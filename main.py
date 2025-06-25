@@ -8,20 +8,22 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 
-# 拡張AIエンジンをインポート（フォールバック付き）
+# AIエンジンをインポート（Enhanced優先、フォールバック付き）
 print("🚀 Football Hub Japan - Enhanced版 起動中...")
-print("🤖 拡張AIエンジンを初期化中...")
+print("🤖 AIエンジンを初期化中...")
 
 try:
     from enhanced_custom_ai_engine import EnhancedSoccerAI
     soccer_ai = EnhancedSoccerAI()
     print("✅ Enhanced AI エンジン初期化完了！")
+    engine_type = "Enhanced AI with Football-Data.org API"
 except ImportError as e:
     print(f"⚠️ Enhanced AI読み込みエラー: {e}")
     print("🔄 基本AIエンジンにフォールバック...")
     from custom_ai_engine import CustomSoccerAI
     soccer_ai = CustomSoccerAI()
     print("✅ 基本AI エンジン初期化完了！")
+    engine_type = "基本AI エンジン"
 
 app = Flask(__name__)
 
@@ -65,7 +67,7 @@ def hello():
     </ul>
     
     <footer>
-        <p>⚡ Enhanced AI with Football-Data.org API</p>
+        <p>⚡ {engine_type}</p>
         <p>🚀 24/7稼働中</p>
     </footer>
     '''
@@ -104,7 +106,7 @@ def handle_message(event):
     print(f"👤 User {user_id}: {user_message}")
     
     try:
-        # Enhanced AIエンジンで処理
+        # AIエンジンで処理
         start_time = time.time()
         ai_response = soccer_ai.process_message(user_id, user_message)
         processing_time = time.time() - start_time
