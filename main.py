@@ -9,7 +9,8 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 
 # 独自AIエンジンをインポート
-from custom_ai_engine import CustomSoccerAI
+# 拡張AIエンジンをインポート  
+from enhanced_custom_ai_engine import EnhancedSoccerAI
 
 app = Flask(__name__)
 
@@ -20,7 +21,7 @@ handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 # 独自AIエンジンを初期化
 print("🚀 Football Hub Japan - 安定版 起動中...")
 print("🤖 独自AIエンジンを初期化中...")
-soccer_ai = CustomSoccerAI()
+soccer_ai = EnhancedSoccerAI()
 print("✅ 独自AIエンジン初期化完了！")
 
 @app.route('/')
