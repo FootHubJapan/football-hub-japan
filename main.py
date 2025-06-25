@@ -8,10 +8,20 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 
-# 独自AIエンジンをインポート
-# 拡張AIエンジンをインポート  
-from custom_ai_engine import CustomSoccerAI
-# from enhanced_custom_ai_engine import EnhancedSoccerAI
+# 拡張AIエンジンをインポート（フォールバック付き）
+print("🚀 Football Hub Japan - Enhanced版 起動中...")
+print("🤖 拡張AIエンジンを初期化中...")
+
+try:
+    from enhanced_custom_ai_engine import EnhancedSoccerAI
+    soccer_ai = EnhancedSoccerAI()
+    print("✅ Enhanced AI エンジン初期化完了！")
+except ImportError as e:
+    print(f"⚠️ Enhanced AI読み込みエラー: {e}")
+    print("🔄 基本AIエンジンにフォールバック...")
+    from custom_ai_engine import CustomSoccerAI
+    soccer_ai = CustomSoccerAI()
+    print("✅ 基本AI エンジン初期化完了！")
 
 app = Flask(__name__)
 
@@ -19,19 +29,13 @@ app = Flask(__name__)
 line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
 handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 
-# 独自AIエンジンを初期化
-print("🚀 Football Hub Japan - 安定版 起動中...")
-print("🤖 独自AIエンジンを初期化中...")
-soccer_ai = EnhancedSoccerAI()
-print("✅ 独自AIエンジン初期化完了！")
-
 @app.route('/')
 def hello():
     stats = soccer_ai.get_system_stats()
     
     return f'''
     <h1>⚽ Football Hub Japan</h1>
-    <h2>🤖 独自AI搭載版</h2>
+    <h2>🤖 Enhanced AI搭載版</h2>
     <p>📱 LINEで高度なサッカー情報AI</p>
     
     <h3>🎯 システム情報</h3>
@@ -44,7 +48,8 @@ def hello():
     
     <h3>🌟 機能</h3>
     <ul>
-        <li>🤖 独自AIエンジン搭載</li>
+        <li>🤖 Enhanced AIエンジン搭載</li>
+        <li>🔌 Football-Data.org API統合</li>
         <li>⚡ 高速応答 (0.1秒未満)</li>
         <li>🆓 完全無料運用</li>
         <li>📱 24/7稼働</li>
@@ -52,14 +57,15 @@ def hello():
     
     <h3>📱 使用例</h3>
     <ul>
-        <li>「三笘薫のゴール数は？」</li>
-        <li>「久保建英について教えて」</li>
-        <li>「日本代表の最近の結果は？」</li>
+        <li>「ライブスコア」</li>
+        <li>「プレミアリーグの順位表」</li>
+        <li>「アーセナルの試合予定」</li>
+        <li>「三笘薫について教えて」</li>
         <li>「こんにちは」</li>
     </ul>
     
     <footer>
-        <p>⚡ Claude API代替 独自AIエンジン</p>
+        <p>⚡ Enhanced AI with Football-Data.org API</p>
         <p>🚀 24/7稼働中</p>
     </footer>
     '''
@@ -98,7 +104,7 @@ def handle_message(event):
     print(f"👤 User {user_id}: {user_message}")
     
     try:
-        # 独自AIエンジンで処理
+        # Enhanced AIエンジンで処理
         start_time = time.time()
         ai_response = soccer_ai.process_message(user_id, user_message)
         processing_time = time.time() - start_time
@@ -133,8 +139,8 @@ def handle_message(event):
             print(f"❌ Failed to send error message: {e2}")
 
 if __name__ == "__main__":
-    print("🚀 Football Hub Japan - 安定版 Ready!")
-    print("⚽ 独自サッカーAI稼働開始！")
+    print("🚀 Football Hub Japan - Enhanced版 Ready!")
+    print("⚽ Enhanced サッカーAI稼働開始！")
     
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=True)
