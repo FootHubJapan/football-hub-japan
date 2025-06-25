@@ -8,33 +8,32 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 
-# AIエンジンをインポート（Enhanced優先、フォールバック付き）
-print("🚀 Football Hub Japan - Enhanced版 起動中...")
-print("🤖 AIエンジンを初期化中...")
-
-try:
-    from enhanced_custom_ai_engine import EnhancedSoccerAI
-    soccer_ai = EnhancedSoccerAI()
-    print("✅ Enhanced AI エンジン初期化完了！")
-    engine_type = "Enhanced AI with Football-Data.org API"
-except ImportError as e:
-    print(f"⚠️ Enhanced AI読み込みエラー: {e}")
-    print("🔄 基本AIエンジンにフォールバック...")
-    from custom_ai_engine import CustomSoccerAI
-    soccer_ai = CustomSoccerAI()
-    print("✅ 基本AI エンジン初期化完了！")
-    engine_type = "基本AI エンジン"
-
 app = Flask(__name__)
 
 # LINE Bot設定 (v2)
 line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
 handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 
+# 拡張AIエンジンをインポート（フォールバック付き）
+print("🚀 Football Hub Japan - Enhanced版 起動中...")
+print("🤖 拡張AIエンジンを初期化中...")
+
+try:
+    from enhanced_custom_ai_engine import EnhancedSoccerAI
+    soccer_ai = EnhancedSoccerAI()
+    print("✅ Enhanced AI エンジン初期化完了！")
+    ai_version = "Enhanced AI with Football-Data.org API"
+except ImportError as e:
+    print(f"⚠️ Enhanced AI読み込みエラー: {e}")
+    print("🔄 基本AIエンジンにフォールバック...")
+    from custom_ai_engine import CustomSoccerAI
+    soccer_ai = CustomSoccerAI()
+    print("✅ 基本AI エンジン初期化完了！")
+    ai_version = "基本AI エンジン"
+
 @app.route('/')
 def hello():
     stats = soccer_ai.get_system_stats()
-    
     return f'''
     <h1>⚽ Football Hub Japan</h1>
     <h2>🤖 Enhanced AI搭載版</h2>
@@ -46,6 +45,7 @@ def hello():
         <li>登録チーム数: {stats["total_teams"]}チーム</li>
         <li>対応意図: {len(stats["supported_intents"])}種類</li>
         <li>アクティブユーザー: {stats["active_contexts"]}人</li>
+        <li>AIエンジン: {ai_version}</li>
     </ul>
     
     <h3>🌟 機能</h3>
@@ -67,7 +67,7 @@ def hello():
     </ul>
     
     <footer>
-        <p>⚡ {engine_type}</p>
+        <p>⚡ Enhanced AI with Football-Data.org API</p>
         <p>🚀 24/7稼働中</p>
     </footer>
     '''
@@ -75,10 +75,8 @@ def hello():
 @app.route('/callback', methods=['POST'])
 def callback():
     print("🔔 Webhook endpoint called!")
-    
     signature = request.headers.get('X-Line-Signature')
     body = request.get_data(as_text=True)
-    
     print(f"📋 Request headers: {dict(request.headers)}")
     print(f"📝 Request body length: {len(body)}")
     
@@ -102,15 +100,13 @@ def callback():
 def handle_message(event):
     user_message = event.message.text
     user_id = event.source.user_id
-    
     print(f"👤 User {user_id}: {user_message}")
     
     try:
-        # AIエンジンで処理
+        # Enhanced AIエンジンで処理
         start_time = time.time()
         ai_response = soccer_ai.process_message(user_id, user_message)
         processing_time = time.time() - start_time
-        
         print(f"🤖 AI processed in {processing_time:.3f}s")
         print(f"📤 Response: {ai_response[:100]}...")
         
@@ -123,7 +119,6 @@ def handle_message(event):
             event.reply_token,
             TextSendMessage(text=ai_response)
         )
-        
         print("✅ Message sent successfully")
         
     except Exception as e:
@@ -143,6 +138,5 @@ def handle_message(event):
 if __name__ == "__main__":
     print("🚀 Football Hub Japan - Enhanced版 Ready!")
     print("⚽ Enhanced サッカーAI稼働開始！")
-    
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=True)
