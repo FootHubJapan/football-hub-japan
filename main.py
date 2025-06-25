@@ -10,7 +10,8 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage
 
 # 独自AIエンジンをインポート
 # 拡張AIエンジンをインポート  
-from enhanced_custom_ai_engine import EnhancedSoccerAI
+from custom_ai_engine import CustomSoccerAI
+# from enhanced_custom_ai_engine import EnhancedSoccerAI
 
 app = Flask(__name__)
 
