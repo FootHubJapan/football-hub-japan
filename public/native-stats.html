@@ -479,16 +479,18 @@
             setupSearch();
         });
 
-        // Load players from Firebase
+        // Load players from API
         async function loadPlayers() {
             try {
-                if (window.firebaseDataService) {
-                    const players = await window.firebaseDataService.getPlayers();
-                    currentPlayers = players;
-                    filteredPlayers = [...players];
+                // Use native-stats.org style API
+                const response = await fetch('/api/native-stats/players');
+                if (response.ok) {
+                    const data = await response.json();
+                    currentPlayers = data.players || [];
+                    filteredPlayers = [...currentPlayers];
                     renderPlayers();
                 } else {
-                    console.log('FirebaseDataService not available, loading sample data...');
+                    console.log('API not available, loading sample data...');
                     loadSamplePlayers();
                 }
             } catch (error) {
@@ -650,108 +652,166 @@
         }
 
         // Show player detail
-        function showPlayerDetail(player) {
+        async function showPlayerDetail(player) {
             const modal = document.getElementById('playerModal');
             const modalBody = document.getElementById('modalBody');
-            const seasonStats = player.seasons?.['2024-2025']?.stats || {};
-            const matches = player.matches || [];
 
-            modalBody.innerHTML = `
-                <div class="player-details">
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <label>Full name</label>
-                            <span>${player.fullName}</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Position</label>
-                            <span>${player.position}</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Birthday</label>
-                            <span>${player.birthday || 'N/A'}</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Nationality</label>
-                            <span>${player.nationality}</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Current Team</label>
-                            <span>${player.currentTeam}</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Contract</label>
-                            <span>${player.contract?.start || 'N/A'} - ${player.contract?.end || 'N/A'}</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Est. market value</label>
-                            <span>${player.marketValue ? player.marketValue + ' Mio. €' : 'n/a Mio. €'}</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Preferred foot</label>
-                            <span>${player.preferredFoot || 'N/A'}</span>
+            try {
+                // Try to fetch detailed player data from API
+                const response = await fetch(`/api/native-stats/players/${player.id}`);
+                let playerData = player;
+                
+                if (response.ok) {
+                    const apiData = await response.json();
+                    playerData = { ...player, ...apiData };
+                }
+
+                const seasonStats = playerData.seasons?.['2024-2025']?.stats || {};
+                const matches = playerData.matches || [];
+
+                modalBody.innerHTML = `
+                    <div class="player-details">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <label>Full name</label>
+                                <span>${playerData.fullName}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Position</label>
+                                <span>${playerData.position}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Birthday</label>
+                                <span>${playerData.birthday || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Nationality</label>
+                                <span>${playerData.nationality}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Current Team</label>
+                                <span>${playerData.currentTeam}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Contract</label>
+                                <span>${playerData.contract?.start || 'N/A'} - ${playerData.contract?.end || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Est. market value</label>
+                                <span>${playerData.marketValue ? playerData.marketValue + ' Mio. €' : 'n/a Mio. €'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Preferred foot</label>
+                                <span>${playerData.preferredFoot || 'N/A'}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="matches-section">
-                    <h3>Matches in database</h3>
-                    <div class="matches-table">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Label</th>
-                                    <th>Score</th>
-                                    <th>Odds</th>
-                                    <th>OMV</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${matches.slice(0, 10).map(match => `
+                    <div class="matches-section">
+                        <h3>Matches in database</h3>
+                        <div class="matches-table">
+                            <table>
+                                <thead>
                                     <tr>
-                                        <td>${match.date}, ${match.time}</td>
-                                        <td>${match.homeTeam} - ${match.awayTeam}</td>
-                                        <td>${match.score}</td>
-                                        <td>${match.odds}</td>
-                                        <td>100€</td>
+                                        <th>Date</th>
+                                        <th>Label</th>
+                                        <th>Score</th>
+                                        <th>Odds</th>
+                                        <th>OMV</th>
                                     </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    ${matches.slice(0, 10).map(match => `
+                                        <tr>
+                                            <td>${match.date}, ${match.time}</td>
+                                            <td>${match.homeTeam} - ${match.awayTeam}</td>
+                                            <td>${match.score}</td>
+                                            <td>${match.odds}</td>
+                                            <td>100€</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
 
-                <div class="season-stats">
-                    <h3>Season Statistics (2024-2025)</h3>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <span class="value">${seasonStats.appearances || 0}</span>
-                            <span class="label">Appearances</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="value">${seasonStats.goals || 0}</span>
-                            <span class="label">Goals</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="value">${seasonStats.assists || 0}</span>
-                            <span class="label">Assists</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="value">${seasonStats.rating || 'N/A'}</span>
-                            <span class="label">Rating</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="value">${seasonStats.yellowCards || 0}</span>
-                            <span class="label">Yellow Cards</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="value">${seasonStats.redCards || 0}</span>
-                            <span class="label">Red Cards</span>
+                    <div class="season-stats">
+                        <h3>Season Statistics (2024-2025)</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <span class="value">${seasonStats.appearances || 0}</span>
+                                <span class="label">Appearances</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="value">${seasonStats.goals || 0}</span>
+                                <span class="label">Goals</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="value">${seasonStats.assists || 0}</span>
+                                <span class="label">Assists</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="value">${seasonStats.rating || 'N/A'}</span>
+                                <span class="label">Rating</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="value">${seasonStats.yellowCards || 0}</span>
+                                <span class="label">Yellow Cards</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="value">${seasonStats.redCards || 0}</span>
+                                <span class="label">Red Cards</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
+            } catch (error) {
+                console.error('Error loading player details:', error);
+                // Fallback to basic player data
+                const seasonStats = player.seasons?.['2024-2025']?.stats || {};
+                const matches = player.matches || [];
+
+                modalBody.innerHTML = `
+                    <div class="player-details">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <label>Full name</label>
+                                <span>${player.fullName}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Position</label>
+                                <span>${player.position}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Nationality</label>
+                                <span>${player.nationality}</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Current Team</label>
+                                <span>${player.currentTeam}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="season-stats">
+                        <h3>Season Statistics (2024-2025)</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <span class="value">${seasonStats.appearances || 0}</span>
+                                <span class="label">Appearances</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="value">${seasonStats.goals || 0}</span>
+                                <span class="label">Goals</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="value">${seasonStats.rating || 'N/A'}</span>
+                                <span class="label">Rating</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
 
             modal.classList.add('active');
         }
@@ -763,7 +823,7 @@
         }
 
         // Filter by league
-        function filterByLeague(league) {
+        async function filterByLeague(league) {
             currentLeague = league;
             
             // Update active button
@@ -772,20 +832,34 @@
             });
             event.target.classList.add('active');
             
-            // Filter players
-            if (league === 'all') {
-                filteredPlayers = [...currentPlayers];
-            } else {
-                filteredPlayers = currentPlayers.filter(player => {
-                    // Simple league filtering based on team
-                    const team = player.currentTeam.toLowerCase();
-                    if (league === 'PL' && team.includes('brighton')) return true;
-                    if (league === 'PD' && (team.includes('girona') || team.includes('real'))) return true;
-                    if (league === 'SA' && team.includes('milan')) return true;
-                    if (league === 'BL1' && team.includes('bayern')) return true;
-                    if (league === 'FL1' && team.includes('psg')) return true;
-                    return false;
-                });
+            try {
+                // Use API to filter players
+                const response = await fetch(`/api/native-stats/players?league=${league}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    filteredPlayers = data.players || [];
+                } else {
+                    // Fallback to client-side filtering
+                    if (league === 'all') {
+                        filteredPlayers = [...currentPlayers];
+                    } else {
+                        filteredPlayers = currentPlayers.filter(player => {
+                            const playerLeague = player.seasons?.['2024-2025']?.leagueId;
+                            return playerLeague === league;
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error filtering by league:', error);
+                // Fallback to client-side filtering
+                if (league === 'all') {
+                    filteredPlayers = [...currentPlayers];
+                } else {
+                    filteredPlayers = currentPlayers.filter(player => {
+                        const playerLeague = player.seasons?.['2024-2025']?.leagueId;
+                        return playerLeague === league;
+                    });
+                }
             }
             
             renderPlayers();
@@ -797,18 +871,37 @@
             searchInput.addEventListener('input', debounce(searchPlayers, 300));
         }
 
-        function searchPlayers() {
+        async function searchPlayers() {
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
             
             if (!query) {
                 filteredPlayers = [...currentPlayers];
             } else {
-                filteredPlayers = currentPlayers.filter(player => {
-                    return player.fullName.toLowerCase().includes(query) ||
-                           player.currentTeam.toLowerCase().includes(query) ||
-                           player.nationality.toLowerCase().includes(query) ||
-                           player.position.toLowerCase().includes(query);
-                });
+                try {
+                    // Use API to search players
+                    const response = await fetch(`/api/native-stats/players?search=${encodeURIComponent(query)}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        filteredPlayers = data.players || [];
+                    } else {
+                        // Fallback to client-side search
+                        filteredPlayers = currentPlayers.filter(player => {
+                            return player.fullName.toLowerCase().includes(query) ||
+                                   player.currentTeam.toLowerCase().includes(query) ||
+                                   player.nationality.toLowerCase().includes(query) ||
+                                   player.position.toLowerCase().includes(query);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error searching players:', error);
+                    // Fallback to client-side search
+                    filteredPlayers = currentPlayers.filter(player => {
+                        return player.fullName.toLowerCase().includes(query) ||
+                               player.currentTeam.toLowerCase().includes(query) ||
+                               player.nationality.toLowerCase().includes(query) ||
+                               player.position.toLowerCase().includes(query);
+                    });
+                }
             }
             
             renderPlayers();
