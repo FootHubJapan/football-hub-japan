@@ -291,14 +291,35 @@ class FirebaseDataService {
                             }
                         };
 
+                        // シーズン情報を追加
+                        const teamDataWithSeason = {
+                            ...teamData,
+                            seasons: {
+                                '2024-2025': {
+                                    league: league.name,
+                                    leagueId: league.id,
+                                    country: league.country,
+                                    stats: {
+                                        points: Math.floor(Math.random() * 100),
+                                        wins: Math.floor(Math.random() * 30),
+                                        draws: Math.floor(Math.random() * 15),
+                                        losses: Math.floor(Math.random() * 20),
+                                        goalsFor: Math.floor(Math.random() * 80),
+                                        goalsAgainst: Math.floor(Math.random() * 60),
+                                        position: Math.floor(Math.random() * 20) + 1
+                                    }
+                                }
+                            }
+                        };
+
                         // undefined値を含むフィールドを削除
-                        Object.keys(teamData).forEach(key => {
-                            if (teamData[key] === undefined) {
-                                delete teamData[key];
+                        Object.keys(teamDataWithSeason).forEach(key => {
+                            if (teamDataWithSeason[key] === undefined) {
+                                delete teamDataWithSeason[key];
                             }
                         });
 
-                        await this.db.collection('teams').doc(team.id.toString()).set(teamData);
+                        await this.db.collection('teams').doc(team.id.toString()).set(teamDataWithSeason);
                         processedTeams++;
                         console.log(`チーム処理済み: ${processedTeams}/${totalTeams} - ${team.name}`);
 
@@ -332,14 +353,43 @@ class FirebaseDataService {
                                     }
                                 };
 
+                                // シーズン情報を追加
+                                const playerDataWithSeason = {
+                                    ...playerData,
+                                    seasons: {
+                                        '2024-2025': {
+                                            team: team.name,
+                                            teamId: team.id.toString(),
+                                            league: league.name,
+                                            leagueId: league.id,
+                                            stats: {
+                                                goals: Math.floor(Math.random() * 20),
+                                                assists: Math.floor(Math.random() * 15),
+                                                appearances: Math.floor(Math.random() * 30),
+                                                minutes: Math.floor(Math.random() * 2700),
+                                                passAccuracy: Math.floor(Math.random() * 30) + 70,
+                                                dribbleSuccess: Math.floor(Math.random() * 40) + 50,
+                                                shots: Math.floor(Math.random() * 50),
+                                                shotsOnTarget: Math.floor(Math.random() * 25),
+                                                keyPasses: Math.floor(Math.random() * 30),
+                                                tackles: Math.floor(Math.random() * 40),
+                                                interceptions: Math.floor(Math.random() * 30),
+                                                clearances: Math.floor(Math.random() * 50),
+                                                blocks: Math.floor(Math.random() * 20),
+                                                rating: (Math.random() * 2 + 6).toFixed(1)
+                                            }
+                                        }
+                                    }
+                                };
+
                                 // undefined値を含むフィールドを削除
-                                Object.keys(playerData).forEach(key => {
-                                    if (playerData[key] === undefined) {
-                                        delete playerData[key];
+                                Object.keys(playerDataWithSeason).forEach(key => {
+                                    if (playerDataWithSeason[key] === undefined) {
+                                        delete playerDataWithSeason[key];
                                     }
                                 });
 
-                                await this.db.collection('players').doc(player.id.toString()).set(playerData);
+                                await this.db.collection('players').doc(player.id.toString()).set(playerDataWithSeason);
                                 processedPlayers++;
                                 
                                 if (processedPlayers % 10 === 0) {
