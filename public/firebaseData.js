@@ -86,24 +86,149 @@ class FirebaseDataService {
                 return this.searchFallbackPlayers(query);
             }
 
-            // Japanese name mapping for better search
+            // Enhanced Japanese name mapping
             const japaneseNameMap = {
+                'ハーランド': 'haaland',
+                'エルリング・ハーランド': 'erling haaland',
+                'モドリッチ': 'modric',
+                'ルカ・モドリッチ': 'luka modric',
+                'ベリンガム': 'bellingham',
+                'ジュード・ベリンガム': 'jude bellingham',
+                '久保': 'kubo',
                 '久保建英': 'takefusa kubo',
+                '三笘': 'mitoma',
                 '三笘薫': 'kaoru mitoma',
-                '田中碧': 'ao tanaka',
-                '伊藤洋輝': 'hiroki ito',
-                '堂安律': 'ritsudo yanagi',
-                '南野拓実': 'takumi minamino',
-                '古橋亨梧': 'kyogo furuhashi',
-                '前田大然': 'daizen maeda',
-                '浅野拓磨': 'takuma asano',
-                '上田綺世': 'ayase ueda'
+                '孫': 'son',
+                '孫興慜': 'heung-min son',
+                'メッシ': 'messi',
+                'リオネル・メッシ': 'lionel messi',
+                'ロナウド': 'ronaldo',
+                'クリスティアーノ・ロナウド': 'cristiano ronaldo',
+                'ネイマール': 'neymar',
+                'ネイマール・ジュニオール': 'neymar junior',
+                'ムバッペ': 'mbappe',
+                'キリアン・ムバッペ': 'kylian mbappe',
+                'デ・ブルイネ': 'de bruyne',
+                'ケビン・デ・ブルイネ': 'kevin de bruyne',
+                'サラー': 'salah',
+                'モハメド・サラー': 'mohamed salah',
+                'ケイン': 'kane',
+                'ハリー・ケイン': 'harry kane',
+                'ディバラ': 'dybala',
+                'パウロ・ディバラ': 'paulo dybala',
+                'ルイス・ディアス': 'luis diaz',
+                'ディアス': 'diaz',
+                'フェルナンデス': 'fernandez',
+                'ブルーノ・フェルナンデス': 'bruno fernandez',
+                'ロドリゴ': 'rodrygo',
+                'ロドリゴ・ゴエス': 'rodrygo goes',
+                'ビニシウス': 'vinicius',
+                'ビニシウス・ジュニオール': 'vinicius junior',
+                'バルデ': 'valde',
+                'ペドリ・ゴンサレス': 'pedri gonzalez',
+                'ペドリ': 'pedri',
+                'ガビ': 'gavi',
+                'ガビ・パエス': 'gavi paez',
+                'カマビンガ': 'camavinga',
+                'エドゥアルド・カマビンガ': 'eduardo camavinga',
+                'チュアメニ': 'tchouameni',
+                'オーレリアン・チュアメニ': 'aurelien tchouameni',
+                'エンデリック': 'endrick',
+                'エンデリック・フェリペ': 'endrick felipe',
+                'アルダ・ギュラー': 'arda guler',
+                'ギュラー': 'guler',
+                'ミリタン': 'militao',
+                'エデル・ミリタン': 'eder militao',
+                'アラバ': 'alaba',
+                'ダビド・アラバ': 'david alaba',
+                'ルディガー': 'rudiger',
+                'アントニオ・ルディガー': 'antonio rudiger',
+                'クルトゥア': 'courtois',
+                'ティボ・クルトゥア': 'thibaut courtois',
+                'アリソン': 'alisson',
+                'アリソン・ベッカー': 'alisson becker',
+                'エデルソン': 'ederson',
+                'エデルソン・モラエス': 'ederson moraes',
+                'テル・シュテーゲン': 'ter stegen',
+                'シュテーゲン': 'stegen',
+                'ノイアー': 'neuer',
+                'マヌエル・ノイアー': 'manuel neuer',
+                'ドンナルンマ': 'donnarumma',
+                'ジャンヌイジ・ドンナルンマ': 'gianluigi donnarumma',
+                'メニャン': 'mendy',
+                'エドゥアール・メニャン': 'edouard mendy',
+                'マルチネス': 'martinez',
+                'エミリアーノ・マルチネス': 'emiliano martinez',
+                'オブラク': 'oblak',
+                'ヤン・オブラク': 'jan oblak',
+                'シモン': 'simon',
+                'ウナイ・シモン': 'unai simon',
+                'ピケ': 'pique',
+                'ジェラール・ピケ': 'gerard pique',
+                'ラモス': 'ramos',
+                'セルヒオ・ラモス': 'sergio ramos',
+                'ペペ': 'pepe',
+                'ペペ・レイナルド': 'pepe reinaldo',
+                'ディアス': 'diaz',
+                'ルイス・ディアス': 'luis diaz',
+                'フェルナンデス': 'fernandez',
+                'ブルーノ・フェルナンデス': 'bruno fernandez',
+                'ロドリゴ': 'rodrygo',
+                'ロドリゴ・ゴエス': 'rodrygo goes',
+                'ビニシウス': 'vinicius',
+                'ビニシウス・ジュニオール': 'vinicius junior',
+                'バルデ': 'valde',
+                'ペドリ・ゴンサレス': 'pedri gonzalez',
+                'ペドリ': 'pedri',
+                'ガビ': 'gavi',
+                'ガビ・パエス': 'gavi paez',
+                'カマビンガ': 'camavinga',
+                'エドゥアルド・カマビンガ': 'eduardo camavinga',
+                'チュアメニ': 'tchouameni',
+                'オーレリアン・チュアメニ': 'aurelien tchouameni',
+                'エンデリック': 'endrick',
+                'エンデリック・フェリペ': 'endrick felipe',
+                'アルダ・ギュラー': 'arda guler',
+                'ギュラー': 'guler',
+                'ミリタン': 'militao',
+                'エデル・ミリタン': 'eder militao',
+                'アラバ': 'alaba',
+                'ダビド・アラバ': 'david alaba',
+                'ルディガー': 'rudiger',
+                'アントニオ・ルディガー': 'antonio rudiger',
+                'クルトゥア': 'courtois',
+                'ティボ・クルトゥア': 'thibaut courtois',
+                'アリソン': 'alisson',
+                'アリソン・ベッカー': 'alisson becker',
+                'エデルソン': 'ederson',
+                'エデルソン・モラエス': 'ederson moraes',
+                'テル・シュテーゲン': 'ter stegen',
+                'シュテーゲン': 'stegen',
+                'ノイアー': 'neuer',
+                'マヌエル・ノイアー': 'manuel neuer',
+                'ドンナルンマ': 'donnarumma',
+                'ジャンヌイジ・ドンナルンマ': 'gianluigi donnarumma',
+                'メニャン': 'mendy',
+                'エドゥアール・メニャン': 'edouard mendy',
+                'マルチネス': 'martinez',
+                'エミリアーノ・マルチネス': 'emiliano martinez',
+                'オブラク': 'oblak',
+                'ヤン・オブラク': 'jan oblak',
+                'シモン': 'simon',
+                'ウナイ・シモン': 'unai simon',
+                'ピケ': 'pique',
+                'ジェラール・ピケ': 'gerard pique',
+                'ラモス': 'ramos',
+                'セルヒオ・ラモス': 'sergio ramos',
+                'ペペ': 'pepe',
+                'ペペ・レイナルド': 'pepe reinaldo'
             };
 
             // Check if query is a Japanese name
             let searchTerms = [searchQuery];
             if (japaneseNameMap[query]) {
                 searchTerms.push(japaneseNameMap[query]);
+                console.log(`Japanese name detected: "${query}" -> "${japaneseNameMap[query]}"`);
             }
 
             // Helper function to safely convert to string and lowercase
@@ -429,6 +554,182 @@ class FirebaseDataService {
         return matches.sort((a, b) => new Date(b.date) - new Date(a.date));
     }
 
+    // Generate realistic match history with actual team names and varied odds
+    generateRealisticMatchHistory(teamName) {
+        const matches = [];
+        const teamOpponents = this.getTeamOpponents(teamName);
+        
+        for (let i = 0; i < 15; i++) {
+            const date = new Date();
+            date.setDate(date.getDate() - (i * 7));
+            
+            const isHome = Math.random() > 0.5;
+            const opponent = teamOpponents[Math.floor(Math.random() * teamOpponents.length)];
+            const homeGoals = Math.floor(Math.random() * 4);
+            const awayGoals = Math.floor(Math.random() * 4);
+            
+            // Generate realistic odds based on team strength
+            const homeOdds = (Math.random() * 1.5 + 1.2).toFixed(2);
+            const drawOdds = (Math.random() * 1.0 + 3.0).toFixed(2);
+            const awayOdds = (Math.random() * 2.0 + 2.5).toFixed(2);
+            
+            // Generate realistic bet value (not always 100€)
+            const betValue = Math.floor(Math.random() * 500 + 50) + '€';
+            
+            matches.push({
+                date: date.toISOString().split('T')[0],
+                time: `${Math.floor(Math.random() * 24)}:${Math.random() > 0.5 ? '00' : '30'}`,
+                homeTeam: isHome ? teamName : opponent,
+                awayTeam: isHome ? opponent : teamName,
+                score: `${homeGoals}:${awayGoals}`,
+                odds: `${homeOdds} / ${drawOdds} / ${awayOdds}`,
+                result: homeGoals > awayGoals ? 'W' : homeGoals < awayGoals ? 'L' : 'D',
+                betValue: betValue
+            });
+        }
+        
+        return matches.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+
+    // Get realistic opponents for each team
+    getTeamOpponents(teamName) {
+        const opponents = {
+            'Real Madrid CF': ['FC Barcelona', 'Atletico Madrid', 'Sevilla FC', 'Valencia CF', 'Athletic Club', 'Real Betis', 'Villarreal CF', 'Real Sociedad', 'Girona FC', 'Getafe CF', 'Rayo Vallecano', 'Celta de Vigo'],
+            'FC Barcelona': ['Real Madrid CF', 'Atletico Madrid', 'Sevilla FC', 'Valencia CF', 'Athletic Club', 'Real Betis', 'Villarreal CF', 'Real Sociedad', 'Girona FC', 'Getafe CF', 'Rayo Vallecano', 'Celta de Vigo'],
+            'Manchester City FC': ['Arsenal FC', 'Liverpool FC', 'Manchester United FC', 'Chelsea FC', 'Tottenham Hotspur FC', 'Newcastle United FC', 'Aston Villa FC', 'West Ham United FC', 'Brighton & Hove Albion', 'Crystal Palace FC', 'Brentford FC', 'Fulham FC'],
+            'Arsenal FC': ['Manchester City FC', 'Liverpool FC', 'Manchester United FC', 'Chelsea FC', 'Tottenham Hotspur FC', 'Newcastle United FC', 'Aston Villa FC', 'West Ham United FC', 'Brighton & Hove Albion', 'Crystal Palace FC', 'Brentford FC', 'Fulham FC'],
+            'Liverpool FC': ['Manchester City FC', 'Arsenal FC', 'Manchester United FC', 'Chelsea FC', 'Tottenham Hotspur FC', 'Newcastle United FC', 'Aston Villa FC', 'West Ham United FC', 'Brighton & Hove Albion', 'Crystal Palace FC', 'Brentford FC', 'Fulham FC'],
+            'Brighton & Hove Albion': ['Manchester City FC', 'Arsenal FC', 'Liverpool FC', 'Manchester United FC', 'Chelsea FC', 'Tottenham Hotspur FC', 'Newcastle United FC', 'Aston Villa FC', 'West Ham United FC', 'Crystal Palace FC', 'Brentford FC', 'Fulham FC'],
+            'Girona FC': ['Real Madrid CF', 'FC Barcelona', 'Atletico Madrid', 'Sevilla FC', 'Valencia CF', 'Athletic Club', 'Real Betis', 'Villarreal CF', 'Real Sociedad', 'Getafe CF', 'Rayo Vallecano', 'Celta de Vigo'],
+            'Real Sociedad': ['Real Madrid CF', 'FC Barcelona', 'Atletico Madrid', 'Sevilla FC', 'Valencia CF', 'Athletic Club', 'Real Betis', 'Villarreal CF', 'Girona FC', 'Getafe CF', 'Rayo Vallecano', 'Celta de Vigo'],
+            'AC Milan': ['Inter Milan', 'Juventus FC', 'SSC Napoli', 'AS Roma', 'SS Lazio', 'Atalanta BC', 'Fiorentina', 'Torino FC', 'Bologna FC', 'Sassuolo Calcio', 'Udinese Calcio', 'Hellas Verona FC'],
+            'Inter Milan': ['AC Milan', 'Juventus FC', 'SSC Napoli', 'AS Roma', 'SS Lazio', 'Atalanta BC', 'Fiorentina', 'Torino FC', 'Bologna FC', 'Sassuolo Calcio', 'Udinese Calcio', 'Hellas Verona FC'],
+            'Juventus FC': ['AC Milan', 'Inter Milan', 'SSC Napoli', 'AS Roma', 'SS Lazio', 'Atalanta BC', 'Fiorentina', 'Torino FC', 'Bologna FC', 'Sassuolo Calcio', 'Udinese Calcio', 'Hellas Verona FC'],
+            'FC Bayern München': ['Borussia Dortmund', 'RB Leipzig', 'Bayer 04 Leverkusen', 'VfB Stuttgart', 'Eintracht Frankfurt', 'SC Freiburg', 'TSG 1899 Hoffenheim', '1. FC Union Berlin', 'VfL Wolfsburg', '1. FC Köln', 'FC Augsburg', '1. FSV Mainz 05'],
+            'Borussia Dortmund': ['FC Bayern München', 'RB Leipzig', 'Bayer 04 Leverkusen', 'VfB Stuttgart', 'Eintracht Frankfurt', 'SC Freiburg', 'TSG 1899 Hoffenheim', '1. FC Union Berlin', 'VfL Wolfsburg', '1. FC Köln', 'FC Augsburg', '1. FSV Mainz 05'],
+            'Paris Saint-Germain FC': ['AS Monaco FC', 'Olympique de Marseille', 'Olympique Lyonnais', 'Lille OSC', 'Stade Rennais FC', 'RC Lens', 'OGC Nice', 'RC Strasbourg Alsace', 'FC Nantes', 'Toulouse FC', 'Stade Brestois 29', 'FC Lorient']
+        };
+        
+        return opponents[teamName] || ['Team A', 'Team B', 'Team C', 'Team D', 'Team E'];
+    }
+
+    // Generate realistic player statistics
+    generateRealisticPlayerStats(position) {
+        const baseStats = {
+            appearances: Math.floor(Math.random() * 30) + 10,
+            minutes: Math.floor(Math.random() * 2700) + 900,
+            rating: (Math.random() * 1.5 + 6.5).toFixed(1),
+            yellowCards: Math.floor(Math.random() * 8),
+            redCards: Math.floor(Math.random() * 2)
+        };
+
+        // Position-specific stats
+        switch (position.toLowerCase()) {
+            case 'goalkeeper':
+                return {
+                    ...baseStats,
+                    goals: 0,
+                    assists: 0,
+                    saves: Math.floor(Math.random() * 100) + 50,
+                    cleanSheets: Math.floor(Math.random() * 15) + 5,
+                    passAccuracy: Math.floor(Math.random() * 20) + 70,
+                    dribbleSuccess: 0,
+                    shots: 0,
+                    shotsOnTarget: 0,
+                    keyPasses: 0,
+                    tackles: 0,
+                    interceptions: 0,
+                    clearances: Math.floor(Math.random() * 50) + 20,
+                    blocks: 0,
+                    foulsCommitted: Math.floor(Math.random() * 10),
+                    foulsDrawn: 0,
+                    offsides: 0
+                };
+            case 'defender':
+                return {
+                    ...baseStats,
+                    goals: Math.floor(Math.random() * 5),
+                    assists: Math.floor(Math.random() * 8),
+                    saves: 0,
+                    cleanSheets: Math.floor(Math.random() * 10),
+                    passAccuracy: Math.floor(Math.random() * 15) + 80,
+                    dribbleSuccess: Math.floor(Math.random() * 30) + 40,
+                    shots: Math.floor(Math.random() * 20),
+                    shotsOnTarget: Math.floor(Math.random() * 8),
+                    keyPasses: Math.floor(Math.random() * 15),
+                    tackles: Math.floor(Math.random() * 40) + 20,
+                    interceptions: Math.floor(Math.random() * 30) + 15,
+                    clearances: Math.floor(Math.random() * 80) + 40,
+                    blocks: Math.floor(Math.random() * 20) + 10,
+                    foulsCommitted: Math.floor(Math.random() * 25) + 10,
+                    foulsDrawn: Math.floor(Math.random() * 10),
+                    offsides: Math.floor(Math.random() * 5)
+                };
+            case 'midfielder':
+                return {
+                    ...baseStats,
+                    goals: Math.floor(Math.random() * 10) + 2,
+                    assists: Math.floor(Math.random() * 12) + 3,
+                    saves: 0,
+                    cleanSheets: 0,
+                    passAccuracy: Math.floor(Math.random() * 20) + 75,
+                    dribbleSuccess: Math.floor(Math.random() * 40) + 50,
+                    shots: Math.floor(Math.random() * 40) + 10,
+                    shotsOnTarget: Math.floor(Math.random() * 15) + 5,
+                    keyPasses: Math.floor(Math.random() * 50) + 20,
+                    tackles: Math.floor(Math.random() * 35) + 15,
+                    interceptions: Math.floor(Math.random() * 25) + 10,
+                    clearances: Math.floor(Math.random() * 30) + 10,
+                    blocks: Math.floor(Math.random() * 15) + 5,
+                    foulsCommitted: Math.floor(Math.random() * 20) + 8,
+                    foulsDrawn: Math.floor(Math.random() * 25) + 10,
+                    offsides: Math.floor(Math.random() * 8) + 2
+                };
+            case 'forward':
+            case 'striker':
+            case 'winger':
+                return {
+                    ...baseStats,
+                    goals: Math.floor(Math.random() * 20) + 5,
+                    assists: Math.floor(Math.random() * 15) + 3,
+                    saves: 0,
+                    cleanSheets: 0,
+                    passAccuracy: Math.floor(Math.random() * 25) + 70,
+                    dribbleSuccess: Math.floor(Math.random() * 50) + 60,
+                    shots: Math.floor(Math.random() * 60) + 20,
+                    shotsOnTarget: Math.floor(Math.random() * 25) + 10,
+                    keyPasses: Math.floor(Math.random() * 30) + 10,
+                    tackles: Math.floor(Math.random() * 20) + 5,
+                    interceptions: Math.floor(Math.random() * 15) + 5,
+                    clearances: Math.floor(Math.random() * 15) + 5,
+                    blocks: Math.floor(Math.random() * 10) + 2,
+                    foulsCommitted: Math.floor(Math.random() * 15) + 5,
+                    foulsDrawn: Math.floor(Math.random() * 30) + 15,
+                    offsides: Math.floor(Math.random() * 15) + 5
+                };
+            default:
+                return {
+                    ...baseStats,
+                    goals: Math.floor(Math.random() * 10),
+                    assists: Math.floor(Math.random() * 10),
+                    saves: 0,
+                    cleanSheets: 0,
+                    passAccuracy: Math.floor(Math.random() * 20) + 75,
+                    dribbleSuccess: Math.floor(Math.random() * 40) + 50,
+                    shots: Math.floor(Math.random() * 30),
+                    shotsOnTarget: Math.floor(Math.random() * 12),
+                    keyPasses: Math.floor(Math.random() * 25),
+                    tackles: Math.floor(Math.random() * 25),
+                    interceptions: Math.floor(Math.random() * 20),
+                    clearances: Math.floor(Math.random() * 25),
+                    blocks: Math.floor(Math.random() * 10),
+                    foulsCommitted: Math.floor(Math.random() * 15),
+                    foulsDrawn: Math.floor(Math.random() * 15),
+                    offsides: Math.floor(Math.random() * 8)
+                };
+        }
+    }
+
     // Import real data from football-data.org API
     async importRealFootballData() {
         try {
@@ -529,7 +830,7 @@ class FirebaseDataService {
                                         },
                                         marketValue: player.marketValue || null,
                                         preferredFoot: Math.random() > 0.5 ? 'Right' : 'Left',
-                                        matches: this.generateMatchHistory(team.name),
+                                        matches: this.generateRealisticMatchHistory(team.name),
                                         seasons: {
                                             '2024-2025': {
                                                 team: team.name,
@@ -537,24 +838,7 @@ class FirebaseDataService {
                                                 league: league,
                                                 leagueId: league,
                                                 matchesPlayed: Math.floor(Math.random() * 30) + 10,
-                                                stats: {
-                                                    goals: Math.floor(Math.random() * 15),
-                                                    assists: Math.floor(Math.random() * 10),
-                                                    appearances: Math.floor(Math.random() * 30) + 10,
-                                                    minutes: Math.floor(Math.random() * 2700) + 900,
-                                                    passAccuracy: Math.floor(Math.random() * 20) + 75,
-                                                    dribbleSuccess: Math.floor(Math.random() * 30) + 60,
-                                                    shots: Math.floor(Math.random() * 40),
-                                                    shotsOnTarget: Math.floor(Math.random() * 20),
-                                                    keyPasses: Math.floor(Math.random() * 25),
-                                                    tackles: Math.floor(Math.random() * 35),
-                                                    interceptions: Math.floor(Math.random() * 25),
-                                                    clearances: Math.floor(Math.random() * 40),
-                                                    blocks: Math.floor(Math.random() * 15),
-                                                    rating: (Math.random() * 1.5 + 6.5).toFixed(1),
-                                                    yellowCards: Math.floor(Math.random() * 8),
-                                                    redCards: Math.floor(Math.random() * 2)
-                                                }
+                                                stats: this.generateRealisticPlayerStats(this.translatePosition(player.position))
                                             }
                                         }
                                     };
