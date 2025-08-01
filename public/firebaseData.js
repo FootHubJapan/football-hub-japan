@@ -135,6 +135,11 @@ class FirebaseDataService {
             { id: 'FL1', name: 'Ligue 1', country: 'France' }
         ];
 
+        let totalTeams = 0;
+        let totalPlayers = 0;
+        let processedTeams = 0;
+        let processedPlayers = 0;
+
         try {
             // リーグデータを保存
             for (const league of leagues) {
@@ -150,44 +155,63 @@ class FirebaseDataService {
 
             // 各リーグのチームを取得
             for (const league of leagues) {
+                console.log(`${league.name}のチームを取得中...`);
                 const teamsData = await this.fetchFromFootballDataAPI(`competitions/${league.id}/teams`);
                 if (teamsData && teamsData.teams) {
+                    totalTeams += teamsData.teams.length;
+                    console.log(`${league.name}: ${teamsData.teams.length}チームを処理中...`);
+                    
                     for (const team of teamsData.teams) {
-                        await this.db.collection('teams').doc(team.id.toString()).set({
+                        // undefined値をnullに変換
+                        const teamData = {
                             id: team.id.toString(),
-                            name: team.name,
-                            shortName: team.shortName,
+                            name: team.name || 'Unknown',
+                            shortName: team.shortName || team.name || 'Unknown',
                             leagueId: league.id,
                             league: league.name,
                             country: league.country,
-                            founded: team.founded,
-                            venue: team.venue,
-                            crest: team.crest,
+                            founded: team.founded || null,
+                            venue: team.venue || null,
+                            crest: team.crest || null,
                             stats: {
                                 points: Math.floor(Math.random() * 100),
                                 wins: Math.floor(Math.random() * 30),
                                 draws: Math.floor(Math.random() * 15),
                                 losses: Math.floor(Math.random() * 20)
                             }
+                        };
+
+                        // undefined値を含むフィールドを削除
+                        Object.keys(teamData).forEach(key => {
+                            if (teamData[key] === undefined) {
+                                delete teamData[key];
+                            }
                         });
+
+                        await this.db.collection('teams').doc(team.id.toString()).set(teamData);
+                        processedTeams++;
+                        console.log(`チーム処理済み: ${processedTeams}/${totalTeams} - ${team.name}`);
 
                         // チームの選手を取得
                         const teamData = await this.fetchFromFootballDataAPI(`teams/${team.id}`);
                         if (teamData && teamData.squad) {
+                            totalPlayers += teamData.squad.length;
+                            console.log(`${team.name}: ${teamData.squad.length}選手を処理中...`);
                             for (const player of teamData.squad) {
-                                await this.db.collection('players').doc(player.id.toString()).set({
+                                // undefined値をnullに変換
+                                const playerData = {
                                     id: player.id.toString(),
-                                    name: player.name,
-                                    firstName: player.firstName,
-                                    lastName: player.lastName,
+                                    name: player.name || 'Unknown',
+                                    firstName: player.firstName || '',
+                                    lastName: player.lastName || '',
                                     teamId: team.id.toString(),
                                     team: team.name,
                                     league: league.name,
-                                    age: this.calculateAge(player.dateOfBirth),
-                                    position: this.translatePosition(player.position),
-                                    nationality: player.nationality,
-                                    shirtNumber: player.shirtNumber,
-                                    marketValue: player.marketValue,
+                                    age: this.calculateAge(player.dateOfBirth) || 0,
+                                    position: this.translatePosition(player.position) || 'Unknown',
+                                    nationality: player.nationality || 'Unknown',
+                                    shirtNumber: player.shirtNumber || null,
+                                    marketValue: player.marketValue || null,
                                     stats: {
                                         goals: Math.floor(Math.random() * 20),
                                         assists: Math.floor(Math.random() * 15),
@@ -196,7 +220,21 @@ class FirebaseDataService {
                                         passAccuracy: Math.floor(Math.random() * 30) + 70,
                                         dribbleSuccess: Math.floor(Math.random() * 40) + 50
                                     }
+                                };
+
+                                // undefined値を含むフィールドを削除
+                                Object.keys(playerData).forEach(key => {
+                                    if (playerData[key] === undefined) {
+                                        delete playerData[key];
+                                    }
                                 });
+
+                                await this.db.collection('players').doc(player.id.toString()).set(playerData);
+                                processedPlayers++;
+                                
+                                if (processedPlayers % 10 === 0) {
+                                    console.log(`選手処理済み: ${processedPlayers}/${totalPlayers}`);
+                                }
                             }
                         }
 
@@ -206,9 +244,15 @@ class FirebaseDataService {
                 }
             }
 
-            console.log('実際のサッカーデータのインポートが完了しました！');
+            console.log(`実際のサッカーデータのインポートが完了しました！`);
+            console.log(`処理結果: ${processedTeams}チーム、${processedPlayers}選手をインポートしました。`);
         } catch (error) {
             console.error('データインポートエラー:', error);
+            console.error('エラーの詳細:', {
+                message: error.message,
+                code: error.code,
+                stack: error.stack
+            });
         }
     }
 
