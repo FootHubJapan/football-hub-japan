@@ -1,11 +1,11 @@
-// Firebase設定
+// Firebase設定 - 実際のプロジェクト設定
 const firebaseConfig = {
-    apiKey: "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    apiKey: "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", // 実際のAPIキーに置き換え
     authDomain: "football-hub-japan.firebaseapp.com",
     projectId: "football-hub-japan",
     storageBucket: "football-hub-japan.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef123456"
+    messagingSenderId: "123456789", // 実際のSender IDに置き換え
+    appId: "1:123456789:web:abcdef123456" // 実際のApp IDに置き換え
 };
 
 // Firebase初期化
@@ -21,6 +21,10 @@ class FirebaseDataService {
     async getLeagues() {
         try {
             const snapshot = await this.db.collection('leagues').get();
+            if (snapshot.empty) {
+                console.log('Firestoreにリーグデータがありません。フォールバックデータを使用します。');
+                return this.getFallbackLeagues();
+            }
             return snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -37,6 +41,10 @@ class FirebaseDataService {
             const snapshot = await this.db.collection('teams')
                 .where('leagueId', '==', leagueId)
                 .get();
+            if (snapshot.empty) {
+                console.log('Firestoreにチームデータがありません。フォールバックデータを使用します。');
+                return this.getFallbackTeams();
+            }
             return snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -53,6 +61,10 @@ class FirebaseDataService {
             const snapshot = await this.db.collection('players')
                 .where('teamId', '==', teamId)
                 .get();
+            if (snapshot.empty) {
+                console.log('Firestoreに選手データがありません。フォールバックデータを使用します。');
+                return this.getFallbackPlayers();
+            }
             return snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -71,6 +83,10 @@ class FirebaseDataService {
                 .where('name', '<=', query + '\uf8ff')
                 .limit(20)
                 .get();
+            if (snapshot.empty) {
+                console.log('検索結果が見つかりません。フォールバックデータを使用します。');
+                return this.getFallbackSearchResults(query);
+            }
             return snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -78,6 +94,36 @@ class FirebaseDataService {
         } catch (error) {
             console.error('Firebase選手検索エラー:', error);
             return this.getFallbackSearchResults(query);
+        }
+    }
+
+    // データをFirestoreに追加（開発用）
+    async addSampleData() {
+        try {
+            // リーグデータを追加
+            const leaguesRef = this.db.collection('leagues');
+            const leagues = this.getFallbackLeagues();
+            for (const league of leagues) {
+                await leaguesRef.doc(league.id).set(league);
+            }
+
+            // チームデータを追加
+            const teamsRef = this.db.collection('teams');
+            const teams = this.getFallbackTeams();
+            for (const team of teams) {
+                await teamsRef.doc(team.id).set(team);
+            }
+
+            // 選手データを追加
+            const playersRef = this.db.collection('players');
+            const players = this.getFallbackPlayers();
+            for (const player of players) {
+                await playersRef.doc(player.id).set(player);
+            }
+
+            console.log('サンプルデータがFirestoreに追加されました。');
+        } catch (error) {
+            console.error('データ追加エラー:', error);
         }
     }
 
@@ -248,4 +294,9 @@ class FirebaseDataService {
 }
 
 // グローバルに利用可能にする
-window.firebaseDataService = new FirebaseDataService(); 
+window.firebaseDataService = new FirebaseDataService();
+
+// 開発用：サンプルデータをFirestoreに追加する関数
+window.addSampleDataToFirestore = function() {
+    window.firebaseDataService.addSampleData();
+}; 
