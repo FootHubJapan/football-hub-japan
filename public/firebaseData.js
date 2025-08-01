@@ -100,22 +100,132 @@ class FirebaseDataService {
         }
     }
 
-    // 選手検索
+    // 選手検索（改善版 - 多言語対応）
     async searchPlayers(query) {
         try {
-            const snapshot = await this.db.collection('players')
-                .where('name', '>=', query)
-                .where('name', '<=', query + '\uf8ff')
-                .limit(20)
-                .get();
+            console.log(`選手検索: "${query}"`);
+            
+            // 全選手データを取得
+            const snapshot = await this.db.collection('players').get();
+            
             if (snapshot.empty) {
+                console.log('Firestoreに選手データがありません。フォールバックデータを使用します。');
+                return this.getFallbackSearchResults(query);
+            }
+            
+            // 検索クエリを正規化
+            const normalizedQuery = query.toLowerCase().trim();
+            
+            // 日本語名の英語変換マップ（主要選手）
+            const japaneseNameMap = {
+                '久保建英': 'takefusa kubo',
+                '三笘薫': 'kaoru mitoma',
+                '田中碧': 'ao tanaka',
+                '伊藤洋輝': 'hiroki ito',
+                '堂安律': 'ritsudo',
+                '前田大然': 'daizen maeda',
+                '上田綺世': 'ayase ueda',
+                '浅野拓磨': 'takuma asano',
+                '南野拓実': 'takumi minamino',
+                '遠藤航': 'wataru endo',
+                '板倉滉': 'ko itakura',
+                '谷口彰悟': 'shogo taniguchi',
+                '中山雄太': 'yuta nakayama',
+                '伊東純也': 'junya ito',
+                '相馬勇紀': 'yuki soma',
+                '守田英正': 'hidemasa morita',
+                '田中マルクス': 'markus tanaka',
+                '中村敬斗': 'keito nakamura',
+                '古橋亨梧': 'kyogo furuhashi',
+                '旗手怜央': 'reo hatate'
+            };
+            
+            // 日本語名を英語に変換
+            const englishQuery = japaneseNameMap[query] || normalizedQuery;
+            
+            // 部分一致検索
+            const players = [];
+            snapshot.forEach(doc => {
+                const player = doc.data();
+                
+                // 検索対象フィールド
+                const searchFields = [
+                    player.name || '',
+                    player.firstName || '',
+                    player.lastName || '',
+                    player.team || '',
+                    player.nationality || '',
+                    player.position || ''
+                ];
+                
+                // 英語名での検索
+                const englishMatch = searchFields.some(field => {
+                    if (!field) return false;
+                    const fieldLower = field.toLowerCase();
+                    return fieldLower.includes(englishQuery) || 
+                           englishQuery.includes(fieldLower);
+                });
+                
+                // 日本語名での検索
+                const japaneseMatch = searchFields.some(field => {
+                    if (!field) return false;
+                    const fieldLower = field.toLowerCase();
+                    return fieldLower.includes(normalizedQuery) || 
+                           normalizedQuery.includes(fieldLower);
+                });
+                
+                if (englishMatch || japaneseMatch) {
+                    players.push({
+                        id: doc.id,
+                        ...player
+                    });
+                }
+            });
+            
+            // 結果が見つからない場合、より柔軟な検索
+            if (players.length === 0) {
+                console.log('完全一致で見つかりません。柔軟検索を試行中...');
+                
+                // クエリを単語に分割
+                const queryWords = normalizedQuery.split(/\s+/).filter(word => word.length > 1);
+                const englishWords = englishQuery.split(/\s+/).filter(word => word.length > 1);
+                
+                snapshot.forEach(doc => {
+                    const player = doc.data();
+                    const searchText = [
+                        player.name || '',
+                        player.firstName || '',
+                        player.lastName || '',
+                        player.team || '',
+                        player.nationality || ''
+                    ].join(' ').toLowerCase();
+                    
+                    // 日本語単語での一致
+                    const hasJapaneseWordMatch = queryWords.some(word => 
+                        searchText.includes(word)
+                    );
+                    
+                    // 英語単語での一致
+                    const hasEnglishWordMatch = englishWords.some(word => 
+                        searchText.includes(word)
+                    );
+                    
+                    if (hasJapaneseWordMatch || hasEnglishWordMatch) {
+                        players.push({
+                            id: doc.id,
+                            ...player
+                        });
+                    }
+                });
+            }
+            
+            if (players.length === 0) {
                 console.log('検索結果が見つかりません。フォールバックデータを使用します。');
                 return this.getFallbackSearchResults(query);
             }
-            return snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            
+            console.log(`${players.length}人の選手が見つかりました`);
+            return players.slice(0, 50); // 最大50件に制限
         } catch (error) {
             console.error('Firebase選手検索エラー:', error);
             return this.getFallbackSearchResults(query);

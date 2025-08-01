@@ -369,6 +369,31 @@
             border: 1px solid #ff4444;
             display: block;
         }
+        
+        .search-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .search-result.success {
+            background-color: #1a3a1a;
+            color: #00ff88;
+            border: 1px solid #00ff88;
+        }
+        
+        .search-result.warning {
+            background-color: #3a3a1a;
+            color: #ffaa00;
+            border: 1px solid #ffaa00;
+        }
+        
+        .search-result.error {
+            background-color: #3a1a1a;
+            color: #ff4444;
+            border: 1px solid #ff4444;
+        }
 
         @media (max-width: 768px) {
             .search-controls {
@@ -774,44 +799,105 @@
             }, 5000);
         }
 
-        // 検索機能
+        // 検索機能（改善版）
         async function searchData() {
             const searchType = document.getElementById('searchType').value;
-            const searchQuery = document.getElementById('searchQuery').value;
+            const searchQuery = document.getElementById('searchQuery').value.trim();
             const searchLeague = document.getElementById('searchLeague').value;
             
-            if (searchType === 'players' && searchQuery) {
-                // 選手検索APIを使用
-                currentData = await searchPlayers(searchQuery);
-                currentTab = 'players';
-                
-                // タブを切り替え
-                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                document.querySelector('.tab-btn[onclick*="players"]').classList.add('active');
-                
-                document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
-                document.getElementById('playersTab').style.display = 'block';
-            } else {
-                // 通常のタブ切り替え
-                await switchTab(searchType);
-                
-                // クライアントサイドでフィルタリング
-                if (searchQuery) {
-                    currentData = currentData.filter(item => {
-                        if (searchType === 'players') {
-                            return item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                   item.team.toLowerCase().includes(searchQuery.toLowerCase());
-                        } else if (searchType === 'teams') {
-                            return item.name.toLowerCase().includes(searchQuery.toLowerCase());
-                        } else if (searchType === 'leagues') {
-                            return item.name.toLowerCase().includes(searchQuery.toLowerCase());
-                        }
-                        return true;
-                    });
-                }
+            if (!searchQuery) {
+                alert('検索キーワードを入力してください');
+                return;
             }
             
-            renderData();
+            // 検索中の表示
+            const searchButton = document.querySelector('.search-btn');
+            const originalText = searchButton.textContent;
+            searchButton.textContent = '検索中...';
+            searchButton.disabled = true;
+            
+            try {
+                if (searchType === 'players' && searchQuery) {
+                    console.log(`選手検索開始: "${searchQuery}"`);
+                    
+                    // 選手検索APIを使用
+                    currentData = await searchPlayers(searchQuery);
+                    currentTab = 'players';
+                    
+                    // タブを切り替え
+                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    document.querySelector('.tab-btn[onclick*="players"]').classList.add('active');
+                    
+                    document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+                    document.getElementById('playersTab').style.display = 'block';
+                    
+                    // 検索結果の表示
+                    if (currentData.length === 0) {
+                        showSearchResult('検索結果が見つかりませんでした。別のキーワードで試してください。', 'warning');
+                    } else {
+                        showSearchResult(`${currentData.length}件の選手が見つかりました`, 'success');
+                    }
+                } else {
+                    // 通常のタブ切り替え
+                    await switchTab(searchType);
+                    
+                    // クライアントサイドでフィルタリング
+                    if (searchQuery) {
+                        const originalData = [...currentData];
+                        currentData = currentData.filter(item => {
+                            if (searchType === 'players') {
+                                return item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                       item.team.toLowerCase().includes(searchQuery.toLowerCase());
+                            } else if (searchType === 'teams') {
+                                return item.name.toLowerCase().includes(searchQuery.toLowerCase());
+                            } else if (searchType === 'leagues') {
+                                return item.name.toLowerCase().includes(searchQuery.toLowerCase());
+                            }
+                            return true;
+                        });
+                        
+                        if (currentData.length === 0) {
+                            showSearchResult('検索結果が見つかりませんでした。別のキーワードで試してください。', 'warning');
+                        } else {
+                            showSearchResult(`${currentData.length}件の${searchType === 'teams' ? 'チーム' : 'リーグ'}が見つかりました`, 'success');
+                        }
+                    }
+                }
+                
+                renderData();
+            } catch (error) {
+                console.error('検索エラー:', error);
+                showSearchResult('検索中にエラーが発生しました', 'error');
+            } finally {
+                // ボタンを元に戻す
+                searchButton.textContent = originalText;
+                searchButton.disabled = false;
+            }
+        }
+        
+        // 検索結果メッセージ表示
+        function showSearchResult(message, type) {
+            const resultDiv = document.getElementById('searchResult');
+            if (!resultDiv) {
+                // 結果表示用の要素を作成
+                const newResultDiv = document.createElement('div');
+                newResultDiv.id = 'searchResult';
+                newResultDiv.className = `search-result ${type}`;
+                newResultDiv.textContent = message;
+                
+                const searchSection = document.querySelector('.search-section');
+                searchSection.appendChild(newResultDiv);
+            } else {
+                resultDiv.textContent = message;
+                resultDiv.className = `search-result ${type}`;
+            }
+            
+            // 3秒後に自動で非表示
+            setTimeout(() => {
+                if (resultDiv) {
+                    resultDiv.style.display = 'none';
+                }
+            }, 3000);
         }
 
         // ページネーション
