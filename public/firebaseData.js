@@ -1,493 +1,413 @@
-// Firebase設定 - 実際のプロジェクト設定
+// Firebase Configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyCNR4P1ATjDyhrWiNOGKc0weZeacprEC8g",
+    apiKey: "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     authDomain: "football-hub-japan.firebaseapp.com",
     projectId: "football-hub-japan",
-    storageBucket: "football-hub-japan.firebasestorage.app",
-    messagingSenderId: "347425838458",
-    appId: "1:347425838458:web:056c33248688318e38b2c3",
-    measurementId: "G-QF85QC6MZP"
+    storageBucket: "football-hub-japan.appspot.com",
+    messagingSenderId: "123456789012",
+    appId: "1:123456789012:web:abcdefghijklmnop"
 };
 
-// Firebase初期化
-firebase.initializeApp(firebaseConfig);
+// Initialize Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+
 const db = firebase.firestore();
 
+// Firebase Data Service
 class FirebaseDataService {
     constructor() {
         this.db = db;
-        this.footballDataApiKey = null; // APIキーは後で設定
+        console.log('FirebaseDataService initialized');
     }
 
-    // football-data.org APIキーを設定（バックエンドで管理）
-    setApiKey(apiKey) {
-        // APIキーはバックエンドの環境変数で管理されるため、
-        // フロントエンドでは設定不要
-        console.log('APIキーはバックエンドで管理されています');
-    }
-
-    // football-data.org APIからデータを取得（バックエンドプロキシ経由）
-    async fetchFromFootballDataAPI(endpoint) {
-        try {
-            const response = await fetch(`/api/football-data/${endpoint}`);
-
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('football-data.org API エラー:', error);
-            return null;
-        }
-    }
-
-    // リーグ一覧を取得
+    // Get all leagues
     async getLeagues() {
         try {
             const snapshot = await this.db.collection('leagues').get();
-            if (snapshot.empty) {
-                console.log('Firestoreにリーグデータがありません。フォールバックデータを使用します。');
+            if (!snapshot.empty) {
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            } else {
+                console.log('No leagues found in Firestore, using fallback data');
                 return this.getFallbackLeagues();
             }
-            return snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
         } catch (error) {
-            console.error('Firebaseリーグ取得エラー:', error);
+            console.error('Error fetching leagues:', error);
             return this.getFallbackLeagues();
         }
     }
 
-    // チーム一覧を取得
-    async getTeams(leagueId) {
+    // Get all teams
+    async getTeams() {
         try {
-            const snapshot = await this.db.collection('teams')
-                .where('leagueId', '==', leagueId)
-                .get();
-            if (snapshot.empty) {
-                console.log('Firestoreにチームデータがありません。フォールバックデータを使用します。');
+            const snapshot = await this.db.collection('teams').get();
+            if (!snapshot.empty) {
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            } else {
+                console.log('No teams found in Firestore, using fallback data');
                 return this.getFallbackTeams();
             }
-            return snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
         } catch (error) {
-            console.error('Firebaseチーム取得エラー:', error);
+            console.error('Error fetching teams:', error);
             return this.getFallbackTeams();
         }
     }
 
-    // 選手一覧を取得
-    async getPlayers(teamId) {
+    // Get all players
+    async getPlayers() {
         try {
-            const snapshot = await this.db.collection('players')
-                .where('teamId', '==', teamId)
-                .get();
-            if (snapshot.empty) {
-                console.log('Firestoreに選手データがありません。フォールバックデータを使用します。');
+            const snapshot = await this.db.collection('players').get();
+            if (!snapshot.empty) {
+                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            } else {
+                console.log('No players found in Firestore, using fallback data');
                 return this.getFallbackPlayers();
             }
-            return snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
         } catch (error) {
-            console.error('Firebase選手取得エラー:', error);
+            console.error('Error fetching players:', error);
             return this.getFallbackPlayers();
         }
     }
 
-    // 選手検索（改善版 - 多言語対応）
+    // Search players with enhanced functionality
     async searchPlayers(query) {
         try {
-            console.log(`選手検索: "${query}"`);
+            console.log('Player search started: "' + query + '"');
             
-            // 全選手データを取得
             const snapshot = await this.db.collection('players').get();
-            
             if (snapshot.empty) {
-                console.log('Firestoreに選手データがありません。フォールバックデータを使用します。');
-                return this.getFallbackSearchResults(query);
+                console.log('No players in database, using fallback search');
+                return this.searchFallbackPlayers(query);
             }
-            
-            // 検索クエリを正規化
-            const normalizedQuery = query.toLowerCase().trim();
-            
-            // 日本語名の英語変換マップ（主要選手）
+
+            const players = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const searchQuery = query.toLowerCase().trim();
+
+            // Japanese name mapping for better search
             const japaneseNameMap = {
                 '久保建英': 'takefusa kubo',
                 '三笘薫': 'kaoru mitoma',
                 '田中碧': 'ao tanaka',
                 '伊藤洋輝': 'hiroki ito',
-                '堂安律': 'ritsudo',
-                '前田大然': 'daizen maeda',
-                '上田綺世': 'ayase ueda',
-                '浅野拓磨': 'takuma asano',
+                '堂安律': 'ritsudo yanagi',
                 '南野拓実': 'takumi minamino',
-                '遠藤航': 'wataru endo',
-                '板倉滉': 'ko itakura',
-                '谷口彰悟': 'shogo taniguchi',
-                '中山雄太': 'yuta nakayama',
-                '伊東純也': 'junya ito',
-                '相馬勇紀': 'yuki soma',
-                '守田英正': 'hidemasa morita',
-                '田中マルクス': 'markus tanaka',
-                '中村敬斗': 'keito nakamura',
                 '古橋亨梧': 'kyogo furuhashi',
-                '旗手怜央': 'reo hatate'
+                '前田大然': 'daizen maeda',
+                '浅野拓磨': 'takuma asano',
+                '上田綺世': 'ayase ueda'
             };
-            
-            // 日本語名を英語に変換
-            const englishQuery = japaneseNameMap[query] || normalizedQuery;
-            
-            // 部分一致検索
-            const players = [];
-            snapshot.forEach(doc => {
-                const player = doc.data();
-                
-                // 検索対象フィールド
-                const searchFields = [
-                    player.name || '',
-                    player.firstName || '',
-                    player.lastName || '',
-                    player.team || '',
-                    player.nationality || '',
-                    player.position || ''
-                ];
-                
-                // 英語名での検索
-                const englishMatch = searchFields.some(field => {
-                    if (!field) return false;
-                    const fieldLower = field.toLowerCase();
-                    return fieldLower.includes(englishQuery) || 
-                           englishQuery.includes(fieldLower);
-                });
-                
-                // 日本語名での検索
-                const japaneseMatch = searchFields.some(field => {
-                    if (!field) return false;
-                    const fieldLower = field.toLowerCase();
-                    return fieldLower.includes(normalizedQuery) || 
-                           normalizedQuery.includes(fieldLower);
-                });
-                
-                if (englishMatch || japaneseMatch) {
-                    players.push({
-                        id: doc.id,
-                        ...player
-                    });
-                }
+
+            // Check if query is a Japanese name
+            let searchTerms = [searchQuery];
+            if (japaneseNameMap[query]) {
+                searchTerms.push(japaneseNameMap[query]);
+            }
+
+            // First pass: exact matches
+            let results = players.filter(player => {
+                const fullName = (player.fullName || player.name || '').toLowerCase();
+                const firstName = (player.firstName || '').toLowerCase();
+                const lastName = (player.lastName || '').toLowerCase();
+                const team = (player.currentTeam || player.team || '').toLowerCase();
+                const nationality = (player.nationality || '').toLowerCase();
+                const position = (player.position || '').toLowerCase();
+
+                return searchTerms.some(term => 
+                    fullName.includes(term) ||
+                    firstName.includes(term) ||
+                    lastName.includes(term) ||
+                    team.includes(term) ||
+                    nationality.includes(term) ||
+                    position.includes(term)
+                );
             });
-            
-            // 結果が見つからない場合、より柔軟な検索
-            if (players.length === 0) {
-                console.log('完全一致で見つかりません。柔軟検索を試行中...');
-                
-                // クエリを単語に分割
-                const queryWords = normalizedQuery.split(/\s+/).filter(word => word.length > 1);
-                const englishWords = englishQuery.split(/\s+/).filter(word => word.length > 1);
-                
-                snapshot.forEach(doc => {
-                    const player = doc.data();
-                    const searchText = [
-                        player.name || '',
-                        player.firstName || '',
-                        player.lastName || '',
-                        player.team || '',
-                        player.nationality || ''
-                    ].join(' ').toLowerCase();
-                    
-                    // 日本語単語での一致
-                    const hasJapaneseWordMatch = queryWords.some(word => 
-                        searchText.includes(word)
-                    );
-                    
-                    // 英語単語での一致
-                    const hasEnglishWordMatch = englishWords.some(word => 
-                        searchText.includes(word)
-                    );
-                    
-                    if (hasJapaneseWordMatch || hasEnglishWordMatch) {
-                        players.push({
-                            id: doc.id,
-                            ...player
-                        });
-                    }
-                });
+
+            if (results.length > 0) {
+                console.log(results.length + ' players found');
+                return results;
             }
+
+            // Second pass: word-based search
+            console.log('No exact match found. Trying flexible search...');
+            const words = searchQuery.split(' ').filter(word => word.length > 1);
             
-            if (players.length === 0) {
-                console.log('検索結果が見つかりません。フォールバックデータを使用します。');
-                return this.getFallbackSearchResults(query);
+            results = players.filter(player => {
+                const fullName = (player.fullName || player.name || '').toLowerCase();
+                const firstName = (player.firstName || '').toLowerCase();
+                const lastName = (player.lastName || '').toLowerCase();
+                const team = (player.currentTeam || player.team || '').toLowerCase();
+                const nationality = (player.nationality || '').toLowerCase();
+                const position = (player.position || '').toLowerCase();
+
+                return words.some(word => 
+                    fullName.includes(word) ||
+                    firstName.includes(word) ||
+                    lastName.includes(word) ||
+                    team.includes(word) ||
+                    nationality.includes(word) ||
+                    position.includes(word)
+                );
+            });
+
+            if (results.length > 0) {
+                console.log(results.length + ' players found with flexible search');
+                return results;
             }
-            
-            console.log(`${players.length}人の選手が見つかりました`);
-            return players.slice(0, 50); // 最大50件に制限
+
+            console.log('No search results found, using fallback data');
+            return this.searchFallbackPlayers(query);
+
         } catch (error) {
-            console.error('Firebase選手検索エラー:', error);
-            return this.getFallbackSearchResults(query);
+            console.error('Search error:', error);
+            return this.searchFallbackPlayers(query);
         }
     }
 
-    // football-data.orgから実際のデータを取得してFirestoreに保存
-    async importRealFootballData() {
-        console.log('football-data.orgから実際のデータを取得中...');
-        
-        // 主要リーグのID
-        const leagues = [
+    // Fallback data methods
+    getFallbackLeagues() {
+        return [
             { id: 'PL', name: 'Premier League', country: 'England' },
-            { id: 'SA', name: 'Serie A', country: 'Italy' },
             { id: 'PD', name: 'La Liga', country: 'Spain' },
+            { id: 'SA', name: 'Serie A', country: 'Italy' },
             { id: 'BL1', name: 'Bundesliga', country: 'Germany' },
             { id: 'FL1', name: 'Ligue 1', country: 'France' }
         ];
+    }
 
-        let totalTeams = 0;
-        let totalPlayers = 0;
-        let processedTeams = 0;
-        let processedPlayers = 0;
+    getFallbackTeams() {
+        return [
+            { id: '1', name: 'Real Madrid CF', league: 'PD', country: 'Spain' },
+            { id: '2', name: 'FC Barcelona', league: 'PD', country: 'Spain' },
+            { id: '3', name: 'Manchester City FC', league: 'PL', country: 'England' },
+            { id: '4', name: 'Brighton & Hove Albion', league: 'PL', country: 'England' },
+            { id: '5', name: 'Girona FC', league: 'PD', country: 'Spain' },
+            { id: '6', name: 'Real Sociedad', league: 'PD', country: 'Spain' }
+        ];
+    }
 
-        try {
-            // リーグデータを保存
-            for (const league of leagues) {
-                await this.db.collection('leagues').doc(league.id).set({
-                    id: league.id,
-                    name: league.name,
-                    country: league.country,
-                    teams: 20,
-                    season: '2024',
-                    stats: { totalMatches: 380, totalGoals: 1000, avgGoals: 2.6 }
-                });
-            }
-
-            // 各リーグのチームを取得
-            for (const league of leagues) {
-                console.log(`${league.name}のチームを取得中...`);
-                const teamsData = await this.fetchFromFootballDataAPI(`competitions/${league.id}/teams`);
-                if (teamsData && teamsData.teams) {
-                    totalTeams += teamsData.teams.length;
-                    console.log(`${league.name}: ${teamsData.teams.length}チームを処理中...`);
-                    
-                    for (const team of teamsData.teams) {
-                        // undefined値をnullに変換
-                        const teamData = {
-                            id: team.id.toString(),
-                            name: team.name || 'Unknown',
-                            shortName: team.shortName || team.name || 'Unknown',
-                            leagueId: league.id,
-                            league: league.name,
-                            country: league.country,
-                            founded: team.founded || null,
-                            venue: team.venue || null,
-                            crest: team.crest || null,
-                            stats: {
-                                points: Math.floor(Math.random() * 100),
-                                wins: Math.floor(Math.random() * 30),
-                                draws: Math.floor(Math.random() * 15),
-                                losses: Math.floor(Math.random() * 20)
-                            }
-                        };
-
-                        // シーズン情報を追加
-                        const teamDataWithSeason = {
-                            ...teamData,
-                            seasons: {
-                                '2024-2025': {
-                                    league: league.name,
-                                    leagueId: league.id,
-                                    country: league.country,
-                                    stats: {
-                                        points: Math.floor(Math.random() * 100),
-                                        wins: Math.floor(Math.random() * 30),
-                                        draws: Math.floor(Math.random() * 15),
-                                        losses: Math.floor(Math.random() * 20),
-                                        goalsFor: Math.floor(Math.random() * 80),
-                                        goalsAgainst: Math.floor(Math.random() * 60),
-                                        position: Math.floor(Math.random() * 20) + 1
-                                    }
-                                }
-                            }
-                        };
-
-                        // undefined値を含むフィールドを削除
-                        Object.keys(teamDataWithSeason).forEach(key => {
-                            if (teamDataWithSeason[key] === undefined) {
-                                delete teamDataWithSeason[key];
-                            }
-                        });
-
-                        await this.db.collection('teams').doc(team.id.toString()).set(teamDataWithSeason);
-                        processedTeams++;
-                        console.log(`チーム処理済み: ${processedTeams}/${totalTeams} - ${team.name}`);
-
-                        // チームの選手を取得
-                        const teamDetails = await this.fetchFromFootballDataAPI(`teams/${team.id}`);
-                        if (teamDetails && teamDetails.squad) {
-                            totalPlayers += teamDetails.squad.length;
-                            console.log(`${team.name}: ${teamDetails.squad.length}選手を処理中...`);
-                            for (const player of teamDetails.squad) {
-                                // undefined値をnullに変換
-                                const playerData = {
-                                    id: player.id.toString(),
-                                    name: player.name || 'Unknown',
-                                    firstName: player.firstName || '',
-                                    lastName: player.lastName || '',
-                                    teamId: team.id.toString(),
-                                    team: team.name,
-                                    league: league.name,
-                                    age: this.calculateAge(player.dateOfBirth) || 0,
-                                    position: this.translatePosition(player.position) || 'Unknown',
-                                    nationality: player.nationality || 'Unknown',
-                                    shirtNumber: player.shirtNumber || null,
-                                    marketValue: player.marketValue || null,
-                                    stats: {
-                                        goals: Math.floor(Math.random() * 20),
-                                        assists: Math.floor(Math.random() * 15),
-                                        appearances: Math.floor(Math.random() * 30),
-                                        minutes: Math.floor(Math.random() * 2700),
-                                        passAccuracy: Math.floor(Math.random() * 30) + 70,
-                                        dribbleSuccess: Math.floor(Math.random() * 40) + 50
-                                    }
-                                };
-
-                                // native-stats.org風のデータ構造
-                                const playerDataWithSeason = {
-                                    ...playerData,
-                                    // 基本情報
-                                    fullName: player.name,
-                                    position: this.translatePosition(player.position) || 'Unknown',
-                                    birthday: player.dateOfBirth || null,
-                                    nationality: player.nationality || 'Unknown',
-                                    currentTeam: team.name,
-                                    contract: {
-                                        start: '2024-07-01',
-                                        end: '2025-06-30'
-                                    },
-                                    marketValue: player.marketValue || null,
-                                    preferredFoot: Math.random() > 0.5 ? 'Right' : 'Left',
-                                    
-                                    // 試合履歴（サンプル）
-                                    matches: this.generateMatchHistory(team.name, league.name),
-                                    
-                                    // シーズン統計
-                                    seasons: {
-                                        '2024-2025': {
-                                            team: team.name,
-                                            teamId: team.id.toString(),
-                                            league: league.name,
-                                            leagueId: league.id,
-                                            matchesPlayed: Math.floor(Math.random() * 30) + 10,
-                                            stats: {
-                                                goals: Math.floor(Math.random() * 15),
-                                                assists: Math.floor(Math.random() * 10),
-                                                appearances: Math.floor(Math.random() * 30) + 10,
-                                                minutes: Math.floor(Math.random() * 2700) + 900,
-                                                passAccuracy: Math.floor(Math.random() * 20) + 75,
-                                                dribbleSuccess: Math.floor(Math.random() * 30) + 60,
-                                                shots: Math.floor(Math.random() * 40),
-                                                shotsOnTarget: Math.floor(Math.random() * 20),
-                                                keyPasses: Math.floor(Math.random() * 25),
-                                                tackles: Math.floor(Math.random() * 35),
-                                                interceptions: Math.floor(Math.random() * 25),
-                                                clearances: Math.floor(Math.random() * 40),
-                                                blocks: Math.floor(Math.random() * 15),
-                                                rating: (Math.random() * 1.5 + 6.5).toFixed(1),
-                                                yellowCards: Math.floor(Math.random() * 8),
-                                                redCards: Math.floor(Math.random() * 2)
-                                            }
-                                        }
-                                    }
-                                };
-
-                                // undefined値を含むフィールドを削除
-                                Object.keys(playerDataWithSeason).forEach(key => {
-                                    if (playerDataWithSeason[key] === undefined) {
-                                        delete playerDataWithSeason[key];
-                                    }
-                                });
-
-                                await this.db.collection('players').doc(player.id.toString()).set(playerDataWithSeason);
-                                processedPlayers++;
-                                
-                                if (processedPlayers % 10 === 0) {
-                                    console.log(`選手処理済み: ${processedPlayers}/${totalPlayers}`);
-                                }
-                            }
+    getFallbackPlayers() {
+        return [
+            {
+                id: '1',
+                fullName: 'Juan Carlos',
+                firstName: 'Juan',
+                lastName: 'Carlos',
+                position: 'Goalkeeper',
+                birthday: '1988-01-20',
+                nationality: 'Spain',
+                currentTeam: 'Girona FC',
+                team: 'Girona FC',
+                contract: { start: '2019-07', end: '2025-06' },
+                marketValue: '5.2',
+                preferredFoot: 'Right',
+                matches: this.generateMatchHistory('Girona FC'),
+                seasons: {
+                    '2024-2025': {
+                        team: 'Girona FC',
+                        teamId: '5',
+                        league: 'La Liga',
+                        leagueId: 'PD',
+                        matchesPlayed: 25,
+                        stats: {
+                            goals: 0,
+                            assists: 0,
+                            appearances: 25,
+                            minutes: 2250,
+                            passAccuracy: 85,
+                            dribbleSuccess: 0,
+                            shots: 0,
+                            shotsOnTarget: 0,
+                            keyPasses: 0,
+                            tackles: 0,
+                            interceptions: 0,
+                            clearances: 0,
+                            blocks: 0,
+                            rating: 7.2,
+                            yellowCards: 2,
+                            redCards: 0
                         }
-
-                        // API制限を避けるため少し待機
-                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+            },
+            {
+                id: '2',
+                fullName: 'Takefusa Kubo',
+                firstName: 'Takefusa',
+                lastName: 'Kubo',
+                position: 'Right Winger',
+                birthday: '2001-06-04',
+                nationality: 'Japan',
+                currentTeam: 'Real Sociedad',
+                team: 'Real Sociedad',
+                contract: { start: '2022-07', end: '2027-06' },
+                marketValue: '25.0',
+                preferredFoot: 'Left',
+                matches: this.generateMatchHistory('Real Sociedad'),
+                seasons: {
+                    '2024-2025': {
+                        team: 'Real Sociedad',
+                        teamId: '6',
+                        league: 'La Liga',
+                        leagueId: 'PD',
+                        matchesPlayed: 28,
+                        stats: {
+                            goals: 8,
+                            assists: 12,
+                            appearances: 28,
+                            minutes: 2520,
+                            passAccuracy: 82,
+                            dribbleSuccess: 68,
+                            shots: 45,
+                            shotsOnTarget: 18,
+                            keyPasses: 35,
+                            tackles: 12,
+                            interceptions: 8,
+                            clearances: 2,
+                            blocks: 1,
+                            rating: 7.5,
+                            yellowCards: 4,
+                            redCards: 0
+                        }
+                    }
+                }
+            },
+            {
+                id: '3',
+                fullName: 'Kaoru Mitoma',
+                firstName: 'Kaoru',
+                lastName: 'Mitoma',
+                position: 'Left Winger',
+                birthday: '1997-05-20',
+                nationality: 'Japan',
+                currentTeam: 'Brighton & Hove Albion',
+                team: 'Brighton & Hove Albion',
+                contract: { start: '2022-08', end: '2027-06' },
+                marketValue: '30.0',
+                preferredFoot: 'Right',
+                matches: this.generateMatchHistory('Brighton & Hove Albion'),
+                seasons: {
+                    '2024-2025': {
+                        team: 'Brighton & Hove Albion',
+                        teamId: '4',
+                        league: 'Premier League',
+                        leagueId: 'PL',
+                        matchesPlayed: 26,
+                        stats: {
+                            goals: 6,
+                            assists: 8,
+                            appearances: 26,
+                            minutes: 2340,
+                            passAccuracy: 78,
+                            dribbleSuccess: 72,
+                            shots: 38,
+                            shotsOnTarget: 15,
+                            keyPasses: 42,
+                            tackles: 18,
+                            interceptions: 12,
+                            clearances: 3,
+                            blocks: 2,
+                            rating: 7.3,
+                            yellowCards: 3,
+                            redCards: 0
+                        }
+                    }
+                }
+            },
+            {
+                id: '4',
+                fullName: 'Erling Haaland',
+                firstName: 'Erling',
+                lastName: 'Haaland',
+                position: 'Centre-Forward',
+                birthday: '2000-07-21',
+                nationality: 'Norway',
+                currentTeam: 'Manchester City FC',
+                team: 'Manchester City FC',
+                contract: { start: '2022-07', end: '2027-06' },
+                marketValue: '180.0',
+                preferredFoot: 'Left',
+                matches: this.generateMatchHistory('Manchester City FC'),
+                seasons: {
+                    '2024-2025': {
+                        team: 'Manchester City FC',
+                        teamId: '3',
+                        league: 'Premier League',
+                        leagueId: 'PL',
+                        matchesPlayed: 30,
+                        stats: {
+                            goals: 18,
+                            assists: 5,
+                            appearances: 30,
+                            minutes: 2700,
+                            passAccuracy: 75,
+                            dribbleSuccess: 45,
+                            shots: 89,
+                            shotsOnTarget: 42,
+                            keyPasses: 28,
+                            tackles: 8,
+                            interceptions: 5,
+                            clearances: 12,
+                            blocks: 3,
+                            rating: 7.8,
+                            yellowCards: 2,
+                            redCards: 0
+                        }
                     }
                 }
             }
-
-            console.log(`実際のサッカーデータのインポートが完了しました！`);
-            console.log(`処理結果: ${processedTeams}チーム、${processedPlayers}選手をインポートしました。`);
-        } catch (error) {
-            console.error('データインポートエラー:', error);
-            console.error('エラーの詳細:', {
-                message: error.message,
-                code: error.code,
-                stack: error.stack
-            });
-        }
-    }
-
-    // 年齢計算
-    calculateAge(dateOfBirth) {
-        if (!dateOfBirth) return null;
-        const birthDate = new Date(dateOfBirth);
-        const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
-        return age;
-    }
-
-    // 試合履歴生成（native-stats.org風）
-    generateMatchHistory(teamName, leagueName) {
-        const matches = [];
-        const opponents = [
-            'Real Madrid CF', 'FC Barcelona', 'Atletico Madrid', 'Sevilla FC',
-            'Valencia CF', 'Athletic Club', 'Real Betis', 'Villarreal CF',
-            'Real Sociedad', 'Getafe CF', 'RCD Mallorca', 'Rayo Vallecano',
-            'Celta Vigo', 'Osasuna', 'Alaves', 'Las Palmas', 'Girona FC'
         ];
+    }
+
+    searchFallbackPlayers(query) {
+        const players = this.getFallbackPlayers();
+        const searchQuery = query.toLowerCase().trim();
         
-        const currentDate = new Date();
+        return players.filter(player => {
+            const fullName = (player.fullName || '').toLowerCase();
+            const firstName = (player.firstName || '').toLowerCase();
+            const lastName = (player.lastName || '').toLowerCase();
+            const team = (player.currentTeam || '').toLowerCase();
+            const nationality = (player.nationality || '').toLowerCase();
+            const position = (player.position || '').toLowerCase();
+
+            return fullName.includes(searchQuery) ||
+                   firstName.includes(searchQuery) ||
+                   lastName.includes(searchQuery) ||
+                   team.includes(searchQuery) ||
+                   nationality.includes(searchQuery) ||
+                   position.includes(searchQuery);
+        });
+    }
+
+    // Generate realistic match history
+    generateMatchHistory(teamName) {
+        const matches = [];
+        const opponents = {
+            'Girona FC': ['Real Madrid CF', 'FC Barcelona', 'Atletico Madrid', 'Sevilla FC', 'Valencia CF', 'Athletic Club', 'Real Betis', 'Villarreal CF', 'Real Sociedad', 'Getafe CF'],
+            'Real Sociedad': ['Real Madrid CF', 'FC Barcelona', 'Atletico Madrid', 'Sevilla FC', 'Valencia CF', 'Athletic Club', 'Real Betis', 'Villarreal CF', 'Girona FC', 'Getafe CF'],
+            'Brighton & Hove Albion': ['Manchester City FC', 'Arsenal FC', 'Liverpool FC', 'Manchester United FC', 'Chelsea FC', 'Tottenham Hotspur FC', 'Newcastle United FC', 'Aston Villa FC', 'West Ham United FC', 'Crystal Palace FC'],
+            'Manchester City FC': ['Arsenal FC', 'Liverpool FC', 'Manchester United FC', 'Chelsea FC', 'Tottenham Hotspur FC', 'Newcastle United FC', 'Aston Villa FC', 'West Ham United FC', 'Brighton & Hove Albion', 'Crystal Palace FC']
+        };
+
+        const teamOpponents = opponents[teamName] || ['Team A', 'Team B', 'Team C', 'Team D', 'Team E'];
         
-        for (let i = 0; i < 20; i++) {
-            const matchDate = new Date(currentDate);
-            matchDate.setDate(matchDate.getDate() - (i * 7)); // 1週間ごと
+        for (let i = 0; i < 15; i++) {
+            const date = new Date();
+            date.setDate(date.getDate() - (i * 7));
             
             const isHome = Math.random() > 0.5;
-            const opponent = opponents[Math.floor(Math.random() * opponents.length)];
-            
-            // スコア生成
+            const opponent = teamOpponents[Math.floor(Math.random() * teamOpponents.length)];
             const homeGoals = Math.floor(Math.random() * 4);
             const awayGoals = Math.floor(Math.random() * 4);
             
-            // オッズ生成（native-stats.org風）
-            const homeOdds = (Math.random() * 2 + 1).toFixed(2);
-            const drawOdds = (Math.random() * 2 + 2).toFixed(2);
-            const awayOdds = (Math.random() * 3 + 2).toFixed(2);
-            
             matches.push({
-                date: matchDate.toISOString().split('T')[0],
-                time: `${Math.floor(Math.random() * 24)}:${Math.random() > 0.5 ? '00' : '30'}`,
+                date: date.toISOString().split('T')[0],
+                time: '14:00',
                 homeTeam: isHome ? teamName : opponent,
                 awayTeam: isHome ? opponent : teamName,
-                homeGoals: isHome ? homeGoals : awayGoals,
-                awayGoals: isHome ? awayGoals : homeGoals,
                 score: `${isHome ? homeGoals : awayGoals}:${isHome ? awayGoals : homeGoals}`,
-                odds: `${homeOdds} / ${drawOdds} / ${awayOdds}`,
-                venue: isHome ? 'Home' : 'Away',
-                league: leagueName,
+                odds: `${(Math.random() * 2 + 1).toFixed(2)} / ${(Math.random() * 2 + 2).toFixed(2)} / ${(Math.random() * 2 + 2).toFixed(2)}`,
                 result: homeGoals > awayGoals ? 'W' : homeGoals < awayGoals ? 'L' : 'D'
             });
         }
@@ -495,227 +415,203 @@ class FirebaseDataService {
         return matches.sort((a, b) => new Date(b.date) - new Date(a.date));
     }
 
-    // ポジション翻訳
-    translatePosition(position) {
-        const translations = {
-            'Goalkeeper': 'GK',
-            'Defence': 'DF',
-            'Midfield': 'MF',
-            'Offence': 'FW'
-        };
-        return translations[position] || position;
-    }
-
-    // データをFirestoreに追加（開発用）
-    async addSampleData() {
+    // Import real data from football-data.org API
+    async importRealFootballData() {
         try {
-            // リーグデータを追加
-            const leaguesRef = this.db.collection('leagues');
-            const leagues = this.getFallbackLeagues();
+            console.log('Starting import of real football data...');
+            
+            const leagues = ['PL', 'PD', 'SA', 'BL1', 'FL1'];
+            let totalTeams = 0;
+            let totalPlayers = 0;
+
             for (const league of leagues) {
-                await leaguesRef.doc(league.id).set(league);
+                console.log(`Importing ${league} teams...`);
+                
+                try {
+                    const response = await fetch(`/api/football-data/competitions/${league}/teams`);
+                    if (!response.ok) {
+                        console.log(`Failed to fetch ${league} teams, skipping...`);
+                        continue;
+                    }
+                    
+                    const data = await response.json();
+                    const teams = data.teams || [];
+                    
+                    console.log(`${league}: ${teams.length} teams to process...`);
+                    
+                    for (let i = 0; i < teams.length; i++) {
+                        const team = teams[i];
+                        console.log(`Processing team ${i + 1}/${teams.length}: ${team.name}`);
+                        
+                        // Save team data
+                        const teamData = {
+                            id: team.id.toString(),
+                            name: team.name || 'Unknown',
+                            shortName: team.shortName || team.name || 'Unknown',
+                            tla: team.tla || 'Unknown',
+                            founded: team.founded || null,
+                            venue: team.venue || null,
+                            crest: team.crest || null,
+                            website: team.website || null,
+                            league: league,
+                            seasons: {
+                                '2024-2025': {
+                                    league: league,
+                                    leagueId: league,
+                                    matchesPlayed: Math.floor(Math.random() * 20) + 10,
+                                    stats: {
+                                        wins: Math.floor(Math.random() * 15),
+                                        draws: Math.floor(Math.random() * 10),
+                                        losses: Math.floor(Math.random() * 10),
+                                        goalsFor: Math.floor(Math.random() * 50) + 20,
+                                        goalsAgainst: Math.floor(Math.random() * 40) + 15,
+                                        points: Math.floor(Math.random() * 60) + 30
+                                    }
+                                }
+                            }
+                        };
+
+                        // Remove undefined values
+                        Object.keys(teamData).forEach(key => {
+                            if (teamData[key] === undefined) {
+                                delete teamData[key];
+                            }
+                        });
+
+                        await this.db.collection('teams').doc(team.id.toString()).set(teamData);
+                        totalTeams++;
+
+                        // Get players for this team
+                        try {
+                            const playerResponse = await fetch(`/api/football-data/teams/${team.id}`);
+                            if (playerResponse.ok) {
+                                const playerData = await playerResponse.json();
+                                const players = playerData.squad || [];
+                                
+                                console.log(`${team.name}: ${players.length} players to process...`);
+                                
+                                for (let j = 0; j < players.length; j++) {
+                                    const player = players[j];
+                                    
+                                    if (j % 10 === 0) {
+                                        console.log(`Player ${j + 1}/${players.length} processed`);
+                                    }
+                                    
+                                    const playerDataWithSeason = {
+                                        id: player.id.toString(),
+                                        name: player.name || 'Unknown',
+                                        firstName: player.firstName || 'Unknown',
+                                        lastName: player.lastName || 'Unknown',
+                                        fullName: player.name,
+                                        position: this.translatePosition(player.position) || 'Unknown',
+                                        birthday: player.dateOfBirth || null,
+                                        nationality: player.nationality || 'Unknown',
+                                        currentTeam: team.name,
+                                        team: team.name,
+                                        teamId: team.id.toString(),
+                                        contract: {
+                                            start: '2024-07-01',
+                                            end: '2025-06-30'
+                                        },
+                                        marketValue: player.marketValue || null,
+                                        preferredFoot: Math.random() > 0.5 ? 'Right' : 'Left',
+                                        matches: this.generateMatchHistory(team.name),
+                                        seasons: {
+                                            '2024-2025': {
+                                                team: team.name,
+                                                teamId: team.id.toString(),
+                                                league: league,
+                                                leagueId: league,
+                                                matchesPlayed: Math.floor(Math.random() * 30) + 10,
+                                                stats: {
+                                                    goals: Math.floor(Math.random() * 15),
+                                                    assists: Math.floor(Math.random() * 10),
+                                                    appearances: Math.floor(Math.random() * 30) + 10,
+                                                    minutes: Math.floor(Math.random() * 2700) + 900,
+                                                    passAccuracy: Math.floor(Math.random() * 20) + 75,
+                                                    dribbleSuccess: Math.floor(Math.random() * 30) + 60,
+                                                    shots: Math.floor(Math.random() * 40),
+                                                    shotsOnTarget: Math.floor(Math.random() * 20),
+                                                    keyPasses: Math.floor(Math.random() * 25),
+                                                    tackles: Math.floor(Math.random() * 35),
+                                                    interceptions: Math.floor(Math.random() * 25),
+                                                    clearances: Math.floor(Math.random() * 40),
+                                                    blocks: Math.floor(Math.random() * 15),
+                                                    rating: (Math.random() * 1.5 + 6.5).toFixed(1),
+                                                    yellowCards: Math.floor(Math.random() * 8),
+                                                    redCards: Math.floor(Math.random() * 2)
+                                                }
+                                            }
+                                        }
+                                    };
+
+                                    // Remove undefined values
+                                    Object.keys(playerDataWithSeason).forEach(key => {
+                                        if (playerDataWithSeason[key] === undefined) {
+                                            delete playerDataWithSeason[key];
+                                        }
+                                    });
+
+                                    await this.db.collection('players').doc(player.id.toString()).set(playerDataWithSeason);
+                                    totalPlayers++;
+                                }
+                            }
+                        } catch (playerError) {
+                            console.error(`Error fetching players for ${team.name}:`, playerError);
+                        }
+                    }
+                } catch (leagueError) {
+                    console.error(`Error processing league ${league}:`, leagueError);
+                }
             }
 
-            // チームデータを追加
-            const teamsRef = this.db.collection('teams');
-            const teams = this.getFallbackTeams();
-            for (const team of teams) {
-                await teamsRef.doc(team.id).set(team);
-            }
+            console.log(`Import completed! ${totalTeams} teams and ${totalPlayers} players imported.`);
+            return { teams: totalTeams, players: totalPlayers };
 
-            // 選手データを追加
-            const playersRef = this.db.collection('players');
-            const players = this.getFallbackPlayers();
-            for (const player of players) {
-                await playersRef.doc(player.id).set(player);
-            }
-
-            console.log('サンプルデータがFirestoreに追加されました。');
         } catch (error) {
-            console.error('データ追加エラー:', error);
+            console.error('Import error:', error);
+            throw error;
         }
     }
 
-    // フォールバックデータ
-    getFallbackLeagues() {
-        return [
-            {
-                id: 'j1',
-                name: 'J1リーグ',
-                country: '日本',
-                teams: 18,
-                season: '2024',
-                stats: { totalMatches: 306, totalGoals: 856, avgGoals: 2.8 }
-            },
-            {
-                id: 'j2',
-                name: 'J2リーグ',
-                country: '日本',
-                teams: 22,
-                season: '2024',
-                stats: { totalMatches: 462, totalGoals: 1155, avgGoals: 2.5 }
-            },
-            {
-                id: 'premier',
-                name: 'プレミアリーグ',
-                country: 'イングランド',
-                teams: 20,
-                season: '2023/24',
-                stats: { totalMatches: 380, totalGoals: 1084, avgGoals: 2.85 }
-            }
-        ];
-    }
-
-    getFallbackTeams() {
-        return [
-            {
-                id: 'urawa',
-                name: '浦和レッズ',
-                leagueId: 'j1',
-                league: 'J1リーグ',
-                country: '日本',
-                founded: 1950,
-                stats: { points: 65, wins: 20, draws: 5, losses: 9 }
-            },
-            {
-                id: 'yokohama',
-                name: '横浜F・マリノス',
-                leagueId: 'j1',
-                league: 'J1リーグ',
-                country: '日本',
-                founded: 1972,
-                stats: { points: 68, wins: 21, draws: 5, losses: 8 }
-            },
-            {
-                id: 'kawasaki',
-                name: '川崎フロンターレ',
-                leagueId: 'j1',
-                league: 'J1リーグ',
-                country: '日本',
-                founded: 1955,
-                stats: { points: 58, wins: 17, draws: 7, losses: 10 }
-            }
-        ];
-    }
-
-    getFallbackPlayers() {
-        return [
-            {
-                id: 'kubo',
-                name: '久保建英',
-                teamId: 'sociedad',
-                team: 'レアル・ソシエダード',
-                league: 'ラ・リーガ',
-                age: 22,
-                position: 'MF/FW',
-                nationality: '日本',
-                stats: {
-                    goals: 8,
-                    assists: 12,
-                    appearances: 28,
-                    minutes: 2240,
-                    passAccuracy: 87,
-                    dribbleSuccess: 68
-                }
-            },
-            {
-                id: 'mitoma',
-                name: '三笘薫',
-                teamId: 'brighton',
-                team: 'ブライトン',
-                league: 'プレミアリーグ',
-                age: 26,
-                position: 'FW',
-                nationality: '日本',
-                stats: {
-                    goals: 10,
-                    assists: 8,
-                    appearances: 32,
-                    minutes: 2560,
-                    passAccuracy: 82,
-                    dribbleSuccess: 72
-                }
-            },
-            {
-                id: 'tanaka',
-                name: '田中碧',
-                teamId: 'dusseldorf',
-                team: 'デュッセルドルフ',
-                league: 'ブンデスリーガ2部',
-                age: 24,
-                position: 'MF',
-                nationality: '日本',
-                stats: {
-                    goals: 5,
-                    assists: 15,
-                    appearances: 30,
-                    minutes: 2400,
-                    passAccuracy: 89,
-                    dribbleSuccess: 65
-                }
-            },
-            {
-                id: 'ito',
-                name: '伊藤洋輝',
-                teamId: 'stuttgart',
-                team: 'シュトゥットガルト',
-                league: 'ブンデスリーガ',
-                age: 24,
-                position: 'DF',
-                nationality: '日本',
-                stats: {
-                    goals: 2,
-                    assists: 4,
-                    appearances: 25,
-                    minutes: 2000,
-                    passAccuracy: 85,
-                    dribbleSuccess: 58
-                }
-            },
-            {
-                id: 'doan',
-                name: '堂安律',
-                teamId: 'freiburg',
-                team: 'フライブルク',
-                league: 'ブンデスリーガ',
-                age: 25,
-                position: 'MF',
-                nationality: '日本',
-                stats: {
-                    goals: 6,
-                    assists: 9,
-                    appearances: 29,
-                    minutes: 2320,
-                    passAccuracy: 84,
-                    dribbleSuccess: 70
-                }
-            }
-        ];
-    }
-
-    getFallbackSearchResults(query) {
-        const players = this.getFallbackPlayers();
-        return players.filter(player => 
-            player.name.toLowerCase().includes(query.toLowerCase()) ||
-            player.team.toLowerCase().includes(query.toLowerCase())
-        );
+    // Translate position from API to readable format
+    translatePosition(position) {
+        const positionMap = {
+            'Goalkeeper': 'Goalkeeper',
+            'Defender': 'Defender',
+            'Midfielder': 'Midfielder',
+            'Attacker': 'Forward',
+            'Forward': 'Forward',
+            'GK': 'Goalkeeper',
+            'DF': 'Defender',
+            'MF': 'Midfielder',
+            'FW': 'Forward'
+        };
+        return positionMap[position] || position;
     }
 }
 
-// グローバルに利用可能にする
-window.firebaseDataService = new FirebaseDataService();
+// Initialize and make globally available
+const firebaseDataService = new FirebaseDataService();
+window.firebaseDataService = firebaseDataService;
 
-// 開発用：サンプルデータをFirestoreに追加する関数
-window.addSampleDataToFirestore = function() {
-    window.firebaseDataService.addSampleData();
+// Global function for importing real data
+window.importRealFootballData = async function() {
+    try {
+        const result = await firebaseDataService.importRealFootballData();
+        alert(`データインポート完了！\n${result.teams}チーム、${result.players}選手をインポートしました。`);
+        return result;
+    } catch (error) {
+        console.error('Import failed:', error);
+        alert('データインポートに失敗しました。');
+        throw error;
+    }
 };
 
-// 実際のサッカーデータをインポートする関数
-window.importRealFootballData = function() {
-    window.firebaseDataService.importRealFootballData();
+// Global function for setting API key (now managed in backend)
+window.setApiKey = function() {
+    console.log('API key is managed in the backend environment variables');
+    alert('APIキーはバックエンドで管理されています。');
 };
 
-// APIキーを設定する関数（バックエンドで管理）
-window.setFootballDataApiKey = function(apiKey) {
-    console.log('APIキーはバックエンドで管理されています');
-}; 
+console.log('FirebaseDataService initialized'); 
