@@ -132,7 +132,8 @@ class FootballDataService {
     }
 
     // Data generation methods for native-stats.org style
-    generateNativeStatsPlayers({ league, search, page, limit }) {
+    generateNativeStatsPlayers(params = {}) {
+        const { league, search, page = 1, limit = 20 } = params;
         const allPlayers = this.getFallbackNativeStatsPlayers();
         let filteredPlayers = allPlayers;
 
