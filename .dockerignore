@@ -1,0 +1,34 @@
+# Python関連
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.coverage
+.pytest_cache/
+
+# 仮想環境（これが重要！）
+.venv/
+venv/
+env/
+ENV/
+
+# IDE関連
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS関連
+.DS_Store
+Thumbs.db
+
+# Git関連
+.git/
+.gitignore
+
+# その他
+*.log
+*.tmp
+cat .dockerignore

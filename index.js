@@ -138,6 +138,87 @@ app.get('/api/teams/:id/stats', async (req, res) => {
   }
 });
 
+// football-data.org API プロキシエンドポイント
+app.get('/api/football-data/competitions/:id/teams', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+    
+    if (!apiKey) {
+      return res.status(500).json({ error: 'FOOTBALL_DATA_API_KEYが設定されていません' });
+    }
+
+    const response = await fetch(`https://api.football-data.org/v4/competitions/${id}/teams`, {
+      headers: {
+        'X-Auth-Token': apiKey
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('football-data.org API エラー:', error);
+    res.status(500).json({ error: 'football-data.org APIの取得に失敗しました' });
+  }
+});
+
+app.get('/api/football-data/teams/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+    
+    if (!apiKey) {
+      return res.status(500).json({ error: 'FOOTBALL_DATA_API_KEYが設定されていません' });
+    }
+
+    const response = await fetch(`https://api.football-data.org/v4/teams/${id}`, {
+      headers: {
+        'X-Auth-Token': apiKey
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('football-data.org API エラー:', error);
+    res.status(500).json({ error: 'football-data.org APIの取得に失敗しました' });
+  }
+});
+
+app.get('/api/football-data/competitions', async (req, res) => {
+  try {
+    const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+    
+    if (!apiKey) {
+      return res.status(500).json({ error: 'FOOTBALL_DATA_API_KEYが設定されていません' });
+    }
+
+    const response = await fetch('https://api.football-data.org/v4/competitions', {
+      headers: {
+        'X-Auth-Token': apiKey
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('football-data.org API エラー:', error);
+    res.status(500).json({ error: 'football-data.org APIの取得に失敗しました' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
