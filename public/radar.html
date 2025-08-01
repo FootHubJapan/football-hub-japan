@@ -378,109 +378,80 @@
         let currentType = 'players';
         let radarChart = null;
 
-        // 選手データ
-        const playerData = {
-            kubo: {
-                name: "久保建英",
-                team: "レアル・ソシエダード",
-                stats: {
-                    speed: 85,
-                    shooting: 78,
-                    passing: 82,
-                    dribbling: 88,
-                    defending: 45,
-                    physical: 65
-                },
-                details: {
-                    goals: 8,
-                    assists: 12,
-                    matches: 28,
-                    minutes: 2240,
-                    passAccuracy: 87,
-                    dribbleSuccess: 68
+        // 選手データ（APIから取得）
+        let playerData = {};
+        let teamData = {};
+
+        // APIから選手データを取得
+        async function fetchPlayerData() {
+            try {
+                const response = await fetch('/api/search/players?q=久保建英');
+                const players = await response.json();
+                
+                // 選手データを構築
+                players.forEach(player => {
+                    const key = player.name.toLowerCase().replace(/\s+/g, '_');
+                    playerData[key] = {
+                        name: player.name,
+                        team: player.team,
+                        stats: {
+                            speed: Math.floor(Math.random() * 30) + 70, // 仮のデータ
+                            shooting: Math.floor(Math.random() * 30) + 70,
+                            passing: Math.floor(Math.random() * 30) + 70,
+                            dribbling: Math.floor(Math.random() * 30) + 70,
+                            defending: Math.floor(Math.random() * 30) + 70,
+                            physical: Math.floor(Math.random() * 30) + 70
+                        },
+                        details: {
+                            goals: player.stats.goals || 0,
+                            assists: player.stats.assists || 0,
+                            matches: player.stats.appearances || 0,
+                            minutes: player.stats.minutes || 0,
+                            passAccuracy: player.stats.passAccuracy || 0,
+                            dribbleSuccess: player.stats.dribbleSuccess || 0
+                        }
+                    };
+                });
+                
+                // デフォルト選手を追加（APIデータがない場合）
+                if (Object.keys(playerData).length === 0) {
+                    playerData = {
+                        kubo: {
+                            name: "久保建英",
+                            team: "レアル・ソシエダード",
+                            stats: { speed: 85, shooting: 78, passing: 82, dribbling: 88, defending: 45, physical: 65 },
+                            details: { goals: 8, assists: 12, matches: 28, minutes: 2240, passAccuracy: 87, dribbleSuccess: 68 }
+                        },
+                        mitoma: {
+                            name: "三笘薫",
+                            team: "ブライトン",
+                            stats: { speed: 88, shooting: 82, passing: 75, dribbling: 90, defending: 50, physical: 70 },
+                            details: { goals: 10, assists: 8, matches: 32, minutes: 2560, passAccuracy: 82, dribbleSuccess: 72 }
+                        }
+                    };
                 }
-            },
-            mitoma: {
-                name: "三笘薫",
-                team: "ブライトン",
-                stats: {
-                    speed: 88,
-                    shooting: 82,
-                    passing: 75,
-                    dribbling: 90,
-                    defending: 50,
-                    physical: 70
-                },
-                details: {
-                    goals: 10,
-                    assists: 8,
-                    matches: 32,
-                    minutes: 2560,
-                    passAccuracy: 82,
-                    dribbleSuccess: 72
-                }
-            },
-            tanaka: {
-                name: "田中碧",
-                team: "デュッセルドルフ",
-                stats: {
-                    speed: 75,
-                    shooting: 70,
-                    passing: 85,
-                    dribbling: 78,
-                    defending: 80,
-                    physical: 75
-                },
-                details: {
-                    goals: 5,
-                    assists: 15,
-                    matches: 30,
-                    minutes: 2400,
-                    passAccuracy: 89,
-                    dribbleSuccess: 65
-                }
-            },
-            ito: {
-                name: "伊藤洋輝",
-                team: "シュトゥットガルト",
-                stats: {
-                    speed: 70,
-                    shooting: 65,
-                    passing: 80,
-                    dribbling: 72,
-                    defending: 88,
-                    physical: 82
-                },
-                details: {
-                    goals: 2,
-                    assists: 4,
-                    matches: 25,
-                    minutes: 2000,
-                    passAccuracy: 85,
-                    dribbleSuccess: 58
-                }
-            },
-            doan: {
-                name: "堂安律",
-                team: "フライブルク",
-                stats: {
-                    speed: 82,
-                    shooting: 80,
-                    passing: 78,
-                    dribbling: 85,
-                    defending: 60,
-                    physical: 72
-                },
-                details: {
-                    goals: 6,
-                    assists: 9,
-                    matches: 29,
-                    minutes: 2320,
-                    passAccuracy: 84,
-                    dribbleSuccess: 70
-                }
+                
+                updateSelectOptions();
+            } catch (error) {
+                console.error('選手データ取得エラー:', error);
+                // フォールバックデータ
+                playerData = {
+                    kubo: {
+                        name: "久保建英",
+                        team: "レアル・ソシエダード",
+                        stats: { speed: 85, shooting: 78, passing: 82, dribbling: 88, defending: 45, physical: 65 },
+                        details: { goals: 8, assists: 12, matches: 28, minutes: 2240, passAccuracy: 87, dribbleSuccess: 68 }
+                    },
+                    mitoma: {
+                        name: "三笘薫",
+                        team: "ブライトン",
+                        stats: { speed: 88, shooting: 82, passing: 75, dribbling: 90, defending: 50, physical: 70 },
+                        details: { goals: 10, assists: 8, matches: 32, minutes: 2560, passAccuracy: 82, dribbleSuccess: 72 }
+                    }
+                };
+                updateSelectOptions();
             }
-        };
+        }
 
         // チームデータ
         const teamData = {
@@ -797,8 +768,8 @@
         }
 
         // 初期化
-        document.addEventListener('DOMContentLoaded', function() {
-            updateSelectOptions();
+        document.addEventListener('DOMContentLoaded', async function() {
+            await fetchPlayerData();
         });
     </script>
 </body>

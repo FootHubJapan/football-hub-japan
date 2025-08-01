@@ -416,103 +416,63 @@
     </div>
 
     <script>
-        // サンプルデータ
-        const samplePlayers = [
-            {
-                name: "久保建英",
-                team: "レアル・ソシエダード",
-                league: "ラ・リーガ",
-                age: 22,
-                position: "MF/FW",
-                stats: { goals: 8, assists: 12, matches: 28 }
-            },
-            {
-                name: "三笘薫",
-                team: "ブライトン",
-                league: "プレミアリーグ",
-                age: 26,
-                position: "FW",
-                stats: { goals: 10, assists: 8, matches: 32 }
-            },
-            {
-                name: "田中碧",
-                team: "デュッセルドルフ",
-                league: "ブンデスリーガ2部",
-                age: 24,
-                position: "MF",
-                stats: { goals: 5, assists: 15, matches: 30 }
-            },
-            {
-                name: "伊藤洋輝",
-                team: "シュトゥットガルト",
-                league: "ブンデスリーガ",
-                age: 24,
-                position: "DF",
-                stats: { goals: 2, assists: 4, matches: 25 }
-            },
-            {
-                name: "堂安律",
-                team: "フライブルク",
-                league: "ブンデスリーガ",
-                age: 25,
-                position: "MF",
-                stats: { goals: 6, assists: 9, matches: 29 }
-            }
-        ];
-
-        const sampleTeams = [
-            {
-                name: "浦和レッズ",
-                league: "J1リーグ",
-                country: "日本",
-                founded: 1950,
-                stats: { points: 65, wins: 20, draws: 5, losses: 9 }
-            },
-            {
-                name: "横浜F・マリノス",
-                league: "J1リーグ",
-                country: "日本",
-                founded: 1972,
-                stats: { points: 68, wins: 21, draws: 5, losses: 8 }
-            },
-            {
-                name: "川崎フロンターレ",
-                league: "J1リーグ",
-                country: "日本",
-                founded: 1955,
-                stats: { points: 58, wins: 17, draws: 7, losses: 10 }
-            }
-        ];
-
-        const sampleLeagues = [
-            {
-                name: "J1リーグ",
-                country: "日本",
-                teams: 18,
-                season: "2024",
-                stats: { totalMatches: 306, totalGoals: 856, avgGoals: 2.8 }
-            },
-            {
-                name: "プレミアリーグ",
-                country: "イングランド",
-                teams: 20,
-                season: "2023/24",
-                stats: { totalMatches: 380, totalGoals: 1084, avgGoals: 2.85 }
-            },
-            {
-                name: "ラ・リーガ",
-                country: "スペイン",
-                teams: 20,
-                season: "2023/24",
-                stats: { totalMatches: 380, totalGoals: 1056, avgGoals: 2.78 }
-            }
-        ];
-
+        // データ管理
         let currentTab = 'players';
-        let currentData = samplePlayers;
+        let currentData = [];
+        let allLeagues = [];
+        let allTeams = [];
+        let allPlayers = [];
+
+        // APIからデータを取得
+        async function fetchLeagues() {
+            try {
+                const response = await fetch('/api/leagues?country=Japan');
+                const data = await response.json();
+                allLeagues = data;
+                return data;
+            } catch (error) {
+                console.error('リーグデータ取得エラー:', error);
+                return [];
+            }
+        }
+
+        async function fetchTeams(leagueId) {
+            try {
+                const response = await fetch(`/api/teams?leagueId=${leagueId}`);
+                const data = await response.json();
+                allTeams = data;
+                return data;
+            } catch (error) {
+                console.error('チームデータ取得エラー:', error);
+                return [];
+            }
+        }
+
+        async function fetchPlayers(teamId) {
+            try {
+                const response = await fetch(`/api/players?teamId=${teamId}`);
+                const data = await response.json();
+                allPlayers = data;
+                return data;
+            } catch (error) {
+                console.error('選手データ取得エラー:', error);
+                return [];
+            }
+        }
+
+        async function searchPlayers(query) {
+            try {
+                const response = await fetch(`/api/search/players?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('選手検索エラー:', error);
+                return [];
+            }
+        }
 
         // タブ切り替え
-        function switchTab(tab) {
+        async function switchTab(tab) {
             currentTab = tab;
             
             // タブボタンのアクティブ状態を更新
@@ -526,13 +486,35 @@
             // データを更新
             switch(tab) {
                 case 'players':
-                    currentData = samplePlayers;
+                    if (allPlayers.length === 0) {
+                        // デフォルトでJ1リーグのチームから選手を取得
+                        const leagues = await fetchLeagues();
+                        if (leagues.length > 0) {
+                            const teams = await fetchTeams(leagues[0].id);
+                            if (teams.length > 0) {
+                                currentData = await fetchPlayers(teams[0].id);
+                            }
+                        }
+                    } else {
+                        currentData = allPlayers;
+                    }
                     break;
                 case 'teams':
-                    currentData = sampleTeams;
+                    if (allTeams.length === 0) {
+                        const leagues = await fetchLeagues();
+                        if (leagues.length > 0) {
+                            currentData = await fetchTeams(leagues[0].id);
+                        }
+                    } else {
+                        currentData = allTeams;
+                    }
                     break;
                 case 'leagues':
-                    currentData = sampleLeagues;
+                    if (allLeagues.length === 0) {
+                        currentData = await fetchLeagues();
+                    } else {
+                        currentData = allLeagues;
+                    }
                     break;
             }
             
@@ -632,46 +614,43 @@
         }
 
         // 検索機能
-        function searchData() {
+        async function searchData() {
             const searchType = document.getElementById('searchType').value;
-            const searchQuery = document.getElementById('searchQuery').value.toLowerCase();
+            const searchQuery = document.getElementById('searchQuery').value;
             const searchLeague = document.getElementById('searchLeague').value;
             
-            // タブを切り替え
-            switchTab(searchType);
-            
-            // 検索結果をフィルタリング
-            let filteredData = currentData.filter(item => {
-                let matches = true;
+            if (searchType === 'players' && searchQuery) {
+                // 選手検索APIを使用
+                currentData = await searchPlayers(searchQuery);
+                currentTab = 'players';
                 
-                if (searchQuery) {
-                    if (searchType === 'players') {
-                        matches = item.name.toLowerCase().includes(searchQuery) || 
-                                 item.team.toLowerCase().includes(searchQuery);
-                    } else if (searchType === 'teams') {
-                        matches = item.name.toLowerCase().includes(searchQuery);
-                    } else if (searchType === 'leagues') {
-                        matches = item.name.toLowerCase().includes(searchQuery);
-                    }
-                }
+                // タブを切り替え
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelector('.tab-btn[onclick*="players"]').classList.add('active');
                 
-                if (searchLeague && searchType === 'players') {
-                    matches = matches && item.league.toLowerCase().includes(searchLeague);
-                }
-                
-                return matches;
-            });
-            
-            // フィルタリングされたデータを表示
-            const tableBody = document.getElementById(searchType + 'TableBody');
-            tableBody.innerHTML = '';
-            
-            if (filteredData.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #888888;">検索結果が見つかりませんでした。</td></tr>';
+                document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+                document.getElementById('playersTab').style.display = 'block';
             } else {
-                currentData = filteredData;
-                renderData();
+                // 通常のタブ切り替え
+                await switchTab(searchType);
+                
+                // クライアントサイドでフィルタリング
+                if (searchQuery) {
+                    currentData = currentData.filter(item => {
+                        if (searchType === 'players') {
+                            return item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                   item.team.toLowerCase().includes(searchQuery.toLowerCase());
+                        } else if (searchType === 'teams') {
+                            return item.name.toLowerCase().includes(searchQuery.toLowerCase());
+                        } else if (searchType === 'leagues') {
+                            return item.name.toLowerCase().includes(searchQuery.toLowerCase());
+                        }
+                        return true;
+                    });
+                }
             }
+            
+            renderData();
         }
 
         // ページネーション
@@ -681,8 +660,9 @@
         }
 
         // 初期表示
-        document.addEventListener('DOMContentLoaded', function() {
-            renderData();
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 初期データを読み込み
+            await switchTab('leagues');
         });
     </script>
 </body>
