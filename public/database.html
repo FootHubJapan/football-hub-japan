@@ -299,42 +299,25 @@
             margin-bottom: 1rem;
         }
 
-        .api-input-group {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+        .api-info {
+            background: #2a2a2a;
+            border: 1px solid #333333;
+            border-radius: 5px;
+            padding: 1rem;
             margin-bottom: 1rem;
         }
 
-        .api-input-group label {
+        .api-info p {
             color: #cccccc;
-            font-weight: 500;
-            min-width: 200px;
+            margin-bottom: 0.5rem;
         }
 
-        .api-input-group input {
-            flex: 1;
-            padding: 0.8rem;
-            border: 1px solid #333333;
-            border-radius: 5px;
-            background: #2a2a2a;
-            color: #ffffff;
-            font-size: 1rem;
-        }
-
-        .api-btn {
-            background: #00ff88;
-            color: #000000;
-            padding: 0.8rem 1.5rem;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .api-btn:hover {
-            background: #00cc6a;
+        .api-info code {
+            background: #1a1a1a;
+            color: #00ff88;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: monospace;
         }
 
         .data-actions {
@@ -451,10 +434,9 @@
         <!-- API設定セクション -->
         <div class="api-config-section">
             <h3>データソース設定</h3>
-            <div class="api-input-group">
-                <label for="apiKeyInput">football-data.org APIキー:</label>
-                <input type="text" id="apiKeyInput" placeholder="APIキーを入力してください">
-                <button onclick="setApiKey()" class="api-btn">設定</button>
+            <div class="api-info">
+                <p>football-data.org APIキーはバックエンドで管理されています。</p>
+                <p>環境変数 <code>FOOTBALL_DATA_API_KEY</code> が設定されていることを確認してください。</p>
             </div>
             <div class="data-actions">
                 <button onclick="addSampleData()" class="action-btn">サンプルデータ追加</button>
@@ -740,14 +722,7 @@
 
         // API設定機能
         function setApiKey() {
-            const apiKey = document.getElementById('apiKeyInput').value.trim();
-            if (!apiKey) {
-                showApiStatus('APIキーを入力してください', 'error');
-                return;
-            }
-            
-            window.setFootballDataApiKey(apiKey);
-            showApiStatus('APIキーが設定されました', 'success');
+            showApiStatus('APIキーはバックエンドで管理されています', 'success');
         }
 
         function addSampleData() {
@@ -756,14 +731,8 @@
         }
 
         function importRealData() {
-            const apiKey = document.getElementById('apiKeyInput').value.trim();
-            if (!apiKey) {
-                showApiStatus('APIキーを設定してから実行してください', 'error');
-                return;
-            }
-            
             showApiStatus('実際のデータのインポートを開始しました。時間がかかる場合があります...', 'success');
-            window.importRealFootballData(apiKey);
+            window.importRealFootballData();
         }
 
         function showApiStatus(message, type) {

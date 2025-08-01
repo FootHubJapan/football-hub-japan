@@ -19,24 +19,17 @@ class FirebaseDataService {
         this.footballDataApiKey = null; // APIキーは後で設定
     }
 
-    // football-data.org APIキーを設定
+    // football-data.org APIキーを設定（バックエンドで管理）
     setApiKey(apiKey) {
-        this.footballDataApiKey = apiKey;
+        // APIキーはバックエンドの環境変数で管理されるため、
+        // フロントエンドでは設定不要
+        console.log('APIキーはバックエンドで管理されています');
     }
 
-    // football-data.org APIからデータを取得
+    // football-data.org APIからデータを取得（バックエンドプロキシ経由）
     async fetchFromFootballDataAPI(endpoint) {
-        if (!this.footballDataApiKey) {
-            console.warn('football-data.org APIキーが設定されていません');
-            return null;
-        }
-
         try {
-            const response = await fetch(`https://api.football-data.org/v4/${endpoint}`, {
-                headers: {
-                    'X-Auth-Token': this.footballDataApiKey
-                }
-            });
+            const response = await fetch(`/api/football-data/${endpoint}`);
 
             if (!response.ok) {
                 throw new Error(`API Error: ${response.status}`);
@@ -448,15 +441,11 @@ window.addSampleDataToFirestore = function() {
 };
 
 // 実際のサッカーデータをインポートする関数
-window.importRealFootballData = function(apiKey) {
-    if (apiKey) {
-        window.firebaseDataService.setApiKey(apiKey);
-    }
+window.importRealFootballData = function() {
     window.firebaseDataService.importRealFootballData();
 };
 
-// APIキーを設定する関数
+// APIキーを設定する関数（バックエンドで管理）
 window.setFootballDataApiKey = function(apiKey) {
-    window.firebaseDataService.setApiKey(apiKey);
-    console.log('football-data.org APIキーが設定されました');
+    console.log('APIキーはバックエンドで管理されています');
 }; 
