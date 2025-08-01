@@ -41,15 +41,30 @@ class FirebaseDataService {
     // Get all teams
     async getTeams() {
         try {
-            const snapshot = await this.db.collection('teams').get();
-            if (!snapshot.empty) {
-                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            } else {
-                console.log('No teams found in Firestore, using fallback data');
-                return this.getFallbackTeams();
+            // First try to get cached data
+            const cachedTeams = await this.getCachedTeams();
+            if (cachedTeams.length > 0) {
+                console.log(`Using ${cachedTeams.length} cached teams`);
+                return cachedTeams;
             }
+
+            // If no cached data, try to import
+            console.log('No cached teams found, checking if data needs to be imported...');
+            const isImported = await this.isDataImported();
+            
+            if (isImported) {
+                // Data exists but failed to load, try again
+                const retryTeams = await this.getCachedTeams();
+                if (retryTeams.length > 0) {
+                    return retryTeams;
+                }
+            }
+
+            // If still no data, use fallback
+            console.log('Using fallback teams data');
+            return this.getFallbackTeams();
         } catch (error) {
-            console.error('Error fetching teams:', error);
+            console.error('Error getting teams:', error);
             return this.getFallbackTeams();
         }
     }
@@ -57,15 +72,30 @@ class FirebaseDataService {
     // Get all players
     async getPlayers() {
         try {
-            const snapshot = await this.db.collection('players').get();
-            if (!snapshot.empty) {
-                return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            } else {
-                console.log('No players found in Firestore, using fallback data');
-                return this.getFallbackPlayers();
+            // First try to get cached data
+            const cachedPlayers = await this.getCachedPlayers();
+            if (cachedPlayers.length > 0) {
+                console.log(`Using ${cachedPlayers.length} cached players`);
+                return cachedPlayers;
             }
+
+            // If no cached data, try to import
+            console.log('No cached players found, checking if data needs to be imported...');
+            const isImported = await this.isDataImported();
+            
+            if (isImported) {
+                // Data exists but failed to load, try again
+                const retryPlayers = await this.getCachedPlayers();
+                if (retryPlayers.length > 0) {
+                    return retryPlayers;
+                }
+            }
+
+            // If still no data, use fallback
+            console.log('Using fallback players data');
+            return this.getFallbackPlayers();
         } catch (error) {
-            console.error('Error fetching players:', error);
+            console.error('Error getting players:', error);
             return this.getFallbackPlayers();
         }
     }
@@ -886,6 +916,160 @@ class FirebaseDataService {
             'FW': 'Forward'
         };
         return positionMap[position] || position;
+    }
+
+    // Check if data is already imported and cached
+    async isDataImported() {
+        try {
+            const snapshot = await this.db.collection('players').limit(1).get();
+            return !snapshot.empty;
+        } catch (error) {
+            console.error('Error checking data import status:', error);
+            return false;
+        }
+    }
+
+    // Get cached data from Firebase
+    async getCachedPlayers() {
+        try {
+            console.log('Loading cached players from Firebase...');
+            const snapshot = await this.db.collection('players').get();
+            if (snapshot.empty) {
+                console.log('No cached players found');
+                return [];
+            }
+            
+            const players = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            console.log(`Loaded ${players.length} cached players`);
+            return players;
+        } catch (error) {
+            console.error('Error loading cached players:', error);
+            return [];
+        }
+    }
+
+    async getCachedTeams() {
+        try {
+            console.log('Loading cached teams from Firebase...');
+            const snapshot = await this.db.collection('teams').get();
+            if (snapshot.empty) {
+                console.log('No cached teams found');
+                return [];
+            }
+            
+            const teams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            console.log(`Loaded ${teams.length} cached teams`);
+            return teams;
+        } catch (error) {
+            console.error('Error loading cached teams:', error);
+            return [];
+        }
+    }
+
+    // Clear all cached data
+    async clearCachedData() {
+        try {
+            console.log('Clearing cached data...');
+            
+            // Clear players
+            const playersSnapshot = await this.db.collection('players').get();
+            const playerBatch = this.db.batch();
+            playersSnapshot.docs.forEach(doc => {
+                playerBatch.delete(doc.ref);
+            });
+            await playerBatch.commit();
+            
+            // Clear teams
+            const teamsSnapshot = await this.db.collection('teams').get();
+            const teamBatch = this.db.batch();
+            teamsSnapshot.docs.forEach(doc => {
+                teamBatch.delete(doc.ref);
+            });
+            await teamBatch.commit();
+            
+            console.log('Cached data cleared successfully');
+        } catch (error) {
+            console.error('Error clearing cached data:', error);
+        }
+    }
+
+    // Check data status and return detailed information
+    async checkDataStatus() {
+        try {
+            const playersSnapshot = await this.db.collection('players').get();
+            const teamsSnapshot = await this.db.collection('teams').get();
+            
+            const playerCount = playersSnapshot.size;
+            const teamCount = teamsSnapshot.size;
+            
+            if (playerCount > 0 && teamCount > 0) {
+                return {
+                    type: 'success',
+                    message: `データベースに ${playerCount} 人の選手と ${teamCount} チームが保存されています`,
+                    playerCount,
+                    teamCount,
+                    isImported: true
+                };
+            } else if (playerCount > 0) {
+                return {
+                    type: 'warning',
+                    message: `選手データのみ保存されています (${playerCount}人)`,
+                    playerCount,
+                    teamCount: 0,
+                    isImported: true
+                };
+            } else if (teamCount > 0) {
+                return {
+                    type: 'warning',
+                    message: `チームデータのみ保存されています (${teamCount}チーム)`,
+                    playerCount: 0,
+                    teamCount,
+                    isImported: true
+                };
+            } else {
+                return {
+                    type: 'info',
+                    message: 'データベースにデータが保存されていません',
+                    playerCount: 0,
+                    teamCount: 0,
+                    isImported: false
+                };
+            }
+        } catch (error) {
+            console.error('Error checking data status:', error);
+            return {
+                type: 'error',
+                message: 'データベース状態の確認中にエラーが発生しました',
+                playerCount: 0,
+                teamCount: 0,
+                isImported: false
+            };
+        }
+    }
+
+    // Refresh data (clear and re-import)
+    async refreshData() {
+        try {
+            console.log('Starting data refresh...');
+            
+            // Clear existing data
+            await this.clearCachedData();
+            
+            // Re-import data
+            await this.importRealFootballData();
+            
+            console.log('Data refresh completed');
+            return {
+                type: 'success',
+                message: 'データの更新が完了しました'
+            };
+        } catch (error) {
+            console.error('Error refreshing data:', error);
+            return {
+                type: 'error',
+                message: 'データ更新中にエラーが発生しました'
+            };
+        }
     }
 }
 

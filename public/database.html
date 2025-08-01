@@ -859,6 +859,85 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+        .data-management-section {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #333;
+        }
+
+        .data-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .data-controls .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        .data-status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .data-status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .data-status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .data-status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .data-status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
     </style>
 </head>
 <body>
@@ -912,18 +991,16 @@
             </div>
         </div>
 
-        <!-- API設定セクション -->
-        <div class="api-config-section">
-            <h3>データソース設定</h3>
-            <div class="api-info">
-                <p>football-data.org APIキーはバックエンドで管理されています。</p>
-                <p>環境変数 <code>FOOTBALL_DATA_API_KEY</code> が設定されていることを確認してください。</p>
+        <!-- Data Management Section -->
+        <div class="data-management-section">
+            <h3>データ管理</h3>
+            <div class="data-controls">
+                <button onclick="checkDataStatus()" class="btn btn-info">データ状況確認</button>
+                <button onclick="importRealData()" class="btn btn-primary">実際データインポート</button>
+                <button onclick="clearCachedData()" class="btn btn-warning">キャッシュクリア</button>
+                <button onclick="refreshData()" class="btn btn-success">データ更新</button>
             </div>
-            <div class="data-actions">
-                <button onclick="addSampleData()" class="action-btn">サンプルデータ追加</button>
-                <button onclick="importRealData()" class="action-btn primary">実際のデータインポート</button>
-            </div>
-            <div id="apiStatus" class="api-status"></div>
+            <div id="dataStatus" class="data-status"></div>
         </div>
 
         <div class="data-section">
@@ -1744,6 +1821,68 @@
             
             currentPage = 1;
             renderData();
+        }
+
+        // データ状況確認
+        async function checkDataStatus() {
+            if (!window.firebaseDataService) {
+                showDataStatus('FirebaseDataServiceが初期化されていません', 'error');
+                return;
+            }
+
+            try {
+                const status = await window.firebaseDataService.checkDataStatus();
+                showDataStatus(`データベースの状態: ${status.message}`, status.type);
+                console.log('データベース状態:', status);
+            } catch (error) {
+                showDataStatus('データベース状態の確認中にエラーが発生しました', 'error');
+                console.error('データベース状態確認エラー:', error);
+            }
+        }
+
+        // キャッシュクリア
+        async function clearCachedData() {
+            if (!window.firebaseDataService) {
+                showDataStatus('FirebaseDataServiceが初期化されていません', 'error');
+                return;
+            }
+
+            try {
+                await window.firebaseDataService.clearCachedData();
+                showDataStatus('キャッシュがクリアされました', 'success');
+                console.log('キャッシュクリア完了');
+            } catch (error) {
+                showDataStatus('キャッシュクリア中にエラーが発生しました', 'error');
+                console.error('キャッシュクリアエラー:', error);
+            }
+        }
+
+        // データ更新
+        async function refreshData() {
+            if (!window.firebaseDataService) {
+                showDataStatus('FirebaseDataServiceが初期化されていません', 'error');
+                return;
+            }
+
+            try {
+                await window.firebaseDataService.refreshData();
+                showDataStatus('データベースの更新を開始しました', 'success');
+                console.log('データ更新開始');
+            } catch (error) {
+                showDataStatus('データ更新中にエラーが発生しました', 'error');
+                console.error('データ更新エラー:', error);
+            }
+        }
+
+        // データ状態表示
+        function showDataStatus(message, type) {
+            const statusElement = document.getElementById('dataStatus');
+            statusElement.textContent = message;
+            statusElement.className = `data-status ${type}`;
+            
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 5000);
         }
 
         // 初期表示
