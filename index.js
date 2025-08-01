@@ -34,6 +34,16 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
+// サッカーデータベース
+app.get('/database', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'database.html'));
+});
+
+// レーダーチャート比較
+app.get('/radar', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'radar.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

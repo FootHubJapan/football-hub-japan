@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>レーダーチャート比較 - Football Hub Japan</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #1a1a1a;
+            border-bottom: 2px solid #00ff88;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            color: #00ff88;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: #333333;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            color: #00ff88;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .page-subtitle {
+            color: #cccccc;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .controls-section {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .controls-title {
+            color: #00ff88;
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .comparison-type {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .type-btn {
+            background: #333333;
+            color: #ffffff;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .type-btn.active {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .type-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .selection-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .selection-group {
+            background: #2a2a2a;
+            border: 1px solid #333333;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+
+        .selection-title {
+            color: #00ff88;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .selection-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #333333;
+            border-radius: 5px;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .selection-input:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        .compare-btn {
+            background: #00ff88;
+            color: #000000;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            font-size: 1.1rem;
+        }
+
+        .compare-btn:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+        }
+
+        .chart-section {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 500px;
+            margin: 2rem 0;
+        }
+
+        .chart-title {
+            color: #00ff88;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .stats-card {
+            background: #2a2a2a;
+            border: 1px solid #333333;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+
+        .stats-title {
+            color: #00ff88;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: #1a1a1a;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            color: #00ff88;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #888888;
+            font-size: 0.9rem;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .legend-label {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .selection-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .comparison-type {
+                flex-direction: column;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .legend {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">⚽ Football Hub Japan</div>
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="window.location.href='/dashboard'">ダッシュボード</button>
+            <button class="nav-btn" onclick="window.location.href='/database'">データベース</button>
+            <button class="nav-btn" onclick="window.location.href='/'">ログアウト</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <h1 class="page-title">レーダーチャート比較</h1>
+        <p class="page-subtitle">選手やチームのパフォーマンスを視覚的に比較</p>
+
+        <div class="controls-section">
+            <h2 class="controls-title">比較設定</h2>
+            
+            <div class="comparison-type">
+                <button class="type-btn active" onclick="switchType('players')">選手比較</button>
+                <button class="type-btn" onclick="switchType('teams')">チーム比較</button>
+            </div>
+
+            <div class="selection-controls">
+                <div class="selection-group">
+                    <h3 class="selection-title">🏃‍♂️ 比較対象 A</h3>
+                    <select id="playerA" class="selection-input">
+                        <option value="">選手を選択してください</option>
+                        <option value="kubo">久保建英</option>
+                        <option value="mitoma">三笘薫</option>
+                        <option value="tanaka">田中碧</option>
+                        <option value="ito">伊藤洋輝</option>
+                        <option value="doan">堂安律</option>
+                    </select>
+                </div>
+
+                <div class="selection-group">
+                    <h3 class="selection-title">🏃‍♂️ 比較対象 B</h3>
+                    <select id="playerB" class="selection-input">
+                        <option value="">選手を選択してください</option>
+                        <option value="kubo">久保建英</option>
+                        <option value="mitoma">三笘薫</option>
+                        <option value="tanaka">田中碧</option>
+                        <option value="ito">伊藤洋輝</option>
+                        <option value="doan">堂安律</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="compare-btn" onclick="compareData()">📊 比較開始</button>
+        </div>
+
+        <div class="chart-section">
+            <h2 class="chart-title">パフォーマンス比較</h2>
+            <div class="chart-container">
+                <canvas id="radarChart"></canvas>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #00ff88;"></div>
+                    <span class="legend-label" id="legendA">選手A</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff6b6b;"></div>
+                    <span class="legend-label" id="legendB">選手B</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <div class="stats-card">
+                <h3 class="stats-title" id="statsTitleA">選手A 詳細統計</h3>
+                <div class="stats-grid" id="statsGridA">
+                    <!-- 統計データはJavaScriptで動的に生成 -->
+                </div>
+            </div>
+
+            <div class="stats-card">
+                <h3 class="stats-title" id="statsTitleB">選手B 詳細統計</h3>
+                <div class="stats-grid" id="statsGridB">
+                    <!-- 統計データはJavaScriptで動的に生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentType = 'players';
+        let radarChart = null;
+
+        // 選手データ
+        const playerData = {
+            kubo: {
+                name: "久保建英",
+                team: "レアル・ソシエダード",
+                stats: {
+                    speed: 85,
+                    shooting: 78,
+                    passing: 82,
+                    dribbling: 88,
+                    defending: 45,
+                    physical: 65
+                },
+                details: {
+                    goals: 8,
+                    assists: 12,
+                    matches: 28,
+                    minutes: 2240,
+                    passAccuracy: 87,
+                    dribbleSuccess: 68
+                }
+            },
+            mitoma: {
+                name: "三笘薫",
+                team: "ブライトン",
+                stats: {
+                    speed: 88,
+                    shooting: 82,
+                    passing: 75,
+                    dribbling: 90,
+                    defending: 50,
+                    physical: 70
+                },
+                details: {
+                    goals: 10,
+                    assists: 8,
+                    matches: 32,
+                    minutes: 2560,
+                    passAccuracy: 82,
+                    dribbleSuccess: 72
+                }
+            },
+            tanaka: {
+                name: "田中碧",
+                team: "デュッセルドルフ",
+                stats: {
+                    speed: 75,
+                    shooting: 70,
+                    passing: 85,
+                    dribbling: 78,
+                    defending: 80,
+                    physical: 75
+                },
+                details: {
+                    goals: 5,
+                    assists: 15,
+                    matches: 30,
+                    minutes: 2400,
+                    passAccuracy: 89,
+                    dribbleSuccess: 65
+                }
+            },
+            ito: {
+                name: "伊藤洋輝",
+                team: "シュトゥットガルト",
+                stats: {
+                    speed: 70,
+                    shooting: 65,
+                    passing: 80,
+                    dribbling: 72,
+                    defending: 88,
+                    physical: 82
+                },
+                details: {
+                    goals: 2,
+                    assists: 4,
+                    matches: 25,
+                    minutes: 2000,
+                    passAccuracy: 85,
+                    dribbleSuccess: 58
+                }
+            },
+            doan: {
+                name: "堂安律",
+                team: "フライブルク",
+                stats: {
+                    speed: 82,
+                    shooting: 80,
+                    passing: 78,
+                    dribbling: 85,
+                    defending: 60,
+                    physical: 72
+                },
+                details: {
+                    goals: 6,
+                    assists: 9,
+                    matches: 29,
+                    minutes: 2320,
+                    passAccuracy: 84,
+                    dribbleSuccess: 70
+                }
+            }
+        };
+
+        // チームデータ
+        const teamData = {
+            urawa: {
+                name: "浦和レッズ",
+                league: "J1リーグ",
+                stats: {
+                    attack: 78,
+                    midfield: 82,
+                    defense: 85,
+                    speed: 75,
+                    technique: 80,
+                    physical: 78
+                },
+                details: {
+                    points: 65,
+                    wins: 20,
+                    draws: 5,
+                    losses: 9,
+                    goalsFor: 58,
+                    goalsAgainst: 32
+                }
+            },
+            yokohama: {
+                name: "横浜F・マリノス",
+                league: "J1リーグ",
+                stats: {
+                    attack: 85,
+                    midfield: 80,
+                    defense: 78,
+                    speed: 82,
+                    technique: 85,
+                    physical: 75
+                },
+                details: {
+                    points: 68,
+                    wins: 21,
+                    draws: 5,
+                    losses: 8,
+                    goalsFor: 65,
+                    goalsAgainst: 35
+                }
+            },
+            kawasaki: {
+                name: "川崎フロンターレ",
+                league: "J1リーグ",
+                stats: {
+                    attack: 82,
+                    midfield: 85,
+                    defense: 75,
+                    speed: 80,
+                    technique: 88,
+                    physical: 72
+                },
+                details: {
+                    points: 58,
+                    wins: 17,
+                    draws: 7,
+                    losses: 10,
+                    goalsFor: 52,
+                    goalsAgainst: 38
+                }
+            }
+        };
+
+        // 比較タイプを切り替え
+        function switchType(type) {
+            currentType = type;
+            
+            // ボタンのアクティブ状態を更新
+            document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // セレクトボックスのオプションを更新
+            updateSelectOptions();
+            
+            // チャートをクリア
+            if (radarChart) {
+                radarChart.destroy();
+                radarChart = null;
+            }
+        }
+
+        // セレクトボックスのオプションを更新
+        function updateSelectOptions() {
+            const selectA = document.getElementById('playerA');
+            const selectB = document.getElementById('playerB');
+            
+            if (currentType === 'players') {
+                selectA.id = 'playerA';
+                selectB.id = 'playerB';
+                selectA.innerHTML = '<option value="">選手を選択してください</option>';
+                selectB.innerHTML = '<option value="">選手を選択してください</option>';
+                
+                Object.keys(playerData).forEach(key => {
+                    const optionA = document.createElement('option');
+                    const optionB = document.createElement('option');
+                    optionA.value = key;
+                    optionB.value = key;
+                    optionA.textContent = playerData[key].name;
+                    optionB.textContent = playerData[key].name;
+                    selectA.appendChild(optionA);
+                    selectB.appendChild(optionB);
+                });
+            } else {
+                selectA.id = 'teamA';
+                selectB.id = 'teamB';
+                selectA.innerHTML = '<option value="">チームを選択してください</option>';
+                selectB.innerHTML = '<option value="">チームを選択してください</option>';
+                
+                Object.keys(teamData).forEach(key => {
+                    const optionA = document.createElement('option');
+                    const optionB = document.createElement('option');
+                    optionA.value = key;
+                    optionB.value = key;
+                    optionA.textContent = teamData[key].name;
+                    optionB.textContent = teamData[key].name;
+                    selectA.appendChild(optionA);
+                    selectB.appendChild(optionB);
+                });
+            }
+        }
+
+        // データを比較
+        function compareData() {
+            const selectA = currentType === 'players' ? document.getElementById('playerA') : document.getElementById('teamA');
+            const selectB = currentType === 'players' ? document.getElementById('playerB') : document.getElementById('teamB');
+            
+            const valueA = selectA.value;
+            const valueB = selectB.value;
+            
+            if (!valueA || !valueB) {
+                alert('比較対象を両方選択してください。');
+                return;
+            }
+            
+            if (valueA === valueB) {
+                alert('異なる比較対象を選択してください。');
+                return;
+            }
+            
+            const dataA = currentType === 'players' ? playerData[valueA] : teamData[valueA];
+            const dataB = currentType === 'players' ? playerData[valueB] : teamData[valueB];
+            
+            createRadarChart(dataA, dataB);
+            updateStats(dataA, dataB);
+        }
+
+        // レーダーチャートを作成
+        function createRadarChart(dataA, dataB) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            if (radarChart) {
+                radarChart.destroy();
+            }
+            
+            const labels = currentType === 'players' 
+                ? ['スピード', 'シュート', 'パス', 'ドリブル', 'ディフェンス', 'フィジカル']
+                : ['攻撃力', 'ミッドフィールド', 'ディフェンス', 'スピード', 'テクニック', 'フィジカル'];
+            
+            const statsA = Object.values(dataA.stats);
+            const statsB = Object.values(dataB.stats);
+            
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: dataA.name,
+                            data: statsA,
+                            backgroundColor: 'rgba(0, 255, 136, 0.2)',
+                            borderColor: '#00ff88',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#00ff88',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2
+                        },
+                        {
+                            label: dataB.name,
+                            data: statsB,
+                            backgroundColor: 'rgba(255, 107, 107, 0.2)',
+                            borderColor: '#ff6b6b',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#ff6b6b',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                color: '#cccccc',
+                                backdropColor: 'transparent'
+                            },
+                            grid: {
+                                color: '#333333'
+                            },
+                            pointLabels: {
+                                color: '#cccccc',
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // 凡例を更新
+            document.getElementById('legendA').textContent = dataA.name;
+            document.getElementById('legendB').textContent = dataB.name;
+        }
+
+        // 統計情報を更新
+        function updateStats(dataA, dataB) {
+            const detailsA = dataA.details;
+            const detailsB = dataB.details;
+            
+            if (currentType === 'players') {
+                document.getElementById('statsTitleA').textContent = `${dataA.name} 詳細統計`;
+                document.getElementById('statsTitleB').textContent = `${dataB.name} 詳細統計`;
+                
+                document.getElementById('statsGridA').innerHTML = `
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsA.goals}</div>
+                        <div class="stat-label">得点</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsA.assists}</div>
+                        <div class="stat-label">アシスト</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsA.matches}</div>
+                        <div class="stat-label">試合数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsA.passAccuracy}%</div>
+                        <div class="stat-label">パス成功率</div>
+                    </div>
+                `;
+                
+                document.getElementById('statsGridB').innerHTML = `
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsB.goals}</div>
+                        <div class="stat-label">得点</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsB.assists}</div>
+                        <div class="stat-label">アシスト</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsB.matches}</div>
+                        <div class="stat-label">試合数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsB.passAccuracy}%</div>
+                        <div class="stat-label">パス成功率</div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('statsTitleA').textContent = `${dataA.name} 詳細統計`;
+                document.getElementById('statsTitleB').textContent = `${dataB.name} 詳細統計`;
+                
+                document.getElementById('statsGridA').innerHTML = `
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsA.points}</div>
+                        <div class="stat-label">勝点</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsA.wins}</div>
+                        <div class="stat-label">勝利</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsA.goalsFor}</div>
+                        <div class="stat-label">得点</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsA.goalsAgainst}</div>
+                        <div class="stat-label">失点</div>
+                    </div>
+                `;
+                
+                document.getElementById('statsGridB').innerHTML = `
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsB.points}</div>
+                        <div class="stat-label">勝点</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsB.wins}</div>
+                        <div class="stat-label">勝利</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsB.goalsFor}</div>
+                        <div class="stat-label">得点</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${detailsB.goalsAgainst}</div>
+                        <div class="stat-label">失点</div>
+                    </div>
+                `;
+            }
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSelectOptions();
+        });
+    </script>
+</body>
+</html> 

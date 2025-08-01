@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サッカーデータベース - Football Hub Japan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #1a1a1a;
+            border-bottom: 2px solid #00ff88;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            color: #00ff88;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: #333333;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            color: #00ff88;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .page-subtitle {
+            color: #cccccc;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .search-section {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-title {
+            color: #00ff88;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .search-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-group label {
+            color: #cccccc;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .search-input {
+            padding: 0.8rem;
+            border: 1px solid #333333;
+            border-radius: 5px;
+            background: #2a2a2a;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        .search-btn {
+            background: #00ff88;
+            color: #000000;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .search-btn:hover {
+            background: #00cc6a;
+        }
+
+        .data-section {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .data-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #333333;
+        }
+
+        .tab-btn {
+            background: none;
+            color: #cccccc;
+            padding: 1rem 2rem;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: #00ff88;
+            border-bottom-color: #00ff88;
+        }
+
+        .tab-btn:hover {
+            color: #00ff88;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .data-table th {
+            background: #2a2a2a;
+            color: #00ff88;
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 2px solid #333333;
+            font-weight: bold;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #333333;
+            color: #cccccc;
+        }
+
+        .data-table tr:hover {
+            background: #2a2a2a;
+        }
+
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #00ff88;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000000;
+            margin-right: 1rem;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .player-name {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .player-position {
+            color: #888888;
+            font-size: 0.9rem;
+        }
+
+        .team-badge {
+            background: #00ff88;
+            color: #000000;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.5rem;
+            background: #2a2a2a;
+            border-radius: 5px;
+        }
+
+        .stat-value {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .stat-label {
+            color: #888888;
+            font-size: 0.8rem;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .page-btn {
+            background: #333333;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .page-btn.active {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .page-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        @media (max-width: 768px) {
+            .search-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .data-tabs {
+                flex-direction: column;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">⚽ Football Hub Japan</div>
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="window.location.href='/dashboard'">ダッシュボード</button>
+            <button class="nav-btn" onclick="window.location.href='/radar'">レーダーチャート</button>
+            <button class="nav-btn" onclick="window.location.href='/'">ログアウト</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <h1 class="page-title">サッカーデータベース</h1>
+        <p class="page-subtitle">世界中のリーグ、チーム、選手の詳細なデータを網羅</p>
+
+        <div class="search-section">
+            <h2 class="search-title">データ検索</h2>
+            <div class="search-controls">
+                <div class="search-group">
+                    <label for="searchType">検索タイプ</label>
+                    <select id="searchType" class="search-input">
+                        <option value="players">選手</option>
+                        <option value="teams">チーム</option>
+                        <option value="leagues">リーグ</option>
+                    </select>
+                </div>
+                <div class="search-group">
+                    <label for="searchQuery">検索キーワード</label>
+                    <input type="text" id="searchQuery" class="search-input" placeholder="選手名、チーム名、リーグ名...">
+                </div>
+                <div class="search-group">
+                    <label for="searchLeague">リーグ</label>
+                    <select id="searchLeague" class="search-input">
+                        <option value="">すべてのリーグ</option>
+                        <option value="j1">J1リーグ</option>
+                        <option value="j2">J2リーグ</option>
+                        <option value="premier">プレミアリーグ</option>
+                        <option value="laliga">ラ・リーガ</option>
+                        <option value="bundesliga">ブンデスリーガ</option>
+                        <option value="seriea">セリエA</option>
+                        <option value="ligue1">リーグ・アン</option>
+                    </select>
+                </div>
+                <button class="search-btn" onclick="searchData()">🔍 検索</button>
+            </div>
+        </div>
+
+        <div class="data-section">
+            <div class="data-tabs">
+                <button class="tab-btn active" onclick="switchTab('players')">選手データ</button>
+                <button class="tab-btn" onclick="switchTab('teams')">チームデータ</button>
+                <button class="tab-btn" onclick="switchTab('leagues')">リーグデータ</button>
+            </div>
+
+            <div id="playersTab" class="tab-content">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>選手</th>
+                            <th>チーム</th>
+                            <th>リーグ</th>
+                            <th>年齢</th>
+                            <th>ポジション</th>
+                            <th>統計</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playersTableBody">
+                        <!-- データはJavaScriptで動的に生成 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="teamsTab" class="tab-content" style="display: none;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>チーム</th>
+                            <th>リーグ</th>
+                            <th>国</th>
+                            <th>創設年</th>
+                            <th>統計</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teamsTableBody">
+                        <!-- データはJavaScriptで動的に生成 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="leaguesTab" class="tab-content" style="display: none;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>リーグ</th>
+                            <th>国</th>
+                            <th>チーム数</th>
+                            <th>シーズン</th>
+                            <th>統計</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaguesTableBody">
+                        <!-- データはJavaScriptで動的に生成 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <button class="page-btn" onclick="changePage(-1)">← 前へ</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn" onclick="changePage(1)">次へ →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // サンプルデータ
+        const samplePlayers = [
+            {
+                name: "久保建英",
+                team: "レアル・ソシエダード",
+                league: "ラ・リーガ",
+                age: 22,
+                position: "MF/FW",
+                stats: { goals: 8, assists: 12, matches: 28 }
+            },
+            {
+                name: "三笘薫",
+                team: "ブライトン",
+                league: "プレミアリーグ",
+                age: 26,
+                position: "FW",
+                stats: { goals: 10, assists: 8, matches: 32 }
+            },
+            {
+                name: "田中碧",
+                team: "デュッセルドルフ",
+                league: "ブンデスリーガ2部",
+                age: 24,
+                position: "MF",
+                stats: { goals: 5, assists: 15, matches: 30 }
+            },
+            {
+                name: "伊藤洋輝",
+                team: "シュトゥットガルト",
+                league: "ブンデスリーガ",
+                age: 24,
+                position: "DF",
+                stats: { goals: 2, assists: 4, matches: 25 }
+            },
+            {
+                name: "堂安律",
+                team: "フライブルク",
+                league: "ブンデスリーガ",
+                age: 25,
+                position: "MF",
+                stats: { goals: 6, assists: 9, matches: 29 }
+            }
+        ];
+
+        const sampleTeams = [
+            {
+                name: "浦和レッズ",
+                league: "J1リーグ",
+                country: "日本",
+                founded: 1950,
+                stats: { points: 65, wins: 20, draws: 5, losses: 9 }
+            },
+            {
+                name: "横浜F・マリノス",
+                league: "J1リーグ",
+                country: "日本",
+                founded: 1972,
+                stats: { points: 68, wins: 21, draws: 5, losses: 8 }
+            },
+            {
+                name: "川崎フロンターレ",
+                league: "J1リーグ",
+                country: "日本",
+                founded: 1955,
+                stats: { points: 58, wins: 17, draws: 7, losses: 10 }
+            }
+        ];
+
+        const sampleLeagues = [
+            {
+                name: "J1リーグ",
+                country: "日本",
+                teams: 18,
+                season: "2024",
+                stats: { totalMatches: 306, totalGoals: 856, avgGoals: 2.8 }
+            },
+            {
+                name: "プレミアリーグ",
+                country: "イングランド",
+                teams: 20,
+                season: "2023/24",
+                stats: { totalMatches: 380, totalGoals: 1084, avgGoals: 2.85 }
+            },
+            {
+                name: "ラ・リーガ",
+                country: "スペイン",
+                teams: 20,
+                season: "2023/24",
+                stats: { totalMatches: 380, totalGoals: 1056, avgGoals: 2.78 }
+            }
+        ];
+
+        let currentTab = 'players';
+        let currentData = samplePlayers;
+
+        // タブ切り替え
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // タブボタンのアクティブ状態を更新
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // タブコンテンツを切り替え
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            document.getElementById(tab + 'Tab').style.display = 'block';
+            
+            // データを更新
+            switch(tab) {
+                case 'players':
+                    currentData = samplePlayers;
+                    break;
+                case 'teams':
+                    currentData = sampleTeams;
+                    break;
+                case 'leagues':
+                    currentData = sampleLeagues;
+                    break;
+            }
+            
+            renderData();
+        }
+
+        // データをレンダリング
+        function renderData() {
+            const tableBody = document.getElementById(currentTab + 'TableBody');
+            tableBody.innerHTML = '';
+            
+            currentData.forEach(item => {
+                const row = document.createElement('tr');
+                
+                if (currentTab === 'players') {
+                    row.innerHTML = `
+                        <td>
+                            <div class="player-info">
+                                <div class="player-avatar">${item.name.charAt(0)}</div>
+                                <div>
+                                    <div class="player-name">${item.name}</div>
+                                    <div class="player-position">${item.position}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="team-badge">${item.team}</span></td>
+                        <td>${item.league}</td>
+                        <td>${item.age}歳</td>
+                        <td>${item.position}</td>
+                        <td>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-value">${item.stats.goals}</div>
+                                    <div class="stat-label">得点</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${item.stats.assists}</div>
+                                    <div class="stat-label">アシスト</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${item.stats.matches}</div>
+                                    <div class="stat-label">試合数</div>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                } else if (currentTab === 'teams') {
+                    row.innerHTML = `
+                        <td><span class="team-badge">${item.name}</span></td>
+                        <td>${item.league}</td>
+                        <td>${item.country}</td>
+                        <td>${item.founded}</td>
+                        <td>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-value">${item.stats.points}</div>
+                                    <div class="stat-label">勝点</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${item.stats.wins}</div>
+                                    <div class="stat-label">勝利</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${item.stats.draws}</div>
+                                    <div class="stat-label">引分</div>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                } else if (currentTab === 'leagues') {
+                    row.innerHTML = `
+                        <td><span class="team-badge">${item.name}</span></td>
+                        <td>${item.country}</td>
+                        <td>${item.teams}チーム</td>
+                        <td>${item.season}</td>
+                        <td>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-value">${item.stats.totalMatches}</div>
+                                    <div class="stat-label">試合数</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${item.stats.totalGoals}</div>
+                                    <div class="stat-label">総得点</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${item.stats.avgGoals}</div>
+                                    <div class="stat-label">平均得点</div>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                }
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // 検索機能
+        function searchData() {
+            const searchType = document.getElementById('searchType').value;
+            const searchQuery = document.getElementById('searchQuery').value.toLowerCase();
+            const searchLeague = document.getElementById('searchLeague').value;
+            
+            // タブを切り替え
+            switchTab(searchType);
+            
+            // 検索結果をフィルタリング
+            let filteredData = currentData.filter(item => {
+                let matches = true;
+                
+                if (searchQuery) {
+                    if (searchType === 'players') {
+                        matches = item.name.toLowerCase().includes(searchQuery) || 
+                                 item.team.toLowerCase().includes(searchQuery);
+                    } else if (searchType === 'teams') {
+                        matches = item.name.toLowerCase().includes(searchQuery);
+                    } else if (searchType === 'leagues') {
+                        matches = item.name.toLowerCase().includes(searchQuery);
+                    }
+                }
+                
+                if (searchLeague && searchType === 'players') {
+                    matches = matches && item.league.toLowerCase().includes(searchLeague);
+                }
+                
+                return matches;
+            });
+            
+            // フィルタリングされたデータを表示
+            const tableBody = document.getElementById(searchType + 'TableBody');
+            tableBody.innerHTML = '';
+            
+            if (filteredData.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #888888;">検索結果が見つかりませんでした。</td></tr>';
+            } else {
+                currentData = filteredData;
+                renderData();
+            }
+        }
+
+        // ページネーション
+        function changePage(direction) {
+            // 実装予定
+            alert('ページネーション機能は準備中です');
+        }
+
+        // 初期表示
+        document.addEventListener('DOMContentLoaded', function() {
+            renderData();
+        });
+    </script>
+</body>
+</html> 

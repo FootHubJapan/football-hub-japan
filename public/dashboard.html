@@ -419,7 +419,13 @@
                 'ranking': 'ランキングシステム'
             };
             
-            alert(`${features[feature]}機能は準備中です。\n\nこの機能は現在開発中で、近日中にリリース予定です。`);
+            if (feature === 'database') {
+                window.location.href = '/database';
+            } else if (feature === 'radar') {
+                window.location.href = '/radar';
+            } else {
+                alert(`${features[feature]}機能は準備中です。\n\nこの機能は現在開発中で、近日中にリリース予定です。`);
+            }
         }
 
         // ログアウト
