@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: football-hub-japan
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    repo: https://github.com/FootHubJapan/football-hub-japan
+    branch: cursor/football-hub-japan-platform-design-9920
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: API_FOOTBALL_KEY
+        value: 53cfd1d0230dfe92a2d99f81ca0fab88
+      - key: GEMINI_API_KEY
+        value: AIzaSyCD1q757C9d3wNLPf0TLOi8MnFCu1jkXjA
+      - key: FOOTBALL_DATA_ORG_KEY
+        value: c578337e9eb343d8af3411ab3a2a71a9
+      - key: FIREBASE_PROJECT_ID
+        value: football-hub-japan
+      - key: FIREBASE_CLIENT_EMAIL
+        value: firebase-adminsdk-fbsvc@football-hub-japan.iam.gserviceaccount.com
+      - key: FIREBASE_PRIVATE_KEY
+        value: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDhhngBiz0A9IzT\n94R5C89D2HIER4Z+4Xt7p9aTEwrwNs/pub1Xtf21GJuIlc1YEyEIOWUE/SbOmOU0\nkmsmDPjIYN8K2Vtpm7y5d9+yDAzmvbay3UonWhiCUa2g3uayGSAxXw33OwoPsKxF\ngSq7182dXr0r3dZ+wfTw3q5M94RVdvvKAxkWsB7djP7Tsg/C1Ow00OCHy0VqplCe\nUB1JxybJlEk3CkIjzUqEC1pr7REiPLy734VNFH4aytZ+TLjawoik11wldseZR1dw\n/LogKa0q2y0HgflF3DTp+ZyAuouVjeZuSzZ+pjo3QkZmXzsHRab6LNNNSunJnwMC\nCK6h7rlfAgMBAAECggEABGzlEfKvgcNKuCYVPWLT8Frg8eCNbRPznluOxFgNUOVi\ncw2n/36cud7/vlBiNSY68bRenRhymH87kCqHW7nJb/Umq0nUl1/s9h66Dv5ZinWS\njjP1boxACt6bb5qwIDKKBS3+Uimgaupmlv6P3hu/9ySSxbeWq+oWaluURAJfYGXp\n36VduJj2Ys2CbwJBFQm04l+qjlIrAqxYumcgoqPdPNuv58KTZrqLbvgjRihGnAGc\n7+kSvLcj2iYoVWk3zpcOEYSF67yCKB9vzzVRHSMb9rHzNpT+uRlIMtlFDuFRMVv\ne5lPlruZJk231BQduYROFI6VvqbcAlu6S+Y3/k+xcQKBgQD4Dj0LwRtCa79GG1HO\nPNqmSSGDNruAOV8DIe8qBFsBeegUNXV/UyXH+TIR+Gkbu7JguOW1usPH7bcGzK1n\nWAW0GXXqjxcfX+c4XRiVEk7wg1ZpOWJ76zi4Db9A7x29e4silDi3yDyGLWrKahS4\nP09V0UlylQQ6iu+qfVHgPhjZdQKBgQDov4IY4y5YT5W8mS9Ec4GncorzBHnOlIq0\n2fgI0RFlRFdAqX9twL1gAGIxTPxwxA7pehB/B+7eVXTyvk7asXjb+5i2HYhSteMI\ncCSKuErVQiZ500XxXb/ATmNkAPh5o5/6MLUYYiueKR8fQsWSx47h6Kf+7k1SPL8k\nCfyAQBDZAwKBgQCifSE7++kRX2dSUz8JLA/GcY1EWKwGWI6GjMoP6f57PxHpewNW\nvm63SeOkpeakRhWZCkVe/9KTuoH0MEs+sQg7a5o0ZjstUDM0Vrdtnyqank4Sa4a5\nyeHDny2zKW9/2dfQdOuaZ85Nzp5vrYGZF8+uVYQZTMgSWUSZl7H0hHjeqQKBgG1z\nWZeghfPLgSvOkZbMBqWazNLZQPqvicbgVa63ukl36NwkmSMgpy2VIJf0jyXsXOLY\nnxdNwLvXTga1Ddnz6VTxrO+/VZMnq5sVOWnunmpJEFTr0JFft8OUWVL2zeJN2vZJ\nn2/XApH+3n7R5J1QsNV1lkLhB4VrwasN8yrQddvHAoGAFy59EWwZaoCAsAMLZ8mt\nV/cWFfjNEEN0MvKFAT5EPXuFbCNIi07CwXpR55Z/DC6709FAkKVkv0rA0f5e8X0X\ntKjdNQ03UKL8Pk8hdCbBcVJW/XU5w9o5urrNaSGmRXrmJK5B7jEgs4qqt6jt2Z/O\nCZwHiktn7IZL6WzPg5wRSvU=\n-----END PRIVATE KEY-----\n"
+      - key: JWT_SECRET
+        value: football_hub_japan_super_secret_key_2024
+      - key: DEEPL_API_KEY
+        value: 5a41ceaa-4baf-4d0c-bac2-d6f545de0db5:fx
