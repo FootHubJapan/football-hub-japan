@@ -401,17 +401,105 @@ app.get('/admin/data-status', async (req, res) => {
         // In a real implementation, you would check admin authentication here
         const dataService = require('./dataService');
         
-        // Check data status
+        // Check data status using dataService
         const status = {
             serverTime: new Date().toISOString(),
             dataStatus: 'Data service available',
-            cacheStatus: 'Cache system active'
+            cacheStatus: 'Cache system active',
+            playerCount: 0,
+            teamCount: 0
         };
+        
+        // Try to get actual data counts
+        try {
+            const players = await dataService.getNativeStatsPlayers({});
+            const teams = await dataService.getNativeStatsTeams();
+            status.playerCount = players.length || 0;
+            status.teamCount = teams.length || 0;
+        } catch (error) {
+            console.log('Could not get actual data counts:', error.message);
+        }
         
         res.json(status);
     } catch (error) {
         console.error('Admin data status error:', error);
         res.status(500).json({ error: 'Failed to get data status' });
+    }
+});
+
+// Admin endpoint for data import
+app.post('/admin/import-data', async (req, res) => {
+    try {
+        console.log('Admin data import requested');
+        
+        // In a real implementation, you would check admin authentication here
+        const dataService = require('./dataService');
+        
+        // Initialize data
+        dataService.initializeNativeStatsData();
+        
+        res.json({ 
+            success: true, 
+            message: 'データの初期化が完了しました',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Admin data import error:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to import data: ' + error.message 
+        });
+    }
+});
+
+// Admin endpoint for cache clear
+app.post('/admin/clear-cache', async (req, res) => {
+    try {
+        console.log('Admin cache clear requested');
+        
+        // In a real implementation, you would check admin authentication here
+        const dataService = require('./dataService');
+        
+        // Clear cache
+        dataService.cache.flushAll();
+        
+        res.json({ 
+            success: true, 
+            message: 'キャッシュがクリアされました',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Admin cache clear error:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to clear cache: ' + error.message 
+        });
+    }
+});
+
+// Admin endpoint for data refresh
+app.post('/admin/refresh-data', async (req, res) => {
+    try {
+        console.log('Admin data refresh requested');
+        
+        // In a real implementation, you would check admin authentication here
+        const dataService = require('./dataService');
+        
+        // Clear cache and reinitialize
+        dataService.cache.flushAll();
+        dataService.initializeNativeStatsData();
+        
+        res.json({ 
+            success: true, 
+            message: 'データの更新が完了しました',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Admin data refresh error:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to refresh data: ' + error.message 
+        });
     }
 });
 

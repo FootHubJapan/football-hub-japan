@@ -265,7 +265,6 @@
         </div>
     </div>
 
-    <script src="firebaseData.js"></script>
     <script>
         // システムログ管理
         function addLog(message, type = 'info') {
@@ -306,23 +305,27 @@
             try {
                 addLog('データベース状況を確認中...', 'info');
                 
-                if (!window.firebaseDataService) {
-                    addLog('FirebaseDataServiceが利用できません', 'error');
-                    return;
+                // サーバーサイドのAPIを直接呼び出し
+                const response = await fetch('/admin/data-status');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-
-                const status = await window.firebaseDataService.checkDataStatus();
                 
+                const status = await response.json();
+                
+                // データ状況を表示
                 document.querySelector('#dataStatus .status-item:nth-child(1) .status-value').textContent = 
-                    status.playerCount + '人';
+                    status.playerCount || '確認中...';
                 document.querySelector('#dataStatus .status-item:nth-child(2) .status-value').textContent = 
-                    status.teamCount + 'チーム';
+                    status.teamCount || '確認中...';
                 document.querySelector('#dataStatus .status-item:nth-child(3) .status-value').textContent = 
                     new Date().toLocaleString();
                 
-                addLog(`データ状況確認完了: ${status.playerCount}選手, ${status.teamCount}チーム`, 'success');
+                addLog(`データ状況確認完了: ${status.playerCount || 0}選手, ${status.teamCount || 0}チーム`, 'success');
             } catch (error) {
                 addLog('データ状況確認エラー: ' + error.message, 'error');
+                document.querySelector('#dataStatus .status-item:nth-child(1) .status-value').textContent = 'エラー';
+                document.querySelector('#dataStatus .status-item:nth-child(2) .status-value').textContent = 'エラー';
             }
         }
 
@@ -331,13 +334,20 @@
             try {
                 addLog('データインポートを開始...', 'info');
                 
-                if (!window.firebaseDataService) {
-                    addLog('FirebaseDataServiceが利用できません', 'error');
-                    return;
+                // サーバーサイドのインポートAPIを呼び出し
+                const response = await fetch('/admin/import-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-
-                await window.firebaseDataService.importRealFootballData();
-                addLog('データインポート完了', 'success');
+                
+                const result = await response.json();
+                addLog('データインポート完了: ' + result.message, 'success');
                 
                 // 状況を更新
                 await checkDataStatus();
@@ -351,13 +361,20 @@
             try {
                 addLog('キャッシュクリアを開始...', 'warning');
                 
-                if (!window.firebaseDataService) {
-                    addLog('FirebaseDataServiceが利用できません', 'error');
-                    return;
+                // サーバーサイドのクリアAPIを呼び出し
+                const response = await fetch('/admin/clear-cache', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-
-                await window.firebaseDataService.clearCachedData();
-                addLog('キャッシュクリア完了', 'success');
+                
+                const result = await response.json();
+                addLog('キャッシュクリア完了: ' + result.message, 'success');
                 
                 // 状況を更新
                 await checkDataStatus();
@@ -371,13 +388,20 @@
             try {
                 addLog('データ更新を開始...', 'info');
                 
-                if (!window.firebaseDataService) {
-                    addLog('FirebaseDataServiceが利用できません', 'error');
-                    return;
+                // サーバーサイドの更新APIを呼び出し
+                const response = await fetch('/admin/refresh-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-
-                await window.firebaseDataService.refreshData();
-                addLog('データ更新完了', 'success');
+                
+                const result = await response.json();
+                addLog('データ更新完了: ' + result.message, 'success');
                 
                 // 状況を更新
                 await checkDataStatus();
