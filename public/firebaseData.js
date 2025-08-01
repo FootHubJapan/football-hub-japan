@@ -74,15 +74,17 @@ class FirebaseDataService {
     async searchPlayers(query) {
         try {
             console.log('Player search started: "' + query + '"');
+            const searchQuery = query.toLowerCase().trim();
             
-            const snapshot = await this.db.collection('players').get();
-            if (snapshot.empty) {
-                console.log('No players in database, using fallback search');
-                return this.searchFallbackPlayers(query);
+            if (!searchQuery) {
+                return [];
             }
 
-            const players = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const searchQuery = query.toLowerCase().trim();
+            const players = await this.getPlayers();
+            if (!players || players.length === 0) {
+                console.log('No players available for search');
+                return this.searchFallbackPlayers(query);
+            }
 
             // Japanese name mapping for better search
             const japaneseNameMap = {
@@ -104,14 +106,20 @@ class FirebaseDataService {
                 searchTerms.push(japaneseNameMap[query]);
             }
 
+            // Helper function to safely convert to string and lowercase
+            const safeToString = (value) => {
+                if (value === null || value === undefined) return '';
+                return String(value).toLowerCase();
+            };
+
             // First pass: exact matches
             let results = players.filter(player => {
-                const fullName = (player.fullName || player.name || '').toLowerCase();
-                const firstName = (player.firstName || '').toLowerCase();
-                const lastName = (player.lastName || '').toLowerCase();
-                const team = (player.currentTeam || player.team || '').toLowerCase();
-                const nationality = (player.nationality || '').toLowerCase();
-                const position = (player.position || '').toLowerCase();
+                const fullName = safeToString(player.fullName || player.name);
+                const firstName = safeToString(player.firstName);
+                const lastName = safeToString(player.lastName);
+                const team = safeToString(player.currentTeam || player.team);
+                const nationality = safeToString(player.nationality);
+                const position = safeToString(player.position);
 
                 return searchTerms.some(term => 
                     fullName.includes(term) ||
@@ -133,12 +141,12 @@ class FirebaseDataService {
             const words = searchQuery.split(' ').filter(word => word.length > 1);
             
             results = players.filter(player => {
-                const fullName = (player.fullName || player.name || '').toLowerCase();
-                const firstName = (player.firstName || '').toLowerCase();
-                const lastName = (player.lastName || '').toLowerCase();
-                const team = (player.currentTeam || player.team || '').toLowerCase();
-                const nationality = (player.nationality || '').toLowerCase();
-                const position = (player.position || '').toLowerCase();
+                const fullName = safeToString(player.fullName || player.name);
+                const firstName = safeToString(player.firstName);
+                const lastName = safeToString(player.lastName);
+                const team = safeToString(player.currentTeam || player.team);
+                const nationality = safeToString(player.nationality);
+                const position = safeToString(player.position);
 
                 return words.some(word => 
                     fullName.includes(word) ||
@@ -363,13 +371,19 @@ class FirebaseDataService {
         const players = this.getFallbackPlayers();
         const searchQuery = query.toLowerCase().trim();
         
+        // Helper function to safely convert to string and lowercase
+        const safeToString = (value) => {
+            if (value === null || value === undefined) return '';
+            return String(value).toLowerCase();
+        };
+        
         return players.filter(player => {
-            const fullName = (player.fullName || '').toLowerCase();
-            const firstName = (player.firstName || '').toLowerCase();
-            const lastName = (player.lastName || '').toLowerCase();
-            const team = (player.currentTeam || '').toLowerCase();
-            const nationality = (player.nationality || '').toLowerCase();
-            const position = (player.position || '').toLowerCase();
+            const fullName = safeToString(player.fullName);
+            const firstName = safeToString(player.firstName);
+            const lastName = safeToString(player.lastName);
+            const team = safeToString(player.currentTeam);
+            const nationality = safeToString(player.nationality);
+            const position = safeToString(player.position);
 
             return fullName.includes(searchQuery) ||
                    firstName.includes(searchQuery) ||
