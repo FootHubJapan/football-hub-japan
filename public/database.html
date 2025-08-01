@@ -999,6 +999,7 @@
                 <button onclick="importRealData()" class="btn btn-primary">実際データインポート</button>
                 <button onclick="clearCachedData()" class="btn btn-warning">キャッシュクリア</button>
                 <button onclick="refreshData()" class="btn btn-success">データ更新</button>
+                <a href="/admin.html" class="btn btn-info" style="text-decoration: none; display: inline-block;">管理画面</a>
             </div>
             <div id="dataStatus" class="data-status"></div>
         </div>
@@ -1877,66 +1878,89 @@
         // データ状態表示
         function showDataStatus(message, type) {
             const statusElement = document.getElementById('dataStatus');
-            statusElement.textContent = message;
-            statusElement.className = `data-status ${type}`;
-            
-            setTimeout(() => {
-                statusElement.style.display = 'none';
-            }, 5000);
+            if (statusElement) {
+                statusElement.textContent = message;
+                statusElement.className = `data-status ${type}`;
+                statusElement.style.display = 'block';
+                
+                setTimeout(() => {
+                    statusElement.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // オーナー権限チェック（簡易版）
+        function isOwner() {
+            // 実際の実装では、サーバーサイドで認証を確認する
+            // ここでは簡易的にURLパラメータで判定
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('owner') === 'true' || 
+                   localStorage.getItem('isOwner') === 'true';
+        }
+
+        // オーナー用機能の表示/非表示
+        function toggleOwnerFeatures() {
+            const ownerFeatures = document.querySelector('.data-management-section');
+            if (ownerFeatures) {
+                if (isOwner()) {
+                    ownerFeatures.style.display = 'block';
+                    console.log('オーナー機能を表示しました');
+                } else {
+                    ownerFeatures.style.display = 'none';
+                    console.log('オーナー機能を非表示にしました');
+                }
+            }
         }
 
         // 初期表示
         document.addEventListener('DOMContentLoaded', async function() {
-            // FirebaseDataServiceの初期化を待つ
-            let retryCount = 0;
-            const maxRetries = 10;
+            console.log('Database page loaded');
             
-            const waitForFirebase = () => {
-                if (window.firebaseDataService) {
-                    console.log('FirebaseDataServiceが初期化されました');
-                    initializeData();
-                } else if (retryCount < maxRetries) {
-                    retryCount++;
-                    console.log(`FirebaseDataServiceの初期化を待機中... (${retryCount}/${maxRetries})`);
-                    setTimeout(waitForFirebase, 500);
-                } else {
-                    console.error('FirebaseDataServiceの初期化がタイムアウトしました');
-                    initializeFallbackData();
-                }
-            };
+            // オーナー機能の表示/非表示を設定
+            toggleOwnerFeatures();
             
-            const initializeData = async () => {
-                try {
-                    await switchTab('leagues');
-                } catch (error) {
-                    console.error('初期データ読み込みエラー:', error);
-                    initializeFallbackData();
-                }
-            };
+            // 自動データ更新チェック（オーナーのみ）
+            if (isOwner()) {
+                await checkAndUpdateData();
+            }
             
-            const initializeFallbackData = () => {
-                // フォールバックデータを設定
-                currentData = [
-                    {
-                        name: "J1リーグ",
-                        country: "日本",
-                        teams: 18,
-                        season: "2024",
-                        stats: { totalMatches: 306, totalGoals: 856, avgGoals: 2.8 }
-                    },
-                    {
-                        name: "J2リーグ",
-                        country: "日本",
-                        teams: 22,
-                        season: "2024",
-                        stats: { totalMatches: 462, totalGoals: 1155, avgGoals: 2.5 }
-                    }
-                ];
-                renderData();
-            };
-            
-            waitForFirebase();
+            // データ表示
+            await renderData();
         });
+
+        // 自動データ更新チェック
+        async function checkAndUpdateData() {
+            try {
+                if (!window.firebaseDataService) {
+                    console.log('FirebaseDataService not available for auto-update');
+                    return;
+                }
+
+                const status = await window.firebaseDataService.checkDataStatus();
+                
+                // データが存在しない場合、自動でインポート
+                if (!status.isImported) {
+                    console.log('No data found, starting automatic import...');
+                    showDataStatus('データが存在しません。自動インポートを開始します...', 'info');
+                    
+                    // バックグラウンドでインポート実行
+                    setTimeout(async () => {
+                        try {
+                            await window.firebaseDataService.importRealFootballData();
+                            showDataStatus('自動データインポートが完了しました', 'success');
+                            await renderData(); // データを再表示
+                        } catch (error) {
+                            console.error('Auto-import error:', error);
+                            showDataStatus('自動インポート中にエラーが発生しました', 'error');
+                        }
+                    }, 1000);
+                } else {
+                    console.log(`Data already exists: ${status.playerCount} players, ${status.teamCount} teams`);
+                }
+            } catch (error) {
+                console.error('Auto-update check error:', error);
+            }
+        }
     </script>
 </body>
 </html> 

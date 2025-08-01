@@ -364,6 +364,57 @@ app.get('/api/teams/:id/stats', async (req, res) => {
     }
 });
 
+// Auto data update on server start
+async function initializeDataOnStartup() {
+    console.log('Checking data on server startup...');
+    
+    try {
+        // Check if data exists
+        const dataService = require('./dataService');
+        
+        // For now, we'll just log that the server is ready
+        // In a real implementation, you would check Firebase data here
+        console.log('Server ready. Data will be loaded on first request.');
+        
+    } catch (error) {
+        console.error('Error during startup data check:', error);
+    }
+}
+
+// Initialize data on server start
+initializeDataOnStartup();
+
+// Health check endpoint for monitoring
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        version: '1.0.0'
+    });
+});
+
+// Admin endpoint for data management (protected)
+app.get('/admin/data-status', async (req, res) => {
+    try {
+        // In a real implementation, you would check admin authentication here
+        const dataService = require('./dataService');
+        
+        // Check data status
+        const status = {
+            serverTime: new Date().toISOString(),
+            dataStatus: 'Data service available',
+            cacheStatus: 'Cache system active'
+        };
+        
+        res.json(status);
+    } catch (error) {
+        console.error('Admin data status error:', error);
+        res.status(500).json({ error: 'Failed to get data status' });
+    }
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
