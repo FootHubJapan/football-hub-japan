@@ -1,11 +1,12 @@
 // Firebase設定 - 実際のプロジェクト設定
 const firebaseConfig = {
-    apiKey: "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", // 実際のAPIキーに置き換え
+    apiKey: "AIzaSyCNR4P1ATjDyhrWiNOGKc0weZeacprEC8g",
     authDomain: "football-hub-japan.firebaseapp.com",
     projectId: "football-hub-japan",
-    storageBucket: "football-hub-japan.appspot.com",
-    messagingSenderId: "123456789", // 実際のSender IDに置き換え
-    appId: "1:123456789:web:abcdef123456" // 実際のApp IDに置き換え
+    storageBucket: "football-hub-japan.firebasestorage.app",
+    messagingSenderId: "347425838458",
+    appId: "1:347425838458:web:056c33248688318e38b2c3",
+    measurementId: "G-QF85QC6MZP"
 };
 
 // Firebase初期化
