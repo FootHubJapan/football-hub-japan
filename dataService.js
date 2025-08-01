@@ -228,8 +228,16 @@ class FootballDataService {
     generateNativeStatsMatches(playerId, limit) {
         const matches = [];
         const teams = this.generateNativeStatsTeams();
-        const player = this.generateNativeStatsPlayer(playerId);
-        const playerTeam = player?.currentTeam || 'Unknown Team';
+        
+        // Get player team name directly from fallback data to avoid circular reference
+        const playerTeamMap = {
+            '1': 'Girona FC',
+            '2': 'Real Sociedad',
+            '3': 'Brighton & Hove Albion',
+            '4': 'Manchester City FC',
+            '5': 'Manchester City FC'
+        };
+        const playerTeam = playerTeamMap[playerId] || 'Unknown Team';
         
         for (let i = 0; i < limit; i++) {
             const date = new Date();
@@ -311,7 +319,7 @@ class FootballDataService {
                 preferredFoot: 'Right',
                 height: '185cm',
                 weight: '78kg',
-                matches: this.generateNativeStatsMatches('1', 15),
+                matches: [], // Empty array to avoid circular reference
                 seasons: {
                     '2024-2025': {
                         team: 'Girona FC',
@@ -357,7 +365,7 @@ class FootballDataService {
                 preferredFoot: 'Left',
                 height: '173cm',
                 weight: '67kg',
-                matches: this.generateNativeStatsMatches('2', 15),
+                matches: [], // Empty array to avoid circular reference
                 seasons: {
                     '2024-2025': {
                         team: 'Real Sociedad',
@@ -404,7 +412,7 @@ class FootballDataService {
                 preferredFoot: 'Right',
                 height: '178cm',
                 weight: '72kg',
-                matches: this.generateNativeStatsMatches('3', 15),
+                matches: [], // Empty array to avoid circular reference
                 seasons: {
                     '2024-2025': {
                         team: 'Brighton & Hove Albion',
@@ -451,7 +459,7 @@ class FootballDataService {
                 preferredFoot: 'Left',
                 height: '194cm',
                 weight: '88kg',
-                matches: this.generateNativeStatsMatches('4', 15),
+                matches: [], // Empty array to avoid circular reference
                 seasons: {
                     '2024-2025': {
                         team: 'Manchester City FC',
@@ -498,7 +506,7 @@ class FootballDataService {
                 preferredFoot: 'Right',
                 height: '181cm',
                 weight: '76kg',
-                matches: this.generateNativeStatsMatches('5', 15),
+                matches: [], // Empty array to avoid circular reference
                 seasons: {
                     '2024-2025': {
                         team: 'Manchester City FC',
