@@ -193,11 +193,11 @@ class FirebaseDataService {
                         console.log(`チーム処理済み: ${processedTeams}/${totalTeams} - ${team.name}`);
 
                         // チームの選手を取得
-                        const teamData = await this.fetchFromFootballDataAPI(`teams/${team.id}`);
-                        if (teamData && teamData.squad) {
-                            totalPlayers += teamData.squad.length;
-                            console.log(`${team.name}: ${teamData.squad.length}選手を処理中...`);
-                            for (const player of teamData.squad) {
+                        const teamDetails = await this.fetchFromFootballDataAPI(`teams/${team.id}`);
+                        if (teamDetails && teamDetails.squad) {
+                            totalPlayers += teamDetails.squad.length;
+                            console.log(`${team.name}: ${teamDetails.squad.length}選手を処理中...`);
+                            for (const player of teamDetails.squad) {
                                 // undefined値をnullに変換
                                 const playerData = {
                                     id: player.id.toString(),

@@ -525,9 +525,21 @@
         let allTeams = [];
         let allPlayers = [];
 
+        // FirebaseDataServiceの初期化確認
+        function checkFirebaseDataService() {
+            if (!window.firebaseDataService) {
+                console.error('FirebaseDataServiceが初期化されていません');
+                return false;
+            }
+            return true;
+        }
+
         // Firebaseからデータを取得
         async function fetchLeagues() {
             try {
+                if (!checkFirebaseDataService()) {
+                    return [];
+                }
                 const data = await window.firebaseDataService.getLeagues();
                 allLeagues = data;
                 return data;
@@ -539,6 +551,9 @@
 
         async function fetchTeams(leagueId) {
             try {
+                if (!checkFirebaseDataService()) {
+                    return [];
+                }
                 const data = await window.firebaseDataService.getTeams(leagueId);
                 allTeams = data;
                 return data;
@@ -550,6 +565,9 @@
 
         async function fetchPlayers(teamId) {
             try {
+                if (!checkFirebaseDataService()) {
+                    return [];
+                }
                 const data = await window.firebaseDataService.getPlayers(teamId);
                 allPlayers = data;
                 return data;
@@ -561,6 +579,9 @@
 
         async function searchPlayers(query) {
             try {
+                if (!checkFirebaseDataService()) {
+                    return [];
+                }
                 const data = await window.firebaseDataService.searchPlayers(query);
                 return data;
             } catch (error) {
@@ -726,11 +747,19 @@
         }
 
         function addSampleData() {
+            if (!window.addSampleDataToFirestore) {
+                showApiStatus('FirebaseDataServiceが初期化されていません', 'error');
+                return;
+            }
             window.addSampleDataToFirestore();
             showApiStatus('サンプルデータの追加を開始しました', 'success');
         }
 
         function importRealData() {
+            if (!window.importRealFootballData) {
+                showApiStatus('FirebaseDataServiceが初期化されていません', 'error');
+                return;
+            }
             showApiStatus('実際のデータのインポートを開始しました。時間がかかる場合があります...', 'success');
             window.importRealFootballData();
         }
@@ -793,11 +822,34 @@
 
         // 初期表示
         document.addEventListener('DOMContentLoaded', async function() {
-            // 初期データを読み込み
-            try {
-                await switchTab('leagues');
-            } catch (error) {
-                console.error('初期データ読み込みエラー:', error);
+            // FirebaseDataServiceの初期化を待つ
+            let retryCount = 0;
+            const maxRetries = 10;
+            
+            const waitForFirebase = () => {
+                if (window.firebaseDataService) {
+                    console.log('FirebaseDataServiceが初期化されました');
+                    initializeData();
+                } else if (retryCount < maxRetries) {
+                    retryCount++;
+                    console.log(`FirebaseDataServiceの初期化を待機中... (${retryCount}/${maxRetries})`);
+                    setTimeout(waitForFirebase, 500);
+                } else {
+                    console.error('FirebaseDataServiceの初期化がタイムアウトしました');
+                    initializeFallbackData();
+                }
+            };
+            
+            const initializeData = async () => {
+                try {
+                    await switchTab('leagues');
+                } catch (error) {
+                    console.error('初期データ読み込みエラー:', error);
+                    initializeFallbackData();
+                }
+            };
+            
+            const initializeFallbackData = () => {
                 // フォールバックデータを設定
                 currentData = [
                     {
@@ -816,7 +868,9 @@
                     }
                 ];
                 renderData();
-            }
+            };
+            
+            waitForFirebase();
         });
     </script>
 </body>
