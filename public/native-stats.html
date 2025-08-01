@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Hub Japan - pure. fast. accessible.</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: #000;
+            padding: 1rem 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: #fff;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav a {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+        }
+
+        .nav a:hover {
+            color: #fff;
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+        }
+
+        .hero p {
+            font-size: 1.125rem;
+            color: #888;
+            font-weight: 300;
+        }
+
+        /* League Navigation */
+        .league-nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .league-btn {
+            background: none;
+            border: 1px solid #333;
+            color: #888;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .league-btn:hover {
+            border-color: #666;
+            color: #fff;
+        }
+
+        .league-btn.active {
+            background: #00ff88;
+            color: #000;
+            border-color: #00ff88;
+        }
+
+        /* Search */
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto 3rem;
+        }
+
+        .search-box {
+            display: flex;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .search-input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #fff;
+            padding: 1rem;
+            font-size: 1rem;
+        }
+
+        .search-input::placeholder {
+            color: #666;
+        }
+
+        .search-btn {
+            background: #00ff88;
+            border: none;
+            color: #000;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* Player Grid */
+        .player-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .player-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .player-card:hover {
+            border-color: #00ff88;
+            transform: translateY(-2px);
+        }
+
+        .player-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .player-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000;
+            font-size: 1.25rem;
+        }
+
+        .player-info h3 {
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+
+        .player-info p {
+            color: #888;
+            font-size: 0.875rem;
+        }
+
+        .player-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff88;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid #333;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .modal-header h2 {
+            color: #fff;
+            font-weight: 300;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .close-btn:hover {
+            color: #fff;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        /* Player Details */
+        .player-details {
+            margin-bottom: 2rem;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .detail-item label {
+            font-size: 0.875rem;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .detail-item span {
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        /* Matches Table */
+        .matches-section {
+            margin-bottom: 2rem;
+        }
+
+        .matches-section h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+            font-weight: 300;
+        }
+
+        .matches-table {
+            background: #2a2a2a;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .matches-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .matches-table th {
+            background: #1a1a1a;
+            color: #888;
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .matches-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #333;
+            color: #fff;
+            font-size: 0.875rem;
+        }
+
+        .matches-table tr:hover {
+            background: #333;
+        }
+
+        /* Season Stats */
+        .season-stats {
+            margin-bottom: 2rem;
+        }
+
+        .season-stats h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+            font-weight: 300;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: #2a2a2a;
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff88;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .label {
+            font-size: 0.875rem;
+            color: #888;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .league-nav {
+                gap: 0.5rem;
+            }
+
+            .league-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.75rem;
+            }
+
+            .player-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">Football Hub Japan</div>
+            <nav class="nav">
+                <a href="#matches">Matches</a>
+                <a href="#streaks">Streaks</a>
+                <a href="#blog">Blog</a>
+                <a href="#search">Search</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1>Football Hub Japan</h1>
+            <p>pure. fast. accessible.</p>
+        </div>
+
+        <!-- League Navigation -->
+        <div class="league-nav">
+            <button class="league-btn active" onclick="filterByLeague('all')">ALL</button>
+            <button class="league-btn" onclick="filterByLeague('PL')">PL</button>
+            <button class="league-btn" onclick="filterByLeague('PD')">PD</button>
+            <button class="league-btn" onclick="filterByLeague('SA')">SA</button>
+            <button class="league-btn" onclick="filterByLeague('BL1')">BL1</button>
+            <button class="league-btn" onclick="filterByLeague('FL1')">FL1</button>
+        </div>
+
+        <!-- Search -->
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search players, teams, matches...">
+                <button class="search-btn" onclick="searchPlayers()">Search</button>
+            </div>
+        </div>
+
+        <!-- Player Grid -->
+        <div id="playerGrid" class="player-grid">
+            <!-- Players will be loaded here -->
+        </div>
+    </main>
+
+    <!-- Player Detail Modal -->
+    <div id="playerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Player Information</h2>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Player details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="firebaseData.js"></script>
+
+    <script>
+        // Global variables
+        let currentPlayers = [];
+        let filteredPlayers = [];
+        let currentLeague = 'all';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadPlayers();
+            setupSearch();
+        });
+
+        // Load players from Firebase
+        async function loadPlayers() {
+            try {
+                if (window.firebaseDataService) {
+                    const players = await window.firebaseDataService.getPlayers();
+                    currentPlayers = players;
+                    filteredPlayers = [...players];
+                    renderPlayers();
+                } else {
+                    console.log('FirebaseDataService not available, loading sample data...');
+                    loadSamplePlayers();
+                }
+            } catch (error) {
+                console.error('Error loading players:', error);
+                loadSamplePlayers();
+            }
+        }
+
+        // Load sample players
+        function loadSamplePlayers() {
+            currentPlayers = [
+                {
+                    id: '1',
+                    fullName: 'Juan Carlos',
+                    position: 'Goalkeeper',
+                    birthday: '1988-01-20',
+                    nationality: 'Spain',
+                    currentTeam: 'Girona FC',
+                    contract: { start: '2019-07', end: '2025-06' },
+                    marketValue: '5.2',
+                    preferredFoot: 'Right',
+                    matches: generateSampleMatches('Girona FC'),
+                    seasons: {
+                        '2024-2025': {
+                            stats: {
+                                appearances: 25,
+                                goals: 0,
+                                assists: 0,
+                                rating: 7.2,
+                                yellowCards: 2,
+                                redCards: 0
+                            }
+                        }
+                    }
+                },
+                {
+                    id: '2',
+                    fullName: 'Takefusa Kubo',
+                    position: 'Right Winger',
+                    birthday: '2001-06-04',
+                    nationality: 'Japan',
+                    currentTeam: 'Real Sociedad',
+                    contract: { start: '2022-07', end: '2027-06' },
+                    marketValue: '25.0',
+                    preferredFoot: 'Left',
+                    matches: generateSampleMatches('Real Sociedad'),
+                    seasons: {
+                        '2024-2025': {
+                            stats: {
+                                appearances: 28,
+                                goals: 8,
+                                assists: 12,
+                                rating: 7.5,
+                                yellowCards: 4,
+                                redCards: 0
+                            }
+                        }
+                    }
+                },
+                {
+                    id: '3',
+                    fullName: 'Kaoru Mitoma',
+                    position: 'Left Winger',
+                    birthday: '1997-05-20',
+                    nationality: 'Japan',
+                    currentTeam: 'Brighton & Hove Albion',
+                    contract: { start: '2022-08', end: '2027-06' },
+                    marketValue: '30.0',
+                    preferredFoot: 'Right',
+                    matches: generateSampleMatches('Brighton & Hove Albion'),
+                    seasons: {
+                        '2024-2025': {
+                            stats: {
+                                appearances: 26,
+                                goals: 6,
+                                assists: 8,
+                                rating: 7.3,
+                                yellowCards: 3,
+                                redCards: 0
+                            }
+                        }
+                    }
+                }
+            ];
+            filteredPlayers = [...currentPlayers];
+            renderPlayers();
+        }
+
+        // Generate sample matches
+        function generateSampleMatches(teamName) {
+            const matches = [];
+            const opponents = [
+                'Real Madrid CF', 'FC Barcelona', 'Atletico Madrid', 'Sevilla FC',
+                'Valencia CF', 'Athletic Club', 'Real Betis', 'Villarreal CF',
+                'Real Sociedad', 'Getafe CF', 'RCD Mallorca', 'Rayo Vallecano'
+            ];
+            
+            for (let i = 0; i < 10; i++) {
+                const date = new Date();
+                date.setDate(date.getDate() - (i * 7));
+                
+                const isHome = Math.random() > 0.5;
+                const opponent = opponents[Math.floor(Math.random() * opponents.length)];
+                const homeGoals = Math.floor(Math.random() * 4);
+                const awayGoals = Math.floor(Math.random() * 4);
+                
+                matches.push({
+                    date: date.toISOString().split('T')[0],
+                    time: '14:00',
+                    homeTeam: isHome ? teamName : opponent,
+                    awayTeam: isHome ? opponent : teamName,
+                    score: `${isHome ? homeGoals : awayGoals}:${isHome ? awayGoals : homeGoals}`,
+                    odds: '2.50 / 3.20 / 2.80',
+                    result: homeGoals > awayGoals ? 'W' : homeGoals < awayGoals ? 'L' : 'D'
+                });
+            }
+            
+            return matches.sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+
+        // Render players
+        function renderPlayers() {
+            const grid = document.getElementById('playerGrid');
+            grid.innerHTML = '';
+
+            filteredPlayers.forEach(player => {
+                const seasonStats = player.seasons?.['2024-2025']?.stats || {};
+                
+                const card = document.createElement('div');
+                card.className = 'player-card';
+                card.onclick = () => showPlayerDetail(player);
+                
+                card.innerHTML = `
+                    <div class="player-header">
+                        <div class="player-avatar">${player.fullName.charAt(0)}</div>
+                        <div class="player-info">
+                            <h3>${player.fullName}</h3>
+                            <p>${player.position} • ${player.nationality}</p>
+                        </div>
+                    </div>
+                    <div class="player-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">${seasonStats.appearances || 0}</span>
+                            <span class="stat-label">Apps</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">${seasonStats.goals || 0}</span>
+                            <span class="stat-label">Goals</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">${seasonStats.rating || 'N/A'}</span>
+                            <span class="stat-label">Rating</span>
+                        </div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+
+        // Show player detail
+        function showPlayerDetail(player) {
+            const modal = document.getElementById('playerModal');
+            const modalBody = document.getElementById('modalBody');
+            const seasonStats = player.seasons?.['2024-2025']?.stats || {};
+            const matches = player.matches || [];
+
+            modalBody.innerHTML = `
+                <div class="player-details">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Full name</label>
+                            <span>${player.fullName}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Position</label>
+                            <span>${player.position}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Birthday</label>
+                            <span>${player.birthday || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Nationality</label>
+                            <span>${player.nationality}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Current Team</label>
+                            <span>${player.currentTeam}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Contract</label>
+                            <span>${player.contract?.start || 'N/A'} - ${player.contract?.end || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Est. market value</label>
+                            <span>${player.marketValue ? player.marketValue + ' Mio. €' : 'n/a Mio. €'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Preferred foot</label>
+                            <span>${player.preferredFoot || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="matches-section">
+                    <h3>Matches in database</h3>
+                    <div class="matches-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Label</th>
+                                    <th>Score</th>
+                                    <th>Odds</th>
+                                    <th>OMV</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${matches.slice(0, 10).map(match => `
+                                    <tr>
+                                        <td>${match.date}, ${match.time}</td>
+                                        <td>${match.homeTeam} - ${match.awayTeam}</td>
+                                        <td>${match.score}</td>
+                                        <td>${match.odds}</td>
+                                        <td>100€</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="season-stats">
+                    <h3>Season Statistics (2024-2025)</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="value">${seasonStats.appearances || 0}</span>
+                            <span class="label">Appearances</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="value">${seasonStats.goals || 0}</span>
+                            <span class="label">Goals</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="value">${seasonStats.assists || 0}</span>
+                            <span class="label">Assists</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="value">${seasonStats.rating || 'N/A'}</span>
+                            <span class="label">Rating</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="value">${seasonStats.yellowCards || 0}</span>
+                            <span class="label">Yellow Cards</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="value">${seasonStats.redCards || 0}</span>
+                            <span class="label">Red Cards</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        // Close modal
+        function closeModal() {
+            const modal = document.getElementById('playerModal');
+            modal.classList.remove('active');
+        }
+
+        // Filter by league
+        function filterByLeague(league) {
+            currentLeague = league;
+            
+            // Update active button
+            document.querySelectorAll('.league-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Filter players
+            if (league === 'all') {
+                filteredPlayers = [...currentPlayers];
+            } else {
+                filteredPlayers = currentPlayers.filter(player => {
+                    // Simple league filtering based on team
+                    const team = player.currentTeam.toLowerCase();
+                    if (league === 'PL' && team.includes('brighton')) return true;
+                    if (league === 'PD' && (team.includes('girona') || team.includes('real'))) return true;
+                    if (league === 'SA' && team.includes('milan')) return true;
+                    if (league === 'BL1' && team.includes('bayern')) return true;
+                    if (league === 'FL1' && team.includes('psg')) return true;
+                    return false;
+                });
+            }
+            
+            renderPlayers();
+        }
+
+        // Search functionality
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', debounce(searchPlayers, 300));
+        }
+
+        function searchPlayers() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            if (!query) {
+                filteredPlayers = [...currentPlayers];
+            } else {
+                filteredPlayers = currentPlayers.filter(player => {
+                    return player.fullName.toLowerCase().includes(query) ||
+                           player.currentTeam.toLowerCase().includes(query) ||
+                           player.nationality.toLowerCase().includes(query) ||
+                           player.position.toLowerCase().includes(query);
+                });
+            }
+            
+            renderPlayers();
+        }
+
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('playerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html> 

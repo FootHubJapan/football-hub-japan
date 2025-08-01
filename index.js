@@ -45,7 +45,11 @@ app.get('/database', (req, res) => {
 
 // レーダーチャート比較
 app.get('/radar', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'radar.html'));
+    res.sendFile(path.join(__dirname, 'public', 'radar.html'));
+});
+
+app.get('/native-stats', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'native-stats.html'));
 });
 
 // APIエンドポイント

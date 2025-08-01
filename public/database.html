@@ -1323,9 +1323,9 @@
 
         // 検索機能（改善版）
         async function searchData() {
-            const searchType = document.getElementById('searchType').value;
-            const searchQuery = document.getElementById('searchQuery').value.trim();
-            const searchLeague = document.getElementById('searchLeague').value;
+            const searchType = document.getElementById('searchType')?.value || 'players';
+            const searchQuery = document.getElementById('searchQuery')?.value?.trim() || '';
+            const searchLeague = document.getElementById('searchLeague')?.value || '';
             
             if (!searchQuery) {
                 alert('検索キーワードを入力してください');

@@ -355,6 +355,15 @@
                 </p>
                 <button class="feature-btn">ランキングを開く</button>
             </div>
+
+            <div class="feature-card" onclick="openFeature('native-stats')">
+                <span class="feature-icon">⚽</span>
+                <h3 class="feature-title">Native Stats</h3>
+                <p class="feature-description">
+                    native-stats.org風の美しいUIで選手データを閲覧。pure. fast. accessible.
+                </p>
+                <button class="feature-btn">Native Statsを開く</button>
+            </div>
         </div>
 
         <div class="recent-activity">
@@ -416,13 +425,16 @@
                 'review': '試合レビュー/プレビュー',
                 'schedule': '試合スケジュール',
                 'ai-agent': 'AI分析エージェント',
-                'ranking': 'ランキングシステム'
+                'ranking': 'ランキングシステム',
+                'native-stats': 'Native Stats'
             };
             
             if (feature === 'database') {
                 window.location.href = '/database';
             } else if (feature === 'radar') {
                 window.location.href = '/radar';
+            } else if (feature === 'native-stats') {
+                window.location.href = '/native-stats';
             } else {
                 alert(`${features[feature]}機能は準備中です。\n\nこの機能は現在開発中で、近日中にリリース予定です。`);
             }
