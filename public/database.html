@@ -285,6 +285,108 @@
             color: #000000;
         }
 
+        /* API設定セクション */
+        .api-config-section {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .api-config-section h3 {
+            color: #00ff88;
+            margin-bottom: 1rem;
+        }
+
+        .api-input-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .api-input-group label {
+            color: #cccccc;
+            font-weight: 500;
+            min-width: 200px;
+        }
+
+        .api-input-group input {
+            flex: 1;
+            padding: 0.8rem;
+            border: 1px solid #333333;
+            border-radius: 5px;
+            background: #2a2a2a;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .api-btn {
+            background: #00ff88;
+            color: #000000;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .api-btn:hover {
+            background: #00cc6a;
+        }
+
+        .data-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            background: #333333;
+            color: #ffffff;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            background: #555555;
+        }
+
+        .action-btn.primary {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .action-btn.primary:hover {
+            background: #00cc6a;
+        }
+
+        .api-status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .api-status.success {
+            background: #1a3a1a;
+            color: #00ff88;
+            border: 1px solid #00ff88;
+            display: block;
+        }
+
+        .api-status.error {
+            background: #3a1a1a;
+            color: #ff4444;
+            border: 1px solid #ff4444;
+            display: block;
+        }
+
         @media (max-width: 768px) {
             .search-controls {
                 grid-template-columns: 1fr;
@@ -344,6 +446,21 @@
                 </div>
                 <button class="search-btn" onclick="searchData()">🔍 検索</button>
             </div>
+        </div>
+
+        <!-- API設定セクション -->
+        <div class="api-config-section">
+            <h3>データソース設定</h3>
+            <div class="api-input-group">
+                <label for="apiKeyInput">football-data.org APIキー:</label>
+                <input type="text" id="apiKeyInput" placeholder="APIキーを入力してください">
+                <button onclick="setApiKey()" class="api-btn">設定</button>
+            </div>
+            <div class="data-actions">
+                <button onclick="addSampleData()" class="action-btn">サンプルデータ追加</button>
+                <button onclick="importRealData()" class="action-btn primary">実際のデータインポート</button>
+            </div>
+            <div id="apiStatus" class="api-status"></div>
         </div>
 
         <div class="data-section">
@@ -619,6 +736,44 @@
                 
                 tableBody.appendChild(row);
             });
+        }
+
+        // API設定機能
+        function setApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (!apiKey) {
+                showApiStatus('APIキーを入力してください', 'error');
+                return;
+            }
+            
+            window.setFootballDataApiKey(apiKey);
+            showApiStatus('APIキーが設定されました', 'success');
+        }
+
+        function addSampleData() {
+            window.addSampleDataToFirestore();
+            showApiStatus('サンプルデータの追加を開始しました', 'success');
+        }
+
+        function importRealData() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (!apiKey) {
+                showApiStatus('APIキーを設定してから実行してください', 'error');
+                return;
+            }
+            
+            showApiStatus('実際のデータのインポートを開始しました。時間がかかる場合があります...', 'success');
+            window.importRealFootballData(apiKey);
+        }
+
+        function showApiStatus(message, type) {
+            const statusElement = document.getElementById('apiStatus');
+            statusElement.textContent = message;
+            statusElement.className = `api-status ${type}`;
+            
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 5000);
         }
 
         // 検索機能
