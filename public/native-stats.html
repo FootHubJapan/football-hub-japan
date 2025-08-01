@@ -704,6 +704,18 @@
                                 <label>Preferred foot</label>
                                 <span>${playerData.preferredFoot || 'N/A'}</span>
                             </div>
+                            ${playerData.height ? `
+                            <div class="detail-item">
+                                <label>Height</label>
+                                <span>${playerData.height}</span>
+                            </div>
+                            ` : ''}
+                            ${playerData.weight ? `
+                            <div class="detail-item">
+                                <label>Weight</label>
+                                <span>${playerData.weight}</span>
+                            </div>
+                            ` : ''}
                         </div>
                     </div>
 
@@ -762,6 +774,36 @@
                                 <span class="value">${seasonStats.redCards || 0}</span>
                                 <span class="label">Red Cards</span>
                             </div>
+                            ${seasonStats.saves !== undefined ? `
+                            <div class="stat-card">
+                                <span class="value">${seasonStats.saves || 0}</span>
+                                <span class="label">Saves</span>
+                            </div>
+                            ` : ''}
+                            ${seasonStats.cleanSheets !== undefined ? `
+                            <div class="stat-card">
+                                <span class="value">${seasonStats.cleanSheets || 0}</span>
+                                <span class="label">Clean Sheets</span>
+                            </div>
+                            ` : ''}
+                            ${seasonStats.foulsCommitted !== undefined ? `
+                            <div class="stat-card">
+                                <span class="value">${seasonStats.foulsCommitted || 0}</span>
+                                <span class="label">Fouls Committed</span>
+                            </div>
+                            ` : ''}
+                            ${seasonStats.foulsDrawn !== undefined ? `
+                            <div class="stat-card">
+                                <span class="value">${seasonStats.foulsDrawn || 0}</span>
+                                <span class="label">Fouls Drawn</span>
+                            </div>
+                            ` : ''}
+                            ${seasonStats.offsides !== undefined ? `
+                            <div class="stat-card">
+                                <span class="value">${seasonStats.offsides || 0}</span>
+                                <span class="label">Offsides</span>
+                            </div>
+                            ` : ''}
                         </div>
                     </div>
                 `;

@@ -10,7 +10,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 }
 
 const db = firebase.firestore();
@@ -209,7 +209,7 @@ class FirebaseDataService {
                         league: 'La Liga',
                         leagueId: 'PD',
                         matchesPlayed: 25,
-                        stats: {
+                stats: {
                             goals: 0,
                             assists: 0,
                             appearances: 25,
@@ -251,12 +251,12 @@ class FirebaseDataService {
                         league: 'La Liga',
                         leagueId: 'PD',
                         matchesPlayed: 28,
-                        stats: {
+                stats: {
                             goals: 8,
                             assists: 12,
                             appearances: 28,
                             minutes: 2520,
-                            passAccuracy: 82,
+                    passAccuracy: 82,
                             dribbleSuccess: 68,
                             shots: 45,
                             shotsOnTarget: 18,
@@ -293,7 +293,7 @@ class FirebaseDataService {
                         league: 'Premier League',
                         leagueId: 'PL',
                         matchesPlayed: 26,
-                        stats: {
+                stats: {
                             goals: 6,
                             assists: 8,
                             appearances: 26,
@@ -335,7 +335,7 @@ class FirebaseDataService {
                         league: 'Premier League',
                         leagueId: 'PL',
                         matchesPlayed: 30,
-                        stats: {
+                stats: {
                             goals: 18,
                             assists: 5,
                             appearances: 30,

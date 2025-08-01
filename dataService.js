@@ -1,8 +1,8 @@
 const axios = require('axios');
 const NodeCache = require('node-cache');
 
-// Cache configuration
-const cache = new NodeCache({ stdTTL: 3600 }); // 1 hour cache
+// Cache configuration - native-stats.org style
+const cache = new NodeCache({ stdTTL: 1800 }); // 30 minutes cache like native-stats.org
 
 // API client configuration
 const apiClient = axios.create({
@@ -16,11 +16,20 @@ const apiClient = axios.create({
 class FootballDataService {
     constructor() {
         this.cache = cache;
+        this.initializeNativeStatsData();
+    }
+
+    // Initialize native-stats.org style data
+    initializeNativeStatsData() {
+        // Pre-populate cache with native-stats.org style data
+        this.cache.set('native_leagues', this.generateNativeStatsLeagues(), 3600);
+        this.cache.set('native_teams_all', this.generateNativeStatsTeams(), 1800);
+        this.cache.set('native_players_all', this.generateNativeStatsPlayers(), 1800);
     }
 
     // Native Stats API Methods (native-stats.org style)
     async getNativeStatsPlayers({ league, search, page = 1, limit = 20 }) {
-        const cacheKey = `native_players_${league}_${search}_${page}_${limit}`;
+        const cacheKey = `native_players_${league || 'all'}_${search || 'none'}_${page}_${limit}`;
         let data = this.cache.get(cacheKey);
         
         if (!data) {
@@ -72,7 +81,7 @@ class FootballDataService {
     }
 
     async getNativeStatsTeams(league) {
-        const cacheKey = `native_teams_${league}`;
+        const cacheKey = `native_teams_${league || 'all'}`;
         let data = this.cache.get(cacheKey);
         
         if (!data) {
@@ -127,7 +136,7 @@ class FootballDataService {
         const allPlayers = this.getFallbackNativeStatsPlayers();
         let filteredPlayers = allPlayers;
 
-        // Filter by league
+        // Filter by league (native-stats.org style)
         if (league && league !== 'all') {
             filteredPlayers = filteredPlayers.filter(player => {
                 const playerLeague = player.seasons?.['2024-2025']?.leagueId;
@@ -135,18 +144,20 @@ class FootballDataService {
             });
         }
 
-        // Filter by search
+        // Filter by search (native-stats.org style)
         if (search) {
             const searchLower = search.toLowerCase();
             filteredPlayers = filteredPlayers.filter(player => {
                 return player.fullName.toLowerCase().includes(searchLower) ||
                        player.currentTeam.toLowerCase().includes(searchLower) ||
                        player.nationality.toLowerCase().includes(searchLower) ||
-                       player.position.toLowerCase().includes(searchLower);
+                       player.position.toLowerCase().includes(searchLower) ||
+                       (player.firstName && player.firstName.toLowerCase().includes(searchLower)) ||
+                       (player.lastName && player.lastName.toLowerCase().includes(searchLower));
             });
         }
 
-        // Pagination
+        // Pagination (native-stats.org style)
         const startIndex = (page - 1) * limit;
         const endIndex = startIndex + limit;
         const paginatedPlayers = filteredPlayers.slice(startIndex, endIndex);
@@ -161,22 +172,49 @@ class FootballDataService {
 
     generateNativeStatsLeagues() {
         return [
-            { id: 'PL', name: 'Premier League', country: 'England', flag: '🇬🇧' },
-            { id: 'PD', name: 'La Liga', country: 'Spain', flag: '🇪🇸' },
-            { id: 'SA', name: 'Serie A', country: 'Italy', flag: '🇮🇹' },
-            { id: 'BL1', name: 'Bundesliga', country: 'Germany', flag: '🇩🇪' },
-            { id: 'FL1', name: 'Ligue 1', country: 'France', flag: '🇫🇷' }
+            { id: 'PL', name: 'Premier League', country: 'England', flag: '🇬🇧', teams: 20 },
+            { id: 'PD', name: 'La Liga', country: 'Spain', flag: '🇪🇸', teams: 20 },
+            { id: 'SA', name: 'Serie A', country: 'Italy', flag: '🇮🇹', teams: 20 },
+            { id: 'BL1', name: 'Bundesliga', country: 'Germany', flag: '🇩🇪', teams: 18 },
+            { id: 'FL1', name: 'Ligue 1', country: 'France', flag: '🇫🇷', teams: 18 }
         ];
     }
 
     generateNativeStatsTeams(league) {
         const teams = [
-            { id: '1', name: 'Real Madrid CF', league: 'PD', country: 'Spain' },
-            { id: '2', name: 'FC Barcelona', league: 'PD', country: 'Spain' },
-            { id: '3', name: 'Manchester City FC', league: 'PL', country: 'England' },
-            { id: '4', name: 'Brighton & Hove Albion', league: 'PL', country: 'England' },
-            { id: '5', name: 'Girona FC', league: 'PD', country: 'Spain' },
-            { id: '6', name: 'Real Sociedad', league: 'PD', country: 'Spain' }
+            // Premier League
+            { id: '1', name: 'Manchester City FC', league: 'PL', country: 'England', founded: 1880, venue: 'Etihad Stadium' },
+            { id: '2', name: 'Arsenal FC', league: 'PL', country: 'England', founded: 1886, venue: 'Emirates Stadium' },
+            { id: '3', name: 'Liverpool FC', league: 'PL', country: 'England', founded: 1892, venue: 'Anfield' },
+            { id: '4', name: 'Brighton & Hove Albion', league: 'PL', country: 'England', founded: 1901, venue: 'Amex Stadium' },
+            { id: '5', name: 'Manchester United FC', league: 'PL', country: 'England', founded: 1878, venue: 'Old Trafford' },
+            { id: '6', name: 'Chelsea FC', league: 'PL', country: 'England', founded: 1905, venue: 'Stamford Bridge' },
+            
+            // La Liga
+            { id: '7', name: 'Real Madrid CF', league: 'PD', country: 'Spain', founded: 1902, venue: 'Santiago Bernabéu' },
+            { id: '8', name: 'FC Barcelona', league: 'PD', country: 'Spain', founded: 1899, venue: 'Camp Nou' },
+            { id: '9', name: 'Atletico Madrid', league: 'PD', country: 'Spain', founded: 1903, venue: 'Metropolitano' },
+            { id: '10', name: 'Girona FC', league: 'PD', country: 'Spain', founded: 1930, venue: 'Montilivi' },
+            { id: '11', name: 'Real Sociedad', league: 'PD', country: 'Spain', founded: 1909, venue: 'Reale Arena' },
+            { id: '12', name: 'Sevilla FC', league: 'PD', country: 'Spain', founded: 1890, venue: 'Ramón Sánchez Pizjuán' },
+            
+            // Serie A
+            { id: '13', name: 'AC Milan', league: 'SA', country: 'Italy', founded: 1899, venue: 'San Siro' },
+            { id: '14', name: 'Inter Milan', league: 'SA', country: 'Italy', founded: 1908, venue: 'San Siro' },
+            { id: '15', name: 'Juventus FC', league: 'SA', country: 'Italy', founded: 1897, venue: 'Allianz Stadium' },
+            { id: '16', name: 'SSC Napoli', league: 'SA', country: 'Italy', founded: 1926, venue: 'Diego Armando Maradona' },
+            
+            // Bundesliga
+            { id: '17', name: 'FC Bayern München', league: 'BL1', country: 'Germany', founded: 1900, venue: 'Allianz Arena' },
+            { id: '18', name: 'Borussia Dortmund', league: 'BL1', country: 'Germany', founded: 1909, venue: 'Signal Iduna Park' },
+            { id: '19', name: 'RB Leipzig', league: 'BL1', country: 'Germany', founded: 2009, venue: 'Red Bull Arena' },
+            { id: '20', name: 'Bayer 04 Leverkusen', league: 'BL1', country: 'Germany', founded: 1904, venue: 'BayArena' },
+            
+            // Ligue 1
+            { id: '21', name: 'Paris Saint-Germain FC', league: 'FL1', country: 'France', founded: 1970, venue: 'Parc des Princes' },
+            { id: '22', name: 'AS Monaco FC', league: 'FL1', country: 'France', founded: 1924, venue: 'Stade Louis II' },
+            { id: '23', name: 'Olympique de Marseille', league: 'FL1', country: 'France', founded: 1899, venue: 'Orange Vélodrome' },
+            { id: '24', name: 'Olympique Lyonnais', league: 'FL1', country: 'France', founded: 1950, venue: 'Groupama Stadium' }
         ];
 
         if (league && league !== 'all') {
@@ -188,28 +226,31 @@ class FootballDataService {
 
     generateNativeStatsMatches(playerId, limit) {
         const matches = [];
-        const teams = ['Real Madrid CF', 'FC Barcelona', 'Manchester City FC', 'Brighton & Hove Albion'];
+        const teams = this.generateNativeStatsTeams();
+        const player = this.generateNativeStatsPlayer(playerId);
+        const playerTeam = player?.currentTeam || 'Unknown Team';
         
         for (let i = 0; i < limit; i++) {
             const date = new Date();
             date.setDate(date.getDate() - (i * 7));
             
             const isHome = Math.random() > 0.5;
-            const homeTeam = teams[Math.floor(Math.random() * teams.length)];
-            const awayTeam = teams[Math.floor(Math.random() * teams.length)];
+            const opponent = teams[Math.floor(Math.random() * teams.length)].name;
             const homeGoals = Math.floor(Math.random() * 4);
             const awayGoals = Math.floor(Math.random() * 4);
             
             matches.push({
-                id: `match_${i}`,
+                id: `match_${playerId}_${i}`,
                 date: date.toISOString().split('T')[0],
-                time: '14:00',
-                homeTeam,
-                awayTeam,
+                time: `${Math.floor(Math.random() * 24)}:${Math.random() > 0.5 ? '00' : '30'}`,
+                homeTeam: isHome ? playerTeam : opponent,
+                awayTeam: isHome ? opponent : playerTeam,
                 score: `${homeGoals}:${awayGoals}`,
                 odds: `${(Math.random() * 2 + 1).toFixed(2)} / ${(Math.random() * 2 + 2).toFixed(2)} / ${(Math.random() * 2 + 2).toFixed(2)}`,
                 result: homeGoals > awayGoals ? 'W' : homeGoals < awayGoals ? 'L' : 'D',
-                venue: isHome ? 'Home' : 'Away'
+                venue: isHome ? 'Home' : 'Away',
+                competition: 'League Match',
+                season: '2024-2025'
             });
         }
         
@@ -217,10 +258,13 @@ class FootballDataService {
     }
 
     generateNativeStatsPlayerStats(playerId, season) {
+        const player = this.generateNativeStatsPlayer(playerId);
+        if (!player) return null;
+
         return {
             season,
-            team: 'Sample Team',
-            league: 'Sample League',
+            team: player.currentTeam,
+            league: player.seasons?.[season]?.league || 'Unknown League',
             matchesPlayed: Math.floor(Math.random() * 30) + 10,
             stats: {
                 goals: Math.floor(Math.random() * 15),
@@ -238,7 +282,12 @@ class FootballDataService {
                 blocks: Math.floor(Math.random() * 15),
                 rating: (Math.random() * 1.5 + 6.5).toFixed(1),
                 yellowCards: Math.floor(Math.random() * 8),
-                redCards: Math.floor(Math.random() * 2)
+                redCards: Math.floor(Math.random() * 2),
+                foulsCommitted: Math.floor(Math.random() * 20),
+                foulsDrawn: Math.floor(Math.random() * 15),
+                offsides: Math.floor(Math.random() * 10),
+                saves: Math.floor(Math.random() * 50),
+                cleanSheets: Math.floor(Math.random() * 10)
             }
         };
     }
@@ -259,11 +308,13 @@ class FootballDataService {
                 contract: { start: '2019-07', end: '2025-06' },
                 marketValue: '5.2',
                 preferredFoot: 'Right',
+                height: '185cm',
+                weight: '78kg',
                 matches: this.generateNativeStatsMatches('1', 15),
                 seasons: {
                     '2024-2025': {
                         team: 'Girona FC',
-                        teamId: '5',
+                        teamId: '10',
                         league: 'La Liga',
                         leagueId: 'PD',
                         matchesPlayed: 25,
@@ -283,7 +334,9 @@ class FootballDataService {
                             blocks: 0,
                             rating: 7.2,
                             yellowCards: 2,
-                            redCards: 0
+                            redCards: 0,
+                            saves: 78,
+                            cleanSheets: 8
                         }
                     }
                 }
@@ -301,11 +354,13 @@ class FootballDataService {
                 contract: { start: '2022-07', end: '2027-06' },
                 marketValue: '25.0',
                 preferredFoot: 'Left',
+                height: '173cm',
+                weight: '67kg',
                 matches: this.generateNativeStatsMatches('2', 15),
                 seasons: {
                     '2024-2025': {
                         team: 'Real Sociedad',
-                        teamId: '6',
+                        teamId: '11',
                         league: 'La Liga',
                         leagueId: 'PD',
                         matchesPlayed: 28,
@@ -325,7 +380,10 @@ class FootballDataService {
                             blocks: 1,
                             rating: 7.5,
                             yellowCards: 4,
-                            redCards: 0
+                            redCards: 0,
+                            foulsCommitted: 15,
+                            foulsDrawn: 22,
+                            offsides: 3
                         }
                     }
                 }
@@ -343,6 +401,8 @@ class FootballDataService {
                 contract: { start: '2022-08', end: '2027-06' },
                 marketValue: '30.0',
                 preferredFoot: 'Right',
+                height: '178cm',
+                weight: '72kg',
                 matches: this.generateNativeStatsMatches('3', 15),
                 seasons: {
                     '2024-2025': {
@@ -367,7 +427,10 @@ class FootballDataService {
                             blocks: 2,
                             rating: 7.3,
                             yellowCards: 3,
-                            redCards: 0
+                            redCards: 0,
+                            foulsCommitted: 12,
+                            foulsDrawn: 18,
+                            offsides: 2
                         }
                     }
                 }
@@ -385,11 +448,13 @@ class FootballDataService {
                 contract: { start: '2022-07', end: '2027-06' },
                 marketValue: '180.0',
                 preferredFoot: 'Left',
+                height: '194cm',
+                weight: '88kg',
                 matches: this.generateNativeStatsMatches('4', 15),
                 seasons: {
                     '2024-2025': {
                         team: 'Manchester City FC',
-                        teamId: '3',
+                        teamId: '1',
                         league: 'Premier League',
                         leagueId: 'PL',
                         matchesPlayed: 30,
@@ -409,7 +474,57 @@ class FootballDataService {
                             blocks: 3,
                             rating: 7.8,
                             yellowCards: 2,
-                            redCards: 0
+                            redCards: 0,
+                            foulsCommitted: 18,
+                            foulsDrawn: 25,
+                            offsides: 8
+                        }
+                    }
+                }
+            },
+            {
+                id: '5',
+                fullName: 'Kevin De Bruyne',
+                firstName: 'Kevin',
+                lastName: 'De Bruyne',
+                position: 'Attacking Midfielder',
+                birthday: '1991-06-28',
+                nationality: 'Belgium',
+                currentTeam: 'Manchester City FC',
+                team: 'Manchester City FC',
+                contract: { start: '2015-08', end: '2025-06' },
+                marketValue: '45.0',
+                preferredFoot: 'Right',
+                height: '181cm',
+                weight: '76kg',
+                matches: this.generateNativeStatsMatches('5', 15),
+                seasons: {
+                    '2024-2025': {
+                        team: 'Manchester City FC',
+                        teamId: '1',
+                        league: 'Premier League',
+                        leagueId: 'PL',
+                        matchesPlayed: 25,
+                        stats: {
+                            goals: 4,
+                            assists: 15,
+                            appearances: 25,
+                            minutes: 2250,
+                            passAccuracy: 88,
+                            dribbleSuccess: 65,
+                            shots: 35,
+                            shotsOnTarget: 12,
+                            keyPasses: 85,
+                            tackles: 25,
+                            interceptions: 15,
+                            clearances: 8,
+                            blocks: 5,
+                            rating: 8.1,
+                            yellowCards: 3,
+                            redCards: 0,
+                            foulsCommitted: 20,
+                            foulsDrawn: 35,
+                            offsides: 1
                         }
                     }
                 }
