@@ -1,31 +1,467 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>Football Hub Japan</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: sans-serif; background: #f7fafc; text-align: center; margin-top: 10vh; }
-    h1 { font-size: 2.5rem; color: #333; }
-    #startBtn {
-      margin-top: 2rem;
-      padding: 1rem 2.5rem;
-      font-size: 1.2rem;
-      background: #667eea;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    #startBtn:hover { background: #5a67d8; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Hub Japan - サッカー統計プラットフォーム</title>
+    <link href="https://cdn.jsdelivr.net/npm/chart.js" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #1a1a1a;
+            border-bottom: 2px solid #00ff88;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-menu a {
+            color: #ffffff;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-menu a:hover {
+            color: #00ff88;
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 3rem 0;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #00ff88;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: #cccccc;
+            margin-bottom: 2rem;
+        }
+
+        .cta-button {
+            background: #00ff88;
+            color: #000000;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 10px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: #00ff88;
+            transform: translateY(-5px);
+        }
+
+        .stat-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #00ff88;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 0.5rem;
+        }
+
+        .stat-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .stat-table th,
+        .stat-table td {
+            padding: 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid #333333;
+        }
+
+        .stat-table th {
+            background: #2a2a2a;
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .stat-table tr:hover {
+            background: #2a2a2a;
+        }
+
+        .chart-container {
+            background: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #00ff88;
+        }
+
+        .footer {
+            background: #1a1a1a;
+            border-top: 2px solid #00ff88;
+            padding: 2rem 0;
+            text-align: center;
+            margin-top: 3rem;
+        }
+
+        .footer-text {
+            color: #cccccc;
+        }
+
+        .highlight {
+            color: #00ff88;
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-menu {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>Football Hub Japan</h1>
-  <button id="startBtn">無料で始める</button>
-  <script>
-    document.getElementById('startBtn').onclick = () => alert('無料で始める！');
-  </script>
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">⚽ Football Hub Japan</div>
+            <ul class="nav-menu">
+                <li><a href="#matches">試合</a></li>
+                <li><a href="#stats">統計</a></li>
+                <li><a href="#rankings">ランキング</a></li>
+                <li><a href="#blog">ブログ</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="hero-section">
+            <h1 class="hero-title">pure. fast. accessible.</h1>
+            <p class="hero-subtitle">サッカー統計を<span class="highlight">純粋に</span>、<span class="highlight">高速に</span>、<span class="highlight">アクセスしやすく</span></p>
+            <button id="startBtn" class="cta-button">無料で始める</button>
+        </section>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 class="stat-title">トップパフォーマンスチーム</h3>
+                <p>ヨーロッパトップリーグの最高パフォーマンスチーム</p>
+                <table class="stat-table">
+                    <thead>
+                        <tr>
+                            <th>チーム</th>
+                            <th>フォーム</th>
+                            <th>平均得点</th>
+                            <th>平均得点</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Manchester City</td>
+                            <td>WWWWW</td>
+                            <td>2.8</td>
+                            <td>2.1</td>
+                        </tr>
+                        <tr>
+                            <td>Arsenal</td>
+                            <td>WWWWD</td>
+                            <td>2.5</td>
+                            <td>1.8</td>
+                        </tr>
+                        <tr>
+                            <td>Liverpool</td>
+                            <td>WWDLW</td>
+                            <td>2.3</td>
+                            <td>1.9</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="stat-card">
+                <h3 class="stat-title">トップスコアラー</h3>
+                <p>ヨーロッパと南米トップリーグ、過去10試合</p>
+                <table class="stat-table">
+                    <thead>
+                        <tr>
+                            <th>選手</th>
+                            <th>S</th>
+                            <th>G</th>
+                            <th>A</th>
+                            <th>平均</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Erling Haaland</td>
+                            <td>10</td>
+                            <td>8</td>
+                            <td>2</td>
+                            <td>0.8</td>
+                        </tr>
+                        <tr>
+                            <td>Harry Kane</td>
+                            <td>10</td>
+                            <td>7</td>
+                            <td>3</td>
+                            <td>0.7</td>
+                        </tr>
+                        <tr>
+                            <td>Kylian Mbappé</td>
+                            <td>10</td>
+                            <td>6</td>
+                            <td>4</td>
+                            <td>0.6</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="stat-card">
+                <h3 class="stat-title">スランプ中のストライカー</h3>
+                <p>全大会でゴールを待ち望むトップ-ローストライカー</p>
+                <table class="stat-table">
+                    <thead>
+                        <tr>
+                            <th>スコアラー</th>
+                            <th>最後のゴール</th>
+                            <th>試合</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Marcus Rashford</td>
+                            <td>5試合前</td>
+                            <td>vs Chelsea</td>
+                        </tr>
+                        <tr>
+                            <td>Gabriel Jesus</td>
+                            <td>7試合前</td>
+                            <td>vs Brighton</td>
+                        </tr>
+                        <tr>
+                            <td>Darwin Núñez</td>
+                            <td>4試合前</td>
+                            <td>vs Arsenal</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="stat-card">
+                <h3 class="stat-title">最新のハットトリック</h3>
+                <p>全進行中大会の最新ハットトリック</p>
+                <table class="stat-table">
+                    <thead>
+                        <tr>
+                            <th>日付</th>
+                            <th>試合</th>
+                            <th>スコアラー</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2024-01-15</td>
+                            <td>City vs United</td>
+                            <td>Haaland</td>
+                        </tr>
+                        <tr>
+                            <td>2024-01-12</td>
+                            <td>Arsenal vs Spurs</td>
+                            <td>Saka</td>
+                        </tr>
+                        <tr>
+                            <td>2024-01-10</td>
+                            <td>Liverpool vs Chelsea</td>
+                            <td>Salah</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h3 class="chart-title">リーグ別試合数</h3>
+            <canvas id="leagueChart" width="400" height="200"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <h3 class="chart-title">選手パフォーマンス</h3>
+            <canvas id="playerChart" width="400" height="200"></canvas>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p class="footer-text">For the 💙︎ of the game. | 2021-25</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ボタンのイベントハンドラー
+            document.getElementById('startBtn').addEventListener('click', function() {
+                alert('Football Hub Japanへようこそ！');
+            });
+
+            // リーグ別試合数チャート
+            const leagueCtx = document.getElementById('leagueChart').getContext('2d');
+            new Chart(leagueCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['プレミアリーグ', 'ラ・リーガ', 'ブンデスリーガ', 'セリエA', 'リーグ・アン'],
+                    datasets: [{
+                        data: [380, 380, 306, 380, 380],
+                        backgroundColor: [
+                            '#00ff88',
+                            '#00cc6a',
+                            '#00994d',
+                            '#006630',
+                            '#003313'
+                        ],
+                        borderColor: '#1a1a1a',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 選手パフォーマンスチャート
+            const playerCtx = document.getElementById('playerChart').getContext('2d');
+            new Chart(playerCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Haaland', 'Kane', 'Mbappé', 'Salah', 'Vinicius'],
+                    datasets: [{
+                        label: '得点数',
+                        data: [27, 24, 22, 18, 15],
+                        backgroundColor: '#00ff88',
+                        borderColor: '#00cc6a',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#333333'
+                            },
+                            ticks: {
+                                color: '#ffffff'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: '#333333'
+                            },
+                            ticks: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html> 
