@@ -353,30 +353,50 @@ class FirebaseDataService {
                                     }
                                 };
 
-                                // シーズン情報を追加
+                                // native-stats.org風のデータ構造
                                 const playerDataWithSeason = {
                                     ...playerData,
+                                    // 基本情報
+                                    fullName: player.name,
+                                    position: this.translatePosition(player.position) || 'Unknown',
+                                    birthday: player.dateOfBirth || null,
+                                    nationality: player.nationality || 'Unknown',
+                                    currentTeam: team.name,
+                                    contract: {
+                                        start: '2024-07-01',
+                                        end: '2025-06-30'
+                                    },
+                                    marketValue: player.marketValue || null,
+                                    preferredFoot: Math.random() > 0.5 ? 'Right' : 'Left',
+                                    
+                                    // 試合履歴（サンプル）
+                                    matches: this.generateMatchHistory(team.name, league.name),
+                                    
+                                    // シーズン統計
                                     seasons: {
                                         '2024-2025': {
                                             team: team.name,
                                             teamId: team.id.toString(),
                                             league: league.name,
                                             leagueId: league.id,
+                                            matchesPlayed: Math.floor(Math.random() * 30) + 10,
                                             stats: {
-                                                goals: Math.floor(Math.random() * 20),
-                                                assists: Math.floor(Math.random() * 15),
-                                                appearances: Math.floor(Math.random() * 30),
-                                                minutes: Math.floor(Math.random() * 2700),
-                                                passAccuracy: Math.floor(Math.random() * 30) + 70,
-                                                dribbleSuccess: Math.floor(Math.random() * 40) + 50,
-                                                shots: Math.floor(Math.random() * 50),
-                                                shotsOnTarget: Math.floor(Math.random() * 25),
-                                                keyPasses: Math.floor(Math.random() * 30),
-                                                tackles: Math.floor(Math.random() * 40),
-                                                interceptions: Math.floor(Math.random() * 30),
-                                                clearances: Math.floor(Math.random() * 50),
-                                                blocks: Math.floor(Math.random() * 20),
-                                                rating: (Math.random() * 2 + 6).toFixed(1)
+                                                goals: Math.floor(Math.random() * 15),
+                                                assists: Math.floor(Math.random() * 10),
+                                                appearances: Math.floor(Math.random() * 30) + 10,
+                                                minutes: Math.floor(Math.random() * 2700) + 900,
+                                                passAccuracy: Math.floor(Math.random() * 20) + 75,
+                                                dribbleSuccess: Math.floor(Math.random() * 30) + 60,
+                                                shots: Math.floor(Math.random() * 40),
+                                                shotsOnTarget: Math.floor(Math.random() * 20),
+                                                keyPasses: Math.floor(Math.random() * 25),
+                                                tackles: Math.floor(Math.random() * 35),
+                                                interceptions: Math.floor(Math.random() * 25),
+                                                clearances: Math.floor(Math.random() * 40),
+                                                blocks: Math.floor(Math.random() * 15),
+                                                rating: (Math.random() * 1.5 + 6.5).toFixed(1),
+                                                yellowCards: Math.floor(Math.random() * 8),
+                                                redCards: Math.floor(Math.random() * 2)
                                             }
                                         }
                                     }
@@ -427,6 +447,52 @@ class FirebaseDataService {
             age--;
         }
         return age;
+    }
+
+    // 試合履歴生成（native-stats.org風）
+    generateMatchHistory(teamName, leagueName) {
+        const matches = [];
+        const opponents = [
+            'Real Madrid CF', 'FC Barcelona', 'Atletico Madrid', 'Sevilla FC',
+            'Valencia CF', 'Athletic Club', 'Real Betis', 'Villarreal CF',
+            'Real Sociedad', 'Getafe CF', 'RCD Mallorca', 'Rayo Vallecano',
+            'Celta Vigo', 'Osasuna', 'Alaves', 'Las Palmas', 'Girona FC'
+        ];
+        
+        const currentDate = new Date();
+        
+        for (let i = 0; i < 20; i++) {
+            const matchDate = new Date(currentDate);
+            matchDate.setDate(matchDate.getDate() - (i * 7)); // 1週間ごと
+            
+            const isHome = Math.random() > 0.5;
+            const opponent = opponents[Math.floor(Math.random() * opponents.length)];
+            
+            // スコア生成
+            const homeGoals = Math.floor(Math.random() * 4);
+            const awayGoals = Math.floor(Math.random() * 4);
+            
+            // オッズ生成（native-stats.org風）
+            const homeOdds = (Math.random() * 2 + 1).toFixed(2);
+            const drawOdds = (Math.random() * 2 + 2).toFixed(2);
+            const awayOdds = (Math.random() * 3 + 2).toFixed(2);
+            
+            matches.push({
+                date: matchDate.toISOString().split('T')[0],
+                time: `${Math.floor(Math.random() * 24)}:${Math.random() > 0.5 ? '00' : '30'}`,
+                homeTeam: isHome ? teamName : opponent,
+                awayTeam: isHome ? opponent : teamName,
+                homeGoals: isHome ? homeGoals : awayGoals,
+                awayGoals: isHome ? awayGoals : homeGoals,
+                score: `${isHome ? homeGoals : awayGoals}:${isHome ? awayGoals : homeGoals}`,
+                odds: `${homeOdds} / ${drawOdds} / ${awayOdds}`,
+                venue: isHome ? 'Home' : 'Away',
+                league: leagueName,
+                result: homeGoals > awayGoals ? 'W' : homeGoals < awayGoals ? 'L' : 'D'
+            });
+        }
+        
+        return matches.sort((a, b) => new Date(b.date) - new Date(a.date));
     }
 
     // ポジション翻訳

@@ -395,14 +395,127 @@
             border: 1px solid #ff4444;
         }
 
-        /* FotMob風スタイル */
+        /* native-stats.org風スタイル */
+        .native-header {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            padding: 2rem 0;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+
+        .site-title {
+            color: #fff;
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin: 0;
+            letter-spacing: 2px;
+        }
+
+        .site-subtitle {
+            color: #888;
+            font-size: 1rem;
+            margin: 0.5rem 0 0 0;
+            font-weight: 300;
+        }
+
+        .league-nav {
+            background: #1a1a1a;
+            border-bottom: 1px solid #333;
+            padding: 1rem 0;
+        }
+
+        .league-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .league-tab {
+            background: none;
+            border: 1px solid #444;
+            color: #888;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            min-width: 60px;
+        }
+
+        .league-tab:hover {
+            border-color: #666;
+            color: #fff;
+        }
+
+        .league-tab.active {
+            background: #00ff88;
+            color: #000;
+            border-color: #00ff88;
+        }
+
+        .search-section {
+            background: #1a1a1a;
+            padding: 1.5rem 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .search-container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            display: flex;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .search-input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #fff;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+        }
+
+        .search-input::placeholder {
+            color: #666;
+        }
+
+        .search-btn {
+            background: #00ff88;
+            border: none;
+            color: #000;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .filter-select {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
         .data-row {
             cursor: pointer;
             transition: background-color 0.2s;
+            border-bottom: 1px solid #333;
         }
 
         .data-row:hover {
-            background-color: #1a3a1a;
+            background-color: #2a2a2a;
         }
 
         .player-info, .team-info, .league-info {
@@ -634,6 +747,105 @@
             cursor: not-allowed;
         }
 
+        /* native-stats.org風詳細表示 */
+        .player-info-section {
+            margin-bottom: 2rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .info-item label {
+            font-size: 0.875rem;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .info-item span {
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .matches-section {
+            margin-bottom: 2rem;
+        }
+
+        .matches-section h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .matches-table table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #2a2a2a;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .matches-table th {
+            background: #1a1a1a;
+            color: #888;
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .matches-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #333;
+            color: #fff;
+            font-size: 0.875rem;
+        }
+
+        .matches-table tr:hover {
+            background: #333;
+        }
+
+        .stats-section h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .stats-grid-native {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-item-native {
+            background: #2a2a2a;
+            padding: 1rem;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-item-native .stat-label {
+            font-size: 0.875rem;
+            color: #888;
+        }
+
+        .stat-item-native .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
         @media (max-width: 768px) {
             .search-controls {
                 grid-template-columns: 1fr;
@@ -663,35 +875,40 @@
         <h1 class="page-title">サッカーデータベース</h1>
         <p class="page-subtitle">世界中のリーグ、チーム、選手の詳細なデータを網羅</p>
 
+        <!-- native-stats.org風ヘッダー -->
+        <div class="native-header">
+            <div class="header-content">
+                <h1 class="site-title">Football Hub Japan</h1>
+                <p class="site-subtitle">pure. fast. accessible.</p>
+            </div>
+        </div>
+
+        <!-- リーグナビゲーション -->
+        <div class="league-nav">
+            <div class="league-tabs">
+                <button class="league-tab active" onclick="filterByLeague('all')">ALL</button>
+                <button class="league-tab" onclick="filterByLeague('PL')">PL</button>
+                <button class="league-tab" onclick="filterByLeague('PD')">PD</button>
+                <button class="league-tab" onclick="filterByLeague('SA')">SA</button>
+                <button class="league-tab" onclick="filterByLeague('BL1')">BL1</button>
+                <button class="league-tab" onclick="filterByLeague('FL1')">FL1</button>
+            </div>
+        </div>
+
+        <!-- 検索セクション -->
         <div class="search-section">
-            <h2 class="search-title">データ検索</h2>
-            <div class="search-controls">
-                <div class="search-group">
-                    <label for="searchType">検索タイプ</label>
-                    <select id="searchType" class="search-input">
-                        <option value="players">選手</option>
-                        <option value="teams">チーム</option>
-                        <option value="leagues">リーグ</option>
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="searchQuery" class="search-input" placeholder="Search players, teams, matches...">
+                    <button class="search-btn" onclick="searchData()">🔍</button>
+                </div>
+                <div class="search-filters">
+                    <select id="searchType" class="filter-select">
+                        <option value="players">Players</option>
+                        <option value="teams">Teams</option>
+                        <option value="matches">Matches</option>
                     </select>
                 </div>
-                <div class="search-group">
-                    <label for="searchQuery">検索キーワード</label>
-                    <input type="text" id="searchQuery" class="search-input" placeholder="選手名、チーム名、リーグ名...">
-                </div>
-                <div class="search-group">
-                    <label for="searchLeague">リーグ</label>
-                    <select id="searchLeague" class="search-input">
-                        <option value="">すべてのリーグ</option>
-                        <option value="j1">J1リーグ</option>
-                        <option value="j2">J2リーグ</option>
-                        <option value="premier">プレミアリーグ</option>
-                        <option value="laliga">ラ・リーガ</option>
-                        <option value="bundesliga">ブンデスリーガ</option>
-                        <option value="seriea">セリエA</option>
-                        <option value="ligue1">リーグ・アン</option>
-                    </select>
-                </div>
-                <button class="search-btn" onclick="searchData()">🔍 検索</button>
             </div>
         </div>
 
@@ -1271,56 +1488,117 @@
             updatePagination();
         }
 
-        // 詳細表示機能
+        // 詳細表示機能（native-stats.org風）
         function showPlayerDetail(playerId) {
             const player = currentData.find(p => p.id === playerId);
             if (!player) return;
             
             const seasonStats = player.seasons?.['2024-2025']?.stats || player.stats || {};
+            const matches = player.matches || [];
             
             const modal = document.createElement('div');
             modal.className = 'detail-modal';
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2>${player.name}</h2>
+                        <h2>Player Information</h2>
                         <button onclick="closeModal()" class="close-btn">×</button>
                     </div>
                     <div class="modal-body">
-                        <div class="player-header">
-                            <div class="player-avatar-large">${player.name.charAt(0)}</div>
-                            <div class="player-info-large">
-                                <h3>${player.name}</h3>
-                                <p>${player.position} • ${player.nationality} • ${player.age}歳</p>
-                                <p>${player.team} • ${player.league}</p>
+                        <!-- 基本情報 -->
+                        <div class="player-info-section">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>Full name</label>
+                                    <span>${player.fullName || player.name}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Position</label>
+                                    <span>${player.position}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Birthday</label>
+                                    <span>${player.birthday || 'N/A'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Nationality</label>
+                                    <span>${player.nationality}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Current Team</label>
+                                    <span>${player.currentTeam || player.team}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Contract</label>
+                                    <span>${player.contract?.start || 'N/A'} - ${player.contract?.end || 'N/A'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Est. market value</label>
+                                    <span>${player.marketValue ? player.marketValue + ' Mio. €' : 'n/a Mio. €'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Preferred foot</label>
+                                    <span>${player.preferredFoot || 'N/A'}</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="season-section">
-                            <h4>2024-2025 シーズン統計</h4>
-                            <div class="stats-grid-large">
-                                <div class="stat-card">
-                                    <div class="stat-value">${seasonStats.goals || 0}</div>
-                                    <div class="stat-label">ゴール</div>
+
+                        <!-- 試合履歴 -->
+                        <div class="matches-section">
+                            <h3>Matches in database</h3>
+                            <div class="matches-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Label</th>
+                                            <th>Score</th>
+                                            <th>Odds</th>
+                                            <th>OMV</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${matches.slice(0, 10).map(match => `
+                                            <tr>
+                                                <td>${match.date}, ${match.time}</td>
+                                                <td>${match.homeTeam} - ${match.awayTeam}</td>
+                                                <td>${match.score}</td>
+                                                <td>${match.odds}</td>
+                                                <td>100€</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 統計 -->
+                        <div class="stats-section">
+                            <h3>Season Statistics (2024-2025)</h3>
+                            <div class="stats-grid-native">
+                                <div class="stat-item-native">
+                                    <span class="stat-label">Appearances</span>
+                                    <span class="stat-value">${seasonStats.appearances || 0}</span>
                                 </div>
-                                <div class="stat-card">
-                                    <div class="stat-value">${seasonStats.assists || 0}</div>
-                                    <div class="stat-label">アシスト</div>
+                                <div class="stat-item-native">
+                                    <span class="stat-label">Goals</span>
+                                    <span class="stat-value">${seasonStats.goals || 0}</span>
                                 </div>
-                                <div class="stat-card">
-                                    <div class="stat-value">${seasonStats.appearances || 0}</div>
-                                    <div class="stat-label">試合数</div>
+                                <div class="stat-item-native">
+                                    <span class="stat-label">Assists</span>
+                                    <span class="stat-value">${seasonStats.assists || 0}</span>
                                 </div>
-                                <div class="stat-card">
-                                    <div class="stat-value">${seasonStats.rating || 'N/A'}</div>
-                                    <div class="stat-label">評価</div>
+                                <div class="stat-item-native">
+                                    <span class="stat-label">Rating</span>
+                                    <span class="stat-value">${seasonStats.rating || 'N/A'}</span>
                                 </div>
-                                <div class="stat-card">
-                                    <div class="stat-value">${seasonStats.minutes || 0}</div>
-                                    <div class="stat-label">出場時間</div>
+                                <div class="stat-item-native">
+                                    <span class="stat-label">Yellow Cards</span>
+                                    <span class="stat-value">${seasonStats.yellowCards || 0}</span>
                                 </div>
-                                <div class="stat-card">
-                                    <div class="stat-value">${seasonStats.passAccuracy || 0}%</div>
-                                    <div class="stat-label">パス成功率</div>
+                                <div class="stat-item-native">
+                                    <span class="stat-label">Red Cards</span>
+                                    <span class="stat-value">${seasonStats.redCards || 0}</span>
                                 </div>
                             </div>
                         </div>
@@ -1440,6 +1718,32 @@
             if (modal) {
                 modal.remove();
             }
+        }
+
+        // リーグフィルター機能
+        function filterByLeague(leagueCode) {
+            // リーグタブのアクティブ状態を更新
+            document.querySelectorAll('.league-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // データをフィルタリング
+            if (leagueCode === 'all') {
+                filteredData = [...currentData];
+            } else {
+                filteredData = currentData.filter(item => {
+                    if (currentTab === 'players') {
+                        return item.leagueId === leagueCode || item.league?.includes(leagueCode);
+                    } else if (currentTab === 'teams') {
+                        return item.leagueId === leagueCode || item.league?.includes(leagueCode);
+                    }
+                    return true;
+                });
+            }
+            
+            currentPage = 1;
+            renderData();
         }
 
         // 初期表示
