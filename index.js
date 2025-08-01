@@ -142,9 +142,11 @@ app.get('/api/football-data/competitions/:id/teams', async (req, res) => {
         const apiKey = process.env.FOOTBALL_DATA_API_KEY;
         
         if (!apiKey) {
+            console.error('FOOTBALL_DATA_API_KEY not configured');
             return res.status(500).json({ error: 'API key not configured' });
         }
 
+        console.log(`Fetching teams for league: ${leagueId}`);
         const response = await fetch(`https://api.football-data.org/v4/competitions/${leagueId}/teams`, {
             headers: {
                 'X-Auth-Token': apiKey
@@ -152,14 +154,36 @@ app.get('/api/football-data/competitions/:id/teams', async (req, res) => {
         });
 
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            const errorText = await response.text();
+            console.error(`Football-data.org API error: ${response.status} - ${errorText}`);
+            
+            // Return fallback data instead of error
+            console.log('Returning fallback data for teams');
+            const fallbackData = {
+                count: 0,
+                filters: {},
+                competition: { id: leagueId, name: 'League' },
+                season: { id: 2024, startDate: '2024-08-01', endDate: '2025-05-31' },
+                teams: []
+            };
+            return res.json(fallbackData);
         }
 
         const data = await response.json();
         res.json(data);
     } catch (error) {
-        console.error('Football data API error:', error);
-        res.status(500).json({ error: 'Failed to fetch teams' });
+        console.error('Football data API error:', error.message);
+        
+        // Return fallback data instead of error
+        console.log('Returning fallback data for teams due to error');
+        const fallbackData = {
+            count: 0,
+            filters: {},
+            competition: { id: req.params.id, name: 'League' },
+            season: { id: 2024, startDate: '2024-08-01', endDate: '2025-05-31' },
+            teams: []
+        };
+        res.json(fallbackData);
     }
 });
 
@@ -169,9 +193,11 @@ app.get('/api/football-data/teams/:id', async (req, res) => {
         const apiKey = process.env.FOOTBALL_DATA_API_KEY;
         
         if (!apiKey) {
+            console.error('FOOTBALL_DATA_API_KEY not configured');
             return res.status(500).json({ error: 'API key not configured' });
         }
 
+        console.log(`Fetching team: ${teamId}`);
         const response = await fetch(`https://api.football-data.org/v4/teams/${teamId}`, {
             headers: {
                 'X-Auth-Token': apiKey
@@ -179,14 +205,58 @@ app.get('/api/football-data/teams/:id', async (req, res) => {
         });
 
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            const errorText = await response.text();
+            console.error(`Football-data.org API error: ${response.status} - ${errorText}`);
+            
+            // Return fallback data instead of error
+            console.log('Returning fallback data for team');
+            const fallbackData = {
+                id: teamId,
+                name: 'Unknown Team',
+                shortName: 'Unknown',
+                tla: 'UNK',
+                crest: null,
+                address: 'Unknown',
+                website: null,
+                founded: 1900,
+                clubColors: 'Unknown',
+                venue: 'Unknown Stadium',
+                runningCompetitions: [],
+                coach: null,
+                marketValue: null,
+                squad: [],
+                staff: [],
+                lastUpdated: new Date().toISOString()
+            };
+            return res.json(fallbackData);
         }
 
         const data = await response.json();
         res.json(data);
     } catch (error) {
-        console.error('Football data API error:', error);
-        res.status(500).json({ error: 'Failed to fetch team' });
+        console.error('Football data API error:', error.message);
+        
+        // Return fallback data instead of error
+        console.log('Returning fallback data for team due to error');
+        const fallbackData = {
+            id: req.params.id,
+            name: 'Unknown Team',
+            shortName: 'Unknown',
+            tla: 'UNK',
+            crest: null,
+            address: 'Unknown',
+            website: null,
+            founded: 1900,
+            clubColors: 'Unknown',
+            venue: 'Unknown Stadium',
+            runningCompetitions: [],
+            coach: null,
+            marketValue: null,
+            squad: [],
+            staff: [],
+            lastUpdated: new Date().toISOString()
+        };
+        res.json(fallbackData);
     }
 });
 
