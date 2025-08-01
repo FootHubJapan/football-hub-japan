@@ -348,9 +348,9 @@
 
         <div class="data-section">
             <div class="data-tabs">
-                <button class="tab-btn active" onclick="switchTab('players')">選手データ</button>
-                <button class="tab-btn" onclick="switchTab('teams')">チームデータ</button>
-                <button class="tab-btn" onclick="switchTab('leagues')">リーグデータ</button>
+                <button class="tab-btn active" onclick="switchTab('players', this)">選手データ</button>
+                <button class="tab-btn" onclick="switchTab('teams', this)">チームデータ</button>
+                <button class="tab-btn" onclick="switchTab('leagues', this)">リーグデータ</button>
             </div>
 
             <div id="playersTab" class="tab-content">
@@ -415,6 +415,9 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="firebaseData.js"></script>
     <script>
         // データ管理
         let currentTab = 'players';
@@ -423,11 +426,10 @@
         let allTeams = [];
         let allPlayers = [];
 
-        // APIからデータを取得
+        // Firebaseからデータを取得
         async function fetchLeagues() {
             try {
-                const response = await fetch('/api/leagues?country=Japan');
-                const data = await response.json();
+                const data = await window.firebaseDataService.getLeagues();
                 allLeagues = data;
                 return data;
             } catch (error) {
@@ -438,8 +440,7 @@
 
         async function fetchTeams(leagueId) {
             try {
-                const response = await fetch(`/api/teams?leagueId=${leagueId}`);
-                const data = await response.json();
+                const data = await window.firebaseDataService.getTeams(leagueId);
                 allTeams = data;
                 return data;
             } catch (error) {
@@ -450,8 +451,7 @@
 
         async function fetchPlayers(teamId) {
             try {
-                const response = await fetch(`/api/players?teamId=${teamId}`);
-                const data = await response.json();
+                const data = await window.firebaseDataService.getPlayers(teamId);
                 allPlayers = data;
                 return data;
             } catch (error) {
@@ -462,8 +462,7 @@
 
         async function searchPlayers(query) {
             try {
-                const response = await fetch(`/api/search/players?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
+                const data = await window.firebaseDataService.searchPlayers(query);
                 return data;
             } catch (error) {
                 console.error('選手検索エラー:', error);
@@ -472,12 +471,16 @@
         }
 
         // タブ切り替え
-        async function switchTab(tab) {
+        async function switchTab(tab, element = null) {
             currentTab = tab;
             
             // タブボタンのアクティブ状態を更新
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            if (element) {
+                element.classList.add('active');
+            } else {
+                document.querySelector(`[onclick*="${tab}"]`).classList.add('active');
+            }
             
             // タブコンテンツを切り替え
             document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
@@ -525,6 +528,11 @@
         function renderData() {
             const tableBody = document.getElementById(currentTab + 'TableBody');
             tableBody.innerHTML = '';
+            
+            if (!currentData || currentData.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #888888; padding: 2rem;">データを読み込み中...</td></tr>';
+                return;
+            }
             
             currentData.forEach(item => {
                 const row = document.createElement('tr');
@@ -662,7 +670,29 @@
         // 初期表示
         document.addEventListener('DOMContentLoaded', async function() {
             // 初期データを読み込み
-            await switchTab('leagues');
+            try {
+                await switchTab('leagues');
+            } catch (error) {
+                console.error('初期データ読み込みエラー:', error);
+                // フォールバックデータを設定
+                currentData = [
+                    {
+                        name: "J1リーグ",
+                        country: "日本",
+                        teams: 18,
+                        season: "2024",
+                        stats: { totalMatches: 306, totalGoals: 856, avgGoals: 2.8 }
+                    },
+                    {
+                        name: "J2リーグ",
+                        country: "日本",
+                        teams: 22,
+                        season: "2024",
+                        stats: { totalMatches: 462, totalGoals: 1155, avgGoals: 2.5 }
+                    }
+                ];
+                renderData();
+            }
         });
     </script>
 </body>
