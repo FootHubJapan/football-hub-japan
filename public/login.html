@@ -116,6 +116,25 @@
             transform: translateY(-2px);
         }
 
+        .register-btn {
+            width: 100%;
+            background: #ffaa00;
+            color: #000000;
+            padding: 1rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        .register-btn:hover {
+            background: #ff8800;
+            transform: translateY(-2px);
+        }
+
         .free-start-btn {
             width: 100%;
             background: transparent;
@@ -258,15 +277,15 @@
         <div class="header">
             <div class="logo">⚽ Football Hub Japan</div>
             <div class="hero-message">
-                私たちはサッカーを愛するあなたのサポーターです<br>
-                サッカーデータとサッカーAIエージェントで<br>
-                あなたのサッカー体験をより楽しく
+                サッカーAIエージェント<br>
+                最先端のAI技術で日本サッカーを分析・予測<br>
+                選手パフォーマンス、戦術、移籍可能性を詳細分析
             </div>
         </div>
 
         <div class="main-content">
             <div class="login-section">
-                <h2 class="login-title">ログイン</h2>
+                <h2 class="login-title">ログイン / 新規登録</h2>
                 
                 <div id="errorMessage" class="error-message"></div>
                 <div id="successMessage" class="success-message"></div>
@@ -285,13 +304,14 @@
                     <button type="submit" class="login-btn">ログイン</button>
                 </form>
 
+                <button onclick="register()" class="register-btn">📝 新規登録</button>
                 <button onclick="freeStart()" class="free-start-btn">無料で始める</button>
                 <button onclick="goBack()" class="back-btn">戻る</button>
 
                 <div class="account-info">
                     <h4>アカウント情報</h4>
                     <p><strong>オーナーアカウント:</strong> iyuki09175407@gmail.com <span class="owner-badge">機能制限なし</span></p>
-                    <p><strong>一般ユーザー:</strong> その他のメールアドレス <span class="user-badge">機能制限あり</span></p>
+                    <p><strong>一般ユーザー:</strong> 新規登録で作成 <span class="user-badge">機能制限あり</span></p>
                 </div>
             </div>
 
@@ -362,20 +382,40 @@
             if (isOwner) {
                 showSuccess('オーナーアカウントでログインしました！機能制限なしでご利用いただけます。');
                 setTimeout(() => {
-                    window.location.href = '/dashboard';
+                    window.location.href = '/dashboard?email=' + encodeURIComponent(email);
                 }, 2000);
             } else {
                 showSuccess('一般ユーザーでログインしました！一部機能に制限があります。');
                 setTimeout(() => {
-                    window.location.href = '/dashboard';
+                    window.location.href = '/dashboard?email=' + encodeURIComponent(email);
                 }, 2000);
             }
         });
 
+        function register() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showError('メールアドレスとパスワードを入力してください。');
+                return;
+            }
+
+            if (email === 'iyuki09175407@gmail.com') {
+                showError('このメールアドレスは既にオーナーアカウントとして登録されています。');
+                return;
+            }
+
+            showSuccess('新規登録が完了しました！一般ユーザーとしてログインします。');
+            setTimeout(() => {
+                window.location.href = '/dashboard?email=' + encodeURIComponent(email);
+            }, 2000);
+        }
+
         function freeStart() {
             showSuccess('無料プランでログインしました！');
             setTimeout(() => {
-                window.location.href = '/dashboard';
+                window.location.href = '/dashboard?email=guest@footballhub.jp';
             }, 1500);
         }
 

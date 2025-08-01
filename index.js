@@ -31,7 +31,7 @@ app.get('/login', (req, res) => {
 
 // ダッシュボード（ログイン後）
 app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
 app.listen(PORT, () => {
