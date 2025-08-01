@@ -8,8 +8,26 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Basic middleware
-app.use(helmet());
+// Custom CSP configuration to allow all resources
+const helmetConfig = {
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'", "*", "'unsafe-inline'", "'unsafe-eval'", "data:", "blob:"],
+      scriptSrc: ["'self'", "*", "'unsafe-inline'", "'unsafe-eval'", "'unsafe-hashes'"],
+      styleSrc: ["'self'", "*", "'unsafe-inline'"],
+      imgSrc: ["'self'", "*", "data:", "blob:"],
+      fontSrc: ["'self'", "*", "data:"],
+      connectSrc: ["'self'", "*"],
+      frameSrc: ["'self'", "*"],
+      objectSrc: ["'self'", "*"],
+      mediaSrc: ["'self'", "*"],
+      manifestSrc: ["'self'", "*"]
+    }
+  }
+};
+
+// Basic middleware with custom CSP
+app.use(helmet(helmetConfig));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
