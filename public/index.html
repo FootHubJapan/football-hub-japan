@@ -140,8 +140,7 @@
             background: #1a1a1a;
             border: 1px solid #333333;
             border-radius: 10px;
-            padding: 2rem;
-            text-align: center;
+            padding: 1.5rem;
             transition: all 0.3s;
         }
 
@@ -150,15 +149,12 @@
             transform: translateY(-5px);
         }
 
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
         .feature-title {
             font-size: 1.3rem;
-            color: #00ff88;
             margin-bottom: 1rem;
+            color: #00ff88;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 0.5rem;
         }
 
         .feature-description {
@@ -234,50 +230,44 @@
             <h2 class="features-title">主な機能</h2>
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
+                    <h3 class="feature-title">サッカーデータベース</h3>
+                    <p class="feature-description">
+                        世界中のリーグ、チーム、選手の詳細なデータを網羅。リアルタイムで更新される統計情報にアクセスできます。
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <h3 class="feature-title">レーダーチャート比較</h3>
+                    <p class="feature-description">
+                        選手やチームのパフォーマンスを視覚的に比較。多角的な分析で真の実力を把握できます。
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <h3 class="feature-title">試合レビュー/プレビュー</h3>
+                    <p class="feature-description">
+                        AIが生成する詳細な試合分析。過去の試合レビューと今後の試合予想を提供します。
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <h3 class="feature-title">試合スケジュール</h3>
+                    <p class="feature-description">
+                        お気に入りのチームや選手の試合スケジュールを一覧表示。重要な試合を見逃しません。
+                    </p>
+                </div>
+
+                <div class="feature-card">
                     <h3 class="feature-title">AI分析エージェント</h3>
                     <p class="feature-description">
-                        Gemini AIが選手パフォーマンス、戦術、移籍可能性を詳細分析
+                        最新のAI技術で試合結果を予想。機械学習による高精度な分析をお届けします。
                     </p>
                 </div>
 
                 <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3 class="feature-title">高度な統計データ</h3>
+                    <h3 class="feature-title">ランキングシステム</h3>
                     <p class="feature-description">
-                        リアルタイム統計、ヒートマップ、パフォーマンス指標
-                    </p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🔮</div>
-                    <h3 class="feature-title">予測機能</h3>
-                    <p class="feature-description">
-                        試合結果、移籍、選手の成長ポテンシャルをAIが予測
-                    </p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3 class="feature-title">リアルタイム更新</h3>
-                    <p class="feature-description">
-                        ライブスコア、最新データ、即座に反映される分析結果
-                    </p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">🎯</div>
-                    <h3 class="feature-title">カスタム分析</h3>
-                    <p class="feature-description">
-                        特定の選手・チーム・戦術に特化したパーソナライズ分析
-                    </p>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">📱</div>
-                    <h3 class="feature-title">モバイル対応</h3>
-                    <p class="feature-description">
-                        スマートフォン・タブレット完全対応、どこでもアクセス可能
+                        ポジション別、リーグ別の詳細なランキング。選手の市場価値や移籍情報も追跡します。
                     </p>
                 </div>
             </div>
@@ -290,9 +280,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // 無料で始めるボタンのイベントハンドラー
+            // 無料で始めるボタンのイベントハンドラー - 直接ダッシュボードに遷移
             document.getElementById('startBtn').addEventListener('click', function() {
-                window.location.href = '/login';
+                window.location.href = '/dashboard';
             });
 
             // プランを見るボタンのイベントハンドラー
