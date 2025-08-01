@@ -8,6 +8,24 @@ require('dotenv').config(); // 環境変数をロード (.envファイルから)
 const app = express();
 const PORT = process.env.PORT || 3000; // 環境変数PORTが設定されていなければ3000番ポートを使用
 
+// Content Security Policy ヘッダーを設定
+app.use((req, res, next) => {
+  // CSPヘッダーを完全に無効化（開発環境用）
+  // res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; font-src * data:; connect-src *; frame-src *; object-src *;");
+  
+  // または、CSPヘッダーを削除して完全に無効化
+  res.removeHeader('Content-Security-Policy');
+  next();
+});
+
+// 静的ファイルの提供
+app.use(express.static('public'));
+
+// favicon.icoの404エラーを修正
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end(); // No Content
+});
+
 // LINE Botの設定
 // 環境変数からチャンネルアクセストークンとチャンネルシークレットを取得
 const lineConfig = {
@@ -212,11 +230,7 @@ app.post('/webhook', middleware(lineConfig), (req, res) => {
 // ヘルスチェックエンドポイント
 // サーバーが正常に動作しているか確認するために使用
 app.get('/', (req, res) => {
-  res.send(`⚽ Football Hub Japan BOT (Node.js版)
-🕐 起動時間: ${new Date().toLocaleString('ja-JP')}
-🔑 API-Footballキー設定: ${API_KEY ? '✅' : '❌'}
-📱 LINEチャネルアクセストークン設定: ${lineConfig.channelAccessToken ? '✅' : '❌'}
-📱 LINEチャネルシークレット設定: ${lineConfig.channelSecret ? '✅' : '❌'}`);
+  res.sendFile(__dirname + '/public/index.html');
 });
 
 // サーバー起動
