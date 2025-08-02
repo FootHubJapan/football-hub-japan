@@ -1301,6 +1301,13 @@
             
             // データを更新
             try {
+                // FirebaseDataServiceが利用可能かチェック
+                if (!window.firebaseDataService) {
+                    console.error('FirebaseDataServiceが利用できません');
+                    currentData = [];
+                    return;
+                }
+                
                 switch(tab) {
                     case 'players':
                         console.log('選手データを取得中...');
@@ -2222,10 +2229,10 @@
             // 検索タイプ変更時のイベントリスナーを追加
             document.getElementById('searchType').addEventListener('change', updateSearchFilters);
         
-        // デバッグ用：ポジションフィルターの動作確認
-        document.getElementById('searchPosition').addEventListener('change', function() {
-            console.log('ポジションフィルター変更:', this.value);
-        });
+            // デバッグ用：ポジションフィルターの動作確認
+            document.getElementById('searchPosition').addEventListener('change', function() {
+                console.log('ポジションフィルター変更:', this.value);
+            });
             
             // 初期フィルター状態を設定
             updateSearchFilters();
@@ -2233,7 +2240,8 @@
             // オーナー機能の表示/非表示を設定
             toggleOwnerFeatures();
             
-            // 初期タブを設定
+            // FirebaseDataServiceの初期化を待ってから初期タブを設定
+            await waitForFirebaseDataService();
             await switchTab('players');
             
             // 自動データ更新チェック（オーナーのみ）
@@ -2241,6 +2249,25 @@
                 await checkAndUpdateData();
             }
         });
+
+        // FirebaseDataServiceの初期化を待つ関数
+        async function waitForFirebaseDataService() {
+            let retryCount = 0;
+            const maxRetries = 50;
+            
+            while (!window.firebaseDataService && retryCount < maxRetries) {
+                console.log(`FirebaseDataServiceの初期化を待機中... (${retryCount + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, 200));
+                retryCount++;
+            }
+            
+            if (!window.firebaseDataService) {
+                console.error('FirebaseDataServiceの初期化がタイムアウトしました');
+                throw new Error('FirebaseDataServiceの初期化に失敗しました');
+            }
+            
+            console.log('FirebaseDataServiceが利用可能になりました');
+        }
 
         // 自動データ更新チェック
         async function checkAndUpdateData() {
