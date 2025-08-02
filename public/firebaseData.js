@@ -1,5 +1,6 @@
+// Version: 1.5 - Cache busting - UPDATED
 // Firebase Configuration
-const firebaseConfig = {
+let firebaseConfig = {
     apiKey: "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     authDomain: "football-hub-japan.firebaseapp.com",
     projectId: "football-hub-japan",
@@ -8,22 +9,109 @@ const firebaseConfig = {
     appId: "1:123456789012:web:abcdefghijklmnop"
 };
 
-// Initialize Firebase
-if (!firebase.apps.length) {
-firebase.initializeApp(firebaseConfig);
+// Check if Firebase is properly configured
+function isFirebaseConfigured() {
+    return firebaseConfig.apiKey && 
+           firebaseConfig.apiKey !== "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" &&
+           firebaseConfig.projectId &&
+           firebaseConfig.projectId !== "football-hub-japan";
 }
 
-const db = firebase.firestore();
+// Initialize Firebase only if properly configured
+let db = null;
+let firebaseInitialized = false;
+
+// Function to initialize Firebase with server config
+async function initializeFirebase() {
+    try {
+        // Get Firebase config from server
+        const response = await fetch('/api/firebase-config');
+        const data = await response.json();
+        
+        if (data.isConfigured) {
+            firebaseConfig = data.config;
+            console.log('Firebase configuration loaded from server');
+        } else {
+            console.warn('Firebase not properly configured on server');
+            return false;
+        }
+        
+        // Initialize Firebase
+        if (typeof firebase !== 'undefined' && isFirebaseConfigured()) {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            db = firebase.firestore();
+            firebaseInitialized = true;
+            console.log('Firebase initialized successfully');
+            return true;
+        } else {
+            console.warn('Firebase not available or not properly configured');
+            return false;
+        }
+    } catch (error) {
+        console.error('Error initializing Firebase:', error);
+        return false;
+    }
+}
+
+// Initialize Firebase when the script loads
+initializeFirebase().then(success => {
+    if (!success) {
+        console.log('Firebase initialization failed, using fallback data');
+    }
+});
 
 // Firebase Data Service
 class FirebaseDataService {
     constructor() {
         this.db = db;
-        console.log('FirebaseDataService initialized');
+        this.isInitialized = firebaseInitialized;
+        this.initializationPromise = null;
+        
+        if (this.isInitialized) {
+            console.log('FirebaseDataService initialized with Firebase');
+        } else {
+            console.log('FirebaseDataService initialized with fallback mode');
+        }
+        
+        // Make the service available globally
+        window.firebaseDataService = this;
+    }
+    
+    // Wait for Firebase initialization
+    async waitForInitialization() {
+        if (this.isInitialized) {
+            return true;
+        }
+        
+        if (!this.initializationPromise) {
+            this.initializationPromise = new Promise((resolve) => {
+                const checkInitialization = () => {
+                    if (firebaseInitialized) {
+                        this.isInitialized = true;
+                        this.db = db;
+                        resolve(true);
+                    } else {
+                        setTimeout(checkInitialization, 100);
+                    }
+                };
+                checkInitialization();
+            });
+        }
+        
+        return this.initializationPromise;
     }
 
     // Get all leagues
     async getLeagues() {
+        await this.waitForInitialization();
+        
+        if (!this.isInitialized || !this.db) {
+            console.log('Firebase not available, using fallback leagues data');
+            return this.getFallbackLeagues();
+        }
+        
         try {
             const snapshot = await this.db.collection('leagues').get();
             if (!snapshot.empty) {
@@ -40,6 +128,13 @@ class FirebaseDataService {
 
     // Get all teams
     async getTeams() {
+        await this.waitForInitialization();
+        
+        if (!this.isInitialized || !this.db) {
+            console.log('Firebase not available, using fallback teams data');
+            return this.getFallbackTeams();
+        }
+        
         try {
             // First try to get cached data
             const cachedTeams = await this.getCachedTeams();
@@ -71,6 +166,15 @@ class FirebaseDataService {
 
     // Get all players
     async getPlayers() {
+        console.log('getPlayers() called');
+        
+        if (!this.isInitialized || !this.db) {
+            console.log('Firebase not available, using fallback players data');
+            const fallbackPlayers = this.getFallbackPlayers();
+            console.log('Fallback players returned:', fallbackPlayers.length, 'players');
+            return fallbackPlayers;
+        }
+        
         try {
             // First try to get cached data
             const cachedPlayers = await this.getCachedPlayers();
@@ -102,6 +206,13 @@ class FirebaseDataService {
 
     // Search players with enhanced functionality
     async searchPlayers(query) {
+        await this.waitForInitialization();
+        
+        if (!this.isInitialized || !this.db) {
+            console.log('Firebase not available, using fallback search');
+            return this.searchFallbackPlayers(query);
+        }
+        
         try {
             console.log('Player search started: "' + query + '"');
             const searchQuery = query.toLowerCase().trim();
@@ -350,7 +461,8 @@ class FirebaseDataService {
     }
 
     getFallbackPlayers() {
-        return [
+        console.log('getFallbackPlayers() called');
+        const players = [
             {
                 id: '1',
                 fullName: 'Juan Carlos',
@@ -372,7 +484,7 @@ class FirebaseDataService {
                         league: 'La Liga',
                         leagueId: 'PD',
                         matchesPlayed: 25,
-                stats: {
+                        stats: {
                             goals: 0,
                             assists: 0,
                             appearances: 25,
@@ -446,32 +558,32 @@ class FirebaseDataService {
                 currentTeam: 'Brighton & Hove Albion',
                 team: 'Brighton & Hove Albion',
                 contract: { start: '2022-08', end: '2027-06' },
-                marketValue: '30.0',
+                marketValue: '35.0',
                 preferredFoot: 'Right',
                 matches: this.generateMatchHistory('Brighton & Hove Albion'),
                 seasons: {
                     '2024-2025': {
                         team: 'Brighton & Hove Albion',
-                        teamId: '4',
+                        teamId: '7',
                         league: 'Premier League',
                         leagueId: 'PL',
-                        matchesPlayed: 26,
-                stats: {
-                            goals: 6,
+                        matchesPlayed: 30,
+                        stats: {
+                            goals: 12,
                             assists: 8,
-                            appearances: 26,
-                            minutes: 2340,
+                            appearances: 30,
+                            minutes: 2700,
                             passAccuracy: 78,
                             dribbleSuccess: 72,
-                            shots: 38,
-                            shotsOnTarget: 15,
+                            shots: 52,
+                            shotsOnTarget: 22,
                             keyPasses: 42,
                             tackles: 18,
                             interceptions: 12,
                             clearances: 3,
                             blocks: 2,
-                            rating: 7.3,
-                            yellowCards: 3,
+                            rating: 7.8,
+                            yellowCards: 5,
                             redCards: 0
                         }
                     }
@@ -485,41 +597,85 @@ class FirebaseDataService {
                 position: 'Centre-Forward',
                 birthday: '2000-07-21',
                 nationality: 'Norway',
-                currentTeam: 'Manchester City FC',
-                team: 'Manchester City FC',
+                currentTeam: 'Manchester City',
+                team: 'Manchester City',
                 contract: { start: '2022-07', end: '2027-06' },
                 marketValue: '180.0',
                 preferredFoot: 'Left',
-                matches: this.generateMatchHistory('Manchester City FC'),
+                matches: this.generateMatchHistory('Manchester City'),
                 seasons: {
                     '2024-2025': {
-                        team: 'Manchester City FC',
-                        teamId: '3',
+                        team: 'Manchester City',
+                        teamId: '8',
                         league: 'Premier League',
                         leagueId: 'PL',
-                        matchesPlayed: 30,
-                stats: {
-                            goals: 18,
+                        matchesPlayed: 32,
+                        stats: {
+                            goals: 28,
                             assists: 5,
-                            appearances: 30,
-                            minutes: 2700,
+                            appearances: 32,
+                            minutes: 2880,
                             passAccuracy: 75,
                             dribbleSuccess: 45,
                             shots: 89,
                             shotsOnTarget: 42,
-                            keyPasses: 28,
+                            keyPasses: 18,
                             tackles: 8,
-                            interceptions: 5,
-                            clearances: 12,
-                            blocks: 3,
-                            rating: 7.8,
-                            yellowCards: 2,
+                            interceptions: 4,
+                            clearances: 2,
+                            blocks: 1,
+                            rating: 8.2,
+                            yellowCards: 3,
+                            redCards: 0
+                        }
+                    }
+                }
+            },
+            {
+                id: '5',
+                fullName: 'Kylian Mbappé',
+                firstName: 'Kylian',
+                lastName: 'Mbappé',
+                position: 'Left Winger',
+                birthday: '1998-12-20',
+                nationality: 'France',
+                currentTeam: 'Real Madrid',
+                team: 'Real Madrid',
+                contract: { start: '2024-07', end: '2029-06' },
+                marketValue: '150.0',
+                preferredFoot: 'Right',
+                matches: this.generateMatchHistory('Real Madrid'),
+                seasons: {
+                    '2024-2025': {
+                        team: 'Real Madrid',
+                        teamId: '9',
+                        league: 'La Liga',
+                        leagueId: 'PD',
+                        matchesPlayed: 29,
+                        stats: {
+                            goals: 22,
+                            assists: 15,
+                            appearances: 29,
+                            minutes: 2610,
+                            passAccuracy: 82,
+                            dribbleSuccess: 78,
+                            shots: 76,
+                            shotsOnTarget: 35,
+                            keyPasses: 48,
+                            tackles: 12,
+                            interceptions: 8,
+                            clearances: 1,
+                            blocks: 0,
+                            rating: 8.5,
+                            yellowCards: 4,
                             redCards: 0
                         }
                     }
                 }
             }
         ];
+        console.log('getFallbackPlayers() returning:', players.length, 'players');
+        return players;
     }
 
     searchFallbackPlayers(query) {
@@ -920,6 +1076,11 @@ class FirebaseDataService {
 
     // Check if data is already imported and cached
     async isDataImported() {
+        if (!this.isInitialized || !this.db) {
+            console.log('Firebase not available, data import check skipped');
+            return false;
+        }
+        
         try {
             const snapshot = await this.db.collection('players').limit(1).get();
             return !snapshot.empty;
@@ -931,6 +1092,11 @@ class FirebaseDataService {
 
     // Get cached data from Firebase
     async getCachedPlayers() {
+        if (!this.isInitialized || !this.db) {
+            console.log('Firebase not available, cannot load cached players');
+            return [];
+        }
+        
         try {
             console.log('Loading cached players from Firebase...');
             const snapshot = await this.db.collection('players').get();
@@ -949,6 +1115,11 @@ class FirebaseDataService {
     }
 
     async getCachedTeams() {
+        if (!this.isInitialized || !this.db) {
+            console.log('Firebase not available, cannot load cached teams');
+            return [];
+        }
+        
         try {
             console.log('Loading cached teams from Firebase...');
             const snapshot = await this.db.collection('teams').get();
@@ -968,33 +1139,62 @@ class FirebaseDataService {
 
     // Clear all cached data
     async clearCachedData() {
+        if (!this.isInitialized || !this.db) {
+            console.log('Firebase not available, cannot clear cached data');
+            return;
+        }
+        
         try {
             console.log('Clearing cached data...');
             
-            // Clear players
+            // Clear players in smaller batches to avoid quota limits
             const playersSnapshot = await this.db.collection('players').get();
-            const playerBatch = this.db.batch();
-            playersSnapshot.docs.forEach(doc => {
-                playerBatch.delete(doc.ref);
-            });
-            await playerBatch.commit();
+            const playerDocs = playersSnapshot.docs;
+            const batchSize = 500; // Firebase batch limit
+            
+            for (let i = 0; i < playerDocs.length; i += batchSize) {
+                const batch = this.db.batch();
+                const batchDocs = playerDocs.slice(i, i + batchSize);
+                batchDocs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                console.log(`Cleared players batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(playerDocs.length / batchSize)}`);
+            }
             
             // Clear teams
             const teamsSnapshot = await this.db.collection('teams').get();
-            const teamBatch = this.db.batch();
-            teamsSnapshot.docs.forEach(doc => {
-                teamBatch.delete(doc.ref);
-            });
-            await teamBatch.commit();
+            const teamDocs = teamsSnapshot.docs;
+            
+            for (let i = 0; i < teamDocs.length; i += batchSize) {
+                const batch = this.db.batch();
+                const batchDocs = teamDocs.slice(i, i + batchSize);
+                batchDocs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                console.log(`Cleared teams batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(teamDocs.length / batchSize)}`);
+            }
             
             console.log('Cached data cleared successfully');
         } catch (error) {
             console.error('Error clearing cached data:', error);
+            // Don't throw error to prevent breaking the UI
         }
     }
 
     // Check data status and return detailed information
     async checkDataStatus() {
+        if (!this.isInitialized || !this.db) {
+            return {
+                type: 'warning',
+                message: 'Firebaseが利用できません。フォールバックデータを使用しています。',
+                playerCount: 0,
+                teamCount: 0,
+                isImported: false
+            };
+        }
+        
         try {
             const playersSnapshot = await this.db.collection('players').get();
             const teamsSnapshot = await this.db.collection('teams').get();
@@ -1049,6 +1249,14 @@ class FirebaseDataService {
 
     // Refresh data (clear and re-import)
     async refreshData() {
+        if (!this.isInitialized || !this.db) {
+            console.log('Firebase not available, cannot refresh data');
+            return {
+                type: 'warning',
+                message: 'Firebaseが利用できません。データ更新をスキップしました。'
+            };
+        }
+        
         try {
             console.log('Starting data refresh...');
             
@@ -1074,26 +1282,40 @@ class FirebaseDataService {
 }
 
 // Initialize and make globally available
-const firebaseDataService = new FirebaseDataService();
-window.firebaseDataService = firebaseDataService;
+let firebaseDataService = null;
 
-// Global function for importing real data
-window.importRealFootballData = async function() {
+// Initialize FirebaseDataService after Firebase is ready
+async function initializeFirebaseDataService() {
     try {
-        const result = await firebaseDataService.importRealFootballData();
-        alert(`データインポート完了！\n${result.teams}チーム、${result.players}選手をインポートしました。`);
-        return result;
+        firebaseDataService = new FirebaseDataService();
+        window.firebaseDataService = firebaseDataService;
+        
+        // Global function for importing real data
+        window.importRealFootballData = async function() {
+            try {
+                const result = await firebaseDataService.importRealFootballData();
+                alert(`データインポート完了！\n${result.teams}チーム、${result.players}選手をインポートしました。`);
+                return result;
+            } catch (error) {
+                console.error('Import failed:', error);
+                alert('データインポートに失敗しました。');
+                throw error;
+            }
+        };
+
+        // Global function for setting API key (now managed in backend)
+        window.setApiKey = function() {
+            console.log('API key is managed in the backend environment variables');
+            alert('APIキーはバックエンドで管理されています。');
+        };
+
+        console.log('FirebaseDataService initialized');
     } catch (error) {
-        console.error('Import failed:', error);
-        alert('データインポートに失敗しました。');
-        throw error;
+        console.error('Error initializing FirebaseDataService:', error);
     }
-};
+}
 
-// Global function for setting API key (now managed in backend)
-window.setApiKey = function() {
-    console.log('API key is managed in the backend environment variables');
-    alert('APIキーはバックエンドで管理されています。');
-};
-
-console.log('FirebaseDataService initialized'); 
+// Initialize after Firebase is ready
+initializeFirebase().then(() => {
+    initializeFirebaseDataService();
+}); 

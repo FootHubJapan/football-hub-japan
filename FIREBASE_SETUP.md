@@ -28,10 +28,31 @@ const firebaseConfig = {
 };
 ```
 
-## 2. 設定情報を更新
+## 2. 環境変数の設定
 
-### public/firebaseData.js を更新
-上記で取得した設定情報で `public/firebaseData.js` の `firebaseConfig` を更新してください。
+### .env ファイルを作成
+プロジェクトルートに `.env` ファイルを作成し、以下の内容を追加してください：
+
+```bash
+# Football API Key (API-Football)
+FOOTBALL_API_KEY=your-api-key-here
+
+# Football Data API Key (football-data.org)
+FOOTBALL_DATA_API_KEY=your-football-data-api-key-here
+
+# Firebase Configuration
+FIREBASE_API_KEY=AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+FIREBASE_AUTH_DOMAIN=football-hub-japan.firebaseapp.com
+FIREBASE_PROJECT_ID=football-hub-japan
+FIREBASE_STORAGE_BUCKET=football-hub-japan.appspot.com
+FIREBASE_MESSAGING_SENDER_ID=123456789012
+FIREBASE_APP_ID=1:123456789012:web:abcdef1234567890
+
+# Server Port
+PORT=3000
+```
+
+**重要**: 上記の設定値を、Firebase Consoleで取得した実際の値に置き換えてください。
 
 ## 3. Firestoreデータベースの設定
 
@@ -155,9 +176,19 @@ Firebase Consoleの「Firestore Database」から手動でデータを追加す�
 ## トラブルシューティング
 
 ### よくある問題
-1. **APIキーエラー**: 設定情報が正しくコピーされているか確認
+1. **APIキーエラー**: 環境変数が正しく設定されているか確認
 2. **データが表示されない**: Firestoreにデータが存在するか確認
 3. **セキュリティエラー**: セキュリティルールを確認
+4. **FirebaseDataServiceが利用できません**: 環境変数の設定を確認
 
 ### ログの確認
-ブラウザの開発者ツールのコンソールでエラーメッセージを確認してください。 
+ブラウザの開発者ツールのコンソールでエラーメッセージを確認してください。
+
+### 環境変数の確認
+サーバーを再起動して、環境変数が正しく読み込まれているか確認してください：
+
+```bash
+node index.js
+```
+
+コンソールに「Firebase configuration loaded from server」と表示されれば正常です。 

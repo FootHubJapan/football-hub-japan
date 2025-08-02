@@ -3,6 +3,9 @@ const path = require('path');
 const helmet = require('helmet');
 const dataService = require('./dataService');
 
+// Load environment variables
+require('dotenv').config();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -26,6 +29,17 @@ app.use(helmet({
 
 // Middleware
 app.use(express.json());
+
+// Disable caching for HTML files
+app.use((req, res, next) => {
+    if (req.path.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+    next();
+});
+
 app.use(express.static('public'));
 
 // Favicon route
@@ -48,6 +62,14 @@ app.get('/dashboard', (req, res) => {
 
 app.get('/database', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'database.html'));
+});
+
+app.get('/database-new', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'database-new.html'));
+});
+
+app.get('/database-fixed', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'database-fixed.html'));
 });
 
 app.get('/radar', (req, res) => {
@@ -501,6 +523,29 @@ app.post('/admin/refresh-data', async (req, res) => {
             error: 'Failed to refresh data: ' + error.message 
         });
     }
+});
+
+// Firebase configuration endpoint
+app.get('/api/firebase-config', (req, res) => {
+    const firebaseConfig = {
+        apiKey: process.env.FIREBASE_API_KEY,
+        authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+        appId: process.env.FIREBASE_APP_ID
+    };
+    
+    // Check if Firebase is properly configured
+    const isConfigured = firebaseConfig.apiKey && 
+                        firebaseConfig.apiKey !== 'your-firebase-api-key-here' &&
+                        firebaseConfig.projectId &&
+                        firebaseConfig.projectId !== 'your-project-id';
+    
+    res.json({
+        config: firebaseConfig,
+        isConfigured: isConfigured
+    });
 });
 
 // Start server
