@@ -80,6 +80,14 @@ app.get('/native-stats', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'native-stats.html'));
 });
 
+app.get('/test-firebase-fix', (req, res) => {
+    res.sendFile(path.join(__dirname, 'test-firebase-fix.html'));
+});
+
+app.get('/database-final', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'database-final.html'));
+});
+
 // Native Stats API Endpoints (native-stats.org style)
 app.get('/api/native-stats/players', async (req, res) => {
     try {
@@ -204,6 +212,66 @@ app.get('/api/football-data/competitions/:id/teams', async (req, res) => {
             competition: { id: req.params.id, name: 'League' },
             season: { id: 2024, startDate: '2024-08-01', endDate: '2025-05-31' },
             teams: []
+        };
+        res.json(fallbackData);
+    }
+});
+
+// 選手詳細情報を取得
+app.get('/api/football-data/players/:id', async (req, res) => {
+    try {
+        const playerId = req.params.id;
+        const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+        
+        if (!apiKey) {
+            console.error('FOOTBALL_DATA_API_KEY not configured');
+            return res.status(500).json({ error: 'API key not configured' });
+        }
+
+        console.log(`Fetching player: ${playerId}`);
+        const response = await fetch(`https://api.football-data.org/v4/persons/${playerId}`, {
+            headers: {
+                'X-Auth-Token': apiKey
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Football-data.org API error: ${response.status} - ${errorText}`);
+            
+            // Return fallback data instead of error
+            console.log('Returning fallback data for player');
+            const fallbackData = {
+                id: playerId,
+                name: 'Unknown Player',
+                firstName: 'Unknown',
+                lastName: 'Player',
+                dateOfBirth: '1900-01-01',
+                nationality: 'Unknown',
+                position: 'Unknown',
+                shirtNumber: null,
+                lastUpdated: new Date().toISOString()
+            };
+            return res.json(fallbackData);
+        }
+
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Football data API error:', error.message);
+        
+        // Return fallback data instead of error
+        console.log('Returning fallback data for player due to error');
+        const fallbackData = {
+            id: req.params.id,
+            name: 'Unknown Player',
+            firstName: 'Unknown',
+            lastName: 'Player',
+            dateOfBirth: '1900-01-01',
+            nationality: 'Unknown',
+            position: 'Unknown',
+            shirtNumber: null,
+            lastUpdated: new Date().toISOString()
         };
         res.json(fallbackData);
     }

@@ -130,6 +130,12 @@ class FirebaseDataService {
     async getTeams() {
         await this.waitForInitialization();
         
+        // Check memory data first
+        if (this.memoryTeams && this.memoryTeams.length > 0) {
+            console.log(`Using ${this.memoryTeams.length} teams from memory`);
+            return this.memoryTeams;
+        }
+        
         if (!this.isInitialized || !this.db) {
             console.log('Firebase not available, using fallback teams data');
             return this.getFallbackTeams();
@@ -167,6 +173,12 @@ class FirebaseDataService {
     // Get all players
     async getPlayers() {
         console.log('getPlayers() called');
+        
+        // Check memory data first
+        if (this.memoryPlayers && this.memoryPlayers.length > 0) {
+            console.log(`Using ${this.memoryPlayers.length} players from memory`);
+            return this.memoryPlayers;
+        }
         
         if (!this.isInitialized || !this.db) {
             console.log('Firebase not available, using fallback players data');
@@ -207,11 +219,6 @@ class FirebaseDataService {
     // Search players with enhanced functionality
     async searchPlayers(query) {
         await this.waitForInitialization();
-        
-        if (!this.isInitialized || !this.db) {
-            console.log('Firebase not available, using fallback search');
-            return this.searchFallbackPlayers(query);
-        }
         
         try {
             console.log('Player search started: "' + query + '"');
@@ -921,6 +928,11 @@ class FirebaseDataService {
         try {
             console.log('Starting import of real football data...');
             
+            // Check if Firebase is available, if not, work in memory-only mode
+            if (!this.isInitialized || !this.db) {
+                console.log('Firebase not available, working in memory-only mode');
+            }
+            
             const leagues = ['PL', 'PD', 'SA', 'BL1', 'FL1'];
             let totalTeams = 0;
             let totalPlayers = 0;
@@ -936,6 +948,13 @@ class FirebaseDataService {
                     }
                     
                     const data = await response.json();
+                    
+                    // Check if the response contains an error message about API key
+                    if (data.error && data.error.includes('API key')) {
+                        console.log(`API key not configured for ${league}, skipping...`);
+                        continue;
+                    }
+                    
                     const teams = data.teams || [];
                     
                     console.log(`${league}: ${teams.length} teams to process...`);
@@ -979,7 +998,9 @@ class FirebaseDataService {
                             }
                         });
 
-                        await this.db.collection('teams').doc(team.id.toString()).set(teamData);
+                        // Store in memory
+                        if (!this.memoryTeams) this.memoryTeams = [];
+                        this.memoryTeams.push(teamData);
                         totalTeams++;
 
                         // Get players for this team
@@ -987,6 +1008,13 @@ class FirebaseDataService {
                             const playerResponse = await fetch(`/api/football-data/teams/${team.id}`);
                             if (playerResponse.ok) {
                                 const playerData = await playerResponse.json();
+                                
+                                // Check if the response contains an error message about API key
+                                if (playerData.error && playerData.error.includes('API key')) {
+                                    console.log(`API key not configured for team ${team.name}, skipping players...`);
+                                    continue;
+                                }
+                                
                                 const players = playerData.squad || [];
                                 
                                 console.log(`${team.name}: ${players.length} players to process...`);
@@ -1036,7 +1064,9 @@ class FirebaseDataService {
                                         }
                                     });
 
-                                    await this.db.collection('players').doc(player.id.toString()).set(playerDataWithSeason);
+                                    // Store in memory
+                                    if (!this.memoryPlayers) this.memoryPlayers = [];
+                                    this.memoryPlayers.push(playerDataWithSeason);
                                     totalPlayers++;
                                 }
                             }
@@ -1076,6 +1106,17 @@ class FirebaseDataService {
 
     // Check if data is already imported and cached
     async isDataImported() {
+        // Check memory data first
+        if (this.memoryPlayers && this.memoryPlayers.length > 0) {
+            console.log('Data found in memory');
+            return true;
+        }
+        
+        if (this.memoryTeams && this.memoryTeams.length > 0) {
+            console.log('Team data found in memory');
+            return true;
+        }
+        
         if (!this.isInitialized || !this.db) {
             console.log('Firebase not available, data import check skipped');
             return false;
@@ -1090,8 +1131,14 @@ class FirebaseDataService {
         }
     }
 
-    // Get cached data from Firebase
+    // Get cached data from memory or Firebase
     async getCachedPlayers() {
+        // Check memory first
+        if (this.memoryPlayers && this.memoryPlayers.length > 0) {
+            console.log(`Loading ${this.memoryPlayers.length} players from memory`);
+            return this.memoryPlayers;
+        }
+        
         if (!this.isInitialized || !this.db) {
             console.log('Firebase not available, cannot load cached players');
             return [];
@@ -1115,6 +1162,12 @@ class FirebaseDataService {
     }
 
     async getCachedTeams() {
+        // Check memory first
+        if (this.memoryTeams && this.memoryTeams.length > 0) {
+            console.log(`Loading ${this.memoryTeams.length} teams from memory`);
+            return this.memoryTeams;
+        }
+        
         if (!this.isInitialized || !this.db) {
             console.log('Firebase not available, cannot load cached teams');
             return [];
@@ -1139,13 +1192,24 @@ class FirebaseDataService {
 
     // Clear all cached data
     async clearCachedData() {
+        // Clear memory data first
+        if (this.memoryPlayers) {
+            console.log(`Clearing ${this.memoryPlayers.length} players from memory`);
+            this.memoryPlayers = [];
+        }
+        
+        if (this.memoryTeams) {
+            console.log(`Clearing ${this.memoryTeams.length} teams from memory`);
+            this.memoryTeams = [];
+        }
+        
         if (!this.isInitialized || !this.db) {
-            console.log('Firebase not available, cannot clear cached data');
+            console.log('Firebase not available, memory data cleared');
             return;
         }
         
         try {
-            console.log('Clearing cached data...');
+            console.log('Clearing Firebase cached data...');
             
             // Clear players in smaller batches to avoid quota limits
             const playersSnapshot = await this.db.collection('players').get();
@@ -1185,6 +1249,38 @@ class FirebaseDataService {
 
     // Check data status and return detailed information
     async checkDataStatus() {
+        // Check memory data first
+        const memoryPlayerCount = this.memoryPlayers ? this.memoryPlayers.length : 0;
+        const memoryTeamCount = this.memoryTeams ? this.memoryTeams.length : 0;
+        
+        if (memoryPlayerCount > 0 || memoryTeamCount > 0) {
+            if (memoryPlayerCount > 0 && memoryTeamCount > 0) {
+                return {
+                    type: 'success',
+                    message: `メモリに ${memoryPlayerCount} 人の選手と ${memoryTeamCount} チームが保存されています`,
+                    playerCount: memoryPlayerCount,
+                    teamCount: memoryTeamCount,
+                    isImported: true
+                };
+            } else if (memoryPlayerCount > 0) {
+                return {
+                    type: 'warning',
+                    message: `選手データのみ保存されています (${memoryPlayerCount}人)`,
+                    playerCount: memoryPlayerCount,
+                    teamCount: 0,
+                    isImported: true
+                };
+            } else if (memoryTeamCount > 0) {
+                return {
+                    type: 'warning',
+                    message: `チームデータのみ保存されています (${memoryTeamCount}チーム)`,
+                    playerCount: 0,
+                    teamCount: memoryTeamCount,
+                    isImported: true
+                };
+            }
+        }
+        
         if (!this.isInitialized || !this.db) {
             return {
                 type: 'warning',
@@ -1249,18 +1345,10 @@ class FirebaseDataService {
 
     // Refresh data (clear and re-import)
     async refreshData() {
-        if (!this.isInitialized || !this.db) {
-            console.log('Firebase not available, cannot refresh data');
-            return {
-                type: 'warning',
-                message: 'Firebaseが利用できません。データ更新をスキップしました。'
-            };
-        }
-        
         try {
             console.log('Starting data refresh...');
             
-            // Clear existing data
+            // Clear existing data (works with both memory and Firebase)
             await this.clearCachedData();
             
             // Re-import data
@@ -1294,7 +1382,13 @@ async function initializeFirebaseDataService() {
         window.importRealFootballData = async function() {
             try {
                 const result = await firebaseDataService.importRealFootballData();
-                alert(`データインポート完了！\n${result.teams}チーム、${result.players}選手をインポートしました。`);
+                
+                if (result.teams === 0 && result.players === 0) {
+                    alert('データインポート完了！\nAPIキーが設定されていないため、0チーム、0選手をインポートしました。\n\n実際のデータをインポートするには、.envファイルにFOOTBALL_DATA_API_KEYを設定してください。');
+                } else {
+                    alert(`データインポート完了！\n${result.teams}チーム、${result.players}選手をインポートしました。`);
+                }
+                
                 return result;
             } catch (error) {
                 console.error('Import failed:', error);
