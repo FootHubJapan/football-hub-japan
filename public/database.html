@@ -1376,8 +1376,15 @@
                         const position = item.position || 'Unknown';
                         const stats = item.seasons?.['2024-2025']?.stats || {};
                         
+                        // JSONデータを安全にエスケープ
+                        const safeJsonData = JSON.stringify(item)
+                            .replace(/'/g, "\\'")
+                            .replace(/"/g, '\\"')
+                            .replace(/\n/g, '\\n')
+                            .replace(/\r/g, '\\r');
+                        
                         html += `
-                            <tr class="data-row" onclick="showPlayerDetail('${item.id || index}', ${JSON.stringify(item).replace(/'/g, "\\'")})">
+                            <tr class="data-row" onclick="showPlayerDetail('${item.id || index}', '${safeJsonData}')">
                                 <td>
                                     <div class="player-info">
                                         <div class="player-avatar">${playerName.charAt(0)}</div>
@@ -1808,9 +1815,21 @@
         // 詳細表示機能（native-stats.org風）
         function showPlayerDetail(playerId, playerData = null) {
             let player = playerData;
+            
+            // playerDataが文字列の場合はJSONとしてパース
+            if (typeof playerData === 'string') {
+                try {
+                    player = JSON.parse(playerData);
+                } catch (error) {
+                    console.error('JSONパースエラー:', error);
+                    player = null;
+                }
+            }
+            
             if (!player) {
                 player = currentData.find(p => p.id === playerId);
             }
+            
             if (!player) {
                 console.error('選手データが見つかりません:', playerId);
                 return;
