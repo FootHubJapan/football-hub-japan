@@ -1809,8 +1809,21 @@
                 return;
             }
             
+            console.log('選手詳細表示:', player);
+            
             const seasonStats = player.seasons?.['2024-2025']?.stats || player.stats || {};
             const matches = player.matches || [];
+            
+            // 年齢計算
+            let age = 'N/A';
+            if (player.birthday) {
+                const birthDate = new Date(player.birthday);
+                const today = new Date();
+                const ageDiff = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                age = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())
+                    ? ageDiff - 1 : ageDiff;
+            }
             
             const modal = document.createElement('div');
             modal.className = 'detail-modal';
@@ -1841,7 +1854,7 @@
                                 </div>
                                 <div class="info-item">
                                     <label>年齢</label>
-                                    <span>${player.age || 'N/A'}歳</span>
+                                    <span>${age}歳</span>
                                 </div>
                                 <div class="info-item">
                                     <label>身長</label>
@@ -1905,7 +1918,7 @@
                             <div class="stats-grid-native">
                                 <div class="stat-item-native">
                                     <span class="stat-label">試合数</span>
-                                    <span class="stat-value">${seasonStats.matchesPlayed || seasonStats.appearances || 0}</span>
+                                    <span class="stat-value">${seasonStats.matchesPlayed || seasonStats.appearances || seasonStats.matches || 0}</span>
                                 </div>
                                 <div class="stat-item-native">
                                     <span class="stat-label">ゴール</span>
@@ -1917,7 +1930,7 @@
                                 </div>
                                 <div class="stat-item-native">
                                     <span class="stat-label">評価</span>
-                                    <span class="stat-value">${seasonStats.rating || 'N/A'}</span>
+                                    <span class="stat-value">${seasonStats.rating || seasonStats.overallRating || 'N/A'}</span>
                                 </div>
                                 <div class="stat-item-native">
                                     <span class="stat-label">イエローカード</span>
@@ -1934,6 +1947,22 @@
                                 <div class="stat-item-native">
                                     <span class="stat-label">パス成功率</span>
                                     <span class="stat-value">${seasonStats.passAccuracy || 'N/A'}%</span>
+                                </div>
+                                <div class="stat-item-native">
+                                    <span class="stat-label">出場時間</span>
+                                    <span class="stat-value">${seasonStats.minutesPlayed || 'N/A'}分</span>
+                                </div>
+                                <div class="stat-item-native">
+                                    <span class="stat-label">シュート数</span>
+                                    <span class="stat-value">${seasonStats.shots || 0}</span>
+                                </div>
+                                <div class="stat-item-native">
+                                    <span class="stat-label">キック数</span>
+                                    <span class="stat-value">${seasonStats.kicks || 0}</span>
+                                </div>
+                                <div class="stat-item-native">
+                                    <span class="stat-label">セーブ数</span>
+                                    <span class="stat-value">${seasonStats.saves || 0}</span>
                                 </div>
                             </div>
                         </div>
