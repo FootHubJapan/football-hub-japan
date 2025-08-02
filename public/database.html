@@ -1083,18 +1083,27 @@
                     </select>
                     <select id="searchPosition" class="filter-select" style="display: none;">
                         <option value="">すべてのポジション</option>
-                        <option value="Goalkeeper">ゴールキーパー</option>
-                        <option value="Defender">ディフェンダー</option>
-                        <option value="Midfielder">ミッドフィルダー</option>
-                        <option value="Forward">フォワード</option>
-                        <option value="Right Winger">右ウィンガー</option>
-                        <option value="Left Winger">左ウィンガー</option>
-                        <option value="Centre-Forward">センターフォワード</option>
-                        <option value="Attacking Midfielder">攻撃的ミッドフィルダー</option>
-                        <option value="Defensive Midfielder">守備的ミッドフィルダー</option>
-                        <option value="Centre-Back">センターバック</option>
-                        <option value="Right-Back">ライトバック</option>
-                        <option value="Left-Back">レフトバック</option>
+                        <!-- 日本語カテゴリ -->
+                        <option value="ディフェンダー">ディフェンダー（全般）</option>
+                        <option value="フォワード">フォワード（全般）</option>
+                        <option value="ミッドフィルダー">ミッドフィルダー（全般）</option>
+                        <option value="ゴールキーパー">ゴールキーパー</option>
+                        <!-- 詳細ポジション -->
+                        <option value="センターバック">センターバック</option>
+                        <option value="サイドバック">サイドバック</option>
+                        <option value="ウィンガー">ウィンガー</option>
+                        <option value="ストライカー">ストライカー</option>
+                        <option value="アタッキングミッドフィルダー">アタッキングミッドフィルダー</option>
+                        <option value="ディフェンシブミッドフィルダー">ディフェンシブミッドフィルダー</option>
+                        <!-- 英語ポジション（後方互換性） -->
+                        <option value="Goalkeeper">Goalkeeper</option>
+                        <option value="Centre-Back">Centre-Back</option>
+                        <option value="Left-Back">Left-Back</option>
+                        <option value="Right-Back">Right-Back</option>
+                        <option value="Attacking Midfield">Attacking Midfield</option>
+                        <option value="Defensive Midfield">Defensive Midfield</option>
+                        <option value="Forward">Forward</option>
+                        <option value="Winger">Winger</option>
                     </select>
                     <select id="searchLeague" class="filter-select" style="display: none;">
                         <option value="">すべてのリーグ</option>
@@ -1629,24 +1638,90 @@
                     // フィルタリングを適用
                     let filteredPlayers = players;
                     
-                    // 検索クエリでフィルタリング
+                    // 検索クエリでフィルタリング（日本語対応）
                     if (searchQuery) {
-                        filteredPlayers = filteredPlayers.filter(player => 
-                            (player.name && player.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            (player.fullName && player.fullName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            (player.team && player.team.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            (player.currentTeam && player.currentTeam.toLowerCase().includes(searchQuery.toLowerCase()))
-                        );
+                        const query = searchQuery.toLowerCase();
+                        filteredPlayers = filteredPlayers.filter(player => {
+                            // 基本フィールドの検索
+                            const nameMatch = (player.name && player.name.toLowerCase().includes(query)) ||
+                                            (player.fullName && player.fullName.toLowerCase().includes(query));
+                            
+                            const teamMatch = (player.team && player.team.toLowerCase().includes(query)) ||
+                                            (player.currentTeam && player.currentTeam.toLowerCase().includes(query));
+                            
+                            // ポジションの日本語検索
+                            const positionMatch = (() => {
+                                const playerPosition = (player.position || '').toLowerCase();
+                                const positionMapping = {
+                                    'ディフェンダー': ['centre-back', 'left-back', 'right-back', 'defender'],
+                                    'フォワード': ['forward', 'striker', 'winger', 'attacker'],
+                                    'ミッドフィルダー': ['midfielder', 'attacking midfield', 'defensive midfield'],
+                                    'ゴールキーパー': ['goalkeeper', 'keeper'],
+                                    'センターバック': ['centre-back', 'center back'],
+                                    'サイドバック': ['left-back', 'right-back', 'full back'],
+                                    'ウィンガー': ['winger', 'left winger', 'right winger'],
+                                    'ストライカー': ['striker', 'forward'],
+                                    'アタッキングミッドフィルダー': ['attacking midfield', 'attacking midfielder'],
+                                    'ディフェンシブミッドフィルダー': ['defensive midfield', 'defensive midfielder']
+                                };
+                                
+                                // 直接マッチ
+                                if (playerPosition.includes(query)) return true;
+                                
+                                // 日本語マッピングによる検索
+                                if (positionMapping[query]) {
+                                    return positionMapping[query].some(pos => playerPosition.includes(pos));
+                                }
+                                
+                                return false;
+                            })();
+                            
+                            return nameMatch || teamMatch || positionMatch;
+                        });
                     }
                     
-                    // ポジションでフィルタリング
+                    // ポジションでフィルタリング（日本語対応）
                     if (searchPosition) {
                         filteredPlayers = filteredPlayers.filter(player => {
                             const playerPosition = player.position || '';
-                            // 完全一致または部分一致で検索
-                            return playerPosition === searchPosition || 
-                                   playerPosition.includes(searchPosition) ||
-                                   searchPosition.includes(playerPosition);
+                            
+                            // ポジションの日本語マッピング
+                            const positionMapping = {
+                                'ディフェンダー': ['Centre-Back', 'Left-Back', 'Right-Back', 'Defender'],
+                                'フォワード': ['Forward', 'Striker', 'Winger', 'Attacker'],
+                                'ミッドフィルダー': ['Midfielder', 'Attacking Midfield', 'Defensive Midfield', 'Central Midfield'],
+                                'ゴールキーパー': ['Goalkeeper', 'Keeper'],
+                                'センターバック': ['Centre-Back', 'Center Back'],
+                                'サイドバック': ['Left-Back', 'Right-Back', 'Full Back'],
+                                'ウィンガー': ['Winger', 'Left Winger', 'Right Winger'],
+                                'ストライカー': ['Striker', 'Forward'],
+                                'アタッキングミッドフィルダー': ['Attacking Midfield', 'Attacking Midfielder'],
+                                'ディフェンシブミッドフィルダー': ['Defensive Midfield', 'Defensive Midfielder']
+                            };
+                            
+                            // 完全一致
+                            if (playerPosition === searchPosition) return true;
+                            
+                            // 部分一致
+                            if (playerPosition.includes(searchPosition) || searchPosition.includes(playerPosition)) return true;
+                            
+                            // 日本語マッピングによる検索
+                            if (positionMapping[searchPosition]) {
+                                return positionMapping[searchPosition].some(pos => 
+                                    playerPosition.includes(pos) || pos.includes(playerPosition)
+                                );
+                            }
+                            
+                            // 逆マッピング（英語→日本語）
+                            for (const [japanese, englishPositions] of Object.entries(positionMapping)) {
+                                if (englishPositions.some(pos => pos === searchPosition)) {
+                                    return positionMapping[japanese].some(pos => 
+                                        playerPosition.includes(pos) || pos.includes(playerPosition)
+                                    );
+                                }
+                            }
+                            
+                            return false;
                         });
                     }
                     
