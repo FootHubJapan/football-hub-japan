@@ -1180,7 +1180,7 @@
                 <div class="search-box">
                     <input type="text" id="searchQuery" class="search-input" placeholder="Search players, teams, matches..." autocomplete="off">
                     <div id="searchSuggestions" class="search-suggestions" style="display: none;"></div>
-                    <button class="search-btn" onclick="searchData()">🔍</button>
+                    <button class="search-btn" id="searchButton">🔍</button>
                 </div>
                 <div class="search-filters">
                     <select id="searchType" class="filter-select">
@@ -1258,10 +1258,10 @@
                 
                 <!-- フィルター制御ボタン -->
                 <div class="filter-controls">
-                    <button id="toggleAdvancedFilters" class="btn btn-secondary" onclick="toggleAdvancedFilters()">
+                    <button id="toggleAdvancedFilters" class="btn btn-secondary">
                         高度なフィルター ▼
                     </button>
-                    <button class="btn btn-warning" onclick="clearAllFilters()">フィルタークリア</button>
+                    <button class="btn btn-warning" id="clearFiltersButton">フィルタークリア</button>
                 </div>
             </div>
         </div>
@@ -1270,10 +1270,10 @@
         <div class="data-management-section">
             <h3>データ管理</h3>
             <div class="data-controls">
-                <button onclick="checkDataStatus()" class="btn btn-info">データ状況確認</button>
-                <button onclick="importRealData()" class="btn btn-primary">実際データインポート</button>
-                <button onclick="clearCachedData()" class="btn btn-warning">キャッシュクリア</button>
-                <button onclick="refreshData()" class="btn btn-success">データ更新</button>
+                <button id="checkDataStatusBtn" class="btn btn-info">データ状況確認</button>
+                <button id="importRealDataBtn" class="btn btn-primary">実際データインポート</button>
+                <button id="clearCachedDataBtn" class="btn btn-warning">キャッシュクリア</button>
+                <button id="refreshDataBtn" class="btn btn-success">データ更新</button>
                 <a href="/admin.html" class="btn btn-info" style="text-decoration: none; display: inline-block;">管理画面</a>
             </div>
             <div id="dataStatus" class="data-status"></div>
@@ -1298,7 +1298,7 @@
                             <th>ポジション</th>
                             <th>統計</th>
                         <th>
-                            <select id="sortBy" class="sort-select" onchange="sortPlayers()">
+                            <select id="sortBy" class="sort-select">
                                 <option value="">並び替え</option>
                                 <option value="name">名前順</option>
                                 <option value="age">年齢順</option>
@@ -2212,7 +2212,6 @@
 
         // 検索サジェスト機能
         let searchTimeout;
-        let allPlayers = [];
 
         // 検索サジェストの初期化
         function initializeSearchSuggestions() {
@@ -2260,11 +2259,11 @@
         async function showSearchSuggestions(query) {
             try {
                 // 選手データを取得
-                if (allPlayers.length === 0) {
-                    allPlayers = await window.firebaseDataService.getPlayers();
+                if (!window.allPlayers || window.allPlayers.length === 0) {
+                    window.allPlayers = await window.firebaseDataService.getPlayers();
                 }
                 
-                const suggestions = generateSuggestions(query, allPlayers);
+                const suggestions = generateSuggestions(query, window.allPlayers);
                 displaySuggestions(suggestions, query);
             } catch (error) {
                 console.error('サジェスト生成エラー:', error);
@@ -2398,6 +2397,54 @@
             }
         }
 
+        // イベントリスナーの設定
+        function setupEventListeners() {
+            // 検索ボタン
+            const searchButton = document.getElementById('searchButton');
+            if (searchButton) {
+                searchButton.addEventListener('click', searchData);
+            }
+
+            // 高度なフィルター切り替え
+            const toggleAdvancedFiltersBtn = document.getElementById('toggleAdvancedFilters');
+            if (toggleAdvancedFiltersBtn) {
+                toggleAdvancedFiltersBtn.addEventListener('click', toggleAdvancedFilters);
+            }
+
+            // フィルタークリア
+            const clearFiltersBtn = document.getElementById('clearFiltersButton');
+            if (clearFiltersBtn) {
+                clearFiltersBtn.addEventListener('click', clearAllFilters);
+            }
+
+            // データ管理ボタン
+            const checkDataStatusBtn = document.getElementById('checkDataStatusBtn');
+            if (checkDataStatusBtn) {
+                checkDataStatusBtn.addEventListener('click', checkDataStatus);
+            }
+
+            const importRealDataBtn = document.getElementById('importRealDataBtn');
+            if (importRealDataBtn) {
+                importRealDataBtn.addEventListener('click', importRealData);
+            }
+
+            const clearCachedDataBtn = document.getElementById('clearCachedDataBtn');
+            if (clearCachedDataBtn) {
+                clearCachedDataBtn.addEventListener('click', clearCachedData);
+            }
+
+            const refreshDataBtn = document.getElementById('refreshDataBtn');
+            if (refreshDataBtn) {
+                refreshDataBtn.addEventListener('click', refreshData);
+            }
+
+            // 並び替えセレクトボックス
+            const sortBySelect = document.getElementById('sortBy');
+            if (sortBySelect) {
+                sortBySelect.addEventListener('change', sortPlayers);
+            }
+        }
+
         // 選手データの並び替え
         function sortPlayers() {
             const sortBy = document.getElementById('sortBy').value;
@@ -2443,6 +2490,103 @@
                 'marketValue': '市場価値順（降順）'
             };
             return labels[sortBy] || 'デフォルト順';
+        }
+
+        // データ状況確認
+        async function checkDataStatus() {
+            try {
+                if (!window.firebaseDataService) {
+                    showDataStatus('FirebaseDataServiceが初期化されていません', 'error');
+                    return;
+                }
+                
+                const status = await window.firebaseDataService.checkDataStatus();
+                showDataStatus(`データ状況: ${status.playerCount}選手, ${status.teamCount}チーム, ${status.leagueCount}リーグ`, 'success');
+            } catch (error) {
+                console.error('データ状況確認エラー:', error);
+                showDataStatus('データ状況確認中にエラーが発生しました', 'error');
+            }
+        }
+
+        // 実際データインポート
+        async function importRealData() {
+            try {
+                if (!window.firebaseDataService) {
+                    showDataStatus('FirebaseDataServiceが初期化されていません', 'error');
+                    return;
+                }
+                
+                showDataStatus('実際のデータのインポートを開始しました。時間がかかる場合があります...', 'info');
+                await window.firebaseDataService.importRealFootballData();
+                showDataStatus('データインポートが完了しました', 'success');
+                
+                // データを再表示
+                setTimeout(async () => {
+                    await switchTab('players');
+                }, 2000);
+            } catch (error) {
+                console.error('データインポートエラー:', error);
+                showDataStatus('データインポート中にエラーが発生しました', 'error');
+            }
+        }
+
+        // キャッシュクリア
+        async function clearCachedData() {
+            try {
+                if (!window.firebaseDataService) {
+                    showDataStatus('FirebaseDataServiceが初期化されていません', 'error');
+                    return;
+                }
+                
+                await window.firebaseDataService.clearCachedData();
+                showDataStatus('キャッシュデータをクリアしました', 'success');
+                
+                // データを再表示
+                setTimeout(async () => {
+                    await switchTab('players');
+                }, 1000);
+            } catch (error) {
+                console.error('キャッシュクリアエラー:', error);
+                showDataStatus('キャッシュクリア中にエラーが発生しました', 'error');
+            }
+        }
+
+        // データ更新
+        async function refreshData() {
+            try {
+                if (!window.firebaseDataService) {
+                    showDataStatus('FirebaseDataServiceが初期化されていません', 'error');
+                    return;
+                }
+                
+                showDataStatus('データを更新中...', 'info');
+                await window.firebaseDataService.refreshData();
+                showDataStatus('データの更新が完了しました', 'success');
+                
+                // データを再表示
+                setTimeout(async () => {
+                    await switchTab('players');
+                }, 1000);
+            } catch (error) {
+                console.error('データ更新エラー:', error);
+                showDataStatus('データ更新中にエラーが発生しました', 'error');
+            }
+        }
+
+        // データ状況表示
+        function showDataStatus(message, type) {
+            const statusElement = document.getElementById('dataStatus');
+            if (statusElement) {
+                statusElement.textContent = message;
+                statusElement.className = `data-status ${type}`;
+                statusElement.style.display = 'block';
+                
+                setTimeout(() => {
+                    statusElement.style.display = 'none';
+                }, 5000);
+            } else {
+                console.log('データ状況:', message);
+            }
         }
 
         // ページネーション管理
@@ -2963,6 +3107,9 @@
             
             // 検索サジェスト機能を初期化
             initializeSearchSuggestions();
+            
+            // イベントリスナーを設定
+            setupEventListeners();
             
             // オーナー機能の表示/非表示を設定
             toggleOwnerFeatures();
