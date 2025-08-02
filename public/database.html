@@ -1597,9 +1597,11 @@
             const searchPosition = document.getElementById('searchPosition')?.value || '';
             const searchLeague = document.getElementById('searchLeague')?.value || '';
             
+            console.log('検索開始:', { searchType, searchQuery, searchPosition, searchLeague });
+            
             // 検索クエリが空でもフィルターが設定されている場合は検索を実行
             if (!searchQuery && !searchPosition && !searchLeague) {
-                alert('検索キーワードまたはフィルターを設定してください');
+                showSearchResult('検索キーワードまたはフィルターを設定してください', 'warning');
                 return;
             }
             
@@ -1725,18 +1727,24 @@
                 newResultDiv.textContent = message;
                 
                 const searchSection = document.querySelector('.search-section');
-                searchSection.appendChild(newResultDiv);
+                if (searchSection) {
+                    searchSection.appendChild(newResultDiv);
+                }
             } else {
                 resultDiv.textContent = message;
                 resultDiv.className = `search-result ${type}`;
+                resultDiv.style.display = 'block';
             }
             
-            // 3秒後に自動で非表示
+            console.log('検索結果:', message, type);
+            
+            // 5秒後に自動で非表示
             setTimeout(() => {
+                const resultDiv = document.getElementById('searchResult');
                 if (resultDiv) {
                     resultDiv.style.display = 'none';
                 }
-            }, 3000);
+            }, 5000);
         }
 
         // ページネーション管理
