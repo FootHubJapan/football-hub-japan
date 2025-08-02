@@ -144,6 +144,111 @@
             background: #00cc6a;
         }
 
+        .search-filters {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid #333333;
+            border-radius: 5px;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-size: 0.9rem;
+            min-width: 150px;
+        }
+
+        /* 高度なフィルター */
+        .advanced-filters {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 10px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-size: 0.9rem;
+            color: #cccccc;
+        }
+
+        .filter-input {
+            padding: 0.5rem;
+            border: 1px solid #333333;
+            border-radius: 5px;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-size: 0.9rem;
+            width: 100px;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* 検索サジェスト */
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            border: 1px solid #333333;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .suggestion-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #333333;
+            transition: background-color 0.2s;
+        }
+
+        .suggestion-item:hover {
+            background: #333333;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-highlight {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .sort-select {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
         .data-section {
             background: #1a1a1a;
             border: 2px solid #333333;
@@ -481,6 +586,7 @@
             border: 1px solid #444;
             border-radius: 6px;
             overflow: hidden;
+            position: relative;
         }
 
         .search-input {
@@ -1072,7 +1178,8 @@
         <div class="search-section">
             <div class="search-container">
                 <div class="search-box">
-                    <input type="text" id="searchQuery" class="search-input" placeholder="Search players, teams, matches...">
+                    <input type="text" id="searchQuery" class="search-input" placeholder="Search players, teams, matches..." autocomplete="off">
+                    <div id="searchSuggestions" class="search-suggestions" style="display: none;"></div>
                     <button class="search-btn" onclick="searchData()">🔍</button>
                 </div>
                 <div class="search-filters">
@@ -1114,6 +1221,48 @@
                         <option value="FL1">リーグ・アン</option>
                     </select>
                 </div>
+                
+                <!-- 高度なフィルター -->
+                <div class="advanced-filters" id="advancedFilters" style="display: none;">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label>年齢範囲:</label>
+                            <select id="ageRange" class="filter-select">
+                                <option value="">すべての年齢</option>
+                                <option value="18-25">18-25歳</option>
+                                <option value="26-30">26-30歳</option>
+                                <option value="31-35">31-35歳</option>
+                                <option value="36+">36歳以上</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>市場価値:</label>
+                            <select id="marketValue" class="filter-select">
+                                <option value="">すべて</option>
+                                <option value="0-10">0-10M €</option>
+                                <option value="10-50">10-50M €</option>
+                                <option value="50-100">50-100M €</option>
+                                <option value="100+">100M €以上</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>最低ゴール数:</label>
+                            <input type="number" id="minGoals" class="filter-input" placeholder="0" min="0">
+                        </div>
+                        <div class="filter-group">
+                            <label>最低アシスト数:</label>
+                            <input type="number" id="minAssists" class="filter-input" placeholder="0" min="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- フィルター制御ボタン -->
+                <div class="filter-controls">
+                    <button id="toggleAdvancedFilters" class="btn btn-secondary" onclick="toggleAdvancedFilters()">
+                        高度なフィルター ▼
+                    </button>
+                    <button class="btn btn-warning" onclick="clearAllFilters()">フィルタークリア</button>
+                </div>
             </div>
         </div>
 
@@ -1148,6 +1297,16 @@
                             <th>年齢</th>
                             <th>ポジション</th>
                             <th>統計</th>
+                        <th>
+                            <select id="sortBy" class="sort-select" onchange="sortPlayers()">
+                                <option value="">並び替え</option>
+                                <option value="name">名前順</option>
+                                <option value="age">年齢順</option>
+                                <option value="goals">ゴール数順</option>
+                                <option value="assists">アシスト数順</option>
+                                <option value="marketValue">市場価値順</option>
+                            </select>
+                        </th>
                         </tr>
                     </thead>
                     <tbody id="playersTableBody">
@@ -1599,6 +1758,27 @@
             }
         }
 
+        // 選手の年齢を計算する関数
+        function calculatePlayerAge(birthday) {
+            if (!birthday) return NaN;
+            
+            try {
+                const birthDate = new Date(birthday);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                
+                return age;
+            } catch (error) {
+                console.error('年齢計算エラー:', error);
+                return NaN;
+            }
+        }
+
         // 文字列類似度計算関数
         function calculateSimilarity(str1, str2) {
             if (str1 === str2) return 1.0;
@@ -1638,10 +1818,16 @@
             const searchPosition = document.getElementById('searchPosition')?.value || '';
             const searchLeague = document.getElementById('searchLeague')?.value || '';
             
-            console.log('検索開始:', { searchType, searchQuery, searchPosition, searchLeague });
+            // 高度なフィルター
+            const ageRange = document.getElementById('ageRange')?.value || '';
+            const marketValue = document.getElementById('marketValue')?.value || '';
+            const minGoals = parseInt(document.getElementById('minGoals')?.value) || 0;
+            const minAssists = parseInt(document.getElementById('minAssists')?.value) || 0;
+            
+            console.log('検索開始:', { searchType, searchQuery, searchPosition, searchLeague, ageRange, marketValue, minGoals, minAssists });
             
             // 検索クエリが空でもフィルターが設定されている場合は検索を実行
-            if (!searchQuery && !searchPosition && !searchLeague) {
+            if (!searchQuery && !searchPosition && !searchLeague && !ageRange && !marketValue && minGoals === 0 && minAssists === 0) {
                 showSearchResult('検索キーワードまたはフィルターを設定してください', 'warning');
                 return;
             }
@@ -1851,6 +2037,56 @@
                         );
                     }
                     
+                    // 高度なフィルタリング
+                    
+                    // 年齢範囲でフィルタリング
+                    if (ageRange) {
+                        filteredPlayers = filteredPlayers.filter(player => {
+                            const age = calculatePlayerAge(player.birthday);
+                            if (isNaN(age)) return false;
+                            
+                            switch (ageRange) {
+                                case '18-25': return age >= 18 && age <= 25;
+                                case '26-30': return age >= 26 && age <= 30;
+                                case '31-35': return age >= 31 && age <= 35;
+                                case '36+': return age >= 36;
+                                default: return true;
+                            }
+                        });
+                    }
+                    
+                    // 市場価値でフィルタリング
+                    if (marketValue) {
+                        filteredPlayers = filteredPlayers.filter(player => {
+                            const value = parseFloat(player.marketValue?.replace(/[^\d.]/g, '') || '0');
+                            if (isNaN(value)) return false;
+                            
+                            switch (marketValue) {
+                                case '0-10': return value >= 0 && value <= 10;
+                                case '10-50': return value >= 10 && value <= 50;
+                                case '50-100': return value >= 50 && value <= 100;
+                                case '100+': return value >= 100;
+                                default: return true;
+                            }
+                        });
+                    }
+                    
+                    // 最低ゴール数でフィルタリング
+                    if (minGoals > 0) {
+                        filteredPlayers = filteredPlayers.filter(player => {
+                            const goals = parseInt(player.seasons?.['2024-2025']?.goals || '0');
+                            return goals >= minGoals;
+                        });
+                    }
+                    
+                    // 最低アシスト数でフィルタリング
+                    if (minAssists > 0) {
+                        filteredPlayers = filteredPlayers.filter(player => {
+                            const assists = parseInt(player.seasons?.['2024-2025']?.assists || '0');
+                            return assists >= minAssists;
+                        });
+                    }
+                    
                     currentData = filteredPlayers;
                     
                     // 検索結果の表示
@@ -1861,6 +2097,10 @@
                         if (searchQuery) filters.push(`キーワード: "${searchQuery}"`);
                         if (searchPosition) filters.push(`ポジション: ${searchPosition}`);
                         if (searchLeague) filters.push(`リーグ: ${searchLeague}`);
+                        if (ageRange) filters.push(`年齢: ${ageRange}`);
+                        if (marketValue) filters.push(`市場価値: ${marketValue}`);
+                        if (minGoals > 0) filters.push(`最低ゴール: ${minGoals}`);
+                        if (minAssists > 0) filters.push(`最低アシスト: ${minAssists}`);
                         
                         const filterText = filters.length > 0 ? ` (${filters.join(', ')})` : '';
                         showSearchResult(`${currentData.length}件の選手が見つかりました${filterText}`, 'success');
@@ -1938,6 +2178,271 @@
                     resultDiv.style.display = 'none';
                 }
             }, 5000);
+        }
+
+        // 高度なフィルターの表示/非表示切り替え
+        function toggleAdvancedFilters() {
+            const advancedFilters = document.getElementById('advancedFilters');
+            const toggleBtn = document.getElementById('toggleAdvancedFilters');
+            
+            if (advancedFilters.style.display === 'none') {
+                advancedFilters.style.display = 'block';
+                toggleBtn.textContent = '高度なフィルター ▲';
+            } else {
+                advancedFilters.style.display = 'none';
+                toggleBtn.textContent = '高度なフィルター ▼';
+            }
+        }
+
+        // すべてのフィルターをクリア
+        function clearAllFilters() {
+            document.getElementById('searchQuery').value = '';
+            document.getElementById('searchPosition').value = '';
+            document.getElementById('searchLeague').value = '';
+            document.getElementById('ageRange').value = '';
+            document.getElementById('marketValue').value = '';
+            document.getElementById('minGoals').value = '';
+            document.getElementById('minAssists').value = '';
+            
+            // 検索サジェストを非表示
+            hideSearchSuggestions();
+            
+            showSearchResult('すべてのフィルターをクリアしました', 'info');
+        }
+
+        // 検索サジェスト機能
+        let searchTimeout;
+        let allPlayers = [];
+
+        // 検索サジェストの初期化
+        function initializeSearchSuggestions() {
+            const searchInput = document.getElementById('searchQuery');
+            if (searchInput) {
+                searchInput.addEventListener('input', handleSearchInput);
+                searchInput.addEventListener('focus', handleSearchFocus);
+                searchInput.addEventListener('blur', handleSearchBlur);
+            }
+        }
+
+        // 検索入力の処理
+        function handleSearchInput(event) {
+            const query = event.target.value.trim();
+            
+            // 既存のタイムアウトをクリア
+            clearTimeout(searchTimeout);
+            
+            if (query.length < 2) {
+                hideSearchSuggestions();
+                return;
+            }
+            
+            // 300ms後にサジェストを表示
+            searchTimeout = setTimeout(() => {
+                showSearchSuggestions(query);
+            }, 300);
+        }
+
+        // 検索フォーカス時の処理
+        function handleSearchFocus(event) {
+            const query = event.target.value.trim();
+            if (query.length >= 2) {
+                showSearchSuggestions(query);
+            }
+        }
+
+        // 検索ブラー時の処理
+        function handleSearchBlur() {
+            // 少し遅延させてサジェストを非表示（クリックイベントのため）
+            setTimeout(hideSearchSuggestions, 200);
+        }
+
+        // 検索サジェストの表示
+        async function showSearchSuggestions(query) {
+            try {
+                // 選手データを取得
+                if (allPlayers.length === 0) {
+                    allPlayers = await window.firebaseDataService.getPlayers();
+                }
+                
+                const suggestions = generateSuggestions(query, allPlayers);
+                displaySuggestions(suggestions, query);
+            } catch (error) {
+                console.error('サジェスト生成エラー:', error);
+            }
+        }
+
+        // サジェストの生成
+        function generateSuggestions(query, players) {
+            const suggestions = [];
+            const queryLower = query.toLowerCase();
+            
+            // 選手名マッピング
+            const playerNameMapping = {
+                'ハーランド': ['erling haaland', 'haaland'],
+                'メッシ': ['lionel messi', 'messi'],
+                'ロナウド': ['cristiano ronaldo', 'ronaldo'],
+                'ムバッペ': ['kylian mbappé', 'mbappé', 'mbappe'],
+                'ベンゼマ': ['karim benzema', 'benzema'],
+                'サラー': ['mohamed salah', 'salah'],
+                'ケイン': ['harry kane', 'kane'],
+                'ソン': ['heung-min son', 'son'],
+                'ディブルイネ': ['kevin de bruyne', 'de bruyne'],
+                'シルバ': ['bernardo silva', 'silva'],
+                'ロドリ': ['rodri', 'rodrigo'],
+                'ファーデン': ['phil foden', 'foden'],
+                'グレリッシュ': ['jack grealish', 'grealish'],
+                'アルバレス': ['julián álvarez', 'álvarez', 'alvarez'],
+                'ヌニェス': ['darwin núñez', 'núñez', 'nunez'],
+                'ディアス': ['luis díaz', 'díaz', 'diaz'],
+                'マクアリスター': ['alexis mac allister', 'mac allister'],
+                'ソボスライ': ['dominik szoboszlai', 'szoboszlai'],
+                'バルデ': ['pedri', 'pedro gonzález'],
+                'ガビ': ['gavi', 'pablo martín páez gaviria'],
+                'ビニシウス': ['vinícius júnior', 'vinícius', 'vinicius'],
+                'ベリンガム': ['jude bellingham', 'bellingham'],
+                'カマビンガ': ['eduardo camavinga', 'camavinga'],
+                'チュアメニ': ['aurélien tchouaméni', 'tchouaméni'],
+                'ムサラ': ['luka modrić', 'modrić', 'modric'],
+                'クロース': ['toni kroos', 'kroos'],
+                'バルベルデ': ['federico valverde', 'valverde'],
+                'ホランド': ['erling haaland', 'haaland'],
+                'エルリング': ['erling haaland', 'haaland'],
+                'キリアン': ['kylian mbappé', 'mbappé', 'mbappe'],
+                'リオネル': ['lionel messi', 'messi'],
+                'クリスティアーノ': ['cristiano ronaldo', 'ronaldo']
+            };
+            
+            // 選手名で検索
+            players.forEach(player => {
+                const playerName = (player.name || '').toLowerCase();
+                const playerFullName = (player.fullName || '').toLowerCase();
+                
+                // 直接マッチ
+                if (playerName.includes(queryLower) || playerFullName.includes(queryLower)) {
+                    suggestions.push({
+                        text: player.name || player.fullName,
+                        type: 'player',
+                        highlight: queryLower
+                    });
+                }
+                
+                // 日本語マッピングによる検索
+                for (const [japanese, englishNames] of Object.entries(playerNameMapping)) {
+                    if (japanese.includes(queryLower) || queryLower.includes(japanese)) {
+                        if (englishNames.some(name => playerName.includes(name) || playerFullName.includes(name))) {
+                            suggestions.push({
+                                text: `${japanese} (${player.name || player.fullName})`,
+                                type: 'player',
+                                highlight: japanese
+                            });
+                        }
+                    }
+                }
+                
+                // チーム名で検索
+                const teamName = (player.team || player.currentTeam || '').toLowerCase();
+                if (teamName.includes(queryLower)) {
+                    suggestions.push({
+                        text: `${player.team || player.currentTeam} - ${player.name || player.fullName}`,
+                        type: 'team',
+                        highlight: player.team || player.currentTeam
+                    });
+                }
+            });
+            
+            // 重複を除去して上位10件を返す
+            const uniqueSuggestions = suggestions.filter((suggestion, index, self) => 
+                index === self.findIndex(s => s.text === suggestion.text)
+            );
+            
+            return uniqueSuggestions.slice(0, 10);
+        }
+
+        // サジェストの表示
+        function displaySuggestions(suggestions, query) {
+            const suggestionsContainer = document.getElementById('searchSuggestions');
+            if (!suggestionsContainer) return;
+            
+            if (suggestions.length === 0) {
+                hideSearchSuggestions();
+                return;
+            }
+            
+            const suggestionsHTML = suggestions.map(suggestion => {
+                const highlightedText = suggestion.text.replace(
+                    new RegExp(`(${query})`, 'gi'),
+                    '<span class="suggestion-highlight">$1</span>'
+                );
+                
+                return `<div class="suggestion-item" onclick="selectSuggestion('${suggestion.text.replace(/'/g, "\\'")}')">
+                    ${highlightedText}
+                </div>`;
+            }).join('');
+            
+            suggestionsContainer.innerHTML = suggestionsHTML;
+            suggestionsContainer.style.display = 'block';
+        }
+
+        // サジェストの選択
+        function selectSuggestion(text) {
+            document.getElementById('searchQuery').value = text;
+            hideSearchSuggestions();
+            searchData(); // 自動検索実行
+        }
+
+        // 検索サジェストの非表示
+        function hideSearchSuggestions() {
+            const suggestionsContainer = document.getElementById('searchSuggestions');
+            if (suggestionsContainer) {
+                suggestionsContainer.style.display = 'none';
+            }
+        }
+
+        // 選手データの並び替え
+        function sortPlayers() {
+            const sortBy = document.getElementById('sortBy').value;
+            if (!sortBy || !currentData || currentTab !== 'players') return;
+            
+            const sortedData = [...currentData].sort((a, b) => {
+                switch (sortBy) {
+                    case 'name':
+                        return (a.name || '').localeCompare(b.name || '');
+                    case 'age':
+                        const ageA = calculatePlayerAge(a.birthday);
+                        const ageB = calculatePlayerAge(b.birthday);
+                        return ageA - ageB;
+                    case 'goals':
+                        const goalsA = parseInt(a.seasons?.['2024-2025']?.goals || '0');
+                        const goalsB = parseInt(b.seasons?.['2024-2025']?.goals || '0');
+                        return goalsB - goalsA; // 降順
+                    case 'assists':
+                        const assistsA = parseInt(a.seasons?.['2024-2025']?.assists || '0');
+                        const assistsB = parseInt(b.seasons?.['2024-2025']?.assists || '0');
+                        return assistsB - assistsA; // 降順
+                    case 'marketValue':
+                        const valueA = parseFloat(a.marketValue?.replace(/[^\d.]/g, '') || '0');
+                        const valueB = parseFloat(b.marketValue?.replace(/[^\d.]/g, '') || '0');
+                        return valueB - valueA; // 降順
+                    default:
+                        return 0;
+                }
+            });
+            
+            currentData = sortedData;
+            displayData(currentData, currentTab);
+            showSearchResult(`選手データを${getSortLabel(sortBy)}で並び替えました`, 'info');
+        }
+
+        // 並び替えラベルの取得
+        function getSortLabel(sortBy) {
+            const labels = {
+                'name': '名前順',
+                'age': '年齢順',
+                'goals': 'ゴール数順（降順）',
+                'assists': 'アシスト数順（降順）',
+                'marketValue': '市場価値順（降順）'
+            };
+            return labels[sortBy] || 'デフォルト順';
         }
 
         // ページネーション管理
@@ -2455,6 +2960,9 @@
             
             // 初期フィルター状態を設定
             updateSearchFilters();
+            
+            // 検索サジェスト機能を初期化
+            initializeSearchSuggestions();
             
             // オーナー機能の表示/非表示を設定
             toggleOwnerFeatures();
