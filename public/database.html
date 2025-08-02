@@ -1599,6 +1599,38 @@
             }
         }
 
+        // 文字列類似度計算関数
+        function calculateSimilarity(str1, str2) {
+            if (str1 === str2) return 1.0;
+            if (str1.length === 0) return str2.length === 0 ? 1.0 : 0.0;
+            if (str2.length === 0) return 0.0;
+            
+            const matrix = [];
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            
+            const maxLength = Math.max(str1.length, str2.length);
+            return maxLength === 0 ? 1.0 : (maxLength - matrix[str2.length][str1.length]) / maxLength;
+        }
+
         // 検索機能（改善版）
         async function searchData() {
             const searchType = document.getElementById('searchType')?.value || 'players';
@@ -1642,9 +1674,95 @@
                     if (searchQuery) {
                         const query = searchQuery.toLowerCase();
                         filteredPlayers = filteredPlayers.filter(player => {
+                            // 選手名の日本語マッピング
+                            const playerNameMapping = {
+                                'ハーランド': ['erling haaland', 'haaland'],
+                                'メッシ': ['lionel messi', 'messi'],
+                                'ロナウド': ['cristiano ronaldo', 'ronaldo'],
+                                'ムバッペ': ['kylian mbappé', 'mbappé', 'mbappe'],
+                                'ベンゼマ': ['karim benzema', 'benzema'],
+                                'サラー': ['mohamed salah', 'salah'],
+                                'ケイン': ['harry kane', 'kane'],
+                                'ソン': ['heung-min son', 'son'],
+                                'ディブルイネ': ['kevin de bruyne', 'de bruyne'],
+                                'シルバ': ['bernardo silva', 'silva'],
+                                'ロドリ': ['rodri', 'rodrigo'],
+                                'ファーデン': ['phil foden', 'foden'],
+                                'グレリッシュ': ['jack grealish', 'grealish'],
+                                'アルバレス': ['julián álvarez', 'álvarez', 'alvarez'],
+                                'ヌニェス': ['darwin núñez', 'núñez', 'nunez'],
+                                'ディアス': ['luis díaz', 'díaz', 'diaz'],
+                                'マクアリスター': ['alexis mac allister', 'mac allister'],
+                                'ソボスライ': ['dominik szoboszlai', 'szoboszlai'],
+                                'バルデ': ['pedri', 'pedro gonzález'],
+                                'ガビ': ['gavi', 'pablo martín páez gaviria'],
+                                'ビニシウス': ['vinícius júnior', 'vinícius', 'vinicius'],
+                                'ベリンガム': ['jude bellingham', 'bellingham'],
+                                'カマビンガ': ['eduardo camavinga', 'camavinga'],
+                                'チュアメニ': ['aurélien tchouaméni', 'tchouaméni'],
+                                'ムサラ': ['luka modrić', 'modrić', 'modric'],
+                                'クロース': ['toni kroos', 'kroos'],
+                                'バルベルデ': ['federico valverde', 'valverde'],
+                                'ホランド': ['erling haaland', 'haaland'], // 別表記
+                                'エルリング': ['erling haaland', 'haaland'], // 別表記
+                                'キリアン': ['kylian mbappé', 'mbappé', 'mbappe'], // 別表記
+                                'リオネル': ['lionel messi', 'messi'], // 別表記
+                                'クリスティアーノ': ['cristiano ronaldo', 'ronaldo'] // 別表記
+                            };
+                            
                             // 基本フィールドの検索
-                            const nameMatch = (player.name && player.name.toLowerCase().includes(query)) ||
-                                            (player.fullName && player.fullName.toLowerCase().includes(query));
+                            const nameMatch = (() => {
+                                const playerName = (player.name || '').toLowerCase();
+                                const playerFullName = (player.fullName || '').toLowerCase();
+                                
+                                // 直接マッチ
+                                if (playerName.includes(query) || playerFullName.includes(query)) {
+                                    return true;
+                                }
+                                
+                                // 日本語マッピングによる検索
+                                if (playerNameMapping[query]) {
+                                    return playerNameMapping[query].some(name => 
+                                        playerName.includes(name) || playerFullName.includes(name)
+                                    );
+                                }
+                                
+                                // 逆マッピング（英語→日本語）
+                                for (const [japanese, englishNames] of Object.entries(playerNameMapping)) {
+                                    if (englishNames.some(name => name.includes(query))) {
+                                        return englishNames.some(name => 
+                                            playerName.includes(name) || playerFullName.includes(name)
+                                        );
+                                    }
+                                }
+                                
+                                // 部分一致検索（日本語の一部でもマッチ）
+                                for (const [japanese, englishNames] of Object.entries(playerNameMapping)) {
+                                    if (japanese.includes(query) || query.includes(japanese)) {
+                                        return englishNames.some(name => 
+                                            playerName.includes(name) || playerFullName.includes(name)
+                                        );
+                                    }
+                                }
+                                
+                                // ファジー検索（類似度チェック）
+                                const fuzzyMatch = (() => {
+                                    for (const [japanese, englishNames] of Object.entries(playerNameMapping)) {
+                                        // 文字列の類似度をチェック（簡易版）
+                                        const similarity = calculateSimilarity(query, japanese);
+                                        if (similarity > 0.6) { // 60%以上の類似度
+                                            return englishNames.some(name => 
+                                                playerName.includes(name) || playerFullName.includes(name)
+                                            );
+                                        }
+                                    }
+                                    return false;
+                                })();
+                                
+                                if (fuzzyMatch) return true;
+                                
+                                return false;
+                            })();
                             
                             const teamMatch = (player.team && player.team.toLowerCase().includes(query)) ||
                                             (player.currentTeam && player.currentTeam.toLowerCase().includes(query));
