@@ -306,7 +306,7 @@
                 <span class="feature-icon">📊</span>
                 <h3 class="feature-title">サッカーデータベース</h3>
                 <p class="feature-description">
-                    世界中のリーグ、チーム、選手の詳細なデータを網羅。リアルタイムで更新される統計情報にアクセスできます。
+                    世界中のリーグ、チーム、選手の詳細なデータを網羅。API-Football統合で日本語選手検索も可能。
                 </p>
                 <button class="feature-btn">データベースを開く</button>
             </div>
@@ -365,14 +365,7 @@
                 <button class="feature-btn">Native Statsを開く</button>
             </div>
 
-            <div class="feature-card" onclick="openFeature('api-football')">
-                <span class="feature-icon">🚀</span>
-                <h3 class="feature-title">API-Football データベース</h3>
-                <p class="feature-description">
-                    最新のAPI-Footballデータを使用した高精度な選手検索。日本語選手の詳細情報をリアルタイムで取得。
-                </p>
-                <button class="feature-btn">API-Football DBを開く</button>
-            </div>
+
         </div>
 
         <div class="recent-activity">
@@ -435,8 +428,7 @@
                 'schedule': '試合スケジュール',
                 'ai-agent': 'AI分析エージェント',
                 'ranking': 'ランキングシステム',
-                'native-stats': 'Native Stats',
-                'api-football': 'API-Football データベース'
+                'native-stats': 'Native Stats'
             };
             
             if (feature === 'database') {
@@ -445,8 +437,6 @@
                 window.location.href = '/radar';
             } else if (feature === 'native-stats') {
                 window.location.href = '/native-stats';
-            } else if (feature === 'api-football') {
-                window.location.href = '/database-api-football';
             } else {
                 alert(`${features[feature]}機能は準備中です。\n\nこの機能は現在開発中で、近日中にリリース予定です。`);
             }
