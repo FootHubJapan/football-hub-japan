@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API-Football データベース - Football Hub Japan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #1a1a1a;
+            border-bottom: 2px solid #00ff88;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            color: #00ff88;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: #333333;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            color: #00ff88;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .page-subtitle {
+            color: #cccccc;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .search-section {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-title {
+            color: #00ff88;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 0.8rem;
+            border: 2px solid #333333;
+            border-radius: 5px;
+            background: #2a2a2a;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        .search-btn {
+            background: #00ff88;
+            color: #000000;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .search-btn:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+        }
+
+        .search-options {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .option-label {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        .option-select {
+            padding: 0.5rem;
+            border: 1px solid #333333;
+            border-radius: 5px;
+            background: #2a2a2a;
+            color: #ffffff;
+            font-size: 0.9rem;
+        }
+
+        .results-section {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #333333;
+        }
+
+        .results-title {
+            color: #00ff88;
+            font-size: 1.3rem;
+        }
+
+        .results-count {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #00ff88;
+        }
+
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #ff4444;
+            background: #2a1a1a;
+            border: 1px solid #ff4444;
+            border-radius: 10px;
+        }
+
+        .player-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .player-card {
+            background: #2a2a2a;
+            border: 1px solid #333333;
+            border-radius: 10px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .player-card:hover {
+            border-color: #00ff88;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .player-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .player-photo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #00ff88;
+        }
+
+        .player-info {
+            flex: 1;
+        }
+
+        .player-name {
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+
+        .player-team {
+            color: #00ff88;
+            font-size: 0.9rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .player-league {
+            color: #cccccc;
+            font-size: 0.8rem;
+        }
+
+        .player-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.5rem;
+            background: #1a1a1a;
+            border-radius: 5px;
+        }
+
+        .stat-value {
+            color: #00ff88;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 0.2rem;
+        }
+
+        .stat-label {
+            color: #888888;
+            font-size: 0.8rem;
+        }
+
+        .player-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .detail-label {
+            color: #888888;
+        }
+
+        .detail-value {
+            color: #ffffff;
+        }
+
+        .japanese-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #ff4444;
+            color: #ffffff;
+            padding: 0.3rem 0.6rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .api-source {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            background: #00ff88;
+            color: #000000;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #888888;
+        }
+
+        .suggestions {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #2a2a2a;
+            border-radius: 10px;
+        }
+
+        .suggestions-title {
+            color: #00ff88;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .suggestion-list {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .suggestion-item {
+            background: #1a1a1a;
+            color: #cccccc;
+            padding: 0.3rem 0.6rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .suggestion-item:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        @media (max-width: 768px) {
+            .search-controls {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: auto;
+            }
+
+            .player-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .player-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">⚽ Football Hub Japan</div>
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="window.location.href='/dashboard'">ダッシュボード</button>
+            <button class="nav-btn" onclick="window.location.href='/database'">従来DB</button>
+            <button class="nav-btn" onclick="window.location.href='/'">ホーム</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <h1 class="page-title">API-Football データベース</h1>
+        <p class="page-subtitle">最新のAPI-Footballデータを使用した高精度な選手検索</p>
+
+        <div class="search-section">
+            <h2 class="search-title">選手検索</h2>
+            <div class="search-controls">
+                <input type="text" id="searchInput" class="search-input" placeholder="選手名を入力してください（例: kubo, mitoma, son）" />
+                <button id="searchBtn" class="search-btn">🔍 検索</button>
+            </div>
+            <div class="search-options">
+                <div class="option-group">
+                    <label class="option-label">リーグ:</label>
+                    <select id="leagueSelect" class="option-select">
+                        <option value="">すべて</option>
+                        <option value="39">Premier League</option>
+                        <option value="140">La Liga</option>
+                        <option value="135">Serie A</option>
+                        <option value="78">Bundesliga</option>
+                        <option value="61">Ligue 1</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <label class="option-label">海外選手:</label>
+                    <select id="overseasSelect" class="option-select">
+                        <option value="true">含む</option>
+                        <option value="false">含まない</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-section">
+            <div class="results-header">
+                <h3 class="results-title">検索結果</h3>
+                <div class="results-count" id="resultsCount">0件の結果</div>
+            </div>
+            <div id="resultsContainer">
+                <div class="no-results">検索を開始してください</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class APIFootballDatabase {
+            constructor() {
+                this.baseURL = window.location.origin;
+                this.searchInput = document.getElementById('searchInput');
+                this.searchBtn = document.getElementById('searchBtn');
+                this.leagueSelect = document.getElementById('leagueSelect');
+                this.overseasSelect = document.getElementById('overseasSelect');
+                this.resultsContainer = document.getElementById('resultsContainer');
+                this.resultsCount = document.getElementById('resultsCount');
+                
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                this.searchBtn.addEventListener('click', () => this.performSearch());
+                this.searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.performSearch();
+                    }
+                });
+            }
+
+            async performSearch() {
+                const query = this.searchInput.value.trim();
+                if (!query) {
+                    this.showError('検索クエリを入力してください');
+                    return;
+                }
+
+                this.showLoading();
+
+                try {
+                    const league = this.leagueSelect.value;
+                    const includeOverseas = this.overseasSelect.value;
+                    
+                    let url = `${this.baseURL}/api/japanese-players/search-v2?query=${encodeURIComponent(query)}`;
+                    if (league) {
+                        url += `&league=${league}`;
+                    }
+                    if (includeOverseas) {
+                        url += `&includeOverseas=${includeOverseas}`;
+                    }
+
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        this.displayResults(data);
+                    } else {
+                        this.showError(`検索エラー: ${data.message || '不明なエラー'}`);
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                    this.showError('検索中にエラーが発生しました');
+                }
+            }
+
+            showLoading() {
+                this.resultsContainer.innerHTML = '<div class="loading">🔍 検索中...</div>';
+                this.resultsCount.textContent = '検索中...';
+            }
+
+            showError(message) {
+                this.resultsContainer.innerHTML = `<div class="error">❌ ${message}</div>`;
+                this.resultsCount.textContent = 'エラー';
+            }
+
+            displayResults(data) {
+                const { results, totalResults } = data;
+                this.resultsCount.textContent = `${totalResults}件の結果`;
+
+                if (totalResults === 0) {
+                    this.resultsContainer.innerHTML = `
+                        <div class="no-results">
+                            <p>検索結果が見つかりませんでした</p>
+                            <div class="suggestions">
+                                <div class="suggestions-title">検索のヒント:</div>
+                                <ul class="suggestion-list">
+                                    <li class="suggestion-item" onclick="this.searchForSuggestion('kubo')">久保建英</li>
+                                    <li class="suggestion-item" onclick="this.searchForSuggestion('mitoma')">三笘薫</li>
+                                    <li class="suggestion-item" onclick="this.searchForSuggestion('minamino')">南野拓実</li>
+                                    <li class="suggestion-item" onclick="this.searchForSuggestion('endo')">遠藤航</li>
+                                    <li class="suggestion-item" onclick="this.searchForSuggestion('son')">孫興慜</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const resultsHTML = results.map(player => this.createPlayerCard(player)).join('');
+                this.resultsContainer.innerHTML = `<div class="player-grid">${resultsHTML}</div>`;
+            }
+
+            createPlayerCard(playerData) {
+                const { player, statistics, isJapanese, source } = playerData;
+                const stats = statistics && statistics[0];
+                
+                return `
+                    <div class="player-card">
+                        ${isJapanese ? '<div class="japanese-badge">🇯🇵 日本</div>' : ''}
+                        <div class="api-source">${source}</div>
+                        
+                        <div class="player-header">
+                            <img src="${player.photo || '/placeholder-player.png'}" alt="${player.name}" class="player-photo" onerror="this.src='/placeholder-player.png'">
+                            <div class="player-info">
+                                <div class="player-name">${player.name}</div>
+                                <div class="player-team">${stats?.team?.name || '不明'}</div>
+                                <div class="player-league">${stats?.league?.name || '不明'}</div>
+                            </div>
+                        </div>
+
+                        ${stats ? `
+                            <div class="player-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value">${stats.games?.appearences || 0}</div>
+                                    <div class="stat-label">試合数</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${stats.goals?.total || 0}</div>
+                                    <div class="stat-label">得点</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${stats.goals?.assists || 0}</div>
+                                    <div class="stat-label">アシスト</div>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="player-details">
+                            <div class="detail-item">
+                                <span class="detail-label">年齢:</span>
+                                <span class="detail-value">${player.age || '不明'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">身長:</span>
+                                <span class="detail-value">${player.height || '不明'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">体重:</span>
+                                <span class="detail-value">${player.weight || '不明'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">国籍:</span>
+                                <span class="detail-value">${player.nationality || '不明'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">ポジション:</span>
+                                <span class="detail-value">${stats?.games?.position || '不明'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">評価:</span>
+                                <span class="detail-value">${stats?.games?.rating || '不明'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            searchForSuggestion(query) {
+                this.searchInput.value = query;
+                this.performSearch();
+            }
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            window.database = new APIFootballDatabase();
+        });
+    </script>
+</body>
+</html> 
