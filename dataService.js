@@ -1072,18 +1072,43 @@ class FootballDataService {
 
             const results = [];
 
-            // Jリーグ選手を検索
-            const jLeagueSearch = async () => {
+            // 複数のリーグで検索（より柔軟な検索）
+            const multiLeagueSearch = async () => {
                 try {
-                                    const response = await fetchWithRetry(
-                    `/players?search=${encodeURIComponent(query)}&league=39&season=2024`,
-                    'apiFootball'
-                );
+                    // 主要リーグでの検索（リーグ指定なしでより広範囲に検索）
+                    const response = await fetchWithRetry(
+                        `/players?search=${encodeURIComponent(query)}`,
+                        'apiFootball'
+                    );
 
                     if (response.data && response.data.response) {
                         return response.data.response;
                     }
                     return [];
+                } catch (error) {
+                    console.error('Multi-league search error:', error);
+                    return [];
+                }
+            };
+
+            // Jリーグ選手を検索（より広範囲）
+            const jLeagueSearch = async () => {
+                try {
+                    // 複数のシーズンで検索
+                    const seasons = [2024, 2023, 2022];
+                    const leaguePromises = seasons.map(season => 
+                        fetchWithRetry(
+                            `/players?search=${encodeURIComponent(query)}&league=39&season=${season}`,
+                            'apiFootball'
+                        ).then(response => response.data?.response || [])
+                        .catch(error => {
+                            console.error(`J-League search error for season ${season}:`, error);
+                            return [];
+                        })
+                    );
+
+                    const results = await Promise.all(leaguePromises);
+                    return results.flat();
                 } catch (error) {
                     console.error('J-League search error:', error);
                     return [];
@@ -1095,10 +1120,10 @@ class FootballDataService {
                 if (!includeOverseas) return [];
                 
                 try {
-                                    const response = await fetchWithRetry(
-                    `/players?search=${encodeURIComponent(query)}&nationality=JP`,
-                    'apiFootball'
-                );
+                    const response = await fetchWithRetry(
+                        `/players?search=${encodeURIComponent(query)}&nationality=JP`,
+                        'apiFootball'
+                    );
 
                     if (response.data && response.data.response) {
                         return response.data.response;
@@ -1111,7 +1136,8 @@ class FootballDataService {
             };
 
             // 並列で検索実行
-            const [jLeagueResults, overseasResults] = await Promise.all([
+            const [multiLeagueResults, jLeagueResults, overseasResults] = await Promise.all([
+                multiLeagueSearch(),
                 jLeagueSearch(),
                 overseasSearch()
             ]);
@@ -1119,7 +1145,7 @@ class FootballDataService {
             // 結果を統合（重複除去）
             const combinedMap = new Map();
             
-            [...jLeagueResults, ...overseasResults].forEach(player => {
+            [...multiLeagueResults, ...jLeagueResults, ...overseasResults].forEach(player => {
                 const key = `${player.player.name}-${player.player.nationality}`;
                 if (!combinedMap.has(key)) {
                     combinedMap.set(key, {
