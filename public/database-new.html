@@ -470,42 +470,13 @@
             max-width: 800px;
             margin: 0 auto;
             display: flex;
-            flex-direction: column;
             gap: 1rem;
             align-items: center;
         }
 
-        .search-type-tabs {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .search-type-tab {
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: #888;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 500;
-        }
-
-        .search-type-tab:hover {
-            border-color: #666;
-            color: #fff;
-        }
-
-        .search-type-tab.active {
-            background: #00ff88;
-            color: #000;
-            border-color: #00ff88;
-        }
-
         .search-box {
+            flex: 1;
             display: flex;
-            width: 100%;
             background: #2a2a2a;
             border: 1px solid #444;
             border-radius: 6px;
@@ -1102,22 +1073,10 @@
         <!-- 検索セクション -->
         <div class="search-section">
             <div class="search-container">
-                <!-- 検索タイプタブ -->
-                <div class="search-type-tabs">
-                    <button class="search-type-tab active" onclick="switchSearchType('standard')">標準検索</button>
-                    <button class="search-type-tab" onclick="switchSearchType('api-football')">API-Football検索</button>
-                </div>
-                
-                <!-- 標準検索 -->
-                <div id="standard-search" class="search-box">
-                    <input type="text" id="searchQuery" class="search-input" placeholder="Search players, teams, matches...">
+                <!-- 統合検索 -->
+                <div class="search-box">
+                    <input type="text" id="searchQuery" class="search-input" placeholder="選手名、チーム名、リーグ名を入力（例: kubo, mitoma, son, Arsenal, Premier League）">
                     <button class="search-btn" onclick="searchData()">🔍</button>
-                </div>
-                
-                <!-- API-Football検索 -->
-                <div id="api-football-search" class="search-box" style="display: none;">
-                    <input type="text" id="apiFootballQuery" class="search-input" placeholder="日本語選手名を入力（例: kubo, mitoma, son）">
-                    <button class="search-btn" onclick="searchAPIFootball()">🚀</button>
                 </div>
                 
                 <div class="search-filters">
@@ -1400,9 +1359,9 @@
                         const teamName = item.currentTeam || item.team || 'Unknown Team';
                         const leagueName = item.seasons?.['2024-2025']?.league || 'Unknown League';
                         
-                        // 年齢を計算
-                        let age = 'N/A';
-                        if (item.birthday) {
+                        // 年齢を計算（API-Footballの場合は直接使用）
+                        let age = item.age || 'N/A';
+                        if (!age && item.birthday) {
                             const birthDate = new Date(item.birthday);
                             const today = new Date();
                             const ageDiff = today.getFullYear() - birthDate.getFullYear();
@@ -1414,13 +1373,23 @@
                         const position = item.position || 'Unknown';
                         const stats = item.seasons?.['2024-2025']?.stats || {};
                         
+                        // API-Footballの統計がある場合は使用
+                        const apiStats = item.apiFootballStats;
+                        const isAPIFootball = item.source === 'api-football';
+                        
                         html += `
                             <tr class="data-row" onclick="showPlayerDetail('${item.id || index}', ${JSON.stringify(item).replace(/'/g, "\\'")})">
                                 <td>
                                     <div class="player-info">
-                                        <div class="player-avatar">${playerName.charAt(0)}</div>
+                                        <div class="player-avatar">
+                                            ${item.photo ? `<img src="${item.photo}" alt="${playerName}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;" onerror="this.parentElement.innerHTML='${playerName.charAt(0)}'">` : playerName.charAt(0)}
+                                        </div>
                                         <div class="player-details">
-                                            <div class="player-name">${playerName}</div>
+                                            <div class="player-name">
+                                                ${playerName}
+                                                ${item.isJapanese ? '<span style="background: #ff4444; color: white; padding: 0.2rem 0.4rem; border-radius: 10px; font-size: 0.7rem; margin-left: 0.5rem;">🇯🇵</span>' : ''}
+                                                ${isAPIFootball ? '<span style="background: #00ff88; color: black; padding: 0.2rem 0.4rem; border-radius: 10px; font-size: 0.7rem; margin-left: 0.5rem;">🚀</span>' : ''}
+                                            </div>
                                             <div class="player-meta">${position} • ${item.nationality || 'Unknown'} • ${age}歳</div>
                                         </div>
                                     </div>
@@ -1445,19 +1414,19 @@
                                     <div class="stats-grid">
                                         <div class="stat-item">
                                             <span class="stat-label">⚽ ゴール</span>
-                                            <span class="stat-value">${stats.goals || 0}</span>
+                                            <span class="stat-value">${apiStats?.goals?.total || stats.goals || 0}</span>
                                         </div>
                                         <div class="stat-item">
                                             <span class="stat-label">🎯 アシスト</span>
-                                            <span class="stat-value">${stats.assists || 0}</span>
+                                            <span class="stat-value">${apiStats?.goals?.assists || stats.assists || 0}</span>
                                         </div>
                                         <div class="stat-item">
                                             <span class="stat-label">📊 試合数</span>
-                                            <span class="stat-value">${stats.appearances || 0}</span>
+                                            <span class="stat-value">${apiStats?.games?.appearences || stats.appearances || 0}</span>
                                         </div>
                                         <div class="stat-item">
                                             <span class="stat-label">⭐ 評価</span>
-                                            <span class="stat-value">${stats.rating || 'N/A'}</span>
+                                            <span class="stat-value">${apiStats?.games?.rating || stats.rating || 'N/A'}</span>
                                         </div>
                                     </div>
                                 </td>
@@ -1628,7 +1597,7 @@
             }
         }
 
-        // 検索機能（改善版）
+        // 統合検索機能（API-Football + 標準検索）
         async function searchData() {
             const searchType = document.getElementById('searchType')?.value || 'players';
             const searchQuery = document.getElementById('searchQuery')?.value?.trim() || '';
@@ -1639,6 +1608,32 @@
             if (!searchQuery && !searchPosition && !searchLeague) {
                 alert('検索キーワードまたはフィルターを設定してください');
                 return;
+            }
+
+            // 選手検索の場合、API-Footballを優先的に試す
+            if (searchType === 'players' && searchQuery) {
+                // 日本語選手の可能性がある場合、API-Footballを試す
+                const japaneseKeywords = ['kubo', 'mitoma', 'minamino', 'son', 'endo', 'wataru', '久保', '三笘', '南野', '孫', '遠藤'];
+                const isJapaneseSearch = japaneseKeywords.some(keyword => 
+                    searchQuery.toLowerCase().includes(keyword.toLowerCase())
+                );
+
+                if (isJapaneseSearch) {
+                    console.log('日本語選手検索を検出、API-Footballを試行中...');
+                    try {
+                        const response = await fetch(`/api/japanese-players/search-v2?query=${encodeURIComponent(searchQuery)}`);
+                        const data = await response.json();
+
+                        if (response.ok && data.totalResults > 0) {
+                            console.log(`API-Football検索成功: ${data.totalResults}件`);
+                            displayAPIFootballResults(data);
+                            showSearchResult(`API-Football検索: ${data.totalResults}件の選手が見つかりました`, 'success');
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('API-Football検索エラー:', error);
+                    }
+                }
             }
             
             // 検索中の表示
@@ -2231,101 +2226,155 @@
             }
         }
 
-        // 検索タイプ切り替え
-        function switchSearchType(type) {
-            const standardSearch = document.getElementById('standard-search');
-            const apiFootballSearch = document.getElementById('api-football-search');
-            const standardTab = document.querySelector('.search-type-tab[onclick*="standard"]');
-            const apiFootballTab = document.querySelector('.search-type-tab[onclick*="api-football"]');
-            
-            if (type === 'standard') {
-                standardSearch.style.display = 'flex';
-                apiFootballSearch.style.display = 'none';
-                standardTab.classList.add('active');
-                apiFootballTab.classList.remove('active');
-            } else {
-                standardSearch.style.display = 'none';
-                apiFootballSearch.style.display = 'flex';
-                standardTab.classList.remove('active');
-                apiFootballTab.classList.add('active');
-            }
-        }
 
-        // API-Football検索
-        async function searchAPIFootball() {
-            const query = document.getElementById('apiFootballQuery').value.trim();
-            if (!query) {
-                showDataStatus('検索クエリを入力してください', 'warning');
-                return;
-            }
-
-            showDataStatus('API-Footballで検索中...', 'info');
-            
-            try {
-                const response = await fetch(`/api/japanese-players/search-v2?query=${encodeURIComponent(query)}`);
-                const data = await response.json();
-
-                if (response.ok) {
-                    displayAPIFootballResults(data);
-                    showDataStatus(`検索完了: ${data.totalResults}件の結果`, 'success');
-                } else {
-                    showDataStatus(`検索エラー: ${data.error || '不明なエラー'}`, 'error');
-                }
-            } catch (error) {
-                console.error('API-Football search error:', error);
-                showDataStatus('検索中にエラーが発生しました', 'error');
-            }
-        }
 
         // API-Football検索結果表示
         function displayAPIFootballResults(data) {
             const { results, totalResults } = data;
-            const dataTable = document.querySelector('.data-table tbody');
             
             if (totalResults === 0) {
-                dataTable.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 2rem;">
-                            <p>検索結果が見つかりませんでした</p>
-                            <p style="color: #888; font-size: 0.9rem;">検索のヒント: kubo, mitoma, minamino, son</p>
-                        </td>
-                    </tr>
-                `;
+                showSearchResult('検索結果が見つかりませんでした。条件を変更して再試行してください。', 'warning');
                 return;
             }
 
-            const resultsHTML = results.map(player => {
+            // 選手タブに切り替え
+            currentTab = 'players';
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.tab-btn[onclick*="players"]').classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            document.getElementById('playersTab').style.display = 'block';
+
+            // API-Footballの結果を標準フォーマットに変換
+            const convertedPlayers = results.map(player => {
                 const { player: playerData, statistics, isJapanese, source } = player;
                 const stats = statistics && statistics[0];
                 
-                return `
-                    <tr class="player-row" onclick="showAPIFootballPlayerDetail('${playerData.id}')">
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <img src="${playerData.photo || '/placeholder-player.png'}" 
-                                     alt="${playerData.name}" 
-                                     style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;"
-                                     onerror="this.src='/placeholder-player.png'">
-                                <span>${playerData.name}</span>
-                                ${isJapanese ? '<span style="background: #ff4444; color: white; padding: 0.2rem 0.4rem; border-radius: 10px; font-size: 0.7rem;">🇯🇵</span>' : ''}
-                            </div>
-                        </td>
-                        <td>${stats?.team?.name || '不明'}</td>
-                        <td>${stats?.league?.name || '不明'}</td>
-                        <td>${playerData.age || '不明'}</td>
-                        <td>${stats?.goals?.total || 0}</td>
-                        <td>${stats?.goals?.assists || 0}</td>
-                    </tr>
-                `;
-            }).join('');
+                return {
+                    id: playerData.id,
+                    name: playerData.name,
+                    fullName: `${playerData.firstname || ''} ${playerData.lastname || ''}`.trim(),
+                    position: stats?.games?.position || '不明',
+                    team: stats?.team?.name || '不明',
+                    currentTeam: stats?.team?.name || '不明',
+                    age: playerData.age,
+                    nationality: playerData.nationality,
+                    height: playerData.height,
+                    weight: playerData.weight,
+                    photo: playerData.photo,
+                    isJapanese: isJapanese,
+                    source: source,
+                    // API-Footballの詳細統計
+                    apiFootballStats: stats,
+                    seasons: {
+                        '2024-2025': {
+                            league: stats?.league?.name || '不明',
+                            team: stats?.team?.name || '不明',
+                            goals: stats?.goals?.total || 0,
+                            assists: stats?.goals?.assists || 0,
+                            appearances: stats?.games?.appearences || 0
+                        }
+                    }
+                };
+            });
 
-            dataTable.innerHTML = resultsHTML;
+            currentData = convertedPlayers;
+            displayData(convertedPlayers, 'players');
         }
 
-        // API-Football選手詳細表示
-        function showAPIFootballPlayerDetail(playerId) {
-            // 実装予定: 選手の詳細情報をモーダルで表示
-            alert('選手詳細機能は準備中です');
+        // 選手詳細表示（API-Football対応）
+        function showPlayerDetail(playerId, playerData) {
+            const modal = document.createElement('div');
+            modal.className = 'detail-modal';
+            
+            // API-Footballの詳細統計がある場合
+            const apiStats = playerData.apiFootballStats;
+            const isAPIFootball = playerData.source === 'api-football';
+            
+            let statsHTML = '';
+            if (apiStats) {
+                statsHTML = `
+                    <div class="stats-section">
+                        <h4>2024-2025 シーズン統計</h4>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value">${apiStats.games?.appearences || 0}</div>
+                                <div class="stat-label">試合数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${apiStats.goals?.total || 0}</div>
+                                <div class="stat-label">得点</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${apiStats.goals?.assists || 0}</div>
+                                <div class="stat-label">アシスト</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${apiStats.games?.rating || 'N/A'}</div>
+                                <div class="stat-label">評価</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${apiStats.passes?.total || 0}</div>
+                                <div class="stat-label">パス数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${apiStats.passes?.key || 0}</div>
+                                <div class="stat-label">キーパス</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>${playerData.name || playerData.fullName}</h2>
+                        <button onclick="closeModal()" class="close-btn">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="player-header">
+                            <img src="${playerData.photo || '/placeholder-player.png'}" 
+                                 alt="${playerData.name}" 
+                                 class="player-avatar-large"
+                                 onerror="this.src='/placeholder-player.png'">
+                            <div class="player-info-large">
+                                <h3>${playerData.name || playerData.fullName}</h3>
+                                <p>${playerData.position || 'Unknown'} • ${playerData.nationality || 'Unknown'}</p>
+                                <p>${playerData.currentTeam || playerData.team || 'Unknown Team'}</p>
+                                ${playerData.isJapanese ? '<p style="color: #ff4444; font-weight: bold;">🇯🇵 日本代表</p>' : ''}
+                                ${isAPIFootball ? '<p style="color: #00ff88; font-weight: bold;">🚀 API-Football データ</p>' : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="player-info-section">
+                            <h4>基本情報</h4>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">年齢:</span>
+                                    <span class="info-value">${playerData.age || 'N/A'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">身長:</span>
+                                    <span class="info-value">${playerData.height || 'N/A'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">体重:</span>
+                                    <span class="info-value">${playerData.weight || 'N/A'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">国籍:</span>
+                                    <span class="info-value">${playerData.nationality || 'N/A'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${statsHTML}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
         }
 
         // 初期表示
@@ -2340,12 +2389,7 @@
             console.log('ポジションフィルター変更:', this.value);
         });
 
-        // API-Football検索のEnterキー対応
-        document.getElementById('apiFootballQuery').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchAPIFootball();
-            }
-        });
+
             
             // 初期フィルター状態を設定
             updateSearchFilters();
