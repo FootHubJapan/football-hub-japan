@@ -149,7 +149,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 app.get('/database', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'database.html'));
+    res.sendFile(path.join(__dirname, 'public', 'database-new.html'));
 });
 
 app.get('/database-new', (req, res) => {
