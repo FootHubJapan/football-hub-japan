@@ -1078,6 +1078,7 @@
                 <div class="search-filters">
                     <select id="searchType" class="filter-select">
                         <option value="players">選手</option>
+                        <option value="api-football-players">API-Football 選手検索</option>
                         <option value="teams">チーム</option>
                         <option value="leagues">リーグ</option>
                     </select>
@@ -1103,6 +1104,18 @@
                         <option value="SA">セリエA</option>
                         <option value="BL1">ブンデスリーガ</option>
                         <option value="FL1">リーグ・アン</option>
+                    </select>
+                    <select id="apiFootballLeague" class="filter-select" style="display: none;">
+                        <option value="">すべてのリーグ</option>
+                        <option value="39">Premier League</option>
+                        <option value="140">La Liga</option>
+                        <option value="135">Serie A</option>
+                        <option value="78">Bundesliga</option>
+                        <option value="61">Ligue 1</option>
+                    </select>
+                    <select id="includeOverseas" class="filter-select" style="display: none;">
+                        <option value="true">海外選手を含む</option>
+                        <option value="false">海外選手を含まない</option>
                     </select>
                 </div>
             </div>
@@ -1353,11 +1366,11 @@
                     if (tabType === 'players') {
                         const playerName = item.fullName || item.name || 'Unknown Player';
                         const teamName = item.currentTeam || item.team || 'Unknown Team';
-                        const leagueName = item.seasons?.['2024-2025']?.league || 'Unknown League';
+                        const leagueName = item.seasons?.['2024-2025']?.league || item.league || 'Unknown League';
                         
-                        // 年齢を計算
-                        let age = 'N/A';
-                        if (item.birthday) {
+                        // 年齢を計算（API-Footballデータの場合は直接使用）
+                        let age = item.age || 'N/A';
+                        if (!item.age && item.birthday) {
                             const birthDate = new Date(item.birthday);
                             const today = new Date();
                             const ageDiff = today.getFullYear() - birthDate.getFullYear();
@@ -1369,13 +1382,25 @@
                         const position = item.position || 'Unknown';
                         const stats = item.seasons?.['2024-2025']?.stats || {};
                         
+                        // API-Footballデータの場合は統計情報を使用
+                        const goals = item.goals || stats.goals || 0;
+                        const assists = item.assists || stats.assists || 0;
+                        const appearances = item.appearances || stats.appearances || 0;
+                        const rating = item.rating || stats.rating || 'N/A';
+                        
+                        // 日本選手バッジ
+                        const japaneseBadge = item.isJapanese ? '<span class="japanese-badge" style="background: #ff4444; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; margin-left: 5px;">🇯🇵</span>' : '';
+                        
+                        // データソース表示
+                        const sourceBadge = item.source ? `<span class="source-badge" style="background: #00ff88; color: black; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; margin-left: 5px;">${item.source}</span>` : '';
+                        
                         html += `
                             <tr class="data-row" onclick="showPlayerDetail('${item.id || index}', ${JSON.stringify(item).replace(/'/g, "\\'")})">
                                 <td>
                                     <div class="player-info">
                                         <div class="player-avatar">${playerName.charAt(0)}</div>
                                         <div class="player-details">
-                                            <div class="player-name">${playerName}</div>
+                                            <div class="player-name">${playerName}${japaneseBadge}${sourceBadge}</div>
                                             <div class="player-meta">${position} • ${item.nationality || 'Unknown'} • ${age}歳</div>
                                         </div>
                                     </div>
@@ -1400,19 +1425,19 @@
                                     <div class="stats-grid">
                                         <div class="stat-item">
                                             <span class="stat-label">⚽ ゴール</span>
-                                            <span class="stat-value">${stats.goals || 0}</span>
+                                            <span class="stat-value">${goals}</span>
                                         </div>
                                         <div class="stat-item">
                                             <span class="stat-label">🎯 アシスト</span>
-                                            <span class="stat-value">${stats.assists || 0}</span>
+                                            <span class="stat-value">${assists}</span>
                                         </div>
                                         <div class="stat-item">
                                             <span class="stat-label">📊 試合数</span>
-                                            <span class="stat-value">${stats.appearances || 0}</span>
+                                            <span class="stat-value">${appearances}</span>
                                         </div>
                                         <div class="stat-item">
                                             <span class="stat-label">⭐ 評価</span>
-                                            <span class="stat-value">${stats.rating || 'N/A'}</span>
+                                            <span class="stat-value">${rating}</span>
                                         </div>
                                     </div>
                                 </td>
@@ -1569,15 +1594,22 @@
             const searchType = document.getElementById('searchType').value;
             const positionFilter = document.getElementById('searchPosition');
             const leagueFilter = document.getElementById('searchLeague');
+            const apiFootballLeagueFilter = document.getElementById('apiFootballLeague');
+            const includeOverseasFilter = document.getElementById('includeOverseas');
             
             // すべてのフィルターを非表示
             positionFilter.style.display = 'none';
             leagueFilter.style.display = 'none';
+            apiFootballLeagueFilter.style.display = 'none';
+            includeOverseasFilter.style.display = 'none';
             
             // 検索タイプに応じてフィルターを表示
             if (searchType === 'players') {
                 positionFilter.style.display = 'inline-block';
                 leagueFilter.style.display = 'inline-block';
+            } else if (searchType === 'api-football-players') {
+                apiFootballLeagueFilter.style.display = 'inline-block';
+                includeOverseasFilter.style.display = 'inline-block';
             } else if (searchType === 'teams') {
                 leagueFilter.style.display = 'inline-block';
             }
@@ -1662,6 +1694,91 @@
                         
                         const filterText = filters.length > 0 ? ` (${filters.join(', ')})` : '';
                         showSearchResult(`${currentData.length}件の選手が見つかりました${filterText}`, 'success');
+                    }
+                } else if (searchType === 'api-football-players') {
+                    console.log(`API-Football選手検索開始: "${searchQuery}"`);
+                    
+                    if (!searchQuery) {
+                        showSearchResult('検索キーワードを入力してください', 'warning');
+                        return;
+                    }
+                    
+                    // API-Football検索を実行
+                    const apiFootballLeague = document.getElementById('apiFootballLeague').value;
+                    const includeOverseas = document.getElementById('includeOverseas').value;
+                    
+                    let url = `/api/japanese-players/search-v2?query=${encodeURIComponent(searchQuery)}`;
+                    if (apiFootballLeague) {
+                        url += `&league=${apiFootballLeague}`;
+                    }
+                    if (includeOverseas) {
+                        url += `&includeOverseas=${includeOverseas}`;
+                    }
+                    
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        // API-Footballデータを既存の形式に変換
+                        const convertedPlayers = data.results.map(result => {
+                            const player = result.player;
+                            const stats = result.statistics && result.statistics[0];
+                            
+                            return {
+                                id: player.id,
+                                name: player.name,
+                                fullName: `${player.firstname} ${player.lastname}`,
+                                age: player.age,
+                                position: stats?.games?.position || '不明',
+                                team: stats?.team?.name || '不明',
+                                league: stats?.league?.name || '不明',
+                                nationality: player.nationality,
+                                height: player.height,
+                                weight: player.weight,
+                                photo: player.photo,
+                                isJapanese: result.isJapanese,
+                                source: result.source,
+                                // 統計情報
+                                appearances: stats?.games?.appearences || 0,
+                                goals: stats?.goals?.total || 0,
+                                assists: stats?.goals?.assists || 0,
+                                rating: stats?.games?.rating || '不明'
+                            };
+                        });
+                        
+                        currentData = convertedPlayers;
+                        currentTab = 'players';
+                        
+                        // タブを切り替え
+                        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                        document.querySelector('.tab-btn[onclick*="players"]').classList.add('active');
+                        
+                        document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+                        document.getElementById('playersTab').style.display = 'block';
+                        
+                        // 検索結果の表示
+                        if (currentData.length === 0) {
+                            showSearchResult('API-Footballで検索結果が見つかりませんでした。', 'warning');
+                        } else {
+                            const filters = [];
+                            if (searchQuery) filters.push(`キーワード: "${searchQuery}"`);
+                            if (apiFootballLeague) {
+                                const leagueNames = {
+                                    '39': 'Premier League',
+                                    '140': 'La Liga',
+                                    '135': 'Serie A',
+                                    '78': 'Bundesliga',
+                                    '61': 'Ligue 1'
+                                };
+                                filters.push(`リーグ: ${leagueNames[apiFootballLeague] || apiFootballLeague}`);
+                            }
+                            if (includeOverseas === 'false') filters.push('海外選手除外');
+                            
+                            const filterText = filters.length > 0 ? ` (${filters.join(', ')})` : '';
+                            showSearchResult(`API-Football: ${currentData.length}件の選手が見つかりました${filterText}`, 'success');
+                        }
+                    } else {
+                        showSearchResult(`API-Football検索エラー: ${data.error || '不明なエラー'}`, 'error');
                     }
                 } else {
                     // チーム・リーグ検索
@@ -1837,7 +1954,7 @@
                             <div class="info-grid">
                                 <div class="info-item">
                                     <label>生年月日</label>
-                                    <span>${player.birthday || 'N/A'}</span>
+                                    <span>${player.birth?.date || player.birthday || 'N/A'}</span>
                                 </div>
                                 <div class="info-item">
                                     <label>年齢</label>
@@ -1845,11 +1962,15 @@
                                 </div>
                                 <div class="info-item">
                                     <label>身長</label>
-                                    <span>${player.height || 'N/A'}cm</span>
+                                    <span>${player.height || 'N/A'}</span>
                                 </div>
                                 <div class="info-item">
                                     <label>体重</label>
-                                    <span>${player.weight || 'N/A'}kg</span>
+                                    <span>${player.weight || 'N/A'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>国籍</label>
+                                    <span>${player.nationality || 'N/A'}</span>
                                 </div>
                                 <div class="info-item">
                                     <label>利き足</label>
@@ -1867,6 +1988,8 @@
                                     <label>背番号</label>
                                     <span>${player.shirtNumber || 'N/A'}</span>
                                 </div>
+                                ${player.isJapanese ? '<div class="info-item"><label>日本代表</label><span>🇯🇵 日本国籍</span></div>' : ''}
+                                ${player.source ? `<div class="info-item"><label>データソース</label><span>${player.source}</span></div>` : ''}
                             </div>
                         </div>
 
@@ -1905,19 +2028,19 @@
                             <div class="stats-grid-native">
                                 <div class="stat-item-native">
                                     <span class="stat-label">試合数</span>
-                                    <span class="stat-value">${seasonStats.matchesPlayed || seasonStats.appearances || 0}</span>
+                                    <span class="stat-value">${seasonStats.matchesPlayed || seasonStats.appearances || player.appearances || 0}</span>
                                 </div>
                                 <div class="stat-item-native">
                                     <span class="stat-label">ゴール</span>
-                                    <span class="stat-value">${seasonStats.goals || 0}</span>
+                                    <span class="stat-value">${seasonStats.goals || player.goals || 0}</span>
                                 </div>
                                 <div class="stat-item-native">
                                     <span class="stat-label">アシスト</span>
-                                    <span class="stat-value">${seasonStats.assists || 0}</span>
+                                    <span class="stat-value">${seasonStats.assists || player.assists || 0}</span>
                                 </div>
                                 <div class="stat-item-native">
                                     <span class="stat-label">評価</span>
-                                    <span class="stat-value">${seasonStats.rating || 'N/A'}</span>
+                                    <span class="stat-value">${seasonStats.rating || player.rating || 'N/A'}</span>
                                 </div>
                                 <div class="stat-item-native">
                                     <span class="stat-label">イエローカード</span>
