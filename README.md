@@ -1,71 +1,129 @@
 # Football Hub Japan
 
-サッカーAIエージェント - 最先端のAI技術で日本サッカーを分析・予測
+サッカー選手データベースと検索システム
 
-## 機能
+## 新機能: API-Football統合とハイブリッドAPI戦略
 
-- **サッカーデータベース**: 世界中のリーグ、チーム、選手の詳細なデータ
-- **レーダーチャート比較**: 選手やチームのパフォーマンスを視覚的に比較
-- **試合レビュー/プレビュー**: AIが生成する詳細な試合分析
-- **試合スケジュール**: お気に入りのチームや選手の試合スケジュール
-- **AI分析エージェント**: 最新のAI技術で試合結果を予想
-- **ランキングシステム**: ポジション別、リーグ別の詳細なランキング
+### 🚀 実装された改善点
 
-## セットアップ
+#### 1. リクエスト制限エラーの解決（429エラー対策）
+- **レート制限機能**: 各APIの制限に応じた自動制御
+- **リトライ機能**: 指数バックオフによる自動リトライ
+- **並列処理**: 複数APIからの同時データ取得
 
-### 1. 依存関係のインストール
+#### 2. ハイブリッドAPI戦略
+- **Football-data.org**: 主要欧州リーグ（PL, La Liga, Serie A, Bundesliga, Ligue 1）
+- **API-Football**: Jリーグ、アジアリーグ、詳細選手統計
+- **統合検索**: 両方のAPIからデータを取得し、重複を除去
 
+#### 3. 新しいエンドポイント
+
+##### ハイブリッド検索
+```
+GET /api/hybrid/players/search-v2?query=久保建英&league=39&country=JP
+```
+
+##### アジアリーグ
+```
+GET /api/asian-leagues/leagues-v2
+```
+
+##### 日本語選手検索
+```
+GET /api/japanese-players/search-v2?query=三笘薫&includeOverseas=true
+```
+
+##### 詳細統計
+```
+GET /api/players/123/detailed-stats-v2?season=2024&league=39
+```
+
+### 📊 期待される改善効果
+
+#### データ品質の向上
+- より多くの日本語選手データ
+- より詳細な統計情報
+- より広範なリーグカバレッジ
+
+#### パフォーマンスの改善
+- リクエスト制限エラーの削減
+- より高速なデータ取得
+- より安定したサービス
+
+#### ユーザー体験の向上
+- より正確な検索結果
+- より豊富な選手情報
+- より快適な検索体験
+
+### 🔧 セットアップ
+
+#### 1. 環境変数の設定
+```bash
+# .env ファイルを作成
+cp env.example .env
+
+# APIキーを設定
+API_FOOTBALL_KEY=your-api-football-key-here
+FOOTBALL_DATA_API_KEY=your-football-data-api-key-here
+```
+
+#### 2. APIキーの取得
+- **API-Football**: https://www.api-football.com/
+- **Football-data.org**: https://www.football-data.org/
+
+#### 3. サーバーの起動
 ```bash
 npm install
+node index.js
 ```
 
-### 2. 環境変数の設定
-
-1. `env.example` を `.env` にコピー
-2. API-FootballのAPIキーを取得: https://www.api-football.com/
-3. `.env` ファイルにAPIキーを設定
+### 📈 レート制限設定
 
 ```bash
-cp env.example .env
-# .envファイルを編集してAPIキーを設定
+# 環境変数でカスタマイズ可能
+FOOTBALL_DATA_RATE_LIMIT=10  # 1分あたりのリクエスト数
+API_FOOTBALL_RATE_LIMIT=30   # 1分あたりのリクエスト数
 ```
 
-### 3. サーバーの起動
+### 🔍 使用例
 
-```bash
-npm start
+#### 日本語選手の検索
+```javascript
+// 久保建英を検索（Jリーグ + 海外）
+fetch('/api/japanese-players/search-v2?query=久保建英&includeOverseas=true')
+  .then(response => response.json())
+  .then(data => console.log(data));
 ```
 
-## API エンドポイント
+#### ハイブリッド検索
+```javascript
+// 両方のAPIから検索
+fetch('/api/hybrid/players/search-v2?query=久保建英')
+  .then(response => response.json())
+  .then(data => console.log(data));
+```
 
-### リーグ関連
-- `GET /api/leagues` - リーグ一覧を取得
-- `GET /api/teams?leagueId={id}` - リーグのチーム一覧を取得
+#### 詳細統計の取得
+```javascript
+// 選手の詳細統計
+fetch('/api/players/123/detailed-stats-v2?season=2024&league=39')
+  .then(response => response.json())
+  .then(data => console.log(data));
+```
 
-### チーム関連
-- `GET /api/teams/:id/stats?leagueId={id}` - チーム統計を取得
+### 🛠️ 技術的な改善点
 
-### 選手関連
-- `GET /api/players?teamId={id}` - チームの選手一覧を取得
-- `GET /api/search/players?q={query}` - 選手検索
-- `GET /api/players/:id/stats` - 選手統計を取得
+1. **キャッシュ機能**: 30分間のキャッシュでAPI呼び出しを削減
+2. **エラーハンドリング**: 包括的なエラー処理とフォールバック
+3. **並列処理**: Promise.allを使用した効率的なデータ取得
+4. **レート制限**: 各APIの制限に応じた自動制御
 
-## 技術スタック
+### 📝 既存の機能
 
-- **バックエンド**: Node.js, Express.js
-- **フロントエンド**: HTML5, CSS3, JavaScript (ES6+)
-- **データベース**: API-Football (外部API)
-- **チャート**: Chart.js
-- **キャッシュ**: Node-Cache
-
-## デプロイ
-
-### Render.com
-
-1. GitHubリポジトリをRender.comに接続
-2. 環境変数 `FOOTBALL_API_KEY` を設定
-3. ビルドコマンド: `npm install`
-4. 起動コマンド: `npm start`
+- Firebase統合
+- リアルタイムデータ更新
+- 管理者ダッシュボード
+- データベース管理機能
 
 ## ライセンス
 

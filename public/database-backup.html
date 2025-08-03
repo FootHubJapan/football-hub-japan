@@ -89,6 +89,8 @@
             border-radius: 15px;
             padding: 2rem;
             margin-bottom: 2rem;
+            position: relative;
+            z-index: 10;
         }
 
         .search-title {
@@ -142,6 +144,111 @@
 
         .search-btn:hover {
             background: #00cc6a;
+        }
+
+        .search-filters {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid #333333;
+            border-radius: 5px;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-size: 0.9rem;
+            min-width: 150px;
+        }
+
+        /* 高度なフィルター */
+        .advanced-filters {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 10px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-size: 0.9rem;
+            color: #cccccc;
+        }
+
+        .filter-input {
+            padding: 0.5rem;
+            border: 1px solid #333333;
+            border-radius: 5px;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-size: 0.9rem;
+            width: 100px;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* 検索サジェスト */
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            border: 1px solid #333333;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .suggestion-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #333333;
+            transition: background-color 0.2s;
+        }
+
+        .suggestion-item:hover {
+            background: #333333;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-highlight {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .sort-select {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
         }
 
         .data-section {
@@ -467,20 +574,22 @@
         }
 
         .search-container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             display: flex;
+            flex-direction: column;
             gap: 1rem;
-            align-items: center;
         }
 
         .search-box {
-            flex: 1;
+            width: 100%;
             display: flex;
             background: #2a2a2a;
             border: 1px solid #444;
             border-radius: 6px;
             overflow: hidden;
+            position: relative;
+            margin-bottom: 1rem;
         }
 
         .search-input {
@@ -490,6 +599,7 @@
             color: #fff;
             padding: 0.75rem 1rem;
             font-size: 1rem;
+            min-height: 50px;
         }
 
         .search-input::placeholder {
@@ -500,9 +610,11 @@
             background: #00ff88;
             border: none;
             color: #000;
-            padding: 0.75rem 1rem;
+            padding: 0.75rem 1.5rem;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 1.2rem;
+            min-height: 50px;
+            font-weight: bold;
         }
 
         .filter-select {
@@ -1070,10 +1182,12 @@
 
         <!-- 検索セクション -->
         <div class="search-section">
+            <h3 class="search-title">選手・チーム・リーグ検索</h3>
             <div class="search-container">
                 <div class="search-box">
-                    <input type="text" id="searchQuery" class="search-input" placeholder="Search players, teams, matches...">
-                    <button class="search-btn" onclick="searchData()">🔍</button>
+                    <input type="text" id="searchQuery" class="search-input" placeholder="選手名、チーム名、リーグ名で検索..." autocomplete="off">
+                    <div id="searchSuggestions" class="search-suggestions" style="display: none;"></div>
+                    <button class="search-btn" id="searchButton">🔍</button>
                 </div>
                 <div class="search-filters">
                     <select id="searchType" class="filter-select">
@@ -1083,18 +1197,27 @@
                     </select>
                     <select id="searchPosition" class="filter-select" style="display: none;">
                         <option value="">すべてのポジション</option>
-                        <option value="Goalkeeper">ゴールキーパー</option>
-                        <option value="Defender">ディフェンダー</option>
-                        <option value="Midfielder">ミッドフィルダー</option>
-                        <option value="Forward">フォワード</option>
-                        <option value="Right Winger">右ウィンガー</option>
-                        <option value="Left Winger">左ウィンガー</option>
-                        <option value="Centre-Forward">センターフォワード</option>
-                        <option value="Attacking Midfielder">攻撃的ミッドフィルダー</option>
-                        <option value="Defensive Midfielder">守備的ミッドフィルダー</option>
-                        <option value="Centre-Back">センターバック</option>
-                        <option value="Right-Back">ライトバック</option>
-                        <option value="Left-Back">レフトバック</option>
+                        <!-- 日本語カテゴリ -->
+                        <option value="ディフェンダー">ディフェンダー（全般）</option>
+                        <option value="フォワード">フォワード（全般）</option>
+                        <option value="ミッドフィルダー">ミッドフィルダー（全般）</option>
+                        <option value="ゴールキーパー">ゴールキーパー</option>
+                        <!-- 詳細ポジション -->
+                        <option value="センターバック">センターバック</option>
+                        <option value="サイドバック">サイドバック</option>
+                        <option value="ウィンガー">ウィンガー</option>
+                        <option value="ストライカー">ストライカー</option>
+                        <option value="アタッキングミッドフィルダー">アタッキングミッドフィルダー</option>
+                        <option value="ディフェンシブミッドフィルダー">ディフェンシブミッドフィルダー</option>
+                        <!-- 英語ポジション（後方互換性） -->
+                        <option value="Goalkeeper">Goalkeeper</option>
+                        <option value="Centre-Back">Centre-Back</option>
+                        <option value="Left-Back">Left-Back</option>
+                        <option value="Right-Back">Right-Back</option>
+                        <option value="Attacking Midfield">Attacking Midfield</option>
+                        <option value="Defensive Midfield">Defensive Midfield</option>
+                        <option value="Forward">Forward</option>
+                        <option value="Winger">Winger</option>
                     </select>
                     <select id="searchLeague" class="filter-select" style="display: none;">
                         <option value="">すべてのリーグ</option>
@@ -1105,6 +1228,48 @@
                         <option value="FL1">リーグ・アン</option>
                     </select>
                 </div>
+                
+                <!-- 高度なフィルター -->
+                <div class="advanced-filters" id="advancedFilters" style="display: none;">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label>年齢範囲:</label>
+                            <select id="ageRange" class="filter-select">
+                                <option value="">すべての年齢</option>
+                                <option value="18-25">18-25歳</option>
+                                <option value="26-30">26-30歳</option>
+                                <option value="31-35">31-35歳</option>
+                                <option value="36+">36歳以上</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>市場価値:</label>
+                            <select id="marketValue" class="filter-select">
+                                <option value="">すべて</option>
+                                <option value="0-10">0-10M €</option>
+                                <option value="10-50">10-50M €</option>
+                                <option value="50-100">50-100M €</option>
+                                <option value="100+">100M €以上</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>最低ゴール数:</label>
+                            <input type="number" id="minGoals" class="filter-input" placeholder="0" min="0">
+                        </div>
+                        <div class="filter-group">
+                            <label>最低アシスト数:</label>
+                            <input type="number" id="minAssists" class="filter-input" placeholder="0" min="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- フィルター制御ボタン -->
+                <div class="filter-controls">
+                    <button id="toggleAdvancedFilters" class="btn btn-secondary">
+                        高度なフィルター ▼
+                    </button>
+                    <button class="btn btn-warning" id="clearFiltersButton">フィルタークリア</button>
+                </div>
             </div>
         </div>
 
@@ -1112,10 +1277,10 @@
         <div class="data-management-section">
             <h3>データ管理</h3>
             <div class="data-controls">
-                <button onclick="checkDataStatus()" class="btn btn-info">データ状況確認</button>
-                <button onclick="importRealData()" class="btn btn-primary">実際データインポート</button>
-                <button onclick="clearCachedData()" class="btn btn-warning">キャッシュクリア</button>
-                <button onclick="refreshData()" class="btn btn-success">データ更新</button>
+                <button id="checkDataStatusBtn" class="btn btn-info">データ状況確認</button>
+                <button id="importRealDataBtn" class="btn btn-primary">実際データインポート</button>
+                <button id="clearCachedDataBtn" class="btn btn-warning">キャッシュクリア</button>
+                <button id="refreshDataBtn" class="btn btn-success">データ更新</button>
                 <a href="/admin.html" class="btn btn-info" style="text-decoration: none; display: inline-block;">管理画面</a>
             </div>
             <div id="dataStatus" class="data-status"></div>
@@ -1139,6 +1304,16 @@
                             <th>年齢</th>
                             <th>ポジション</th>
                             <th>統計</th>
+                        <th>
+                            <select id="sortBy" class="sort-select">
+                                <option value="">並び替え</option>
+                                <option value="name">名前順</option>
+                                <option value="age">年齢順</option>
+                                <option value="goals">ゴール数順</option>
+                                <option value="assists">アシスト数順</option>
+                                <option value="marketValue">市場価値順</option>
+                            </select>
+                        </th>
                         </tr>
                     </thead>
                     <tbody id="playersTableBody">
@@ -1301,6 +1476,13 @@
             
             // データを更新
             try {
+                // FirebaseDataServiceが利用可能かチェック
+                if (!window.firebaseDataService) {
+                    console.error('FirebaseDataServiceが利用できません');
+                    currentData = [];
+                    return;
+                }
+                
                 switch(tab) {
                     case 'players':
                         console.log('選手データを取得中...');
@@ -1370,7 +1552,7 @@
                         const stats = item.seasons?.['2024-2025']?.stats || {};
                         
                         html += `
-                            <tr class="data-row" onclick="showPlayerDetail('${item.id || index}', ${JSON.stringify(item).replace(/'/g, "\\'")})">
+                            <tr class="data-row" data-player-id="${item.id || index}" onclick="showPlayerDetailFromElement(this)">
                                 <td>
                                     <div class="player-info">
                                         <div class="player-avatar">${playerName.charAt(0)}</div>
@@ -1583,6 +1765,59 @@
             }
         }
 
+        // 選手の年齢を計算する関数
+        function calculatePlayerAge(birthday) {
+            if (!birthday) return NaN;
+            
+            try {
+                const birthDate = new Date(birthday);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                
+                return age;
+            } catch (error) {
+                console.error('年齢計算エラー:', error);
+                return NaN;
+            }
+        }
+
+        // 文字列類似度計算関数
+        function calculateSimilarity(str1, str2) {
+            if (str1 === str2) return 1.0;
+            if (str1.length === 0) return str2.length === 0 ? 1.0 : 0.0;
+            if (str2.length === 0) return 0.0;
+            
+            const matrix = [];
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            
+            const maxLength = Math.max(str1.length, str2.length);
+            return maxLength === 0 ? 1.0 : (maxLength - matrix[str2.length][str1.length]) / maxLength;
+        }
+
         // 検索機能（改善版）
         async function searchData() {
             const searchType = document.getElementById('searchType')?.value || 'players';
@@ -1590,9 +1825,17 @@
             const searchPosition = document.getElementById('searchPosition')?.value || '';
             const searchLeague = document.getElementById('searchLeague')?.value || '';
             
+            // 高度なフィルター
+            const ageRange = document.getElementById('ageRange')?.value || '';
+            const marketValue = document.getElementById('marketValue')?.value || '';
+            const minGoals = parseInt(document.getElementById('minGoals')?.value) || 0;
+            const minAssists = parseInt(document.getElementById('minAssists')?.value) || 0;
+            
+            console.log('検索開始:', { searchType, searchQuery, searchPosition, searchLeague, ageRange, marketValue, minGoals, minAssists });
+            
             // 検索クエリが空でもフィルターが設定されている場合は検索を実行
-            if (!searchQuery && !searchPosition && !searchLeague) {
-                alert('検索キーワードまたはフィルターを設定してください');
+            if (!searchQuery && !searchPosition && !searchLeague && !ageRange && !marketValue && minGoals === 0 && minAssists === 0) {
+                showSearchResult('検索キーワードまたはフィルターを設定してください', 'warning');
                 return;
             }
             
@@ -1620,24 +1863,176 @@
                     // フィルタリングを適用
                     let filteredPlayers = players;
                     
-                    // 検索クエリでフィルタリング
+                    // 検索クエリでフィルタリング（日本語対応）
                     if (searchQuery) {
-                        filteredPlayers = filteredPlayers.filter(player => 
-                            (player.name && player.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            (player.fullName && player.fullName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            (player.team && player.team.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            (player.currentTeam && player.currentTeam.toLowerCase().includes(searchQuery.toLowerCase()))
-                        );
+                        const query = searchQuery.toLowerCase();
+                        filteredPlayers = filteredPlayers.filter(player => {
+                            // 選手名の日本語マッピング
+                            const playerNameMapping = {
+                                'ハーランド': ['erling haaland', 'haaland'],
+                                'メッシ': ['lionel messi', 'messi'],
+                                'ロナウド': ['cristiano ronaldo', 'ronaldo'],
+                                'ムバッペ': ['kylian mbappé', 'mbappé', 'mbappe'],
+                                'ベンゼマ': ['karim benzema', 'benzema'],
+                                'サラー': ['mohamed salah', 'salah'],
+                                'ケイン': ['harry kane', 'kane'],
+                                'ソン': ['heung-min son', 'son'],
+                                'ディブルイネ': ['kevin de bruyne', 'de bruyne'],
+                                'シルバ': ['bernardo silva', 'silva'],
+                                'ロドリ': ['rodri', 'rodrigo'],
+                                'ファーデン': ['phil foden', 'foden'],
+                                'グレリッシュ': ['jack grealish', 'grealish'],
+                                'アルバレス': ['julián álvarez', 'álvarez', 'alvarez'],
+                                'ヌニェス': ['darwin núñez', 'núñez', 'nunez'],
+                                'ディアス': ['luis díaz', 'díaz', 'diaz'],
+                                'マクアリスター': ['alexis mac allister', 'mac allister'],
+                                'ソボスライ': ['dominik szoboszlai', 'szoboszlai'],
+                                'バルデ': ['pedri', 'pedro gonzález'],
+                                'ガビ': ['gavi', 'pablo martín páez gaviria'],
+                                'ビニシウス': ['vinícius júnior', 'vinícius', 'vinicius'],
+                                'ベリンガム': ['jude bellingham', 'bellingham'],
+                                'カマビンガ': ['eduardo camavinga', 'camavinga'],
+                                'チュアメニ': ['aurélien tchouaméni', 'tchouaméni'],
+                                'ムサラ': ['luka modrić', 'modrić', 'modric'],
+                                'クロース': ['toni kroos', 'kroos'],
+                                'バルベルデ': ['federico valverde', 'valverde'],
+                                'ホランド': ['erling haaland', 'haaland'], // 別表記
+                                'エルリング': ['erling haaland', 'haaland'], // 別表記
+                                'キリアン': ['kylian mbappé', 'mbappé', 'mbappe'], // 別表記
+                                'リオネル': ['lionel messi', 'messi'], // 別表記
+                                'クリスティアーノ': ['cristiano ronaldo', 'ronaldo'] // 別表記
+                            };
+                            
+                            // 基本フィールドの検索
+                            const nameMatch = (() => {
+                                const playerName = (player.name || '').toLowerCase();
+                                const playerFullName = (player.fullName || '').toLowerCase();
+                                
+                                // 直接マッチ
+                                if (playerName.includes(query) || playerFullName.includes(query)) {
+                                    return true;
+                                }
+                                
+                                // 日本語マッピングによる検索
+                                if (playerNameMapping[query]) {
+                                    return playerNameMapping[query].some(name => 
+                                        playerName.includes(name) || playerFullName.includes(name)
+                                    );
+                                }
+                                
+                                // 逆マッピング（英語→日本語）
+                                for (const [japanese, englishNames] of Object.entries(playerNameMapping)) {
+                                    if (englishNames.some(name => name.includes(query))) {
+                                        return englishNames.some(name => 
+                                            playerName.includes(name) || playerFullName.includes(name)
+                                        );
+                                    }
+                                }
+                                
+                                // 部分一致検索（日本語の一部でもマッチ）
+                                for (const [japanese, englishNames] of Object.entries(playerNameMapping)) {
+                                    if (japanese.includes(query) || query.includes(japanese)) {
+                                        return englishNames.some(name => 
+                                            playerName.includes(name) || playerFullName.includes(name)
+                                        );
+                                    }
+                                }
+                                
+                                // ファジー検索（類似度チェック）
+                                const fuzzyMatch = (() => {
+                                    for (const [japanese, englishNames] of Object.entries(playerNameMapping)) {
+                                        // 文字列の類似度をチェック（簡易版）
+                                        const similarity = calculateSimilarity(query, japanese);
+                                        if (similarity > 0.6) { // 60%以上の類似度
+                                            return englishNames.some(name => 
+                                                playerName.includes(name) || playerFullName.includes(name)
+                                            );
+                                        }
+                                    }
+                                    return false;
+                                })();
+                                
+                                if (fuzzyMatch) return true;
+                                
+                                return false;
+                            })();
+                            
+                            const teamMatch = (player.team && player.team.toLowerCase().includes(query)) ||
+                                            (player.currentTeam && player.currentTeam.toLowerCase().includes(query));
+                            
+                            // ポジションの日本語検索
+                            const positionMatch = (() => {
+                                const playerPosition = (player.position || '').toLowerCase();
+                                const positionMapping = {
+                                    'ディフェンダー': ['centre-back', 'left-back', 'right-back', 'defender'],
+                                    'フォワード': ['forward', 'striker', 'winger', 'attacker'],
+                                    'ミッドフィルダー': ['midfielder', 'attacking midfield', 'defensive midfield'],
+                                    'ゴールキーパー': ['goalkeeper', 'keeper'],
+                                    'センターバック': ['centre-back', 'center back'],
+                                    'サイドバック': ['left-back', 'right-back', 'full back'],
+                                    'ウィンガー': ['winger', 'left winger', 'right winger'],
+                                    'ストライカー': ['striker', 'forward'],
+                                    'アタッキングミッドフィルダー': ['attacking midfield', 'attacking midfielder'],
+                                    'ディフェンシブミッドフィルダー': ['defensive midfield', 'defensive midfielder']
+                                };
+                                
+                                // 直接マッチ
+                                if (playerPosition.includes(query)) return true;
+                                
+                                // 日本語マッピングによる検索
+                                if (positionMapping[query]) {
+                                    return positionMapping[query].some(pos => playerPosition.includes(pos));
+                                }
+                                
+                                return false;
+                            })();
+                            
+                            return nameMatch || teamMatch || positionMatch;
+                        });
                     }
                     
-                    // ポジションでフィルタリング
+                    // ポジションでフィルタリング（日本語対応）
                     if (searchPosition) {
                         filteredPlayers = filteredPlayers.filter(player => {
                             const playerPosition = player.position || '';
-                            // 完全一致または部分一致で検索
-                            return playerPosition === searchPosition || 
-                                   playerPosition.includes(searchPosition) ||
-                                   searchPosition.includes(playerPosition);
+                            
+                            // ポジションの日本語マッピング
+                            const positionMapping = {
+                                'ディフェンダー': ['Centre-Back', 'Left-Back', 'Right-Back', 'Defender'],
+                                'フォワード': ['Forward', 'Striker', 'Winger', 'Attacker'],
+                                'ミッドフィルダー': ['Midfielder', 'Attacking Midfield', 'Defensive Midfield', 'Central Midfield'],
+                                'ゴールキーパー': ['Goalkeeper', 'Keeper'],
+                                'センターバック': ['Centre-Back', 'Center Back'],
+                                'サイドバック': ['Left-Back', 'Right-Back', 'Full Back'],
+                                'ウィンガー': ['Winger', 'Left Winger', 'Right Winger'],
+                                'ストライカー': ['Striker', 'Forward'],
+                                'アタッキングミッドフィルダー': ['Attacking Midfield', 'Attacking Midfielder'],
+                                'ディフェンシブミッドフィルダー': ['Defensive Midfield', 'Defensive Midfielder']
+                            };
+                            
+                            // 完全一致
+                            if (playerPosition === searchPosition) return true;
+                            
+                            // 部分一致
+                            if (playerPosition.includes(searchPosition) || searchPosition.includes(playerPosition)) return true;
+                            
+                            // 日本語マッピングによる検索
+                            if (positionMapping[searchPosition]) {
+                                return positionMapping[searchPosition].some(pos => 
+                                    playerPosition.includes(pos) || pos.includes(playerPosition)
+                                );
+                            }
+                            
+                            // 逆マッピング（英語→日本語）
+                            for (const [japanese, englishPositions] of Object.entries(positionMapping)) {
+                                if (englishPositions.some(pos => pos === searchPosition)) {
+                                    return positionMapping[japanese].some(pos => 
+                                        playerPosition.includes(pos) || pos.includes(playerPosition)
+                                    );
+                                }
+                            }
+                            
+                            return false;
                         });
                     }
                     
@@ -1647,6 +2042,56 @@
                             player.seasons?.['2024-2025']?.league === searchLeague ||
                             player.league === searchLeague
                         );
+                    }
+                    
+                    // 高度なフィルタリング
+                    
+                    // 年齢範囲でフィルタリング
+                    if (ageRange) {
+                        filteredPlayers = filteredPlayers.filter(player => {
+                            const age = calculatePlayerAge(player.birthday);
+                            if (isNaN(age)) return false;
+                            
+                            switch (ageRange) {
+                                case '18-25': return age >= 18 && age <= 25;
+                                case '26-30': return age >= 26 && age <= 30;
+                                case '31-35': return age >= 31 && age <= 35;
+                                case '36+': return age >= 36;
+                                default: return true;
+                            }
+                        });
+                    }
+                    
+                    // 市場価値でフィルタリング
+                    if (marketValue) {
+                        filteredPlayers = filteredPlayers.filter(player => {
+                            const value = parseFloat(player.marketValue?.replace(/[^\d.]/g, '') || '0');
+                            if (isNaN(value)) return false;
+                            
+                            switch (marketValue) {
+                                case '0-10': return value >= 0 && value <= 10;
+                                case '10-50': return value >= 10 && value <= 50;
+                                case '50-100': return value >= 50 && value <= 100;
+                                case '100+': return value >= 100;
+                                default: return true;
+                            }
+                        });
+                    }
+                    
+                    // 最低ゴール数でフィルタリング
+                    if (minGoals > 0) {
+                        filteredPlayers = filteredPlayers.filter(player => {
+                            const goals = parseInt(player.seasons?.['2024-2025']?.goals || '0');
+                            return goals >= minGoals;
+                        });
+                    }
+                    
+                    // 最低アシスト数でフィルタリング
+                    if (minAssists > 0) {
+                        filteredPlayers = filteredPlayers.filter(player => {
+                            const assists = parseInt(player.seasons?.['2024-2025']?.assists || '0');
+                            return assists >= minAssists;
+                        });
                     }
                     
                     currentData = filteredPlayers;
@@ -1659,6 +2104,10 @@
                         if (searchQuery) filters.push(`キーワード: "${searchQuery}"`);
                         if (searchPosition) filters.push(`ポジション: ${searchPosition}`);
                         if (searchLeague) filters.push(`リーグ: ${searchLeague}`);
+                        if (ageRange) filters.push(`年齢: ${ageRange}`);
+                        if (marketValue) filters.push(`市場価値: ${marketValue}`);
+                        if (minGoals > 0) filters.push(`最低ゴール: ${minGoals}`);
+                        if (minAssists > 0) filters.push(`最低アシスト: ${minAssists}`);
                         
                         const filterText = filters.length > 0 ? ` (${filters.join(', ')})` : '';
                         showSearchResult(`${currentData.length}件の選手が見つかりました${filterText}`, 'success');
@@ -1718,18 +2167,433 @@
                 newResultDiv.textContent = message;
                 
                 const searchSection = document.querySelector('.search-section');
-                searchSection.appendChild(newResultDiv);
+                if (searchSection) {
+                    searchSection.appendChild(newResultDiv);
+                }
             } else {
                 resultDiv.textContent = message;
                 resultDiv.className = `search-result ${type}`;
+                resultDiv.style.display = 'block';
             }
             
-            // 3秒後に自動で非表示
+            console.log('検索結果:', message, type);
+            
+            // 5秒後に自動で非表示
             setTimeout(() => {
+                const resultDiv = document.getElementById('searchResult');
                 if (resultDiv) {
                     resultDiv.style.display = 'none';
                 }
-            }, 3000);
+            }, 5000);
+        }
+
+        // 高度なフィルターの表示/非表示切り替え
+        function toggleAdvancedFilters() {
+            const advancedFilters = document.getElementById('advancedFilters');
+            const toggleBtn = document.getElementById('toggleAdvancedFilters');
+            
+            if (advancedFilters.style.display === 'none') {
+                advancedFilters.style.display = 'block';
+                toggleBtn.textContent = '高度なフィルター ▲';
+            } else {
+                advancedFilters.style.display = 'none';
+                toggleBtn.textContent = '高度なフィルター ▼';
+            }
+        }
+
+        // すべてのフィルターをクリア
+        function clearAllFilters() {
+            document.getElementById('searchQuery').value = '';
+            document.getElementById('searchPosition').value = '';
+            document.getElementById('searchLeague').value = '';
+            document.getElementById('ageRange').value = '';
+            document.getElementById('marketValue').value = '';
+            document.getElementById('minGoals').value = '';
+            document.getElementById('minAssists').value = '';
+            
+            // 検索サジェストを非表示
+            hideSearchSuggestions();
+            
+            showSearchResult('すべてのフィルターをクリアしました', 'info');
+        }
+
+        // 検索サジェスト機能
+        let searchTimeout;
+
+        // 検索サジェストの初期化
+        function initializeSearchSuggestions() {
+            const searchInput = document.getElementById('searchQuery');
+            if (searchInput) {
+                searchInput.addEventListener('input', handleSearchInput);
+                searchInput.addEventListener('focus', handleSearchFocus);
+                searchInput.addEventListener('blur', handleSearchBlur);
+            }
+        }
+
+        // 検索入力の処理
+        function handleSearchInput(event) {
+            const query = event.target.value.trim();
+            
+            // 既存のタイムアウトをクリア
+            clearTimeout(searchTimeout);
+            
+            if (query.length < 2) {
+                hideSearchSuggestions();
+                return;
+            }
+            
+            // 300ms後にサジェストを表示
+            searchTimeout = setTimeout(() => {
+                showSearchSuggestions(query);
+            }, 300);
+        }
+
+        // 検索フォーカス時の処理
+        function handleSearchFocus(event) {
+            const query = event.target.value.trim();
+            if (query.length >= 2) {
+                showSearchSuggestions(query);
+            }
+        }
+
+        // 検索ブラー時の処理
+        function handleSearchBlur() {
+            // 少し遅延させてサジェストを非表示（クリックイベントのため）
+            setTimeout(hideSearchSuggestions, 200);
+        }
+
+        // 検索サジェストの表示
+        async function showSearchSuggestions(query) {
+            try {
+                // 選手データを取得
+                if (!window.allPlayers || window.allPlayers.length === 0) {
+                    window.allPlayers = await window.firebaseDataService.getPlayers();
+                }
+                
+                const suggestions = generateSuggestions(query, window.allPlayers);
+                displaySuggestions(suggestions, query);
+            } catch (error) {
+                console.error('サジェスト生成エラー:', error);
+            }
+        }
+
+        // サジェストの生成
+        function generateSuggestions(query, players) {
+            const suggestions = [];
+            const queryLower = query.toLowerCase();
+            
+            // 選手名マッピング
+            const playerNameMapping = {
+                'ハーランド': ['erling haaland', 'haaland'],
+                'メッシ': ['lionel messi', 'messi'],
+                'ロナウド': ['cristiano ronaldo', 'ronaldo'],
+                'ムバッペ': ['kylian mbappé', 'mbappé', 'mbappe'],
+                'ベンゼマ': ['karim benzema', 'benzema'],
+                'サラー': ['mohamed salah', 'salah'],
+                'ケイン': ['harry kane', 'kane'],
+                'ソン': ['heung-min son', 'son'],
+                'ディブルイネ': ['kevin de bruyne', 'de bruyne'],
+                'シルバ': ['bernardo silva', 'silva'],
+                'ロドリ': ['rodri', 'rodrigo'],
+                'ファーデン': ['phil foden', 'foden'],
+                'グレリッシュ': ['jack grealish', 'grealish'],
+                'アルバレス': ['julián álvarez', 'álvarez', 'alvarez'],
+                'ヌニェス': ['darwin núñez', 'núñez', 'nunez'],
+                'ディアス': ['luis díaz', 'díaz', 'diaz'],
+                'マクアリスター': ['alexis mac allister', 'mac allister'],
+                'ソボスライ': ['dominik szoboszlai', 'szoboszlai'],
+                'バルデ': ['pedri', 'pedro gonzález'],
+                'ガビ': ['gavi', 'pablo martín páez gaviria'],
+                'ビニシウス': ['vinícius júnior', 'vinícius', 'vinicius'],
+                'ベリンガム': ['jude bellingham', 'bellingham'],
+                'カマビンガ': ['eduardo camavinga', 'camavinga'],
+                'チュアメニ': ['aurélien tchouaméni', 'tchouaméni'],
+                'ムサラ': ['luka modrić', 'modrić', 'modric'],
+                'クロース': ['toni kroos', 'kroos'],
+                'バルベルデ': ['federico valverde', 'valverde'],
+                'ホランド': ['erling haaland', 'haaland'],
+                'エルリング': ['erling haaland', 'haaland'],
+                'キリアン': ['kylian mbappé', 'mbappé', 'mbappe'],
+                'リオネル': ['lionel messi', 'messi'],
+                'クリスティアーノ': ['cristiano ronaldo', 'ronaldo']
+            };
+            
+            // 選手名で検索
+            players.forEach(player => {
+                const playerName = (player.name || '').toLowerCase();
+                const playerFullName = (player.fullName || '').toLowerCase();
+                
+                // 直接マッチ
+                if (playerName.includes(queryLower) || playerFullName.includes(queryLower)) {
+                    suggestions.push({
+                        text: player.name || player.fullName,
+                        type: 'player',
+                        highlight: queryLower
+                    });
+                }
+                
+                // 日本語マッピングによる検索
+                for (const [japanese, englishNames] of Object.entries(playerNameMapping)) {
+                    if (japanese.includes(queryLower) || queryLower.includes(japanese)) {
+                        if (englishNames.some(name => playerName.includes(name) || playerFullName.includes(name))) {
+                            suggestions.push({
+                                text: `${japanese} (${player.name || player.fullName})`,
+                                type: 'player',
+                                highlight: japanese
+                            });
+                        }
+                    }
+                }
+                
+                // チーム名で検索
+                const teamName = (player.team || player.currentTeam || '').toLowerCase();
+                if (teamName.includes(queryLower)) {
+                    suggestions.push({
+                        text: `${player.team || player.currentTeam} - ${player.name || player.fullName}`,
+                        type: 'team',
+                        highlight: player.team || player.currentTeam
+                    });
+                }
+            });
+            
+            // 重複を除去して上位10件を返す
+            const uniqueSuggestions = suggestions.filter((suggestion, index, self) => 
+                index === self.findIndex(s => s.text === suggestion.text)
+            );
+            
+            return uniqueSuggestions.slice(0, 10);
+        }
+
+        // サジェストの表示
+        function displaySuggestions(suggestions, query) {
+            const suggestionsContainer = document.getElementById('searchSuggestions');
+            if (!suggestionsContainer) return;
+            
+            if (suggestions.length === 0) {
+                hideSearchSuggestions();
+                return;
+            }
+            
+            const suggestionsHTML = suggestions.map(suggestion => {
+                const highlightedText = suggestion.text.replace(
+                    new RegExp(`(${query})`, 'gi'),
+                    '<span class="suggestion-highlight">$1</span>'
+                );
+                
+                return `<div class="suggestion-item" onclick="selectSuggestion('${suggestion.text.replace(/'/g, "\\'")}')">
+                    ${highlightedText}
+                </div>`;
+            }).join('');
+            
+            suggestionsContainer.innerHTML = suggestionsHTML;
+            suggestionsContainer.style.display = 'block';
+        }
+
+        // サジェストの選択
+        function selectSuggestion(text) {
+            document.getElementById('searchQuery').value = text;
+            hideSearchSuggestions();
+            searchData(); // 自動検索実行
+        }
+
+        // 検索サジェストの非表示
+        function hideSearchSuggestions() {
+            const suggestionsContainer = document.getElementById('searchSuggestions');
+            if (suggestionsContainer) {
+                suggestionsContainer.style.display = 'none';
+            }
+        }
+
+        // イベントリスナーの設定
+        function setupEventListeners() {
+            // 検索ボタン
+            const searchButton = document.getElementById('searchButton');
+            if (searchButton) {
+                searchButton.addEventListener('click', searchData);
+            }
+
+            // 高度なフィルター切り替え
+            const toggleAdvancedFiltersBtn = document.getElementById('toggleAdvancedFilters');
+            if (toggleAdvancedFiltersBtn) {
+                toggleAdvancedFiltersBtn.addEventListener('click', toggleAdvancedFilters);
+            }
+
+            // フィルタークリア
+            const clearFiltersBtn = document.getElementById('clearFiltersButton');
+            if (clearFiltersBtn) {
+                clearFiltersBtn.addEventListener('click', clearAllFilters);
+            }
+
+            // データ管理ボタン
+            const checkDataStatusBtn = document.getElementById('checkDataStatusBtn');
+            if (checkDataStatusBtn) {
+                checkDataStatusBtn.addEventListener('click', checkDataStatus);
+            }
+
+            const importRealDataBtn = document.getElementById('importRealDataBtn');
+            if (importRealDataBtn) {
+                importRealDataBtn.addEventListener('click', importRealData);
+            }
+
+            const clearCachedDataBtn = document.getElementById('clearCachedDataBtn');
+            if (clearCachedDataBtn) {
+                clearCachedDataBtn.addEventListener('click', clearCachedData);
+            }
+
+            const refreshDataBtn = document.getElementById('refreshDataBtn');
+            if (refreshDataBtn) {
+                refreshDataBtn.addEventListener('click', refreshData);
+            }
+
+            // 並び替えセレクトボックス
+            const sortBySelect = document.getElementById('sortBy');
+            if (sortBySelect) {
+                sortBySelect.addEventListener('change', sortPlayers);
+            }
+        }
+
+        // 選手データの並び替え
+        function sortPlayers() {
+            const sortBy = document.getElementById('sortBy').value;
+            if (!sortBy || !currentData || currentTab !== 'players') return;
+            
+            const sortedData = [...currentData].sort((a, b) => {
+                switch (sortBy) {
+                    case 'name':
+                        return (a.name || '').localeCompare(b.name || '');
+                    case 'age':
+                        const ageA = calculatePlayerAge(a.birthday);
+                        const ageB = calculatePlayerAge(b.birthday);
+                        return ageA - ageB;
+                    case 'goals':
+                        const goalsA = parseInt(a.seasons?.['2024-2025']?.goals || '0');
+                        const goalsB = parseInt(b.seasons?.['2024-2025']?.goals || '0');
+                        return goalsB - goalsA; // 降順
+                    case 'assists':
+                        const assistsA = parseInt(a.seasons?.['2024-2025']?.assists || '0');
+                        const assistsB = parseInt(b.seasons?.['2024-2025']?.assists || '0');
+                        return assistsB - assistsA; // 降順
+                    case 'marketValue':
+                        const valueA = parseFloat(a.marketValue?.replace(/[^\d.]/g, '') || '0');
+                        const valueB = parseFloat(b.marketValue?.replace(/[^\d.]/g, '') || '0');
+                        return valueB - valueA; // 降順
+                    default:
+                        return 0;
+                }
+            });
+            
+            currentData = sortedData;
+            displayData(currentData, currentTab);
+            showSearchResult(`選手データを${getSortLabel(sortBy)}で並び替えました`, 'info');
+        }
+
+        // 並び替えラベルの取得
+        function getSortLabel(sortBy) {
+            const labels = {
+                'name': '名前順',
+                'age': '年齢順',
+                'goals': 'ゴール数順（降順）',
+                'assists': 'アシスト数順（降順）',
+                'marketValue': '市場価値順（降順）'
+            };
+            return labels[sortBy] || 'デフォルト順';
+        }
+
+        // データ状況確認
+        async function checkDataStatus() {
+            try {
+                if (!window.firebaseDataService) {
+                    showDataStatus('FirebaseDataServiceが初期化されていません', 'error');
+                    return;
+                }
+                
+                const status = await window.firebaseDataService.checkDataStatus();
+                showDataStatus(`データ状況: ${status.playerCount}選手, ${status.teamCount}チーム, ${status.leagueCount}リーグ`, 'success');
+            } catch (error) {
+                console.error('データ状況確認エラー:', error);
+                showDataStatus('データ状況確認中にエラーが発生しました', 'error');
+            }
+        }
+
+        // 実際データインポート
+        async function importRealData() {
+            try {
+                if (!window.firebaseDataService) {
+                    showDataStatus('FirebaseDataServiceが初期化されていません', 'error');
+                    return;
+                }
+                
+                showDataStatus('実際のデータのインポートを開始しました。時間がかかる場合があります...', 'info');
+                await window.firebaseDataService.importRealFootballData();
+                showDataStatus('データインポートが完了しました', 'success');
+                
+                // データを再表示
+                setTimeout(async () => {
+                    await switchTab('players');
+                }, 2000);
+            } catch (error) {
+                console.error('データインポートエラー:', error);
+                showDataStatus('データインポート中にエラーが発生しました', 'error');
+            }
+        }
+
+        // キャッシュクリア
+        async function clearCachedData() {
+            try {
+                if (!window.firebaseDataService) {
+                    showDataStatus('FirebaseDataServiceが初期化されていません', 'error');
+                    return;
+                }
+                
+                await window.firebaseDataService.clearCachedData();
+                showDataStatus('キャッシュデータをクリアしました', 'success');
+                
+                // データを再表示
+                setTimeout(async () => {
+                    await switchTab('players');
+                }, 1000);
+            } catch (error) {
+                console.error('キャッシュクリアエラー:', error);
+                showDataStatus('キャッシュクリア中にエラーが発生しました', 'error');
+            }
+        }
+
+        // データ更新
+        async function refreshData() {
+            try {
+                if (!window.firebaseDataService) {
+                    showDataStatus('FirebaseDataServiceが初期化されていません', 'error');
+                    return;
+                }
+                
+                showDataStatus('データを更新中...', 'info');
+                await window.firebaseDataService.refreshData();
+                showDataStatus('データの更新が完了しました', 'success');
+                
+                // データを再表示
+                setTimeout(async () => {
+                    await switchTab('players');
+                }, 1000);
+            } catch (error) {
+                console.error('データ更新エラー:', error);
+                showDataStatus('データ更新中にエラーが発生しました', 'error');
+            }
+        }
+
+        // データ状況表示
+        function showDataStatus(message, type) {
+            const statusElement = document.getElementById('dataStatus');
+            if (statusElement) {
+                statusElement.textContent = message;
+                statusElement.className = `data-status ${type}`;
+                statusElement.style.display = 'block';
+                
+                setTimeout(() => {
+                    statusElement.style.display = 'none';
+                }, 5000);
+            } else {
+                console.log('データ状況:', message);
+            }
         }
 
         // ページネーション管理
@@ -1798,19 +2662,50 @@
             updatePagination();
         }
 
-        // 詳細表示機能（native-stats.org風）
-        function showPlayerDetail(playerId, playerData = null) {
-            let player = playerData;
-            if (!player) {
-                player = currentData.find(p => p.id === playerId);
-            }
+        // 要素から選手詳細を表示する関数
+        function showPlayerDetailFromElement(element) {
+            const playerId = element.getAttribute('data-player-id');
+            const index = parseInt(playerId);
+            
+            // currentDataから選手を取得
+            const player = currentData[index] || currentData.find(p => p.id === playerId);
+            
             if (!player) {
                 console.error('選手データが見つかりません:', playerId);
                 return;
             }
             
+            showPlayerDetail(playerId, player);
+        }
+
+        // 詳細表示機能（native-stats.org風）
+        function showPlayerDetail(playerId, playerData = null) {
+            let player = playerData;
+            
+            if (!player) {
+                player = currentData.find(p => p.id === playerId);
+            }
+            
+            if (!player) {
+                console.error('選手データが見つかりません:', playerId);
+                return;
+            }
+            
+            console.log('選手詳細表示:', player);
+            
             const seasonStats = player.seasons?.['2024-2025']?.stats || player.stats || {};
             const matches = player.matches || [];
+            
+            // 年齢計算
+            let age = 'N/A';
+            if (player.birthday) {
+                const birthDate = new Date(player.birthday);
+                const today = new Date();
+                const ageDiff = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                age = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())
+                    ? ageDiff - 1 : ageDiff;
+            }
             
             const modal = document.createElement('div');
             modal.className = 'detail-modal';
@@ -1841,7 +2736,7 @@
                                 </div>
                                 <div class="info-item">
                                     <label>年齢</label>
-                                    <span>${player.age || 'N/A'}歳</span>
+                                    <span>${age}歳</span>
                                 </div>
                                 <div class="info-item">
                                     <label>身長</label>
@@ -1905,7 +2800,7 @@
                             <div class="stats-grid-native">
                                 <div class="stat-item-native">
                                     <span class="stat-label">試合数</span>
-                                    <span class="stat-value">${seasonStats.matchesPlayed || seasonStats.appearances || 0}</span>
+                                    <span class="stat-value">${seasonStats.matchesPlayed || seasonStats.appearances || seasonStats.matches || 0}</span>
                                 </div>
                                 <div class="stat-item-native">
                                     <span class="stat-label">ゴール</span>
@@ -1917,7 +2812,7 @@
                                 </div>
                                 <div class="stat-item-native">
                                     <span class="stat-label">評価</span>
-                                    <span class="stat-value">${seasonStats.rating || 'N/A'}</span>
+                                    <span class="stat-value">${seasonStats.rating || seasonStats.overallRating || 'N/A'}</span>
                                 </div>
                                 <div class="stat-item-native">
                                     <span class="stat-label">イエローカード</span>
@@ -1934,6 +2829,22 @@
                                 <div class="stat-item-native">
                                     <span class="stat-label">パス成功率</span>
                                     <span class="stat-value">${seasonStats.passAccuracy || 'N/A'}%</span>
+                                </div>
+                                <div class="stat-item-native">
+                                    <span class="stat-label">出場時間</span>
+                                    <span class="stat-value">${seasonStats.minutesPlayed || 'N/A'}分</span>
+                                </div>
+                                <div class="stat-item-native">
+                                    <span class="stat-label">シュート数</span>
+                                    <span class="stat-value">${seasonStats.shots || 0}</span>
+                                </div>
+                                <div class="stat-item-native">
+                                    <span class="stat-label">キック数</span>
+                                    <span class="stat-value">${seasonStats.kicks || 0}</span>
+                                </div>
+                                <div class="stat-item-native">
+                                    <span class="stat-label">セーブ数</span>
+                                    <span class="stat-value">${seasonStats.saves || 0}</span>
                                 </div>
                             </div>
                         </div>
@@ -2193,18 +3104,25 @@
             // 検索タイプ変更時のイベントリスナーを追加
             document.getElementById('searchType').addEventListener('change', updateSearchFilters);
         
-        // デバッグ用：ポジションフィルターの動作確認
-        document.getElementById('searchPosition').addEventListener('change', function() {
-            console.log('ポジションフィルター変更:', this.value);
-        });
+            // デバッグ用：ポジションフィルターの動作確認
+            document.getElementById('searchPosition').addEventListener('change', function() {
+                console.log('ポジションフィルター変更:', this.value);
+            });
             
             // 初期フィルター状態を設定
             updateSearchFilters();
             
+            // 検索サジェスト機能を初期化
+            initializeSearchSuggestions();
+            
+            // イベントリスナーを設定
+            setupEventListeners();
+            
             // オーナー機能の表示/非表示を設定
             toggleOwnerFeatures();
             
-            // 初期タブを設定
+            // FirebaseDataServiceの初期化を待ってから初期タブを設定
+            await waitForFirebaseDataService();
             await switchTab('players');
             
             // 自動データ更新チェック（オーナーのみ）
@@ -2212,6 +3130,25 @@
                 await checkAndUpdateData();
             }
         });
+
+        // FirebaseDataServiceの初期化を待つ関数
+        async function waitForFirebaseDataService() {
+            let retryCount = 0;
+            const maxRetries = 50;
+            
+            while (!window.firebaseDataService && retryCount < maxRetries) {
+                console.log(`FirebaseDataServiceの初期化を待機中... (${retryCount + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, 200));
+                retryCount++;
+            }
+            
+            if (!window.firebaseDataService) {
+                console.error('FirebaseDataServiceの初期化がタイムアウトしました');
+                throw new Error('FirebaseDataServiceの初期化に失敗しました');
+            }
+            
+            console.log('FirebaseDataServiceが利用可能になりました');
+        }
 
         // 自動データ更新チェック
         async function checkAndUpdateData() {

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Fix Test</title>
+</head>
+<body>
+    <h1>Firebase Fix Test</h1>
+    <button onclick="testImport()">Test Import</button>
+    <button onclick="testGetPlayers()">Test Get Players</button>
+    <button onclick="testGetTeams()">Test Get Teams</button>
+    <div id="output"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="/firebaseData.js"></script>
+
+    <script>
+        function log(message) {
+            console.log(message);
+            document.getElementById('output').innerHTML += '<p>' + message + '</p>';
+        }
+
+        async function testImport() {
+            try {
+                log('Testing import...');
+                if (window.importRealFootballData) {
+                    const result = await window.importRealFootballData();
+                    log('Import result: ' + JSON.stringify(result));
+                } else {
+                    log('importRealFootballData not available');
+                }
+            } catch (error) {
+                log('Import error: ' + error.message);
+            }
+        }
+
+        async function testGetPlayers() {
+            try {
+                log('Testing getPlayers...');
+                if (window.firebaseDataService) {
+                    const players = await window.firebaseDataService.getPlayers();
+                    log('Players count: ' + players.length);
+                } else {
+                    log('firebaseDataService not available');
+                }
+            } catch (error) {
+                log('GetPlayers error: ' + error.message);
+            }
+        }
+
+        async function testGetTeams() {
+            try {
+                log('Testing getTeams...');
+                if (window.firebaseDataService) {
+                    const teams = await window.firebaseDataService.getTeams();
+                    log('Teams count: ' + teams.length);
+                } else {
+                    log('firebaseDataService not available');
+                }
+            } catch (error) {
+                log('GetTeams error: ' + error.message);
+            }
+        }
+
+        // Wait for FirebaseDataService to initialize
+        setTimeout(() => {
+            log('FirebaseDataService ready: ' + (window.firebaseDataService ? 'Yes' : 'No'));
+        }, 2000);
+    </script>
+</body>
+</html> 

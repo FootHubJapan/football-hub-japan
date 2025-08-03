@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Expires" content="Thu, 01 Jan 1970 00:00:00 GMT">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <title>サッカーデータベース - Football Hub Japan (FIXED V2)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #333333;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .logo::before {
+            content: "⚽";
+            margin-right: 0.5rem;
+            font-size: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-links a {
+            color: #ffffff;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #333333;
+            color: #00ff88;
+        }
+
+        .search-section {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #333333;
+            border-radius: 10px;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        .search-btn {
+            padding: 1rem 2rem;
+            background: #00ff88;
+            color: #000000;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .search-btn:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+        }
+
+        .clear-btn {
+            padding: 1rem 2rem;
+            background: #666666;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .clear-btn:hover {
+            background: #888888;
+        }
+
+        .search-filters {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.8rem 1rem;
+            border: 2px solid #333333;
+            border-radius: 8px;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        .data-management-section {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .data-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary { background: #007bff; color: #ffffff; }
+        .btn-success { background: #28a745; color: #ffffff; }
+        .btn-warning { background: #ffc107; color: #000000; }
+        .btn-info { background: #17a2b8; color: #ffffff; }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .data-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab-btn {
+            padding: 1rem 2rem;
+            background: #333333;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px 10px 0 0;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .tab-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .tab-content {
+            background: #2a2a2a;
+            border-radius: 0 10px 10px 10px;
+            padding: 2rem;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .data-table th {
+            background: #1a1a1a;
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 2px solid #333333;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #333333;
+        }
+
+        .data-row {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .data-row:hover {
+            background: #333333;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #888888;
+            font-style: italic;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #00ff88;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000000;
+            margin-right: 1rem;
+        }
+
+        .player-name {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .player-meta {
+            color: #888888;
+            font-size: 0.9rem;
+        }
+
+        .team-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .team-name {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .league-name {
+            color: #888888;
+            font-size: 0.9rem;
+        }
+
+        .age-info, .position-info {
+            text-align: center;
+        }
+
+        .age-value, .position-value {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.5rem;
+            background: #1a1a1a;
+            border-radius: 5px;
+        }
+
+        .stat-label {
+            color: #888888;
+            font-size: 0.8rem;
+        }
+
+        .stat-value {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .page-btn {
+            background: #333333;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .page-btn.active {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .page-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .data-status, .api-status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .data-status {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+        }
+
+        .api-status {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Football Hub Japan</div>
+            <div class="nav-links">
+                <a href="/dashboard.html">ダッシュボード</a>
+                <a href="/radar.html">レーダーチャート</a>
+                <a href="/logout">ログアウト</a>
+            </div>
+        </div>
+
+        <div class="search-section">
+            <div class="search-bar">
+                <input type="text" id="searchQuery" class="search-input" placeholder="選手名、チーム名、リーグ名で検索...">
+                <button onclick="searchData()" class="search-btn">🔍 検索</button>
+                <button onclick="clearSearch()" class="clear-btn">クリア</button>
+            </div>
+            <div class="search-filters">
+                <select id="searchType" class="filter-select">
+                    <option value="players">選手</option>
+                    <option value="teams">チーム</option>
+                    <option value="leagues">リーグ</option>
+                </select>
+                <select id="searchPosition" class="filter-select" style="display: none;">
+                    <option value="">すべてのポジション</option>
+                    <option value="Goalkeeper">ゴールキーパー</option>
+                    <option value="Defender">ディフェンダー</option>
+                    <option value="Midfielder">ミッドフィルダー</option>
+                    <option value="Forward">フォワード</option>
+                    <option value="Right Winger">右ウィンガー</option>
+                    <option value="Left Winger">左ウィンガー</option>
+                    <option value="Centre-Forward">センターフォワード</option>
+                    <option value="Attacking Midfielder">攻撃的ミッドフィルダー</option>
+                    <option value="Defensive Midfielder">守備的ミッドフィルダー</option>
+                    <option value="Centre-Back">センターバック</option>
+                    <option value="Right-Back">ライトバック</option>
+                    <option value="Left-Back">レフトバック</option>
+                </select>
+                <select id="searchLeague" class="filter-select" style="display: none;">
+                    <option value="">すべてのリーグ</option>
+                    <option value="PL">プレミアリーグ</option>
+                    <option value="PD">ラ・リーガ</option>
+                    <option value="SA">セリエA</option>
+                    <option value="BL1">ブンデスリーガ</option>
+                    <option value="FL1">リーグ・アン</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="data-management-section">
+            <h3>データ管理</h3>
+            <div class="data-controls">
+                <button onclick="checkDataStatus()" class="btn btn-info">データ状況確認</button>
+                <button onclick="importRealData()" class="btn btn-primary">実際データインポート</button>
+                <button onclick="clearCachedData()" class="btn btn-warning">キャッシュクリア</button>
+                <button onclick="refreshData()" class="btn btn-success">データ更新</button>
+                <a href="/admin.html" class="btn btn-info">管理画面</a>
+            </div>
+            <div id="dataStatus" class="data-status"></div>
+            <div id="apiStatus" class="api-status"></div>
+        </div>
+
+        <div class="data-section">
+            <div class="data-tabs">
+                <button class="tab-btn active" onclick="switchTab('players', this)">選手データ</button>
+                <button class="tab-btn" onclick="switchTab('teams', this)">チームデータ</button>
+                <button class="tab-btn" onclick="switchTab('leagues', this)">リーグデータ</button>
+            </div>
+
+            <div id="playersTab" class="tab-content">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>選手</th>
+                            <th>チーム</th>
+                            <th>リーグ</th>
+                            <th>年齢</th>
+                            <th>ポジション</th>
+                            <th>統計</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playersTableBody">
+                        <!-- データはJavaScriptで動的に生成 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="teamsTab" class="tab-content" style="display: none;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>チーム</th>
+                            <th>リーグ</th>
+                            <th>国</th>
+                            <th>創設年</th>
+                            <th>統計</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teamsTableBody">
+                        <!-- データはJavaScriptで動的に生成 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="leaguesTab" class="tab-content" style="display: none;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>リーグ</th>
+                            <th>国</th>
+                            <th>チーム数</th>
+                            <th>シーズン</th>
+                            <th>統計</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaguesTableBody">
+                        <!-- データはJavaScriptで動的に生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Detail Modal -->
+    <div id="playerModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8);">
+        <div class="modal-content" style="background-color: #2a2a2a; margin: 5% auto; padding: 2rem; border-radius: 15px; width: 80%; max-width: 800px; max-height: 80%; overflow-y: auto;">
+            <span class="close" onclick="closePlayerModal()" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+            <div id="playerModalContent">
+                <!-- 選手詳細情報がここに表示される -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Version: 2.0 - NEW FILE WITH FIXED POSITION FILTERS
+        let currentTab = 'players';
+        let currentData = [];
+
+        // FirebaseDataServiceの初期化確認
+        function checkFirebaseDataService() {
+            if (!window.firebaseDataService) {
+                console.error('FirebaseDataServiceが初期化されていません');
+                return false;
+            }
+            return true;
+        }
+
+        // タブ切り替え
+        async function switchTab(tab, element = null) {
+            currentTab = tab;
+            
+            // タブボタンのアクティブ状態を更新
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (element) {
+                element.classList.add('active');
+            } else {
+                document.querySelector(`[onclick*="${tab}"]`).classList.add('active');
+            }
+            
+            // タブコンテンツを切り替え
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            document.getElementById(tab + 'Tab').style.display = 'block';
+            
+            // データを更新
+            try {
+                switch(tab) {
+                    case 'players':
+                        console.log('選手データを取得中...');
+                        currentData = await window.firebaseDataService.getPlayers();
+                        console.log('取得した選手データ:', currentData.length, '件');
+                        console.log('データの型:', typeof currentData);
+                        console.log('データの最初の要素:', currentData[0]);
+                        break;
+                    case 'teams':
+                        console.log('チームデータを取得中...');
+                        currentData = await window.firebaseDataService.getTeams();
+                        console.log('取得したチームデータ:', currentData.length, '件');
+                        break;
+                    case 'leagues':
+                        console.log('リーグデータを取得中...');
+                        currentData = await window.firebaseDataService.getLeagues();
+                        console.log('取得したリーグデータ:', currentData.length, '件');
+                        break;
+                }
+            } catch (error) {
+                console.error('データ取得エラー:', error);
+                currentData = [];
+            }
+            
+            displayData(currentData, currentTab);
+        }
+
+        // データを表示する関数
+        function displayData(data, tabType) {
+            console.log(`${tabType}データを表示中:`, data.length, '件');
+            
+            // データが配列でない場合は配列に変換
+            if (!Array.isArray(data)) {
+                console.warn('データが配列ではありません:', typeof data);
+                data = [];
+            }
+            
+            const tableBody = document.getElementById(tabType + 'TableBody');
+            if (!tableBody) {
+                console.error('テーブルボディが見つかりません:', tabType + 'TableBody');
+                return;
+            }
+            
+            let html = '';
+            
+            if (data.length === 0) {
+                html = '<tr><td colspan="6" class="no-data">データが見つかりません</td></tr>';
+            } else {
+                data.forEach((item, index) => {
+                    if (tabType === 'players') {
+                        const playerName = item.fullName || item.name || 'Unknown Player';
+                        const teamName = item.currentTeam || item.team || 'Unknown Team';
+                        const leagueName = item.seasons?.['2024-2025']?.league || 'Unknown League';
+                        
+                        // 年齢を計算
+                        let age = 'N/A';
+                        if (item.birthday) {
+                            const birthDate = new Date(item.birthday);
+                            const today = new Date();
+                            const ageDiff = today.getFullYear() - birthDate.getFullYear();
+                            const monthDiff = today.getMonth() - birthDate.getMonth();
+                            age = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
+                                ? ageDiff - 1 : ageDiff;
+                        }
+                        
+                        const position = item.position || 'Unknown';
+                        const stats = item.seasons?.['2024-2025']?.stats || {};
+                        
+                        html += `
+                            <tr class="data-row" onclick="showPlayerDetail('${item.id || index}', ${JSON.stringify(item).replace(/'/g, "\\'")})">
+                                <td>
+                                    <div class="player-info">
+                                        <div class="player-avatar">${playerName.charAt(0)}</div>
+                                        <div class="player-details">
+                                            <div class="player-name">${playerName}</div>
+                                            <div class="player-meta">${position} • ${item.nationality || 'Unknown'} • ${age}歳</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="team-info">
+                                        <div class="team-name">${teamName}</div>
+                                        <div class="league-name">${leagueName}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="season-info">
+                                        <div class="season-year">2024-2025</div>
+                                        <div class="season-status">進行中</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="age-info">
+                                        <div class="age-value">${age}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="position-info">
+                                        <div class="position-value">${position}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="stats-grid">
+                                        <div class="stat-item">
+                                            <span class="stat-label">⚽ ゴール</span>
+                                            <span class="stat-value">${stats.goals || 0}</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">🎯 アシスト</span>
+                                            <span class="stat-value">${stats.assists || 0}</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">📊 試合数</span>
+                                            <span class="stat-value">${stats.appearances || 0}</span>
+                                        </div>
+                                        <div class="stat-item">
+                                            <span class="stat-label">⭐ 評価</span>
+                                            <span class="stat-value">${stats.rating || 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+            }
+            
+            tableBody.innerHTML = html;
+            console.log(`${tabType}データの表示完了:`, data.length, '件');
+        }
+
+        // 検索フィルターの更新
+        function updateSearchFilters() {
+            const searchType = document.getElementById('searchType').value;
+            const positionFilter = document.getElementById('searchPosition');
+            const leagueFilter = document.getElementById('searchLeague');
+            
+            // すべてのフィルターを非表示
+            positionFilter.style.display = 'none';
+            leagueFilter.style.display = 'none';
+            
+            // 検索タイプに応じてフィルターを表示
+            if (searchType === 'players') {
+                positionFilter.style.display = 'inline-block';
+                leagueFilter.style.display = 'inline-block';
+            } else if (searchType === 'teams') {
+                leagueFilter.style.display = 'inline-block';
+            }
+        }
+
+        // 検索機能
+        async function searchData() {
+            const searchQuery = document.getElementById('searchQuery').value.trim();
+            const searchType = document.getElementById('searchType').value;
+            const searchPosition = document.getElementById('searchPosition').value;
+            const searchLeague = document.getElementById('searchLeague').value;
+            
+            // 検索条件のチェック
+            if (!searchQuery && !searchPosition && !searchLeague) {
+                alert('検索キーワードまたはフィルターを設定してください');
+                return;
+            }
+            
+            try {
+                let results = [];
+                
+                if (searchType === 'players') {
+                    // 選手検索
+                    if (searchQuery) {
+                        results = await window.firebaseDataService.searchPlayers(searchQuery);
+                    } else {
+                        results = await window.firebaseDataService.getPlayers();
+                    }
+                    
+                    // ポジションでフィルタリング
+                    if (searchPosition) {
+                        results = results.filter(player => {
+                            const playerPosition = player.position || '';
+                            return playerPosition === searchPosition || 
+                                   playerPosition.includes(searchPosition) ||
+                                   searchPosition.includes(playerPosition);
+                        });
+                    }
+                    
+                    // リーグでフィルタリング
+                    if (searchLeague) {
+                        results = results.filter(player => {
+                            const playerLeague = player.seasons?.['2024-2025']?.leagueId || '';
+                            return playerLeague === searchLeague;
+                        });
+                    }
+                    
+                    currentData = results;
+                    displayData(results, 'players');
+                    
+                    // 検索結果メッセージ
+                    let message = `${results.length}件の選手が見つかりました`;
+                    if (searchPosition) message += ` (ポジション: ${searchPosition})`;
+                    if (searchLeague) message += ` (リーグ: ${searchLeague})`;
+                    showSearchResult(message);
+                    
+                } else if (searchType === 'teams') {
+                    // チーム検索
+                    results = await window.firebaseDataService.getTeams();
+                    if (searchQuery) {
+                        results = results.filter(team => 
+                            team.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+                    }
+                    if (searchLeague) {
+                        results = results.filter(team => 
+                            team.leagueId === searchLeague
+                        );
+                    }
+                    currentData = results;
+                    displayData(results, 'teams');
+                    showSearchResult(`${results.length}件のチームが見つかりました`);
+                    
+                } else if (searchType === 'leagues') {
+                    // リーグ検索
+                    results = await window.firebaseDataService.getLeagues();
+                    if (searchQuery) {
+                        results = results.filter(league => 
+                            league.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+                    }
+                    currentData = results;
+                    displayData(results, 'leagues');
+                    showSearchResult(`${results.length}件のリーグが見つかりました`);
+                }
+                
+            } catch (error) {
+                console.error('検索エラー:', error);
+                alert('検索中にエラーが発生しました');
+            }
+        }
+
+        // 検索結果の表示
+        function showSearchResult(message) {
+            const dataStatus = document.getElementById('dataStatus');
+            dataStatus.textContent = message;
+            dataStatus.style.display = 'block';
+            
+            setTimeout(() => {
+                dataStatus.style.display = 'none';
+            }, 3000);
+        }
+
+        // 検索クリア
+        function clearSearch() {
+            document.getElementById('searchQuery').value = '';
+            document.getElementById('searchPosition').value = '';
+            document.getElementById('searchLeague').value = '';
+            switchTab(currentTab);
+        }
+
+        // 選手詳細表示
+        function showPlayerDetail(playerId, playerData = null) {
+            let player = playerData;
+            if (!player) {
+                player = currentData.find(p => p.id === playerId || p.id === parseInt(playerId));
+            }
+            
+            if (!player) {
+                alert('選手データが見つかりません');
+                return;
+            }
+            
+            const modal = document.getElementById('playerModal');
+            const modalContent = document.getElementById('playerModalContent');
+            
+            // 年齢計算
+            let age = 'N/A';
+            if (player.birthday) {
+                const birthDate = new Date(player.birthday);
+                const today = new Date();
+                const ageDiff = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                age = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
+                    ? ageDiff - 1 : ageDiff;
+            }
+            
+            const stats = player.seasons?.['2024-2025']?.stats || {};
+            
+            modalContent.innerHTML = `
+                <div class="player-header" style="border-bottom: 2px solid #333; padding-bottom: 1rem; margin-bottom: 2rem;">
+                    <h2 style="color: #00ff88; margin-bottom: 0.5rem;">${player.fullName || player.name}</h2>
+                    <p style="color: #888; margin: 0;">${player.position} • ${player.nationality} • ${age}歳</p>
+                </div>
+                
+                <div class="player-info-section" style="margin-bottom: 2rem;">
+                    <h3 style="color: #00ff88; margin-bottom: 1rem;">基本情報</h3>
+                    <div class="info-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                        <div class="info-item">
+                            <strong>生年月日:</strong> ${player.birthday || 'N/A'}
+                        </div>
+                        <div class="info-item">
+                            <strong>年齢:</strong> ${age}歳
+                        </div>
+                        <div class="info-item">
+                            <strong>身長:</strong> ${player.height || 'N/A'} cm
+                        </div>
+                        <div class="info-item">
+                            <strong>体重:</strong> ${player.weight || 'N/A'} kg
+                        </div>
+                        <div class="info-item">
+                            <strong>背番号:</strong> ${player.shirtNumber || 'N/A'}
+                        </div>
+                        <div class="info-item">
+                            <strong>利き足:</strong> ${player.preferredFoot || 'N/A'}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-section" style="margin-bottom: 2rem;">
+                    <h3 style="color: #00ff88; margin-bottom: 1rem;">2024-2025シーズン統計</h3>
+                    <div class="stats-grid-native" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                        <div class="stat-item-native" style="background: #1a1a1a; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="color: #888; font-size: 0.9rem;">試合数</div>
+                            <div style="color: #00ff88; font-size: 1.5rem; font-weight: bold;">${stats.appearances || 0}</div>
+                        </div>
+                        <div class="stat-item-native" style="background: #1a1a1a; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="color: #888; font-size: 0.9rem;">ゴール</div>
+                            <div style="color: #00ff88; font-size: 1.5rem; font-weight: bold;">${stats.goals || 0}</div>
+                        </div>
+                        <div class="stat-item-native" style="background: #1a1a1a; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="color: #888; font-size: 0.9rem;">アシスト</div>
+                            <div style="color: #00ff88; font-size: 1.5rem; font-weight: bold;">${stats.assists || 0}</div>
+                        </div>
+                        <div class="stat-item-native" style="background: #1a1a1a; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="color: #888; font-size: 0.9rem;">クリーンシート</div>
+                            <div style="color: #00ff88; font-size: 1.5rem; font-weight: bold;">${stats.cleanSheets || 0}</div>
+                        </div>
+                        <div class="stat-item-native" style="background: #1a1a1a; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="color: #888; font-size: 0.9rem;">パス成功率</div>
+                            <div style="color: #00ff88; font-size: 1.5rem; font-weight: bold;">${stats.passAccuracy || 0}%</div>
+                        </div>
+                        <div class="stat-item-native" style="background: #1a1a1a; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="color: #888; font-size: 0.9rem;">評価</div>
+                            <div style="color: #00ff88; font-size: 1.5rem; font-weight: bold;">${stats.rating || 'N/A'}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="matches-section">
+                    <h3 style="color: #00ff88; margin-bottom: 1rem;">最近の試合</h3>
+                    ${player.matches && player.matches.length > 0 ? `
+                        <table class="matches-table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #1a1a1a;">
+                                    <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid #333;">日付</th>
+                                    <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid #333;">ホーム</th>
+                                    <th style="padding: 0.5rem; text-align: center; border-bottom: 1px solid #333;">スコア</th>
+                                    <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid #333;">アウェイ</th>
+                                    <th style="padding: 0.5rem; text-align: center; border-bottom: 1px solid #333;">結果</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${player.matches.slice(0, 5).map(match => `
+                                    <tr>
+                                        <td style="padding: 0.5rem; border-bottom: 1px solid #333;">${match.date}</td>
+                                        <td style="padding: 0.5rem; border-bottom: 1px solid #333;">${match.homeTeam}</td>
+                                        <td style="padding: 0.5rem; text-align: center; border-bottom: 1px solid #333;">${match.score}</td>
+                                        <td style="padding: 0.5rem; border-bottom: 1px solid #333;">${match.awayTeam}</td>
+                                        <td style="padding: 0.5rem; text-align: center; border-bottom: 1px solid #333;">
+                                            <span style="color: ${match.result === 'W' ? '#00ff88' : match.result === 'L' ? '#ff4444' : '#ffaa00'}; font-weight: bold;">
+                                                ${match.result === 'W' ? '勝' : match.result === 'L' ? '負' : '分'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    ` : '<p style="color: #888; font-style: italic;">試合データがありません</p>'}
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        // モーダルを閉じる
+        function closePlayerModal() {
+            document.getElementById('playerModal').style.display = 'none';
+        }
+
+        // データ管理機能
+        async function checkDataStatus() {
+            try {
+                const status = await window.firebaseDataService.checkDataStatus();
+                document.getElementById('dataStatus').textContent = `データ状況: ${status.message}`;
+            } catch (error) {
+                console.error('データ状況確認エラー:', error);
+                document.getElementById('dataStatus').textContent = 'データ状況確認に失敗しました';
+            }
+        }
+
+        async function importRealData() {
+            try {
+                const result = await window.importRealFootballData();
+                document.getElementById('dataStatus').textContent = `インポート完了: ${result.teams}チーム、${result.players}選手`;
+            } catch (error) {
+                console.error('データインポートエラー:', error);
+                document.getElementById('dataStatus').textContent = 'データインポートに失敗しました';
+            }
+        }
+
+        async function clearCachedData() {
+            try {
+                await window.firebaseDataService.clearCachedData();
+                document.getElementById('dataStatus').textContent = 'キャッシュをクリアしました';
+                switchTab(currentTab);
+            } catch (error) {
+                console.error('キャッシュクリアエラー:', error);
+                document.getElementById('dataStatus').textContent = 'キャッシュクリアに失敗しました';
+            }
+        }
+
+        async function refreshData() {
+            try {
+                await window.firebaseDataService.refreshData();
+                document.getElementById('dataStatus').textContent = 'データを更新しました';
+                switchTab(currentTab);
+            } catch (error) {
+                console.error('データ更新エラー:', error);
+                document.getElementById('dataStatus').textContent = 'データ更新に失敗しました';
+            }
+            }
+        }
+
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Database page loaded - FIXED V2 VERSION');
+            
+            // FirebaseDataServiceの初期化を待つ
+            let initCount = 0;
+            const maxAttempts = 50;
+            
+            const waitForFirebaseDataService = () => {
+                initCount++;
+                console.log('Waiting for FirebaseDataService...', `(${initCount}/${maxAttempts})`);
+                
+                if (window.firebaseDataService) {
+                    console.log('FirebaseDataService is ready');
+                    switchTab('players');
+                } else if (initCount < maxAttempts) {
+                    setTimeout(waitForFirebaseDataService, 100);
+                } else {
+                    console.error('FirebaseDataService initialization timeout');
+                }
+            };
+            
+            waitForFirebaseDataService();
+            
+            // 検索タイプ変更時のイベントリスナーを追加
+            document.getElementById('searchType').addEventListener('change', updateSearchFilters);
+            
+            // デバッグ用：ポジションフィルターの動作確認
+            document.getElementById('searchPosition').addEventListener('change', function() {
+                console.log('ポジションフィルター変更:', this.value);
+            });
+            
+            // 初期フィルター状態を設定
+            updateSearchFilters();
+        });
+
+        // firebaseData.jsの動的読み込み
+        const timestamp = Date.now();
+        const random = Math.random();
+        console.log('Loading firebaseData.js with cache busting:', timestamp, random);
+        
+        const script = document.createElement('script');
+        script.src = `firebaseData.js?v=2.0&t=${timestamp}&r=${random}`;
+        script.onload = function() {
+            console.log('firebaseData.js loaded successfully at:', new Date().toISOString());
+        };
+        script.onerror = function() {
+            console.error('firebaseData.js loading failed');
+        };
+        document.head.appendChild(script);
+    </script>
+</body>
+</html> 

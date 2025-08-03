@@ -6,12 +6,113 @@ const cache = new NodeCache({ stdTTL: 1800 }); // 30 minutes cache like native-s
 
 // API client configuration
 const apiClient = axios.create({
-    baseURL: 'https://v3.football.api-sports.io',
+    baseURL: 'https://api.football-data.org/v4',
     headers: {
-        'x-rapidapi-host': 'v3.football.api-sports.io',
-        'x-rapidapi-key': process.env.FOOTBALL_API_KEY || ''
+        'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY || ''
     }
 });
+
+// API-Football client configuration
+function createApiFootballClient() {
+    const apiKey = process.env.API_FOOTBALL_KEY || '';
+    console.log('Creating API-Football client with key:', apiKey ? `${apiKey.substring(0, 8)}...` : 'NOT SET');
+    return axios.create({
+        baseURL: 'https://v3.football.api-sports.io',
+        headers: {
+            'x-rapidapi-host': 'v3.football.api-sports.io',
+            'x-rapidapi-key': apiKey
+        }
+    });
+}
+
+// Rate limiting configuration
+const RATE_LIMIT_CONFIG = {
+    footballData: {
+        requestsPerMinute: parseInt(process.env.FOOTBALL_DATA_RATE_LIMIT) || 10,
+        retryDelay: 60000
+    },
+    apiFootball: {
+        requestsPerMinute: parseInt(process.env.API_FOOTBALL_RATE_LIMIT) || 30,
+        retryDelay: 2000
+    }
+};
+
+// Rate limiting storage
+const rateLimitStore = {
+    footballData: { requests: [], lastReset: Date.now() },
+    apiFootball: { requests: [], lastReset: Date.now() }
+};
+
+// Rate limiting function
+function checkRateLimit(apiType) {
+    const config = RATE_LIMIT_CONFIG[apiType];
+    const store = rateLimitStore[apiType];
+    const now = Date.now();
+    
+    if (now - store.lastReset > 60000) {
+        store.requests = [];
+        store.lastReset = now;
+    }
+    
+    if (store.requests.length >= config.requestsPerMinute) {
+        const oldestRequest = store.requests[0];
+        const timeSinceOldest = now - oldestRequest;
+        
+        if (timeSinceOldest < 60000) {
+            return false;
+        } else {
+            store.requests = store.requests.filter(req => now - req > 60000);
+        }
+    }
+    
+    store.requests.push(now);
+    return true;
+}
+
+// Retry function with exponential backoff
+async function fetchWithRetry(url, apiType, maxRetries = 3) {
+    const config = RATE_LIMIT_CONFIG[apiType];
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            if (!checkRateLimit(apiType)) {
+                const waitTime = config.retryDelay * (attempt + 1);
+                console.log(`Rate limit exceeded for ${apiType}, waiting ${waitTime}ms before retry ${attempt + 1}`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+                continue;
+            }
+            
+            const client = apiType === 'apiFootball' ? createApiFootballClient() : apiClient;
+            console.log(`Making ${apiType} request to: ${url}`);
+            const response = await client.get(url);
+            console.log(`${apiType} response status: ${response.status}`);
+            
+            if (response.status === 429) {
+                const retryAfter = response.headers['retry-after'];
+                const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : config.retryDelay * (attempt + 1);
+                console.log(`429 error for ${apiType}, waiting ${waitTime}ms before retry ${attempt + 1}`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+                continue;
+            }
+            
+            return response;
+        } catch (error) {
+            console.error(`${apiType} request error:`, error.message);
+            if (error.response) {
+                console.error(`${apiType} response status:`, error.response.status);
+                console.error(`${apiType} response data:`, error.response.data);
+            }
+            if (attempt === maxRetries) {
+                throw error;
+            }
+            const waitTime = config.retryDelay * Math.pow(2, attempt);
+            console.log(`Request failed for ${apiType}, waiting ${waitTime}ms before retry ${attempt + 1}`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+    }
+    
+    throw new Error(`Max retries exceeded for ${apiType}`);
+}
 
 class FootballDataService {
     constructor() {
@@ -771,6 +872,397 @@ class FootballDataService {
 
     getFallbackSearchResults() {
         return this.getFallbackPlayers();
+    }
+
+    // ===== Hybrid API Methods =====
+
+    // ハイブリッド選手検索（両方のAPIを組み合わせ）
+    async hybridSearchPlayers(query, options = {}) {
+        const { league, country, includeOverseas = true } = options;
+        const cacheKey = `hybrid_search_${query}_${league || 'all'}_${country || 'all'}_${includeOverseas}`;
+        
+        let data = this.cache.get(cacheKey);
+        if (data) {
+            return data;
+        }
+
+        const results = {
+            footballData: [],
+            apiFootball: [],
+            combined: []
+        };
+
+        try {
+            // Football-data.org から検索（並列実行）
+            const footballDataPromise = this.searchFootballDataPlayers(query, league, country);
+            
+            // API-Football から検索（並列実行）
+            const apiFootballPromise = this.searchApiFootballPlayers(query, league, country, includeOverseas);
+
+            // 両方のAPIから並列でデータを取得
+            const [footballDataResults, apiFootballResults] = await Promise.all([
+                footballDataPromise,
+                apiFootballPromise
+            ]);
+
+            results.footballData = footballDataResults;
+            results.apiFootball = apiFootballResults;
+
+            // 結果を統合（重複を除去）
+            const combinedMap = new Map();
+            
+            // Football-data.org の結果を追加
+            results.footballData.forEach(player => {
+                const key = `${player.name}-${player.nationality}`;
+                combinedMap.set(key, {
+                    ...player,
+                    source: 'football-data.org'
+                });
+            });
+            
+            // API-Football の結果を追加（重複しない場合のみ）
+            results.apiFootball.forEach(player => {
+                const key = `${player.player.name}-${player.player.nationality}`;
+                if (!combinedMap.has(key)) {
+                    combinedMap.set(key, {
+                        ...player,
+                        source: 'api-football'
+                    });
+                }
+            });
+            
+            results.combined = Array.from(combinedMap.values());
+
+            // キャッシュに保存（15分）
+            this.cache.set(cacheKey, results, 900);
+            
+            return results;
+        } catch (error) {
+            console.error('Hybrid search error:', error);
+            return results;
+        }
+    }
+
+    // Football-data.org 選手検索
+    async searchFootballDataPlayers(query, league, country) {
+        try {
+            if (!process.env.FOOTBALL_DATA_API_KEY) {
+                return [];
+            }
+
+            const response = await fetchWithRetry(
+                `/persons?name=${encodeURIComponent(query)}`,
+                'footballData'
+            );
+
+            if (response.data && response.data.persons) {
+                return response.data.persons;
+            }
+            return [];
+        } catch (error) {
+            console.error('Football-data.org search error:', error);
+            return [];
+        }
+    }
+
+    // API-Football 選手検索
+    async searchApiFootballPlayers(query, league, country, includeOverseas) {
+        try {
+            if (!process.env.API_FOOTBALL_KEY) {
+                return [];
+            }
+
+            let url = `/players?search=${encodeURIComponent(query)}`;
+            if (league) url += `&league=${league}`;
+            if (country) url += `&country=${country}`;
+
+            const response = await fetchWithRetry(
+                url,
+                'apiFootball'
+            );
+
+            if (response.data && response.data.response) {
+                return response.data.response;
+            }
+            return [];
+        } catch (error) {
+            console.error('API-Football search error:', error);
+            return [];
+        }
+    }
+
+    // Jリーグ・アジアリーグ取得
+    async getAsianLeagues() {
+        const cacheKey = 'asian_leagues';
+        let data = this.cache.get(cacheKey);
+        
+        if (data) {
+            return data;
+        }
+
+        try {
+            if (!process.env.API_FOOTBALL_KEY) {
+                return this.getFallbackAsianLeagues();
+            }
+
+            const asianLeagues = [
+                { id: 39, name: 'J1 League', country: 'Japan' },
+                { id: 40, name: 'J2 League', country: 'Japan' },
+                { id: 41, name: 'J3 League', country: 'Japan' },
+                { id: 42, name: 'K League 1', country: 'South Korea' },
+                { id: 43, name: 'K League 2', country: 'South Korea' },
+                { id: 44, name: 'Chinese Super League', country: 'China' },
+                { id: 45, name: 'A-League', country: 'Australia' },
+                { id: 46, name: 'Thai League 1', country: 'Thailand' },
+                { id: 47, name: 'V.League 1', country: 'Vietnam' },
+                { id: 48, name: 'Singapore Premier League', country: 'Singapore' }
+            ];
+
+            const currentSeason = new Date().getFullYear();
+            const results = [];
+
+            // 並列でリーグ情報を取得
+            const leaguePromises = asianLeagues.map(async (league) => {
+                try {
+                                    const response = await fetchWithRetry(
+                    `/leagues?id=${league.id}&season=${currentSeason}`,
+                    'apiFootball'
+                );
+
+                    if (response.data && response.data.response && response.data.response[0]) {
+                        return response.data.response[0];
+                    }
+                    return league;
+                } catch (error) {
+                    console.error(`Error fetching league ${league.id}:`, error);
+                    return league;
+                }
+            });
+
+            const leagueResults = await Promise.all(leaguePromises);
+            results.push(...leagueResults.filter(league => league));
+
+            // キャッシュに保存（1時間）
+            this.cache.set(cacheKey, results, 3600);
+            
+            return results;
+        } catch (error) {
+            console.error('Asian leagues error:', error);
+            return this.getFallbackAsianLeagues();
+        }
+    }
+
+    // 日本語選手検索
+    async searchJapanesePlayers(query, options = {}) {
+        console.log('searchJapanesePlayers called with:', { query, options });
+        const { league, includeOverseas = true } = options;
+        const cacheKey = `japanese_players_${query}_${league || 'all'}_${includeOverseas}`;
+        
+        console.log('Cache key:', cacheKey);
+        let data = this.cache.get(cacheKey);
+        if (data) {
+            console.log('Returning cached data');
+            return data;
+        }
+
+        try {
+            if (!process.env.API_FOOTBALL_KEY) {
+                return this.getFallbackJapanesePlayers();
+            }
+
+            const results = [];
+
+            // Jリーグ選手を検索
+            const jLeagueSearch = async () => {
+                try {
+                                    const response = await fetchWithRetry(
+                    `/players?search=${encodeURIComponent(query)}&league=39&season=2024`,
+                    'apiFootball'
+                );
+
+                    if (response.data && response.data.response) {
+                        return response.data.response;
+                    }
+                    return [];
+                } catch (error) {
+                    console.error('J-League search error:', error);
+                    return [];
+                }
+            };
+
+            // 海外の日本語選手を検索（オプション）
+            const overseasSearch = async () => {
+                if (!includeOverseas) return [];
+                
+                try {
+                                    const response = await fetchWithRetry(
+                    `/players?search=${encodeURIComponent(query)}&nationality=JP`,
+                    'apiFootball'
+                );
+
+                    if (response.data && response.data.response) {
+                        return response.data.response;
+                    }
+                    return [];
+                } catch (error) {
+                    console.error('Overseas Japanese player search error:', error);
+                    return [];
+                }
+            };
+
+            // 並列で検索実行
+            const [jLeagueResults, overseasResults] = await Promise.all([
+                jLeagueSearch(),
+                overseasSearch()
+            ]);
+
+            // 結果を統合（重複除去）
+            const combinedMap = new Map();
+            
+            [...jLeagueResults, ...overseasResults].forEach(player => {
+                const key = `${player.player.name}-${player.player.nationality}`;
+                if (!combinedMap.has(key)) {
+                    combinedMap.set(key, {
+                        ...player,
+                        source: 'api-football',
+                        isJapanese: player.player.nationality === 'JP'
+                    });
+                }
+            });
+
+            results.push(...Array.from(combinedMap.values()));
+
+            // キャッシュに保存（15分）
+            this.cache.set(cacheKey, results, 900);
+            
+            return results;
+        } catch (error) {
+            console.error('Japanese players search error:', error);
+            return this.getFallbackJapanesePlayers();
+        }
+    }
+
+    // 詳細選手統計取得
+    async getDetailedPlayerStats(playerId, options = {}) {
+        const { season, league } = options;
+        const cacheKey = `detailed_stats_${playerId}_${season || 'current'}_${league || 'all'}`;
+        
+        let data = this.cache.get(cacheKey);
+        if (data) {
+            return data;
+        }
+
+        try {
+            if (!process.env.API_FOOTBALL_KEY) {
+                return this.getFallbackDetailedPlayerStats();
+            }
+
+            // 選手の基本情報と統計を並列で取得
+            const [playerInfo, playerStats] = await Promise.all([
+                // 選手基本情報
+                (async () => {
+                    try {
+                                            const response = await fetchWithRetry(
+                        `/players?id=${playerId}`,
+                        'apiFootball'
+                    );
+
+                        if (response.data && response.data.response && response.data.response[0]) {
+                            return response.data.response[0];
+                        }
+                        return null;
+                    } catch (error) {
+                        console.error('Player info error:', error);
+                        return null;
+                    }
+                })(),
+                
+                // 選手統計
+                (async () => {
+                    try {
+                        let url = `/players?id=${playerId}&statistics=true`;
+                        if (season) url += `&season=${season}`;
+                        if (league) url += `&league=${league}`;
+
+                                            const response = await fetchWithRetry(
+                        url,
+                        'apiFootball'
+                    );
+
+                        if (response.data && response.data.response && response.data.response[0]) {
+                            return response.data.response[0];
+                        }
+                        return null;
+                    } catch (error) {
+                        console.error('Player stats error:', error);
+                        return null;
+                    }
+                })()
+            ]);
+
+            const result = {
+                player: playerInfo,
+                statistics: playerStats,
+                season: season || 'current',
+                league: league || 'all'
+            };
+
+            // キャッシュに保存（30分）
+            this.cache.set(cacheKey, result, 1800);
+            
+            return result;
+        } catch (error) {
+            console.error('Detailed player stats error:', error);
+            return this.getFallbackDetailedPlayerStats();
+        }
+    }
+
+    // Fallback methods for new features
+    getFallbackAsianLeagues() {
+        return [
+            { id: 39, name: 'J1 League', country: 'Japan', logo: null },
+            { id: 40, name: 'J2 League', country: 'Japan', logo: null },
+            { id: 42, name: 'K League 1', country: 'South Korea', logo: null },
+            { id: 44, name: 'Chinese Super League', country: 'China', logo: null },
+            { id: 45, name: 'A-League', country: 'Australia', logo: null }
+        ];
+    }
+
+    getFallbackJapanesePlayers() {
+        return [
+            {
+                player: { id: 1, name: '久保建英', nationality: 'JP' },
+                statistics: [{ team: { name: 'レアル・ソシエダード' } }],
+                source: 'api-football',
+                isJapanese: true
+            },
+            {
+                player: { id: 2, name: '三笘薫', nationality: 'JP' },
+                statistics: [{ team: { name: 'ブライトン' } }],
+                source: 'api-football',
+                isJapanese: true
+            }
+        ];
+    }
+
+    getFallbackDetailedPlayerStats() {
+        return {
+            player: {
+                id: 1,
+                name: '久保建英',
+                nationality: 'JP',
+                age: 22,
+                height: '173',
+                weight: '67'
+            },
+            statistics: {
+                games: { position: 'MF', rating: '7.5' },
+                goals: { total: 8 },
+                assists: { total: 12 }
+            },
+            season: 'current',
+            league: 'all'
+        };
     }
 }
 
