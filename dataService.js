@@ -1075,18 +1075,63 @@ class FootballDataService {
             // 複数のリーグで検索（より柔軟な検索）
             const multiLeagueSearch = async () => {
                 try {
-                    // 主要リーグでの検索（リーグ指定なしでより広範囲に検索）
-                    const response = await fetchWithRetry(
-                        `/players?search=${encodeURIComponent(query)}`,
-                        'apiFootball'
+                    // 主要リーグでの検索（リーグ指定ありで検索）
+                    const majorLeagues = [39, 140, 135, 78, 61]; // J-League, La Liga, Serie A, Bundesliga, Ligue 1
+                    const leaguePromises = majorLeagues.map(leagueId => 
+                        fetchWithRetry(
+                            `/players?search=${encodeURIComponent(query)}&league=${leagueId}&season=2024`,
+                            'apiFootball'
+                        ).then(response => {
+                            console.log(`Multi-league search league ${leagueId} found ${response.data?.response?.length || 0} results`);
+                            return response.data?.response || [];
+                        })
+                        .catch(error => {
+                            console.error(`Multi-league search error for league ${leagueId}:`, error);
+                            return [];
+                        })
                     );
 
-                    if (response.data && response.data.response) {
-                        return response.data.response;
-                    }
-                    return [];
+                    const results = await Promise.all(leaguePromises);
+                    const flattened = results.flat();
+                    console.log(`Multi-league search total found ${flattened.length} results`);
+                    return flattened;
                 } catch (error) {
                     console.error('Multi-league search error:', error);
+                    return [];
+                }
+            };
+
+            // 部分一致検索（クエリを分割して検索）
+            const partialMatchSearch = async () => {
+                try {
+                    // クエリを分割して部分一致検索
+                    const words = query.split(/\s+/).filter(word => word.length > 2);
+                    if (words.length === 0) return [];
+
+                    // 主要リーグで部分一致検索
+                    const majorLeagues = [39, 140, 135, 78, 61]; // J-League, La Liga, Serie A, Bundesliga, Ligue 1
+                    const partialPromises = words.flatMap(word => 
+                        majorLeagues.map(leagueId => 
+                            fetchWithRetry(
+                                `/players?search=${encodeURIComponent(word)}&league=${leagueId}&season=2024`,
+                                'apiFootball'
+                            ).then(response => {
+                                console.log(`Partial search for "${word}" in league ${leagueId} found ${response.data?.response?.length || 0} results`);
+                                return response.data?.response || [];
+                            })
+                            .catch(error => {
+                                console.error(`Partial search error for "${word}" in league ${leagueId}:`, error);
+                                return [];
+                            })
+                        )
+                    );
+
+                    const results = await Promise.all(partialPromises);
+                    const flattened = results.flat();
+                    console.log(`Partial match search total found ${flattened.length} results`);
+                    return flattened;
+                } catch (error) {
+                    console.error('Partial match search error:', error);
                     return [];
                 }
             };
@@ -1100,7 +1145,10 @@ class FootballDataService {
                         fetchWithRetry(
                             `/players?search=${encodeURIComponent(query)}&league=39&season=${season}`,
                             'apiFootball'
-                        ).then(response => response.data?.response || [])
+                        ).then(response => {
+                            console.log(`J-League search season ${season} found ${response.data?.response?.length || 0} results`);
+                            return response.data?.response || [];
+                        })
                         .catch(error => {
                             console.error(`J-League search error for season ${season}:`, error);
                             return [];
@@ -1108,7 +1156,9 @@ class FootballDataService {
                     );
 
                     const results = await Promise.all(leaguePromises);
-                    return results.flat();
+                    const flattened = results.flat();
+                    console.log(`J-League search total found ${flattened.length} results`);
+                    return flattened;
                 } catch (error) {
                     console.error('J-League search error:', error);
                     return [];
@@ -1136,22 +1186,26 @@ class FootballDataService {
             };
 
             // 並列で検索実行
-            const [multiLeagueResults, jLeagueResults, overseasResults] = await Promise.all([
+            const [multiLeagueResults, jLeagueResults, overseasResults, partialResults] = await Promise.all([
                 multiLeagueSearch(),
                 jLeagueSearch(),
-                overseasSearch()
+                overseasSearch(),
+                partialMatchSearch()
             ]);
+
+            console.log(`Search results summary: multiLeague=${multiLeagueResults.length}, jLeague=${jLeagueResults.length}, overseas=${overseasResults.length}, partial=${partialResults.length}`);
 
             // 結果を統合（重複除去）
             const combinedMap = new Map();
             
-            [...multiLeagueResults, ...jLeagueResults, ...overseasResults].forEach(player => {
+            [...multiLeagueResults, ...jLeagueResults, ...overseasResults, ...partialResults].forEach(player => {
                 const key = `${player.player.name}-${player.player.nationality}`;
                 if (!combinedMap.has(key)) {
+                    const isJapanese = player.player.nationality === 'JP' || player.player.nationality === 'Japan';
                     combinedMap.set(key, {
                         ...player,
                         source: 'api-football',
-                        isJapanese: player.player.nationality === 'JP'
+                        isJapanese: isJapanese
                     });
                 }
             });
