@@ -2793,21 +2793,17 @@
             displayData(convertedPlayers, 'players');
         }
 
-
-
         // 初期表示
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('Database page loaded');
             
             // 検索タイプ変更時のイベントリスナーを追加
             document.getElementById('searchType').addEventListener('change', updateSearchFilters);
-        
-        // デバッグ用：ポジションフィルターの動作確認
-        document.getElementById('searchPosition').addEventListener('change', function() {
-            console.log('ポジションフィルター変更:', this.value);
-        });
-
-
+            
+            // デバッグ用：ポジションフィルターの動作確認
+            document.getElementById('searchPosition').addEventListener('change', function() {
+                console.log('ポジションフィルター変更:', this.value);
+            });
             
             // 初期フィルター状態を設定
             updateSearchFilters();
