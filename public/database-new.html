@@ -2300,7 +2300,7 @@
             updatePagination();
         }
 
-        // 詳細表示機能（native-stats.org風）
+        // 詳細表示機能（API-Football対応）
         function showPlayerDetail(playerId, playerData = null) {
             let player = playerData;
             if (!player) {
@@ -2311,25 +2311,72 @@
                 return;
             }
             
+            // API-Footballの詳細統計がある場合
+            const apiStats = player.apiFootballStats;
+            const isAPIFootball = player.source === 'api-football';
+            const isJapanese = player.isJapanese;
+            
             const seasonStats = player.seasons?.['2024-2025']?.stats || player.stats || {};
             const matches = player.matches || [];
             
             const modal = document.createElement('div');
             modal.className = 'detail-modal';
+            
+            // API-Football統計のHTML
+            let statsHTML = '';
+            if (apiStats) {
+                statsHTML = `
+                    <div class="stats-section">
+                        <h4>2024-2025 シーズン統計</h4>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value">${apiStats.games?.appearences || 0}</div>
+                                <div class="stat-label">試合数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${apiStats.goals?.total || 0}</div>
+                                <div class="stat-label">得点</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${apiStats.goals?.assists || 0}</div>
+                                <div class="stat-label">アシスト</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${apiStats.games?.rating || 'N/A'}</div>
+                                <div class="stat-label">評価</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${apiStats.passes?.total || 0}</div>
+                                <div class="stat-label">パス数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${apiStats.passes?.key || 0}</div>
+                                <div class="stat-label">キーパス</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2>選手詳細情報</h2>
+                        <h2>${player.name || player.fullName}</h2>
                         <button onclick="closeModal()" class="close-btn">×</button>
                     </div>
                     <div class="modal-body">
                         <!-- 選手ヘッダー -->
                         <div class="player-header">
-                            <div class="player-avatar-large">${(player.fullName || player.name).charAt(0)}</div>
+                            <img src="${player.photo || '/placeholder-player.png'}" 
+                                 alt="${player.name}" 
+                                 class="player-avatar-large"
+                                 onerror="this.src='/placeholder-player.png'">
                             <div class="player-info-large">
                                 <h3>${player.fullName || player.name}</h3>
                                 <p>${player.position} • ${player.nationality || 'Unknown'}</p>
                                 <p>${player.currentTeam || player.team} • ${player.seasons?.['2024-2025']?.league || 'Unknown League'}</p>
+                                ${isJapanese ? '<p style="color: #ff4444; font-weight: bold;">🇯🇵 日本代表</p>' : ''}
+                                ${isAPIFootball ? '<p style="color: #00ff88; font-weight: bold;">🚀 API-Football データ</p>' : ''}
                             </div>
                         </div>
 
@@ -2400,6 +2447,8 @@
                                 ` : '<p>試合履歴データがありません</p>'}
                             </div>
                         </div>
+                        
+                        ${statsHTML}
 
                         <!-- 統計 -->
                         <div class="stats-section">
@@ -2744,100 +2793,7 @@
             displayData(convertedPlayers, 'players');
         }
 
-        // 選手詳細表示（API-Football対応）
-        function showPlayerDetail(playerId, playerData) {
-            const modal = document.createElement('div');
-            modal.className = 'detail-modal';
-            
-            // API-Footballの詳細統計がある場合
-            const apiStats = playerData.apiFootballStats;
-            const isAPIFootball = playerData.source === 'api-football';
-            
-            let statsHTML = '';
-            if (apiStats) {
-                statsHTML = `
-                    <div class="stats-section">
-                        <h4>2024-2025 シーズン統計</h4>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <div class="stat-value">${apiStats.games?.appearences || 0}</div>
-                                <div class="stat-label">試合数</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${apiStats.goals?.total || 0}</div>
-                                <div class="stat-label">得点</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${apiStats.goals?.assists || 0}</div>
-                                <div class="stat-label">アシスト</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${apiStats.games?.rating || 'N/A'}</div>
-                                <div class="stat-label">評価</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${apiStats.passes?.total || 0}</div>
-                                <div class="stat-label">パス数</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${apiStats.passes?.key || 0}</div>
-                                <div class="stat-label">キーパス</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>${playerData.name || playerData.fullName}</h2>
-                        <button onclick="closeModal()" class="close-btn">×</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="player-header">
-                            <img src="${playerData.photo || '/placeholder-player.png'}" 
-                                 alt="${playerData.name}" 
-                                 class="player-avatar-large"
-                                 onerror="this.src='/placeholder-player.png'">
-                            <div class="player-info-large">
-                                <h3>${playerData.name || playerData.fullName}</h3>
-                                <p>${playerData.position || 'Unknown'} • ${playerData.nationality || 'Unknown'}</p>
-                                <p>${playerData.currentTeam || playerData.team || 'Unknown Team'}</p>
-                                ${playerData.isJapanese ? '<p style="color: #ff4444; font-weight: bold;">🇯🇵 日本代表</p>' : ''}
-                                ${isAPIFootball ? '<p style="color: #00ff88; font-weight: bold;">🚀 API-Football データ</p>' : ''}
-                            </div>
-                        </div>
-                        
-                        <div class="player-info-section">
-                            <h4>基本情報</h4>
-                            <div class="info-grid">
-                                <div class="info-item">
-                                    <span class="info-label">年齢:</span>
-                                    <span class="info-value">${playerData.age || 'N/A'}</span>
-                                </div>
-                                <div class="info-item">
-                                    <span class="info-label">身長:</span>
-                                    <span class="info-value">${playerData.height || 'N/A'}</span>
-                                </div>
-                                <div class="info-item">
-                                    <span class="info-label">体重:</span>
-                                    <span class="info-value">${playerData.weight || 'N/A'}</span>
-                                </div>
-                                <div class="info-item">
-                                    <span class="info-label">国籍:</span>
-                                    <span class="info-value">${playerData.nationality || 'N/A'}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        ${statsHTML}
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-        }
+
 
         // 初期表示
         document.addEventListener('DOMContentLoaded', async function() {
