@@ -2029,12 +2029,14 @@
             if (searchType === 'players' && searchQuery) {
                 // 日本語→英語マッピングをチェック
                 let apiQuery = searchQuery;
+                let isTranslated = false;
                 if (japaneseToEnglishMap[searchQuery]) {
                     apiQuery = japaneseToEnglishMap[searchQuery];
+                    isTranslated = true;
                     console.log(`日本語→英語変換: "${searchQuery}" → "${apiQuery}"`);
                 }
                 
-                // 日本語選手の可能性がある場合、API-Footballを試す
+                // 日本語選手の可能性がある場合、または変換された場合、API-Footballを試す
                 const japaneseKeywords = [
                     // 英語名（主要選手）
                     'kubo', 'mitoma', 'minamino', 'son', 'endo', 'wataru', 'ito', 'kamada', 'tomiyasu', 'tanaka', 'sugawara',
@@ -2062,8 +2064,12 @@
                     searchQuery.toLowerCase().includes(keyword.toLowerCase())
                 );
 
-                if (isJapaneseSearch) {
-                    console.log('日本語選手検索を検出、API-Footballを試行中...', apiQuery);
+                if (isJapaneseSearch || isTranslated) {
+                    if (isTranslated) {
+                        console.log('日本語→英語変換検索を検出、API-Footballを試行中...', apiQuery);
+                    } else {
+                        console.log('日本語選手検索を検出、API-Footballを試行中...', apiQuery);
+                    }
                     try {
                         const response = await fetch(`/api/japanese-players/search-v2?query=${encodeURIComponent(apiQuery)}`);
                         console.log('API-Footballレスポンス:', response.status, response.statusText);
