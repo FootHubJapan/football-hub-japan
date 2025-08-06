@@ -544,21 +544,61 @@
         // サンプル選手データを読み込み
         async function loadSamplePlayers() {
             try {
-                // 人気の日本人選手を検索
-                const players = [
-                    '久保建英', '三笘薫', '堂安律', '田中碧', '伊藤洋輝',
-                    '遠藤航', '南野拓実', '浅野拓磨', '上田綺世', '前田大然'
-                ];
+                // 人気の日本人選手を検索（日本語名と英語名のマッピング）
+                const playerMappings = {
+                    '久保建英': 'Takefusa Kubo',
+                    '三笘薫': 'Kaoru Mitoma',
+                    '堂安律': 'Ritsu Doan',
+                    '田中碧': 'Ao Tanaka',
+                    '伊藤洋輝': 'Hiroki Ito',
+                    '遠藤航': 'Wataru Endo',
+                    '南野拓実': 'Takumi Minamino',
+                    '浅野拓磨': 'Takuma Asano',
+                    '上田綺世': 'Ayase Ueda',
+                    '前田大然': 'Daizen Maeda'
+                };
 
-                const searchPromises = players.map(player => 
-                    fetch(`/api/search/players?query=${encodeURIComponent(player)}&limit=1`)
-                        .then(response => response.json())
-                        .then(data => data.results?.[0])
-                        .catch(() => null)
+                console.log('Loading sample players with mappings:', playerMappings);
+
+                const searchPromises = Object.entries(playerMappings).map(([japaneseName, englishName]) => 
+                    fetch(`/api/search/players?query=${encodeURIComponent(englishName)}&limit=1`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log(`Search result for ${englishName}:`, data);
+                            const player = data.results?.[0];
+                            if (player) {
+                                // 日本語名を追加
+                                return {
+                                    ...player,
+                                    name: japaneseName,
+                                    fullName: japaneseName,
+                                    japaneseName: japaneseName,
+                                    englishName: englishName
+                                };
+                            }
+                            return null;
+                        })
+                        .catch((error) => {
+                            console.error(`Error searching for ${englishName}:`, error);
+                            return null;
+                        })
                 );
 
                 const results = await Promise.all(searchPromises);
                 currentPlayers = results.filter(player => player !== null);
+                
+                console.log('Final players loaded:', currentPlayers);
+                
+                // 結果が空の場合はフォールバックデータを使用
+                if (currentPlayers.length === 0) {
+                    console.log('No players found from API, using fallback data');
+                    currentPlayers = getFallbackPlayers();
+                }
                 
                 displayPlayers(currentPlayers);
             } catch (error) {
@@ -610,9 +650,16 @@
             const grid = document.getElementById('playersGrid');
             grid.innerHTML = '';
 
+            if (!players || players.length === 0) {
+                grid.innerHTML = '<div style="text-align: center; color: #cccccc; padding: 2rem;">選手が見つかりませんでした</div>';
+                return;
+            }
+
             players.forEach(player => {
-                const card = createPlayerCard(player);
-                grid.appendChild(card);
+                if (player && player.name) {
+                    const card = createPlayerCard(player);
+                    grid.appendChild(card);
+                }
             });
         }
 
@@ -622,23 +669,30 @@
             card.className = 'player-card';
             card.onclick = () => selectPlayer(player);
 
+            // 安全なプロパティアクセス
+            const name = player.name || player.fullName || player.japaneseName || 'Unknown Player';
+            const team = player.currentTeam || player.team || 'Unknown Team';
+            const position = player.position || 'Unknown Position';
+            const nationality = player.nationality || 'Unknown';
+            const stats = player.stats || {};
+
             card.innerHTML = `
-                <div class="player-name">${player.name}</div>
+                <div class="player-name">${name}</div>
                 <div class="player-info">
-                    ${player.currentTeam} | ${player.position} | ${player.nationality}
+                    ${team} | ${position} | ${nationality}
                 </div>
                 <div class="player-stats">
                     <div class="stat-item">
                         <div>得点</div>
-                        <div>${player.stats?.goals || 0}</div>
+                        <div>${stats.goals || 0}</div>
                     </div>
                     <div class="stat-item">
                         <div>アシスト</div>
-                        <div>${player.stats?.assists || 0}</div>
+                        <div>${stats.assists || 0}</div>
                     </div>
                     <div class="stat-item">
                         <div>出場</div>
-                        <div>${player.stats?.appearances || 0}</div>
+                        <div>${stats.appearances || 0}</div>
                     </div>
                 </div>
             `;
@@ -669,11 +723,41 @@
             }
 
             try {
-                const response = await fetch(`/api/search/players?query=${encodeURIComponent(query)}&limit=20`);
+                // 日本語名を英語名にマッピング
+                const playerMappings = {
+                    '久保建英': 'Takefusa Kubo',
+                    '三笘薫': 'Kaoru Mitoma',
+                    '堂安律': 'Ritsu Doan',
+                    '田中碧': 'Ao Tanaka',
+                    '伊藤洋輝': 'Hiroki Ito',
+                    '遠藤航': 'Wataru Endo',
+                    '南野拓実': 'Takumi Minamino',
+                    '浅野拓磨': 'Takuma Asano',
+                    '上田綺世': 'Ayase Ueda',
+                    '前田大然': 'Daizen Maeda'
+                };
+
+                // 検索クエリを決定（日本語名の場合は英語名に変換）
+                const searchQuery = playerMappings[query] || query;
+
+                const response = await fetch(`/api/search/players?query=${encodeURIComponent(searchQuery)}&limit=20`);
                 const data = await response.json();
 
                 if (data.results && data.results.length > 0) {
-                    currentPlayers = data.results;
+                    // 日本語名を追加
+                    currentPlayers = data.results.map(player => {
+                        // 日本語名が検索された場合、その名前を追加
+                        if (playerMappings[query]) {
+                            return {
+                                ...player,
+                                name: query,
+                                fullName: query,
+                                japaneseName: query,
+                                englishName: playerMappings[query]
+                            };
+                        }
+                        return player;
+                    });
                     displayPlayers(currentPlayers);
                 } else {
                     showError('選手が見つかりませんでした');
