@@ -544,7 +544,7 @@
         // サンプル選手データを読み込み
         async function loadSamplePlayers() {
             try {
-                // 人気の日本人選手を検索（日本語名と英語名のマッピング）
+                // 人気の日本人選手を検索
                 const playerMappings = {
                     '久保建英': 'Takefusa Kubo',
                     '三笘薫': 'Kaoru Mitoma',
@@ -560,8 +560,9 @@
 
                 console.log('Loading sample players with mappings:', playerMappings);
 
+                // 新しいFotMobスタイルのAPIを使用
                 const searchPromises = Object.entries(playerMappings).map(([japaneseName, englishName]) => 
-                    fetch(`/api/search/players?query=${encodeURIComponent(englishName)}&limit=1`)
+                    fetch(`/api/fotmob/search?q=${encodeURIComponent(englishName)}&limit=1`)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -570,7 +571,7 @@
                         })
                         .then(data => {
                             console.log(`Search result for ${englishName}:`, data);
-                            const player = data.results?.[0];
+                            const player = data.players?.[0];
                             if (player) {
                                 // 日本語名を追加
                                 return {
@@ -641,6 +642,96 @@
                     nationality: 'Japan',
                     age: 25,
                     stats: { goals: 6, assists: 4, appearances: 28, minutes: 2000, rating: 6.8 }
+                },
+                {
+                    id: '4',
+                    name: '田中碧',
+                    fullName: '田中碧',
+                    currentTeam: 'フライブルク',
+                    position: 'Midfielder',
+                    nationality: 'Japan',
+                    age: 25,
+                    stats: { goals: 3, assists: 2, appearances: 22, minutes: 1650, rating: 6.5 }
+                },
+                {
+                    id: '5',
+                    name: '伊藤洋輝',
+                    fullName: '伊藤洋輝',
+                    currentTeam: 'シュトゥットガルト',
+                    position: 'Defender',
+                    nationality: 'Japan',
+                    age: 24,
+                    stats: { goals: 1, assists: 3, appearances: 26, minutes: 2340, rating: 6.9 }
+                },
+                {
+                    id: '6',
+                    name: '遠藤航',
+                    fullName: '遠藤航',
+                    currentTeam: 'リバプール',
+                    position: 'Midfielder',
+                    nationality: 'Japan',
+                    age: 30,
+                    stats: { goals: 2, assists: 1, appearances: 18, minutes: 1620, rating: 6.7 }
+                },
+                {
+                    id: '7',
+                    name: '南野拓実',
+                    fullName: '南野拓実',
+                    currentTeam: 'モナコ',
+                    position: 'Forward',
+                    nationality: 'Japan',
+                    age: 28,
+                    stats: { goals: 5, assists: 4, appearances: 24, minutes: 1800, rating: 6.8 }
+                },
+                {
+                    id: '8',
+                    name: '浅野拓磨',
+                    fullName: '浅野拓磨',
+                    currentTeam: 'シュトゥットガルト',
+                    position: 'Forward',
+                    nationality: 'Japan',
+                    age: 29,
+                    stats: { goals: 4, assists: 2, appearances: 20, minutes: 1500, rating: 6.6 }
+                },
+                {
+                    id: '9',
+                    name: '上田綺世',
+                    fullName: '上田綺世',
+                    currentTeam: 'フェイエノールト',
+                    position: 'Forward',
+                    nationality: 'Japan',
+                    age: 25,
+                    stats: { goals: 7, assists: 3, appearances: 23, minutes: 1800, rating: 7.0 }
+                },
+                {
+                    id: '10',
+                    name: '前田大然',
+                    fullName: '前田大然',
+                    currentTeam: 'セルティック',
+                    position: 'Forward',
+                    nationality: 'Japan',
+                    age: 26,
+                    stats: { goals: 9, assists: 5, appearances: 28, minutes: 2100, rating: 7.1 }
+                },
+                {
+                    id: '11',
+                    name: 'Erling Haaland',
+                    fullName: 'Erling Haaland',
+                    currentTeam: 'マンチェスター・シティ',
+                    position: 'Forward',
+                    nationality: 'Norway',
+                    age: 23,
+                    stats: { goals: 18, assists: 4, appearances: 15, minutes: 1350, rating: 8.2 }
+                },
+                {
+                    id: '12',
+                    name: 'Kevin De Bruyne',
+                    fullName: 'Kevin De Bruyne',
+                    currentTeam: 'マンチェスター・シティ',
+                    position: 'Midfielder',
+                    nationality: 'Belgium',
+                    age: 32,
+                    stats: { goals: 3, assists: 12, appearances: 20, minutes: 1800, rating: 7.8 }
                 }
             ];
         }
@@ -716,48 +807,26 @@
             const query = document.getElementById('searchInput').value.trim();
             const league = document.getElementById('leagueSelect').value;
             const position = document.getElementById('positionSelect').value;
+            const detailedPositions = getSelectedDetailedPositions();
 
-            if (!query) {
+            if (!query && !league && !position && detailedPositions.length === 0) {
                 loadSamplePlayers();
                 return;
             }
 
             try {
-                // 日本語名を英語名にマッピング
-                const playerMappings = {
-                    '久保建英': 'Takefusa Kubo',
-                    '三笘薫': 'Kaoru Mitoma',
-                    '堂安律': 'Ritsu Doan',
-                    '田中碧': 'Ao Tanaka',
-                    '伊藤洋輝': 'Hiroki Ito',
-                    '遠藤航': 'Wataru Endo',
-                    '南野拓実': 'Takumi Minamino',
-                    '浅野拓磨': 'Takuma Asano',
-                    '上田綺世': 'Ayase Ueda',
-                    '前田大然': 'Daizen Maeda'
-                };
+                // 新しいFotMobスタイルのAPIを使用
+                const searchParams = new URLSearchParams();
+                if (query) searchParams.append('q', query);
+                if (league) searchParams.append('league', league);
+                if (position) searchParams.append('position', position);
+                searchParams.append('limit', '20');
 
-                // 検索クエリを決定（日本語名の場合は英語名に変換）
-                const searchQuery = playerMappings[query] || query;
-
-                const response = await fetch(`/api/search/players?query=${encodeURIComponent(searchQuery)}&limit=20`);
+                const response = await fetch(`/api/fotmob/search?${searchParams.toString()}`);
                 const data = await response.json();
 
-                if (data.results && data.results.length > 0) {
-                    // 日本語名を追加
-                    currentPlayers = data.results.map(player => {
-                        // 日本語名が検索された場合、その名前を追加
-                        if (playerMappings[query]) {
-                            return {
-                                ...player,
-                                name: query,
-                                fullName: query,
-                                japaneseName: query,
-                                englishName: playerMappings[query]
-                            };
-                        }
-                        return player;
-                    });
+                if (data.players && data.players.length > 0) {
+                    currentPlayers = data.players;
                     displayPlayers(currentPlayers);
                 } else {
                     showError('選手が見つかりませんでした');
@@ -916,11 +985,11 @@
         // 選手検索
         async function searchPlayer(name) {
             try {
-                const response = await fetch(`/api/search/players?query=${encodeURIComponent(name)}&limit=1`);
+                const response = await fetch(`/api/fotmob/search?q=${encodeURIComponent(name)}&limit=1`);
                 const data = await response.json();
                 
-                if (data.results && data.results.length > 0) {
-                    return data.results[0];
+                if (data.players && data.players.length > 0) {
+                    return data.players[0];
                 }
                 return null;
             } catch (error) {
