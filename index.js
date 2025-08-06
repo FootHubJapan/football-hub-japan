@@ -602,7 +602,28 @@ app.get('/api/search/players', async (req, res) => {
         try {
             const apiFootballKey = process.env.API_FOOTBALL_KEY;
             if (apiFootballKey && apiFootballKey !== 'your-api-football-key-here') {
-                const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(query)}&limit=${limit}`;
+                // 日本語名を英語名に変換
+                const playerMappings = {
+                    '久保建英': 'Takefusa Kubo',
+                    '三笘薫': 'Kaoru Mitoma',
+                    '堂安律': 'Ritsu Doan',
+                    '田中碧': 'Ao Tanaka',
+                    '伊藤洋輝': 'Hiroki Ito',
+                    '遠藤航': 'Wataru Endo',
+                    '南野拓実': 'Takumi Minamino',
+                    '浅野拓磨': 'Takuma Asano',
+                    '上田綺世': 'Ayase Ueda',
+                    '前田大然': 'Daizen Maeda',
+                    'ハーランド': 'Erling Haaland',
+                    'メッシ': 'Lionel Messi',
+                    'ロナウド': 'Cristiano Ronaldo'
+                };
+
+                // 検索クエリを決定（日本語名の場合は英語名に変換）
+                const searchQuery = playerMappings[query] || query;
+                
+                // API-Footballの正しいパラメータ形式
+                const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(searchQuery)}&league=39&season=2024`;
                 console.log(`API-Football: Searching players - ${url}`);
                 
                 const response = await fetchWithRetry(url, {
@@ -660,13 +681,20 @@ app.get('/api/search/players', async (req, res) => {
         try {
             const footballDataKey = process.env.FOOTBALL_DATA_API_KEY || process.env.FOOTBALL_DATA_KEY;
             if (footballDataKey && footballDataKey !== 'your-football-data-api-key-here') {
-                // 主要リーグのチームから選手を検索
+                // レート制限を考慮して、より効率的な検索を実装
                 const leagues = ['PL', 'PD', 'SA', 'BL1', 'FL1'];
+                let searchCompleted = false;
                 
                 for (const league of leagues) {
-                    if (results.length >= limit) break;
+                    if (results.length >= limit || searchCompleted) break;
                     
                     try {
+                        // レート制限をチェック
+                        if (!checkRateLimit('footballData')) {
+                            console.log('Rate limit reached for Football-Data.org, skipping remaining searches');
+                            break;
+                        }
+                        
                         const url = `https://api.football-data.org/v4/competitions/${league}/teams`;
                         console.log(`Football-Data.org: Searching teams in ${league}`);
                         
@@ -680,10 +708,20 @@ app.get('/api/search/players', async (req, res) => {
                             const data = await response.json();
                             console.log(`Football-Data.org teams response for ${league}:`, data);
                             
-                            for (const team of data.teams || []) {
-                                if (results.length >= limit) break;
+                            // チーム数が多すぎる場合は最初の数チームのみ処理
+                            const teamsToProcess = data.teams ? data.teams.slice(0, 3) : [];
+                            
+                            for (const team of teamsToProcess) {
+                                if (results.length >= limit || searchCompleted) break;
                                 
                                 try {
+                                    // レート制限を再チェック
+                                    if (!checkRateLimit('footballData')) {
+                                        console.log('Rate limit reached during team search, stopping');
+                                        searchCompleted = true;
+                                        break;
+                                    }
+                                    
                                     const playersUrl = `https://api.football-data.org/v4/teams/${team.id}/players`;
                                     const playersResponse = await fetchWithRetry(playersUrl, {
                                         headers: {
@@ -695,38 +733,40 @@ app.get('/api/search/players', async (req, res) => {
                                         const playersData = await playersResponse.json();
                                         console.log(`Football-Data.org players response for team ${team.id}:`, playersData);
                                         
-                                        playersData.players?.forEach(player => {
-                                            const playerName = `${player.firstName} ${player.lastName}`.trim();
-                                            const playerKey = playerName.toLowerCase();
-                                            
-                                            if (playerName.toLowerCase().includes(query.toLowerCase()) && 
-                                                !seenPlayers.has(playerKey) && 
-                                                results.length < limit) {
+                                        if (playersData.players) {
+                                            playersData.players.forEach(player => {
+                                                const playerName = `${player.firstName} ${player.lastName}`.trim();
+                                                const playerKey = playerName.toLowerCase();
                                                 
-                                                seenPlayers.add(playerKey);
-                                                results.push({
-                                                    id: player.id || `football-data-${Date.now()}`,
-                                                    name: playerName,
-                                                    fullName: playerName,
-                                                    currentTeam: team.name,
-                                                    position: player.position || 'Unknown',
-                                                    nationality: player.nationality || 'Unknown',
-                                                    age: player.dateOfBirth ? calculateAge(player.dateOfBirth) : 'N/A',
-                                                    height: 'N/A',
-                                                    weight: 'N/A',
-                                                    source: 'football-data',
-                                                    stats: {
-                                                        goals: 0,
-                                                        assists: 0,
-                                                        appearances: 0,
-                                                        minutes: 0,
-                                                        rating: 'N/A',
-                                                        yellowCards: 0,
-                                                        redCards: 0
-                                                    }
-                                                });
-                                            }
-                                        });
+                                                if (playerName.toLowerCase().includes(query.toLowerCase()) && 
+                                                    !seenPlayers.has(playerKey) && 
+                                                    results.length < limit) {
+                                                    
+                                                    seenPlayers.add(playerKey);
+                                                    results.push({
+                                                        id: player.id || `football-data-${Date.now()}`,
+                                                        name: playerName,
+                                                        fullName: playerName,
+                                                        currentTeam: team.name,
+                                                        position: player.position || 'Unknown',
+                                                        nationality: player.nationality || 'Unknown',
+                                                        age: player.dateOfBirth ? calculateAge(player.dateOfBirth) : 'N/A',
+                                                        height: 'N/A',
+                                                        weight: 'N/A',
+                                                        source: 'football-data',
+                                                        stats: {
+                                                            goals: 0,
+                                                            assists: 0,
+                                                            appearances: 0,
+                                                            minutes: 0,
+                                                            rating: 'N/A',
+                                                            yellowCards: 0,
+                                                            redCards: 0
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                        }
                                     } else {
                                         console.log(`Football-Data.org players response not ok for team ${team.id}: ${playersResponse.status} ${playersResponse.statusText}`);
                                     }
