@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="Thu, 01 Jan 1970 00:00:00 GMT">
-    <title>強化データベース - Football Hub Japan</title>
+    <title>FotMobスタイル データベース - Football Hub Japan</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -81,1265 +78,540 @@
             text-align: center;
         }
 
-        .search-section {
+        /* FotMob-style layout */
+        .fotmob-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            height: calc(100vh - 200px);
+        }
+
+        .sidebar {
             background: #1a1a1a;
-            border: 2px solid #333333;
             border-radius: 15px;
-            padding: 2rem;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            background: #1a1a1a;
+            border-radius: 15px;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .filter-section {
             margin-bottom: 2rem;
         }
 
-        .search-title {
+        .filter-title {
             color: #00ff88;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             margin-bottom: 1rem;
         }
 
-        .search-controls {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
+        .filter-group {
+            margin-bottom: 1.5rem;
         }
 
-        .search-input {
+        .filter-label {
+            color: #cccccc;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .filter-input {
+            width: 100%;
             padding: 0.8rem;
-            background: #0a0a0a;
-            color: #ffffff;
-            border: 1px solid #333333;
+            background: #333333;
+            border: 1px solid #555555;
             border-radius: 5px;
-            font-size: 1rem;
+            color: #ffffff;
+            font-size: 0.9rem;
         }
 
-        .search-input:focus {
+        .filter-input:focus {
             outline: none;
             border-color: #00ff88;
         }
 
-        .search-input optgroup {
-            background: #1a1a1a;
-            color: #00ff88;
-            font-weight: bold;
-            padding: 0.5rem;
-        }
-
-        .search-input option {
-            background: #0a0a0a;
-            color: #ffffff;
-            padding: 0.3rem;
-        }
-
-        .search-input option:hover {
-            background: #00ff88;
-            color: #000000;
-        }
-
-        .position-filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .position-filter {
-            padding: 0.5rem 1rem;
+        .filter-select {
+            width: 100%;
+            padding: 0.8rem;
             background: #333333;
-            color: #ffffff;
-            border: 1px solid #333333;
+            border: 1px solid #555555;
             border-radius: 5px;
-            cursor: pointer;
+            color: #ffffff;
             font-size: 0.9rem;
-            transition: all 0.3s;
         }
 
-        .position-filter.active {
-            background: #00ff88;
-            color: #000000;
+        .filter-select:focus {
+            outline: none;
             border-color: #00ff88;
-        }
-
-        .position-filter:hover {
-            background: #00ff88;
-            color: #000000;
-        }
-
-        .detailed-position-section {
-            background: #2a2a2a;
-            border: 1px solid #333333;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .detailed-position-title {
-            color: #00ff88;
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .position-categories {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-        }
-
-        .position-category {
-            background: #1a1a1a;
-            border: 1px solid #333333;
-            border-radius: 8px;
-            padding: 1rem;
-        }
-
-        .position-category h4 {
-            color: #00ff88;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-            border-bottom: 1px solid #333333;
-            padding-bottom: 0.5rem;
-        }
-
-        .position-options {
-            display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .position-option {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.3rem 0;
-        }
-
-        .position-option input[type="checkbox"] {
-            accent-color: #00ff88;
-            width: 16px;
-            height: 16px;
-        }
-
-        .position-option label {
-            font-size: 0.9rem;
-            color: #cccccc;
-            cursor: pointer;
-            flex: 1;
-        }
-
-        .position-option:hover {
-            background: #333333;
-            border-radius: 4px;
-            padding: 0.3rem;
-            margin: 0 -0.3rem;
-        }
-
-        .search-btn {
-            background: #00ff88;
-            color: #000000;
-            padding: 0.8rem 2rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-
-        .search-btn:hover {
-            background: #00cc6a;
-        }
-
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .data-section, .chart-section {
-            background: #1a1a1a;
-            border: 2px solid #333333;
-            border-radius: 15px;
-            padding: 2rem;
-        }
-
-        .section-title {
-            color: #00ff88;
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
         }
 
         .players-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
-            max-height: 600px;
-            overflow-y: auto;
+            gap: 1.5rem;
         }
 
         .player-card {
-            background: #333333;
-            border: 1px solid #00ff88;
+            background: #2a2a2a;
             border-radius: 10px;
-            padding: 1rem;
-            cursor: pointer;
+            padding: 1.5rem;
             transition: all 0.3s;
+            cursor: pointer;
+            border: 1px solid #333333;
         }
 
         .player-card:hover {
-            background: #444444;
-            transform: translateY(-2px);
+            transform: translateY(-5px);
+            border-color: #00ff88;
+            box-shadow: 0 10px 20px rgba(0, 255, 136, 0.2);
         }
 
-        .player-card.selected {
-            background: #00ff88;
-            color: #000000;
+        .player-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
         }
 
-        .player-name {
-            font-size: 1.1rem;
+        .player-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
             font-weight: bold;
-            margin-bottom: 0.5rem;
+            color: #000000;
+            margin-right: 1rem;
         }
 
         .player-info {
+            flex: 1;
+        }
+
+        .player-name {
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+
+        .player-team {
+            color: #00ff88;
             font-size: 0.9rem;
+        }
+
+        .player-position {
             color: #cccccc;
-            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
         }
 
         .player-stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
-            font-size: 0.8rem;
+            gap: 1rem;
+            margin-top: 1rem;
         }
 
         .stat-item {
             text-align: center;
-            padding: 0.3rem;
-            background: #222222;
-            border-radius: 3px;
-        }
-
-        .chart-container {
-            background: #0a0a0a;
-            border-radius: 10px;
-            padding: 1rem;
-            height: 400px;
-            position: relative;
-        }
-
-        .comparison-section {
-            background: #1a1a1a;
-            border: 2px solid #333333;
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .comparison-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .comparison-player {
-            background: #333333;
-            border-radius: 10px;
-            padding: 1rem;
-        }
-
-        .comparison-player h3 {
-            color: #00ff88;
-            margin-bottom: 1rem;
-        }
-
-        .comparison-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-
-        .comparison-stat {
-            background: #222222;
             padding: 0.8rem;
+            background: #333333;
             border-radius: 5px;
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: #cccccc;
-            margin-bottom: 0.3rem;
         }
 
         .stat-value {
-            font-size: 1.2rem;
-            font-weight: bold;
             color: #00ff88;
+            font-weight: bold;
+            font-size: 1.1rem;
         }
 
-        .ai-analysis-section {
-            background: #1a1a1a;
-            border: 2px solid #333333;
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
+        .stat-label {
+            color: #888888;
+            font-size: 0.8rem;
         }
 
-        .ai-input {
+        .pagination {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
         }
 
-        .ai-input input {
-            flex: 1;
-            padding: 0.8rem;
-            border: 1px solid #333333;
-            border-radius: 5px;
-            background: #0a0a0a;
+        .page-btn {
+            background: #333333;
             color: #ffffff;
-            font-size: 1rem;
-        }
-
-        .ai-input button {
-            padding: 0.8rem 1.5rem;
-            background: #00ff88;
-            color: #000000;
+            padding: 0.5rem 1rem;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-weight: bold;
+            transition: all 0.3s;
         }
 
-        .ai-response {
-            background: #0a0a0a;
-            border: 1px solid #333333;
-            border-radius: 10px;
-            padding: 1rem;
-            min-height: 100px;
-            max-height: 300px;
-            overflow-y: auto;
+        .page-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .page-btn.active {
+            background: #00ff88;
+            color: #000000;
         }
 
         .loading {
-            display: none;
             text-align: center;
+            padding: 2rem;
             color: #00ff88;
-            font-size: 1.1rem;
-            margin: 1rem 0;
         }
 
         .error {
+            text-align: center;
+            padding: 2rem;
             color: #ff4444;
-            background: #330000;
-            padding: 1rem;
-            border-radius: 5px;
-            margin: 1rem 0;
         }
 
-        .success {
-            color: #00ff88;
-            background: #003300;
-            padding: 1rem;
-            border-radius: 5px;
-            margin: 1rem 0;
-        }
-
-        .quick-filters {
-            display: flex;
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
+            margin-bottom: 2rem;
         }
 
-        .filter-btn {
-            padding: 0.5rem 1rem;
-            background: #333333;
-            color: #ffffff;
-            border: 1px solid #00ff88;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s;
+        .stat-card {
+            background: #2a2a2a;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #333333;
+        }
+
+        .stat-card-value {
+            color: #00ff88;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-label {
+            color: #cccccc;
             font-size: 0.9rem;
         }
 
-        .filter-btn:hover, .filter-btn.active {
-            background: #00ff88;
-            color: #000000;
-        }
-
-        .selected-positions-display {
-            background: #1a1a1a;
-            border: 1px solid #00ff88;
-            border-radius: 5px;
-            padding: 0.5rem;
-            margin-top: 0.5rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.3rem;
-        }
-
-        .position-tag {
-            background: #00ff88;
-            color: #000000;
-            padding: 0.2rem 0.5rem;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
         @media (max-width: 768px) {
-            .content-grid {
+            .fotmob-layout {
                 grid-template-columns: 1fr;
             }
             
-            .comparison-controls {
+            .players-grid {
                 grid-template-columns: 1fr;
             }
             
-            .main-container {
-            padding: 1rem;
+            .stats-overview {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo">Football Hub Japan</div>
+    <header class="header">
+        <div class="logo">⚽ Football Hub Japan</div>
         <div class="nav-buttons">
-            <button class="nav-btn" onclick="window.location.href='/'">ホーム</button>
-            <button class="nav-btn" onclick="window.location.href='/ai-agent-enhanced'">AIエージェント</button>
-            <button class="nav-btn" onclick="window.location.href='/radar'">レーダーチャート</button>
             <button class="nav-btn" onclick="window.location.href='/dashboard'">ダッシュボード</button>
+            <button class="nav-btn" onclick="window.location.href='/radar-enhanced'">レーダーチャート</button>
+            <button class="nav-btn" onclick="window.location.href='/ai-agent-enhanced'">AIエージェント</button>
+            <button class="nav-btn" onclick="window.location.href='/'">ログアウト</button>
         </div>
-    </div>
+    </header>
 
     <div class="main-container">
-        <h1 class="page-title">強化データベース</h1>
-        <p class="page-subtitle">選手データとAI分析の統合プラットフォーム</p>
+        <h1 class="page-title">FotMobスタイル データベース</h1>
+        <p class="page-subtitle">常時表示される選手データベース</p>
 
-        <!-- 検索セクション -->
-        <div class="search-section">
-            <h2 class="search-title">選手検索</h2>
-            
-            <div class="quick-filters">
-                <button class="filter-btn active" onclick="setFilter('all')">すべて</button>
-                <button class="filter-btn" onclick="setFilter('japanese')">日本人選手</button>
-                <button class="filter-btn" onclick="setFilter('forwards')">フォワード</button>
-                <button class="filter-btn" onclick="setFilter('midfielders')">ミッドフィルダー</button>
-                <button class="filter-btn" onclick="setFilter('defenders')">ディフェンダー</button>
-                <button class="filter-btn" onclick="setFilter('goalkeepers')">ゴールキーパー</button>
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-card-value" id="totalPlayers">-</div>
+                <div class="stat-card-label">総選手数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value" id="totalTeams">-</div>
+                <div class="stat-card-label">総チーム数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value" id="totalLeagues">-</div>
+                <div class="stat-card-label">総リーグ数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value" id="lastUpdate">-</div>
+                <div class="stat-card-label">最終更新</div>
+            </div>
+        </div>
+
+        <div class="fotmob-layout">
+            <div class="sidebar">
+                <div class="filter-section">
+                    <h3 class="filter-title">🔍 フィルター</h3>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">検索</label>
+                        <input type="text" id="searchInput" class="filter-input" placeholder="選手名、チーム名、国籍...">
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">リーグ</label>
+                        <select id="leagueSelect" class="filter-select">
+                            <option value="">すべてのリーグ</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">ポジション</label>
+                        <select id="positionSelect" class="filter-select">
+                            <option value="">すべてのポジション</option>
+                            <option value="Forward">フォワード</option>
+                            <option value="Midfielder">ミッドフィルダー</option>
+                            <option value="Defender">ディフェンダー</option>
+                            <option value="Goalkeeper">ゴールキーパー</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div id="playersContainer" class="players-grid">
+                    <div class="loading">データを読み込み中...</div>
                 </div>
                 
-            <div class="search-controls">
-                <input type="text" id="searchInput" class="search-input" placeholder="選手名を入力..." onkeyup="handleSearch()">
-                <select id="leagueSelect" class="search-input">
-                        <option value="">すべてのリーグ</option>
-                        <option value="PL">プレミアリーグ</option>
-                        <option value="PD">ラ・リーガ</option>
-                        <option value="SA">セリエA</option>
-                        <option value="BL1">ブンデスリーガ</option>
-                        <option value="FL1">リーグ・アン</option>
-                    <option value="J1">J1リーグ</option>
-                </select>
-                <select id="positionSelect" class="search-input">
-                    <option value="">すべてのポジション</option>
-                    <!-- フォワード -->
-                    <optgroup label="フォワード (FW)">
-                        <option value="ST">ストライカー (ST)</option>
-                        <option value="CF">センターフォワード (CF)</option>
-                        <option value="SS">セカンドストライカー (SS)</option>
-                        <option value="LW">レフトウィング (LW)</option>
-                        <option value="RW">ライトウィング (RW)</option>
-                        <option value="AM">攻撃的MF (AM)</option>
-                        <option value="CF2">センターフォワード (CF2)</option>
-                        <option value="WF">ウィングフォワード (WF)</option>
-                    </optgroup>
-                    <!-- ミッドフィルダー -->
-                    <optgroup label="ミッドフィルダー (MF)">
-                        <option value="CM">センターミッドフィルダー (CM)</option>
-                        <option value="DM">守備的MF (DM)</option>
-                        <option value="AM">攻撃的MF (AM)</option>
-                        <option value="LM">レフトMF (LM)</option>
-                        <option value="RM">ライトMF (RM)</option>
-                        <option value="B2B">ボックス・トゥ・ボックス (B2B)</option>
-                        <option value="OMF">オフェンシブMF (OMF)</option>
-                        <option value="WM">ワイドMF (WM)</option>
-                        <option value="CAM">センタール攻撃的MF (CAM)</option>
-                        <option value="CDM">センタール守備的MF (CDM)</option>
-                    </optgroup>
-                    <!-- ディフェンダー -->
-                    <optgroup label="ディフェンダー (DF)">
-                        <option value="CB">センターバック (CB)</option>
-                        <option value="LB">レフトバック (LB)</option>
-                        <option value="RB">ライトバック (RB)</option>
-                        <option value="SW">スイーパー (SW)</option>
-                        <option value="WB">ウィングバック (WB)</option>
-                        <option value="LIB">リベロ (LIB)</option>
-                        <option value="LWB">レフトウィングバック (LWB)</option>
-                        <option value="RWB">ライトウィングバック (RWB)</option>
-                        <option value="LCB">レフトセンターバック (LCB)</option>
-                        <option value="RCB">ライトセンターバック (RCB)</option>
-                        <option value="FB">フルバック (FB)</option>
-                    </optgroup>
-                    <!-- ゴールキーパー -->
-                    <optgroup label="ゴールキーパー (GK)">
-                        <option value="GK">ゴールキーパー (GK)</option>
-                        <option value="SK">スイーパーキーパー (SK)</option>
-                        <option value="AK">攻撃的キーパー (AK)</option>
-                    </optgroup>
-                </select>
-                </div>
-
-            <!-- 詳細ポジション設定セクション -->
-            <div class="detailed-position-section">
-                <h3 class="detailed-position-title">🎯 詳細ポジション設定</h3>
-                <div class="position-categories">
-                    <div class="position-category">
-                        <h4>フォワード (FW)</h4>
-                        <div class="position-options">
-                            <div class="position-option">
-                                <input type="checkbox" id="fw_striker" value="ST">
-                                <label for="fw_striker">ストライカー (ST)</label>
-            </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="fw_center_forward" value="CF">
-                                <label for="fw_center_forward">センターフォワード (CF)</label>
-        </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="fw_second_striker" value="SS">
-                                <label for="fw_second_striker">セカンドストライカー (SS)</label>
-            </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="fw_left_wing" value="LW">
-                                <label for="fw_left_wing">レフトウィング (LW)</label>
-        </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="fw_right_wing" value="RW">
-                                <label for="fw_right_wing">ライトウィング (RW)</label>
-            </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="fw_attacking_midfielder" value="AM">
-                                <label for="fw_attacking_midfielder">攻撃的MF (AM)</label>
-        </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="fw_center_forward_second" value="CF2">
-                                <label for="fw_center_forward_second">センターフォワード (CF2)</label>
-            </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="fw_wing_forward" value="WF">
-                                <label for="fw_wing_forward">ウィングフォワード (WF)</label>
-            </div>
-            </div>
-            </div>
-
-                    <div class="position-category">
-                        <h4>ミッドフィルダー (MF)</h4>
-                        <div class="position-options">
-                            <div class="position-option">
-                                <input type="checkbox" id="mf_central_midfielder" value="CM">
-                                <label for="mf_central_midfielder">センターミッドフィルダー (CM)</label>
-            </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="mf_defensive_midfielder" value="DM">
-                                <label for="mf_defensive_midfielder">守備的MF (DM)</label>
-        </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="mf_attacking_midfielder" value="AM">
-                                <label for="mf_attacking_midfielder">攻撃的MF (AM)</label>
-    </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="mf_left_midfielder" value="LM">
-                                <label for="mf_left_midfielder">レフトMF (LM)</label>
-                                        </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="mf_right_midfielder" value="RM">
-                                <label for="mf_right_midfielder">ライトMF (RM)</label>
-                                            </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="mf_box_to_box" value="B2B">
-                                <label for="mf_box_to_box">ボックス・トゥ・ボックス (B2B)</label>
-                                        </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="mf_offensive_midfielder" value="OMF">
-                                <label for="mf_offensive_midfielder">オフェンシブMF (OMF)</label>
-                                    </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="mf_wide_midfielder" value="WM">
-                                <label for="mf_wide_midfielder">ワイドMF (WM)</label>
-                                    </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="mf_central_attacking" value="CAM">
-                                <label for="mf_central_attacking">センタール攻撃的MF (CAM)</label>
-                                    </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="mf_central_defensive" value="CDM">
-                                <label for="mf_central_defensive">センタール守備的MF (CDM)</label>
-                                    </div>
-                                        </div>
-                                        </div>
-
-                    <div class="position-category">
-                        <h4>ディフェンダー (DF)</h4>
-                        <div class="position-options">
-                            <div class="position-option">
-                                <input type="checkbox" id="df_center_back" value="CB">
-                                <label for="df_center_back">センターバック (CB)</label>
-                                        </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="df_left_back" value="LB">
-                                <label for="df_left_back">レフトバック (LB)</label>
-                                        </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="df_right_back" value="RB">
-                                <label for="df_right_back">ライトバック (RB)</label>
-                                    </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="df_sweeper" value="SW">
-                                <label for="df_sweeper">スイーパー (SW)</label>
-                                        </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="df_wing_back" value="WB">
-                                <label for="df_wing_back">ウィングバック (WB)</label>
-                                    </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="df_libero" value="LIB">
-                                <label for="df_libero">リベロ (LIB)</label>
-                                    </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="df_left_wing_back" value="LWB">
-                                <label for="df_left_wing_back">レフトウィングバック (LWB)</label>
-                                    </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="df_right_wing_back" value="RWB">
-                                <label for="df_right_wing_back">ライトウィングバック (RWB)</label>
-                                        </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="df_center_back_left" value="LCB">
-                                <label for="df_center_back_left">レフトセンターバック (LCB)</label>
-                                        </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="df_center_back_right" value="RCB">
-                                <label for="df_center_back_right">ライトセンターバック (RCB)</label>
-                                        </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="df_full_back" value="FB">
-                                <label for="df_full_back">フルバック (FB)</label>
-                                        </div>
-                                    </div>
-                    </div>
-
-                    <div class="position-category">
-                        <h4>ゴールキーパー (GK)</h4>
-                        <div class="position-options">
-                            <div class="position-option">
-                                <input type="checkbox" id="gk_goalkeeper" value="GK">
-                                <label for="gk_goalkeeper">ゴールキーパー (GK)</label>
-                                        </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="gk_sweeper_keeper" value="SK">
-                                <label for="gk_sweeper_keeper">スイーパーキーパー (SK)</label>
-                                    </div>
-                            <div class="position-option">
-                                <input type="checkbox" id="gk_attacking_keeper" value="AK">
-                                <label for="gk_attacking_keeper">攻撃的キーパー (AK)</label>
-                                    </div>
-                                    </div>
-                                        </div>
-                                        </div>
-                                        </div>
-
-            <button class="search-btn" onclick="performSearch()">🔍 検索実行</button>
-                                    </div>
-
-        <!-- メインコンテンツ -->
-        <div class="content-grid">
-            <!-- 選手データセクション -->
-            <div class="data-section">
-                <h2 class="section-title">選手一覧</h2>
-                <div class="players-grid" id="playersGrid">
-                    <!-- 選手カードがここに表示されます -->
-            </div>
-        </div>
-
-            <!-- レーダーチャートセクション -->
-            <div class="chart-section">
-                <h2 class="section-title">能力レーダーチャート</h2>
-                <div class="chart-container">
-                    <canvas id="radarChart"></canvas>
-            </div>
-        </div>
-            </div>
-
-        <!-- 選手比較セクション -->
-        <div class="comparison-section">
-            <h2 class="section-title">選手比較分析</h2>
-            <div class="comparison-controls">
-                <div class="comparison-player">
-                    <h3>選手1</h3>
-                    <input type="text" id="player1Input" placeholder="選手名を入力..." onchange="updateComparison()">
-                    <div class="comparison-stats" id="player1Stats">
-                        <!-- 選手1の統計がここに表示されます -->
-                    </div>
-            </div>
-
-                <div class="comparison-player">
-                    <h3>選手2</h3>
-                    <input type="text" id="player2Input" placeholder="選手名を入力..." onchange="updateComparison()">
-                    <div class="comparison-stats" id="player2Stats">
-                        <!-- 選手2の統計がここに表示されます -->
-                    </div>
-                </div>
-            </div>
-
-            <button class="search-btn" onclick="compareSelectedPlayers()">AI比較分析</button>
-            </div>
-
-        <!-- AI分析セクション -->
-        <div class="ai-analysis-section">
-            <h2 class="section-title">AI分析</h2>
-            <div class="ai-input">
-                <input type="text" id="aiInput" placeholder="分析したい内容を入力してください（例：久保建英の強みを教えて）">
-                <button onclick="performAIAnalysis()">分析実行</button>
-            </div>
-            <div class="loading" id="aiLoading">AI分析中...</div>
-            <div class="ai-response" id="aiResponse">
-                AI分析の結果がここに表示されます。
+                <div id="pagination" class="pagination"></div>
             </div>
         </div>
     </div>
 
+    <script src="/ai-widget.js"></script>
     <script>
-        let radarChart = null;
-        let currentPlayers = [];
-        let selectedPlayers = [];
-        let currentFilter = 'all';
+        let currentPage = 1;
+        let currentFilters = {};
+        let totalPlayers = 0;
+        let totalPages = 0;
 
-        // 初期化
+        // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
-            initializeRadarChart();
-            loadSamplePlayers();
-            
-            // 詳細ポジション設定のイベントリスナーを追加
-            const positionCheckboxes = document.querySelectorAll('.position-option input[type="checkbox"]');
-            positionCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', updateDetailedPositions);
-            });
+            initializeData();
+            setupEventListeners();
         });
 
-        // サンプル選手データを読み込み
-        async function loadSamplePlayers() {
+        async function initializeData() {
             try {
-                // 人気の日本人選手を検索
-                const players = [
-                    '久保建英', '三笘薫', '堂安律', '田中碧', '伊藤洋輝',
-                    '遠藤航', '南野拓実', '浅野拓磨', '上田綺世', '前田大然'
-                ];
+                // Initialize FotMob service
+                const initResponse = await fetch('/api/fotmob/init');
+                const initData = await initResponse.json();
+                console.log('FotMob service initialized:', initData);
 
-                const searchPromises = players.map(player => 
-                    fetch(`/api/search/players?query=${encodeURIComponent(player)}&limit=1`)
-                        .then(response => response.json())
-                        .then(data => data.results?.[0])
-                        .catch(() => null)
-                );
-
-                const results = await Promise.all(searchPromises);
-                currentPlayers = results.filter(player => player !== null);
-                
-                displayPlayers(currentPlayers);
-                    } catch (error) {
-                console.error('Error loading players:', error);
-                // フォールバックデータ
-                currentPlayers = getFallbackPlayers();
-                displayPlayers(currentPlayers);
+                // Load initial data
+                await loadPlayers();
+                await loadStats();
+                await loadLeagues();
+            } catch (error) {
+                console.error('Error initializing data:', error);
+                showError('データの初期化に失敗しました');
             }
         }
 
-        // フォールバック選手データ
-        function getFallbackPlayers() {
-            return [
-                {
-                    id: '1',
-                    name: '久保建英',
-                    fullName: '久保建英',
-                    currentTeam: 'レアル・ソシエダード',
-                    position: 'Midfielder',
-                    nationality: 'Japan',
-                    age: 22,
-                    stats: { goals: 8, assists: 6, appearances: 25, minutes: 1800, rating: 7.2 }
-                },
-                {
-                    id: '2',
-                    name: '三笘薫',
-                    fullName: '三笘薫',
-                    currentTeam: 'ブライトン',
-                    position: 'Forward',
-                    nationality: 'Japan',
-                    age: 26,
-                    stats: { goals: 12, assists: 8, appearances: 30, minutes: 2400, rating: 7.5 }
-                },
-                {
-                    id: '3',
-                    name: '堂安律',
-                    fullName: '堂安律',
-                    currentTeam: 'フライブルク',
-                    position: 'Midfielder',
-                    nationality: 'Japan',
-                    age: 25,
-                    stats: { goals: 6, assists: 4, appearances: 28, minutes: 2000, rating: 6.8 }
+        async function loadPlayers() {
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    limit: 20,
+                    ...currentFilters
+                });
+
+                const response = await fetch(`/api/fotmob/players?${params}`);
+                const data = await response.json();
+
+                if (data.players) {
+                    displayPlayers(data.players);
+                    totalPlayers = data.total;
+                    totalPages = data.totalPages;
+                    updatePagination();
+                } else {
+                    showError('選手データの取得に失敗しました');
                 }
-            ];
+            } catch (error) {
+                console.error('Error loading players:', error);
+                showError('選手データの読み込みに失敗しました');
+            }
         }
 
-        // 選手を表示
+        async function loadStats() {
+            try {
+                const [playersResponse, teamsResponse, leaguesResponse] = await Promise.all([
+                    fetch('/api/fotmob/players'),
+                    fetch('/api/fotmob/teams'),
+                    fetch('/api/fotmob/leagues')
+                ]);
+
+                const playersData = await playersResponse.json();
+                const teamsData = await teamsResponse.json();
+                const leaguesData = await leaguesResponse.json();
+
+                document.getElementById('totalPlayers').textContent = playersData.total || 0;
+                document.getElementById('totalTeams').textContent = teamsData.length || 0;
+                document.getElementById('totalLeagues').textContent = leaguesData.length || 0;
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('ja-JP');
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadLeagues() {
+            try {
+                const response = await fetch('/api/fotmob/leagues');
+                const leagues = await response.json();
+
+                const leagueSelect = document.getElementById('leagueSelect');
+                leagueSelect.innerHTML = '<option value="">すべてのリーグ</option>';
+
+                leagues.forEach(league => {
+                    const option = document.createElement('option');
+                    option.value = league.id;
+                    option.textContent = `${league.name} (${league.country})`;
+                    leagueSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading leagues:', error);
+            }
+        }
+
         function displayPlayers(players) {
-            const grid = document.getElementById('playersGrid');
-            grid.innerHTML = '';
+            const container = document.getElementById('playersContainer');
+            
+            if (players.length === 0) {
+                container.innerHTML = '<div class="error">選手が見つかりませんでした</div>';
+                return;
+            }
 
-            players.forEach(player => {
-                const card = createPlayerCard(player);
-                grid.appendChild(card);
-            });
-        }
-
-        // 選手カードを作成
-        function createPlayerCard(player) {
-            const card = document.createElement('div');
-            card.className = 'player-card';
-            card.onclick = () => selectPlayer(player);
-
-            card.innerHTML = `
-                <div class="player-name">${player.name}</div>
-                                <div class="player-info">
-                    ${player.currentTeam} | ${player.position} | ${player.nationality}
-                                </div>
-                <div class="player-stats">
-                                        <div class="stat-item">
-                        <div>得点</div>
-                        <div>${player.stats?.goals || 0}</div>
-                            </div>
-                                        <div class="stat-item">
-                        <div>アシスト</div>
-                        <div>${player.stats?.assists || 0}</div>
-                            </div>
-                                        <div class="stat-item">
-                        <div>出場</div>
-                        <div>${player.stats?.appearances || 0}</div>
+            container.innerHTML = players.map(player => `
+                <div class="player-card" onclick="showPlayerDetails(${player.id})">
+                    <div class="player-header">
+                        <div class="player-avatar">
+                            ${player.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </div>
+                        <div class="player-info">
+                            <div class="player-name">${player.name}</div>
+                            <div class="player-team">${player.teamName || 'Unknown Team'}</div>
+                            <div class="player-position">${player.position || 'Unknown Position'}</div>
                         </div>
                     </div>
-                `;
-
-            return card;
-        }
-
-        // 選手を選択
-        function selectPlayer(player) {
-            const cards = document.querySelectorAll('.player-card');
-            cards.forEach(card => card.classList.remove('selected'));
-
-            event.target.closest('.player-card').classList.add('selected');
-            
-            // レーダーチャートを更新
-            updateRadarChart([player]);
-        }
-
-        // 検索処理
-        async function performSearch() {
-            const query = document.getElementById('searchInput').value.trim();
-            const league = document.getElementById('leagueSelect').value;
-            const position = document.getElementById('positionSelect').value;
-            const detailedPositions = getSelectedDetailedPositions();
-
-            if (!query && !league && !position && detailedPositions.length === 0) {
-                loadSamplePlayers();
-                return;
-            }
-
-            try {
-                // 検索パラメータを構築
-                const searchParams = new URLSearchParams();
-                if (query) searchParams.append('query', query);
-                if (league) searchParams.append('league', league);
-                if (position) searchParams.append('position', position);
-                if (detailedPositions.length > 0) {
-                    detailedPositions.forEach(pos => searchParams.append('detailedPositions', pos));
-                }
-                searchParams.append('limit', '20');
-
-                const response = await fetch(`/api/search/players?${searchParams.toString()}`);
-                    const data = await response.json();
-
-                    if (data.results && data.results.length > 0) {
-                    currentPlayers = data.results;
-                    displayPlayers(currentPlayers);
-                } else {
-                    showError('選手が見つかりませんでした');
-                }
-            } catch (error) {
-                console.error('Search error:', error);
-                showError('検索中にエラーが発生しました');
-            }
-        }
-
-        // リアルタイム検索
-        function handleSearch() {
-            clearTimeout(window.searchTimeout);
-            window.searchTimeout = setTimeout(performSearch, 500);
-        }
-
-        // フィルター設定
-        function setFilter(filter) {
-            currentFilter = filter;
-            
-            // フィルターボタンの状態を更新
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-
-            // 選手をフィルタリング
-            let filteredPlayers = currentPlayers;
-
-            switch (filter) {
-                case 'japanese':
-                    filteredPlayers = currentPlayers.filter(p => p.nationality === 'Japan');
-                    break;
-                case 'forwards':
-                    filteredPlayers = currentPlayers.filter(p => p.position === 'Forward');
-                    break;
-                case 'midfielders':
-                    filteredPlayers = currentPlayers.filter(p => p.position === 'Midfielder');
-                    break;
-                case 'defenders':
-                    filteredPlayers = currentPlayers.filter(p => p.position === 'Defender');
-                    break;
-                case 'goalkeepers':
-                    filteredPlayers = currentPlayers.filter(p => p.position === 'Goalkeeper');
-                    break;
-            }
-
-            displayPlayers(filteredPlayers);
-        }
-
-        // 詳細ポジションの選択を取得
-        function getSelectedDetailedPositions() {
-            const selectedPositions = [];
-            const checkboxes = document.querySelectorAll('.position-option input[type="checkbox"]:checked');
-            
-            checkboxes.forEach(checkbox => {
-                selectedPositions.push(checkbox.value);
-            });
-            
-            return selectedPositions;
-        }
-
-        // 詳細ポジションの選択をクリア
-        function clearDetailedPositions() {
-            const checkboxes = document.querySelectorAll('.position-option input[type="checkbox"]');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = false;
-            });
-        }
-
-        // 詳細ポジションの選択を更新
-        function updateDetailedPositions() {
-            const selectedPositions = getSelectedDetailedPositions();
-            console.log('Selected detailed positions:', selectedPositions);
-            
-            // 選択されたポジションを表示
-            displaySelectedPositions(selectedPositions);
-            
-            // 選択されたポジションに基づいて検索を実行
-            if (selectedPositions.length > 0) {
-                performSearch();
-            }
-        }
-
-        // 選択されたポジションを表示
-        function displaySelectedPositions(positions) {
-            const positionDisplay = document.getElementById('selectedPositionsDisplay');
-            if (!positionDisplay) {
-                // 表示エリアが存在しない場合は作成
-                const displayArea = document.createElement('div');
-                displayArea.id = 'selectedPositionsDisplay';
-                displayArea.className = 'selected-positions-display';
-                displayArea.style.cssText = `
-                    background: #1a1a1a;
-                    border: 1px solid #00ff88;
-                    border-radius: 5px;
-                    padding: 0.5rem;
-                    margin-top: 0.5rem;
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 0.3rem;
-                `;
-                
-                const title = document.createElement('span');
-                title.textContent = '選択されたポジション: ';
-                title.style.color = '#00ff88';
-                title.style.fontWeight = 'bold';
-                displayArea.appendChild(title);
-                
-                const detailedPositionSection = document.querySelector('.detailed-position-section');
-                detailedPositionSection.appendChild(displayArea);
-            }
-            
-            const displayArea = document.getElementById('selectedPositionsDisplay');
-            const title = displayArea.querySelector('span');
-            title.textContent = `選択されたポジション (${positions.length}): `;
-            
-            // 既存のポジションタグをクリア
-            const existingTags = displayArea.querySelectorAll('.position-tag');
-            existingTags.forEach(tag => tag.remove());
-            
-            // 新しいポジションタグを追加
-            positions.forEach(position => {
-                const tag = document.createElement('span');
-                tag.className = 'position-tag';
-                tag.textContent = position;
-                tag.style.cssText = `
-                    background: #00ff88;
-                    color: #000000;
-                    padding: 0.2rem 0.5rem;
-                    border-radius: 3px;
-                    font-size: 0.8rem;
-                    font-weight: bold;
-                `;
-                displayArea.appendChild(tag);
-            });
-        }
-
-        // レーダーチャート初期化
-        function initializeRadarChart() {
-            const ctx = document.getElementById('radarChart').getContext('2d');
-            
-            radarChart = new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: ['得点力', 'アシスト力', '出場率', '効率性', '総合力'],
-                    datasets: []
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        r: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                color: '#ffffff',
-                                backdropColor: 'transparent'
-                            },
-                            grid: {
-                                color: '#333333'
-                            },
-                            pointLabels: {
-                                color: '#ffffff'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#ffffff'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // レーダーチャート更新
-        function updateRadarChart(players) {
-            if (!radarChart) return;
-
-            const datasets = players.map((player, index) => {
-                const colors = ['#00ff88', '#ff4444', '#4444ff', '#ffaa00'];
-                const color = colors[index % colors.length];
-                
-                return {
-                    label: player.name,
-                    data: [
-                        normalizeStat(player.stats?.goals || 0, 20),
-                        normalizeStat(player.stats?.assists || 0, 15),
-                        normalizeStat(player.stats?.appearances || 0, 38),
-                        normalizeStat(player.stats?.minutes || 0, 3420),
-                        normalizeStat((player.stats?.goals || 0) + (player.stats?.assists || 0), 30)
-                    ],
-                    borderColor: color,
-                    backgroundColor: color.replace(')', ', 0.2)').replace('rgb', 'rgba'),
-                    borderWidth: 2
-                };
-            });
-
-            radarChart.data.datasets = datasets;
-            radarChart.update();
-        }
-
-        // 統計正規化
-        function normalizeStat(value, max) {
-            return Math.min((value / max) * 100, 100);
-        }
-
-        // 選手比較更新
-        async function updateComparison() {
-            const player1Name = document.getElementById('player1Input').value.trim();
-            const player2Name = document.getElementById('player2Input').value.trim();
-
-            if (player1Name) {
-                const player1 = await searchPlayer(player1Name);
-                if (player1) {
-                    displayPlayerStats(player1, 'player1Stats');
-                }
-            }
-
-            if (player2Name) {
-                const player2 = await searchPlayer(player2Name);
-                if (player2) {
-                    displayPlayerStats(player2, 'player2Stats');
-                }
-            }
-
-            // レーダーチャートを更新
-            const players = [];
-            if (player1Name) {
-                const player1 = await searchPlayer(player1Name);
-                if (player1) players.push(player1);
-            }
-            if (player2Name) {
-                const player2 = await searchPlayer(player2Name);
-                if (player2) players.push(player2);
-            }
-            
-            if (players.length > 0) {
-                updateRadarChart(players);
-            }
-        }
-
-        // 選手検索
-        async function searchPlayer(name) {
-            try {
-                const response = await fetch(`/api/search/players?query=${encodeURIComponent(name)}&limit=1`);
-                    const data = await response.json();
-                
-                    if (data.results && data.results.length > 0) {
-                    return data.results[0];
-                }
-                return null;
-            } catch (error) {
-                console.error('Player search error:', error);
-                return null;
-            }
-        }
-
-        // 選手統計表示
-        function displayPlayerStats(player, containerId) {
-            const container = document.getElementById(containerId);
-            
-            container.innerHTML = `
-                <div class="comparison-stat">
-                                    <div class="stat-label">得点</div>
-                    <div class="stat-value">${player.stats?.goals || 0}</div>
-                                </div>
-                <div class="comparison-stat">
-                    <div class="stat-label">アシスト</div>
-                    <div class="stat-value">${player.stats?.assists || 0}</div>
-                                </div>
-                <div class="comparison-stat">
-                    <div class="stat-label">出場試合</div>
-                    <div class="stat-value">${player.stats?.appearances || 0}</div>
-                                </div>
-                <div class="comparison-stat">
-                    <div class="stat-label">評価</div>
-                    <div class="stat-value">${player.stats?.rating || 'N/A'}</div>
+                    <div class="player-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">${player.nationality || 'N/A'}</div>
+                            <div class="stat-label">国籍</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${player.shirtNumber || 'N/A'}</div>
+                            <div class="stat-label">背番号</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${player.dateOfBirth ? new Date(player.dateOfBirth).getFullYear() : 'N/A'}</div>
+                            <div class="stat-label">生年</div>
+                        </div>
+                    </div>
                 </div>
-            `;
+            `).join('');
         }
 
-        // 選択された選手を比較
-        async function compareSelectedPlayers() {
-            const player1Name = document.getElementById('player1Input').value.trim();
-            const player2Name = document.getElementById('player2Input').value.trim();
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
 
-            if (!player1Name || !player2Name) {
-                showError('比較する選手名を両方入力してください');
-                return;
+            if (totalPages <= 1) return;
+
+            // Previous button
+            if (currentPage > 1) {
+                const prevBtn = document.createElement('button');
+                prevBtn.className = 'page-btn';
+                prevBtn.textContent = '前へ';
+                prevBtn.onclick = () => changePage(currentPage - 1);
+                pagination.appendChild(prevBtn);
             }
 
-            try {
-                const response = await fetch('/api/ai/compare', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ player1: player1Name, player2: player2Name })
-                });
-
-                const data = await response.json();
-                
-                if (data.response) {
-                    showSuccess(`<h3>${player1Name} vs ${player2Name}</h3><p>${data.response}</p>`);
-                } else {
-                    showError('比較分析を実行できませんでした');
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                    pageBtn.textContent = i;
+                    pageBtn.onclick = () => changePage(i);
+                    pagination.appendChild(pageBtn);
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    ellipsis.style.color = '#888888';
+                    ellipsis.style.padding = '0.5rem';
+                    pagination.appendChild(ellipsis);
                 }
-            } catch (error) {
-                console.error('Comparison error:', error);
-                showError('比較分析中にエラーが発生しました');
+            }
+
+            // Next button
+            if (currentPage < totalPages) {
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'page-btn';
+                nextBtn.textContent = '次へ';
+                nextBtn.onclick = () => changePage(currentPage + 1);
+                pagination.appendChild(nextBtn);
             }
         }
 
-        // AI分析実行
-        async function performAIAnalysis() {
-            const input = document.getElementById('aiInput').value.trim();
-            
-            if (!input) {
-                showError('分析内容を入力してください');
-                return;
-            }
-
-            const loading = document.getElementById('aiLoading');
-            const response = document.getElementById('aiResponse');
-            
-            loading.style.display = 'block';
-            response.innerHTML = '';
-
-            try {
-                const aiResponse = await fetch('/api/ai/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: input })
-                });
-
-                const data = await aiResponse.json();
-                
-                if (data.response) {
-                    response.innerHTML = `<div class="success">${data.response}</div>`;
-                } else {
-                    response.innerHTML = '<div class="error">AI分析を実行できませんでした</div>';
-                }
-            } catch (error) {
-                console.error('AI analysis error:', error);
-                response.innerHTML = '<div class="error">AI分析中にエラーが発生しました</div>';
-            } finally {
-                loading.style.display = 'none';
-            }
+        function changePage(page) {
+            currentPage = page;
+            loadPlayers();
         }
 
-        // エラー表示
+        function setupEventListeners() {
+            // Search input
+            const searchInput = document.getElementById('searchInput');
+            let searchTimeout;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    currentFilters.search = e.target.value;
+                    currentPage = 1;
+                    loadPlayers();
+                }, 500);
+            });
+
+            // League select
+            const leagueSelect = document.getElementById('leagueSelect');
+            leagueSelect.addEventListener('change', (e) => {
+                currentFilters.league = e.target.value;
+                currentPage = 1;
+                loadPlayers();
+            });
+
+            // Position select
+            const positionSelect = document.getElementById('positionSelect');
+            positionSelect.addEventListener('change', (e) => {
+                currentFilters.position = e.target.value;
+                currentPage = 1;
+                loadPlayers();
+            });
+        }
+
+        function showPlayerDetails(playerId) {
+            // Navigate to player details page or show modal
+            window.location.href = `/player/${playerId}`;
+        }
+
         function showError(message) {
-            const response = document.getElementById('aiResponse');
-            response.innerHTML = `<div class="error">${message}</div>`;
-        }
-
-        // 成功表示
-        function showSuccess(message) {
-            const response = document.getElementById('aiResponse');
-            response.innerHTML = `<div class="success">${message}</div>`;
+            const container = document.getElementById('playersContainer');
+            container.innerHTML = `<div class="error">${message}</div>`;
         }
     </script>
-    <script src="/ai-widget.js"></script>
 </body>
 </html> 

@@ -1,8 +1,41 @@
 const axios = require('axios');
 const NodeCache = require('node-cache');
+const fs = require('fs').promises;
+const path = require('path');
 
-// Cache configuration - native-stats.org style
-const cache = new NodeCache({ stdTTL: 1800 }); // 30 minutes cache like native-stats.org
+// Cache configuration - FotMob style persistent cache
+const cache = new NodeCache({ stdTTL: 86400 }); // 24 hours cache like FotMob
+
+// Persistent data storage
+const DATA_DIR = path.join(__dirname, 'data');
+const PLAYERS_FILE = path.join(DATA_DIR, 'players.json');
+const TEAMS_FILE = path.join(DATA_DIR, 'teams.json');
+const LEAGUES_FILE = path.join(DATA_DIR, 'leagues.json');
+
+// Ensure data directory exists
+async function ensureDataDirectory() {
+    try {
+        await fs.access(DATA_DIR);
+    } catch {
+        await fs.mkdir(DATA_DIR, { recursive: true });
+    }
+}
+
+// Data persistence functions
+async function saveDataToFile(filename, data) {
+    await ensureDataDirectory();
+    await fs.writeFile(filename, JSON.stringify(data, null, 2));
+}
+
+async function loadDataFromFile(filename) {
+    try {
+        await ensureDataDirectory();
+        const data = await fs.readFile(filename, 'utf8');
+        return JSON.parse(data);
+    } catch {
+        return null;
+    }
+}
 
 // API client configuration
 const apiClient = axios.create({
@@ -916,7 +949,7 @@ class FootballDataService {
                 const key = `${player.name}-${player.nationality}`;
                 combinedMap.set(key, {
                     ...player,
-                    source: 'football-data.org'
+                    source: 'football-data'
                 });
             });
             
@@ -1346,4 +1379,364 @@ class FootballDataService {
     }
 }
 
-module.exports = new FootballDataService(); 
+// FotMob-style Data Service
+class FotMobDataService {
+    constructor() {
+        this.cache = cache;
+        this.isInitialized = false;
+        this.initializationPromise = null;
+        this.lastUpdate = null;
+        this.updateInterval = 24 * 60 * 60 * 1000; // 24 hours
+    }
+
+    // Initialize the service
+    async initialize() {
+        if (this.initializationPromise) {
+            return this.initializationPromise;
+        }
+
+        this.initializationPromise = this._initialize();
+        return this.initializationPromise;
+    }
+
+    async _initialize() {
+        console.log('Initializing FotMob-style Data Service...');
+        
+        // Load existing data
+        await this.loadPersistentData();
+        
+        // Check if data needs updating
+        if (this.shouldUpdateData()) {
+            console.log('Data is outdated, updating...');
+            await this.updateAllData();
+        } else {
+            console.log('Data is up to date');
+        }
+
+        this.isInitialized = true;
+        console.log('FotMob-style Data Service initialized');
+    }
+
+    // Check if data should be updated
+    shouldUpdateData() {
+        if (!this.lastUpdate) return true;
+        return Date.now() - this.lastUpdate > this.updateInterval;
+    }
+
+    // Load persistent data from files
+    async loadPersistentData() {
+        try {
+            const [players, teams, leagues] = await Promise.all([
+                loadDataFromFile(PLAYERS_FILE),
+                loadDataFromFile(TEAMS_FILE),
+                loadDataFromFile(LEAGUES_FILE)
+            ]);
+
+            if (players) {
+                this.cache.set('players', players);
+                console.log(`Loaded ${players.length} players from persistent storage`);
+            }
+            if (teams) {
+                this.cache.set('teams', teams);
+                console.log(`Loaded ${teams.length} teams from persistent storage`);
+            }
+            if (leagues) {
+                this.cache.set('leagues', leagues);
+                console.log(`Loaded ${leagues.length} leagues from persistent storage`);
+            }
+        } catch (error) {
+            console.error('Error loading persistent data:', error);
+        }
+    }
+
+    // Update all data from APIs
+    async updateAllData() {
+        try {
+            console.log('Starting data update...');
+            
+            // Update leagues
+            const leagues = await this.fetchLeagues();
+            await saveDataToFile(LEAGUES_FILE, leagues);
+            this.cache.set('leagues', leagues);
+
+            // Update teams
+            const teams = await this.fetchTeams();
+            await saveDataToFile(TEAMS_FILE, teams);
+            this.cache.set('teams', teams);
+
+            // Update players
+            const players = await this.fetchPlayers();
+            await saveDataToFile(PLAYERS_FILE, players);
+            this.cache.set('players', players);
+
+            this.lastUpdate = Date.now();
+            console.log('Data update completed');
+        } catch (error) {
+            console.error('Error updating data:', error);
+        }
+    }
+
+    // Fetch leagues from APIs
+    async fetchLeagues() {
+        const leagues = [];
+        
+        try {
+            // Fetch from Football-Data.org
+            if (checkRateLimit('footballData')) {
+                const response = await apiClient.get('/competitions');
+                if (response.data && response.data.competitions) {
+                    response.data.competitions.forEach(league => {
+                        leagues.push({
+                            id: league.id,
+                            name: league.name,
+                            country: league.area?.name || 'Unknown',
+                            code: league.code,
+                            type: league.type,
+                            emblem: league.emblem,
+                            currentSeason: league.currentSeason,
+                            source: 'football-data'
+                        });
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching leagues from Football-Data.org:', error);
+        }
+
+        // Add fallback leagues if no data
+        if (leagues.length === 0) {
+            leagues.push(...this.getFallbackLeagues());
+        }
+
+        return leagues;
+    }
+
+    // Fetch teams from APIs
+    async fetchTeams() {
+        const teams = [];
+        const leagueIds = ['PL', 'PD', 'SA', 'BL1', 'FL1']; // Major leagues
+
+        for (const leagueId of leagueIds) {
+            try {
+                if (checkRateLimit('footballData')) {
+                    const response = await apiClient.get(`/competitions/${leagueId}/teams`);
+                    if (response.data && response.data.teams) {
+                        response.data.teams.forEach(team => {
+                            teams.push({
+                                id: team.id,
+                                name: team.name,
+                                shortName: team.shortName,
+                                tla: team.tla,
+                                crest: team.crest,
+                                address: team.address,
+                                website: team.website,
+                                founded: team.founded,
+                                clubColors: team.clubColors,
+                                venue: team.venue,
+                                leagueId: leagueId,
+                                source: 'football-data'
+                            });
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error(`Error fetching teams for league ${leagueId}:`, error);
+            }
+        }
+
+        // Add fallback teams if no data
+        if (teams.length === 0) {
+            teams.push(...this.getFallbackTeams());
+        }
+
+        return teams;
+    }
+
+    // Fetch players from APIs
+    async fetchPlayers() {
+        const players = [];
+        const teams = this.cache.get('teams') || [];
+
+        // Limit to first 10 teams to avoid rate limits
+        const teamsToProcess = teams.slice(0, 10);
+
+        for (const team of teamsToProcess) {
+            try {
+                if (checkRateLimit('footballData')) {
+                    const response = await apiClient.get(`/teams/${team.id}/players`);
+                    if (response.data && response.data.players) {
+                        response.data.players.forEach(player => {
+                            const playerName = `${player.firstName} ${player.lastName}`.trim();
+                            players.push({
+                                id: player.id,
+                                name: playerName,
+                                firstName: player.firstName,
+                                lastName: player.lastName,
+                                dateOfBirth: player.dateOfBirth,
+                                nationality: player.nationality,
+                                position: player.position,
+                                shirtNumber: player.shirtNumber,
+                                lastUpdated: player.lastUpdated,
+                                teamId: team.id,
+                                teamName: team.name,
+                                leagueId: team.leagueId,
+                                source: 'football-data'
+                            });
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error(`Error fetching players for team ${team.id}:`, error);
+            }
+        }
+
+        // Add fallback players if no data
+        if (players.length === 0) {
+            players.push(...this.getFallbackPlayers());
+        }
+
+        return players;
+    }
+
+    // Get all players (FotMob style - always available)
+    async getAllPlayers(options = {}) {
+        await this.initialize();
+        
+        let players = this.cache.get('players') || [];
+        
+        // Apply filters
+        if (options.search) {
+            const searchLower = options.search.toLowerCase();
+            players = players.filter(player => 
+                player.name.toLowerCase().includes(searchLower) ||
+                player.teamName?.toLowerCase().includes(searchLower) ||
+                player.nationality?.toLowerCase().includes(searchLower) ||
+                player.position?.toLowerCase().includes(searchLower)
+            );
+        }
+
+        if (options.league) {
+            players = players.filter(player => player.leagueId === options.league);
+        }
+
+        if (options.position) {
+            players = players.filter(player => player.position === options.position);
+        }
+
+        // Apply pagination
+        const page = options.page || 1;
+        const limit = options.limit || 20;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+
+        return {
+            players: players.slice(startIndex, endIndex),
+            total: players.length,
+            page,
+            limit,
+            totalPages: Math.ceil(players.length / limit)
+        };
+    }
+
+    // Get player by ID
+    async getPlayerById(playerId) {
+        await this.initialize();
+        
+        const players = this.cache.get('players') || [];
+        return players.find(player => player.id == playerId);
+    }
+
+    // Get all teams
+    async getAllTeams(options = {}) {
+        await this.initialize();
+        
+        let teams = this.cache.get('teams') || [];
+        
+        if (options.league) {
+            teams = teams.filter(team => team.leagueId === options.league);
+        }
+
+        return teams;
+    }
+
+    // Get all leagues
+    async getAllLeagues() {
+        await this.initialize();
+        
+        return this.cache.get('leagues') || [];
+    }
+
+    // Search players (FotMob style)
+    async searchPlayers(query, options = {}) {
+        await this.initialize();
+        
+        const searchResults = await this.getAllPlayers({
+            search: query,
+            ...options
+        });
+
+        return searchResults;
+    }
+
+    // Get fallback data
+    getFallbackLeagues() {
+        return [
+            { id: 'PL', name: 'Premier League', country: 'England', code: 'PL', type: 'LEAGUE' },
+            { id: 'PD', name: 'La Liga', country: 'Spain', code: 'PD', type: 'LEAGUE' },
+            { id: 'SA', name: 'Serie A', country: 'Italy', code: 'SA', type: 'LEAGUE' },
+            { id: 'BL1', name: 'Bundesliga', country: 'Germany', code: 'BL1', type: 'LEAGUE' },
+            { id: 'FL1', name: 'Ligue 1', country: 'France', code: 'FL1', type: 'LEAGUE' }
+        ];
+    }
+
+    getFallbackTeams() {
+        return [
+            { id: 57, name: 'Arsenal FC', shortName: 'Arsenal', tla: 'ARS', leagueId: 'PL' },
+            { id: 58, name: 'Aston Villa FC', shortName: 'Aston Villa', tla: 'AVL', leagueId: 'PL' },
+            { id: 61, name: 'Chelsea FC', shortName: 'Chelsea', tla: 'CHE', leagueId: 'PL' },
+            { id: 64, name: 'Liverpool FC', shortName: 'Liverpool', tla: 'LIV', leagueId: 'PL' },
+            { id: 65, name: 'Manchester City FC', shortName: 'Man City', tla: 'MCI', leagueId: 'PL' }
+        ];
+    }
+
+    getFallbackPlayers() {
+        return [
+            {
+                id: 1,
+                name: 'Erling Haaland',
+                firstName: 'Erling',
+                lastName: 'Haaland',
+                dateOfBirth: '2000-07-21',
+                nationality: 'Norway',
+                position: 'Forward',
+                shirtNumber: 9,
+                teamId: 65,
+                teamName: 'Manchester City FC',
+                leagueId: 'PL',
+                source: 'fallback'
+            },
+            {
+                id: 2,
+                name: 'Kevin De Bruyne',
+                firstName: 'Kevin',
+                lastName: 'De Bruyne',
+                dateOfBirth: '1991-06-28',
+                nationality: 'Belgium',
+                position: 'Midfielder',
+                shirtNumber: 17,
+                teamId: 65,
+                teamName: 'Manchester City FC',
+                leagueId: 'PL',
+                source: 'fallback'
+            }
+        ];
+    }
+}
+
+// Create and export the service instance
+const fotMobDataService = new FotMobDataService();
+
+module.exports = {
+    fotMobDataService,
+    FootballDataService: require('./dataService').FootballDataService
+}; 

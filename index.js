@@ -3,6 +3,7 @@ const path = require('path');
 const helmet = require('helmet');
 const dataService = require('./dataService');
 const aiService = require('./ai-service');
+const { fotMobDataService } = require('./dataService');
 
 // Load environment variables
 require('dotenv').config();
@@ -1377,6 +1378,91 @@ app.post('/api/ai/tactics', async (req, res) => {
             error: '戦術分析中にエラーが発生しました',
             details: error.message 
         });
+    }
+});
+
+// FotMob-style database endpoints
+app.get('/api/fotmob/players', async (req, res) => {
+    try {
+        const { search, league, position, page = 1, limit = 20 } = req.query;
+        const result = await fotMobDataService.getAllPlayers({
+            search,
+            league,
+            position,
+            page: parseInt(page),
+            limit: parseInt(limit)
+        });
+        res.json(result);
+    } catch (error) {
+        console.error('Error fetching players:', error);
+        res.status(500).json({ error: 'Failed to fetch players' });
+    }
+});
+
+app.get('/api/fotmob/players/:id', async (req, res) => {
+    try {
+        const player = await fotMobDataService.getPlayerById(req.params.id);
+        if (player) {
+            res.json(player);
+        } else {
+            res.status(404).json({ error: 'Player not found' });
+        }
+    } catch (error) {
+        console.error('Error fetching player:', error);
+        res.status(500).json({ error: 'Failed to fetch player' });
+    }
+});
+
+app.get('/api/fotmob/teams', async (req, res) => {
+    try {
+        const { league } = req.query;
+        const teams = await fotMobDataService.getAllTeams({ league });
+        res.json(teams);
+    } catch (error) {
+        console.error('Error fetching teams:', error);
+        res.status(500).json({ error: 'Failed to fetch teams' });
+    }
+});
+
+app.get('/api/fotmob/leagues', async (req, res) => {
+    try {
+        const leagues = await fotMobDataService.getAllLeagues();
+        res.json(leagues);
+    } catch (error) {
+        console.error('Error fetching leagues:', error);
+        res.status(500).json({ error: 'Failed to fetch leagues' });
+    }
+});
+
+app.get('/api/fotmob/search', async (req, res) => {
+    try {
+        const { q, page = 1, limit = 20 } = req.query;
+        if (!q) {
+            return res.status(400).json({ error: 'Search query is required' });
+        }
+        const result = await fotMobDataService.searchPlayers(q, {
+            page: parseInt(page),
+            limit: parseInt(limit)
+        });
+        res.json(result);
+    } catch (error) {
+        console.error('Error searching players:', error);
+        res.status(500).json({ error: 'Failed to search players' });
+    }
+});
+
+// Initialize FotMob data service on startup
+app.get('/api/fotmob/init', async (req, res) => {
+    try {
+        await fotMobDataService.initialize();
+        res.json({ 
+            status: 'success', 
+            message: 'FotMob data service initialized',
+            lastUpdate: fotMobDataService.lastUpdate
+        });
+    } catch (error) {
+        console.error('Error initializing FotMob service:', error);
+        res.status(500).json({ error: 'Failed to initialize service' });
     }
 });
 
