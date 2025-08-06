@@ -232,6 +232,25 @@ app.get('/api/firebase-config', (req, res) => {
     });
 });
 
+// API設定状況確認エンドポイント
+app.get('/api/config/status', (req, res) => {
+    const config = {
+        apiFootball: {
+            configured: !!(process.env.API_FOOTBALL_KEY && process.env.API_FOOTBALL_KEY !== 'your-api-football-key-here'),
+            keyLength: process.env.API_FOOTBALL_KEY ? process.env.API_FOOTBALL_KEY.length : 0
+        },
+        footballData: {
+            configured: !!((process.env.FOOTBALL_DATA_API_KEY && process.env.FOOTBALL_DATA_API_KEY !== 'your-football-data-api-key-here') || 
+                          (process.env.FOOTBALL_DATA_KEY && process.env.FOOTBALL_DATA_KEY !== 'your-football-data-api-key-here')),
+            keyLength: (process.env.FOOTBALL_DATA_API_KEY || process.env.FOOTBALL_DATA_KEY) ? 
+                      (process.env.FOOTBALL_DATA_API_KEY || process.env.FOOTBALL_DATA_KEY).length : 0
+        },
+        environment: process.env.NODE_ENV || 'development'
+    };
+    
+    res.json(config);
+});
+
 // Native Stats API Endpoints (native-stats.org style)
 app.get('/api/native-stats/players', async (req, res) => {
     try {
@@ -582,19 +601,20 @@ app.get('/api/search/players', async (req, res) => {
         // API-Footballから検索
         try {
             const apiFootballKey = process.env.API_FOOTBALL_KEY;
-            if (apiFootballKey) {
+            if (apiFootballKey && apiFootballKey !== 'your-api-football-key-here') {
                 const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(query)}&limit=${limit}`;
                 console.log(`API-Football: Searching players - ${url}`);
                 
-        const response = await fetchWithRetry(url, {
-            headers: {
-                'x-rapidapi-host': 'v3.football.api-sports.io',
+                const response = await fetchWithRetry(url, {
+                    headers: {
+                        'x-rapidapi-host': 'v3.football.api-sports.io',
                         'x-rapidapi-key': apiFootballKey
-            }
-        }, 'apiFootball');
+                    }
+                }, 'apiFootball');
 
                 if (response.ok) {
-        const data = await response.json();
+                    const data = await response.json();
+                    console.log(`API-Football response:`, data);
                     if (data.response && data.response.length > 0) {
                         data.response.forEach(player => {
                             const playerName = player.player?.name || 'Unknown Player';
@@ -626,16 +646,20 @@ app.get('/api/search/players', async (req, res) => {
                             }
                         });
                     }
+                } else {
+                    console.log(`API-Football response not ok: ${response.status} ${response.statusText}`);
                 }
+            } else {
+                console.log('API-Football key not configured');
             }
-    } catch (error) {
+        } catch (error) {
             console.error('API-Football search error:', error);
         }
 
         // Football-Data.orgから検索
         try {
-            const footballDataKey = process.env.FOOTBALL_DATA_KEY;
-            if (footballDataKey) {
+            const footballDataKey = process.env.FOOTBALL_DATA_API_KEY || process.env.FOOTBALL_DATA_KEY;
+            if (footballDataKey && footballDataKey !== 'your-football-data-api-key-here') {
                 // 主要リーグのチームから選手を検索
                 const leagues = ['PL', 'PD', 'SA', 'BL1', 'FL1'];
                 
@@ -646,14 +670,15 @@ app.get('/api/search/players', async (req, res) => {
                         const url = `https://api.football-data.org/v4/competitions/${league}/teams`;
                         console.log(`Football-Data.org: Searching teams in ${league}`);
                         
-        const response = await fetchWithRetry(url, {
-            headers: {
+                        const response = await fetchWithRetry(url, {
+                            headers: {
                                 'X-Auth-Token': footballDataKey
                             }
                         }, 'footballData');
 
                         if (response.ok) {
-        const data = await response.json();
+                            const data = await response.json();
+                            console.log(`Football-Data.org teams response for ${league}:`, data);
                             
                             for (const team of data.teams || []) {
                                 if (results.length >= limit) break;
@@ -661,13 +686,14 @@ app.get('/api/search/players', async (req, res) => {
                                 try {
                                     const playersUrl = `https://api.football-data.org/v4/teams/${team.id}/players`;
                                     const playersResponse = await fetchWithRetry(playersUrl, {
-            headers: {
+                                        headers: {
                                             'X-Auth-Token': footballDataKey
                                         }
                                     }, 'footballData');
 
                                     if (playersResponse.ok) {
                                         const playersData = await playersResponse.json();
+                                        console.log(`Football-Data.org players response for team ${team.id}:`, playersData);
                                         
                                         playersData.players?.forEach(player => {
                                             const playerName = `${player.firstName} ${player.lastName}`.trim();
@@ -701,18 +727,24 @@ app.get('/api/search/players', async (req, res) => {
                                                 });
                                             }
                                         });
+                                    } else {
+                                        console.log(`Football-Data.org players response not ok for team ${team.id}: ${playersResponse.status} ${playersResponse.statusText}`);
                                     }
-    } catch (error) {
+                                } catch (error) {
                                     console.error(`Error fetching players for team ${team.id}:`, error);
                                 }
                             }
+                        } else {
+                            console.log(`Football-Data.org teams response not ok for ${league}: ${response.status} ${response.statusText}`);
                         }
-            } catch (error) {
+                    } catch (error) {
                         console.error(`Error fetching teams for league ${league}:`, error);
                     }
                 }
+            } else {
+                console.log('Football-Data.org key not configured');
             }
-            } catch (error) {
+        } catch (error) {
             console.error('Football-Data.org search error:', error);
         }
 
@@ -971,10 +1003,10 @@ app.get('/api/firebase-config', (req, res) => {
 // Football-Data.org: 選手一覧を取得
 app.get('/api/football-data/players', async (req, res) => {
     try {
-        const apiKey = process.env.FOOTBALL_DATA_KEY;
+        const apiKey = process.env.FOOTBALL_DATA_API_KEY;
         
         if (!apiKey) {
-            console.error('FOOTBALL_DATA_KEY not configured');
+            console.error('FOOTBALL_DATA_API_KEY not configured');
             return res.status(500).json({ error: 'API key not configured' });
         }
 
@@ -1033,11 +1065,11 @@ app.get('/api/football-data/players', async (req, res) => {
 // Football-Data.org: 選手詳細を取得
 app.get('/api/football-data/players/:id', async (req, res) => {
     try {
-        const apiKey = process.env.FOOTBALL_DATA_KEY;
+        const apiKey = process.env.FOOTBALL_DATA_API_KEY;
         const playerId = req.params.id;
         
         if (!apiKey) {
-            console.error('FOOTBALL_DATA_KEY not configured');
+            console.error('FOOTBALL_DATA_API_KEY not configured');
             return res.status(500).json({ error: 'API key not configured' });
         }
 
@@ -1094,12 +1126,12 @@ app.get('/api/football-data/players/:id', async (req, res) => {
 // Football-Data.org: 選手統計を取得
 app.get('/api/football-data/players/:id/stats', async (req, res) => {
     try {
-        const apiKey = process.env.FOOTBALL_DATA_KEY;
+        const apiKey = process.env.FOOTBALL_DATA_API_KEY;
         const playerId = req.params.id;
         const { season } = req.query;
         
         if (!apiKey) {
-            console.error('FOOTBALL_DATA_KEY not configured');
+            console.error('FOOTBALL_DATA_API_KEY not configured');
             return res.status(500).json({ error: 'API key not configured' });
         }
 
