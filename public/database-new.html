@@ -164,7 +164,7 @@
 
         .position-categories {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1rem;
         }
 
@@ -179,28 +179,43 @@
             color: #00ff88;
             margin-bottom: 0.5rem;
             font-size: 1rem;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 0.5rem;
         }
 
         .position-options {
             display: flex;
             flex-direction: column;
             gap: 0.3rem;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
         .position-option {
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            padding: 0.3rem 0;
         }
 
         .position-option input[type="checkbox"] {
             accent-color: #00ff88;
+            width: 16px;
+            height: 16px;
         }
 
         .position-option label {
             font-size: 0.9rem;
             color: #cccccc;
             cursor: pointer;
+            flex: 1;
+        }
+
+        .position-option:hover {
+            background: #333333;
+            border-radius: 4px;
+            padding: 0.3rem;
+            margin: 0 -0.3rem;
         }
 
         .search-btn {
@@ -442,6 +457,26 @@
             color: #000000;
         }
 
+        .selected-positions-display {
+            background: #1a1a1a;
+            border: 1px solid #00ff88;
+            border-radius: 5px;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+
+        .position-tag {
+            background: #00ff88;
+            color: #000000;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
         @media (max-width: 768px) {
             .content-grid {
                 grid-template-columns: 1fr;
@@ -536,6 +571,14 @@
                                 <input type="checkbox" id="fw_attacking_midfielder" value="AM">
                                 <label for="fw_attacking_midfielder">攻撃的MF (AM)</label>
                             </div>
+                            <div class="position-option">
+                                <input type="checkbox" id="fw_center_forward_second" value="CF2">
+                                <label for="fw_center_forward_second">センターフォワード (CF2)</label>
+                            </div>
+                            <div class="position-option">
+                                <input type="checkbox" id="fw_wing_forward" value="WF">
+                                <label for="fw_wing_forward">ウィングフォワード (WF)</label>
+                            </div>
                         </div>
                     </div>
 
@@ -565,6 +608,22 @@
                             <div class="position-option">
                                 <input type="checkbox" id="mf_box_to_box" value="B2B">
                                 <label for="mf_box_to_box">ボックス・トゥ・ボックス (B2B)</label>
+                            </div>
+                            <div class="position-option">
+                                <input type="checkbox" id="mf_offensive_midfielder" value="OMF">
+                                <label for="mf_offensive_midfielder">オフェンシブMF (OMF)</label>
+                            </div>
+                            <div class="position-option">
+                                <input type="checkbox" id="mf_wide_midfielder" value="WM">
+                                <label for="mf_wide_midfielder">ワイドMF (WM)</label>
+                            </div>
+                            <div class="position-option">
+                                <input type="checkbox" id="mf_central_attacking" value="CAM">
+                                <label for="mf_central_attacking">センタール攻撃的MF (CAM)</label>
+                            </div>
+                            <div class="position-option">
+                                <input type="checkbox" id="mf_central_defensive" value="CDM">
+                                <label for="mf_central_defensive">センタール守備的MF (CDM)</label>
                             </div>
                         </div>
                     </div>
@@ -596,6 +655,26 @@
                                 <input type="checkbox" id="df_libero" value="LIB">
                                 <label for="df_libero">リベロ (LIB)</label>
                             </div>
+                            <div class="position-option">
+                                <input type="checkbox" id="df_left_wing_back" value="LWB">
+                                <label for="df_left_wing_back">レフトウィングバック (LWB)</label>
+                            </div>
+                            <div class="position-option">
+                                <input type="checkbox" id="df_right_wing_back" value="RWB">
+                                <label for="df_right_wing_back">ライトウィングバック (RWB)</label>
+                            </div>
+                            <div class="position-option">
+                                <input type="checkbox" id="df_center_back_left" value="LCB">
+                                <label for="df_center_back_left">レフトセンターバック (LCB)</label>
+                            </div>
+                            <div class="position-option">
+                                <input type="checkbox" id="df_center_back_right" value="RCB">
+                                <label for="df_center_back_right">ライトセンターバック (RCB)</label>
+                            </div>
+                            <div class="position-option">
+                                <input type="checkbox" id="df_full_back" value="FB">
+                                <label for="df_full_back">フルバック (FB)</label>
+                            </div>
                         </div>
                     </div>
 
@@ -609,6 +688,10 @@
                             <div class="position-option">
                                 <input type="checkbox" id="gk_sweeper_keeper" value="SK">
                                 <label for="gk_sweeper_keeper">スイーパーキーパー (SK)</label>
+                            </div>
+                            <div class="position-option">
+                                <input type="checkbox" id="gk_attacking_keeper" value="AK">
+                                <label for="gk_attacking_keeper">攻撃的キーパー (AK)</label>
                             </div>
                         </div>
                     </div>
@@ -910,10 +993,67 @@
             const selectedPositions = getSelectedDetailedPositions();
             console.log('Selected detailed positions:', selectedPositions);
             
+            // 選択されたポジションを表示
+            displaySelectedPositions(selectedPositions);
+            
             // 選択されたポジションに基づいて検索を実行
             if (selectedPositions.length > 0) {
                 performSearch();
             }
+        }
+
+        // 選択されたポジションを表示
+        function displaySelectedPositions(positions) {
+            const positionDisplay = document.getElementById('selectedPositionsDisplay');
+            if (!positionDisplay) {
+                // 表示エリアが存在しない場合は作成
+                const displayArea = document.createElement('div');
+                displayArea.id = 'selectedPositionsDisplay';
+                displayArea.className = 'selected-positions-display';
+                displayArea.style.cssText = `
+                    background: #1a1a1a;
+                    border: 1px solid #00ff88;
+                    border-radius: 5px;
+                    padding: 0.5rem;
+                    margin-top: 0.5rem;
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 0.3rem;
+                `;
+                
+                const title = document.createElement('span');
+                title.textContent = '選択されたポジション: ';
+                title.style.color = '#00ff88';
+                title.style.fontWeight = 'bold';
+                displayArea.appendChild(title);
+                
+                const detailedPositionSection = document.querySelector('.detailed-position-section');
+                detailedPositionSection.appendChild(displayArea);
+            }
+            
+            const displayArea = document.getElementById('selectedPositionsDisplay');
+            const title = displayArea.querySelector('span');
+            title.textContent = `選択されたポジション (${positions.length}): `;
+            
+            // 既存のポジションタグをクリア
+            const existingTags = displayArea.querySelectorAll('.position-tag');
+            existingTags.forEach(tag => tag.remove());
+            
+            // 新しいポジションタグを追加
+            positions.forEach(position => {
+                const tag = document.createElement('span');
+                tag.className = 'position-tag';
+                tag.textContent = position;
+                tag.style.cssText = `
+                    background: #00ff88;
+                    color: #000000;
+                    padding: 0.2rem 0.5rem;
+                    border-radius: 3px;
+                    font-size: 0.8rem;
+                    font-weight: bold;
+                `;
+                displayArea.appendChild(tag);
+            });
         }
 
         // レーダーチャート初期化
