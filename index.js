@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const helmet = require('helmet');
 const dataService = require('./dataService');
+const aiService = require('./ai-service');
 
 // Load environment variables
 require('dotenv').config();
@@ -149,7 +150,8 @@ app.get('/dashboard', (req, res) => {
 });
 
 app.get('/database', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'database-new.html'));
+    // 強化されたデータベースページにリダイレクト
+    res.redirect('/database-enhanced');
 });
 
 app.get('/database-new', (req, res) => {
@@ -161,7 +163,29 @@ app.get('/database-fixed', (req, res) => {
 });
 
 app.get('/radar', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'radar.html'));
+    // 強化されたレーダーチャートページにリダイレクト
+    res.redirect('/radar-enhanced');
+});
+
+// AIエージェントページ
+app.get('/ai-agent', (req, res) => {
+    // 強化されたAIエージェントページにリダイレクト
+    res.redirect('/ai-agent-enhanced');
+});
+
+// 強化AIエージェントページ
+app.get('/ai-agent-enhanced', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'ai-agent-enhanced.html'));
+});
+
+// 強化データベースページ
+app.get('/database-enhanced', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'database-enhanced.html'));
+});
+
+// 強化レーダーチャートページ
+app.get('/radar-enhanced', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'radar-enhanced.html'));
 });
 
 app.get('/native-stats', (req, res) => {
@@ -174,6 +198,33 @@ app.get('/test-firebase-fix', (req, res) => {
 
 app.get('/database-final', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'database-final.html'));
+});
+
+app.get('/player-detail', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'player-detail.html'));
+});
+
+// Firebase configuration endpoint
+app.get('/api/firebase-config', (req, res) => {
+    // Check if Firebase is configured in environment variables
+    const firebaseConfig = {
+        apiKey: process.env.FIREBASE_API_KEY,
+        authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+        appId: process.env.FIREBASE_APP_ID
+    };
+
+    const isConfigured = firebaseConfig.apiKey && 
+                        firebaseConfig.apiKey !== "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" &&
+                        firebaseConfig.projectId &&
+                        firebaseConfig.projectId !== "football-hub-japan";
+
+    res.json({
+        isConfigured: isConfigured,
+        config: isConfigured ? firebaseConfig : null
+    });
 });
 
 // Native Stats API Endpoints (native-stats.org style)
@@ -501,927 +552,281 @@ app.get('/api/players', async (req, res) => {
     }
 });
 
+// 統合選手検索API
 app.get('/api/search/players', async (req, res) => {
     try {
-        const query = req.query.q;
+        const { query, limit = 10 } = req.query;
+        
         if (!query) {
             return res.status(400).json({ error: '検索クエリが必要です' });
         }
-        const data = await dataService.searchPlayers(query);
-        const formattedData = dataService.formatPlayerData(data);
-        res.json(formattedData);
-    } catch (error) {
-        console.error('選手検索エラー:', error);
-        res.status(500).json({ error: '選手検索に失敗しました' });
-    }
-});
-
-app.get('/api/players/:id/stats', async (req, res) => {
-    try {
-        const playerId = req.params.id;
-        const data = await dataService.getPlayerStats(playerId);
-        res.json(data);
-    } catch (error) {
-        console.error('選手統計取得エラー:', error);
-        res.status(500).json({ error: '選手統計の取得に失敗しました' });
-    }
-});
-
-app.get('/api/teams/:id/stats', async (req, res) => {
-    try {
-        const teamId = req.params.id;
-        const leagueId = req.query.leagueId;
-        if (!leagueId) {
-            return res.status(400).json({ error: 'リーグIDが必要です' });
+        
+        const cacheKey = `search_${query}_${limit}`;
+        
+        // キャッシュから取得を試行
+        const cachedResult = getFromCache(cacheKey, 'players');
+        if (cachedResult) {
+            return res.json(cachedResult);
         }
-        const data = await dataService.getTeamStats(teamId, leagueId);
-        res.json(data);
+
+        console.log(`Searching for players: ${query}`);
+        
+        const results = [];
+        const seenPlayers = new Set();
+
+        // API-Footballから検索
+        try {
+            const apiFootballKey = process.env.API_FOOTBALL_KEY;
+            if (apiFootballKey) {
+                const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(query)}&limit=${limit}`;
+                console.log(`API-Football: Searching players - ${url}`);
+                
+        const response = await fetchWithRetry(url, {
+            headers: {
+                'x-rapidapi-host': 'v3.football.api-sports.io',
+                        'x-rapidapi-key': apiFootballKey
+            }
+        }, 'apiFootball');
+
+                if (response.ok) {
+        const data = await response.json();
+                    if (data.response && data.response.length > 0) {
+                        data.response.forEach(player => {
+                            const playerName = player.player?.name || 'Unknown Player';
+                            const playerKey = playerName.toLowerCase();
+                            
+                            if (!seenPlayers.has(playerKey)) {
+                                seenPlayers.add(playerKey);
+                                results.push({
+                                    id: player.player?.id || `api-football-${Date.now()}`,
+                                    name: playerName,
+                                    fullName: player.player?.name || playerName,
+                                    currentTeam: player.statistics?.[0]?.team?.name || 'Unknown Team',
+                                    position: player.statistics?.[0]?.games?.position || player.player?.position || 'Unknown',
+                                    nationality: player.player?.nationality || 'Unknown',
+                                    age: player.player?.age || 'N/A',
+                                    height: player.player?.height || 'N/A',
+                                    weight: player.player?.weight || 'N/A',
+                                    source: 'api-football',
+                                    stats: {
+                                        goals: player.statistics?.[0]?.goals?.total || 0,
+                                        assists: player.statistics?.[0]?.goals?.assists || 0,
+                                        appearances: player.statistics?.[0]?.games?.appearences || 0,
+                                        minutes: player.statistics?.[0]?.games?.minutes || 0,
+                                        rating: player.statistics?.[0]?.games?.rating || 'N/A',
+                                        yellowCards: player.statistics?.[0]?.cards?.yellow || 0,
+                                        redCards: player.statistics?.[0]?.cards?.red || 0
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }
+            }
     } catch (error) {
-        console.error('チーム統計取得エラー:', error);
-        res.status(500).json({ error: 'チーム統計の取得に失敗しました' });
+            console.error('API-Football search error:', error);
+        }
+
+        // Football-Data.orgから検索
+        try {
+            const footballDataKey = process.env.FOOTBALL_DATA_KEY;
+            if (footballDataKey) {
+                // 主要リーグのチームから選手を検索
+                const leagues = ['PL', 'PD', 'SA', 'BL1', 'FL1'];
+                
+                for (const league of leagues) {
+                    if (results.length >= limit) break;
+                    
+                    try {
+                        const url = `https://api.football-data.org/v4/competitions/${league}/teams`;
+                        console.log(`Football-Data.org: Searching teams in ${league}`);
+                        
+        const response = await fetchWithRetry(url, {
+            headers: {
+                                'X-Auth-Token': footballDataKey
+                            }
+                        }, 'footballData');
+
+                        if (response.ok) {
+        const data = await response.json();
+                            
+                            for (const team of data.teams || []) {
+                                if (results.length >= limit) break;
+                                
+                                try {
+                                    const playersUrl = `https://api.football-data.org/v4/teams/${team.id}/players`;
+                                    const playersResponse = await fetchWithRetry(playersUrl, {
+            headers: {
+                                            'X-Auth-Token': footballDataKey
+                                        }
+                                    }, 'footballData');
+
+                                    if (playersResponse.ok) {
+                                        const playersData = await playersResponse.json();
+                                        
+                                        playersData.players?.forEach(player => {
+                                            const playerName = `${player.firstName} ${player.lastName}`.trim();
+                                            const playerKey = playerName.toLowerCase();
+                                            
+                                            if (playerName.toLowerCase().includes(query.toLowerCase()) && 
+                                                !seenPlayers.has(playerKey) && 
+                                                results.length < limit) {
+                                                
+                                                seenPlayers.add(playerKey);
+                                                results.push({
+                                                    id: player.id || `football-data-${Date.now()}`,
+                                                    name: playerName,
+                                                    fullName: playerName,
+                                                    currentTeam: team.name,
+                                                    position: player.position || 'Unknown',
+                                                    nationality: player.nationality || 'Unknown',
+                                                    age: player.dateOfBirth ? calculateAge(player.dateOfBirth) : 'N/A',
+                                                    height: 'N/A',
+                                                    weight: 'N/A',
+                                                    source: 'football-data',
+                                                    stats: {
+                                                        goals: 0,
+                                                        assists: 0,
+                                                        appearances: 0,
+                                                        minutes: 0,
+                                                        rating: 'N/A',
+                                                        yellowCards: 0,
+                                                        redCards: 0
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+    } catch (error) {
+                                    console.error(`Error fetching players for team ${team.id}:`, error);
+                                }
+                            }
+                        }
+            } catch (error) {
+                        console.error(`Error fetching teams for league ${league}:`, error);
+                    }
+                }
+            }
+            } catch (error) {
+            console.error('Football-Data.org search error:', error);
+        }
+
+        // 結果をソート（名前の類似度で）
+        results.sort((a, b) => {
+            const aScore = calculateSimilarity(query.toLowerCase(), a.name.toLowerCase());
+            const bScore = calculateSimilarity(query.toLowerCase(), b.name.toLowerCase());
+            return bScore - aScore;
+        });
+
+        const finalResults = results.slice(0, limit);
+        
+        // キャッシュに保存
+        setCache(cacheKey, finalResults, 'players');
+
+        res.json({
+            query: query,
+            count: finalResults.length,
+            results: finalResults
+        });
+        
+    } catch (error) {
+        console.error('Unified player search error:', error);
+        res.status(500).json({ 
+            error: 'Search failed', 
+            message: error.message 
+        });
     }
 });
 
-// Auto data update on server start
-async function initializeDataOnStartup() {
-    console.log('Checking data on server startup...');
+// 年齢計算関数
+function calculateAge(dateOfBirth) {
+    const birthDate = new Date(dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
     
-    try {
-        // Check if data exists
-        const dataService = require('./dataService');
-        
-        // For now, we'll just log that the server is ready
-        // In a real implementation, you would check Firebase data here
-        console.log('Server ready. Data will be loaded on first request.');
-        
-    } catch (error) {
-        console.error('Error during startup data check:', error);
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
     }
+    
+    return age;
 }
 
-// Initialize data on server start
-initializeDataOnStartup();
-
-// Health check endpoint for monitoring
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
-        version: '1.0.0'
+// 文字列類似度計算関数
+function calculateSimilarity(query, target) {
+    if (target.includes(query)) return 100;
+    if (query.includes(target)) return 80;
+    
+    // 簡単な類似度計算
+    let score = 0;
+    const queryWords = query.split(' ');
+    const targetWords = target.split(' ');
+    
+    queryWords.forEach(qWord => {
+        targetWords.forEach(tWord => {
+            if (tWord.startsWith(qWord) || qWord.startsWith(tWord)) {
+                score += 50;
+            } else if (tWord.includes(qWord) || qWord.includes(tWord)) {
+                score += 30;
+            }
+        });
     });
-});
+    
+    return score;
+}
 
-// Admin endpoint for data management (protected)
-app.get('/admin/data-status', async (req, res) => {
-    try {
-        // In a real implementation, you would check admin authentication here
-        const dataService = require('./dataService');
-        
-        // Check data status using dataService
-        const status = {
-            serverTime: new Date().toISOString(),
-            dataStatus: 'Data service available',
-            cacheStatus: 'Cache system active',
-            playerCount: 0,
-            teamCount: 0
-        };
-        
-        // Try to get actual data counts
-        try {
-            const players = await dataService.getNativeStatsPlayers({});
-            const teams = await dataService.getNativeStatsTeams();
-            status.playerCount = players.length || 0;
-            status.teamCount = teams.length || 0;
-        } catch (error) {
-            console.log('Could not get actual data counts:', error.message);
+// データキャッシュ
+const dataCache = {
+    players: new Map(),
+    teams: new Map(),
+    leagues: new Map(),
+    lastUpdate: new Map(),
+    cacheExpiry: 30 * 60 * 1000 // 30分
+};
+
+// キャッシュからデータを取得
+function getFromCache(cacheKey, dataType) {
+    const cache = dataCache[dataType];
+    const lastUpdate = dataCache.lastUpdate.get(cacheKey);
+    
+    if (cache.has(cacheKey) && lastUpdate) {
+        const now = Date.now();
+        if (now - lastUpdate < dataCache.cacheExpiry) {
+            console.log(`Cache hit for ${cacheKey} (${dataType})`);
+            return cache.get(cacheKey);
+        } else {
+            console.log(`Cache expired for ${cacheKey} (${dataType})`);
+            cache.delete(cacheKey);
+            dataCache.lastUpdate.delete(cacheKey);
         }
-        
-        res.json(status);
-    } catch (error) {
-        console.error('Admin data status error:', error);
-        res.status(500).json({ error: 'Failed to get data status' });
     }
-});
-
-// Admin endpoint for data import
-app.post('/admin/import-data', async (req, res) => {
-    try {
-        console.log('Admin data import requested');
-        
-        // In a real implementation, you would check admin authentication here
-        const dataService = require('./dataService');
-        
-        // Initialize data
-        dataService.initializeNativeStatsData();
-        
-        res.json({ 
-            success: true, 
-            message: 'データの初期化が完了しました',
-            timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-        console.error('Admin data import error:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to import data: ' + error.message 
-        });
-    }
-});
-
-// Admin endpoint for cache clear
-app.post('/admin/clear-cache', async (req, res) => {
-    try {
-        console.log('Admin cache clear requested');
-        
-        // In a real implementation, you would check admin authentication here
-        const dataService = require('./dataService');
-        
-        // Clear cache
-        dataService.cache.flushAll();
-        
-        res.json({ 
-            success: true, 
-            message: 'キャッシュがクリアされました',
-            timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-        console.error('Admin cache clear error:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to clear cache: ' + error.message 
-        });
-    }
-});
-
-// Admin endpoint for data refresh
-app.post('/admin/refresh-data', async (req, res) => {
-    try {
-        console.log('Admin data refresh requested');
-        
-        // In a real implementation, you would check admin authentication here
-        const dataService = require('./dataService');
-        
-        // Clear cache and reinitialize
-        dataService.cache.flushAll();
-        dataService.initializeNativeStatsData();
-        
-        res.json({ 
-            success: true, 
-            message: 'データの更新が完了しました',
-            timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-        console.error('Admin data refresh error:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to refresh data: ' + error.message 
-        });
-    }
-});
-
-// ===== API-Football Integration =====
-
-// API-Football: リーグ一覧を取得
-app.get('/api/api-football/leagues', async (req, res) => {
-    try {
-        const apiKey = process.env.API_FOOTBALL_KEY;
-        
-        if (!apiKey) {
-            console.error('API_FOOTBALL_KEY not configured');
-            return res.status(500).json({ error: 'API key not configured' });
-        }
-
-        const { country, season } = req.query;
-        let url = 'https://v3.football.api-sports.io/leagues';
-        const params = new URLSearchParams();
-        
-        if (country) params.append('country', country);
-        if (season) params.append('season', season);
-        
-        if (params.toString()) {
-            url += '?' + params.toString();
-        }
-
-        console.log(`API-Football: Fetching leagues - ${url}`);
-        const response = await fetchWithRetry(url, {
-            headers: {
-                'x-rapidapi-host': 'v3.football.api-sports.io',
-                'x-rapidapi-key': apiKey
-            }
-        }, 'apiFootball');
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`API-Football error: ${response.status} - ${errorText}`);
-            
-            // Return fallback data
-            console.log('Returning fallback data for leagues');
-            const fallbackData = {
-                get: 'leagues',
-                parameters: { country, season },
-                errors: [],
-                results: 0,
-                response: []
-            };
-            return res.json(fallbackData);
-        }
-
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error('API-Football leagues error:', error);
-        
-        // Return fallback data
-        const fallbackData = {
-            get: 'leagues',
-            parameters: req.query,
-            errors: [],
-            results: 0,
-            response: []
-        };
-        res.json(fallbackData);
-    }
-});
-
-// API-Football: チーム一覧を取得
-app.get('/api/api-football/teams', async (req, res) => {
-    try {
-        const apiKey = process.env.API_FOOTBALL_KEY;
-        
-        if (!apiKey) {
-            console.error('API_FOOTBALL_KEY not configured');
-            return res.status(500).json({ error: 'API key not configured' });
-        }
-
-        const { league, season, country } = req.query;
-        let url = 'https://v3.football.api-sports.io/teams';
-        const params = new URLSearchParams();
-        
-        if (league) params.append('league', league);
-        if (season) params.append('season', season);
-        if (country) params.append('country', country);
-        
-        if (params.toString()) {
-            url += '?' + params.toString();
-        }
-
-        console.log(`API-Football: Fetching teams - ${url}`);
-        const response = await fetchWithRetry(url, {
-            headers: {
-                'x-rapidapi-host': 'v3.football.api-sports.io',
-                'x-rapidapi-key': apiKey
-            }
-        }, 'apiFootball');
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`API-Football error: ${response.status} - ${errorText}`);
-            
-            // Return fallback data
-            console.log('Returning fallback data for teams');
-            const fallbackData = {
-                get: 'teams',
-                parameters: { league, season, country },
-                errors: [],
-                results: 0,
-                response: []
-            };
-            return res.json(fallbackData);
-        }
-
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error('API-Football teams error:', error);
-        
-        // Return fallback data
-        const fallbackData = {
-            get: 'teams',
-            parameters: req.query,
-            errors: [],
-            results: 0,
-            response: []
-        };
-        res.json(fallbackData);
-    }
-});
-
-// API-Football: 選手一覧を取得
-app.get('/api/api-football/players', async (req, res) => {
-    try {
-        const apiKey = process.env.API_FOOTBALL_KEY;
-        
-        if (!apiKey) {
-            console.error('API_FOOTBALL_KEY not configured');
-            return res.status(500).json({ error: 'API key not configured' });
-        }
-
-        const { team, league, season, search } = req.query;
-        let url = 'https://v3.football.api-sports.io/players';
-        const params = new URLSearchParams();
-        
-        if (team) params.append('team', team);
-        if (league) params.append('league', league);
-        if (season) params.append('season', season);
-        if (search) params.append('search', search);
-        
-        if (params.toString()) {
-            url += '?' + params.toString();
-        }
-
-        console.log(`API-Football: Fetching players - ${url}`);
-        const response = await fetchWithRetry(url, {
-            headers: {
-                'x-rapidapi-host': 'v3.football.api-sports.io',
-                'x-rapidapi-key': apiKey
-            }
-        }, 'apiFootball');
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`API-Football error: ${response.status} - ${errorText}`);
-            
-            // Return fallback data
-            console.log('Returning fallback data for players');
-            const fallbackData = {
-                get: 'players',
-                parameters: { team, league, season, search },
-                errors: [],
-                results: 0,
-                response: []
-            };
-            return res.json(fallbackData);
-        }
-
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error('API-Football players error:', error);
-        
-        // Return fallback data
-        const fallbackData = {
-            get: 'players',
-            parameters: req.query,
-            errors: [],
-            results: 0,
-            response: []
-        };
-        res.json(fallbackData);
-    }
-});
-
-// API-Football: 選手詳細を取得
-app.get('/api/api-football/players/:id', async (req, res) => {
-    try {
-        const playerId = req.params.id;
-        const apiKey = process.env.API_FOOTBALL_KEY;
-        
-        if (!apiKey) {
-            console.error('API_FOOTBALL_KEY not configured');
-            return res.status(500).json({ error: 'API key not configured' });
-        }
-
-        const { season } = req.query;
-        let url = `https://v3.football.api-sports.io/players?id=${playerId}`;
-        
-        if (season) {
-            url += `&season=${season}`;
-        }
-
-        console.log(`API-Football: Fetching player details - ${url}`);
-        const response = await fetchWithRetry(url, {
-            headers: {
-                'x-rapidapi-host': 'v3.football.api-sports.io',
-                'x-rapidapi-key': apiKey
-            }
-        }, 'apiFootball');
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`API-Football error: ${response.status} - ${errorText}`);
-            
-            // Return fallback data
-            console.log('Returning fallback data for player details');
-            const fallbackData = {
-                get: 'players',
-                parameters: { id: playerId, season },
-                errors: [],
-                results: 0,
-                response: []
-            };
-            return res.json(fallbackData);
-        }
-
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error('API-Football player details error:', error);
-        
-        // Return fallback data
-        const fallbackData = {
-            get: 'players',
-            parameters: { id: req.params.id, season: req.query.season },
-            errors: [],
-            results: 0,
-            response: []
-        };
-        res.json(fallbackData);
-    }
-});
-
-// API-Football: 選手統計を取得
-app.get('/api/api-football/players/:id/statistics', async (req, res) => {
-    try {
-        const playerId = req.params.id;
-        const apiKey = process.env.API_FOOTBALL_KEY;
-        
-        if (!apiKey) {
-            console.error('API_FOOTBALL_KEY not configured');
-            return res.status(500).json({ error: 'API key not configured' });
-        }
-
-        const { league, season } = req.query;
-        let url = `https://v3.football.api-sports.io/players?id=${playerId}&statistics=true`;
-        
-        if (league) url += `&league=${league}`;
-        if (season) url += `&season=${season}`;
-
-        console.log(`API-Football: Fetching player statistics - ${url}`);
-        const response = await fetchWithRetry(url, {
-            headers: {
-                'x-rapidapi-host': 'v3.football.api-sports.io',
-                'x-rapidapi-key': apiKey
-            }
-        }, 'apiFootball');
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`API-Football error: ${response.status} - ${errorText}`);
-            
-            // Return fallback data
-            console.log('Returning fallback data for player statistics');
-            const fallbackData = {
-                get: 'players',
-                parameters: { id: playerId, league, season, statistics: true },
-                errors: [],
-                results: 0,
-                response: []
-            };
-            return res.json(fallbackData);
-        }
-
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error('API-Football player statistics error:', error);
-        
-        // Return fallback data
-        const fallbackData = {
-            get: 'players',
-            parameters: { id: req.params.id, league: req.query.league, season: req.query.season, statistics: true },
-            errors: [],
-            results: 0,
-            response: []
-        };
-        res.json(fallbackData);
-    }
-});
-
-// API-Football: チーム詳細を取得
-app.get('/api/api-football/teams/:id', async (req, res) => {
-    try {
-        const teamId = req.params.id;
-        const apiKey = process.env.API_FOOTBALL_KEY;
-        
-        if (!apiKey) {
-            console.error('API_FOOTBALL_KEY not configured');
-            return res.status(500).json({ error: 'API key not configured' });
-        }
-
-        const { season } = req.query;
-        let url = `https://v3.football.api-sports.io/teams?id=${teamId}`;
-        
-        if (season) {
-            url += `&season=${season}`;
-        }
-
-        console.log(`API-Football: Fetching team details - ${url}`);
-        const response = await fetchWithRetry(url, {
-            headers: {
-                'x-rapidapi-host': 'v3.football.api-sports.io',
-                'x-rapidapi-key': apiKey
-            }
-        }, 'apiFootball');
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`API-Football error: ${response.status} - ${errorText}`);
-            
-            // Return fallback data
-            console.log('Returning fallback data for team details');
-            const fallbackData = {
-                get: 'teams',
-                parameters: { id: teamId, season },
-                errors: [],
-                results: 0,
-                response: []
-            };
-            return res.json(fallbackData);
-        }
-
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error('API-Football team details error:', error);
-        
-        // Return fallback data
-        const fallbackData = {
-            get: 'teams',
-            parameters: { id: req.params.id, season: req.query.season },
-            errors: [],
-            results: 0,
-            response: []
-        };
-        res.json(fallbackData);
-    }
-});
-
-// ===== Enhanced Hybrid API Strategy =====
-
-// ハイブリッドAPI: 選手検索（両方のAPIを組み合わせ）
-app.get('/api/hybrid/players/search', async (req, res) => {
-    try {
-        const { query, league, country } = req.query;
-        
-        if (!query) {
-            return res.status(400).json({ error: '検索クエリが必要です' });
-        }
-
-        console.log(`Hybrid search for: ${query}`);
-        
-        // 両方のAPIからデータを取得
-        const results = {
-            footballData: [],
-            apiFootball: [],
-            combined: []
-        };
-
-        // Football-data.org から検索（並列実行）
-        const footballDataPromise = (async () => {
-            try {
-                const footballDataKey = process.env.FOOTBALL_DATA_API_KEY;
-                if (footballDataKey) {
-                    const response = await fetchWithRetry(`https://api.football-data.org/v4/persons?name=${encodeURIComponent(query)}`, {
-                        headers: {
-                            'X-Auth-Token': footballDataKey
-                        }
-                    }, 'footballData');
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        return data.persons || [];
-                    }
-                }
-                return [];
-            } catch (error) {
-                console.error('Football-data.org search error:', error);
-                return [];
-            }
-        })();
-
-        // API-Football から検索（並列実行）
-        const apiFootballPromise = (async () => {
-            try {
-                const apiFootballKey = process.env.API_FOOTBALL_KEY;
-                if (apiFootballKey) {
-                    const response = await fetchWithRetry(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(query)}`, {
-                        headers: {
-                            'x-rapidapi-host': 'v3.football.api-sports.io',
-                            'x-rapidapi-key': apiFootballKey
-                        }
-                    }, 'apiFootball');
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        return data.response || [];
-                    }
-                }
-                return [];
-            } catch (error) {
-                console.error('API-Football search error:', error);
-                return [];
-            }
-        })();
-
-        // 両方のAPIから並列でデータを取得
-        const [footballDataResults, apiFootballResults] = await Promise.all([
-            footballDataPromise,
-            apiFootballPromise
-        ]);
-
-        results.footballData = footballDataResults;
-        results.apiFootball = apiFootballResults;
-
-        // 結果を統合（重複を除去）
-        const combinedMap = new Map();
-        
-        // Football-data.org の結果を追加
-        results.footballData.forEach(player => {
-            const key = `${player.name}-${player.nationality}`;
-            combinedMap.set(key, {
-                ...player,
-                source: 'football-data.org'
-            });
-        });
-        
-        // API-Football の結果を追加（重複しない場合のみ）
-        results.apiFootball.forEach(player => {
-            const key = `${player.player.name}-${player.player.nationality}`;
-            if (!combinedMap.has(key)) {
-                combinedMap.set(key, {
-                    ...player,
-                    source: 'api-football'
-                });
-            }
-        });
-        
-        results.combined = Array.from(combinedMap.values());
-
-        res.json({
-            query,
-            totalResults: results.combined.length,
-            footballDataResults: results.footballData.length,
-            apiFootballResults: results.apiFootball.length,
-            results: results.combined
-        });
-        
-    } catch (error) {
-        console.error('Hybrid search error:', error);
-        res.status(500).json({ error: '検索に失敗しました' });
-    }
-});
-
-// Jリーグ・アジアリーグ専用エンドポイント
-app.get('/api/asian-leagues/leagues', async (req, res) => {
-    try {
-        const apiKey = process.env.API_FOOTBALL_KEY;
-        
-        if (!apiKey) {
-            console.error('API_FOOTBALL_KEY not configured');
-            return res.status(500).json({ error: 'API key not configured' });
-        }
-
-        // アジアの主要リーグID
-        const asianLeagues = [
-            { id: 39, name: 'J1 League', country: 'Japan' },
-            { id: 40, name: 'J2 League', country: 'Japan' },
-            { id: 41, name: 'J3 League', country: 'Japan' },
-            { id: 42, name: 'K League 1', country: 'South Korea' },
-            { id: 43, name: 'K League 2', country: 'South Korea' },
-            { id: 44, name: 'Chinese Super League', country: 'China' },
-            { id: 45, name: 'A-League', country: 'Australia' },
-            { id: 46, name: 'Thai League 1', country: 'Thailand' },
-            { id: 47, name: 'V.League 1', country: 'Vietnam' },
-            { id: 48, name: 'Singapore Premier League', country: 'Singapore' }
-        ];
-
-        const currentSeason = new Date().getFullYear();
-        const results = [];
-
-        // 並列でリーグ情報を取得
-        const leaguePromises = asianLeagues.map(async (league) => {
-            try {
-                const response = await fetchWithRetry(
-                    `https://v3.football.api-sports.io/leagues?id=${league.id}&season=${currentSeason}`,
-                    {
-                        headers: {
-                            'x-rapidapi-host': 'v3.football.api-sports.io',
-                            'x-rapidapi-key': apiKey
-                        }
-                    },
-                    'apiFootball'
-                );
-
-                if (response.ok) {
-                    const data = await response.json();
-                    return data.response?.[0] || league;
-                }
-                return league;
-            } catch (error) {
-                console.error(`Error fetching league ${league.id}:`, error);
-                return league;
-            }
-        });
-
-        const leagueResults = await Promise.all(leaguePromises);
-        results.push(...leagueResults.filter(league => league));
-
-        res.json({
-            get: 'asian-leagues',
-            parameters: { season: currentSeason },
-            errors: [],
-            results: results.length,
-            response: results
-        });
-
-    } catch (error) {
-        console.error('Asian leagues error:', error);
-        res.status(500).json({ error: 'アジアリーグの取得に失敗しました' });
-    }
-});
-
-// 日本語選手検索専用エンドポイント
-app.get('/api/japanese-players/search', async (req, res) => {
-    try {
-        const { query, league, includeOverseas = 'true' } = req.query;
-        
-        if (!query) {
-            return res.status(400).json({ error: '検索クエリが必要です' });
-        }
-
-        console.log(`Japanese player search for: ${query}`);
-        
-        const apiKey = process.env.API_FOOTBALL_KEY;
-        if (!apiKey) {
-            return res.status(500).json({ error: 'API key not configured' });
-        }
-
-        const results = [];
-
-        // Jリーグ選手を検索
-        const jLeagueSearch = async () => {
-            try {
-                const response = await fetchWithRetry(
-                    `https://v3.football.api-sports.io/players?search=${encodeURIComponent(query)}&league=39&season=2024`,
-                    {
-                        headers: {
-                            'x-rapidapi-host': 'v3.football.api-sports.io',
-                            'x-rapidapi-key': apiKey
-                        }
-                    },
-                    'apiFootball'
-                );
-
-                if (response.ok) {
-                    const data = await response.json();
-                    return data.response || [];
-                }
-                return [];
-            } catch (error) {
-                console.error('J-League search error:', error);
-                return [];
-            }
-        };
-
-        // 海外の日本語選手を検索（オプション）
-        const overseasSearch = async () => {
-            if (includeOverseas !== 'true') return [];
-            
-            try {
-                const response = await fetchWithRetry(
-                    `https://v3.football.api-sports.io/players?search=${encodeURIComponent(query)}&nationality=JP`,
-                    {
-                        headers: {
-                            'x-rapidapi-host': 'v3.football.api-sports.io',
-                            'x-rapidapi-key': apiKey
-                        }
-                    },
-                    'apiFootball'
-                );
-
-                if (response.ok) {
-                    const data = await response.json();
-                    return data.response || [];
-                }
-                return [];
-            } catch (error) {
-                console.error('Overseas Japanese player search error:', error);
-                return [];
-            }
-        };
-
-        // 並列で検索実行
-        const [jLeagueResults, overseasResults] = await Promise.all([
-            jLeagueSearch(),
-            overseasSearch()
-        ]);
-
-        // 結果を統合（重複除去）
-        const combinedMap = new Map();
-        
-        [...jLeagueResults, ...overseasResults].forEach(player => {
-            const key = `${player.player.name}-${player.player.nationality}`;
-            if (!combinedMap.has(key)) {
-                combinedMap.set(key, {
-                    ...player,
-                    source: 'api-football',
-                    isJapanese: player.player.nationality === 'JP'
-                });
-            }
-        });
-
-        results.push(...Array.from(combinedMap.values()));
-
-        res.json({
-            query,
-            totalResults: results.length,
-            jLeagueResults: jLeagueResults.length,
-            overseasResults: overseasResults.length,
-            results: results
-        });
-
-    } catch (error) {
-        console.error('Japanese players search error:', error);
-        res.status(500).json({ error: '日本語選手検索に失敗しました' });
-    }
-});
-
-// 詳細選手統計エンドポイント
-app.get('/api/players/:id/detailed-stats', async (req, res) => {
-    try {
-        const playerId = req.params.id;
-        const { season, league } = req.query;
-        
-        console.log(`Fetching detailed stats for player: ${playerId}`);
-        
-        const apiKey = process.env.API_FOOTBALL_KEY;
-        if (!apiKey) {
-            return res.status(500).json({ error: 'API key not configured' });
-        }
-
-        // 選手の基本情報と統計を並列で取得
-        const [playerInfo, playerStats] = await Promise.all([
-            // 選手基本情報
-            (async () => {
-                try {
-                    const response = await fetchWithRetry(
-                        `https://v3.football.api-sports.io/players?id=${playerId}`,
-                        {
-                            headers: {
-                                'x-rapidapi-host': 'v3.football.api-sports.io',
-                                'x-rapidapi-key': apiKey
-                            }
-                        },
-                        'apiFootball'
-                    );
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        return data.response?.[0] || null;
-                    }
-                    return null;
-                } catch (error) {
-                    console.error('Player info error:', error);
+    
                     return null;
                 }
-            })(),
-            
-            // 選手統計
-            (async () => {
-                try {
-                    let url = `https://v3.football.api-sports.io/players?id=${playerId}&statistics=true`;
-                    if (season) url += `&season=${season}`;
-                    if (league) url += `&league=${league}`;
 
-                    const response = await fetchWithRetry(
-                        url,
-                        {
-                            headers: {
-                                'x-rapidapi-host': 'v3.football.api-sports.io',
-                                'x-rapidapi-key': apiKey
-                            }
-                        },
-                        'apiFootball'
-                    );
+// データをキャッシュに保存
+function setCache(cacheKey, data, dataType) {
+    const cache = dataCache[dataType];
+    cache.set(cacheKey, data);
+    dataCache.lastUpdate.set(cacheKey, Date.now());
+    console.log(`Cached ${cacheKey} (${dataType})`);
+}
 
-                    if (response.ok) {
-                        const data = await response.json();
-                        return data.response?.[0] || null;
-                    }
-                    return null;
-                } catch (error) {
-                    console.error('Player stats error:', error);
-                    return null;
-                }
-            })()
-        ]);
-
-        const result = {
-            player: playerInfo,
-            statistics: playerStats,
-            season: season || 'current',
-            league: league || 'all'
-        };
-
-        res.json(result);
-
-    } catch (error) {
-        console.error('Detailed player stats error:', error);
-        res.status(500).json({ error: '詳細統計の取得に失敗しました' });
+// キャッシュをクリア
+function clearCache(dataType = null) {
+    if (dataType) {
+        dataCache[dataType].clear();
+        console.log(`Cleared ${dataType} cache`);
+    } else {
+        Object.keys(dataCache).forEach(key => {
+            if (key !== 'lastUpdate') {
+                dataCache[key].clear();
+            }
+        });
+        dataCache.lastUpdate.clear();
+        console.log('Cleared all caches');
     }
-});
+}
 
 // データサービスを使用したハイブリッドAPIエンドポイント
 app.get('/api/hybrid/players/search-v2', async (req, res) => {
@@ -1556,7 +961,361 @@ app.get('/api/firebase-config', (req, res) => {
     });
 });
 
+// ===== Football-Data.org Integration =====
+
+// Football-Data.org: 選手一覧を取得
+app.get('/api/football-data/players', async (req, res) => {
+    try {
+        const apiKey = process.env.FOOTBALL_DATA_KEY;
+        
+        if (!apiKey) {
+            console.error('FOOTBALL_DATA_KEY not configured');
+            return res.status(500).json({ error: 'API key not configured' });
+        }
+
+        const { team, limit } = req.query;
+        let url = 'https://api.football-data.org/v4/teams';
+        
+        if (team) {
+            url += `/${team}/players`;
+        } else {
+            url = 'https://api.football-data.org/v4/players';
+        }
+        
+        const params = new URLSearchParams();
+        if (limit) params.append('limit', limit);
+        
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+
+        console.log(`Football-Data.org: Fetching players - ${url}`);
+        const response = await fetchWithRetry(url, {
+            headers: {
+                'X-Auth-Token': apiKey
+            }
+        }, 'footballData');
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Football-Data.org error: ${response.status} - ${errorText}`);
+            
+            // Return fallback data
+            console.log('Returning fallback data for players');
+            const fallbackData = {
+                count: 0,
+                filters: {},
+                players: []
+            };
+            return res.json(fallbackData);
+        }
+
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Football-Data.org players error:', error);
+        
+        // Return fallback data
+        const fallbackData = {
+            count: 0,
+            filters: {},
+            players: []
+        };
+        res.json(fallbackData);
+    }
+});
+
+// Football-Data.org: 選手詳細を取得
+app.get('/api/football-data/players/:id', async (req, res) => {
+    try {
+        const apiKey = process.env.FOOTBALL_DATA_KEY;
+        const playerId = req.params.id;
+        
+        if (!apiKey) {
+            console.error('FOOTBALL_DATA_KEY not configured');
+            return res.status(500).json({ error: 'API key not configured' });
+        }
+
+        const url = `https://api.football-data.org/v4/players/${playerId}`;
+
+        console.log(`Football-Data.org: Fetching player details - ${url}`);
+        const response = await fetchWithRetry(url, {
+            headers: {
+                'X-Auth-Token': apiKey
+            }
+        }, 'footballData');
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Football-Data.org error: ${response.status} - ${errorText}`);
+            
+            // Return fallback data
+            console.log('Returning fallback data for player details');
+            const fallbackData = {
+                id: playerId,
+                name: 'Unknown Player',
+                firstName: '',
+                lastName: '',
+                dateOfBirth: '',
+                nationality: '',
+                position: '',
+                shirtNumber: null,
+                lastUpdated: new Date().toISOString()
+            };
+            return res.json(fallbackData);
+        }
+
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Football-Data.org player details error:', error);
+        
+        // Return fallback data
+        const fallbackData = {
+            id: req.params.id,
+            name: 'Unknown Player',
+            firstName: '',
+            lastName: '',
+            dateOfBirth: '',
+            nationality: '',
+            position: '',
+            shirtNumber: null,
+            lastUpdated: new Date().toISOString()
+        };
+        res.json(fallbackData);
+    }
+});
+
+// Football-Data.org: 選手統計を取得
+app.get('/api/football-data/players/:id/stats', async (req, res) => {
+    try {
+        const apiKey = process.env.FOOTBALL_DATA_KEY;
+        const playerId = req.params.id;
+        const { season } = req.query;
+        
+        if (!apiKey) {
+            console.error('FOOTBALL_DATA_KEY not configured');
+            return res.status(500).json({ error: 'API key not configured' });
+        }
+
+        let url = `https://api.football-data.org/v4/players/${playerId}/matches`;
+        const params = new URLSearchParams();
+        if (season) params.append('season', season);
+        
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+
+        console.log(`Football-Data.org: Fetching player stats - ${url}`);
+        const response = await fetchWithRetry(url, {
+            headers: {
+                'X-Auth-Token': apiKey
+            }
+        }, 'footballData');
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Football-Data.org error: ${response.status} - ${errorText}`);
+            
+            // Return fallback data
+            console.log('Returning fallback data for player stats');
+            const fallbackData = {
+                player: {
+                    id: playerId,
+                    name: 'Unknown Player'
+                },
+                matches: []
+            };
+            return res.json(fallbackData);
+        }
+
+        const data = await response.json();
+        
+        // 統計データを計算
+        const stats = calculatePlayerStats(data.matches, playerId);
+        res.json({
+            player: data.player,
+            matches: data.matches,
+            stats: stats
+        });
+    } catch (error) {
+        console.error('Football-Data.org player stats error:', error);
+        
+        // Return fallback data
+        const fallbackData = {
+            player: {
+                id: req.params.id,
+                name: 'Unknown Player'
+            },
+            matches: [],
+            stats: {
+                appearances: 0,
+                goals: 0,
+                assists: 0,
+                yellowCards: 0,
+                redCards: 0,
+                minutes: 0
+            }
+        };
+        res.json(fallbackData);
+    }
+});
+
+// 選手統計を計算する関数
+function calculatePlayerStats(matches, playerId) {
+    let stats = {
+        appearances: 0,
+        goals: 0,
+        assists: 0,
+        yellowCards: 0,
+        redCards: 0,
+        minutes: 0
+    };
+
+    matches.forEach(match => {
+        // ホームチームの選手
+        if (match.homeTeam && match.homeTeam.id) {
+            const player = match.homeTeam.players?.find(p => p.id === parseInt(playerId));
+            if (player) {
+                stats.appearances++;
+                stats.goals += player.goals || 0;
+                stats.assists += player.assists || 0;
+                stats.yellowCards += player.yellowCards || 0;
+                stats.redCards += player.redCards || 0;
+                stats.minutes += player.minutes || 0;
+            }
+        }
+        
+        // アウェイチームの選手
+        if (match.awayTeam && match.awayTeam.id) {
+            const player = match.awayTeam.players?.find(p => p.id === parseInt(playerId));
+            if (player) {
+                stats.appearances++;
+                stats.goals += player.goals || 0;
+                stats.assists += player.assists || 0;
+                stats.yellowCards += player.yellowCards || 0;
+                stats.redCards += player.redCards || 0;
+                stats.minutes += player.minutes || 0;
+            }
+        }
+    });
+
+    return stats;
+}
+
+// AIチャットAPIエンドポイント
+app.post('/api/ai/chat', async (req, res) => {
+    try {
+        const { message, context } = req.body;
+        
+        if (!message) {
+            return res.status(400).json({ error: 'メッセージが必要です' });
+        }
+        
+        console.log('AIチャットリクエスト:', { message, context });
+        
+        // AI分析を実行
+        const response = await aiService.generateSoccerAnalysis(message);
+        
+        res.json({ response });
+        
+    } catch (error) {
+        console.error('AIチャットエラー:', error);
+        res.status(500).json({ 
+            error: 'AI応答の生成中にエラーが発生しました',
+            details: error.message 
+        });
+    }
+});
+
+// 選手比較分析API
+app.post('/api/ai/compare', async (req, res) => {
+    try {
+        const { player1, player2 } = req.body;
+        
+        if (!player1 || !player2) {
+            return res.status(400).json({ error: '比較する選手名が必要です' });
+        }
+        
+        console.log('選手比較リクエスト:', { player1, player2 });
+        
+        // 選手比較分析を実行
+        const response = await aiService.generatePlayerComparison(player1, player2);
+        
+        res.json({ response });
+        
+    } catch (error) {
+        console.error('選手比較エラー:', error);
+        res.status(500).json({ 
+            error: '選手比較分析中にエラーが発生しました',
+            details: error.message 
+        });
+    }
+});
+
+// 試合予測API
+app.post('/api/ai/predict', async (req, res) => {
+    try {
+        const { team1, team2, context } = req.body;
+        
+        if (!team1 || !team2) {
+            return res.status(400).json({ error: '対戦チーム名が必要です' });
+        }
+        
+        console.log('試合予測リクエスト:', { team1, team2, context });
+        
+        // 試合予測を実行
+        const response = await aiService.generateMatchPrediction(team1, team2, context);
+        
+        res.json({ response });
+        
+    } catch (error) {
+        console.error('試合予測エラー:', error);
+        res.status(500).json({ 
+            error: '試合予測中にエラーが発生しました',
+            details: error.message 
+        });
+    }
+});
+
+// 戦術分析API
+app.post('/api/ai/tactics', async (req, res) => {
+    try {
+        const { team, season } = req.body;
+        
+        if (!team) {
+            return res.status(400).json({ error: 'チーム名が必要です' });
+        }
+        
+        console.log('戦術分析リクエスト:', { team, season });
+        
+        // 戦術分析を実行
+        const response = await aiService.generateTacticalAnalysis(team, season);
+        
+        res.json({ response });
+        
+    } catch (error) {
+        console.error('戦術分析エラー:', error);
+        res.status(500).json({ 
+            error: '戦術分析中にエラーが発生しました',
+            details: error.message 
+        });
+    }
+});
+
+// ヘルスチェックエンドポイント
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
 });

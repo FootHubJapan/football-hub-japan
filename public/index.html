@@ -98,6 +98,18 @@
             cursor: pointer;
             transition: all 0.3s;
             text-decoration: none;
+        }
+
+        .cta-button.secondary {
+            background: transparent;
+            color: #00ff88;
+            border: 2px solid #00ff88;
+        }
+
+        .cta-button.secondary:hover {
+            background: #00ff88;
+            color: #000000;
+        }
             display: inline-block;
         }
 
@@ -142,6 +154,7 @@
             border-radius: 10px;
             padding: 1.5rem;
             transition: all 0.3s;
+            cursor: pointer;
         }
 
         .feature-card:hover {
@@ -221,8 +234,9 @@
                 選手パフォーマンス、戦術、移籍可能性を詳細分析
             </p>
             <div class="cta-buttons">
-                <button id="startBtn" class="cta-button">🚀 無料で始める</button>
-                <button class="cta-button secondary">💎 プランを見る</button>
+                <a href="/ai-agent-enhanced" class="cta-button">🚀 AIエージェント</a>
+                <a href="/database-enhanced" class="cta-button secondary">📊 データベース</a>
+                <a href="/radar-enhanced" class="cta-button secondary">📈 レーダーチャート</a>
             </div>
         </section>
 
@@ -280,15 +294,24 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // 無料で始めるボタンのイベントハンドラー - 直接ダッシュボードに遷移
-            document.getElementById('startBtn').addEventListener('click', function() {
-                window.location.href = '/dashboard';
-            });
-
-            // プランを見るボタンのイベントハンドラー
-            document.querySelector('.cta-button.secondary').addEventListener('click', function() {
-                // 料金プランページに遷移（将来的に実装）
-                alert('料金プランページは準備中です');
+            // 機能カードにクリックイベントを追加
+            const featureCards = document.querySelectorAll('.feature-card');
+            
+            featureCards.forEach((card, index) => {
+                card.addEventListener('click', function() {
+                    const routes = [
+                        '/database-enhanced',
+                        '/radar-enhanced', 
+                        '/ai-agent-enhanced',
+                        '/dashboard',
+                        '/ai-agent-enhanced',
+                        '/database-enhanced'
+                    ];
+                    
+                    if (routes[index]) {
+                        window.location.href = routes[index];
+                    }
+                });
             });
         });
     </script>

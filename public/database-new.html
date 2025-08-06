@@ -524,6 +524,12 @@
 
         .data-row:hover {
             background-color: #2a2a2a;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 255, 136, 0.2);
+        }
+
+        .data-row:active {
+            transform: translateY(0);
         }
 
         .player-info, .team-info, .league-info {
@@ -600,17 +606,273 @@
         }
 
         /* モーダルスタイル */
-        .detail-modal {
+        .detail-modal, .player-detail-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .player-detail-modal {
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .modal-header {
+            background: #2a2a2a;
+            padding: 1.5rem;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 13px 13px 0 0;
+        }
+
+        .modal-header h2 {
+            color: #00ff88;
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        /* 選手詳細モーダル用スタイル */
+        .player-detail-modal .modal-content {
+            background: #1a1a1a;
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            max-width: 800px;
+            max-height: 90%;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .player-detail-modal .player-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            padding: 2rem;
+            background: #2a2a2a;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .player-detail-modal .player-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .player-detail-modal .player-info h3 {
+            color: #00ff88;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .player-detail-modal .player-info p {
+            color: #ccc;
+            margin-bottom: 0.3rem;
+        }
+
+        .player-detail-modal .seasons-container {
+            padding: 0 2rem 2rem;
+        }
+
+        .player-detail-modal .seasons-container h4 {
+            color: #00ff88;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .player-detail-modal .season-card {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .player-detail-modal .season-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .player-detail-modal .season-year {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .player-detail-modal .season-team {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .player-detail-modal .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .player-detail-modal .stat-item {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .player-detail-modal .stat-label {
+            color: #888;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .player-detail-modal .stat-value {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .close-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            background: #cc3333;
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .player-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .player-avatar-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .player-info-large h3 {
+            color: #00ff88;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .player-info-large p {
+            color: #cccccc;
+            margin: 0.2rem 0;
+            font-size: 1rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-item {
+            background: #2a2a2a;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        .info-item label {
+            color: #888;
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-item span {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .stats-grid-native {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-item-native {
+            background: #2a2a2a;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .stat-item-native .stat-label {
+            color: #888;
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-item-native .stat-value {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 1.2rem;
         }
 
         .modal-content {
@@ -1034,6 +1296,188 @@
             color: #0c5460;
             border: 1px solid #bee5eb;
         }
+
+        /* 選手比較機能用スタイル */
+        .compare-section {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .compare-title {
+            color: #00ff88;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .compare-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .compare-select {
+            background: #333333;
+            color: #ffffff;
+            border: 1px solid #555555;
+            border-radius: 5px;
+            padding: 0.5rem;
+            font-size: 0.9rem;
+            min-width: 200px;
+        }
+
+        .compare-btn {
+            background: #00ff88;
+            color: #000000;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .compare-btn:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+        }
+
+        .compare-btn:disabled {
+            background: #555555;
+            color: #888888;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 比較モーダルスタイル */
+        .compare-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .compare-modal.show {
+            opacity: 1;
+        }
+
+        .compare-modal .modal-content {
+            background: #1a1a1a;
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            max-width: 95%;
+            max-height: 95%;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .compare-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .compare-player {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+
+        .compare-player-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .compare-player-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .compare-player-info h3 {
+            color: #00ff88;
+            font-size: 1.3rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .compare-player-info p {
+            color: #ccc;
+            margin-bottom: 0.2rem;
+            font-size: 0.9rem;
+        }
+
+        .compare-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .compare-stat-item {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .compare-stat-label {
+            color: #888;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .compare-stat-value {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .compare-winner {
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .compare-winner .compare-stat-value {
+            color: #00ff88;
+        }
+
+        .compare-loser .compare-stat-value {
+            color: #ff4444;
+        }
+
+        @media (max-width: 768px) {
+            .compare-container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1041,7 +1485,8 @@
         <div class="logo">⚽ Football Hub Japan</div>
         <div class="nav-buttons">
             <button class="nav-btn" onclick="window.location.href='/dashboard'">ダッシュボード</button>
-            <button class="nav-btn" onclick="window.location.href='/radar'">レーダーチャート</button>
+            <button class="nav-btn" onclick="window.location.href='/radar-enhanced'">レーダーチャート</button>
+            <button class="nav-btn" onclick="window.location.href='/ai-agent-enhanced'">AIエージェント</button>
             <button class="nav-btn" onclick="window.location.href='/'">ログアウト</button>
         </div>
     </header>
@@ -1126,6 +1571,15 @@
             <div id="apiStatus" class="api-status"></div>
         </div>
 
+        <!-- Player Comparison Section -->
+        <div class="compare-section">
+            <h3 class="compare-title">選手比較</h3>
+            <div class="compare-controls">
+                <p style="color: #888; margin-bottom: 1rem;">選手比較機能はレーダーチャートページに統合されました。</p>
+                <a href="/radar-enhanced" class="compare-btn" style="text-decoration: none; display: inline-block;">📊 レーダーチャートで比較</a>
+            </div>
+        </div>
+
         <div class="data-section">
             <div class="data-tabs">
                 <button class="tab-btn active" onclick="switchTab('players', this)">選手データ</button>
@@ -1197,6 +1651,16 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script>
+        // Force cache busting
+        const cacheBuster = Date.now();
+        console.log('Cache buster:', cacheBuster);
+        
+        // Global error handler
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+        });
+    </script>
     <script>
         // Force cache busting with unique timestamp
         const timestamp = Date.now();
@@ -1341,6 +1805,30 @@
                 console.warn('データが配列ではありません:', typeof data);
                 data = [];
             }
+
+            // 選手データの場合、比較用のドロップダウンを更新
+            if (tabType === 'players') {
+                allPlayersForComparison = [...data];
+                
+                // フォールバック選手データも追加
+                const fallbackPlayers = [
+                    { id: 'haaland', name: 'Erling Haaland', fullName: 'Erling Braut Haaland', position: 'Forward', nationality: 'Norway', currentTeam: 'Manchester City' },
+                    { id: 'mbappe', name: 'Kylian Mbappé', fullName: 'Kylian Mbappé Lottin', position: 'Forward', nationality: 'France', currentTeam: 'Real Madrid' },
+                    { id: 'kubo', name: 'Takefusa Kubo', fullName: '久保建英', position: 'Midfielder', nationality: 'Japan', currentTeam: 'Real Sociedad', isJapanese: true }
+                ];
+                
+                // 重複を避けてフォールバック選手を追加
+                fallbackPlayers.forEach(fallbackPlayer => {
+                    const exists = allPlayersForComparison.some(player => 
+                        (player.name || player.fullName) === (fallbackPlayer.name || fallbackPlayer.fullName)
+                    );
+                    if (!exists) {
+                        allPlayersForComparison.push(fallbackPlayer);
+                    }
+                });
+                
+                updatePlayerSelects();
+            }
             
             const tableBody = document.getElementById(tabType + 'TableBody');
             if (!tableBody) {
@@ -1377,8 +1865,16 @@
                         const apiStats = item.apiFootballStats;
                         const isAPIFootball = item.source === 'api-football';
                         
+                        // Safely escape the player data for data attribute
+                        const safePlayerData = JSON.stringify(item)
+                            .replace(/'/g, "\\'")
+                            .replace(/"/g, '&quot;')
+                            .replace(/\n/g, '\\n')
+                            .replace(/\r/g, '\\r')
+                            .replace(/\\/g, '\\\\');
+                        
                         html += `
-                            <tr class="data-row" onclick="showPlayerDetail('${item.id || index}', ${JSON.stringify(item).replace(/'/g, "\\'")})">
+                            <tr class="data-row" data-player-id="${item.id || index}" data-player='${safePlayerData}'>
                                 <td>
                                     <div class="player-info">
                                         <div class="player-avatar">
@@ -2300,199 +2796,645 @@
             updatePagination();
         }
 
-        // 詳細表示機能（API-Football対応）
-        function showPlayerDetail(playerId, playerData = null) {
-            let player = playerData;
-            if (!player) {
-                player = currentData.find(p => p.id === playerId);
+        // 詳細表示機能（モーダル版）
+        async function showPlayerDetail(playerId, event) {
+            try {
+                let player = null;
+                
+                // First try to get player data from the clicked row's data attribute
+                if (event && event.target) {
+                    const clickedRow = event.target.closest('.data-row');
+                    if (clickedRow && clickedRow.dataset.player) {
+                        try {
+                            const playerDataString = clickedRow.dataset.player
+                                .replace(/&quot;/g, '"')
+                                .replace(/\\n/g, '\n')
+                                .replace(/\\r/g, '\r')
+                                .replace(/\\\\/g, '\\');
+                            player = JSON.parse(playerDataString);
+                            console.log('Player data loaded from data attribute:', player.name || player.fullName);
+                        } catch (e) {
+                            console.error('Error parsing player data from data attribute:', e);
+                            console.log('Raw data attribute:', clickedRow.dataset.player);
+                        }
+                    }
+                }
+                
+                // Fallback to currentData if not found in data attribute
+                if (!player) {
+                    player = currentData.find(p => p.id === playerId);
+                }
+
+                // もしデータが見つからない場合、API-Footballから取得を試行
+                if (!player) {
+                    console.log('ローカルデータに見つからないため、API-Footballから取得を試行:', playerId);
+                    try {
+                        const response = await fetch(`/api/api-football/players?search=${encodeURIComponent(playerId)}`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.results && data.results.length > 0) {
+                                const apiPlayer = data.results.find(p => 
+                                    p.player.name.toLowerCase().includes(playerId.toLowerCase()) ||
+                                    p.player.name.toLowerCase() === playerId.toLowerCase()
+                                );
+                                if (apiPlayer) {
+                                    console.log('API-Footballから選手データを取得:', apiPlayer);
+                                    displayPlayerModal(apiPlayer, true);
+                                    return;
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.log('API-Football検索失敗:', error);
+                    }
+
+                    // 最後の手段としてフォールバックデータを確認
+                    const fallbackPlayer = generateFallbackPlayerData(playerId);
+                    if (fallbackPlayer) {
+                        console.log('フォールバックデータを使用:', fallbackPlayer);
+                        displayPlayerModal(fallbackPlayer, false);
+                        return;
+                    }
+
+                    console.error('選手データが見つかりません:', playerId);
+                    alert('選手データが見つかりません。');
+                    return;
+                }
+
+                displayPlayerModal(player, false);
+            } catch (error) {
+                console.error('Error showing player detail:', error);
+                alert('選手詳細の表示中にエラーが発生しました。');
             }
-            if (!player) {
-                console.error('選手データが見つかりません:', playerId);
-                return;
+        }
+
+        // 選手詳細モーダルを表示
+        function displayPlayerModal(player, isAPIFootball = false) {
+            // 既存のモーダルを削除
+            const existingModal = document.querySelector('.player-detail-modal');
+            if (existingModal) {
+                existingModal.remove();
             }
+
+            let modalContent = '';
             
-            // API-Footballの詳細統計がある場合
-            const apiStats = player.apiFootballStats;
-            const isAPIFootball = player.source === 'api-football';
-            const isJapanese = player.isJapanese;
-            
-            const seasonStats = player.seasons?.['2024-2025']?.stats || player.stats || {};
-            const matches = player.matches || [];
-            
-            const modal = document.createElement('div');
-            modal.className = 'detail-modal';
-            
-            // API-Football統計のHTML
-            let statsHTML = '';
-            if (apiStats) {
-                statsHTML = `
-                    <div class="stats-section">
-                        <h4>2024-2025 シーズン統計</h4>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <div class="stat-value">${apiStats.games?.appearences || 0}</div>
-                                <div class="stat-label">試合数</div>
+            if (isAPIFootball) {
+                // API-Footballデータの場合
+                const playerData = player.player;
+                const statistics = player.statistics || [];
+                
+                const playerName = playerData.name || 'Unknown Player';
+                const playerInitial = playerName.charAt(0);
+                const position = playerData.position || 'Unknown';
+                const nationality = playerData.nationality || 'Unknown';
+                const currentTeam = playerData.team?.name || 'Unknown Team';
+                const isJapanese = nationality === 'Japan' || nationality === 'JP';
+                const age = playerData.age || 'N/A';
+                const height = playerData.height || 'N/A';
+                const weight = playerData.weight || 'N/A';
+
+                modalContent = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>${playerName}</h2>
+                            <button onclick="closePlayerModal()" class="close-btn">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="player-header">
+                                <div class="player-avatar">${playerInitial}</div>
+                                <div class="player-info">
+                                    <h3>${playerName}</h3>
+                                    <p>${position} • ${nationality}</p>
+                                    <p>${currentTeam}</p>
+                                    ${isJapanese ? '<p style="color: #ff4444; font-weight: bold;">🇯🇵 日本代表</p>' : ''}
+                                    <p>年齢: ${age}歳</p>
+                                    <p>身長: ${height}cm</p>
+                                    <p>体重: ${weight}kg</p>
+                                    <p style="color: #00ff88; font-weight: bold;">🚀 API-Footballデータ</p>
+                                </div>
                             </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${apiStats.goals?.total || 0}</div>
-                                <div class="stat-label">得点</div>
+                            <div class="seasons-container">
+                                <h4>シーズン別統計</h4>
+                                ${generateAPIFootballSeasonsHTML(statistics)}
                             </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${apiStats.goals?.assists || 0}</div>
-                                <div class="stat-label">アシスト</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 通常データの場合
+                const playerName = player.name || player.fullName || 'Unknown Player';
+                const playerInitial = playerName.charAt(0);
+                const position = player.position || 'Unknown';
+                const nationality = player.nationality || 'Unknown';
+                const currentTeam = player.currentTeam || player.team || 'Unknown Team';
+                const isJapanese = player.isJapanese || nationality === 'Japan' || nationality === 'JP';
+
+                modalContent = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>${playerName}</h2>
+                            <button onclick="closePlayerModal()" class="close-btn">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="player-header">
+                                <div class="player-avatar">${playerInitial}</div>
+                                <div class="player-info">
+                                    <h3>${playerName}</h3>
+                                    <p>${position} • ${nationality}</p>
+                                    <p>${currentTeam}</p>
+                                    ${isJapanese ? '<p style="color: #ff4444; font-weight: bold;">🇯🇵 日本代表</p>' : ''}
+                                </div>
                             </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${apiStats.games?.rating || 'N/A'}</div>
-                                <div class="stat-label">評価</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${apiStats.passes?.total || 0}</div>
-                                <div class="stat-label">パス数</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${apiStats.passes?.key || 0}</div>
-                                <div class="stat-label">キーパス</div>
+                            <div class="seasons-container">
+                                <h4>シーズン別統計</h4>
+                                ${generateSeasonsHTML(player)}
                             </div>
                         </div>
                     </div>
                 `;
             }
+
+            const modal = document.createElement('div');
+            modal.className = 'player-detail-modal';
+            modal.innerHTML = modalContent;
             
+            document.body.appendChild(modal);
+            
+            // モーダルを表示
+            setTimeout(() => {
+                modal.style.opacity = '1';
+            }, 10);
+        }
+
+        // 選手詳細モーダルを閉じる
+        function closePlayerModal() {
+            const modal = document.querySelector('.player-detail-modal');
+            if (modal) {
+                modal.style.opacity = '0';
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
+            }
+        }
+
+        // 既存のモーダルを閉じる
+        function closeModal() {
+            const modal = document.querySelector('.detail-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // 選手比較機能
+        let allPlayersForComparison = [];
+        let selectedPlayer1 = null;
+        let selectedPlayer2 = null;
+
+        // 選手選択ドロップダウンを更新
+        function updatePlayerSelects() {
+            const player1Select = document.getElementById('player1Select');
+            const player2Select = document.getElementById('player2Select');
+            const compareBtn = document.getElementById('compareBtn');
+
+            // 既存のオプションをクリア（最初のオプション以外）
+            player1Select.innerHTML = '<option value="">選手1を選択</option>';
+            player2Select.innerHTML = '<option value="">選手2を選択</option>';
+
+            // 選手データを追加
+            allPlayersForComparison.forEach(player => {
+                const playerName = player.name || player.fullName || 'Unknown Player';
+                const teamName = player.currentTeam || player.team || 'Unknown Team';
+                const displayText = `${playerName} (${teamName})`;
+
+                const option1 = document.createElement('option');
+                option1.value = player.id || player.name;
+                option1.textContent = displayText;
+                player1Select.appendChild(option1);
+
+                const option2 = document.createElement('option');
+                option2.value = player.id || player.name;
+                option2.textContent = displayText;
+                player2Select.appendChild(option2);
+            });
+
+            // 選択変更イベントを追加
+            player1Select.addEventListener('change', updateCompareButton);
+            player2Select.addEventListener('change', updateCompareButton);
+        }
+
+        // 比較ボタンの状態を更新
+        function updateCompareButton() {
+            const player1Select = document.getElementById('player1Select');
+            const player2Select = document.getElementById('player2Select');
+            const compareBtn = document.getElementById('compareBtn');
+
+            const player1Value = player1Select.value;
+            const player2Value = player2Select.value;
+
+            if (player1Value && player2Value && player1Value !== player2Value) {
+                compareBtn.disabled = false;
+                selectedPlayer1 = allPlayersForComparison.find(p => (p.id || p.name) === player1Value);
+                selectedPlayer2 = allPlayersForComparison.find(p => (p.id || p.name) === player2Value);
+            } else {
+                compareBtn.disabled = true;
+                selectedPlayer1 = null;
+                selectedPlayer2 = null;
+            }
+        }
+
+        // 選手を比較
+        async function comparePlayers() {
+            if (!selectedPlayer1 || !selectedPlayer2) {
+                alert('2人の選手を選択してください。');
+                return;
+            }
+
+            try {
+                // 選手データを取得（API-Footballからも取得を試行）
+                const player1Data = await getPlayerDataForComparison(selectedPlayer1);
+                const player2Data = await getPlayerDataForComparison(selectedPlayer2);
+
+                displayCompareModal(player1Data, player2Data);
+            } catch (error) {
+                console.error('選手比較エラー:', error);
+                alert('選手比較中にエラーが発生しました。');
+            }
+        }
+
+        // 比較用の選手データを取得
+        async function getPlayerDataForComparison(player) {
+            // まずAPI-Footballから取得を試行
+            try {
+                const response = await fetch(`/api/api-football/players?search=${encodeURIComponent(player.name || player.fullName)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.results && data.results.length > 0) {
+                        const apiPlayer = data.results.find(p => 
+                            p.player.name.toLowerCase().includes((player.name || player.fullName).toLowerCase())
+                        );
+                        if (apiPlayer) {
+                            return { ...player, apiFootballData: apiPlayer, isAPIFootball: true };
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('API-Football取得失敗:', error);
+            }
+
+            // フォールバックデータを確認
+            const fallbackPlayer = generateFallbackPlayerData(player.name || player.fullName);
+            if (fallbackPlayer) {
+                return { ...player, fallbackData: fallbackPlayer, isFallback: true };
+            }
+
+            return player;
+        }
+
+        // 比較モーダルを表示
+        function displayCompareModal(player1, player2) {
+            // 既存のモーダルを削除
+            const existingModal = document.querySelector('.compare-modal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'compare-modal';
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2>${player.name || player.fullName}</h2>
-                        <button onclick="closeModal()" class="close-btn">×</button>
+                        <h2>選手比較</h2>
+                        <button onclick="closeCompareModal()" class="close-btn">×</button>
                     </div>
-                    <div class="modal-body">
-                        <!-- 選手ヘッダー -->
-                        <div class="player-header">
-                            <img src="${player.photo || '/placeholder-player.png'}" 
-                                 alt="${player.name}" 
-                                 class="player-avatar-large"
-                                 onerror="this.src='/placeholder-player.png'">
-                            <div class="player-info-large">
-                                <h3>${player.fullName || player.name}</h3>
-                                <p>${player.position} • ${player.nationality || 'Unknown'}</p>
-                                <p>${player.currentTeam || player.team} • ${player.seasons?.['2024-2025']?.league || 'Unknown League'}</p>
-                                ${isJapanese ? '<p style="color: #ff4444; font-weight: bold;">🇯🇵 日本代表</p>' : ''}
-                                ${isAPIFootball ? '<p style="color: #00ff88; font-weight: bold;">🚀 API-Football データ</p>' : ''}
-                            </div>
-                        </div>
+                    <div class="compare-container">
+                        ${generateComparePlayerHTML(player1, 'player1')}
+                        ${generateComparePlayerHTML(player2, 'player2')}
+                    </div>
+                </div>
+            `;
 
-                        <!-- 基本情報 -->
-                        <div class="player-info-section">
-                            <h4>基本情報</h4>
-                            <div class="info-grid">
-                                <div class="info-item">
-                                    <label>生年月日</label>
-                                    <span>${player.birthday || 'N/A'}</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>年齢</label>
-                                    <span>${player.age || 'N/A'}歳</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>身長</label>
-                                    <span>${player.height || 'N/A'}cm</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>体重</label>
-                                    <span>${player.weight || 'N/A'}kg</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>利き足</label>
-                                    <span>${player.preferredFoot || 'N/A'}</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>契約期間</label>
-                                    <span>${player.contract?.start || 'N/A'} - ${player.contract?.end || 'N/A'}</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>推定市場価値</label>
-                                    <span>${player.marketValue ? player.marketValue + ' Mio. €' : 'N/A'}</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>背番号</label>
-                                    <span>${player.shirtNumber || 'N/A'}</span>
-                                </div>
-                            </div>
-                        </div>
+            document.body.appendChild(modal);
+            
+            // モーダルを表示
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+        }
 
-                        <!-- 試合履歴 -->
-                        <div class="matches-section">
-                            <h4>最近の試合履歴</h4>
-                            <div class="matches-table">
-                                ${matches.length > 0 ? `
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>日付</th>
-                                                <th>対戦</th>
-                                                <th>スコア</th>
-                                                <th>結果</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${matches.slice(0, 10).map(match => `
-                                                <tr>
-                                                    <td>${match.date || 'N/A'}</td>
-                                                    <td>${match.homeTeam || 'N/A'} vs ${match.awayTeam || 'N/A'}</td>
-                                                    <td>${match.score || 'N/A'}</td>
-                                                    <td>${match.result || 'N/A'}</td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                ` : '<p>試合履歴データがありません</p>'}
-                            </div>
-                        </div>
-                        
-                        ${statsHTML}
+        // 比較用の選手HTMLを生成
+        function generateComparePlayerHTML(player, playerId) {
+            const playerName = player.name || player.fullName || 'Unknown Player';
+            const playerInitial = playerName.charAt(0);
+            const position = player.position || 'Unknown';
+            const nationality = player.nationality || 'Unknown';
+            const currentTeam = player.currentTeam || player.team || 'Unknown Team';
+            const isJapanese = player.isJapanese || nationality === 'Japan' || nationality === 'JP';
 
-                        <!-- 統計 -->
-                        <div class="stats-section">
-                            <h4>2024-2025シーズン統計</h4>
-                            <div class="stats-grid-native">
-                                <div class="stat-item-native">
-                                    <span class="stat-label">試合数</span>
-                                    <span class="stat-value">${seasonStats.matchesPlayed || seasonStats.appearances || 0}</span>
-                                </div>
-                                <div class="stat-item-native">
-                                    <span class="stat-label">ゴール</span>
-                                    <span class="stat-value">${seasonStats.goals || 0}</span>
-                                </div>
-                                <div class="stat-item-native">
-                                    <span class="stat-label">アシスト</span>
-                                    <span class="stat-value">${seasonStats.assists || 0}</span>
-                                </div>
-                                <div class="stat-item-native">
-                                    <span class="stat-label">評価</span>
-                                    <span class="stat-value">${seasonStats.rating || 'N/A'}</span>
-                                </div>
-                                <div class="stat-item-native">
-                                    <span class="stat-label">イエローカード</span>
-                                    <span class="stat-value">${seasonStats.yellowCards || 0}</span>
-                                </div>
-                                <div class="stat-item-native">
-                                    <span class="stat-label">レッドカード</span>
-                                    <span class="stat-value">${seasonStats.redCards || 0}</span>
-                                </div>
-                                <div class="stat-item-native">
-                                    <span class="stat-label">クリーンシート</span>
-                                    <span class="stat-value">${seasonStats.cleanSheets || 0}</span>
-                                </div>
-                                <div class="stat-item-native">
-                                    <span class="stat-label">パス成功率</span>
-                                    <span class="stat-value">${seasonStats.passAccuracy || 'N/A'}%</span>
-                                </div>
-                            </div>
+            // 統計データを取得
+            let stats = {};
+            if (player.isAPIFootball && player.apiFootballData) {
+                const apiStats = player.apiFootballData.statistics?.[0]?.statistics || {};
+                stats = {
+                    goals: apiStats.goals || 0,
+                    assists: apiStats.assists || 0,
+                    appearances: apiStats.appearances || 0,
+                    rating: apiStats.rating || 'N/A',
+                    age: player.apiFootballData.player.age || 'N/A',
+                    height: player.apiFootballData.player.height || 'N/A'
+                };
+            } else if (player.isFallback && player.fallbackData) {
+                const fallbackStats = player.fallbackData.seasons?.['2023-2024']?.stats || {};
+                stats = {
+                    goals: fallbackStats.goals || 0,
+                    assists: fallbackStats.assists || 0,
+                    appearances: fallbackStats.matchesPlayed || 0,
+                    rating: fallbackStats.rating || 'N/A',
+                    age: player.fallbackData.age || 'N/A',
+                    height: player.fallbackData.height || 'N/A'
+                };
+            } else {
+                const seasonStats = player.seasons?.['2023-2024']?.stats || player.seasons?.['2024-2025']?.stats || {};
+                stats = {
+                    goals: seasonStats.goals || 0,
+                    assists: seasonStats.assists || 0,
+                    appearances: seasonStats.matchesPlayed || seasonStats.appearances || 0,
+                    rating: seasonStats.rating || 'N/A',
+                    age: player.age || 'N/A',
+                    height: player.height || 'N/A'
+                };
+            }
+
+            return `
+                <div class="compare-player" id="${playerId}">
+                    <div class="compare-player-header">
+                        <div class="compare-player-avatar">${playerInitial}</div>
+                        <div class="compare-player-info">
+                            <h3>${playerName}</h3>
+                            <p>${position} • ${nationality}</p>
+                            <p>${currentTeam}</p>
+                            ${isJapanese ? '<p style="color: #ff4444; font-weight: bold;">🇯🇵 日本代表</p>' : ''}
+                            ${player.isAPIFootball ? '<p style="color: #00ff88; font-weight: bold;">🚀 API-Football</p>' : ''}
+                            ${player.isFallback ? '<p style="color: #ffaa00; font-weight: bold;">📊 フォールバック</p>' : ''}
+                        </div>
+                    </div>
+                    <div class="compare-stats-grid">
+                        <div class="compare-stat-item">
+                            <div class="compare-stat-label">⚽ ゴール</div>
+                            <div class="compare-stat-value">${stats.goals}</div>
+                        </div>
+                        <div class="compare-stat-item">
+                            <div class="compare-stat-label">🎯 アシスト</div>
+                            <div class="compare-stat-value">${stats.assists}</div>
+                        </div>
+                        <div class="compare-stat-item">
+                            <div class="compare-stat-label">📊 試合数</div>
+                            <div class="compare-stat-value">${stats.appearances}</div>
+                        </div>
+                        <div class="compare-stat-item">
+                            <div class="compare-stat-label">⭐ 評価</div>
+                            <div class="compare-stat-value">${stats.rating}</div>
+                        </div>
+                        <div class="compare-stat-item">
+                            <div class="compare-stat-label">👤 年齢</div>
+                            <div class="compare-stat-value">${stats.age}</div>
+                        </div>
+                        <div class="compare-stat-item">
+                            <div class="compare-stat-label">📏 身長</div>
+                            <div class="compare-stat-value">${stats.height}cm</div>
                         </div>
                     </div>
                 </div>
             `;
-            
-            document.body.appendChild(modal);
+        }
+
+        // 比較モーダルを閉じる
+        function closeCompareModal() {
+            const modal = document.querySelector('.compare-modal');
+            if (modal) {
+                modal.classList.remove('show');
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
+            }
+        }
+
+        // API-Footballシーズン別統計のHTMLを生成
+        function generateAPIFootballSeasonsHTML(statistics) {
+            if (statistics.length === 0) {
+                return '<div class="error">シーズンデータがありません</div>';
+            }
+
+            return statistics.map(stat => {
+                const league = stat.league?.name || 'Unknown League';
+                const team = stat.team?.name || 'Unknown Team';
+                const season = stat.league?.season || 'Unknown Season';
+                const stats = stat.statistics || {};
+
+                return `
+                    <div class="season-card">
+                        <div class="season-header">
+                            <div class="season-year">${season} シーズン</div>
+                            <div class="season-team">${team} (${league})</div>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">⚽ 試合数</div>
+                                <div class="stat-value">${stats.appearances || stats.matchesPlayed || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🎯 ゴール</div>
+                                <div class="stat-value">${stats.goals || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🎯 アシスト</div>
+                                <div class="stat-value">${stats.assists || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">⭐ 評価</div>
+                                <div class="stat-value">${stats.rating || 'N/A'}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🟡 イエローカード</div>
+                                <div class="stat-value">${stats.yellowCards || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🔴 レッドカード</div>
+                                <div class="stat-value">${stats.redCards || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🧤 クリーンシート</div>
+                                <div class="stat-value">${stats.cleanSheets || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">📊 パス成功率</div>
+                                <div class="stat-value">${stats.passAccuracy || 'N/A'}%</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // シーズン別統計のHTMLを生成
+        function generateSeasonsHTML(player) {
+            const seasons = player.seasons || {};
+            const seasonKeys = Object.keys(seasons).sort().reverse(); // 新しいシーズンから表示
+
+            if (seasonKeys.length === 0) {
+                return '<div class="error">シーズンデータがありません</div>';
+            }
+
+            return seasonKeys.map(seasonKey => {
+                const seasonData = seasons[seasonKey];
+                const stats = seasonData.stats || {};
+                const team = seasonData.team || player.currentTeam || 'Unknown Team';
+
+                return `
+                    <div class="season-card">
+                        <div class="season-header">
+                            <div class="season-year">${seasonKey} シーズン</div>
+                            <div class="season-team">${team}</div>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">⚽ 試合数</div>
+                                <div class="stat-value">${stats.matchesPlayed || stats.appearances || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🎯 ゴール</div>
+                                <div class="stat-value">${stats.goals || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🎯 アシスト</div>
+                                <div class="stat-value">${stats.assists || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">⭐ 評価</div>
+                                <div class="stat-value">${stats.rating || 'N/A'}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🟡 イエローカード</div>
+                                <div class="stat-value">${stats.yellowCards || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🔴 レッドカード</div>
+                                <div class="stat-value">${stats.redCards || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🧤 クリーンシート</div>
+                                <div class="stat-value">${stats.cleanSheets || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">📊 パス成功率</div>
+                                <div class="stat-value">${stats.passAccuracy || 'N/A'}%</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // フォールバック選手データを生成
+        function generateFallbackPlayerData(playerId) {
+            // 有名選手のフォールバックデータ
+            const fallbackPlayers = {
+                'haaland': {
+                    id: 'haaland',
+                    name: 'Erling Haaland',
+                    fullName: 'Erling Braut Haaland',
+                    position: 'Forward',
+                    nationality: 'Norway',
+                    currentTeam: 'Manchester City',
+                    age: 23,
+                    height: 194,
+                    weight: 88,
+                    seasons: {
+                        '2023-2024': {
+                            team: 'Manchester City',
+                            stats: {
+                                matchesPlayed: 35,
+                                goals: 36,
+                                assists: 9,
+                                rating: 8.2,
+                                yellowCards: 3,
+                                redCards: 0
+                            }
+                        },
+                        '2022-2023': {
+                            team: 'Manchester City',
+                            stats: {
+                                matchesPlayed: 35,
+                                goals: 52,
+                                assists: 9,
+                                rating: 8.5,
+                                yellowCards: 5,
+                                redCards: 0
+                            }
+                        }
+                    }
+                },
+                'mbappe': {
+                    id: 'mbappe',
+                    name: 'Kylian Mbappé',
+                    fullName: 'Kylian Mbappé Lottin',
+                    position: 'Forward',
+                    nationality: 'France',
+                    currentTeam: 'Real Madrid',
+                    age: 25,
+                    height: 178,
+                    weight: 73,
+                    seasons: {
+                        '2023-2024': {
+                            team: 'Paris Saint-Germain',
+                            stats: {
+                                matchesPlayed: 29,
+                                goals: 27,
+                                assists: 7,
+                                rating: 8.1,
+                                yellowCards: 4,
+                                redCards: 0
+                            }
+                        }
+                    }
+                },
+                'kubo': {
+                    id: 'kubo',
+                    name: 'Takefusa Kubo',
+                    fullName: '久保建英',
+                    position: 'Midfielder',
+                    nationality: 'Japan',
+                    currentTeam: 'Real Sociedad',
+                    age: 23,
+                    height: 173,
+                    weight: 67,
+                    isJapanese: true,
+                    seasons: {
+                        '2023-2024': {
+                            team: 'Real Sociedad',
+                            stats: {
+                                matchesPlayed: 28,
+                                goals: 7,
+                                assists: 4,
+                                rating: 7.3,
+                                yellowCards: 2,
+                                redCards: 0
+                            }
+                        }
+                    }
+                }
+            };
+
+            // 選手IDで検索（大文字小文字を無視）
+            const lowerPlayerId = playerId.toLowerCase();
+            for (const [key, player] of Object.entries(fallbackPlayers)) {
+                if (key.toLowerCase() === lowerPlayerId || 
+                    player.name.toLowerCase().includes(lowerPlayerId) ||
+                    player.fullName.toLowerCase().includes(lowerPlayerId)) {
+                    return player;
+                }
+            }
+
+            return null;
         }
 
         function showTeamDetail(teamId) {
@@ -2599,12 +3541,7 @@
             document.body.appendChild(modal);
         }
 
-        function closeModal() {
-            const modal = document.querySelector('.detail-modal');
-            if (modal) {
-                modal.remove();
-            }
-        }
+
 
         // リーグフィルター機能
         function filterByLeague(leagueCode) {
@@ -2790,6 +3727,8 @@
             });
 
             currentData = convertedPlayers;
+            // グローバルにデータを保存（選手詳細ページで使用）
+            window.currentData = convertedPlayers;
             displayData(convertedPlayers, 'players');
         }
 
@@ -2814,11 +3753,26 @@
             // 初期タブを設定
             await switchTab('players');
             
+            // 選手クリックイベントリスナーを追加
+            setupPlayerClickEvents();
+            
             // 自動データ更新チェック（オーナーのみ）
             if (isOwner()) {
                 await checkAndUpdateData();
             }
         });
+
+        // 選手クリックイベントの設定
+        function setupPlayerClickEvents() {
+            // 動的に追加される要素に対応するため、イベント委譲を使用
+            document.addEventListener('click', function(event) {
+                const dataRow = event.target.closest('.data-row');
+                if (dataRow && dataRow.dataset.playerId) {
+                    const playerId = dataRow.dataset.playerId;
+                    showPlayerDetail(playerId, event);
+                }
+            });
+        }
 
         // 自動データ更新チェック
         async function checkAndUpdateData() {

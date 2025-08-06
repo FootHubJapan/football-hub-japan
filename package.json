@@ -6,7 +6,11 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test-production.js",
+    "test:local": "BASE_URL=http://localhost:3000 node test-production.js",
+    "deploy": "bash deploy.sh",
+    "build": "echo \"No build step required\"",
+    "postinstall": "echo \"Post-install complete\""
   },
   "keywords": [
     "football",
@@ -19,6 +23,7 @@
   "author": "Football Hub Japan",
   "license": "MIT",
   "dependencies": {
+    "@google/generative-ai": "^0.2.1",
     "axios": "^1.6.0",
     "dotenv": "^17.2.1",
     "express": "^4.18.2",
