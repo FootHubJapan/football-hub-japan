@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="Thu, 01 Jan 1970 00:00:00 GMT">
+    <title>AIエージェント - Football Hub Japan</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #1a1a1a;
+            border-bottom: 2px solid #00ff88;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            color: #00ff88;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: #333333;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            color: #00ff88;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .page-subtitle {
+            color: #cccccc;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .ai-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chat-section, .analysis-section {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .section-title {
+            color: #00ff88;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #333333;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: #0a0a0a;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            border-radius: 8px;
+        }
+
+        .user-message {
+            background: #00ff88;
+            color: #000000;
+            margin-left: 2rem;
+        }
+
+        .ai-message {
+            background: #333333;
+            color: #ffffff;
+            margin-right: 2rem;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.8rem;
+            border: 1px solid #333333;
+            border-radius: 5px;
+            background: #0a0a0a;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .chat-input button {
+            padding: 0.8rem 1.5rem;
+            background: #00ff88;
+            color: #000000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .chat-input button:hover {
+            background: #00cc6a;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .quick-btn {
+            padding: 0.8rem;
+            background: #333333;
+            color: #ffffff;
+            border: 1px solid #00ff88;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .quick-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .analysis-controls {
+            margin-bottom: 1rem;
+        }
+
+        .analysis-controls input, .analysis-controls select {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid #333333;
+            border-radius: 5px;
+            background: #0a0a0a;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .analysis-btn {
+            width: 100%;
+            padding: 1rem;
+            background: #00ff88;
+            color: #000000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .analysis-btn:hover {
+            background: #00cc6a;
+        }
+
+        .analysis-result {
+            background: #0a0a0a;
+            border: 1px solid #333333;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .chart-container {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-title {
+            color: #00ff88;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            background: #0a0a0a;
+            border-radius: 10px;
+            padding: 1rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #00ff88;
+            font-size: 1.1rem;
+            margin: 1rem 0;
+        }
+
+        .error {
+            color: #ff4444;
+            background: #330000;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        .success {
+            color: #00ff88;
+            background: #003300;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        .player-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .comparison-input {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .comparison-result {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            background: #333333;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #cccccc;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .ai-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .player-comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Football Hub Japan</div>
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="window.location.href='/'">ホーム</button>
+            <button class="nav-btn" onclick="window.location.href='/database'">データベース</button>
+            <button class="nav-btn" onclick="window.location.href='/radar'">レーダーチャート</button>
+            <button class="nav-btn" onclick="window.location.href='/dashboard'">ダッシュボード</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <h1 class="page-title">AIエージェント</h1>
+        <p class="page-subtitle">サッカー分析AIがあなたの質問にお答えします</p>
+
+        <div class="ai-container">
+            <!-- チャットセクション -->
+            <div class="chat-section">
+                <h2 class="section-title">AIチャット</h2>
+                
+                <div class="quick-actions">
+                    <button class="quick-btn" onclick="sendQuickMessage('選手比較分析を教えてください')">選手比較</button>
+                    <button class="quick-btn" onclick="sendQuickMessage('試合予測をしてください')">試合予測</button>
+                    <button class="quick-btn" onclick="sendQuickMessage('戦術分析をしてください')">戦術分析</button>
+                    <button class="quick-btn" onclick="sendQuickMessage('統計データを分析してください')">統計分析</button>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message ai-message">
+                        こんにちは！サッカー分析AIです。選手比較、試合予測、戦術分析など、何でもお聞きください。
+                    </div>
+                </div>
+
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="質問を入力してください..." onkeypress="handleKeyPress(event)">
+                    <button onclick="sendMessage()">送信</button>
+                </div>
+            </div>
+
+            <!-- 分析セクション -->
+            <div class="analysis-section">
+                <h2 class="section-title">詳細分析</h2>
+                
+                <div class="analysis-controls">
+                    <select id="analysisType">
+                        <option value="player-comparison">選手比較</option>
+                        <option value="match-prediction">試合予測</option>
+                        <option value="tactical-analysis">戦術分析</option>
+                        <option value="stats-analysis">統計分析</option>
+                    </select>
+                    
+                    <input type="text" id="analysisInput1" placeholder="選手名/チーム名1">
+                    <input type="text" id="analysisInput2" placeholder="選手名/チーム名2（比較の場合）">
+                    <input type="text" id="analysisContext" placeholder="追加コンテキスト（オプション）">
+                    
+                    <button class="analysis-btn" onclick="performAnalysis()">分析実行</button>
+                </div>
+
+                <div class="loading" id="analysisLoading">分析中...</div>
+                <div class="analysis-result" id="analysisResult"></div>
+            </div>
+        </div>
+
+        <!-- 選手比較セクション -->
+        <div class="player-comparison">
+            <div class="comparison-input">
+                <h2 class="section-title">選手比較分析</h2>
+                <input type="text" id="player1Input" placeholder="選手名1（例：久保建英）">
+                <input type="text" id="player2Input" placeholder="選手名2（例：三笘薫）">
+                <button class="analysis-btn" onclick="comparePlayers()">比較分析</button>
+            </div>
+            
+            <div class="comparison-result">
+                <h2 class="section-title">比較結果</h2>
+                <div id="comparisonResult"></div>
+            </div>
+        </div>
+
+        <!-- レーダーチャートセクション -->
+        <div class="chart-container">
+            <h2 class="chart-title">選手能力レーダーチャート</h2>
+            <div class="chart-wrapper">
+                <canvas id="radarChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let radarChart = null;
+        let currentAnalysisData = null;
+
+        // チャット機能
+        function sendQuickMessage(message) {
+            document.getElementById('chatInput').value = message;
+            sendMessage();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // ユーザーメッセージを表示
+            addMessage(message, 'user');
+            input.value = '';
+
+            // AI応答を取得
+            try {
+                const response = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                
+                if (data.response) {
+                    addMessage(data.response, 'ai');
+                } else {
+                    addMessage('申し訳ございません。応答を生成できませんでした。', 'ai');
+                }
+            } catch (error) {
+                console.error('Chat error:', error);
+                addMessage('エラーが発生しました。もう一度お試しください。', 'ai');
+            }
+        }
+
+        function addMessage(text, sender) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // 詳細分析機能
+        async function performAnalysis() {
+            const type = document.getElementById('analysisType').value;
+            const input1 = document.getElementById('analysisInput1').value.trim();
+            const input2 = document.getElementById('analysisInput2').value.trim();
+            const context = document.getElementById('analysisContext').value.trim();
+            
+            if (!input1) {
+                showError('入力が必要です');
+                return;
+            }
+
+            const loading = document.getElementById('analysisLoading');
+            const result = document.getElementById('analysisResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                let response;
+                
+                switch (type) {
+                    case 'player-comparison':
+                        if (!input2) {
+                            showError('比較する選手名2が必要です');
+                            return;
+                        }
+                        response = await fetch('/api/ai/compare', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ player1: input1, player2: input2 })
+                        });
+                        break;
+                        
+                    case 'match-prediction':
+                        if (!input2) {
+                            showError('対戦チーム名2が必要です');
+                            return;
+                        }
+                        response = await fetch('/api/ai/predict', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ team1: input1, team2: input2, context })
+                        });
+                        break;
+                        
+                    case 'tactical-analysis':
+                        response = await fetch('/api/ai/tactics', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ team: input1, season: context || '現在のシーズン' })
+                        });
+                        break;
+                        
+                    default:
+                        showError('無効な分析タイプです');
+                        return;
+                }
+
+                const data = await response.json();
+                
+                if (data.response) {
+                    result.innerHTML = `<div class="success">${data.response}</div>`;
+                    currentAnalysisData = data;
+                } else {
+                    showError('分析結果を取得できませんでした');
+                }
+            } catch (error) {
+                console.error('Analysis error:', error);
+                showError('分析中にエラーが発生しました');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // 選手比較機能
+        async function comparePlayers() {
+            const player1 = document.getElementById('player1Input').value.trim();
+            const player2 = document.getElementById('player2Input').value.trim();
+            
+            if (!player1 || !player2) {
+                showError('両方の選手名を入力してください');
+                return;
+            }
+
+            const result = document.getElementById('comparisonResult');
+            result.innerHTML = '<div class="loading">比較分析中...</div>';
+
+            try {
+                // 選手データを取得
+                const [player1Data, player2Data] = await Promise.all([
+                    searchPlayer(player1),
+                    searchPlayer(player2)
+                ]);
+
+                if (!player1Data || !player2Data) {
+                    showError('選手データを取得できませんでした');
+                    return;
+                }
+
+                // AI比較分析
+                const response = await fetch('/api/ai/compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ player1, player2 })
+                });
+
+                const data = await response.json();
+                
+                // 結果を表示
+                let html = '<div class="success">';
+                html += `<h3>${player1} vs ${player2}</h3>`;
+                html += `<p>${data.response}</p>`;
+                
+                // 統計比較
+                html += '<div class="stats-grid">';
+                html += createStatCard('得点', player1Data.stats?.goals || 0, player2Data.stats?.goals || 0);
+                html += createStatCard('アシスト', player1Data.stats?.assists || 0, player2Data.stats?.assists || 0);
+                html += createStatCard('出場試合', player1Data.stats?.appearances || 0, player2Data.stats?.appearances || 0);
+                html += createStatCard('出場時間', player1Data.stats?.minutes || 0, player2Data.stats?.minutes || 0);
+                html += '</div>';
+                
+                html += '</div>';
+                
+                result.innerHTML = html;
+                
+                // レーダーチャートを更新
+                updateRadarChart(player1Data, player2Data);
+                
+            } catch (error) {
+                console.error('Player comparison error:', error);
+                showError('選手比較中にエラーが発生しました');
+            }
+        }
+
+        // 選手検索
+        async function searchPlayer(name) {
+            try {
+                const response = await fetch(`/api/search/players?query=${encodeURIComponent(name)}&limit=1`);
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    return data.results[0];
+                }
+                return null;
+            } catch (error) {
+                console.error('Player search error:', error);
+                return null;
+            }
+        }
+
+        // 統計カード作成
+        function createStatCard(label, value1, value2) {
+            const winner = value1 > value2 ? 'player1' : value2 > value1 ? 'player2' : 'tie';
+            const color = winner === 'player1' ? '#00ff88' : winner === 'player2' ? '#ff4444' : '#cccccc';
+            
+            return `
+                <div class="stat-card">
+                    <div class="stat-label">${label}</div>
+                    <div class="stat-value" style="color: ${color}">
+                        ${value1} - ${value2}
+                    </div>
+                </div>
+            `;
+        }
+
+        // レーダーチャート更新
+        function updateRadarChart(player1Data, player2Data) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            if (radarChart) {
+                radarChart.destroy();
+            }
+
+            const data = {
+                labels: ['得点力', 'アシスト力', '出場率', '効率性', '総合力'],
+                datasets: [
+                    {
+                        label: player1Data.name || '選手1',
+                        data: [
+                            normalizeStat(player1Data.stats?.goals || 0, 20),
+                            normalizeStat(player1Data.stats?.assists || 0, 15),
+                            normalizeStat(player1Data.stats?.appearances || 0, 38),
+                            normalizeStat(player1Data.stats?.minutes || 0, 3420),
+                            normalizeStat((player1Data.stats?.goals || 0) + (player1Data.stats?.assists || 0), 30)
+                        ],
+                        borderColor: '#00ff88',
+                        backgroundColor: 'rgba(0, 255, 136, 0.2)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: player2Data.name || '選手2',
+                        data: [
+                            normalizeStat(player2Data.stats?.goals || 0, 20),
+                            normalizeStat(player2Data.stats?.assists || 0, 15),
+                            normalizeStat(player2Data.stats?.appearances || 0, 38),
+                            normalizeStat(player2Data.stats?.minutes || 0, 3420),
+                            normalizeStat((player2Data.stats?.goals || 0) + (player2Data.stats?.assists || 0), 30)
+                        ],
+                        borderColor: '#ff4444',
+                        backgroundColor: 'rgba(255, 68, 68, 0.2)',
+                        borderWidth: 2
+                    }
+                ]
+            };
+
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                color: '#ffffff',
+                                backdropColor: 'transparent'
+                            },
+                            grid: {
+                                color: '#333333'
+                            },
+                            pointLabels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 統計正規化
+        function normalizeStat(value, max) {
+            return Math.min((value / max) * 100, 100);
+        }
+
+        // エラー表示
+        function showError(message) {
+            const result = document.getElementById('analysisResult');
+            result.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 分析タイプに応じて入力フィールドを調整
+            document.getElementById('analysisType').addEventListener('change', function() {
+                const type = this.value;
+                const input2 = document.getElementById('analysisInput2');
+                const context = document.getElementById('analysisContext');
+                
+                switch (type) {
+                    case 'player-comparison':
+                        input2.placeholder = '選手名2';
+                        context.placeholder = '追加コンテキスト（オプション）';
+                        break;
+                    case 'match-prediction':
+                        input2.placeholder = 'チーム名2';
+                        context.placeholder = '試合コンテキスト（オプション）';
+                        break;
+                    case 'tactical-analysis':
+                        input2.placeholder = '選手名2（不要）';
+                        context.placeholder = 'シーズン（例：2024）';
+                        break;
+                    default:
+                        input2.placeholder = '選手名/チーム名2';
+                        context.placeholder = '追加コンテキスト（オプション）';
+                }
+            });
+        });
+    </script>
+    <script src="/ai-widget.js"></script>
+</body>
+</html> 

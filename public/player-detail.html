@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>選手詳細 - Football Hub Japan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #1a1a1a;
+            border-bottom: 2px solid #00ff88;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            color: #00ff88;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: #333333;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .back-btn {
+            background: #333333;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .player-header {
+            background: #1a1a1a;
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .player-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .player-info h1 {
+            color: #00ff88;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .player-info p {
+            color: #cccccc;
+            font-size: 1.1rem;
+            margin: 0.2rem 0;
+        }
+
+        .seasons-container {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .seasons-title {
+            color: #00ff88;
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .season-card {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .season-card:hover {
+            border-color: #00ff88;
+            transform: translateY(-2px);
+        }
+
+        .season-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .season-year {
+            color: #00ff88;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .season-team {
+            color: #cccccc;
+            font-size: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-item {
+            background: #333;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .loading {
+            text-align: center;
+            color: #00ff88;
+            font-size: 1.2rem;
+            padding: 2rem;
+        }
+
+        .error {
+            text-align: center;
+            color: #ff4444;
+            font-size: 1.2rem;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">⚽ Football Hub Japan</div>
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="window.location.href='/dashboard'">ダッシュボード</button>
+            <button class="nav-btn" onclick="window.location.href='/database'">データベース</button>
+            <button class="nav-btn" onclick="window.location.href='/radar'">レーダーチャート</button>
+            <button class="nav-btn" onclick="logout()">ログアウト</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <button class="back-btn" onclick="window.location.href='/database'">← データベースに戻る</button>
+        
+        <div id="playerContent">
+            <div class="loading">選手データを読み込み中...</div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="firebaseData.js"></script>
+    <script>
+        let currentPlayer = null;
+
+        // URLパラメータから選手IDを取得
+        function getPlayerIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+
+        // 選手データを取得して表示
+        async function loadPlayerData() {
+            const playerId = getPlayerIdFromUrl();
+            console.log('Loading player data for ID:', playerId);
+            
+            if (!playerId) {
+                showError('選手IDが指定されていません');
+                return;
+            }
+
+            try {
+                // まずAPI-Footballから選手データを取得してみる
+                let playerData = null;
+                
+                try {
+                    const response = await fetch(`/api/api-football/players?search=${encodeURIComponent(playerId)}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.results && data.results.length > 0) {
+                            // 名前でマッチング
+                            playerData = data.results.find(p => 
+                                p.player.name.toLowerCase().includes(playerId.toLowerCase()) ||
+                                p.player.name.toLowerCase() === playerId.toLowerCase()
+                            );
+                            if (playerData) {
+                                console.log('API-Footballから選手データを取得:', playerData);
+                                displayAPIFootballPlayerData(playerData);
+                                return;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.log('API-Football検索失敗、フォールバックデータを使用:', error);
+                }
+
+                // API-Footballで見つからない場合、FirebaseDataServiceを使用
+                let players = [];
+                
+                // FirebaseDataServiceの初期化を待つ
+                let retryCount = 0;
+                const maxRetries = 20;
+                
+                while (!window.firebaseDataService && retryCount < maxRetries) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    retryCount++;
+                }
+
+                if (window.firebaseDataService) {
+                    try {
+                        players = await window.firebaseDataService.getCachedPlayers();
+                    } catch (error) {
+                        console.error('キャッシュされた選手データの取得に失敗:', error);
+                    }
+                }
+
+                // グローバルデータも確認
+                if (players.length === 0 && window.currentData) {
+                    players = window.currentData;
+                }
+
+                // 選手を検索
+                currentPlayer = players.find(p => 
+                    p.id === playerId || 
+                    p.name === playerId || 
+                    p.fullName === playerId ||
+                    (p.name && p.name.toLowerCase().includes(playerId.toLowerCase())) ||
+                    (p.fullName && p.fullName.toLowerCase().includes(playerId.toLowerCase()))
+                );
+
+                if (!currentPlayer) {
+                    console.log('検索された選手ID:', playerId);
+                    console.log('利用可能な選手数:', players.length);
+                    console.log('最初の5人の選手:', players.slice(0, 5).map(p => ({ id: p.id, name: p.name, fullName: p.fullName })));
+                    
+                    // 最後の手段として、フォールバックデータを生成
+                    currentPlayer = generateFallbackPlayerData(playerId);
+                    if (currentPlayer) {
+                        console.log('フォールバックデータを生成:', currentPlayer);
+                        displayPlayerData(currentPlayer);
+                        return;
+                    }
+                    
+                    showError('選手データが見つかりません。データベースページに戻って選手を選択してください。');
+                    return;
+                }
+
+                displayPlayerData(currentPlayer);
+            } catch (error) {
+                console.error('選手データ取得エラー:', error);
+                showError('選手データの取得中にエラーが発生しました');
+            }
+        }
+
+        // 選手データを表示
+        function displayPlayerData(player) {
+            const playerName = player.name || player.fullName || 'Unknown Player';
+            const playerInitial = playerName.charAt(0);
+            const position = player.position || 'Unknown';
+            const nationality = player.nationality || 'Unknown';
+            const currentTeam = player.currentTeam || player.team || 'Unknown Team';
+
+            const playerContent = document.getElementById('playerContent');
+            playerContent.innerHTML = `
+                <div class="player-header">
+                    <div class="player-avatar">${playerInitial}</div>
+                    <div class="player-info">
+                        <h1>${playerName}</h1>
+                        <p>${position} • ${nationality}</p>
+                        <p>${currentTeam}</p>
+                        ${player.isJapanese ? '<p style="color: #ff4444; font-weight: bold;">🇯🇵 日本代表</p>' : ''}
+                    </div>
+                </div>
+
+                <div class="seasons-container">
+                    <h2 class="seasons-title">シーズン別統計</h2>
+                    <div id="seasonsList">
+                        ${generateSeasonsHTML(player)}
+                    </div>
+                </div>
+            `;
+        }
+
+        // API-Football選手データを表示
+        function displayAPIFootballPlayerData(playerData) {
+            const player = playerData.player;
+            const statistics = playerData.statistics || [];
+            
+            const playerName = player.name || 'Unknown Player';
+            const playerInitial = playerName.charAt(0);
+            const position = player.position || 'Unknown';
+            const nationality = player.nationality || 'Unknown';
+            const currentTeam = player.team?.name || 'Unknown Team';
+            const isJapanese = nationality === 'Japan' || nationality === 'JP';
+
+            const playerContent = document.getElementById('playerContent');
+            playerContent.innerHTML = `
+                <div class="player-header">
+                    <div class="player-avatar">${playerInitial}</div>
+                    <div class="player-info">
+                        <h1>${playerName}</h1>
+                        <p>${position} • ${nationality}</p>
+                        <p>${currentTeam}</p>
+                        ${isJapanese ? '<p style="color: #ff4444; font-weight: bold;">🇯🇵 日本代表</p>' : ''}
+                        <p>年齢: ${player.age || 'N/A'}歳</p>
+                        <p>身長: ${player.height || 'N/A'}cm</p>
+                        <p>体重: ${player.weight || 'N/A'}kg</p>
+                    </div>
+                </div>
+
+                <div class="seasons-container">
+                    <h2 class="seasons-title">シーズン別統計</h2>
+                    <div id="seasonsList">
+                        ${generateAPIFootballSeasonsHTML(statistics)}
+                    </div>
+                </div>
+            `;
+        }
+
+        // シーズン別統計のHTMLを生成
+        function generateSeasonsHTML(player) {
+            const seasons = player.seasons || {};
+            const seasonKeys = Object.keys(seasons).sort().reverse(); // 新しいシーズンから表示
+
+            if (seasonKeys.length === 0) {
+                return '<div class="error">シーズンデータがありません</div>';
+            }
+
+            return seasonKeys.map(seasonKey => {
+                const seasonData = seasons[seasonKey];
+                const stats = seasonData.stats || {};
+                const team = seasonData.team || player.currentTeam || 'Unknown Team';
+
+                return `
+                    <div class="season-card">
+                        <div class="season-header">
+                            <div class="season-year">${seasonKey} シーズン</div>
+                            <div class="season-team">${team}</div>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">⚽ 試合数</div>
+                                <div class="stat-value">${stats.matchesPlayed || stats.appearances || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🎯 ゴール</div>
+                                <div class="stat-value">${stats.goals || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🎯 アシスト</div>
+                                <div class="stat-value">${stats.assists || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">⭐ 評価</div>
+                                <div class="stat-value">${stats.rating || 'N/A'}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🟡 イエローカード</div>
+                                <div class="stat-value">${stats.yellowCards || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🔴 レッドカード</div>
+                                <div class="stat-value">${stats.redCards || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🧤 クリーンシート</div>
+                                <div class="stat-value">${stats.cleanSheets || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">📊 パス成功率</div>
+                                <div class="stat-value">${stats.passAccuracy || 'N/A'}%</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // API-Footballシーズン別統計のHTMLを生成
+        function generateAPIFootballSeasonsHTML(statistics) {
+            if (statistics.length === 0) {
+                return '<div class="error">シーズンデータがありません</div>';
+            }
+
+            return statistics.map(stat => {
+                const league = stat.league?.name || 'Unknown League';
+                const team = stat.team?.name || 'Unknown Team';
+                const season = stat.league?.season || 'Unknown Season';
+                const stats = stat.statistics || {};
+
+                return `
+                    <div class="season-card">
+                        <div class="season-header">
+                            <div class="season-year">${season} シーズン</div>
+                            <div class="season-team">${team} (${league})</div>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">⚽ 試合数</div>
+                                <div class="stat-value">${stats.appearances || stats.matchesPlayed || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🎯 ゴール</div>
+                                <div class="stat-value">${stats.goals || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🎯 アシスト</div>
+                                <div class="stat-value">${stats.assists || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">⭐ 評価</div>
+                                <div class="stat-value">${stats.rating || 'N/A'}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🟡 イエローカード</div>
+                                <div class="stat-value">${stats.yellowCards || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🔴 レッドカード</div>
+                                <div class="stat-value">${stats.redCards || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">🧤 クリーンシート</div>
+                                <div class="stat-value">${stats.cleanSheets || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">📊 パス成功率</div>
+                                <div class="stat-value">${stats.passAccuracy || 'N/A'}%</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // フォールバック選手データを生成
+        function generateFallbackPlayerData(playerId) {
+            // 有名選手のフォールバックデータ
+            const fallbackPlayers = {
+                'haaland': {
+                    id: 'haaland',
+                    name: 'Erling Haaland',
+                    fullName: 'Erling Braut Haaland',
+                    position: 'Forward',
+                    nationality: 'Norway',
+                    currentTeam: 'Manchester City',
+                    age: 23,
+                    height: 194,
+                    weight: 88,
+                    seasons: {
+                        '2023-2024': {
+                            team: 'Manchester City',
+                            stats: {
+                                matchesPlayed: 35,
+                                goals: 36,
+                                assists: 9,
+                                rating: 8.2,
+                                yellowCards: 3,
+                                redCards: 0
+                            }
+                        },
+                        '2022-2023': {
+                            team: 'Manchester City',
+                            stats: {
+                                matchesPlayed: 35,
+                                goals: 52,
+                                assists: 9,
+                                rating: 8.5,
+                                yellowCards: 5,
+                                redCards: 0
+                            }
+                        }
+                    }
+                },
+                'mbappe': {
+                    id: 'mbappe',
+                    name: 'Kylian Mbappé',
+                    fullName: 'Kylian Mbappé Lottin',
+                    position: 'Forward',
+                    nationality: 'France',
+                    currentTeam: 'Real Madrid',
+                    age: 25,
+                    height: 178,
+                    weight: 73,
+                    seasons: {
+                        '2023-2024': {
+                            team: 'Paris Saint-Germain',
+                            stats: {
+                                matchesPlayed: 29,
+                                goals: 27,
+                                assists: 7,
+                                rating: 8.1,
+                                yellowCards: 4,
+                                redCards: 0
+                            }
+                        }
+                    }
+                },
+                'kubo': {
+                    id: 'kubo',
+                    name: 'Takefusa Kubo',
+                    fullName: '久保建英',
+                    position: 'Midfielder',
+                    nationality: 'Japan',
+                    currentTeam: 'Real Sociedad',
+                    age: 23,
+                    height: 173,
+                    weight: 67,
+                    isJapanese: true,
+                    seasons: {
+                        '2023-2024': {
+                            team: 'Real Sociedad',
+                            stats: {
+                                matchesPlayed: 28,
+                                goals: 7,
+                                assists: 4,
+                                rating: 7.3,
+                                yellowCards: 2,
+                                redCards: 0
+                            }
+                        }
+                    }
+                }
+            };
+
+            // 選手IDで検索（大文字小文字を無視）
+            const lowerPlayerId = playerId.toLowerCase();
+            for (const [key, player] of Object.entries(fallbackPlayers)) {
+                if (key.toLowerCase() === lowerPlayerId || 
+                    player.name.toLowerCase().includes(lowerPlayerId) ||
+                    player.fullName.toLowerCase().includes(lowerPlayerId)) {
+                    return player;
+                }
+            }
+
+            return null;
+        }
+
+        // エラー表示
+        function showError(message) {
+            const playerContent = document.getElementById('playerContent');
+            playerContent.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        // ログアウト機能
+        function logout() {
+            // ログアウト処理
+            window.location.href = '/';
+        }
+
+        // ページ読み込み時に選手データを取得
+        document.addEventListener('DOMContentLoaded', loadPlayerData);
+    </script>
+</body>
+</html> 
