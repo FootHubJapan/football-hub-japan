@@ -131,6 +131,11 @@ app.use((req, res, next) => {
 
 app.use(express.static('public'));
 
+// AIウィジェットファイルを提供
+app.get('/ai-widget.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'ai-widget.js'));
+});
+
 // Favicon route
 app.get('/favicon.ico', (req, res) => {
     res.status(204).end();
