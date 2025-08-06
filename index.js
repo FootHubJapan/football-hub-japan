@@ -1395,7 +1395,16 @@ app.get('/api/fotmob/players', async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error('Error fetching players:', error);
-        res.status(500).json({ error: 'Failed to fetch players' });
+        // Return fallback data if service fails
+        const fallbackPlayers = fotMobDataService.getFallbackPlayers();
+        const fallbackResult = {
+            players: fallbackPlayers.slice(0, parseInt(req.query.limit) || 20),
+            total: fallbackPlayers.length,
+            page: parseInt(req.query.page) || 1,
+            limit: parseInt(req.query.limit) || 20,
+            totalPages: Math.ceil(fallbackPlayers.length / (parseInt(req.query.limit) || 20))
+        };
+        res.json(fallbackResult);
     }
 });
 
@@ -1420,7 +1429,9 @@ app.get('/api/fotmob/teams', async (req, res) => {
         res.json(teams);
     } catch (error) {
         console.error('Error fetching teams:', error);
-        res.status(500).json({ error: 'Failed to fetch teams' });
+        // Return fallback teams if service fails
+        const fallbackTeams = fotMobDataService.getFallbackTeams();
+        res.json(fallbackTeams);
     }
 });
 
@@ -1430,7 +1441,9 @@ app.get('/api/fotmob/leagues', async (req, res) => {
         res.json(leagues);
     } catch (error) {
         console.error('Error fetching leagues:', error);
-        res.status(500).json({ error: 'Failed to fetch leagues' });
+        // Return fallback leagues if service fails
+        const fallbackLeagues = fotMobDataService.getFallbackLeagues();
+        res.json(fallbackLeagues);
     }
 });
 
@@ -1454,10 +1467,10 @@ app.get('/api/fotmob/search', async (req, res) => {
 // Initialize FotMob data service on startup
 app.get('/api/fotmob/init', async (req, res) => {
     try {
-        await fotMobDataService.initialize();
+        const success = await fotMobDataService.initialize();
         res.json({ 
-            status: 'success', 
-            message: 'FotMob data service initialized',
+            status: success ? 'success' : 'partial',
+            message: success ? 'FotMob data service initialized' : 'FotMob data service initialized with fallback data',
             lastUpdate: fotMobDataService.lastUpdate
         });
     } catch (error) {

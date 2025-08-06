@@ -1387,34 +1387,65 @@ class FotMobDataService {
         this.initializationPromise = null;
         this.lastUpdate = null;
         this.updateInterval = 24 * 60 * 60 * 1000; // 24 hours
+        this.isInitializing = false;
     }
 
     // Initialize the service
     async initialize() {
+        if (this.isInitialized) {
+            return true;
+        }
+
         if (this.initializationPromise) {
             return this.initializationPromise;
         }
 
+        if (this.isInitializing) {
+            // Wait for ongoing initialization
+            while (this.isInitializing) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            return this.isInitialized;
+        }
+
+        this.isInitializing = true;
         this.initializationPromise = this._initialize();
-        return this.initializationPromise;
+        
+        try {
+            await this.initializationPromise;
+            this.isInitialized = true;
+        } catch (error) {
+            console.error('FotMobDataService initialization failed:', error);
+            this.isInitialized = false;
+        } finally {
+            this.isInitializing = false;
+        }
+
+        return this.isInitialized;
     }
 
     async _initialize() {
         console.log('Initializing FotMob-style Data Service...');
         
-        // Load existing data
-        await this.loadPersistentData();
-        
-        // Check if data needs updating
-        if (this.shouldUpdateData()) {
-            console.log('Data is outdated, updating...');
-            await this.updateAllData();
-        } else {
-            console.log('Data is up to date');
-        }
+        try {
+            // Load existing data
+            await this.loadPersistentData();
+            
+            // Check if data needs updating
+            if (this.shouldUpdateData()) {
+                console.log('Data is outdated, updating...');
+                await this.updateAllData();
+            } else {
+                console.log('Data is up to date');
+            }
 
-        this.isInitialized = true;
-        console.log('FotMob-style Data Service initialized');
+            console.log('FotMob-style Data Service initialized successfully');
+            return true;
+        } catch (error) {
+            console.error('Error during FotMobDataService initialization:', error);
+            // Even if initialization fails, we can still serve fallback data
+            return false;
+        }
     }
 
     // Check if data should be updated
@@ -1432,15 +1463,15 @@ class FotMobDataService {
                 loadDataFromFile(LEAGUES_FILE)
             ]);
 
-            if (players) {
+            if (players && players.length > 0) {
                 this.cache.set('players', players);
                 console.log(`Loaded ${players.length} players from persistent storage`);
             }
-            if (teams) {
+            if (teams && teams.length > 0) {
                 this.cache.set('teams', teams);
                 console.log(`Loaded ${teams.length} teams from persistent storage`);
             }
-            if (leagues) {
+            if (leagues && leagues.length > 0) {
                 this.cache.set('leagues', leagues);
                 console.log(`Loaded ${leagues.length} leagues from persistent storage`);
             }
@@ -1456,23 +1487,53 @@ class FotMobDataService {
             
             // Update leagues
             const leagues = await this.fetchLeagues();
-            await saveDataToFile(LEAGUES_FILE, leagues);
-            this.cache.set('leagues', leagues);
+            if (leagues && leagues.length > 0) {
+                await saveDataToFile(LEAGUES_FILE, leagues);
+                this.cache.set('leagues', leagues);
+            }
 
             // Update teams
             const teams = await this.fetchTeams();
-            await saveDataToFile(TEAMS_FILE, teams);
-            this.cache.set('teams', teams);
+            if (teams && teams.length > 0) {
+                await saveDataToFile(TEAMS_FILE, teams);
+                this.cache.set('teams', teams);
+            }
 
             // Update players
             const players = await this.fetchPlayers();
-            await saveDataToFile(PLAYERS_FILE, players);
-            this.cache.set('players', players);
+            if (players && players.length > 0) {
+                await saveDataToFile(PLAYERS_FILE, players);
+                this.cache.set('players', players);
+            }
 
             this.lastUpdate = Date.now();
             console.log('Data update completed');
         } catch (error) {
             console.error('Error updating data:', error);
+            // Use fallback data if update fails
+            await this.loadFallbackData();
+        }
+    }
+
+    // Load fallback data if no persistent data exists
+    async loadFallbackData() {
+        console.log('Loading fallback data...');
+        
+        const fallbackPlayers = this.getFallbackPlayers();
+        const fallbackTeams = this.getFallbackTeams();
+        const fallbackLeagues = this.getFallbackLeagues();
+
+        this.cache.set('players', fallbackPlayers);
+        this.cache.set('teams', fallbackTeams);
+        this.cache.set('leagues', fallbackLeagues);
+
+        // Save fallback data to files
+        try {
+            await saveDataToFile(PLAYERS_FILE, fallbackPlayers);
+            await saveDataToFile(TEAMS_FILE, fallbackTeams);
+            await saveDataToFile(LEAGUES_FILE, fallbackLeagues);
+        } catch (error) {
+            console.error('Error saving fallback data:', error);
         }
     }
 
@@ -1600,42 +1661,62 @@ class FotMobDataService {
 
     // Get all players (FotMob style - always available)
     async getAllPlayers(options = {}) {
-        await this.initialize();
-        
-        let players = this.cache.get('players') || [];
-        
-        // Apply filters
-        if (options.search) {
-            const searchLower = options.search.toLowerCase();
-            players = players.filter(player => 
-                player.name.toLowerCase().includes(searchLower) ||
-                player.teamName?.toLowerCase().includes(searchLower) ||
-                player.nationality?.toLowerCase().includes(searchLower) ||
-                player.position?.toLowerCase().includes(searchLower)
-            );
+        try {
+            await this.initialize();
+            
+            let players = this.cache.get('players') || [];
+            
+            // If no players in cache, load fallback data
+            if (players.length === 0) {
+                console.log('No players in cache, loading fallback data...');
+                await this.loadFallbackData();
+                players = this.cache.get('players') || [];
+            }
+            
+            // Apply filters
+            if (options.search) {
+                const searchLower = options.search.toLowerCase();
+                players = players.filter(player => 
+                    player.name && player.name.toLowerCase().includes(searchLower) ||
+                    player.teamName && player.teamName.toLowerCase().includes(searchLower) ||
+                    player.nationality && player.nationality.toLowerCase().includes(searchLower) ||
+                    player.position && player.position.toLowerCase().includes(searchLower)
+                );
+            }
+
+            if (options.league) {
+                players = players.filter(player => player.leagueId === options.league);
+            }
+
+            if (options.position) {
+                players = players.filter(player => player.position === options.position);
+            }
+
+            // Apply pagination
+            const page = options.page || 1;
+            const limit = options.limit || 20;
+            const startIndex = (page - 1) * limit;
+            const endIndex = startIndex + limit;
+
+            return {
+                players: players.slice(startIndex, endIndex),
+                total: players.length,
+                page,
+                limit,
+                totalPages: Math.ceil(players.length / limit)
+            };
+        } catch (error) {
+            console.error('Error in getAllPlayers:', error);
+            // Return fallback data if everything fails
+            const fallbackPlayers = this.getFallbackPlayers();
+            return {
+                players: fallbackPlayers.slice(0, options.limit || 20),
+                total: fallbackPlayers.length,
+                page: options.page || 1,
+                limit: options.limit || 20,
+                totalPages: Math.ceil(fallbackPlayers.length / (options.limit || 20))
+            };
         }
-
-        if (options.league) {
-            players = players.filter(player => player.leagueId === options.league);
-        }
-
-        if (options.position) {
-            players = players.filter(player => player.position === options.position);
-        }
-
-        // Apply pagination
-        const page = options.page || 1;
-        const limit = options.limit || 20;
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + limit;
-
-        return {
-            players: players.slice(startIndex, endIndex),
-            total: players.length,
-            page,
-            limit,
-            totalPages: Math.ceil(players.length / limit)
-        };
     }
 
     // Get player by ID
@@ -1727,6 +1808,188 @@ class FotMobDataService {
                 teamId: 65,
                 teamName: 'Manchester City FC',
                 leagueId: 'PL',
+                source: 'fallback'
+            },
+            {
+                id: 3,
+                name: '久保建英',
+                firstName: 'Takefusa',
+                lastName: 'Kubo',
+                dateOfBirth: '2001-06-04',
+                nationality: 'Japan',
+                position: 'Midfielder',
+                shirtNumber: 14,
+                teamId: 201,
+                teamName: 'Real Sociedad',
+                leagueId: 'PD',
+                source: 'fallback'
+            },
+            {
+                id: 4,
+                name: '三笘薫',
+                firstName: 'Kaoru',
+                lastName: 'Mitoma',
+                dateOfBirth: '1997-05-20',
+                nationality: 'Japan',
+                position: 'Forward',
+                shirtNumber: 22,
+                teamId: 397,
+                teamName: 'Brighton & Hove Albion FC',
+                leagueId: 'PL',
+                source: 'fallback'
+            },
+            {
+                id: 5,
+                name: '堂安律',
+                firstName: 'Ritsu',
+                lastName: 'Doan',
+                dateOfBirth: '1998-06-16',
+                nationality: 'Japan',
+                position: 'Midfielder',
+                shirtNumber: 8,
+                teamId: 165,
+                teamName: 'SC Freiburg',
+                leagueId: 'BL1',
+                source: 'fallback'
+            },
+            {
+                id: 6,
+                name: '田中碧',
+                firstName: 'Ao',
+                lastName: 'Tanaka',
+                dateOfBirth: '1998-09-10',
+                nationality: 'Japan',
+                position: 'Midfielder',
+                shirtNumber: 6,
+                teamId: 165,
+                teamName: 'SC Freiburg',
+                leagueId: 'BL1',
+                source: 'fallback'
+            },
+            {
+                id: 7,
+                name: '伊藤洋輝',
+                firstName: 'Hiroki',
+                lastName: 'Ito',
+                dateOfBirth: '1999-05-12',
+                nationality: 'Japan',
+                position: 'Defender',
+                shirtNumber: 21,
+                teamId: 165,
+                teamName: 'VfB Stuttgart',
+                leagueId: 'BL1',
+                source: 'fallback'
+            },
+            {
+                id: 8,
+                name: '遠藤航',
+                firstName: 'Wataru',
+                lastName: 'Endo',
+                dateOfBirth: '1993-02-09',
+                nationality: 'Japan',
+                position: 'Midfielder',
+                shirtNumber: 3,
+                teamId: 64,
+                teamName: 'Liverpool FC',
+                leagueId: 'PL',
+                source: 'fallback'
+            },
+            {
+                id: 9,
+                name: '南野拓実',
+                firstName: 'Takumi',
+                lastName: 'Minamino',
+                dateOfBirth: '1995-01-16',
+                nationality: 'Japan',
+                position: 'Forward',
+                shirtNumber: 18,
+                teamId: 58,
+                teamName: 'AS Monaco',
+                leagueId: 'FL1',
+                source: 'fallback'
+            },
+            {
+                id: 10,
+                name: '浅野拓磨',
+                firstName: 'Takuma',
+                lastName: 'Asano',
+                dateOfBirth: '1994-11-10',
+                nationality: 'Japan',
+                position: 'Forward',
+                shirtNumber: 9,
+                teamId: 165,
+                teamName: 'VfB Stuttgart',
+                leagueId: 'BL1',
+                source: 'fallback'
+            },
+            {
+                id: 11,
+                name: '上田綺世',
+                firstName: 'Ayase',
+                lastName: 'Ueda',
+                dateOfBirth: '1998-08-28',
+                nationality: 'Japan',
+                position: 'Forward',
+                shirtNumber: 11,
+                teamId: 165,
+                teamName: 'Feyenoord',
+                leagueId: 'NL1',
+                source: 'fallback'
+            },
+            {
+                id: 12,
+                name: '前田大然',
+                firstName: 'Daizen',
+                lastName: 'Maeda',
+                dateOfBirth: '1997-10-20',
+                nationality: 'Japan',
+                position: 'Forward',
+                shirtNumber: 38,
+                teamId: 247,
+                teamName: 'Celtic FC',
+                leagueId: 'SC1',
+                source: 'fallback'
+            },
+            {
+                id: 13,
+                name: 'Lionel Messi',
+                firstName: 'Lionel',
+                lastName: 'Messi',
+                dateOfBirth: '1987-06-24',
+                nationality: 'Argentina',
+                position: 'Forward',
+                shirtNumber: 10,
+                teamId: 197,
+                teamName: 'Inter Miami CF',
+                leagueId: 'MLS',
+                source: 'fallback'
+            },
+            {
+                id: 14,
+                name: 'Cristiano Ronaldo',
+                firstName: 'Cristiano',
+                lastName: 'Ronaldo',
+                dateOfBirth: '1985-02-05',
+                nationality: 'Portugal',
+                position: 'Forward',
+                shirtNumber: 7,
+                teamId: 211,
+                teamName: 'Al Nassr FC',
+                leagueId: 'SAU',
+                source: 'fallback'
+            },
+            {
+                id: 15,
+                name: 'Kylian Mbappé',
+                firstName: 'Kylian',
+                lastName: 'Mbappé',
+                dateOfBirth: '1998-12-20',
+                nationality: 'France',
+                position: 'Forward',
+                shirtNumber: 7,
+                teamId: 524,
+                teamName: 'Real Madrid CF',
+                leagueId: 'PD',
                 source: 'fallback'
             }
         ];

@@ -419,7 +419,36 @@
                 await loadLeagues();
             } catch (error) {
                 console.error('Error initializing data:', error);
-                showError('データの初期化に失敗しました');
+                // Even if initialization fails, try to load fallback data
+                await loadFallbackData();
+            }
+        }
+
+        async function loadFallbackData() {
+            try {
+                console.log('Loading fallback data...');
+                
+                // Load fallback players
+                const playersResponse = await fetch('/api/fotmob/players');
+                const playersData = await playersResponse.json();
+                
+                if (playersData.players && playersData.players.length > 0) {
+                    displayPlayers(playersData.players);
+                    totalPlayers = playersData.total;
+                    totalPages = playersData.totalPages;
+                    updatePagination();
+                }
+
+                // Load fallback stats
+                await loadStats();
+                
+                // Load fallback leagues
+                await loadLeagues();
+                
+                console.log('Fallback data loaded successfully');
+            } catch (error) {
+                console.error('Error loading fallback data:', error);
+                showError('データの読み込みに失敗しました。ページを再読み込みしてください。');
             }
         }
 
