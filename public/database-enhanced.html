@@ -111,6 +111,24 @@
             font-size: 1rem;
         }
 
+        .search-controls select optgroup {
+            background: #1a1a1a;
+            color: #00ff88;
+            font-weight: bold;
+            padding: 0.5rem;
+        }
+
+        .search-controls select option {
+            background: #0a0a0a;
+            color: #ffffff;
+            padding: 0.3rem;
+        }
+
+        .search-controls select option:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
         .search-btn {
             padding: 0.8rem 1.5rem;
             background: #00ff88;
@@ -405,10 +423,50 @@
                 </select>
                 <select id="positionSelect">
                     <option value="">すべてのポジション</option>
-                    <option value="Forward">フォワード</option>
-                    <option value="Midfielder">ミッドフィルダー</option>
-                    <option value="Defender">ディフェンダー</option>
-                    <option value="Goalkeeper">ゴールキーパー</option>
+                    <!-- フォワード -->
+                    <optgroup label="フォワード (FW)">
+                        <option value="ST">ストライカー (ST)</option>
+                        <option value="CF">センターフォワード (CF)</option>
+                        <option value="SS">セカンドストライカー (SS)</option>
+                        <option value="LW">レフトウィング (LW)</option>
+                        <option value="RW">ライトウィング (RW)</option>
+                        <option value="AM">攻撃的MF (AM)</option>
+                        <option value="CF2">センターフォワード (CF2)</option>
+                        <option value="WF">ウィングフォワード (WF)</option>
+                    </optgroup>
+                    <!-- ミッドフィルダー -->
+                    <optgroup label="ミッドフィルダー (MF)">
+                        <option value="CM">センターミッドフィルダー (CM)</option>
+                        <option value="DM">守備的MF (DM)</option>
+                        <option value="AM">攻撃的MF (AM)</option>
+                        <option value="LM">レフトMF (LM)</option>
+                        <option value="RM">ライトMF (RM)</option>
+                        <option value="B2B">ボックス・トゥ・ボックス (B2B)</option>
+                        <option value="OMF">オフェンシブMF (OMF)</option>
+                        <option value="WM">ワイドMF (WM)</option>
+                        <option value="CAM">センタール攻撃的MF (CAM)</option>
+                        <option value="CDM">センタール守備的MF (CDM)</option>
+                    </optgroup>
+                    <!-- ディフェンダー -->
+                    <optgroup label="ディフェンダー (DF)">
+                        <option value="CB">センターバック (CB)</option>
+                        <option value="LB">レフトバック (LB)</option>
+                        <option value="RB">ライトバック (RB)</option>
+                        <option value="SW">スイーパー (SW)</option>
+                        <option value="WB">ウィングバック (WB)</option>
+                        <option value="LIB">リベロ (LIB)</option>
+                        <option value="LWB">レフトウィングバック (LWB)</option>
+                        <option value="RWB">ライトウィングバック (RWB)</option>
+                        <option value="LCB">レフトセンターバック (LCB)</option>
+                        <option value="RCB">ライトセンターバック (RCB)</option>
+                        <option value="FB">フルバック (FB)</option>
+                    </optgroup>
+                    <!-- ゴールキーパー -->
+                    <optgroup label="ゴールキーパー (GK)">
+                        <option value="GK">ゴールキーパー (GK)</option>
+                        <option value="SK">スイーパーキーパー (SK)</option>
+                        <option value="AK">攻撃的キーパー (AK)</option>
+                    </optgroup>
                 </select>
                 <button class="search-btn" onclick="performSearch()">検索</button>
             </div>
