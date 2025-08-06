@@ -150,8 +150,8 @@ app.get('/dashboard', (req, res) => {
 });
 
 app.get('/database', (req, res) => {
-    // 強化されたデータベースページにリダイレクト
-    res.redirect('/database-enhanced');
+    // 強化されたデータベースページを直接提供
+    res.sendFile(path.join(__dirname, 'public', 'database-new.html'));
 });
 
 app.get('/database-new', (req, res) => {
@@ -163,14 +163,14 @@ app.get('/database-fixed', (req, res) => {
 });
 
 app.get('/radar', (req, res) => {
-    // 強化されたレーダーチャートページにリダイレクト
-    res.redirect('/radar-enhanced');
+    // 強化されたレーダーチャートページを直接提供
+    res.sendFile(path.join(__dirname, 'public', 'radar.html'));
 });
 
 // AIエージェントページ
 app.get('/ai-agent', (req, res) => {
-    // 強化されたAIエージェントページにリダイレクト
-    res.redirect('/ai-agent-enhanced');
+    // 強化されたAIエージェントページを直接提供
+    res.sendFile(path.join(__dirname, 'public', 'ai-agent.html'));
 });
 
 // 強化AIエージェントページ
