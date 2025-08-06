@@ -116,6 +116,24 @@
             border-color: #00ff88;
         }
 
+        .search-input optgroup {
+            background: #1a1a1a;
+            color: #00ff88;
+            font-weight: bold;
+            padding: 0.5rem;
+        }
+
+        .search-input option {
+            background: #0a0a0a;
+            color: #ffffff;
+            padding: 0.3rem;
+        }
+
+        .search-input option:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
         .position-filters {
             display: flex;
             flex-wrap: wrap;
@@ -523,22 +541,62 @@
             <div class="search-controls">
                 <input type="text" id="searchInput" class="search-input" placeholder="選手名を入力..." onkeyup="handleSearch()">
                 <select id="leagueSelect" class="search-input">
-                    <option value="">すべてのリーグ</option>
-                    <option value="PL">プレミアリーグ</option>
-                    <option value="PD">ラ・リーガ</option>
-                    <option value="SA">セリエA</option>
-                    <option value="BL1">ブンデスリーガ</option>
-                    <option value="FL1">リーグ・アン</option>
+                        <option value="">すべてのリーグ</option>
+                        <option value="PL">プレミアリーグ</option>
+                        <option value="PD">ラ・リーガ</option>
+                        <option value="SA">セリエA</option>
+                        <option value="BL1">ブンデスリーガ</option>
+                        <option value="FL1">リーグ・アン</option>
                     <option value="J1">J1リーグ</option>
                 </select>
                 <select id="positionSelect" class="search-input">
                     <option value="">すべてのポジション</option>
-                    <option value="FW">フォワード</option>
-                    <option value="MF">ミッドフィルダー</option>
-                    <option value="DF">ディフェンダー</option>
-                    <option value="GK">ゴールキーパー</option>
+                    <!-- フォワード -->
+                    <optgroup label="フォワード (FW)">
+                        <option value="ST">ストライカー (ST)</option>
+                        <option value="CF">センターフォワード (CF)</option>
+                        <option value="SS">セカンドストライカー (SS)</option>
+                        <option value="LW">レフトウィング (LW)</option>
+                        <option value="RW">ライトウィング (RW)</option>
+                        <option value="AM">攻撃的MF (AM)</option>
+                        <option value="CF2">センターフォワード (CF2)</option>
+                        <option value="WF">ウィングフォワード (WF)</option>
+                    </optgroup>
+                    <!-- ミッドフィルダー -->
+                    <optgroup label="ミッドフィルダー (MF)">
+                        <option value="CM">センターミッドフィルダー (CM)</option>
+                        <option value="DM">守備的MF (DM)</option>
+                        <option value="AM">攻撃的MF (AM)</option>
+                        <option value="LM">レフトMF (LM)</option>
+                        <option value="RM">ライトMF (RM)</option>
+                        <option value="B2B">ボックス・トゥ・ボックス (B2B)</option>
+                        <option value="OMF">オフェンシブMF (OMF)</option>
+                        <option value="WM">ワイドMF (WM)</option>
+                        <option value="CAM">センタール攻撃的MF (CAM)</option>
+                        <option value="CDM">センタール守備的MF (CDM)</option>
+                    </optgroup>
+                    <!-- ディフェンダー -->
+                    <optgroup label="ディフェンダー (DF)">
+                        <option value="CB">センターバック (CB)</option>
+                        <option value="LB">レフトバック (LB)</option>
+                        <option value="RB">ライトバック (RB)</option>
+                        <option value="SW">スイーパー (SW)</option>
+                        <option value="WB">ウィングバック (WB)</option>
+                        <option value="LIB">リベロ (LIB)</option>
+                        <option value="LWB">レフトウィングバック (LWB)</option>
+                        <option value="RWB">ライトウィングバック (RWB)</option>
+                        <option value="LCB">レフトセンターバック (LCB)</option>
+                        <option value="RCB">ライトセンターバック (RCB)</option>
+                        <option value="FB">フルバック (FB)</option>
+                    </optgroup>
+                    <!-- ゴールキーパー -->
+                    <optgroup label="ゴールキーパー (GK)">
+                        <option value="GK">ゴールキーパー (GK)</option>
+                        <option value="SK">スイーパーキーパー (SK)</option>
+                        <option value="AK">攻撃的キーパー (AK)</option>
+                    </optgroup>
                 </select>
-            </div>
+                </div>
 
             <!-- 詳細ポジション設定セクション -->
             <div class="detailed-position-section">
@@ -550,37 +608,37 @@
                             <div class="position-option">
                                 <input type="checkbox" id="fw_striker" value="ST">
                                 <label for="fw_striker">ストライカー (ST)</label>
-                            </div>
+            </div>
                             <div class="position-option">
                                 <input type="checkbox" id="fw_center_forward" value="CF">
                                 <label for="fw_center_forward">センターフォワード (CF)</label>
-                            </div>
+        </div>
                             <div class="position-option">
                                 <input type="checkbox" id="fw_second_striker" value="SS">
                                 <label for="fw_second_striker">セカンドストライカー (SS)</label>
-                            </div>
+            </div>
                             <div class="position-option">
                                 <input type="checkbox" id="fw_left_wing" value="LW">
                                 <label for="fw_left_wing">レフトウィング (LW)</label>
-                            </div>
+        </div>
                             <div class="position-option">
                                 <input type="checkbox" id="fw_right_wing" value="RW">
                                 <label for="fw_right_wing">ライトウィング (RW)</label>
-                            </div>
+            </div>
                             <div class="position-option">
                                 <input type="checkbox" id="fw_attacking_midfielder" value="AM">
                                 <label for="fw_attacking_midfielder">攻撃的MF (AM)</label>
-                            </div>
+        </div>
                             <div class="position-option">
                                 <input type="checkbox" id="fw_center_forward_second" value="CF2">
                                 <label for="fw_center_forward_second">センターフォワード (CF2)</label>
-                            </div>
+            </div>
                             <div class="position-option">
                                 <input type="checkbox" id="fw_wing_forward" value="WF">
                                 <label for="fw_wing_forward">ウィングフォワード (WF)</label>
-                            </div>
-                        </div>
-                    </div>
+            </div>
+            </div>
+            </div>
 
                     <div class="position-category">
                         <h4>ミッドフィルダー (MF)</h4>
@@ -588,45 +646,45 @@
                             <div class="position-option">
                                 <input type="checkbox" id="mf_central_midfielder" value="CM">
                                 <label for="mf_central_midfielder">センターミッドフィルダー (CM)</label>
-                            </div>
+            </div>
                             <div class="position-option">
                                 <input type="checkbox" id="mf_defensive_midfielder" value="DM">
                                 <label for="mf_defensive_midfielder">守備的MF (DM)</label>
-                            </div>
+        </div>
                             <div class="position-option">
                                 <input type="checkbox" id="mf_attacking_midfielder" value="AM">
                                 <label for="mf_attacking_midfielder">攻撃的MF (AM)</label>
-                            </div>
+    </div>
                             <div class="position-option">
                                 <input type="checkbox" id="mf_left_midfielder" value="LM">
                                 <label for="mf_left_midfielder">レフトMF (LM)</label>
-                            </div>
+                                        </div>
                             <div class="position-option">
                                 <input type="checkbox" id="mf_right_midfielder" value="RM">
                                 <label for="mf_right_midfielder">ライトMF (RM)</label>
-                            </div>
+                                            </div>
                             <div class="position-option">
                                 <input type="checkbox" id="mf_box_to_box" value="B2B">
                                 <label for="mf_box_to_box">ボックス・トゥ・ボックス (B2B)</label>
-                            </div>
+                                        </div>
                             <div class="position-option">
                                 <input type="checkbox" id="mf_offensive_midfielder" value="OMF">
                                 <label for="mf_offensive_midfielder">オフェンシブMF (OMF)</label>
-                            </div>
+                                    </div>
                             <div class="position-option">
                                 <input type="checkbox" id="mf_wide_midfielder" value="WM">
                                 <label for="mf_wide_midfielder">ワイドMF (WM)</label>
-                            </div>
+                                    </div>
                             <div class="position-option">
                                 <input type="checkbox" id="mf_central_attacking" value="CAM">
                                 <label for="mf_central_attacking">センタール攻撃的MF (CAM)</label>
-                            </div>
+                                    </div>
                             <div class="position-option">
                                 <input type="checkbox" id="mf_central_defensive" value="CDM">
                                 <label for="mf_central_defensive">センタール守備的MF (CDM)</label>
-                            </div>
-                        </div>
-                    </div>
+                                    </div>
+                                        </div>
+                                        </div>
 
                     <div class="position-category">
                         <h4>ディフェンダー (DF)</h4>
@@ -634,48 +692,48 @@
                             <div class="position-option">
                                 <input type="checkbox" id="df_center_back" value="CB">
                                 <label for="df_center_back">センターバック (CB)</label>
-                            </div>
+                                        </div>
                             <div class="position-option">
                                 <input type="checkbox" id="df_left_back" value="LB">
                                 <label for="df_left_back">レフトバック (LB)</label>
-                            </div>
+                                        </div>
                             <div class="position-option">
                                 <input type="checkbox" id="df_right_back" value="RB">
                                 <label for="df_right_back">ライトバック (RB)</label>
-                            </div>
+                                    </div>
                             <div class="position-option">
                                 <input type="checkbox" id="df_sweeper" value="SW">
                                 <label for="df_sweeper">スイーパー (SW)</label>
-                            </div>
+                                        </div>
                             <div class="position-option">
                                 <input type="checkbox" id="df_wing_back" value="WB">
                                 <label for="df_wing_back">ウィングバック (WB)</label>
-                            </div>
+                                    </div>
                             <div class="position-option">
                                 <input type="checkbox" id="df_libero" value="LIB">
                                 <label for="df_libero">リベロ (LIB)</label>
-                            </div>
+                                    </div>
                             <div class="position-option">
                                 <input type="checkbox" id="df_left_wing_back" value="LWB">
                                 <label for="df_left_wing_back">レフトウィングバック (LWB)</label>
-                            </div>
+                                    </div>
                             <div class="position-option">
                                 <input type="checkbox" id="df_right_wing_back" value="RWB">
                                 <label for="df_right_wing_back">ライトウィングバック (RWB)</label>
-                            </div>
+                                        </div>
                             <div class="position-option">
                                 <input type="checkbox" id="df_center_back_left" value="LCB">
                                 <label for="df_center_back_left">レフトセンターバック (LCB)</label>
-                            </div>
+                                        </div>
                             <div class="position-option">
                                 <input type="checkbox" id="df_center_back_right" value="RCB">
                                 <label for="df_center_back_right">ライトセンターバック (RCB)</label>
-                            </div>
+                                        </div>
                             <div class="position-option">
                                 <input type="checkbox" id="df_full_back" value="FB">
                                 <label for="df_full_back">フルバック (FB)</label>
-                            </div>
-                        </div>
+                                        </div>
+                                    </div>
                     </div>
 
                     <div class="position-category">
@@ -684,22 +742,22 @@
                             <div class="position-option">
                                 <input type="checkbox" id="gk_goalkeeper" value="GK">
                                 <label for="gk_goalkeeper">ゴールキーパー (GK)</label>
-                            </div>
+                                        </div>
                             <div class="position-option">
                                 <input type="checkbox" id="gk_sweeper_keeper" value="SK">
                                 <label for="gk_sweeper_keeper">スイーパーキーパー (SK)</label>
-                            </div>
+                                    </div>
                             <div class="position-option">
                                 <input type="checkbox" id="gk_attacking_keeper" value="AK">
                                 <label for="gk_attacking_keeper">攻撃的キーパー (AK)</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                                    </div>
+                                    </div>
+                                        </div>
+                                        </div>
+                                        </div>
 
             <button class="search-btn" onclick="performSearch()">🔍 検索実行</button>
-        </div>
+                                    </div>
 
         <!-- メインコンテンツ -->
         <div class="content-grid">
@@ -796,7 +854,7 @@
                 currentPlayers = results.filter(player => player !== null);
                 
                 displayPlayers(currentPlayers);
-            } catch (error) {
+                    } catch (error) {
                 console.error('Error loading players:', error);
                 // フォールバックデータ
                 currentPlayers = getFallbackPlayers();
@@ -859,24 +917,24 @@
 
             card.innerHTML = `
                 <div class="player-name">${player.name}</div>
-                                    <div class="player-info">
+                                <div class="player-info">
                     ${player.currentTeam} | ${player.position} | ${player.nationality}
-                                        </div>
+                                </div>
                 <div class="player-stats">
                                         <div class="stat-item">
                         <div>得点</div>
                         <div>${player.stats?.goals || 0}</div>
-                                        </div>
+                            </div>
                                         <div class="stat-item">
                         <div>アシスト</div>
                         <div>${player.stats?.assists || 0}</div>
-                                        </div>
+                            </div>
                                         <div class="stat-item">
                         <div>出場</div>
                         <div>${player.stats?.appearances || 0}</div>
-                                        </div>
-                                        </div>
-            `;
+                        </div>
+                    </div>
+                `;
 
             return card;
         }
@@ -916,9 +974,9 @@
                 searchParams.append('limit', '20');
 
                 const response = await fetch(`/api/search/players?${searchParams.toString()}`);
-                const data = await response.json();
+                    const data = await response.json();
 
-                if (data.results && data.results.length > 0) {
+                    if (data.results && data.results.length > 0) {
                     currentPlayers = data.results;
                     displayPlayers(currentPlayers);
                 } else {

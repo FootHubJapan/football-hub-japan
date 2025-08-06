@@ -515,39 +515,39 @@
                     </div>
                 </div>
             </div>
-            
+
             <button class="compare-btn" onclick="startComparison()">📊 比較開始</button>
         </div>
 
         <div class="charts-container">
-            <div class="chart-section">
+        <div class="chart-section">
                 <h2 class="chart-title">パフォーマンス比較</h2>
                 <div class="chart-wrapper">
-                    <canvas id="radarChart"></canvas>
-                </div>
+                <canvas id="radarChart"></canvas>
             </div>
-            
+        </div>
+
             <div class="chart-section">
                 <h2 class="chart-title">詳細統計</h2>
                 <div id="statsComparison">
                     <div id="playerAStats">
                         <h3>選手A 詳細統計</h3>
                         <div id="playerAStatsContent"></div>
-                    </div>
+            </div>
                     <div id="playerBStats">
                         <h3>選手B 詳細統計</h3>
                         <div id="playerBStatsContent"></div>
-                    </div>
-                </div>
             </div>
         </div>
+                </div>
+            </div>
 
         <div class="analysis-section">
             <h2 class="analysis-title">AI分析</h2>
             <div class="analysis-input">
                 <input type="text" id="analysisInput" placeholder="分析したい内容を入力してください（例：久保建英と三笘薫の強みを比較して）">
                 <button onclick="performAIAnalysis()">分析実行</button>
-            </div>
+                    </div>
             <div class="loading" id="analysisLoading">AI分析中...</div>
             <div class="analysis-result" id="analysisResult">
                 AI分析の結果がここに表示されます。
@@ -674,16 +674,16 @@
             
             if (query.length < 2) {
                 document.getElementById(`searchResults${target}`).innerHTML = '';
-                return;
-            }
+                    return;
+                }
 
             try {
                 const response = await fetch(`/api/search/players?query=${encodeURIComponent(query)}&limit=5`);
-                const data = await response.json();
+                    const data = await response.json();
                 
-                if (data.results && data.results.length > 0) {
-                    displaySearchResults(data.results, target);
-                } else {
+                    if (data.results && data.results.length > 0) {
+                        displaySearchResults(data.results, target);
+                    } else {
                     document.getElementById(`searchResults${target}`).innerHTML = '<div class="search-result-item">選手が見つかりませんでした</div>';
                 }
             } catch (error) {
@@ -704,8 +704,8 @@
                     <div><strong>${player.name}</strong></div>
                     <div style="font-size: 0.8rem; color: #cccccc;">
                         ${player.currentTeam || player.team} | ${player.position || 'N/A'}
-                    </div>
-                `;
+                        </div>
+                    `;
                 resultItem.onclick = () => selectPlayer(player, target);
                 resultsContainer.appendChild(resultItem);
             });
@@ -759,20 +759,20 @@
             });
 
             const data = {
-                labels: labels,
-                datasets: [
-                    {
+                    labels: labels,
+                    datasets: [
+                        {
                         label: currentPlayers.A.name,
                         data: generateRandomData(selectedStats.length),
-                        borderColor: '#00ff88',
-                        backgroundColor: 'rgba(0, 255, 136, 0.2)',
+                            borderColor: '#00ff88',
+                            backgroundColor: 'rgba(0, 255, 136, 0.2)',
                         borderWidth: 2
                     },
                     {
                         label: currentPlayers.B.name,
                         data: generateRandomData(selectedStats.length),
-                        borderColor: '#ff4444',
-                        backgroundColor: 'rgba(255, 68, 68, 0.2)',
+                            borderColor: '#ff4444',
+                            backgroundColor: 'rgba(255, 68, 68, 0.2)',
                         borderWidth: 2
                     }
                 ]
@@ -868,7 +868,7 @@
                 
                 if (data.response) {
                     result.innerHTML = `<div class="success">${data.response}</div>`;
-                } else {
+            } else {
                     result.innerHTML = '<div class="error">AI分析を実行できませんでした</div>';
                 }
             } catch (error) {
