@@ -629,8 +629,7 @@ app.get('/api/search/players', async (req, res) => {
                 
                 const response = await fetchWithRetry(url, {
                     headers: {
-                        'x-rapidapi-host': 'v3.football.api-sports.io',
-                        'x-rapidapi-key': apiFootballKey
+                        'x-apisports-key': apiFootballKey
                     }
                 }, 'apiFootball');
 
@@ -696,7 +695,7 @@ app.get('/api/search/players', async (req, res) => {
                             break;
                         }
                         
-                        const url = `https://api.football-data.org/v4/competitions/${league}/teams`;
+                        const url = `https://api.football-data.org/v4/competitions/${league}/teams?season=2024`;
                         console.log(`Football-Data.org: Searching teams in ${league}`);
                         
                         const response = await fetchWithRetry(url, {
@@ -723,7 +722,7 @@ app.get('/api/search/players', async (req, res) => {
                                         break;
                                     }
                                     
-                                    const playersUrl = `https://api.football-data.org/v4/teams/${team.id}/players`;
+                                    const playersUrl = `https://api.football-data.org/v4/teams/${team.id}/players?season=2024`;
                                     const playersResponse = await fetchWithRetry(playersUrl, {
                                         headers: {
                                             'X-Auth-Token': footballDataKey
@@ -734,29 +733,26 @@ app.get('/api/search/players', async (req, res) => {
                                         const playersData = await playersResponse.json();
                                         console.log(`Football-Data.org players response for team ${team.id}:`, playersData);
                                         
-                                        if (playersData.players) {
-                                            playersData.players.forEach(player => {
-                                                const playerName = `${player.firstName} ${player.lastName}`.trim();
+                                        if (playersData.squad && playersData.squad.length > 0) {
+                                            playersData.squad.forEach(player => {
+                                                const playerName = player.name || 'Unknown Player';
                                                 const playerKey = playerName.toLowerCase();
                                                 
-                                                if (playerName.toLowerCase().includes(query.toLowerCase()) && 
-                                                    !seenPlayers.has(playerKey) && 
-                                                    results.length < limit) {
-                                                    
+                                                if (!seenPlayers.has(playerKey)) {
                                                     seenPlayers.add(playerKey);
                                                     results.push({
                                                         id: player.id || `football-data-${Date.now()}`,
                                                         name: playerName,
-                                                        fullName: playerName,
-                                                        currentTeam: team.name,
+                                                        fullName: player.name || playerName,
+                                                        currentTeam: team.name || 'Unknown Team',
                                                         position: player.position || 'Unknown',
                                                         nationality: player.nationality || 'Unknown',
-                                                        age: player.dateOfBirth ? calculateAge(player.dateOfBirth) : 'N/A',
-                                                        height: 'N/A',
-                                                        weight: 'N/A',
+                                                        age: player.age || 'N/A',
+                                                        height: player.height || 'N/A',
+                                                        weight: player.weight || 'N/A',
                                                         source: 'football-data',
                                                         stats: {
-                                                            goals: 0,
+                                                            goals: 0, // Football-Data.org APIでは統計データが別途必要
                                                             assists: 0,
                                                             appearances: 0,
                                                             minutes: 0,
@@ -769,14 +765,14 @@ app.get('/api/search/players', async (req, res) => {
                                             });
                                         }
                                     } else {
-                                        console.log(`Football-Data.org players response not ok for team ${team.id}: ${playersResponse.status} ${playersResponse.statusText}`);
+                                        console.log(`Football-Data.org players response not ok for team ${team.id}: ${playersResponse.status}`);
                                     }
                                 } catch (error) {
                                     console.error(`Error fetching players for team ${team.id}:`, error);
                                 }
                             }
                         } else {
-                            console.log(`Football-Data.org teams response not ok for ${league}: ${response.status} ${response.statusText}`);
+                            console.log(`Football-Data.org teams response not ok for ${league}: ${response.status}`);
                         }
                     } catch (error) {
                         console.error(`Error fetching teams for league ${league}:`, error);
