@@ -342,7 +342,7 @@
             <div class="stat-card">
                 <div class="stat-card-value" id="totalTeams">-</div>
                 <div class="stat-card-label">総チーム数</div>
-            </div>
+        </div>
             <div class="stat-card">
                 <div class="stat-card-value" id="totalLeagues">-</div>
                 <div class="stat-card-label">総リーグ数</div>
@@ -361,37 +361,37 @@
                     <div class="filter-group">
                         <label class="filter-label">検索</label>
                         <input type="text" id="searchInput" class="filter-input" placeholder="選手名、チーム名、国籍...">
-                    </div>
-
+                </div>
+                
                     <div class="filter-group">
                         <label class="filter-label">リーグ</label>
                         <select id="leagueSelect" class="filter-select">
                             <option value="">すべてのリーグ</option>
-                        </select>
+                    </select>
                     </div>
 
                     <div class="filter-group">
                         <label class="filter-label">ポジション</label>
                         <select id="positionSelect" class="filter-select">
-                            <option value="">すべてのポジション</option>
-                            <option value="Forward">フォワード</option>
+                        <option value="">すべてのポジション</option>
+                        <option value="Forward">フォワード</option>
                             <option value="Midfielder">ミッドフィルダー</option>
                             <option value="Defender">ディフェンダー</option>
                             <option value="Goalkeeper">ゴールキーパー</option>
-                        </select>
-                    </div>
+                    </select>
                 </div>
             </div>
+        </div>
 
             <div class="main-content">
                 <div id="playersContainer" class="players-grid">
                     <div class="loading">データを読み込み中...</div>
-                </div>
-                
+        </div>
+
                 <div id="pagination" class="pagination"></div>
             </div>
         </div>
-    </div>
+            </div>
 
     <script src="/ai-widget.js"></script>
     <script>
@@ -468,7 +468,7 @@
                     totalPlayers = data.total;
                     totalPages = data.totalPages;
                     updatePagination();
-                } else {
+            } else {
                     showError('選手データの取得に失敗しました');
                 }
             } catch (error) {
@@ -493,7 +493,7 @@
                 document.getElementById('totalTeams').textContent = teamsData.length || 0;
                 document.getElementById('totalLeagues').textContent = leaguesData.length || 0;
                 document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('ja-JP');
-            } catch (error) {
+                    } catch (error) {
                 console.error('Error loading stats:', error);
             }
         }
@@ -522,36 +522,36 @@
             
             if (players.length === 0) {
                 container.innerHTML = '<div class="error">選手が見つかりませんでした</div>';
-                return;
+                                    return;
             }
 
             container.innerHTML = players.map(player => `
                 <div class="player-card" onclick="showPlayerDetails(${player.id})">
-                    <div class="player-header">
+                            <div class="player-header">
                         <div class="player-avatar">
                             ${player.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                        </div>
-                        <div class="player-info">
+                                </div>
+                                <div class="player-info">
                             <div class="player-name">${player.name}</div>
                             <div class="player-team">${player.teamName || 'Unknown Team'}</div>
                             <div class="player-position">${player.position || 'Unknown Position'}</div>
-                        </div>
-                    </div>
+                                </div>
+                            </div>
                     <div class="player-stats">
-                        <div class="stat-item">
+                            <div class="stat-item">
                             <div class="stat-value">${player.nationality || 'N/A'}</div>
                             <div class="stat-label">国籍</div>
-                        </div>
-                        <div class="stat-item">
+                            </div>
+                            <div class="stat-item">
                             <div class="stat-value">${player.shirtNumber || 'N/A'}</div>
                             <div class="stat-label">背番号</div>
-                        </div>
-                        <div class="stat-item">
+                            </div>
+                            <div class="stat-item">
                             <div class="stat-value">${player.dateOfBirth ? new Date(player.dateOfBirth).getFullYear() : 'N/A'}</div>
                             <div class="stat-label">生年</div>
-                        </div>
-                    </div>
-                </div>
+                            </div>
+                            </div>
+                            </div>
             `).join('');
         }
 
@@ -627,7 +627,7 @@
             const positionSelect = document.getElementById('positionSelect');
             positionSelect.addEventListener('change', (e) => {
                 currentFilters.position = e.target.value;
-                currentPage = 1;
+            currentPage = 1;
                 loadPlayers();
             });
         }

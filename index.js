@@ -623,8 +623,8 @@ app.get('/api/search/players', async (req, res) => {
                 // 検索クエリを決定（日本語名の場合は英語名に変換）
                 const searchQuery = playerMappings[query] || query;
                 
-                // API-Footballの正しいパラメータ形式
-                const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(searchQuery)}&league=39&season=2024`;
+                // API-Footballの検索（シーズンとリーグを指定せずに検索）
+                const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(searchQuery)}`;
                 console.log(`API-Football: Searching players - ${url}`);
                 
                 const response = await fetchWithRetry(url, {
@@ -666,9 +666,13 @@ app.get('/api/search/players', async (req, res) => {
                                 });
                             }
                         });
+                    } else {
+                        console.log(`API-Football: No players found for query "${searchQuery}"`);
                     }
                 } else {
                     console.log(`API-Football response not ok: ${response.status} ${response.statusText}`);
+                    const errorText = await response.text();
+                    console.log(`API-Football error response:`, errorText);
                 }
             } else {
                 console.log('API-Football key not configured');
@@ -695,7 +699,7 @@ app.get('/api/search/players', async (req, res) => {
                             break;
                         }
                         
-                        const url = `https://api.football-data.org/v4/competitions/${league}/teams?season=2024`;
+                        const url = `https://api.football-data.org/v4/competitions/${league}/teams?season=2023`;
                         console.log(`Football-Data.org: Searching teams in ${league}`);
                         
                         const response = await fetchWithRetry(url, {
@@ -722,7 +726,7 @@ app.get('/api/search/players', async (req, res) => {
                                         break;
                                     }
                                     
-                                    const playersUrl = `https://api.football-data.org/v4/teams/${team.id}/players?season=2024`;
+                                    const playersUrl = `https://api.football-data.org/v4/teams/${team.id}/players?season=2023`;
                                     const playersResponse = await fetchWithRetry(playersUrl, {
                                         headers: {
                                             'X-Auth-Token': footballDataKey
