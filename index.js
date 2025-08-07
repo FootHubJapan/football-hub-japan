@@ -623,56 +623,69 @@ app.get('/api/search/players', async (req, res) => {
                 // 検索クエリを決定（日本語名の場合は英語名に変換）
                 const searchQuery = playerMappings[query] || query;
                 
-                // API-Footballの検索（シーズンとリーグを指定せずに検索）
-                const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(searchQuery)}`;
-                console.log(`API-Football: Searching players - ${url}`);
+                // API-Footballの検索（複数シーズンから検索）
+                const seasons = [2023, 2024, 2025];
+                let foundPlayers = false;
                 
-                const response = await fetchWithRetry(url, {
-                    headers: {
-                        'x-apisports-key': apiFootballKey
-                    }
-                }, 'apiFootball');
+                for (const season of seasons) {
+                    if (results.length >= limit || foundPlayers) break;
+                    
+                    try {
+                        const url = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(searchQuery)}&season=${season}`;
+                        console.log(`API-Football: Searching players for season ${season} - ${url}`);
+                        
+                        const response = await fetchWithRetry(url, {
+                            headers: {
+                                'x-apisports-key': apiFootballKey
+                            }
+                        }, 'apiFootball');
 
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log(`API-Football response:`, data);
-                    if (data.response && data.response.length > 0) {
-                        data.response.forEach(player => {
-                            const playerName = player.player?.name || 'Unknown Player';
-                            const playerKey = playerName.toLowerCase();
-                            
-                            if (!seenPlayers.has(playerKey)) {
-                                seenPlayers.add(playerKey);
-                                results.push({
-                                    id: player.player?.id || `api-football-${Date.now()}`,
-                                    name: playerName,
-                                    fullName: player.player?.name || playerName,
-                                    currentTeam: player.statistics?.[0]?.team?.name || 'Unknown Team',
-                                    position: player.statistics?.[0]?.games?.position || player.player?.position || 'Unknown',
-                                    nationality: player.player?.nationality || 'Unknown',
-                                    age: player.player?.age || 'N/A',
-                                    height: player.player?.height || 'N/A',
-                                    weight: player.player?.weight || 'N/A',
-                                    source: 'api-football',
-                                    stats: {
-                                        goals: player.statistics?.[0]?.goals?.total || 0,
-                                        assists: player.statistics?.[0]?.goals?.assists || 0,
-                                        appearances: player.statistics?.[0]?.games?.appearences || 0,
-                                        minutes: player.statistics?.[0]?.games?.minutes || 0,
-                                        rating: player.statistics?.[0]?.games?.rating || 'N/A',
-                                        yellowCards: player.statistics?.[0]?.cards?.yellow || 0,
-                                        redCards: player.statistics?.[0]?.cards?.red || 0
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log(`API-Football response for season ${season}:`, data);
+                            if (data.response && data.response.length > 0) {
+                                foundPlayers = true;
+                                data.response.forEach(player => {
+                                    const playerName = player.player?.name || 'Unknown Player';
+                                    const playerKey = playerName.toLowerCase();
+                                    
+                                    if (!seenPlayers.has(playerKey)) {
+                                        seenPlayers.add(playerKey);
+                                        results.push({
+                                            id: player.player?.id || `api-football-${Date.now()}`,
+                                            name: playerName,
+                                            fullName: player.player?.name || playerName,
+                                            currentTeam: player.statistics?.[0]?.team?.name || 'Unknown Team',
+                                            position: player.statistics?.[0]?.games?.position || player.player?.position || 'Unknown',
+                                            nationality: player.player?.nationality || 'Unknown',
+                                            age: player.player?.age || 'N/A',
+                                            height: player.player?.height || 'N/A',
+                                            weight: player.player?.weight || 'N/A',
+                                            source: 'api-football',
+                                            season: season,
+                                            stats: {
+                                                goals: player.statistics?.[0]?.goals?.total || 0,
+                                                assists: player.statistics?.[0]?.goals?.assists || 0,
+                                                appearances: player.statistics?.[0]?.games?.appearences || 0,
+                                                minutes: player.statistics?.[0]?.games?.minutes || 0,
+                                                rating: player.statistics?.[0]?.games?.rating || 'N/A',
+                                                yellowCards: player.statistics?.[0]?.cards?.yellow || 0,
+                                                redCards: player.statistics?.[0]?.cards?.red || 0
+                                            }
+                                        });
                                     }
                                 });
+                            } else {
+                                console.log(`API-Football: No players found for query "${searchQuery}" in season ${season}`);
                             }
-                        });
-                    } else {
-                        console.log(`API-Football: No players found for query "${searchQuery}"`);
+                        } else {
+                            console.log(`API-Football response not ok for season ${season}: ${response.status} ${response.statusText}`);
+                            const errorText = await response.text();
+                            console.log(`API-Football error response for season ${season}:`, errorText);
+                        }
+                    } catch (error) {
+                        console.error(`API-Football search error for season ${season}:`, error);
                     }
-                } else {
-                    console.log(`API-Football response not ok: ${response.status} ${response.statusText}`);
-                    const errorText = await response.text();
-                    console.log(`API-Football error response:`, errorText);
                 }
             } else {
                 console.log('API-Football key not configured');
@@ -687,99 +700,106 @@ app.get('/api/search/players', async (req, res) => {
             if (footballDataKey && footballDataKey !== 'your-football-data-api-key-here') {
                 // レート制限を考慮して、より効率的な検索を実装
                 const leagues = ['PL', 'PD', 'SA', 'BL1', 'FL1'];
+                const seasons = [2023, 2024, 2025];
                 let searchCompleted = false;
                 
                 for (const league of leagues) {
                     if (results.length >= limit || searchCompleted) break;
                     
-                    try {
-                        // レート制限をチェック
-                        if (!checkRateLimit('footballData')) {
-                            console.log('Rate limit reached for Football-Data.org, skipping remaining searches');
-                            break;
-                        }
+                    for (const season of seasons) {
+                        if (results.length >= limit || searchCompleted) break;
                         
-                        const url = `https://api.football-data.org/v4/competitions/${league}/teams?season=2023`;
-                        console.log(`Football-Data.org: Searching teams in ${league}`);
-                        
-                        const response = await fetchWithRetry(url, {
-                            headers: {
-                                'X-Auth-Token': footballDataKey
+                        try {
+                            // レート制限をチェック
+                            if (!checkRateLimit('footballData')) {
+                                console.log('Rate limit reached for Football-Data.org, skipping remaining searches');
+                                searchCompleted = true;
+                                break;
                             }
-                        }, 'footballData');
-
-                        if (response.ok) {
-                            const data = await response.json();
-                            console.log(`Football-Data.org teams response for ${league}:`, data);
                             
-                            // チーム数が多すぎる場合は最初の数チームのみ処理
-                            const teamsToProcess = data.teams ? data.teams.slice(0, 3) : [];
+                            const url = `https://api.football-data.org/v4/competitions/${league}/teams?season=${season}`;
+                            console.log(`Football-Data.org: Searching teams in ${league} for season ${season}`);
                             
-                            for (const team of teamsToProcess) {
-                                if (results.length >= limit || searchCompleted) break;
-                                
-                                try {
-                                    // レート制限を再チェック
-                                    if (!checkRateLimit('footballData')) {
-                                        console.log('Rate limit reached during team search, stopping');
-                                        searchCompleted = true;
-                                        break;
-                                    }
-                                    
-                                    const playersUrl = `https://api.football-data.org/v4/teams/${team.id}/players?season=2023`;
-                                    const playersResponse = await fetchWithRetry(playersUrl, {
-                                        headers: {
-                                            'X-Auth-Token': footballDataKey
-                                        }
-                                    }, 'footballData');
-
-                                    if (playersResponse.ok) {
-                                        const playersData = await playersResponse.json();
-                                        console.log(`Football-Data.org players response for team ${team.id}:`, playersData);
-                                        
-                                        if (playersData.squad && playersData.squad.length > 0) {
-                                            playersData.squad.forEach(player => {
-                                                const playerName = player.name || 'Unknown Player';
-                                                const playerKey = playerName.toLowerCase();
-                                                
-                                                if (!seenPlayers.has(playerKey)) {
-                                                    seenPlayers.add(playerKey);
-                                                    results.push({
-                                                        id: player.id || `football-data-${Date.now()}`,
-                                                        name: playerName,
-                                                        fullName: player.name || playerName,
-                                                        currentTeam: team.name || 'Unknown Team',
-                                                        position: player.position || 'Unknown',
-                                                        nationality: player.nationality || 'Unknown',
-                                                        age: player.age || 'N/A',
-                                                        height: player.height || 'N/A',
-                                                        weight: player.weight || 'N/A',
-                                                        source: 'football-data',
-                                                        stats: {
-                                                            goals: 0, // Football-Data.org APIでは統計データが別途必要
-                                                            assists: 0,
-                                                            appearances: 0,
-                                                            minutes: 0,
-                                                            rating: 'N/A',
-                                                            yellowCards: 0,
-                                                            redCards: 0
-                                                        }
-                                                    });
-                                                }
-                                            });
-                                        }
-                                    } else {
-                                        console.log(`Football-Data.org players response not ok for team ${team.id}: ${playersResponse.status}`);
-                                    }
-                                } catch (error) {
-                                    console.error(`Error fetching players for team ${team.id}:`, error);
+                            const response = await fetchWithRetry(url, {
+                                headers: {
+                                    'X-Auth-Token': footballDataKey
                                 }
+                            }, 'footballData');
+
+                            if (response.ok) {
+                                const data = await response.json();
+                                console.log(`Football-Data.org teams response for ${league} season ${season}:`, data);
+                                
+                                // チーム数が多すぎる場合は最初の数チームのみ処理
+                                const teamsToProcess = data.teams ? data.teams.slice(0, 3) : [];
+                                
+                                for (const team of teamsToProcess) {
+                                    if (results.length >= limit || searchCompleted) break;
+                                    
+                                    try {
+                                        // レート制限を再チェック
+                                        if (!checkRateLimit('footballData')) {
+                                            console.log('Rate limit reached during team search, stopping');
+                                            searchCompleted = true;
+                                            break;
+                                        }
+                                        
+                                        const playersUrl = `https://api.football-data.org/v4/teams/${team.id}/players?season=${season}`;
+                                        const playersResponse = await fetchWithRetry(playersUrl, {
+                                            headers: {
+                                                'X-Auth-Token': footballDataKey
+                                            }
+                                        }, 'footballData');
+
+                                        if (playersResponse.ok) {
+                                            const playersData = await playersResponse.json();
+                                            console.log(`Football-Data.org players response for team ${team.id} season ${season}:`, playersData);
+                                            
+                                            if (playersData.squad && playersData.squad.length > 0) {
+                                                playersData.squad.forEach(player => {
+                                                    const playerName = player.name || 'Unknown Player';
+                                                    const playerKey = playerName.toLowerCase();
+                                                    
+                                                    if (!seenPlayers.has(playerKey)) {
+                                                        seenPlayers.add(playerKey);
+                                                        results.push({
+                                                            id: player.id || `football-data-${Date.now()}`,
+                                                            name: playerName,
+                                                            fullName: player.name || playerName,
+                                                            currentTeam: team.name || 'Unknown Team',
+                                                            position: player.position || 'Unknown',
+                                                            nationality: player.nationality || 'Unknown',
+                                                            age: player.age || 'N/A',
+                                                            height: player.height || 'N/A',
+                                                            weight: player.weight || 'N/A',
+                                                            source: 'football-data',
+                                                            season: season,
+                                                            stats: {
+                                                                goals: 0, // Football-Data.org APIでは統計データが別途必要
+                                                                assists: 0,
+                                                                appearances: 0,
+                                                                minutes: 0,
+                                                                rating: 'N/A',
+                                                                yellowCards: 0,
+                                                                redCards: 0
+                                                            }
+                                                        });
+                                                    }
+                                                });
+                                            }
+                                        } else {
+                                            console.log(`Football-Data.org players response not ok for team ${team.id} season ${season}: ${playersResponse.status}`);
+                                        }
+                                    } catch (error) {
+                                        console.error(`Error fetching players for team ${team.id} season ${season}:`, error);
+                                    }
+                                }
+                            } else {
+                                console.log(`Football-Data.org teams response not ok for ${league} season ${season}: ${response.status}`);
                             }
-                        } else {
-                            console.log(`Football-Data.org teams response not ok for ${league}: ${response.status}`);
+                        } catch (error) {
+                            console.error(`Error fetching teams for league ${league} season ${season}:`, error);
                         }
-                    } catch (error) {
-                        console.error(`Error fetching teams for league ${league}:`, error);
                     }
                 }
             } else {
