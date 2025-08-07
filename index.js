@@ -744,7 +744,8 @@ app.get('/api/search/players', async (req, res) => {
                                             break;
                                         }
                                         
-                                        const playersUrl = `https://api.football-data.org/v4/teams/${team.id}/players?season=${season}`;
+                                        // 正しいエンドポイント: /teams/{id} (squadプロパティに選手情報が含まれる)
+                                        const playersUrl = `https://api.football-data.org/v4/teams/${team.id}`;
                                         const playersResponse = await fetchWithRetry(playersUrl, {
                                             headers: {
                                                 'X-Auth-Token': footballDataKey

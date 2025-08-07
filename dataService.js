@@ -1624,25 +1624,28 @@ class FotMobDataService {
         for (const team of teamsToProcess) {
             try {
                 if (checkRateLimit('footballData')) {
-                    const response = await apiClient.get(`/teams/${team.id}/players`);
-                    if (response.data && response.data.players) {
-                        response.data.players.forEach(player => {
-                            const playerName = `${player.firstName} ${player.lastName}`.trim();
-                            players.push({
-                                id: player.id,
-                                name: playerName,
-                                firstName: player.firstName,
-                                lastName: player.lastName,
-                                dateOfBirth: player.dateOfBirth,
-                                nationality: player.nationality,
-                                position: player.position,
-                                shirtNumber: player.shirtNumber,
-                                lastUpdated: player.lastUpdated,
-                                teamId: team.id,
-                                teamName: team.name,
-                                leagueId: team.leagueId,
-                                source: 'football-data'
-                            });
+                    // 正しいエンドポイント: /teams/{id} (squadプロパティに選手情報が含まれる)
+                    const response = await apiClient.get(`/teams/${team.id}`);
+                    if (response.data && response.data.squad && response.data.squad.length > 0) {
+                        response.data.squad.forEach(player => {
+                            const playerName = player.name || `${player.firstName || ''} ${player.lastName || ''}`.trim();
+                            if (playerName) {
+                                players.push({
+                                    id: player.id,
+                                    name: playerName,
+                                    firstName: player.firstName,
+                                    lastName: player.lastName,
+                                    dateOfBirth: player.dateOfBirth,
+                                    nationality: player.nationality,
+                                    position: player.position,
+                                    shirtNumber: player.shirtNumber,
+                                    lastUpdated: player.lastUpdated,
+                                    teamId: team.id,
+                                    teamName: team.name,
+                                    leagueId: team.leagueId,
+                                    source: 'football-data'
+                                });
+                            }
                         });
                     }
                 }
