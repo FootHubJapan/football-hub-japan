@@ -599,6 +599,7 @@
                 if (currentPlayers.length === 0) {
                     console.log('No players found from API, using fallback data');
                     currentPlayers = getFallbackPlayers();
+                    console.log(`Loaded ${currentPlayers.length} fallback players`);
                 }
                 
                 displayPlayers(currentPlayers);
@@ -612,7 +613,7 @@
 
         // フォールバック選手データ
         function getFallbackPlayers() {
-            return [
+            const fallbackPlayers = [
                 {
                     id: '1',
                     name: '久保建英',
@@ -734,6 +735,9 @@
                     stats: { goals: 3, assists: 12, appearances: 20, minutes: 1800, rating: 7.8 }
                 }
             ];
+
+            console.log(`Fallback players loaded: ${fallbackPlayers.length} players`);
+            return fallbackPlayers;
         }
 
         // 選手を表示
@@ -746,12 +750,17 @@
                 return;
             }
 
+            console.log(`Displaying ${players.length} players:`, players);
+
             players.forEach(player => {
                 if (player && player.name) {
                     const card = createPlayerCard(player);
                     grid.appendChild(card);
                 }
             });
+
+            // 表示された選手数をログ出力
+            console.log(`Successfully displayed ${players.length} players`);
         }
 
         // 選手カードを作成
