@@ -1679,12 +1679,27 @@ class FotMobDataService {
             // Apply filters
             if (options.search) {
                 const searchLower = options.search.toLowerCase();
-                players = players.filter(player => 
-                    player.name && player.name.toLowerCase().includes(searchLower) ||
-                    player.teamName && player.teamName.toLowerCase().includes(searchLower) ||
-                    player.nationality && player.nationality.toLowerCase().includes(searchLower) ||
-                    player.position && player.position.toLowerCase().includes(searchLower)
-                );
+                players = players.filter(player => {
+                    // 名前での検索（日本語名、英語名、フルネーム）
+                    const nameMatch = player.name && player.name.toLowerCase().includes(searchLower) ||
+                                     player.fullName && player.fullName.toLowerCase().includes(searchLower) ||
+                                     player.japaneseName && player.japaneseName.toLowerCase().includes(searchLower) ||
+                                     player.englishName && player.englishName.toLowerCase().includes(searchLower) ||
+                                     player.firstName && player.firstName.toLowerCase().includes(searchLower) ||
+                                     player.lastName && player.lastName.toLowerCase().includes(searchLower);
+                    
+                    // チーム名での検索
+                    const teamMatch = player.teamName && player.teamName.toLowerCase().includes(searchLower) ||
+                                     player.currentTeam && player.currentTeam.toLowerCase().includes(searchLower);
+                    
+                    // 国籍での検索
+                    const nationalityMatch = player.nationality && player.nationality.toLowerCase().includes(searchLower);
+                    
+                    // ポジションでの検索
+                    const positionMatch = player.position && player.position.toLowerCase().includes(searchLower);
+                    
+                    return nameMatch || teamMatch || nationalityMatch || positionMatch;
+                });
             }
 
             if (options.league) {
@@ -1816,6 +1831,9 @@ class FotMobDataService {
             {
                 id: 3,
                 name: '久保建英',
+                fullName: '久保建英',
+                japaneseName: '久保建英',
+                englishName: 'Takefusa Kubo',
                 firstName: 'Takefusa',
                 lastName: 'Kubo',
                 dateOfBirth: '2001-06-04',
@@ -1824,12 +1842,16 @@ class FotMobDataService {
                 shirtNumber: 14,
                 teamId: 201,
                 teamName: 'Real Sociedad',
+                currentTeam: 'Real Sociedad',
                 leagueId: 'PD',
                 source: 'fallback'
             },
             {
                 id: 4,
                 name: '三笘薫',
+                fullName: '三笘薫',
+                japaneseName: '三笘薫',
+                englishName: 'Kaoru Mitoma',
                 firstName: 'Kaoru',
                 lastName: 'Mitoma',
                 dateOfBirth: '1997-05-20',
@@ -1838,12 +1860,16 @@ class FotMobDataService {
                 shirtNumber: 22,
                 teamId: 397,
                 teamName: 'Brighton & Hove Albion FC',
+                currentTeam: 'Brighton & Hove Albion FC',
                 leagueId: 'PL',
                 source: 'fallback'
             },
             {
                 id: 5,
                 name: '堂安律',
+                fullName: '堂安律',
+                japaneseName: '堂安律',
+                englishName: 'Ritsu Doan',
                 firstName: 'Ritsu',
                 lastName: 'Doan',
                 dateOfBirth: '1998-06-16',
@@ -1852,12 +1878,16 @@ class FotMobDataService {
                 shirtNumber: 8,
                 teamId: 165,
                 teamName: 'SC Freiburg',
+                currentTeam: 'SC Freiburg',
                 leagueId: 'BL1',
                 source: 'fallback'
             },
             {
                 id: 6,
                 name: '田中碧',
+                fullName: '田中碧',
+                japaneseName: '田中碧',
+                englishName: 'Ao Tanaka',
                 firstName: 'Ao',
                 lastName: 'Tanaka',
                 dateOfBirth: '1998-09-10',
@@ -1866,12 +1896,16 @@ class FotMobDataService {
                 shirtNumber: 6,
                 teamId: 165,
                 teamName: 'SC Freiburg',
+                currentTeam: 'SC Freiburg',
                 leagueId: 'BL1',
                 source: 'fallback'
             },
             {
                 id: 7,
                 name: '伊藤洋輝',
+                fullName: '伊藤洋輝',
+                japaneseName: '伊藤洋輝',
+                englishName: 'Hiroki Ito',
                 firstName: 'Hiroki',
                 lastName: 'Ito',
                 dateOfBirth: '1999-05-12',
@@ -1880,12 +1914,16 @@ class FotMobDataService {
                 shirtNumber: 21,
                 teamId: 165,
                 teamName: 'VfB Stuttgart',
+                currentTeam: 'VfB Stuttgart',
                 leagueId: 'BL1',
                 source: 'fallback'
             },
             {
                 id: 8,
                 name: '遠藤航',
+                fullName: '遠藤航',
+                japaneseName: '遠藤航',
+                englishName: 'Wataru Endo',
                 firstName: 'Wataru',
                 lastName: 'Endo',
                 dateOfBirth: '1993-02-09',
@@ -1894,12 +1932,16 @@ class FotMobDataService {
                 shirtNumber: 3,
                 teamId: 64,
                 teamName: 'Liverpool FC',
+                currentTeam: 'Liverpool FC',
                 leagueId: 'PL',
                 source: 'fallback'
             },
             {
                 id: 9,
                 name: '南野拓実',
+                fullName: '南野拓実',
+                japaneseName: '南野拓実',
+                englishName: 'Takumi Minamino',
                 firstName: 'Takumi',
                 lastName: 'Minamino',
                 dateOfBirth: '1995-01-16',
@@ -1908,12 +1950,16 @@ class FotMobDataService {
                 shirtNumber: 18,
                 teamId: 58,
                 teamName: 'AS Monaco',
+                currentTeam: 'AS Monaco',
                 leagueId: 'FL1',
                 source: 'fallback'
             },
             {
                 id: 10,
                 name: '浅野拓磨',
+                fullName: '浅野拓磨',
+                japaneseName: '浅野拓磨',
+                englishName: 'Takuma Asano',
                 firstName: 'Takuma',
                 lastName: 'Asano',
                 dateOfBirth: '1994-11-10',
@@ -1922,12 +1968,16 @@ class FotMobDataService {
                 shirtNumber: 9,
                 teamId: 165,
                 teamName: 'VfB Stuttgart',
+                currentTeam: 'VfB Stuttgart',
                 leagueId: 'BL1',
                 source: 'fallback'
             },
             {
                 id: 11,
                 name: '上田綺世',
+                fullName: '上田綺世',
+                japaneseName: '上田綺世',
+                englishName: 'Ayase Ueda',
                 firstName: 'Ayase',
                 lastName: 'Ueda',
                 dateOfBirth: '1998-08-28',
@@ -1936,12 +1986,16 @@ class FotMobDataService {
                 shirtNumber: 11,
                 teamId: 165,
                 teamName: 'Feyenoord',
+                currentTeam: 'Feyenoord',
                 leagueId: 'NL1',
                 source: 'fallback'
             },
             {
                 id: 12,
                 name: '前田大然',
+                fullName: '前田大然',
+                japaneseName: '前田大然',
+                englishName: 'Daizen Maeda',
                 firstName: 'Daizen',
                 lastName: 'Maeda',
                 dateOfBirth: '1997-10-20',
@@ -1950,49 +2004,8 @@ class FotMobDataService {
                 shirtNumber: 38,
                 teamId: 247,
                 teamName: 'Celtic FC',
+                currentTeam: 'Celtic FC',
                 leagueId: 'SC1',
-                source: 'fallback'
-            },
-            {
-                id: 13,
-                name: 'Lionel Messi',
-                firstName: 'Lionel',
-                lastName: 'Messi',
-                dateOfBirth: '1987-06-24',
-                nationality: 'Argentina',
-                position: 'Forward',
-                shirtNumber: 10,
-                teamId: 197,
-                teamName: 'Inter Miami CF',
-                leagueId: 'MLS',
-                source: 'fallback'
-            },
-            {
-                id: 14,
-                name: 'Cristiano Ronaldo',
-                firstName: 'Cristiano',
-                lastName: 'Ronaldo',
-                dateOfBirth: '1985-02-05',
-                nationality: 'Portugal',
-                position: 'Forward',
-                shirtNumber: 7,
-                teamId: 211,
-                teamName: 'Al Nassr FC',
-                leagueId: 'SAU',
-                source: 'fallback'
-            },
-            {
-                id: 15,
-                name: 'Kylian Mbappé',
-                firstName: 'Kylian',
-                lastName: 'Mbappé',
-                dateOfBirth: '1998-12-20',
-                nationality: 'France',
-                position: 'Forward',
-                shirtNumber: 7,
-                teamId: 524,
-                teamName: 'Real Madrid CF',
-                leagueId: 'PD',
                 source: 'fallback'
             }
         ];
