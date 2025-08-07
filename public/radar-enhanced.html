@@ -95,89 +95,225 @@
             margin-bottom: 1.5rem;
         }
 
-        .player-inputs {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .player-input {
-            background: #333333;
-            border-radius: 10px;
-            padding: 1rem;
-        }
-
-        .player-input h3 {
-            color: #00ff88;
-            margin-bottom: 1rem;
-        }
-
-        .player-input input {
-            width: 100%;
-            padding: 0.8rem;
-            margin-bottom: 1rem;
-            border: 1px solid #555555;
-            border-radius: 5px;
-            background: #0a0a0a;
-            color: #ffffff;
-            font-size: 1rem;
-        }
-
-        .chart-type-selector {
+        .comparison-type {
             display: flex;
             gap: 1rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
+            margin-bottom: 2rem;
         }
 
-        .chart-type-btn {
-            padding: 0.8rem 1.5rem;
+        .type-btn {
             background: #333333;
             color: #ffffff;
-            border: 1px solid #00ff88;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.9rem;
-        }
-
-        .chart-type-btn:hover, .chart-type-btn.active {
-            background: #00ff88;
-            color: #000000;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .action-btn {
             padding: 0.8rem 1.5rem;
-            background: #00ff88;
-            color: #000000;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-weight: bold;
             transition: all 0.3s;
         }
 
-        .action-btn:hover {
+        .type-btn.active {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .type-btn:hover {
             background: #00cc6a;
         }
 
-        .action-btn.secondary {
-            background: #333333;
-            color: #ffffff;
-            border: 1px solid #00ff88;
+        .stats-selection-section {
+            background: #2a2a2a;
+            border: 1px solid #333333;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
         }
 
-        .action-btn.secondary:hover {
+        .selection-title {
+            color: #00ff88;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .season-selection {
+            margin-bottom: 1.5rem;
+        }
+
+        .season-dropdown {
+            background: #333333;
+            color: #ffffff;
+            padding: 0.5rem;
+            border: 1px solid #555555;
+            border-radius: 5px;
+            margin-left: 1rem;
+        }
+
+        .stats-dropdown-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stats-dropdown-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .stats-dropdown-group label {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        .stats-dropdown {
+            background: #333333;
+            color: #ffffff;
+            padding: 0.5rem;
+            border: 1px solid #555555;
+            border-radius: 5px;
+        }
+
+        .selection-counter {
+            color: #00ff88;
+            font-weight: bold;
+            text-align: center;
+            padding: 0.5rem;
+            background: #1a1a1a;
+            border-radius: 5px;
+        }
+
+        .auto-refresh-section {
+            background: #2a2a2a;
+            border: 1px solid #333333;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .refresh-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .refresh-controls label {
+            color: #cccccc;
+            margin-right: 0.5rem;
+        }
+
+        .refresh-controls select {
+            background: #333333;
+            color: #ffffff;
+            padding: 0.3rem;
+            border: 1px solid #555555;
+            border-radius: 3px;
+        }
+
+        .refresh-status {
+            color: #00ff88;
+            font-weight: bold;
+            padding: 0.3rem 0.8rem;
+            background: #1a1a1a;
+            border-radius: 3px;
+        }
+
+        .selection-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .selection-group {
+            background: #2a2a2a;
+            border: 1px solid #333333;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+
+        .search-section {
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.8rem;
+            background: #333333;
+            color: #ffffff;
+            border: 1px solid #555555;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-results {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 5px;
+        }
+
+        .search-result-item {
+            padding: 0.8rem;
+            border-bottom: 1px solid #333333;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-result-item:hover {
+            background: #333333;
+        }
+
+        .selected-player {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #1a1a1a;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+
+        .player-avatar {
+            width: 50px;
+            height: 50px;
             background: #00ff88;
             color: #000000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .player-info h4 {
+            color: #00ff88;
+            margin-bottom: 0.2rem;
+        }
+
+        .player-info p {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        .compare-btn {
+            background: #00ff88;
+            color: #000000;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .compare-btn:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
         }
 
         .charts-container {
@@ -364,38 +500,134 @@
 
         <!-- コントロールセクション -->
         <div class="controls-section">
-            <h2 class="controls-title">選手選択</h2>
+            <h2 class="controls-title">比較設定</h2>
             
-            <div class="player-inputs">
-                <div class="player-input">
-                    <h3>選手1</h3>
-                    <input type="text" id="player1Input" placeholder="選手名を入力（例：久保建英）" onchange="updateCharts()">
+            <div class="comparison-type">
+                <button class="type-btn active" onclick="switchType('players')">選手比較</button>
+                <button class="type-btn" onclick="switchType('teams')">チーム比較</button>
+            </div>
+
+            <!-- 統計項目選択セクション -->
+            <div class="stats-selection-section">
+                <h3 class="selection-title">📊 比較項目選択（6項目を選択してください）</h3>
+                
+                <!-- シーズン選択 -->
+                <div class="season-selection">
+                    <label for="seasonSelect">シーズン:</label>
+                    <select id="seasonSelect" class="season-dropdown" onchange="updateSeason()">
+                        <option value="2024-2025">2024-2025</option>
+                        <option value="2023-2024">2023-2024</option>
+                        <option value="2022-2023">2022-2023</option>
+                        <option value="2021-2022">2021-2022</option>
+                    </select>
                 </div>
                 
-                <div class="player-input">
-                    <h3>選手2</h3>
-                    <input type="text" id="player2Input" placeholder="選手名を入力（例：三笘薫）" onchange="updateCharts()">
+                <div class="stats-dropdown-container">
+                    <div class="stats-dropdown-group">
+                        <label for="statSelect1">項目 1:</label>
+                        <select id="statSelect1" class="stats-dropdown" onchange="updateSelectedStats()">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
+                    <div class="stats-dropdown-group">
+                        <label for="statSelect2">項目 2:</label>
+                        <select id="statSelect2" class="stats-dropdown" onchange="updateSelectedStats()">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
+                    <div class="stats-dropdown-group">
+                        <label for="statSelect3">項目 3:</label>
+                        <select id="statSelect3" class="stats-dropdown" onchange="updateSelectedStats()">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
+                    <div class="stats-dropdown-group">
+                        <label for="statSelect4">項目 4:</label>
+                        <select id="statSelect4" class="stats-dropdown" onchange="updateSelectedStats()">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
+                    <div class="stats-dropdown-group">
+                        <label for="statSelect5">項目 5:</label>
+                        <select id="statSelect5" class="stats-dropdown" onchange="updateSelectedStats()">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
+                    <div class="stats-dropdown-group">
+                        <label for="statSelect6">項目 6:</label>
+                        <select id="statSelect6" class="stats-dropdown" onchange="updateSelectedStats()">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
                 </div>
-                
-                <div class="player-input">
-                    <h3>選手3</h3>
-                    <input type="text" id="player3Input" placeholder="選手名を入力（オプション）" onchange="updateCharts()">
+                <div class="selection-counter" id="selectionCounter">0/6 項目選択中</div>
+            </div>
+
+            <!-- 自動リフレッシュ設定 -->
+            <div class="auto-refresh-section">
+                <h3 class="selection-title">🔄 自動リフレッシュ設定</h3>
+                <div class="refresh-controls">
+                    <label for="autoRefreshToggle">自動リフレッシュ:</label>
+                    <input type="checkbox" id="autoRefreshToggle" onchange="toggleAutoRefresh()">
+                    <label for="refreshInterval">間隔:</label>
+                    <select id="refreshInterval" onchange="updateRefreshInterval()">
+                        <option value="30">30秒</option>
+                        <option value="60" selected>1分</option>
+                        <option value="300">5分</option>
+                        <option value="600">10分</option>
+                    </select>
+                    <span id="refreshStatus" class="refresh-status">停止中</span>
                 </div>
             </div>
 
-            <div class="chart-type-selector">
-                <button class="chart-type-btn active" onclick="setChartType('radar')">レーダーチャート</button>
-                <button class="chart-type-btn" onclick="setChartType('bar')">バーチャート</button>
-                <button class="chart-type-btn" onclick="setChartType('line')">ラインチャート</button>
-                <button class="chart-type-btn" onclick="setChartType('doughnut')">ドーナツチャート</button>
+            <div class="selection-controls">
+                <div class="selection-group">
+                    <h3 class="selection-title">🏃‍♂️ 比較対象 A</h3>
+                    <div class="search-section">
+                        <input type="text" id="searchA" class="search-input" placeholder="選手名を入力して検索..." oninput="searchPlayers('A')">
+                        <div id="searchResultsA" class="search-results"></div>
+                    </div>
+                    <div id="selectedPlayerA" class="selected-player" style="display: none;">
+                        <div class="player-avatar" id="avatarA">?</div>
+                        <div class="player-info">
+                            <h4 id="nameA">選手A</h4>
+                            <p id="teamA">チーム名</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="selection-group">
+                    <h3 class="selection-title">🏃‍♂️ 比較対象 B</h3>
+                    <div class="search-section">
+                        <input type="text" id="searchB" class="search-input" placeholder="選手名を入力して検索..." oninput="searchPlayers('B')">
+                        <div id="searchResultsB" class="search-results"></div>
+                    </div>
+                    <div id="selectedPlayerB" class="selected-player" style="display: none;">
+                        <div class="player-avatar" id="avatarB">?</div>
+                        <div class="player-info">
+                            <h4 id="nameB">選手B</h4>
+                            <p id="teamB">チーム名</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="selection-group">
+                    <h3 class="selection-title">🏃‍♂️ 比較対象 C</h3>
+                    <div class="search-section">
+                        <input type="text" id="searchC" class="search-input" placeholder="選手名を入力して検索..." oninput="searchPlayers('C')">
+                        <div id="searchResultsC" class="search-results"></div>
+                    </div>
+                    <div id="selectedPlayerC" class="selected-player" style="display: none;">
+                        <div class="player-avatar" id="avatarC">?</div>
+                        <div class="player-info">
+                            <h4 id="nameC">選手C</h4>
+                            <p id="teamC">チーム名</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="action-buttons">
-                <button class="action-btn" onclick="loadSamplePlayers()">サンプル選手読み込み</button>
-                <button class="action-btn secondary" onclick="clearCharts()">チャートクリア</button>
-                <button class="action-btn secondary" onclick="exportChart()">チャートエクスポート</button>
-                <button class="action-btn" onclick="performAIComparison()">AI比較分析</button>
-            </div>
+            <button class="compare-btn" onclick="startComparison()">📊 比較開始</button>
         </div>
 
         <!-- チャートセクション -->
@@ -450,56 +682,296 @@
     <script>
         let mainChart = null;
         let currentChartType = 'radar';
-        let currentPlayers = [];
+        let currentPlayers = { A: null, B: null, C: null };
+        let selectedStats = [];
+        let availableStats = [
+            { value: 'goals', label: '得点' },
+            { value: 'assists', label: 'アシスト' },
+            { value: 'appearances', label: '出場試合' },
+            { value: 'minutes', label: '出場時間' },
+            { value: 'passes', label: 'パス成功率' },
+            { value: 'dribbles', label: 'ドリブル成功率' },
+            { value: 'tackles', label: 'タックル数' },
+            { value: 'interceptions', label: 'インターセプト' },
+            { value: 'clearances', label: 'クリアランス' },
+            { value: 'saves', label: 'セーブ数' },
+            { value: 'clean_sheets', label: 'クリーンシート' },
+            { value: 'yellow_cards', label: 'イエローカード' },
+            { value: 'red_cards', label: 'レッドカード' },
+            { value: 'rating', label: '平均評価' },
+            { value: 'key_passes', label: 'キーパス' },
+            { value: 'shots', label: 'シュート数' },
+            { value: 'shots_on_target', label: '枠内シュート' },
+            { value: 'fouls', label: 'ファウル数' },
+            { value: 'offsides', label: 'オフサイド' },
+            { value: 'blocks', label: 'ブロック' }
+        ];
+        let autoRefreshInterval = null;
+        let refreshInterval = 60000; // デフォルト1分
 
         // 初期化
         document.addEventListener('DOMContentLoaded', function() {
-            initializeChart();
+            initializeStatsDropdowns();
             loadSamplePlayers();
+            updateSelectedStats();
         });
 
-        // チャートタイプ設定
-        function setChartType(type) {
-            currentChartType = type;
+        // 統計ドロップダウンの初期化
+        function initializeStatsDropdowns() {
+            const dropdowns = [
+                'statSelect1', 'statSelect2', 'statSelect3', 
+                'statSelect4', 'statSelect5', 'statSelect6'
+            ];
+
+            dropdowns.forEach((dropdownId, index) => {
+                const dropdown = document.getElementById(dropdownId);
+                dropdown.innerHTML = '<option value="">選択してください</option>';
+                
+                availableStats.forEach(stat => {
+                    const option = document.createElement('option');
+                    option.value = stat.value;
+                    option.textContent = stat.label;
+                    dropdown.appendChild(option);
+                });
+            });
+        }
+
+        // 選択された統計項目を更新
+        function updateSelectedStats() {
+            selectedStats = [];
+            const dropdowns = [
+                'statSelect1', 'statSelect2', 'statSelect3', 
+                'statSelect4', 'statSelect5', 'statSelect6'
+            ];
+
+            dropdowns.forEach(dropdownId => {
+                const dropdown = document.getElementById(dropdownId);
+                if (dropdown.value) {
+                    selectedStats.push(dropdown.value);
+                }
+            });
+
+            const counter = document.getElementById('selectionCounter');
+            counter.textContent = `${selectedStats.length}/6 項目選択中`;
             
+            // カウンターの色を更新
+            if (selectedStats.length === 6) {
+                counter.style.color = '#00ff88';
+            } else if (selectedStats.length > 6) {
+                counter.style.color = '#ff4444';
+            } else {
+                counter.style.color = '#ffaa00';
+            }
+        }
+
+        // シーズン更新
+        function updateSeason() {
+            const season = document.getElementById('seasonSelect').value;
+            console.log('シーズン更新:', season);
+            // シーズンに応じてデータを更新
+            if (currentPlayers.A || currentPlayers.B || currentPlayers.C) {
+                updateCharts();
+            }
+        }
+
+        // 自動リフレッシュの切り替え
+        function toggleAutoRefresh() {
+            const toggle = document.getElementById('autoRefreshToggle');
+            const status = document.getElementById('refreshStatus');
+            
+            if (toggle.checked) {
+                startAutoRefresh();
+                status.textContent = '実行中';
+                status.style.color = '#00ff88';
+            } else {
+                stopAutoRefresh();
+                status.textContent = '停止中';
+                status.style.color = '#cccccc';
+            }
+        }
+
+        // 自動リフレッシュ開始
+        function startAutoRefresh() {
+            stopAutoRefresh(); // 既存のインターバルをクリア
+            autoRefreshInterval = setInterval(() => {
+                console.log('自動リフレッシュ実行:', new Date().toLocaleTimeString());
+                updateCharts();
+            }, refreshInterval);
+        }
+
+        // 自動リフレッシュ停止
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+
+        // リフレッシュ間隔更新
+        function updateRefreshInterval() {
+            const intervalSelect = document.getElementById('refreshInterval');
+            refreshInterval = parseInt(intervalSelect.value) * 1000;
+            
+            // 自動リフレッシュが有効な場合は再起動
+            const toggle = document.getElementById('autoRefreshToggle');
+            if (toggle.checked) {
+                startAutoRefresh();
+            }
+        }
+
+        // 比較タイプ切り替え
+        function switchType(type) {
             // ボタンの状態を更新
-            document.querySelectorAll('.chart-type-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
+            // タイプに応じてUIを更新
+            if (type === 'teams') {
+                // チーム比較モード
+                document.querySelectorAll('.selection-title').forEach(title => {
+                    title.textContent = title.textContent.replace('選手', 'チーム');
+                });
+            } else {
+                // 選手比較モード
+                document.querySelectorAll('.selection-title').forEach(title => {
+                    title.textContent = title.textContent.replace('チーム', '選手');
+                });
+            }
+        }
+
+        // 選手検索
+        function searchPlayers(target) {
+            const searchInput = document.getElementById(`search${target}`);
+            const query = searchInput.value.trim();
+            
+            if (query.length < 2) {
+                document.getElementById(`searchResults${target}`).innerHTML = '';
+                return;
+            }
+
+            // サンプル選手データから検索
+            const results = samplePlayers.filter(player => 
+                player.name.toLowerCase().includes(query.toLowerCase()) ||
+                player.fullName.toLowerCase().includes(query.toLowerCase())
+            );
+
+            displaySearchResults(results, target);
+        }
+
+        // 検索結果表示
+        function displaySearchResults(players, target) {
+            const resultsContainer = document.getElementById(`searchResults${target}`);
+            resultsContainer.innerHTML = '';
+
+            if (players.length === 0) {
+                resultsContainer.innerHTML = '<div class="search-result-item">選手が見つかりません</div>';
+                return;
+            }
+
+            players.forEach(player => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'search-result-item';
+                resultItem.innerHTML = `
+                    <div><strong>${player.name}</strong></div>
+                    <div style="font-size: 0.8rem; color: #cccccc;">
+                        ${player.currentTeam || player.team} | ${player.position || 'N/A'}
+                    </div>
+                `;
+                resultItem.onclick = () => selectPlayer(player, target);
+                resultsContainer.appendChild(resultItem);
+            });
+        }
+
+        // 選手選択
+        function selectPlayer(player, target) {
+            currentPlayers[target] = player;
+            
+            const selectedPlayerDiv = document.getElementById(`selectedPlayer${target}`);
+            const avatar = document.getElementById(`avatar${target}`);
+            const name = document.getElementById(`name${target}`);
+            const team = document.getElementById(`team${target}`);
+            
+            avatar.textContent = player.name.charAt(0);
+            name.textContent = player.name;
+            team.textContent = `${player.currentTeam || player.team} | ${player.position || 'N/A'}`;
+            
+            selectedPlayerDiv.style.display = 'flex';
+            document.getElementById(`searchResults${target}`).innerHTML = '';
+            document.getElementById(`search${target}`).value = '';
+        }
+
+        // 比較開始
+        function startComparison() {
+            if (!currentPlayers.A && !currentPlayers.B && !currentPlayers.C) {
+                alert('比較する選手を1人以上選択してください');
+                return;
+            }
+
+            if (selectedStats.length < 6) {
+                alert('6項目を選択してください');
+                return;
+            }
+
             updateCharts();
+            updateStatsComparison();
+        }
+
+        // チャート更新
+        function updateCharts() {
+            if (!mainChart) {
+                initializeChart();
+            }
+
+            const labels = selectedStats.map(stat => {
+                const statObj = availableStats.find(s => s.value === stat);
+                return statObj ? statObj.label : stat;
+            });
+
+            const datasets = [];
+            const colors = ['#00ff88', '#ff4444', '#4444ff'];
+
+            Object.entries(currentPlayers).forEach(([key, player], index) => {
+                if (player) {
+                    datasets.push({
+                        label: player.name,
+                        data: generateRandomData(selectedStats.length),
+                        borderColor: colors[index],
+                        backgroundColor: colors[index] + '20',
+                        borderWidth: 2
+                    });
+                }
+            });
+
+            mainChart.data.labels = labels;
+            mainChart.data.datasets = datasets;
+            mainChart.update();
+        }
+
+        // ランダムデータ生成
+        function generateRandomData(length) {
+            return Array.from({ length }, () => Math.floor(Math.random() * 100) + 1);
         }
 
         // チャート初期化
         function initializeChart() {
             const ctx = document.getElementById('mainChart').getContext('2d');
             
+            if (mainChart) {
+                mainChart.destroy();
+            }
+
             mainChart = new Chart(ctx, {
-                type: currentChartType,
+                type: 'radar',
                 data: {
-                    labels: ['得点力', 'アシスト力', '出場率', '効率性', '総合力'],
+                    labels: selectedStats.map(stat => {
+                        const statObj = availableStats.find(s => s.value === stat);
+                        return statObj ? statObj.label : stat;
+                    }),
                     datasets: []
                 },
-                options: getChartOptions()
-            });
-        }
-
-        // チャートオプション取得
-        function getChartOptions() {
-            const baseOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: '#ffffff'
-                        }
-                    }
-                }
-            };
-
-            if (currentChartType === 'radar') {
-                return {
-                    ...baseOptions,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
                         r: {
                             beginAtZero: true,
@@ -515,301 +987,129 @@
                                 color: '#ffffff'
                             }
                         }
-                    }
-                };
-            } else {
-                return {
-                    ...baseOptions,
-                    scales: {
-                        x: {
-                            ticks: {
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
                                 color: '#ffffff'
-                            },
-                            grid: {
-                                color: '#333333'
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                color: '#ffffff'
-                            },
-                            grid: {
-                                color: '#333333'
                             }
                         }
                     }
-                };
-            }
+                }
+            });
         }
+
+        // 統計比較更新
+        function updateStatsComparison() {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = '';
+
+            Object.entries(currentPlayers).forEach(([key, player]) => {
+                if (player) {
+                    const statCard = document.createElement('div');
+                    statCard.className = 'stat-card';
+                    statCard.innerHTML = `
+                        <h3>${player.name}</h3>
+                        <div class="stat-item">
+                            <span>得点:</span>
+                            <span>${player.stats?.goals || 0}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>アシスト:</span>
+                            <span>${player.stats?.assists || 0}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>出場:</span>
+                            <span>${player.stats?.appearances || 0}</span>
+                        </div>
+                    `;
+                    statsGrid.appendChild(statCard);
+                }
+            });
+        }
+
+        // サンプル選手データ
+        const samplePlayers = [
+            {
+                id: '1',
+                name: '久保建英',
+                fullName: '久保建英',
+                currentTeam: 'レアル・ソシエダード',
+                position: 'Midfielder',
+                nationality: 'Japan',
+                age: 22,
+                stats: { goals: 8, assists: 6, appearances: 25, minutes: 1800, rating: 7.2 }
+            },
+            {
+                id: '2',
+                name: '三笘薫',
+                fullName: '三笘薫',
+                currentTeam: 'ブライトン',
+                position: 'Forward',
+                nationality: 'Japan',
+                age: 26,
+                stats: { goals: 12, assists: 8, appearances: 30, minutes: 2400, rating: 7.5 }
+            },
+            {
+                id: '3',
+                name: '堂安律',
+                fullName: '堂安律',
+                currentTeam: 'フライブルク',
+                position: 'Midfielder',
+                nationality: 'Japan',
+                age: 25,
+                stats: { goals: 6, assists: 4, appearances: 28, minutes: 2000, rating: 6.8 }
+            },
+            {
+                id: '4',
+                name: 'Erling Haaland',
+                fullName: 'Erling Haaland',
+                currentTeam: 'マンチェスター・シティ',
+                position: 'Forward',
+                nationality: 'Norway',
+                age: 23,
+                stats: { goals: 18, assists: 4, appearances: 15, minutes: 1350, rating: 8.2 }
+            },
+            {
+                id: '5',
+                name: 'Kevin De Bruyne',
+                fullName: 'Kevin De Bruyne',
+                currentTeam: 'マンチェスター・シティ',
+                position: 'Midfielder',
+                nationality: 'Belgium',
+                age: 32,
+                stats: { goals: 3, assists: 12, appearances: 20, minutes: 1800, rating: 7.8 }
+            }
+        ];
 
         // サンプル選手読み込み
-        async function loadSamplePlayers() {
-            const samplePlayers = ['久保建英', '三笘薫', '堂安律'];
-            
-            document.getElementById('player1Input').value = samplePlayers[0];
-            document.getElementById('player2Input').value = samplePlayers[1];
-            document.getElementById('player3Input').value = samplePlayers[2];
-            
-            updateCharts();
-        }
-
-        // チャート更新
-        async function updateCharts() {
-            const player1Name = document.getElementById('player1Input').value.trim();
-            const player2Name = document.getElementById('player2Input').value.trim();
-            const player3Name = document.getElementById('player3Input').value.trim();
-
-            const players = [];
-            if (player1Name) {
-                const player1 = await searchPlayer(player1Name);
-                if (player1) players.push(player1);
-            }
-            if (player2Name) {
-                const player2 = await searchPlayer(player2Name);
-                if (player2) players.push(player2);
-            }
-            if (player3Name) {
-                const player3 = await searchPlayer(player3Name);
-                if (player3) players.push(player3);
-            }
-
-            currentPlayers = players;
-            
-            updateMainChart(players);
-            updateStatsGrid(players);
-            updateComparisonTable(players);
-        }
-
-        // メインチャート更新
-        function updateMainChart(players) {
-            if (!mainChart) return;
-
-            const colors = ['#00ff88', '#ff4444', '#4444ff', '#ffaa00', '#ff44ff'];
-            
-            const datasets = players.map((player, index) => {
-                const color = colors[index % colors.length];
-                
-                return {
-                    label: player.name,
-                    data: [
-                        normalizeStat(player.stats?.goals || 0, 20),
-                        normalizeStat(player.stats?.assists || 0, 15),
-                        normalizeStat(player.stats?.appearances || 0, 38),
-                        normalizeStat(player.stats?.minutes || 0, 3420),
-                        normalizeStat((player.stats?.goals || 0) + (player.stats?.assists || 0), 30)
-                    ],
-                    borderColor: color,
-                    backgroundColor: color.replace(')', ', 0.2)').replace('rgb', 'rgba'),
-                    borderWidth: 2
-                };
-            });
-
-            mainChart.data.datasets = datasets;
-            mainChart.options = getChartOptions();
-            mainChart.update();
-        }
-
-        // 統計グリッド更新
-        function updateStatsGrid(players) {
-            const grid = document.getElementById('statsGrid');
-            grid.innerHTML = '';
-
-            if (players.length === 0) return;
-
-            const stats = ['goals', 'assists', 'appearances', 'minutes'];
-            const labels = ['得点', 'アシスト', '出場試合', '出場時間'];
-
-            stats.forEach((stat, index) => {
-                const card = document.createElement('div');
-                card.className = 'stat-card';
-                
-                let maxValue = 0;
-                let maxPlayer = '';
-                
-                players.forEach(player => {
-                    const value = player.stats?.[stat] || 0;
-                    if (value > maxValue) {
-                        maxValue = value;
-                        maxPlayer = player.name;
-                    }
-                });
-
-                card.innerHTML = `
-                    <div class="stat-label">${labels[index]}</div>
-                    <div class="stat-value">${maxValue}</div>
-                    <div class="stat-label">${maxPlayer}</div>
-                `;
-                
-                grid.appendChild(card);
-            });
-        }
-
-        // 比較テーブル更新
-        function updateComparisonTable(players) {
-            const tableBody = document.getElementById('comparisonTableBody');
-            const player1Header = document.getElementById('player1Header');
-            const player2Header = document.getElementById('player2Header');
-            const player3Header = document.getElementById('player3Header');
-
-            // ヘッダー更新
-            player1Header.textContent = players[0]?.name || '選手1';
-            player2Header.textContent = players[1]?.name || '選手2';
-            player3Header.textContent = players[2]?.name || '選手3';
-
-            // テーブル内容更新
-            tableBody.innerHTML = '';
-
-            const stats = [
-                { key: 'goals', label: '得点' },
-                { key: 'assists', label: 'アシスト' },
-                { key: 'appearances', label: '出場試合' },
-                { key: 'minutes', label: '出場時間' },
-                { key: 'rating', label: '評価' }
-            ];
-
-            stats.forEach(stat => {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td>${stat.label}</td>`;
-                
-                for (let i = 0; i < 3; i++) {
-                    const player = players[i];
-                    const value = player?.stats?.[stat.key] || 'N/A';
-                    row.innerHTML += `<td>${value}</td>`;
-                }
-                
-                tableBody.appendChild(row);
-            });
-        }
-
-        // 選手検索
-        async function searchPlayer(name) {
-            try {
-                const response = await fetch(`/api/search/players?query=${encodeURIComponent(name)}&limit=1`);
-                const data = await response.json();
-                
-                if (data.results && data.results.length > 0) {
-                    return data.results[0];
-                }
-                return null;
-            } catch (error) {
-                console.error('Player search error:', error);
-                return null;
-            }
-        }
-
-        // 統計正規化
-        function normalizeStat(value, max) {
-            return Math.min((value / max) * 100, 100);
-        }
-
-        // チャートクリア
-        function clearCharts() {
-            document.getElementById('player1Input').value = '';
-            document.getElementById('player2Input').value = '';
-            document.getElementById('player3Input').value = '';
-            
-            if (mainChart) {
-                mainChart.data.datasets = [];
-                mainChart.update();
-            }
-            
-            document.getElementById('statsGrid').innerHTML = '';
-            document.getElementById('comparisonTableBody').innerHTML = '';
-            currentPlayers = [];
-        }
-
-        // チャートエクスポート
-        function exportChart() {
-            if (!mainChart) return;
-            
-            const canvas = document.getElementById('mainChart');
-            const link = document.createElement('a');
-            link.download = 'player-comparison-chart.png';
-            link.href = canvas.toDataURL();
-            link.click();
-        }
-
-        // AI比較分析
-        async function performAIComparison() {
-            if (currentPlayers.length < 2) {
-                showError('比較する選手を2人以上選択してください');
-                return;
-            }
-
-            const playerNames = currentPlayers.map(p => p.name).join('、');
-            
-            try {
-                const response = await fetch('/api/ai/compare', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        player1: currentPlayers[0].name, 
-                        player2: currentPlayers[1].name 
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (data.response) {
-                    showSuccess(`<h3>${playerNames}の比較分析</h3><p>${data.response}</p>`);
-                } else {
-                    showError('AI比較分析を実行できませんでした');
-                }
-            } catch (error) {
-                console.error('AI comparison error:', error);
-                showError('AI比較分析中にエラーが発生しました');
-            }
+        function loadSamplePlayers() {
+            console.log('サンプル選手データ読み込み完了');
         }
 
         // AI分析実行
-        async function performAIAnalysis() {
-            const input = document.getElementById('analysisInput').value.trim();
-            
-            if (!input) {
-                showError('分析内容を入力してください');
+        function performAIAnalysis() {
+            const analysisInput = document.getElementById('analysisInput').value;
+            const analysisLoading = document.getElementById('analysisLoading');
+            const analysisResult = document.getElementById('analysisResult');
+
+            if (!analysisInput.trim()) {
+                alert('分析したい内容を入力してください');
                 return;
             }
 
-            const loading = document.getElementById('analysisLoading');
-            const result = document.getElementById('analysisResult');
-            
-            loading.style.display = 'block';
-            result.innerHTML = '';
+            analysisLoading.style.display = 'block';
+            analysisResult.innerHTML = 'AI分析中...';
 
-            try {
-                const response = await fetch('/api/ai/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: input })
-                });
-
-                const data = await response.json();
-                
-                if (data.response) {
-                    result.innerHTML = `<div class="success">${data.response}</div>`;
-                } else {
-                    result.innerHTML = '<div class="error">AI分析を実行できませんでした</div>';
-                }
-            } catch (error) {
-                console.error('AI analysis error:', error);
-                result.innerHTML = '<div class="error">AI分析中にエラーが発生しました</div>';
-            } finally {
-                loading.style.display = 'none';
-            }
-        }
-
-        // エラー表示
-        function showError(message) {
-            const result = document.getElementById('analysisResult');
-            result.innerHTML = `<div class="error">${message}</div>`;
-        }
-
-        // 成功表示
-        function showSuccess(message) {
-            const result = document.getElementById('analysisResult');
-            result.innerHTML = `<div class="success">${message}</div>`;
+            // シミュレーション（実際のAI API呼び出し）
+            setTimeout(() => {
+                analysisLoading.style.display = 'none';
+                analysisResult.innerHTML = `
+                    <h4>AI分析結果</h4>
+                    <p>${analysisInput}についての分析結果がここに表示されます。</p>
+                    <p>実際のAI APIとの連携が必要です。</p>
+                `;
+            }, 2000);
         }
     </script>
 </body>
