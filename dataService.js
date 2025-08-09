@@ -1600,17 +1600,25 @@ class FotMobDataService {
             }
 
             // Update standings (optional best effort)
-            const standings = await this.fetchStandings();
-            if (standings && standings.length > 0) {
-                await saveDataToFile(STANDINGS_FILE, standings);
-                this.cache.set('standings', standings);
+            if (typeof this.fetchStandings === 'function') {
+                const standings = await this.fetchStandings();
+                if (standings && standings.length > 0) {
+                    await saveDataToFile(STANDINGS_FILE, standings);
+                    this.cache.set('standings', standings);
+                }
+            } else {
+                console.warn('fetchStandings is not defined; skipping standings update');
             }
 
             // Update recent matches (best effort)
-            const matches = await this.fetchRecentMatches();
-            if (matches && matches.length > 0) {
-                await saveDataToFile(MATCHES_FILE, matches);
-                this.cache.set('matches', matches);
+            if (typeof this.fetchRecentMatches === 'function') {
+                const matches = await this.fetchRecentMatches();
+                if (matches && matches.length > 0) {
+                    await saveDataToFile(MATCHES_FILE, matches);
+                    this.cache.set('matches', matches);
+                }
+            } else {
+                console.warn('fetchRecentMatches is not defined; skipping matches update');
             }
 
             this.lastUpdate = Date.now();
