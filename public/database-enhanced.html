@@ -545,12 +545,26 @@
         let currentPage = 1;
         let totalPages = Infinity;
         let isLoading = false;
+        let io;
 
         function initInfiniteList() {
             // 1ページ目を読み込み
             loadPlayersPage(1);
-            // スクロール監視
-            window.addEventListener('scroll', handleScrollLoadMore);
+            // 監視用セントネル
+            const sentinel = document.createElement('div');
+            sentinel.id = 'infiniteSentinel';
+            sentinel.style.height = '1px';
+            sentinel.style.width = '100%';
+            document.body.appendChild(sentinel);
+            // IntersectionObserverでロード
+            io = new IntersectionObserver((entries) => {
+                entries.forEach(e => {
+                    if (e.isIntersecting && !isLoading && currentPage < totalPages) {
+                        loadPlayersPage(currentPage + 1);
+                    }
+                });
+            }, { root: null, rootMargin: '2000px 0px 200px 0px', threshold: 0 });
+            io.observe(sentinel);
         }
 
         async function loadPlayersPage(page) {
@@ -563,10 +577,11 @@
                     totalPages = data.totalPages || 1;
                     const list = Array.isArray(data.players) ? data.players : [];
                     if (list.length > 0) {
-                        // 既存に追記
                         if (!Array.isArray(currentPlayers)) currentPlayers = [];
                         currentPlayers = currentPlayers.concat(list);
-                        displayPlayers(list); // 追記表示
+                        // 追記表示（差分のみ）
+                        const grid = document.getElementById('playersGrid');
+                        list.forEach(p => { if (p && p.name) grid.appendChild(createPlayerCard(p)); });
                         console.log(`Loaded page ${page}/${totalPages} with ${list.length} players`);
                     }
                 }
@@ -578,17 +593,9 @@
             }
         }
 
-        function handleScrollLoadMore() {
-            const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 800;
-            if (nearBottom && !isLoading && currentPage < totalPages) {
-                loadPlayersPage(currentPage + 1);
-            }
-        }
-
         // サンプル選手データを読み込み（バックアップ用）
         async function loadSamplePlayers() {
             try {
-                // まず常時DBから大量の選手を取得（初期表示用）
                 const resp = await fetch(`/api/fotmob/players?page=1&limit=60`);
                 if (resp.ok) {
                     const data = await resp.json();
@@ -600,8 +607,6 @@
                         return;
                     }
                 }
-
-                // 人気の日本人選手を検索（フォールバック）
                 const playerMappings = {
                     '久保建英': 'Takefusa Kubo',
                     '三笘薫': 'Kaoru Mitoma',
@@ -620,42 +625,26 @@
                 const searchPromises = Object.entries(playerMappings).map(([japaneseName, englishName]) => 
                     fetch(`/api/fotmob/search?q=${encodeURIComponent(englishName)}&limit=1`)
                         .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
+                            if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
                             return response.json();
                         })
                         .then(data => {
                             console.log(`Search result for ${englishName}:`, data);
                             const player = data.players?.[0];
                             if (player) {
-                                return {
-                                    ...player,
-                                    name: japaneseName,
-                                    fullName: japaneseName,
-                                    japaneseName: japaneseName,
-                                    englishName: englishName
-                                };
+                                return { ...player, name: japaneseName, fullName: japaneseName, japaneseName, englishName };
                             }
                             return null;
                         })
-                        .catch((error) => {
-                            console.error(`Error searching for ${englishName}:`, error);
-                            return null;
-                        })
+                        .catch(() => null)
                 );
 
                 const results = await Promise.all(searchPromises);
                 currentPlayers = results.filter(player => player !== null);
-                
-                console.log('Final players loaded:', currentPlayers);
-                
                 if (currentPlayers.length === 0) {
                     console.log('No players found from API, using fallback data');
                     currentPlayers = getFallbackPlayers();
-                    console.log(`Loaded ${currentPlayers.length} fallback players`);
                 }
-                
                 displayPlayers(currentPlayers);
             } catch (error) {
                 console.error('Error loading players:', error);
@@ -820,7 +809,7 @@
         function createPlayerCard(player) {
             const card = document.createElement('div');
             card.className = 'player-card';
-            card.onclick = () => selectPlayer(player);
+            card.addEventListener('click', (e) => selectPlayer(player, e));
 
             const name = player.name || player.fullName || player.japaneseName || 'Unknown Player';
             const team = player.currentTeam || player.team || player.teamName || 'Unknown Team';
@@ -885,14 +874,26 @@
             document.getElementById('detailsClose').onclick = () => (panel.style.display = 'none');
         }
 
-        function showPlayerDetails(player) {
+        async function showPlayerDetails(player) {
             ensureDetailsPanel();
             const panel = document.getElementById('playerDetailsPanel');
             const name = player.name || player.fullName || player.japaneseName || 'Unknown Player';
             const team = player.currentTeam || player.team || player.teamName || 'Unknown Team';
             const position = player.position || 'Unknown Position';
             const nationality = player.nationality || 'Unknown';
-            const stats = player.stats || {};
+            let stats = player.stats || {};
+
+            // サーバから詳細を追加取得
+            try {
+                if (player.id) {
+                    const r = await fetch(`/api/fotmob/players/${encodeURIComponent(player.id)}`);
+                    if (r.ok) {
+                        const full = await r.json();
+                        if (full && full.stats) { stats = { ...stats, ...full.stats }; }
+                    }
+                }
+            } catch {}
+
             document.getElementById('detailsName').textContent = name;
             document.getElementById('detailsMeta').textContent = `${team} | ${position} | ${nationality}`;
             const statsEl = document.getElementById('detailsStats');
@@ -911,23 +912,25 @@
                 box.style.borderRadius = '8px';
                 box.style.padding = '8px';
                 box.style.textAlign = 'center';
-                box.innerHTML = `<div style="color:#888;font-size:12px;">${label}</div><div style="color:#e5e5e5;font-weight:700;">${value}</div>`;
+                box.innerHTML = `<div style=\"color:#888;font-size:12px;\">${label}</div><div style=\"color:#e5e5e5;font-weight:700;\">${value}</div>`;
                 statsEl.appendChild(box);
             });
             const radarLink = document.getElementById('openRadar');
             radarLink.href = `/radar?player=${encodeURIComponent(name)}`;
             panel.style.display = 'block';
+
+            // レーダー更新（安全に初期化）
+            if (!window.radarChart) initializeRadarChart();
+            updateRadarChart([{ name, stats }]);
         }
 
         // 選手を選択
-        function selectPlayer(player) {
+        function selectPlayer(player, evt) {
             const cards = document.querySelectorAll('.player-card');
             cards.forEach(card => card.classList.remove('selected'));
-            if (event && event.target && event.target.closest) {
-                const el = event.target.closest('.player-card');
-                if (el) el.classList.add('selected');
+            if (evt && evt.currentTarget) {
+                evt.currentTarget.classList.add('selected');
             }
-            updateRadarChart([player]);
             showPlayerDetails(player);
         }
 
