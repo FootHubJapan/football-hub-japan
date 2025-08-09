@@ -544,7 +544,19 @@
         // サンプル選手データを読み込み
         async function loadSamplePlayers() {
             try {
-                // 人気の日本人選手を検索
+                // まず常時DBから大量の選手を取得（初期表示用）
+                const resp = await fetch(`/api/fotmob/players?page=1&limit=60`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (Array.isArray(data.players) && data.players.length > 0) {
+                        currentPlayers = data.players;
+                        console.log(`Loaded ${currentPlayers.length} players from persistent API`);
+                        displayPlayers(currentPlayers);
+                        return;
+                    }
+                }
+
+                // 人気の日本人選手を検索（フォールバック）
                 const playerMappings = {
                     '久保建英': 'Takefusa Kubo',
                     '三笘薫': 'Kaoru Mitoma',
