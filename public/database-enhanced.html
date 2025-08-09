@@ -536,12 +536,56 @@
         let currentFilter = 'all';
 
         // 初期化
-        document.addEventListener('DOMContentLoaded', function() {
-            loadSamplePlayers();
+        document.addEventListener('DOMContentLoaded', () => {
+            initInfiniteList();
             initializeRadarChart();
         });
 
-        // サンプル選手データを読み込み
+        // 無限スクロール用の状態
+        let currentPage = 1;
+        let totalPages = Infinity;
+        let isLoading = false;
+
+        function initInfiniteList() {
+            // 1ページ目を読み込み
+            loadPlayersPage(1);
+            // スクロール監視
+            window.addEventListener('scroll', handleScrollLoadMore);
+        }
+
+        async function loadPlayersPage(page) {
+            if (isLoading) return;
+            isLoading = true;
+            try {
+                const resp = await fetch(`/api/fotmob/players?page=${page}&limit=60`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    totalPages = data.totalPages || 1;
+                    const list = Array.isArray(data.players) ? data.players : [];
+                    if (list.length > 0) {
+                        // 既存に追記
+                        if (!Array.isArray(currentPlayers)) currentPlayers = [];
+                        currentPlayers = currentPlayers.concat(list);
+                        displayPlayers(list); // 追記表示
+                        console.log(`Loaded page ${page}/${totalPages} with ${list.length} players`);
+                    }
+                }
+            } catch (e) {
+                console.error('Load page error:', e);
+            } finally {
+                isLoading = false;
+                currentPage = page;
+            }
+        }
+
+        function handleScrollLoadMore() {
+            const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 800;
+            if (nearBottom && !isLoading && currentPage < totalPages) {
+                loadPlayersPage(currentPage + 1);
+            }
+        }
+
+        // サンプル選手データを読み込み（バックアップ用）
         async function loadSamplePlayers() {
             try {
                 // まず常時DBから大量の選手を取得（初期表示用）
@@ -550,6 +594,7 @@
                     const data = await resp.json();
                     if (Array.isArray(data.players) && data.players.length > 0) {
                         currentPlayers = data.players;
+                        totalPages = data.totalPages || 1;
                         console.log(`Loaded ${currentPlayers.length} players from persistent API`);
                         displayPlayers(currentPlayers);
                         return;
@@ -572,7 +617,6 @@
 
                 console.log('Loading sample players with mappings:', playerMappings);
 
-                // 新しいFotMobスタイルのAPIを使用
                 const searchPromises = Object.entries(playerMappings).map(([japaneseName, englishName]) => 
                     fetch(`/api/fotmob/search?q=${encodeURIComponent(englishName)}&limit=1`)
                         .then(response => {
@@ -585,7 +629,6 @@
                             console.log(`Search result for ${englishName}:`, data);
                             const player = data.players?.[0];
                             if (player) {
-                                // 日本語名を追加
                                 return {
                                     ...player,
                                     name: japaneseName,
@@ -607,7 +650,6 @@
                 
                 console.log('Final players loaded:', currentPlayers);
                 
-                // 結果が空の場合はフォールバックデータを使用
                 if (currentPlayers.length === 0) {
                     console.log('No players found from API, using fallback data');
                     currentPlayers = getFallbackPlayers();
@@ -617,7 +659,6 @@
                 displayPlayers(currentPlayers);
             } catch (error) {
                 console.error('Error loading players:', error);
-                // フォールバックデータ
                 currentPlayers = getFallbackPlayers();
                 displayPlayers(currentPlayers);
             }
@@ -781,9 +822,8 @@
             card.className = 'player-card';
             card.onclick = () => selectPlayer(player);
 
-            // 安全なプロパティアクセス
             const name = player.name || player.fullName || player.japaneseName || 'Unknown Player';
-            const team = player.currentTeam || player.team || 'Unknown Team';
+            const team = player.currentTeam || player.team || player.teamName || 'Unknown Team';
             const position = player.position || 'Unknown Position';
             const nationality = player.nationality || 'Unknown';
             const stats = player.stats || {};
@@ -812,15 +852,83 @@
             return card;
         }
 
+        // 詳細パネル生成/表示
+        function ensureDetailsPanel() {
+            if (document.getElementById('playerDetailsPanel')) return;
+            const panel = document.createElement('div');
+            panel.id = 'playerDetailsPanel';
+            panel.style.position = 'fixed';
+            panel.style.right = '24px';
+            panel.style.bottom = '24px';
+            panel.style.width = '360px';
+            panel.style.maxHeight = '75vh';
+            panel.style.overflow = 'auto';
+            panel.style.background = '#121212';
+            panel.style.border = '1px solid #2a2a2a';
+            panel.style.borderRadius = '12px';
+            panel.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+            panel.style.padding = '16px';
+            panel.style.zIndex = '9999';
+            panel.style.display = 'none';
+            panel.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <div id="detailsName" style="font-weight:700;color:#e5e5e5;"></div>
+                    <button id="detailsClose" style="background:#222;color:#aaa;border:1px solid #333;border-radius:8px;padding:4px 8px;cursor:pointer;">閉じる</button>
+                </div>
+                <div id="detailsMeta" style="color:#bdbdbd;font-size:12px;margin-bottom:8px;"></div>
+                <div id="detailsStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+                <div style="margin-top:12px;display:flex;gap:8px;">
+                    <a id="openRadar" href="/radar" style="flex:1;text-align:center;background:#14cf93;color:#000;padding:8px;border-radius:8px;text-decoration:none;font-weight:700;">レーダーチャートで表示</a>
+                </div>
+            `;
+            document.body.appendChild(panel);
+            document.getElementById('detailsClose').onclick = () => (panel.style.display = 'none');
+        }
+
+        function showPlayerDetails(player) {
+            ensureDetailsPanel();
+            const panel = document.getElementById('playerDetailsPanel');
+            const name = player.name || player.fullName || player.japaneseName || 'Unknown Player';
+            const team = player.currentTeam || player.team || player.teamName || 'Unknown Team';
+            const position = player.position || 'Unknown Position';
+            const nationality = player.nationality || 'Unknown';
+            const stats = player.stats || {};
+            document.getElementById('detailsName').textContent = name;
+            document.getElementById('detailsMeta').textContent = `${team} | ${position} | ${nationality}`;
+            const statsEl = document.getElementById('detailsStats');
+            statsEl.innerHTML = '';
+            const items = [
+                ['得点', stats.goals || 0],
+                ['アシスト', stats.assists || 0],
+                ['出場', stats.appearances || 0],
+                ['分', stats.minutes || 0],
+                ['評価', stats.rating || 'N/A'],
+                ['黄', stats.yellowCards || 0]
+            ];
+            items.forEach(([label, value]) => {
+                const box = document.createElement('div');
+                box.style.border = '1px solid #2a2a2a';
+                box.style.borderRadius = '8px';
+                box.style.padding = '8px';
+                box.style.textAlign = 'center';
+                box.innerHTML = `<div style="color:#888;font-size:12px;">${label}</div><div style="color:#e5e5e5;font-weight:700;">${value}</div>`;
+                statsEl.appendChild(box);
+            });
+            const radarLink = document.getElementById('openRadar');
+            radarLink.href = `/radar?player=${encodeURIComponent(name)}`;
+            panel.style.display = 'block';
+        }
+
         // 選手を選択
         function selectPlayer(player) {
             const cards = document.querySelectorAll('.player-card');
             cards.forEach(card => card.classList.remove('selected'));
-
-            event.target.closest('.player-card').classList.add('selected');
-            
-            // レーダーチャートを更新
+            if (event && event.target && event.target.closest) {
+                const el = event.target.closest('.player-card');
+                if (el) el.classList.add('selected');
+            }
             updateRadarChart([player]);
+            showPlayerDetails(player);
         }
 
         // 検索処理
