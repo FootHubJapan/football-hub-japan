@@ -1509,6 +1509,26 @@ app.get('/api/fotmob/search', async (req, res) => {
     }
 });
 
+app.get('/api/fotmob/standings', async (req, res) => {
+    try {
+        const rows = fotMobDataService.cache.get('standings') || [];
+        res.json(rows);
+    } catch (e) {
+        console.error('standings endpoint error', e);
+        res.json([]);
+    }
+});
+
+app.get('/api/fotmob/matches', async (req, res) => {
+    try {
+        const list = fotMobDataService.cache.get('matches') || [];
+        res.json(list);
+    } catch (e) {
+        console.error('matches endpoint error', e);
+        res.json([]);
+    }
+});
+
 // Initialize FotMob data service on startup
 app.get('/api/fotmob/init', async (req, res) => {
     try {

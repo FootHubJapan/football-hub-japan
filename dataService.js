@@ -11,6 +11,8 @@ const DATA_DIR = path.join(__dirname, 'data');
 const PLAYERS_FILE = path.join(DATA_DIR, 'players.json');
 const TEAMS_FILE = path.join(DATA_DIR, 'teams.json');
 const LEAGUES_FILE = path.join(DATA_DIR, 'leagues.json');
+const MATCHES_FILE = path.join(DATA_DIR, 'matches.json');
+const STANDINGS_FILE = path.join(DATA_DIR, 'standings.json');
 
 // Ensure data directory exists
 async function ensureDataDirectory() {
@@ -1377,6 +1379,84 @@ class FootballDataService {
             league: 'all'
         };
     }
+
+    // Fetch league standings (Football-Data.org)
+    async fetchStandings() {
+        const standingsRows = [];
+        const leagueIds = ['PL', 'PD', 'SA', 'BL1', 'FL1'];
+        for (const leagueId of leagueIds) {
+            try {
+                if (checkRateLimit('footballData')) {
+                    const response = await apiClient.get(`/competitions/${leagueId}/standings`);
+                    const tables = response.data?.standings || [];
+                    tables.forEach(table => {
+                        table.table?.forEach(row => {
+                            standingsRows.push({
+                                leagueId,
+                                position: row.position,
+                                teamId: row.team.id,
+                                teamName: row.team.name,
+                                playedGames: row.playedGames,
+                                won: row.won,
+                                draw: row.draw,
+                                lost: row.lost,
+                                points: row.points,
+                                goalsFor: row.goalsFor,
+                                goalsAgainst: row.goalsAgainst,
+                                goalDifference: row.goalDifference,
+                                updated: response.data?.season?.endDate || null,
+                                source: 'football-data'
+                            });
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error(`Error fetching standings for ${leagueId}:`, error.message);
+            }
+        }
+        return standingsRows;
+    }
+
+    // Fetch recent matches for major leagues (Football-Data.org)
+    async fetchRecentMatches() {
+        const matches = [];
+        const leagueIds = ['PL', 'PD', 'SA', 'BL1', 'FL1'];
+        const dateTo = new Date();
+        const dateFrom = new Date();
+        dateFrom.setDate(dateTo.getDate() - 7);
+        const fromStr = dateFrom.toISOString().split('T')[0];
+        const toStr = dateTo.toISOString().split('T')[0];
+        for (const leagueId of leagueIds) {
+            try {
+                if (checkRateLimit('footballData')) {
+                    const response = await apiClient.get(`/competitions/${leagueId}/matches`, {
+                        params: { dateFrom: fromStr, dateTo: toStr }
+                    });
+                    const list = response.data?.matches || [];
+                    list.forEach(m => {
+                        matches.push({
+                            id: m.id,
+                            utcDate: m.utcDate,
+                            status: m.status,
+                            matchday: m.matchday,
+                            stage: m.stage,
+                            group: m.group,
+                            homeTeamId: m.homeTeam?.id,
+                            homeTeam: m.homeTeam?.name,
+                            awayTeamId: m.awayTeam?.id,
+                            awayTeam: m.awayTeam?.name,
+                            score: m.score,
+                            competition: leagueId,
+                            source: 'football-data'
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error(`Error fetching matches for ${leagueId}:`, error.message);
+            }
+        }
+        return matches;
+    }
 }
 
 // FotMob-style Data Service
@@ -1463,6 +1543,11 @@ class FotMobDataService {
                 loadDataFromFile(LEAGUES_FILE)
             ]);
 
+            const [matches, standings] = await Promise.all([
+                loadDataFromFile(MATCHES_FILE),
+                loadDataFromFile(STANDINGS_FILE)
+            ]);
+
             if (players && players.length > 0) {
                 this.cache.set('players', players);
                 console.log(`Loaded ${players.length} players from persistent storage`);
@@ -1474,6 +1559,14 @@ class FotMobDataService {
             if (leagues && leagues.length > 0) {
                 this.cache.set('leagues', leagues);
                 console.log(`Loaded ${leagues.length} leagues from persistent storage`);
+            }
+            if (matches && matches.length > 0) {
+                this.cache.set('matches', matches);
+                console.log(`Loaded ${matches.length} matches from persistent storage`);
+            }
+            if (standings && standings.length > 0) {
+                this.cache.set('standings', standings);
+                console.log(`Loaded ${standings.length} standings rows from persistent storage`);
             }
         } catch (error) {
             console.error('Error loading persistent data:', error);
@@ -1504,6 +1597,20 @@ class FotMobDataService {
             if (players && players.length > 0) {
                 await saveDataToFile(PLAYERS_FILE, players);
                 this.cache.set('players', players);
+            }
+
+            // Update standings (optional best effort)
+            const standings = await this.fetchStandings();
+            if (standings && standings.length > 0) {
+                await saveDataToFile(STANDINGS_FILE, standings);
+                this.cache.set('standings', standings);
+            }
+
+            // Update recent matches (best effort)
+            const matches = await this.fetchRecentMatches();
+            if (matches && matches.length > 0) {
+                await saveDataToFile(MATCHES_FILE, matches);
+                this.cache.set('matches', matches);
             }
 
             this.lastUpdate = Date.now();
