@@ -1478,6 +1478,30 @@ app.get('/api/fotmob/search', async (req, res) => {
             page: parseInt(page),
             limit: parseInt(limit)
         });
+        // サーバー側フォールバック（結果が0件の場合）
+        if (!result || !Array.isArray(result.players) || result.players.length === 0) {
+            const fallbackPlayers = fotMobDataService.getFallbackPlayers();
+            const filteredFallback = fallbackPlayers.filter(p => {
+                const key = q.toLowerCase();
+                return (
+                    (p.name && p.name.toLowerCase().includes(key)) ||
+                    (p.fullName && p.fullName.toLowerCase().includes(key)) ||
+                    (p.japaneseName && p.japaneseName.toLowerCase().includes(key)) ||
+                    (p.englishName && p.englishName.toLowerCase().includes(key)) ||
+                    (p.firstName && p.firstName.toLowerCase().includes(key)) ||
+                    (p.lastName && p.lastName.toLowerCase().includes(key))
+                );
+            });
+            const start = (parseInt(page) - 1) * parseInt(limit);
+            const end = start + parseInt(limit);
+            return res.json({
+                players: filteredFallback.slice(start, end),
+                total: filteredFallback.length,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(filteredFallback.length / parseInt(limit))
+            });
+        }
         res.json(result);
     } catch (error) {
         console.error('Error searching players:', error);

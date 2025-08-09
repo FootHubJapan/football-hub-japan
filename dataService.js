@@ -1618,8 +1618,8 @@ class FotMobDataService {
         const players = [];
         const teams = this.cache.get('teams') || [];
 
-        // Limit to first 10 teams to avoid rate limits
-        const teamsToProcess = teams.slice(0, 10);
+        // Limit to first 60 teams to balance coverage and rate limits
+        const teamsToProcess = teams.slice(0, 60);
 
         for (const team of teamsToProcess) {
             try {
