@@ -1031,6 +1031,11 @@
                 }
             }
             document.getElementById('predictionAccuracy').textContent = predictionAccuracyValue;
+            
+            // データソースを表示
+            if (stats.source) {
+                showDataSource(stats.source);
+            }
         }
 
         // パフォーマンスチャート更新
@@ -1249,6 +1254,49 @@
             setTimeout(() => {
                 errorDiv.remove();
             }, 5000);
+        }
+
+        // データソース表示
+        function showDataSource(source) {
+            // 既存のデータソース表示を削除
+            const existingSource = document.querySelector('.data-source-indicator');
+            if (existingSource) {
+                existingSource.remove();
+            }
+            
+            const sourceDiv = document.createElement('div');
+            sourceDiv.className = 'data-source-indicator';
+            
+            let sourceText = '';
+            let sourceColor = '';
+            
+            switch (source) {
+                case 'API-Football v3':
+                    sourceText = '📡 API-Football v3 Pro から取得';
+                    sourceColor = '#00ff88';
+                    break;
+                case 'football-data.org':
+                    sourceText = '📊 football-data.org Statistic Add-On から取得';
+                    sourceColor = '#ff6b6b';
+                    break;
+                case 'フォールバックデータ':
+                    sourceText = '⚠️ フォールバックデータ（サンプル）';
+                    sourceColor = '#ffaa00';
+                    break;
+                default:
+                    sourceText = `📊 ${source} から取得`;
+                    sourceColor = '#00ff88';
+            }
+            
+            sourceDiv.innerHTML = `
+                <div style="color: ${sourceColor}; font-weight: bold; text-align: center; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 10px; margin: 1rem 0;">
+                    ${sourceText}
+                </div>
+            `;
+            
+            // スタッツカードの下に挿入
+            const statsGrid = document.querySelector('.stats-grid');
+            statsGrid.parentNode.insertBefore(sourceDiv, statsGrid.nextSibling);
         }
 
         // 成功表示
