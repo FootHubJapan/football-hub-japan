@@ -220,6 +220,41 @@
             margin-top: 1rem;
         }
 
+        .player-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+
+        .action-btn {
+            background: #333333;
+            color: #ffffff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .plan-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .radar-btn:hover {
+            background: #4444ff;
+            color: #ffffff;
+        }
+
         .stat-item {
             text-align: center;
             padding: 0.8rem;
@@ -404,6 +439,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             initializeData();
             setupEventListeners();
+            getPlayerFromUrl(); // URLパラメータから選手情報を取得
         });
 
         async function initializeData() {
@@ -526,32 +562,40 @@
             }
 
             container.innerHTML = players.map(player => `
-                <div class="player-card" onclick="showPlayerDetails(${player.id})">
-                            <div class="player-header">
+                <div class="player-card">
+                    <div class="player-header" onclick="showPlayerDetails(${player.id})">
                         <div class="player-avatar">
                             ${player.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                </div>
-                                <div class="player-info">
+                        </div>
+                        <div class="player-info">
                             <div class="player-name">${player.name}</div>
                             <div class="player-team">${player.teamName || 'Unknown Team'}</div>
                             <div class="player-position">${player.position || 'Unknown Position'}</div>
-                                </div>
-                            </div>
+                        </div>
+                    </div>
                     <div class="player-stats">
-                            <div class="stat-item">
+                        <div class="stat-item">
                             <div class="stat-value">${player.nationality || 'N/A'}</div>
                             <div class="stat-label">国籍</div>
-                            </div>
-                            <div class="stat-item">
+                        </div>
+                        <div class="stat-item">
                             <div class="stat-value">${player.shirtNumber || 'N/A'}</div>
                             <div class="stat-label">背番号</div>
-                            </div>
-                            <div class="stat-item">
+                        </div>
+                        <div class="stat-item">
                             <div class="stat-value">${player.dateOfBirth ? new Date(player.dateOfBirth).getFullYear() : 'N/A'}</div>
                             <div class="stat-label">生年</div>
-                            </div>
-                            </div>
-                            </div>
+                        </div>
+                    </div>
+                    <div class="player-actions">
+                        <button class="action-btn plan-btn" onclick="createPlayerPlan(${player.id})" title="プラン作成">
+                            📋 プラン作成
+                        </button>
+                        <button class="action-btn radar-btn" onclick="viewPlayerRadar(${player.id})" title="レーダーチャート">
+                            📈 レーダー
+                        </button>
+                    </div>
+                </div>
             `).join('');
         }
 
@@ -633,8 +677,50 @@
         }
 
         function showPlayerDetails(playerId) {
-            // Navigate to player details page or show modal
-            window.location.href = `/player/${playerId}`;
+            // プランページで選手の詳細プランを作成
+            const player = players.find(p => p.id === playerId);
+            if (player) {
+                const url = `plans.html?player=${playerId}&name=${encodeURIComponent(player.name)}&action=create-plan`;
+                window.open(url, '_blank');
+            }
+        }
+
+        // プランページとの連携機能
+        function createPlayerPlan(playerId) {
+            const player = players.find(p => p.id === playerId);
+            if (player) {
+                const url = `plans.html?player=${playerId}&name=${encodeURIComponent(player.name)}&action=create-plan`;
+                window.open(url, '_blank');
+            }
+        }
+
+        function viewPlayerRadar(playerId) {
+            const player = players.find(p => p.id === playerId);
+            if (player) {
+                const url = `radar.html?player=${playerId}&name=${encodeURIComponent(player.name)}`;
+                window.open(url, '_blank');
+            }
+        }
+
+        // URLパラメータから選手情報を取得
+        function getPlayerFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const playerId = urlParams.get('player');
+            const playerName = urlParams.get('name');
+            
+            if (playerId && playerName) {
+                // 該当選手を検索して表示
+                currentFilters.search = playerName;
+                loadPlayers();
+                
+                // 選手が見つかった場合、詳細表示
+                setTimeout(() => {
+                    const player = players.find(p => p.id == playerId);
+                    if (player) {
+                        showPlayerDetails(playerId);
+                    }
+                }, 1000);
+            }
         }
 
         function showError(message) {

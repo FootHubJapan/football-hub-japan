@@ -1,0 +1,2983 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="Thu, 01 Jan 1970 00:00:00 GMT">
+    <title>プラン管理 - Football Hub Japan</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #1a1a1a;
+            border-bottom: 2px solid #00ff88;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            color: #00ff88;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: #333333;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            color: #00ff88;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .page-subtitle {
+            color: #cccccc;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .plan-section {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .section-title {
+            color: #00ff88;
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .schedule-container {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .date-navigation {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .date-btn {
+            background: #333333;
+            color: #ffffff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .date-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .current-date {
+            color: #00ff88;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .match-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .match-item {
+            background: #2a2a2a;
+            border: 1px solid #444444;
+            border-radius: 10px;
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .team-info {
+            text-align: center;
+        }
+
+        .team-name {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .team-logo {
+            width: 40px;
+            height: 40px;
+            background: #444444;
+            border-radius: 50%;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .match-details {
+            text-align: center;
+            color: #cccccc;
+        }
+
+        .match-time {
+            font-size: 1.1rem;
+            color: #00ff88;
+            margin-bottom: 0.5rem;
+        }
+
+        .match-venue {
+            font-size: 0.9rem;
+        }
+
+        .match-status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-scheduled {
+            background: #2d5a2d;
+            color: #00ff88;
+        }
+
+        .status-live {
+            background: #ff4444;
+            color: #ffffff;
+        }
+
+        .status-finished {
+            background: #444444;
+            color: #cccccc;
+        }
+
+        .plan-form {
+            background: #2a2a2a;
+            border: 1px solid #444444;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #cccccc;
+            font-weight: bold;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: #1a1a1a;
+            border: 1px solid #444444;
+            border-radius: 5px;
+            color: #ffffff;
+            font-size: 0.9rem;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .btn {
+            background: #00ff88;
+            color: #000000;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #666666;
+            color: #ffffff;
+        }
+
+        .btn-secondary:hover {
+            background: #888888;
+        }
+
+        .btn-danger {
+            background: #ff4444;
+            color: #ffffff;
+        }
+
+        .btn-danger:hover {
+            background: #cc3333;
+        }
+
+        .plan-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .plan-item {
+            background: #2a2a2a;
+            border: 1px solid #444444;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+
+        .plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .plan-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .plan-date {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        .plan-subtitle {
+            color: #999999;
+            font-size: 0.8rem;
+            margin-top: 0.2rem;
+        }
+
+        .plan-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .plan-content {
+            color: #cccccc;
+            margin-bottom: 1rem;
+        }
+
+        .plan-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-item {
+            background: #1a1a1a;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #cccccc;
+            text-transform: uppercase;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #cccccc;
+        }
+
+        .error {
+            background: #442222;
+            border: 1px solid #ff4444;
+            color: #ff8888;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .success {
+            background: #224422;
+            border: 1px solid #00ff88;
+            color: #88ff88;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            background: #2a2a2a;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            background: #2a2a2a;
+            color: #cccccc;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .player-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .progress-bar {
+            background: #444444;
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+
+        /* 料金プランスタイル */
+        .pricing-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .pricing-card {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            border-color: #00ff88;
+        }
+
+        .pricing-card.premium {
+            border-color: #ffaa00;
+            transform: scale(1.05);
+        }
+
+        .pricing-card.premium:hover {
+            border-color: #ffaa00;
+            transform: scale(1.05) translateY(-5px);
+        }
+
+        .pricing-card.pro {
+            border-color: #00ff88;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a2a0a 100%);
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .plan-name {
+            color: #ffffff;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .plan-price {
+            margin-bottom: 1rem;
+        }
+
+        .price {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .period {
+            font-size: 1.2rem;
+            color: #cccccc;
+        }
+
+        .plan-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #00ff88;
+            color: #000000;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .pricing-card.premium .plan-badge {
+            background: #ffaa00;
+        }
+
+        .pricing-card.pro .plan-badge {
+            background: #00ff88;
+        }
+
+        .plan-features {
+            margin-bottom: 2rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            background: #2a2a2a;
+            border-radius: 8px;
+        }
+
+        .feature-icon {
+            font-size: 1.2rem;
+        }
+
+        .feature-text {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        .plan-actions {
+            text-align: center;
+        }
+
+        .btn-free {
+            background: #666666;
+            color: #ffffff;
+        }
+
+        .btn-free:hover {
+            background: #888888;
+        }
+
+        .btn-premium {
+            background: #ffaa00;
+            color: #000000;
+        }
+
+        .btn-premium:hover {
+            background: #ffcc00;
+        }
+
+        .btn-pro {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .btn-pro:hover {
+            background: #00cc6a;
+        }
+
+        /* 過去データセクション */
+        .historical-data-section {
+            margin: 3rem 0;
+        }
+
+        .historical-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .info-card {
+            background: #1a1a1a;
+            border: 1px solid #444444;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+
+        .info-card h4 {
+            color: #00ff88;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .info-card p {
+            color: #cccccc;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .data-examples, .search-features {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .example-item, .search-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: #2a2a2a;
+            border-radius: 5px;
+        }
+
+        .example-icon, .search-icon {
+            font-size: 1.1rem;
+        }
+
+        /* プラン比較表 */
+        .plan-comparison {
+            margin: 3rem 0;
+        }
+
+        .comparison-table {
+            overflow-x: auto;
+            margin-top: 2rem;
+        }
+
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #1a1a1a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid #333333;
+        }
+
+        .comparison-table th {
+            background: #00ff88;
+            color: #000000;
+            font-weight: bold;
+        }
+
+        .comparison-table td:first-child {
+            text-align: left;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #2a2a2a;
+        }
+
+        .comparison-table tr:hover {
+            background: #333333;
+        }
+
+        @media (max-width: 768px) {
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .match-item {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-card.premium {
+                transform: none;
+            }
+
+            .pricing-card.premium:hover {
+                transform: translateY(-5px);
+            }
+
+            .comparison-table {
+                font-size: 0.8rem;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Football Hub Japan</div>
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="window.location.href='/'">ホーム</button>
+            <button class="nav-btn" onclick="window.location.href='database-enhanced.html'">データベース</button>
+            <button class="nav-btn" onclick="window.location.href='radar-enhanced.html'">レーダーチャート</button>
+            <button class="nav-btn" onclick="window.location.href='ai-agent-enhanced.html'">AIエージェント</button>
+            <button class="nav-btn" onclick="window.location.href='plans.html'" style="background: #00ff88; color: #000000;">プラン管理</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <h1 class="page-title">プラン管理システム</h1>
+        <p class="page-subtitle">試合スケジュール、選手プラン、チーム戦術を統合管理</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('schedule')">試合スケジュール</button>
+            <button class="tab" onclick="showTab('player-plans')">選手プラン</button>
+            <button class="tab" onclick="showTab('tactical-plans')">戦術プラン</button>
+            <button class="tab" onclick="showTab('analysis')">分析・統計</button>
+            <button class="tab" onclick="showTab('pricing')">料金プラン</button>
+        </div>
+
+        <!-- 試合スケジュールタブ -->
+        <div id="schedule" class="tab-content active">
+            <div class="schedule-container">
+                <div class="schedule-header">
+                    <h2 class="section-title">📅 試合スケジュール</h2>
+                    <div class="date-navigation">
+                        <button class="date-btn" onclick="changeDate(-1)">← 前日</button>
+                        <div class="current-date" id="currentDate"></div>
+                        <button class="date-btn" onclick="changeDate(1)">翌日 →</button>
+                        <button class="date-btn" onclick="goToToday()">今日</button>
+                    </div>
+                </div>
+
+                <div class="schedule-filters" style="margin-bottom: 1rem;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">リーグ・大会</label>
+                            <select class="form-select" id="leagueFilter" onchange="filterFixtures()">
+                                <option value="">すべて</option>
+                                <option value="japan">日本代表</option>
+                                <option value="j-league">Jリーグ</option>
+                                <option value="europe">欧州リーグ</option>
+                                <option value="champions-league">チャンピオンズリーグ</option>
+                                <option value="europa-league">ヨーロッパリーグ</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">試合ステータス</label>
+                            <select class="form-select" id="statusFilter" onchange="filterFixtures()">
+                                <option value="">すべて</option>
+                                <option value="scheduled">予定</option>
+                                <option value="live">試合中</option>
+                                <option value="finished">終了</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="scheduleContent">
+                    <div class="loading">試合スケジュールを読み込み中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 選手プランタブ -->
+        <div id="player-plans" class="tab-content">
+            <div class="plans-grid">
+                <div class="plan-section">
+                    <h2 class="section-title">👤 選手プラン作成</h2>
+                    <form id="playerPlanForm" class="plan-form">
+                        <div class="form-group">
+                            <label class="form-label">選手名</label>
+                            <select class="form-select" id="playerName" required onchange="showPlayerStats()">
+                                <option value="">選手を選択してください</option>
+                            </select>
+                        </div>
+
+                        <div id="playerStatsDisplay" style="display: none; background: #1a1a1a; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h4 style="color: #00ff88; margin: 0;">選手統計情報</h4>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button class="btn btn-secondary" onclick="viewPlayerInDatabase()" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">
+                                        📊 データベースで詳細表示
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="viewPlayerRadar()" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">
+                                        📈 レーダーチャート表示
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="player-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem;">
+                                <div class="stat-item">
+                                    <div class="stat-value" id="playerGoals">-</div>
+                                    <div class="stat-label">ゴール</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="playerAssists">-</div>
+                                    <div class="stat-label">アシスト</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="playerMatches">-</div>
+                                    <div class="stat-label">試合数</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="playerRating">-</div>
+                                    <div class="stat-label">評価</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="playerMinutes">-</div>
+                                    <div class="stat-label">出場時間</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="playerPasses">-</div>
+                                    <div class="stat-label">パス成功率</div>
+                                </div>
+                            </div>
+                            <div id="playerChartContainer" style="margin-top: 1rem; height: 200px;">
+                                <canvas id="playerPerformanceChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">プランタイプ</label>
+                                <select class="form-select" id="planType" required>
+                                    <option value="">選択してください</option>
+                                    <option value="fitness">フィジカル強化</option>
+                                    <option value="technical">技術向上</option>
+                                    <option value="tactical">戦術理解</option>
+                                    <option value="mental">メンタル強化</option>
+                                    <option value="recovery">リカバリー</option>
+                                    <option value="goal-scoring">得点力向上</option>
+                                    <option value="defensive">守備力向上</option>
+                                    <option value="playmaking">プレイメイキング</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">優先度</label>
+                                <select class="form-select" id="priority" required>
+                                    <option value="">選択してください</option>
+                                    <option value="high">高</option>
+                                    <option value="medium">中</option>
+                                    <option value="low">低</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">プラン詳細</label>
+                            <textarea class="form-textarea" id="planDetails" rows="4" placeholder="具体的なプラン内容を入力してください"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">目標達成日</label>
+                                <input type="date" class="form-input" id="targetDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">練習頻度</label>
+                                <select class="form-select" id="practiceFrequency" required>
+                                    <option value="">選択してください</option>
+                                    <option value="daily">毎日</option>
+                                    <option value="3times">週3回</option>
+                                    <option value="2times">週2回</option>
+                                    <option value="weekly">週1回</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn">プラン作成</button>
+                    </form>
+                </div>
+
+                <div class="plan-section">
+                    <h2 class="section-title">📋 選手プラン一覧</h2>
+                    <div id="playerPlansList">
+                        <div class="loading">プランを読み込み中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 戦術プランタブ -->
+        <div id="tactical-plans" class="tab-content">
+            <div class="plans-grid">
+                <div class="plan-section">
+                    <h2 class="section-title">⚽ 戦術プラン作成</h2>
+                    <form id="tacticalPlanForm" class="plan-form">
+                        <div class="form-group">
+                            <label class="form-label">プラン名</label>
+                            <input type="text" class="form-input" id="tacticalPlanName" placeholder="戦術プラン名を入力" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">戦術タイプ</label>
+                                <select class="form-select" id="tacticalType" required>
+                                    <option value="">選択してください</option>
+                                    <option value="formation">フォーメーション</option>
+                                    <option value="pressing">プレス戦術</option>
+                                    <option value="possession">ポゼッション戦術</option>
+                                    <option value="counter">カウンター戦術</option>
+                                    <option value="set-piece">セットプレー</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">対象チーム</label>
+                                <select class="form-select" id="targetTeam" required>
+                                    <option value="">選択してください</option>
+                                    <option value="japan">日本代表</option>
+                                    <option value="j-league">Jリーグ</option>
+                                    <option value="europe">欧州リーグ</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">戦術詳細</label>
+                            <textarea class="form-textarea" id="tacticalDetails" rows="6" placeholder="戦術の詳細、選手配置、動きの指示などを入力してください"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">実戦投入予定日</label>
+                                <input type="date" class="form-input" id="implementationDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">練習回数</label>
+                                <input type="number" class="form-input" id="practiceSessions" min="1" max="20" value="5" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn">戦術プラン作成</button>
+                    </form>
+                </div>
+
+                <div class="plan-section">
+                    <h2 class="section-title">📊 戦術プラン一覧</h2>
+                    <div id="tacticalPlansList">
+                        <div class="loading">戦術プランを読み込み中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分析・統計タブ -->
+        <div id="analysis" class="tab-content">
+            <div class="plans-grid">
+                <div class="plan-section">
+                    <h2 class="section-title">📈 プラン進捗分析</h2>
+                    <div class="plan-stats">
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalPlans">0</div>
+                            <div class="stat-label">総プラン数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="completedPlans">0</div>
+                            <div class="stat-label">完了プラン</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="activePlans">0</div>
+                            <div class="stat-label">進行中プラン</div>
+                        </div>
+                        <div class="stat-value" id="successRate">0%</div>
+                        <div class="stat-label">成功率</div>
+                    </div>
+                    <canvas id="progressChart" width="400" height="200"></canvas>
+                </div>
+
+                <div class="plan-section">
+                    <h2 class="section-title">🎯 今月の目標</h2>
+                    <div id="monthlyGoals">
+                        <div class="loading">目標データを読み込み中...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="plans-grid" style="margin-top: 2rem;">
+                <div class="plan-section">
+                    <h2 class="section-title">👥 選手パフォーマンス分析</h2>
+                    <div class="performance-filters">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">選手</label>
+                                <select class="form-select" id="performancePlayer" onchange="updatePerformanceChart()">
+                                    <option value="">選手を選択</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">分析期間</label>
+                                <select class="form-select" id="performancePeriod" onchange="updatePerformanceChart()">
+                                    <option value="1month">1ヶ月</option>
+                                    <option value="3months">3ヶ月</option>
+                                    <option value="6months">6ヶ月</option>
+                                    <option value="1year">1年</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <canvas id="performanceChart" width="400" height="200"></canvas>
+                </div>
+
+                <div class="plan-section">
+                    <h2 class="section-title">📊 プラン効果測定</h2>
+                    <div id="planEffectiveness">
+                        <div class="loading">プラン効果データを読み込み中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 料金プランタブ -->
+        <div id="pricing" class="tab-content">
+            <div class="pricing-container">
+                <h2 class="section-title">💰 料金プラン</h2>
+                <p class="page-subtitle">あなたのニーズに合わせた柔軟なプラン選択</p>
+                
+                <div class="pricing-grid">
+                    <!-- フリープラン -->
+                    <div class="pricing-card free">
+                        <div class="pricing-header">
+                            <h3 class="plan-name">フリープラン</h3>
+                            <div class="plan-price">
+                                <span class="price">¥0</span>
+                                <span class="period">/月</span>
+                            </div>
+                            <div class="plan-badge">無料</div>
+                        </div>
+                        <div class="plan-features">
+                            <div class="feature-item">
+                                <span class="feature-icon">🤖</span>
+                                <span class="feature-text">AI分析: 日5回まで</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">🏆</span>
+                                <span class="feature-text">ランキング: TOP10表示</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">🔮</span>
+                                <span class="feature-text">予想機能: 勝敗のみ</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">📢</span>
+                                <span class="feature-text">広告表示: あり</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">⭐</span>
+                                <span class="feature-text">推し選手: 3人まで</span>
+                            </div>
+                        </div>
+                        <div class="plan-actions">
+                            <button class="btn btn-free" onclick="selectPlan('free')">無料で始める</button>
+                        </div>
+                    </div>
+
+                    <!-- プレミアムプラン -->
+                    <div class="pricing-card premium">
+                        <div class="pricing-header">
+                            <h3 class="plan-name">プレミアムプラン</h3>
+                            <div class="plan-price">
+                                <span class="price">¥780</span>
+                                <span class="period">/月</span>
+                            </div>
+                            <div class="plan-badge">人気</div>
+                        </div>
+                        <div class="plan-features">
+                            <div class="feature-item">
+                                <span class="feature-icon">🤖</span>
+                                <span class="feature-text">AI分析: 無制限</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">🏆</span>
+                                <span class="feature-text">ランキング: 全選手表示</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">🔮</span>
+                                <span class="feature-text">予想機能: 詳細スコア予想</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">📢</span>
+                                <span class="feature-text">広告表示: なし</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">⭐</span>
+                                <span class="feature-text">推し選手: 3人まで</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">📊</span>
+                                <span class="feature-text">分析履歴: 保存・比較可能</span>
+                            </div>
+                        </div>
+                        <div class="plan-actions">
+                            <button class="btn btn-premium" onclick="selectPlan('premium')">プレミアムにアップグレード</button>
+                        </div>
+                    </div>
+
+                    <!-- プロプラン -->
+                    <div class="pricing-card pro">
+                        <div class="pricing-header">
+                            <h3 class="plan-name">プロプラン</h3>
+                            <div class="plan-price">
+                                <span class="price">¥1,280</span>
+                                <span class="period">/月</span>
+                            </div>
+                            <div class="plan-badge">最高級</div>
+                        </div>
+                        <div class="plan-features">
+                            <div class="feature-item">
+                                <span class="feature-icon">🤖</span>
+                                <span class="feature-text">AI分析: 無制限</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">🏆</span>
+                                <span class="feature-text">ランキング: 全選手表示</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">🔮</span>
+                                <span class="feature-text">予想機能: 詳細スコア予想</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">📢</span>
+                                <span class="feature-text">広告表示: なし</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">⭐</span>
+                                <span class="feature-text">推し選手: 3人まで</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">📊</span>
+                                <span class="feature-text">分析履歴: 保存・比較可能</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">🧮</span>
+                                <span class="feature-text">順位計算機能: 詳細シミュレーション</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">💰</span>
+                                <span class="feature-text">市場価値予測: AI投資分析</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">📄</span>
+                                <span class="feature-text">カスタムレポート: PDF出力</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">👥</span>
+                                <span class="feature-text">プロコミュニティ: 限定参加</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">🎯</span>
+                                <span class="feature-text">優先サポート: 専用窓口</span>
+                            </div>
+                        </div>
+                        <div class="plan-actions">
+                            <button class="btn btn-pro" onclick="selectPlan('pro')">プロにアップグレード</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 過去データセクション -->
+                <div class="historical-data-section">
+                    <h3 class="section-title">📚 過去データ・引退選手スタッツ</h3>
+                    <div class="historical-info">
+                        <div class="info-card">
+                            <h4>🏆 過去の試合データ</h4>
+                            <p>2010年以前の試合結果、対戦成績、選手スタッツを閲覧可能です。</p>
+                            <div class="data-examples">
+                                <div class="example-item">
+                                    <span class="example-icon">⚽</span>
+                                    <span>2008年のユーベルスバッハ試合結果</span>
+                                </div>
+                                <div class="example-item">
+                                    <span class="example-icon">📊</span>
+                                    <span>過去の選手パフォーマンス統計</span>
+                                </div>
+                                <div class="example-item">
+                                    <span class="example-icon">🏅</span>
+                                    <span>引退選手のキャリア統計</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <h4>🔍 データ検索機能</h4>
+                            <p>特定チームや期間を指定して、詳細な過去データを検索できます。</p>
+                            <div class="search-features">
+                                <div class="search-item">
+                                    <span class="search-icon">📅</span>
+                                    <span>期間指定検索</span>
+                                </div>
+                                <div class="search-item">
+                                    <span class="search-icon">🏟️</span>
+                                    <span>チーム別検索</span>
+                                </div>
+                                <div class="search-item">
+                                    <span class="search-icon">👤</span>
+                                    <span>選手別検索</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- プラン比較表 -->
+                <div class="plan-comparison">
+                    <h3 class="section-title">📊 プラン比較表</h3>
+                    <div class="comparison-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>機能</th>
+                                    <th>フリー</th>
+                                    <th>プレミアム</th>
+                                    <th>プロ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>AI分析回数</td>
+                                    <td>日5回</td>
+                                    <td>無制限</td>
+                                    <td>無制限</td>
+                                </tr>
+                                <tr>
+                                    <td>ランキング表示</td>
+                                    <td>TOP10</td>
+                                    <td>全選手</td>
+                                    <td>全選手</td>
+                                </tr>
+                                <tr>
+                                    <td>予想機能</td>
+                                    <td>勝敗のみ</td>
+                                    <td>詳細スコア</td>
+                                    <td>詳細スコア</td>
+                                </tr>
+                                <tr>
+                                    <td>広告表示</td>
+                                    <td>あり</td>
+                                    <td>なし</td>
+                                    <td>なし</td>
+                                </tr>
+                                <tr>
+                                    <td>推し選手</td>
+                                    <td>3人</td>
+                                    <td>3人</td>
+                                    <td>3人</td>
+                                </tr>
+                                <tr>
+                                    <td>分析履歴保存</td>
+                                    <td>❌</td>
+                                    <td>✅</td>
+                                    <td>✅</td>
+                                </tr>
+                                <tr>
+                                    <td>順位計算機能</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                    <td>✅</td>
+                                </tr>
+                                <tr>
+                                    <td>市場価値予測</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                    <td>✅</td>
+                                </tr>
+                                <tr>
+                                    <td>カスタムレポート</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                    <td>✅</td>
+                                </tr>
+                                <tr>
+                                    <td>過去データ閲覧</td>
+                                    <td>❌</td>
+                                    <td>❌</td>
+                                    <td>✅</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // グローバル変数
+        let currentDate = new Date();
+        let playerPlans = [];
+        let tacticalPlans = [];
+        let progressChart = null;
+        let allPlayers = [];
+        let playerStats = {};
+        let fixtures = [];
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentDate();
+            loadAllData();
+            setupEventListeners();
+            checkUrlParameters(); // URLパラメータをチェック
+            checkUrlHash(); // URLハッシュをチェック
+        });
+
+        // 全データ読み込み
+        async function loadAllData() {
+            await Promise.all([
+                loadSchedule(),
+                loadPlayerPlans(),
+                loadTacticalPlans(),
+                loadAllPlayers(),
+                loadPlayerStats()
+            ]);
+            loadAnalysis();
+        }
+
+        // 全選手データ読み込み
+        async function loadAllPlayers() {
+            try {
+                const response = await fetch('/api/players?limit=1000');
+                if (response.ok) {
+                    allPlayers = await response.json();
+                    updatePlayerSelects();
+                }
+            } catch (error) {
+                console.error('Error loading players:', error);
+                // フォールバックデータ
+                allPlayers = [
+                    { id: 1, name: '久保建英', position: 'MF', team: 'レアル・ソシエダッド' },
+                    { id: 2, name: '三笘薫', position: 'FW', team: 'ブライトン' },
+                    { id: 3, name: '遠藤航', position: 'MF', team: 'リバプール' },
+                    { id: 4, name: '伊東純也', position: 'FW', team: 'ランス' },
+                    { id: 5, name: '田中碧', position: 'MF', team: 'フォルトゥナ・デュッセルドルフ' }
+                ];
+                updatePlayerSelects();
+            }
+        }
+
+        // 選手統計データ読み込み
+        async function loadPlayerStats() {
+            try {
+                const response = await fetch('/api/player-stats');
+                if (response.ok) {
+                    playerStats = await response.json();
+                }
+                
+                // 個別選手の詳細統計も取得
+                for (const player of allPlayers) {
+                    try {
+                        const playerResponse = await fetch(`/api/player-stats/${player.id}`);
+                        if (playerResponse.ok) {
+                            const detailedStats = await playerResponse.json();
+                            playerStats[player.id] = { ...playerStats[player.id], ...detailedStats };
+                        }
+                    } catch (error) {
+                        console.error(`Error loading stats for player ${player.id}:`, error);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading player stats:', error);
+                playerStats = {};
+            }
+        }
+
+        // 選手セレクトボックス更新
+        function updatePlayerSelects() {
+            const playerSelect = document.getElementById('playerName');
+            if (playerSelect) {
+                playerSelect.innerHTML = '<option value="">選手を選択してください</option>';
+                allPlayers.forEach(player => {
+                    const option = document.createElement('option');
+                    option.value = player.id;
+                    option.textContent = `${player.name} (${player.position}) - ${player.team}`;
+                    playerSelect.appendChild(option);
+                });
+            }
+        }
+
+        // タブ切り替え
+        function showTab(tabName) {
+            // すべてのタブコンテンツを非表示
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // 選択されたタブを表示
+            document.getElementById(tabName).classList.add('active');
+            
+            // クリックされたタブボタンをアクティブにする
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+
+            // 料金プランタブが表示された場合の特別処理
+            if (tabName === 'pricing') {
+                onPricingTabShow();
+            }
+        }
+
+        // 日付操作
+        function changeDate(days) {
+            currentDate.setDate(currentDate.getDate() + days);
+            updateCurrentDate();
+            loadSchedule();
+        }
+
+        function goToToday() {
+            currentDate = new Date();
+            updateCurrentDate();
+            loadSchedule();
+        }
+
+        function updateCurrentDate() {
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                weekday: 'long'
+            };
+            document.getElementById('currentDate').textContent = currentDate.toLocaleDateString('ja-JP', options);
+        }
+
+        // 試合スケジュール読み込み
+        async function loadSchedule() {
+            const content = document.getElementById('scheduleContent');
+            content.innerHTML = '<div class="loading">試合スケジュールを読み込み中...</div>';
+
+            try {
+                const dateStr = currentDate.toISOString().split('T')[0];
+                const response = await fetch(`/api/fixtures?date=${dateStr}`);
+                
+                if (!response.ok) {
+                    throw new Error('試合データの取得に失敗しました');
+                }
+
+                fixtures = await response.json();
+                
+                if (fixtures.length === 0) {
+                    // より詳細な試合情報を取得
+                    const weekResponse = await fetch(`/api/fixtures/week?date=${dateStr}`);
+                    if (weekResponse.ok) {
+                        const weekFixtures = await weekResponse.json();
+                        if (weekFixtures.length > 0) {
+                            fixtures = weekFixtures;
+                            displayFixtures(fixtures);
+                            return;
+                        }
+                    }
+                    
+                    content.innerHTML = '<div class="success">この日は試合がありません</div>';
+                    return;
+                }
+
+                displayFixtures(fixtures);
+            } catch (error) {
+                console.error('Error loading schedule:', error);
+                content.innerHTML = '<div class="error">試合スケジュールの読み込みに失敗しました: ' + error.message + '</div>';
+                
+                // フォールバックデータを表示
+                fixtures = generateFallbackFixtures();
+                displayFixtures(fixtures);
+            }
+        }
+
+        // フォールバック試合データ生成
+        function generateFallbackFixtures() {
+            const fallbackFixtures = [
+                {
+                    id: 1,
+                    homeTeam: '日本代表',
+                    awayTeam: 'ブラジル代表',
+                    date: new Date(currentDate.getTime() + 2 * 60 * 60 * 1000),
+                    venue: '国立競技場',
+                    status: 'scheduled',
+                    league: 'japan',
+                    homeScore: null,
+                    awayScore: null,
+                    competition: '国際親善試合'
+                },
+                {
+                    id: 2,
+                    homeTeam: '浦和レッズ',
+                    awayTeam: '鹿島アントラーズ',
+                    date: new Date(currentDate.getTime() + 4 * 60 * 60 * 1000),
+                    venue: '埼玉スタジアム',
+                    status: 'scheduled',
+                    league: 'j-league',
+                    homeScore: null,
+                    awayScore: null,
+                    competition: 'J1リーグ'
+                },
+                {
+                    id: 3,
+                    homeTeam: 'レアル・マドリード',
+                    awayTeam: 'バルセロナ',
+                    date: new Date(currentDate.getTime() + 6 * 60 * 60 * 1000),
+                    venue: 'サンティアゴ・ベルナベウ',
+                    status: 'scheduled',
+                    league: 'europe',
+                    homeScore: null,
+                    awayScore: null,
+                    competition: 'ラ・リーガ'
+                }
+            ];
+            return fallbackFixtures;
+        }
+
+        // 試合表示
+        function displayFixtures(fixtures) {
+            const content = document.getElementById('scheduleContent');
+            let html = '';
+
+            fixtures.forEach(fixture => {
+                const matchTime = new Date(fixture.date);
+                const status = getMatchStatus(fixture);
+                const timeUntilMatch = getTimeUntilMatch(matchTime);
+                const leagueIcon = getLeagueIcon(fixture.league);
+                
+                html += `
+                    <div class="match-item">
+                        <div class="team-info">
+                            <div class="team-name">${fixture.homeTeam}</div>
+                            <div class="team-logo">🏠</div>
+                            ${fixture.homeScore !== null ? `<div class="team-score">${fixture.homeScore}</div>` : ''}
+                            <div class="team-stats">
+                                ${getTeamStats(fixture.homeTeam)}
+                            </div>
+                        </div>
+                        <div class="match-details">
+                            <div class="match-time">${matchTime.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'})}</div>
+                            <div class="match-date">${matchTime.toLocaleDateString('ja-JP', {month: 'short', day: 'numeric'})}</div>
+                            <div class="match-venue">${fixture.venue || '未定'}</div>
+                            <div class="match-competition">
+                                <span class="league-icon">${leagueIcon}</span>
+                                ${fixture.competition || 'リーグ戦'}
+                            </div>
+                            <div class="match-status ${status.class}">${status.text}</div>
+                            ${timeUntilMatch ? `<div class="time-until">${timeUntilMatch}</div>` : ''}
+                            <div class="match-actions">
+                                <button class="btn btn-secondary" onclick="viewMatchDetails(${fixture.id})">詳細</button>
+                                <button class="btn btn-secondary" onclick="addToCalendar(${fixture.id})">カレンダー追加</button>
+                            </div>
+                        </div>
+                        <div class="team-info">
+                            <div class="team-name">${fixture.awayTeam}</div>
+                            <div class="team-logo">✈️</div>
+                            ${fixture.awayScore !== null ? `<div class="team-score">${fixture.awayScore}</div>` : ''}
+                            <div class="team-stats">
+                                ${getTeamStats(fixture.awayTeam)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            content.innerHTML = html;
+        }
+
+        // 試合までの時間計算
+        function getTimeUntilMatch(matchTime) {
+            const now = new Date();
+            const diff = matchTime - now;
+            
+            if (diff <= 0) return null;
+            
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (hours > 24) {
+                const days = Math.floor(hours / 24);
+                return `${days}日後`;
+            } else if (hours > 0) {
+                return `${hours}時間${minutes}分後`;
+            } else {
+                return `${minutes}分後`;
+            }
+        }
+
+        // 試合ステータス取得
+        function getMatchStatus(fixture) {
+            const now = new Date();
+            const matchTime = new Date(fixture.date);
+            const diffHours = (matchTime - now) / (1000 * 60 * 60);
+
+            if (diffHours < 0) {
+                return { class: 'status-finished', text: '終了' };
+            } else if (diffHours < 2) {
+                return { class: 'status-live', text: '試合中' };
+            } else {
+                return { class: 'status-scheduled', text: '予定' };
+            }
+        }
+
+        // 試合フィルタリング
+        function filterFixtures() {
+            const leagueFilter = document.getElementById('leagueFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const scheduleContent = document.getElementById('scheduleContent');
+            scheduleContent.innerHTML = '<div class="loading">試合スケジュールをフィルタリング中...</div>';
+
+            const filteredFixtures = fixtures.filter(fixture => {
+                const matchTime = new Date(fixture.date);
+                const isMatchDate = matchTime.toISOString().split('T')[0] === currentDate.toISOString().split('T')[0];
+                const isMatchLeague = leagueFilter === '' || fixture.homeTeam.includes(leagueFilter) || fixture.awayTeam.includes(leagueFilter);
+                const isMatchStatus = statusFilter === '' || getMatchStatus(fixture).class === statusFilter;
+                return isMatchDate && isMatchLeague && isMatchStatus;
+            });
+
+            if (filteredFixtures.length === 0) {
+                scheduleContent.innerHTML = '<div class="success">フィルターに一致する試合が見つかりませんでした</div>';
+                return;
+            }
+
+            displayFixtures(filteredFixtures);
+        }
+
+        // 選手プラン読み込み
+        function loadPlayerPlans() {
+            const plansList = document.getElementById('playerPlansList');
+            plansList.innerHTML = '<div class="loading">プランを読み込み中...</div>';
+
+            // ローカルストレージからプランを読み込み
+            const stored = localStorage.getItem('playerPlans');
+            if (stored) {
+                playerPlans = JSON.parse(stored);
+            }
+
+            displayPlayerPlans();
+        }
+
+        // 選手プラン表示
+        function displayPlayerPlans() {
+            const plansList = document.getElementById('playerPlansList');
+            
+            if (playerPlans.length === 0) {
+                plansList.innerHTML = '<div class="success">まだプランが作成されていません</div>';
+                return;
+            }
+
+            let html = '';
+            playerPlans.forEach((plan, index) => {
+                const progress = calculateProgress(plan);
+                const player = allPlayers.find(p => p.id == plan.playerId) || { name: plan.playerName, position: '不明', team: '不明' };
+                const stats = playerStats[plan.playerId] || {};
+                
+                html += `
+                    <div class="plan-item">
+                        <div class="plan-header">
+                            <div>
+                                <div class="plan-title">${player.name} - ${getPlanTypeText(plan.planType)}</div>
+                                <div class="plan-date">作成日: ${new Date(plan.createdAt).toLocaleDateString('ja-JP')}</div>
+                                <div class="plan-subtitle">${player.position} | ${player.team} | 練習頻度: ${getPracticeFrequencyText(plan.practiceFrequency)}</div>
+                            </div>
+                            <div class="plan-actions">
+                                <button class="btn btn-secondary" onclick="editPlayerPlan(${index})">編集</button>
+                                <button class="btn btn-danger" onclick="deletePlayerPlan(${index})">削除</button>
+                                <button class="btn" onclick="togglePlanComplete(${index})" style="background: ${plan.completed ? '#666666' : '#00ff88'}">
+                                    ${plan.completed ? '完了済み' : '完了にする'}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="plan-content">${plan.planDetails}</div>
+                        <div class="plan-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">${plan.priority}</div>
+                                <div class="stat-label">優先度</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${progress}%</div>
+                                <div class="stat-label">進捗</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${getDaysRemaining(plan.targetDate)}</div>
+                                <div class="stat-label">残り日数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${stats.goals || 0}</div>
+                                <div class="stat-label">ゴール</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${stats.assists || 0}</div>
+                                <div class="stat-label">アシスト</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${stats.matches || 0}</div>
+                                <div class="stat-label">試合数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${stats.rating ? stats.rating.toFixed(1) : 'N/A'}</div>
+                                <div class="stat-label">評価</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${stats.minutes || 0}</div>
+                                <div class="stat-label">出場時間</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar" style="background: #444444; height: 8px; border-radius: 4px; margin-top: 1rem;">
+                            <div style="background: #00ff88; height: 100%; border-radius: 4px; width: ${progress}%; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            plansList.innerHTML = html;
+        }
+
+        // 戦術プラン読み込み
+        function loadTacticalPlans() {
+            const plansList = document.getElementById('tacticalPlansList');
+            plansList.innerHTML = '<div class="loading">戦術プランを読み込み中...</div>';
+
+            // ローカルストレージからプランを読み込み
+            const stored = localStorage.getItem('tacticalPlans');
+            if (stored) {
+                tacticalPlans = JSON.parse(stored);
+            }
+
+            displayTacticalPlans();
+        }
+
+        // 戦術プラン表示
+        function displayTacticalPlans() {
+            const plansList = document.getElementById('tacticalPlansList');
+            
+            if (tacticalPlans.length === 0) {
+                plansList.innerHTML = '<div class="success">まだ戦術プランが作成されていません</div>';
+                return;
+            }
+
+            let html = '';
+            tacticalPlans.forEach((plan, index) => {
+                const progress = calculateTacticalProgress(plan);
+                const targetDate = new Date(plan.implementationDate);
+                const daysUntilImplementation = getDaysRemaining(plan.implementationDate);
+                
+                html += `
+                    <div class="plan-item">
+                        <div class="plan-header">
+                            <div>
+                                <div class="plan-title">${plan.name} - ${getTacticalTypeText(plan.type)}</div>
+                                <div class="plan-date">作成日: ${new Date(plan.createdAt).toLocaleDateString('ja-JP')}</div>
+                                <div class="plan-subtitle">対象チーム: ${getTargetTeamText(plan.targetTeam)} | 実戦投入予定: ${targetDate.toLocaleDateString('ja-JP')}</div>
+                            </div>
+                            <div class="plan-actions">
+                                <button class="btn btn-secondary" onclick="editTacticalPlan(${index})">編集</button>
+                                <button class="btn btn-danger" onclick="deleteTacticalPlan(${index})">削除</button>
+                                <button class="btn" onclick="toggleTacticalPlanComplete(${index})" style="background: ${plan.completed ? '#666666' : '#00ff88'}">
+                                    ${plan.completed ? '実装済み' : '実装完了'}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="plan-content">${plan.details}</div>
+                        <div class="plan-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">${getTargetTeamText(plan.targetTeam)}</div>
+                                <div class="stat-label">対象チーム</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${progress}%</div>
+                                <div class="stat-label">進捗</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${plan.practiceSessions}</div>
+                                <div class="stat-label">練習回数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${daysUntilImplementation}</div>
+                                <div class="stat-label">実装まで</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${plan.completed ? '完了' : '進行中'}</div>
+                                <div class="stat-label">ステータス</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar" style="background: #444444; height: 8px; border-radius: 4px; margin-top: 1rem;">
+                            <div style="background: #00ff88; height: 100%; border-radius: 4px; width: ${progress}%; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            plansList.innerHTML = html;
+        }
+
+        // 分析データ読み込み
+        function loadAnalysis() {
+            updateStats();
+            createProgressChart();
+            loadMonthlyGoals();
+            updatePerformancePlayerSelect();
+            loadPlanEffectiveness();
+        }
+
+        // 選手パフォーマンス分析用セレクトボックス更新
+        function updatePerformancePlayerSelect() {
+            const playerSelect = document.getElementById('performancePlayer');
+            if (playerSelect) {
+                playerSelect.innerHTML = '<option value="">選手を選択</option>';
+                allPlayers.forEach(player => {
+                    const option = document.createElement('option');
+                    option.value = player.id;
+                    option.textContent = `${player.name} (${player.position})`;
+                    playerSelect.appendChild(option);
+                });
+            }
+        }
+
+        // 選手パフォーマンスチャート更新
+        function updatePerformanceChart() {
+            const playerId = document.getElementById('performancePlayer').value;
+            const period = document.getElementById('performancePeriod').value;
+            
+            if (!playerId) return;
+            
+            createPerformanceChart(playerId, period);
+        }
+
+        // 選手パフォーマンスチャート作成
+        function createPerformanceChart(playerId, period) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            if (window.performanceChart) {
+                window.performanceChart.destroy();
+            }
+
+            const player = allPlayers.find(p => p.id == playerId);
+            const stats = playerStats[playerId] || {};
+            
+            // 期間に応じたデータを生成（実際のAPIから取得する場合はここを修正）
+            const data = generatePerformanceData(period, stats);
+            
+            window.performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'ゴール',
+                        data: data.goals,
+                        borderColor: '#ff4444',
+                        backgroundColor: 'rgba(255, 68, 68, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'アシスト',
+                        data: data.assists,
+                        borderColor: '#4444ff',
+                        backgroundColor: 'rgba(68, 68, 255, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: '評価',
+                        data: data.ratings,
+                        borderColor: '#00ff88',
+                        backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `${player.name}のパフォーマンス推移`,
+                            color: '#ffffff'
+                        },
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#cccccc'
+                            },
+                            grid: {
+                                color: '#444444'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#cccccc'
+                            },
+                            grid: {
+                                color: '#444444'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // パフォーマンスデータ生成
+        function generatePerformanceData(period, stats) {
+            const now = new Date();
+            let labels = [];
+            let goals = [];
+            let assists = [];
+            let ratings = [];
+
+            switch (period) {
+                case '1month':
+                    for (let i = 29; i >= 0; i--) {
+                        const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                        labels.push(date.getDate() + '日');
+                        goals.push(Math.floor(Math.random() * 3));
+                        assists.push(Math.floor(Math.random() * 2));
+                        ratings.push(6 + Math.random() * 4);
+                    }
+                    break;
+                case '3months':
+                    for (let i = 11; i >= 0; i--) {
+                        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                        labels.push(date.getMonth() + 1 + '月');
+                        goals.push(Math.floor(Math.random() * 10));
+                        assists.push(Math.floor(Math.random() * 8));
+                        ratings.push(6 + Math.random() * 4);
+                    }
+                    break;
+                case '6months':
+                    for (let i = 5; i >= 0; i--) {
+                        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                        labels.push(date.getMonth() + 1 + '月');
+                        goals.push(Math.floor(Math.random() * 20));
+                        assists.push(Math.floor(Math.random() * 15));
+                        ratings.push(6 + Math.random() * 4);
+                    }
+                    break;
+                case '1year':
+                    for (let i = 11; i >= 0; i--) {
+                        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                        labels.push(date.getMonth() + 1 + '月');
+                        goals.push(Math.floor(Math.random() * 40));
+                        assists.push(Math.floor(Math.random() * 30));
+                        ratings.push(6 + Math.random() * 4);
+                    }
+                    break;
+            }
+
+            return { labels, goals, assists, ratings };
+        }
+
+        // プラン効果測定データ読み込み
+        function loadPlanEffectiveness() {
+            const container = document.getElementById('planEffectiveness');
+            
+            // 実際のAPIからデータを取得する場合はここを修正
+            const effectivenessData = calculatePlanEffectiveness();
+            
+            let html = '';
+            effectivenessData.forEach(item => {
+                const percentage = Math.min((item.current / item.target) * 100, 100);
+                html += `
+                    <div class="plan-item">
+                        <div class="plan-header">
+                            <div class="plan-title">${item.title}</div>
+                            <div class="plan-date">${item.current}/${item.target}</div>
+                        </div>
+                        <div class="plan-content">${item.description}</div>
+                        <div class="plan-stats">
+                            <div class="stat-item">
+                                <div class="stat-value" style="color: ${item.color}">${Math.round(percentage)}%</div>
+                                <div class="stat-label">達成率</div>
+                            </div>
+                        </div>
+                        <div style="background: #444444; height: 10px; border-radius: 5px; margin-top: 1rem;">
+                            <div style="background: ${item.color}; height: 100%; border-radius: 5px; width: ${percentage}%; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // プラン効果測定データ計算
+        function calculatePlanEffectiveness() {
+            const completedPlayerPlans = playerPlans.filter(p => p.completed).length;
+            const completedTacticalPlans = tacticalPlans.filter(t => t.completed).length;
+            const totalPlans = playerPlans.length + tacticalPlans.length;
+            
+            return [
+                {
+                    title: '選手プラン完了率',
+                    current: completedPlayerPlans,
+                    target: Math.max(playerPlans.length, 1),
+                    description: '個別選手の成長プランの完了状況',
+                    color: '#00ff88'
+                },
+                {
+                    title: '戦術プラン実装率',
+                    current: completedTacticalPlans,
+                    target: Math.max(tacticalPlans.length, 1),
+                    description: 'チーム戦術プランの実装完了状況',
+                    color: '#ff4444'
+                },
+                {
+                    title: '総合プラン成功率',
+                    current: completedPlayerPlans + completedTacticalPlans,
+                    target: Math.max(totalPlans, 1),
+                    description: '全プランの総合的な成功状況',
+                    color: '#4444ff'
+                }
+            ];
+        }
+
+        // 統計更新
+        function updateStats() {
+            const totalPlans = playerPlans.length + tacticalPlans.length;
+            const completedPlans = playerPlans.filter(p => p.completed).length + 
+                                 tacticalPlans.filter(t => t.completed).length;
+            const activePlans = totalPlans - completedPlans;
+            const successRate = totalPlans > 0 ? Math.round((completedPlans / totalPlans) * 100) : 0;
+
+            document.getElementById('totalPlans').textContent = totalPlans;
+            document.getElementById('completedPlans').textContent = completedPlans;
+            document.getElementById('activePlans').textContent = activePlans;
+            document.getElementById('successRate').textContent = successRate + '%';
+        }
+
+        // 進捗チャート作成
+        function createProgressChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            
+            if (progressChart) {
+                progressChart.destroy();
+            }
+
+            const monthlyData = getMonthlyProgressData();
+            
+            progressChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthlyData.labels,
+                    datasets: [{
+                        label: '完了プラン数',
+                        data: monthlyData.completed,
+                        borderColor: '#00ff88',
+                        backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: '総プラン数',
+                        data: monthlyData.total,
+                        borderColor: '#ff4444',
+                        backgroundColor: 'rgba(255, 68, 68, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#cccccc'
+                            },
+                            grid: {
+                                color: '#444444'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#cccccc'
+                            },
+                            grid: {
+                                color: '#444444'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 月次進捗データ取得
+        function getMonthlyProgressData() {
+            const months = [];
+            const completed = [];
+            const total = [];
+
+            for (let i = 5; i >= 0; i--) {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                const monthStr = date.toLocaleDateString('ja-JP', { month: 'short' });
+                months.push(monthStr);
+
+                const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+                const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+                const monthPlans = playerPlans.filter(p => {
+                    const planDate = new Date(p.createdAt);
+                    return planDate >= monthStart && planDate <= monthEnd;
+                });
+
+                const monthTactical = tacticalPlans.filter(t => {
+                    const planDate = new Date(t.createdAt);
+                    return planDate >= monthStart && planDate <= monthEnd;
+                });
+
+                completed.push(monthPlans.filter(p => p.completed).length + monthTactical.filter(t => t.completed).length);
+                total.push(monthPlans.length + monthTactical.length);
+            }
+
+            return { labels: months, completed, total };
+        }
+
+        // 月次目標読み込み
+        function loadMonthlyGoals() {
+            const goalsContainer = document.getElementById('monthlyGoals');
+            const currentMonth = new Date().getMonth();
+            const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+
+            const goals = [
+                { title: '選手プラン完了', target: 10, current: playerPlans.filter(p => p.completed).length, color: '#00ff88' },
+                { title: '戦術プラン実装', target: 5, current: tacticalPlans.filter(t => t.completed).length, color: '#ff4444' },
+                { title: '試合分析完了', target: 15, current: Math.floor(Math.random() * 20), color: '#4444ff' }
+            ];
+
+            let html = '';
+            goals.forEach(goal => {
+                const percentage = Math.min((goal.current / goal.target) * 100, 100);
+                html += `
+                    <div class="plan-item">
+                        <div class="plan-header">
+                            <div class="plan-title">${goal.title}</div>
+                            <div class="plan-date">${goal.current}/${goal.target}</div>
+                        </div>
+                        <div class="plan-stats">
+                            <div class="stat-item">
+                                <div class="stat-value" style="color: ${goal.color}">${Math.round(percentage)}%</div>
+                                <div class="stat-label">達成率</div>
+                            </div>
+                        </div>
+                        <div style="background: #444444; height: 10px; border-radius: 5px; margin-top: 1rem;">
+                            <div style="background: ${goal.color}; height: 100%; border-radius: 5px; width: ${percentage}%; transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            goalsContainer.innerHTML = html;
+        }
+
+        // ユーティリティ関数
+        function getPlanTypeText(type) {
+            const types = {
+                'fitness': 'フィジカル強化',
+                'technical': '技術向上',
+                'tactical': '戦術理解',
+                'mental': 'メンタル強化',
+                'recovery': 'リカバリー',
+                'goal-scoring': '得点力向上',
+                'defensive': '守備力向上',
+                'playmaking': 'プレイメイキング'
+            };
+            return types[type] || type;
+        }
+
+        function getTacticalTypeText(type) {
+            const types = {
+                'formation': 'フォーメーション',
+                'pressing': 'プレス戦術',
+                'possession': 'ポゼッション戦術',
+                'counter': 'カウンター戦術',
+                'set-piece': 'セットプレー'
+            };
+            return types[type] || type;
+        }
+
+        function getPracticeFrequencyText(frequency) {
+            const frequencies = {
+                'daily': '毎日',
+                '3times': '週3回',
+                '2times': '週2回',
+                'weekly': '週1回'
+            };
+            return frequencies[frequency] || frequency;
+        }
+
+        function getTargetTeamText(team) {
+            const teams = {
+                'japan': '日本代表',
+                'j-league': 'Jリーグ',
+                'europe': '欧州リーグ'
+            };
+            return teams[team] || team;
+        }
+
+        function calculateProgress(plan) {
+            if (plan.completed) return 100;
+            
+            const now = new Date();
+            const target = new Date(plan.targetDate);
+            const created = new Date(plan.createdAt);
+            
+            if (now >= target) return 100;
+            
+            const total = target - created;
+            const elapsed = now - created;
+            return Math.min(Math.round((elapsed / total) * 100), 99);
+        }
+
+        function calculateTacticalProgress(plan) {
+            if (plan.completed) return 100;
+            
+            const now = new Date();
+            const target = new Date(plan.implementationDate);
+            const created = new Date(plan.createdAt);
+            
+            if (now >= target) return 100;
+            
+            const total = target - created;
+            const elapsed = now - created;
+            return Math.min(Math.round((elapsed / total) * 100), 99);
+        }
+
+        function getDaysRemaining(targetDate) {
+            const now = new Date();
+            const target = new Date(targetDate);
+            const diff = target - now;
+            const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+            return days > 0 ? days : 0;
+        }
+
+        // リアルタイム更新設定
+        function setupRealTimeUpdates() {
+            // 試合スケジュールを5分ごとに更新
+            setInterval(() => {
+                if (document.getElementById('schedule').classList.contains('active')) {
+                    updateLiveMatches();
+                }
+            }, 5 * 60 * 1000);
+
+            // プラン進捗を1分ごとに更新
+            setInterval(() => {
+                updateAllPlanProgress();
+            }, 60 * 1000);
+        }
+
+        // ライブ試合更新
+        function updateLiveMatches() {
+            const liveMatches = fixtures.filter(fixture => {
+                const status = getMatchStatus(fixture);
+                return status.class === 'status-live';
+            });
+
+            if (liveMatches.length > 0) {
+                displayFixtures(fixtures);
+                showMessage(`${liveMatches.length}試合が進行中です`, 'success');
+            }
+        }
+
+        // 全プラン進捗更新
+        function updateAllPlanProgress() {
+            playerPlans.forEach(plan => {
+                if (!plan.completed) {
+                    const progress = calculateProgress(plan);
+                    if (progress >= 100 && !plan.completed) {
+                        plan.completed = true;
+                        showMessage(`プラン「${plan.playerName} - ${getPlanTypeText(plan.planType)}」が完了しました！`, 'success');
+                    }
+                }
+            });
+
+            tacticalPlans.forEach(plan => {
+                if (!plan.completed) {
+                    const progress = calculateTacticalProgress(plan);
+                    if (progress >= 100 && !plan.completed) {
+                        plan.completed = true;
+                        showMessage(`戦術プラン「${plan.name} - ${getTacticalTypeText(plan.type)}」が実装完了しました！`, 'success');
+                    }
+                }
+            });
+
+            // ローカルストレージを更新
+            localStorage.setItem('playerPlans', JSON.stringify(playerPlans));
+            localStorage.setItem('tacticalPlans', JSON.stringify(tacticalPlans));
+
+            // 表示を更新
+            if (document.getElementById('player-plans').classList.contains('active')) {
+                displayPlayerPlans();
+            }
+            if (document.getElementById('tactical-plans').classList.contains('active')) {
+                displayTacticalPlans();
+            }
+        }
+
+        // イベントリスナー設定
+        function setupEventListeners() {
+            // 選手プランフォーム
+            document.getElementById('playerPlanForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                createPlayerPlan();
+            });
+
+            // 戦術プランフォーム
+            document.getElementById('tacticalPlanForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                createTacticalPlan();
+            });
+
+            // リアルタイム更新開始
+            setupRealTimeUpdates();
+        }
+
+        // 選手プラン作成
+        function createPlayerPlan() {
+            const playerId = document.getElementById('playerName').value;
+            const player = allPlayers.find(p => p.id == playerId);
+
+            if (!player) {
+                showMessage('選手が見つかりませんでした。', 'error');
+                return;
+            }
+
+            const planType = document.getElementById('planType').value;
+            const priority = document.getElementById('priority').value;
+            const planDetails = document.getElementById('planDetails').value;
+            const targetDate = document.getElementById('targetDate').value;
+            const practiceFrequency = document.getElementById('practiceFrequency').value;
+
+            const formData = {
+                playerName: player.name,
+                playerId: player.id,
+                planType: planType,
+                priority: priority,
+                planDetails: planDetails,
+                targetDate: targetDate,
+                createdAt: new Date().toISOString(),
+                completed: false,
+                practiceFrequency: practiceFrequency
+            };
+
+            playerPlans.push(formData);
+            localStorage.setItem('playerPlans', JSON.stringify(playerPlans));
+            
+            document.getElementById('playerPlanForm').reset();
+            displayPlayerPlans();
+            updateStats();
+            createProgressChart();
+            loadMonthlyGoals();
+
+            showMessage('選手プランが作成されました！', 'success');
+            showPlayerStats(); // 選手プラン作成後に統計を表示
+        }
+
+        // 選手統計情報表示
+        function showPlayerStats() {
+            const playerId = document.getElementById('playerName').value;
+            const player = allPlayers.find(p => p.id == playerId);
+            const statsDisplay = document.getElementById('playerStatsDisplay');
+            const playerGoals = document.getElementById('playerGoals');
+            const playerAssists = document.getElementById('playerAssists');
+            const playerMatches = document.getElementById('playerMatches');
+            const playerRating = document.getElementById('playerRating');
+            const playerMinutes = document.getElementById('playerMinutes');
+            const playerPasses = document.getElementById('playerPasses');
+
+            if (player) {
+                const stats = playerStats[playerId] || {};
+                
+                // 統計情報を表示
+                playerGoals.textContent = stats.goals || '0';
+                playerAssists.textContent = stats.assists || '0';
+                playerMatches.textContent = stats.matches || '0';
+                playerRating.textContent = stats.rating ? stats.rating.toFixed(1) : 'N/A';
+                playerMinutes.textContent = stats.minutes ? Math.floor(stats.minutes / 90) + '試合分' : '0';
+                playerPasses.textContent = stats.passAccuracy ? stats.passAccuracy.toFixed(1) + '%' : 'N/A';
+                
+                // 選手の現在のプラン状況を表示
+                const currentPlans = playerPlans.filter(p => p.playerId == playerId && !p.completed);
+                const completedPlans = playerPlans.filter(p => p.playerId == playerId && p.completed);
+                
+                if (currentPlans.length > 0 || completedPlans.length > 0) {
+                    const planInfo = document.createElement('div');
+                    planInfo.style.marginTop = '1rem';
+                    planInfo.style.padding = '0.5rem';
+                    planInfo.style.background = '#2a2a2a';
+                    planInfo.style.borderRadius = '5px';
+                    planInfo.innerHTML = `
+                        <div style="color: #00ff88; font-size: 0.9rem; margin-bottom: 0.5rem;">📋 プラン状況</div>
+                        <div style="font-size: 0.8rem; color: #cccccc;">
+                            進行中: ${currentPlans.length}件 | 完了: ${completedPlans.length}件
+                        </div>
+                        <div style="font-size: 0.7rem; color: #999999; margin-top: 0.3rem;">
+                            完了率: ${completedPlans.length > 0 ? Math.round((completedPlans.length / (currentPlans.length + completedPlans.length)) * 100) : 0}%
+                        </div>
+                    `;
+                    
+                    // 既存のプラン情報があれば削除
+                    const existingPlanInfo = statsDisplay.querySelector('.plan-info');
+                    if (existingPlanInfo) {
+                        existingPlanInfo.remove();
+                    }
+                    
+                    planInfo.className = 'plan-info';
+                    statsDisplay.appendChild(planInfo);
+                }
+                
+                // 選手の詳細統計を表示
+                showDetailedPlayerStats(player, stats);
+                
+                statsDisplay.style.display = 'block';
+                
+                // パフォーマンスチャートを作成
+                createPlayerPerformanceChart(player, stats);
+                
+                // プランタイプの推奨を表示
+                showRecommendedPlanType(player, stats);
+                
+                // 選手の強化ポイントを表示
+                showPlayerImprovementAreas(player, stats);
+            } else {
+                statsDisplay.style.display = 'none';
+            }
+        }
+
+        // 選手詳細統計表示
+        function showDetailedPlayerStats(player, stats) {
+            let detailedStatsDiv = document.getElementById('detailedPlayerStats');
+            if (!detailedStatsDiv) {
+                const div = document.createElement('div');
+                div.id = 'detailedPlayerStats';
+                div.style.marginTop = '1rem';
+                div.style.padding = '1rem';
+                div.style.background = '#2a2a2a';
+                div.style.borderRadius = '8px';
+                div.style.border = '1px solid #444444';
+                document.getElementById('playerStatsDisplay').appendChild(div);
+                detailedStatsDiv = div;
+            }
+            
+            const detailedStats = [
+                { label: 'シュート精度', value: stats.shotAccuracy ? stats.shotAccuracy.toFixed(1) + '%' : 'N/A', color: '#ff4444' },
+                { label: 'ドリブル成功率', value: stats.dribbleSuccess ? stats.dribbleSuccess.toFixed(1) + '%' : 'N/A', color: '#4444ff' },
+                { label: 'タックル成功率', value: stats.tackleSuccess ? stats.tackleSuccess.toFixed(1) + '%' : 'N/A', color: '#00ff88' },
+                { label: '空中戦勝率', value: stats.aerialWins ? stats.aerialWins.toFixed(1) + '%' : 'N/A', color: '#ffaa00' },
+                { label: 'キック精度', value: stats.kickAccuracy ? stats.kickAccuracy.toFixed(1) + '%' : 'N/A', color: '#ff00ff' },
+                { label: 'スピード', value: stats.speed ? stats.speed.toFixed(1) + ' km/h' : 'N/A', color: '#00ffff' }
+            ];
+            
+            let html = '<div style="color: #00ff88; font-size: 0.9rem; margin-bottom: 0.8rem;">📊 詳細統計</div>';
+            html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem;">';
+            
+            detailedStats.forEach(stat => {
+                html += `
+                    <div style="text-align: center; padding: 0.5rem; background: #1a1a1a; border-radius: 5px;">
+                        <div style="font-size: 0.8rem; color: #cccccc; margin-bottom: 0.2rem;">${stat.label}</div>
+                        <div style="font-size: 1rem; font-weight: bold; color: ${stat.color};">${stat.value}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            detailedStatsDiv.innerHTML = html;
+        }
+
+        // 選手強化ポイント表示
+        function showPlayerImprovementAreas(player, stats) {
+            let improvementDiv = document.getElementById('playerImprovementAreas');
+            if (!improvementDiv) {
+                const div = document.createElement('div');
+                div.id = 'playerImprovementAreas';
+                div.style.marginTop = '1rem';
+                div.style.padding = '1rem';
+                div.style.background = '#2a2a2a';
+                div.style.borderRadius = '8px';
+                div.style.border = '1px solid #ff4444';
+                document.getElementById('playerStatsDisplay').appendChild(div);
+                improvementDiv = div;
+            }
+            
+            // 統計に基づいて強化ポイントを分析
+            const improvements = [];
+            
+            if ((stats.goals || 0) < 5) improvements.push('得点力の向上');
+            if ((stats.assists || 0) < 3) improvements.push('アシスト力の向上');
+            if ((stats.rating || 0) < 7.0) improvements.push('総合評価の向上');
+            if ((stats.passAccuracy || 0) < 80) improvements.push('パス精度の向上');
+            if ((stats.shotAccuracy || 0) < 60) improvements.push('シュート精度の向上');
+            if ((stats.tackleSuccess || 0) < 70) improvements.push('守備力の向上');
+            
+            if (improvements.length === 0) {
+                improvements.push('現在の能力は十分です');
+            }
+            
+            let html = '<div style="color: #ff4444; font-size: 0.9rem; margin-bottom: 0.8rem;">🎯 強化ポイント</div>';
+            html += '<div style="font-size: 0.8rem; color: #cccccc;">';
+            improvements.forEach(improvement => {
+                html += `<div style="margin-bottom: 0.3rem;">• ${improvement}</div>`;
+            });
+            html += '</div>';
+            
+            improvementDiv.innerHTML = html;
+        }
+
+        // 推奨プランタイプ表示
+        async function showRecommendedPlanType(player, stats) {
+            const planTypeSelect = document.getElementById('planType');
+            let recommendationDiv = document.getElementById('planTypeRecommendation');
+            
+            if (!recommendationDiv) {
+                const div = document.createElement('div');
+                div.id = 'planTypeRecommendation';
+                div.style.marginTop = '1rem';
+                div.style.padding = '1rem';
+                div.style.background = '#2a2a2a';
+                div.style.borderRadius = '8px';
+                div.style.borderLeft = '4px solid #00ff88';
+                document.getElementById('playerPlanForm').insertBefore(div, document.querySelector('.form-row'));
+                recommendationDiv = div;
+            }
+            
+            // AIによる推奨を取得
+            try {
+                const aiResponse = await fetch('/api/ai/recommend-plan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        player: player,
+                        stats: stats,
+                        currentPlans: playerPlans.filter(p => p.playerId == player.id)
+                    })
+                });
+                
+                if (aiResponse.ok) {
+                    const aiRecommendation = await aiResponse.json();
+                    recommendationDiv.innerHTML = `
+                        <div style="color: #00ff88; font-size: 1rem; margin-bottom: 0.8rem; font-weight: bold;">🤖 AI推奨プラン</div>
+                        <div style="font-size: 0.9rem; color: #ffffff; margin-bottom: 0.5rem;">
+                            <strong>${getPlanTypeText(aiRecommendation.planType)}</strong>
+                        </div>
+                        <div style="font-size: 0.8rem; color: #cccccc; margin-bottom: 0.5rem;">
+                            ${aiRecommendation.reason}
+                        </div>
+                        <div style="font-size: 0.7rem; color: #999999; margin-bottom: 0.5rem;">
+                            💡 ${aiRecommendation.suggestions}
+                        </div>
+                        <div style="font-size: 0.7rem; color: #00ff88;">
+                            期待効果: ${aiRecommendation.expectedImprovement || '統計データの向上'}
+                        </div>
+                    `;
+                    planTypeSelect.value = aiRecommendation.planType;
+                    return;
+                }
+            } catch (error) {
+                console.error('AI推奨の取得に失敗:', error);
+            }
+            
+            // 高度な統計ベースの推奨
+            const recommendation = analyzePlayerStats(player, stats);
+            
+            recommendationDiv.innerHTML = `
+                <div style="color: #00ff88; font-size: 1rem; margin-bottom: 0.8rem; font-weight: bold;">📊 統計分析推奨</div>
+                <div style="font-size: 0.9rem; color: #ffffff; margin-bottom: 0.5rem;">
+                    <strong>${getPlanTypeText(recommendation.type)}</strong>
+                </div>
+                <div style="font-size: 0.8rem; color: #cccccc; margin-bottom: 0.5rem;">
+                    ${recommendation.reason}
+                </div>
+                <div style="font-size: 0.7rem; color: #999999; margin-bottom: 0.5rem;">
+                    🎯 優先度: ${recommendation.priority}
+                </div>
+                <div style="font-size: 0.7rem; color: #00ff88;">
+                    期待効果: ${recommendation.expectedImprovement}
+                </div>
+            `;
+            
+            planTypeSelect.value = recommendation.type;
+        }
+
+        // 選手統計分析による推奨
+        function analyzePlayerStats(player, stats) {
+            const analysis = {
+                type: '',
+                reason: '',
+                priority: '',
+                expectedImprovement: ''
+            };
+            
+            // ポジション別の分析
+            if (player.position === 'FW') {
+                if ((stats.goals || 0) < 5) {
+                    analysis.type = 'goal-scoring';
+                    analysis.reason = '得点力の向上が必要です。シュート精度とポジショニングの改善を推奨します。';
+                    analysis.priority = '高';
+                    analysis.expectedImprovement = 'シーズン10ゴール以上を目指せます';
+                } else if ((stats.assists || 0) < 3) {
+                    analysis.type = 'playmaking';
+                    analysis.reason = 'プレイメイキング能力の向上が必要です。パス精度と視野の拡大を推奨します。';
+                    analysis.priority = '中';
+                    analysis.expectedImprovement = 'アシスト数が2倍に増加する可能性があります';
+                } else {
+                    analysis.type = 'tactical';
+                    analysis.reason = '戦術理解の向上が必要です。チーム戦術への適応力を高めましょう。';
+                    analysis.priority = '中';
+                    analysis.expectedImprovement = 'より効率的なプレーが可能になります';
+                }
+            } else if (player.position === 'MF') {
+                if ((stats.passAccuracy || 0) < 80) {
+                    analysis.type = 'technical';
+                    analysis.reason = 'パス精度の向上が必要です。基本的な技術の改善を推奨します。';
+                    analysis.priority = '高';
+                    analysis.expectedImprovement = 'パス成功率が85%以上に向上します';
+                } else if ((stats.assists || 0) < 5) {
+                    analysis.type = 'playmaking';
+                    analysis.reason = 'プレイメイキング能力の向上が必要です。創造性と判断力を高めましょう。';
+                    analysis.priority = '中';
+                    analysis.expectedImprovement = 'アシスト数が大幅に増加します';
+                } else {
+                    analysis.type = 'tactical';
+                    analysis.reason = '戦術理解の向上が必要です。ポジショニングと判断力を改善しましょう。';
+                    analysis.priority = '中';
+                    analysis.expectedImprovement = 'より戦術的なプレーが可能になります';
+                }
+            } else if (player.position === 'DF') {
+                if ((stats.tackleSuccess || 0) < 70) {
+                    analysis.type = 'defensive';
+                    analysis.reason = '守備力の向上が必要です。タックル技術とポジショニングを改善しましょう。';
+                    analysis.priority = '高';
+                    analysis.expectedImprovement = '守備成功率が80%以上に向上します';
+                } else if ((stats.aerialWins || 0) < 60) {
+                    analysis.type = 'fitness';
+                    analysis.reason = 'フィジカル強化が必要です。跳躍力と空中戦での競り合いを強化しましょう。';
+                    analysis.priority = '中';
+                    analysis.expectedImprovement = '空中戦での勝率が大幅に向上します';
+                } else {
+                    analysis.type = 'tactical';
+                    analysis.reason = '戦術理解の向上が必要です。チーム守備への貢献を高めましょう。';
+                    analysis.priority = '中';
+                    analysis.expectedImprovement = 'より組織的な守備が可能になります';
+                }
+            } else {
+                // GKの場合
+                analysis.type = 'technical';
+                analysis.reason = '技術面の向上が必要です。セービング技術とボールハンドリングを改善しましょう。';
+                analysis.priority = '中';
+                analysis.expectedImprovement = '失点数の削減が期待できます';
+            }
+            
+            return analysis;
+        }
+
+        // プラン完了状態切り替え
+        function togglePlanComplete(index) {
+            const plan = playerPlans[index];
+            plan.completed = !plan.completed;
+            localStorage.setItem('playerPlans', JSON.stringify(playerPlans));
+            displayPlayerPlans();
+            updateStats();
+            createProgressChart();
+            loadMonthlyGoals();
+            showMessage(`プラン「${plan.playerName} - ${getPlanTypeText(plan.planType)}」の完了状態を${plan.completed ? '完了に' : '未完了に'}しました。`, 'success');
+        }
+
+        // 戦術プラン作成
+        function createTacticalPlan() {
+            const formData = {
+                name: document.getElementById('tacticalPlanName').value,
+                type: document.getElementById('tacticalType').value,
+                targetTeam: document.getElementById('targetTeam').value,
+                details: document.getElementById('tacticalDetails').value,
+                implementationDate: document.getElementById('implementationDate').value,
+                practiceSessions: parseInt(document.getElementById('practiceSessions').value),
+                createdAt: new Date().toISOString(),
+                completed: false
+            };
+
+            tacticalPlans.push(formData);
+            localStorage.setItem('tacticalPlans', JSON.stringify(tacticalPlans));
+            
+            document.getElementById('tacticalPlanForm').reset();
+            displayTacticalPlans();
+            updateStats();
+            createProgressChart();
+            loadMonthlyGoals();
+
+            showMessage('戦術プランが作成されました！', 'success');
+        }
+
+        // 戦術プラン完了状態切り替え
+        function toggleTacticalPlanComplete(index) {
+            const plan = tacticalPlans[index];
+            plan.completed = !plan.completed;
+            localStorage.setItem('tacticalPlans', JSON.stringify(tacticalPlans));
+            displayTacticalPlans();
+            updateStats();
+            createProgressChart();
+            loadMonthlyGoals();
+            showMessage(`戦術プラン「${plan.name} - ${getTacticalTypeText(plan.type)}」の完了状態を${plan.completed ? '実装済みに' : '実装完了に'}しました。`, 'success');
+        }
+
+        // プラン編集
+        function editPlayerPlan(index) {
+            const plan = playerPlans[index];
+            // 編集フォームの実装（簡略化）
+            alert('編集機能は開発中です');
+        }
+
+        function editTacticalPlan(index) {
+            const plan = tacticalPlans[index];
+            // 編集機能の実装（簡略化）
+            alert('編集機能は開発中です');
+        }
+
+        // プラン削除
+        function deletePlayerPlan(index) {
+            if (confirm('このプランを削除しますか？')) {
+                playerPlans.splice(index, 1);
+                localStorage.setItem('playerPlans', JSON.stringify(playerPlans));
+                displayPlayerPlans();
+                updateStats();
+                createProgressChart();
+                loadMonthlyGoals();
+                showMessage('プランが削除されました', 'success');
+            }
+        }
+
+        function deleteTacticalPlan(index) {
+            if (confirm('この戦術プランを削除しますか？')) {
+                tacticalPlans.splice(index, 1);
+                localStorage.setItem('tacticalPlans', JSON.stringify(tacticalPlans));
+                displayTacticalPlans();
+                updateStats();
+                createProgressChart();
+                loadMonthlyGoals();
+                showMessage('戦術プランが削除されました', 'success');
+            }
+        }
+
+        // リーグアイコン取得
+        function getLeagueIcon(league) {
+            const icons = {
+                'japan': '🇯🇵',
+                'j-league': '⚽',
+                'europe': '🇪🇺',
+                'champions-league': '🏆',
+                'europa-league': '🥈',
+                'premier-league': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+                'la-liga': '🇪🇸',
+                'bundesliga': '🇩🇪',
+                'serie-a': '🇮🇹'
+            };
+            return icons[league] || '⚽';
+        }
+
+        // チーム統計取得
+        function getTeamStats(teamName) {
+            // 実際のAPIからチーム統計を取得する場合はここを修正
+            const stats = {
+                '日本代表': '🏆 世界ランク15位',
+                '浦和レッズ': '🏆 J1 3位',
+                '鹿島アントラーズ': '🏆 J1 8位',
+                'レアル・マドリード': '🏆 ラ・リーガ 1位',
+                'バルセロナ': '🏆 ラ・リーガ 2位'
+            };
+            return stats[teamName] || '';
+        }
+
+        // 試合詳細表示
+        function viewMatchDetails(matchId) {
+            const fixture = fixtures.find(f => f.id === matchId);
+            if (fixture) {
+                const details = `
+                    試合詳細: ${fixture.homeTeam} vs ${fixture.awayTeam}
+                    日時: ${new Date(fixture.date).toLocaleString('ja-JP')}
+                    会場: ${fixture.venue || '未定'}
+                    大会: ${fixture.competition || 'リーグ戦'}
+                `;
+                alert(details);
+            }
+        }
+
+        // カレンダーに追加
+        function addToCalendar(matchId) {
+            const fixture = fixtures.find(f => f.id === matchId);
+            if (fixture) {
+                const event = {
+                    title: `${fixture.homeTeam} vs ${fixture.awayTeam}`,
+                    start: new Date(fixture.date),
+                    end: new Date(new Date(fixture.date).getTime() + 2 * 60 * 60 * 1000),
+                    description: `${fixture.competition || 'リーグ戦'} - ${fixture.venue || '未定'}`
+                };
+                
+                // カレンダーAPIに追加（実装例）
+                console.log('カレンダーに追加:', event);
+                showMessage('カレンダーに追加されました', 'success');
+            }
+        }
+
+        // データベースで選手詳細表示
+        function viewPlayerInDatabase() {
+            const playerId = document.getElementById('playerName').value;
+            if (playerId) {
+                const player = allPlayers.find(p => p.id == playerId);
+                if (player) {
+                    // データベースページに遷移し、選手IDを渡す
+                    const url = `database-new.html?player=${playerId}&name=${encodeURIComponent(player.name)}`;
+                    window.open(url, '_blank');
+                }
+            }
+        }
+
+        // レーダーチャートで選手表示
+        function viewPlayerRadar() {
+            const playerId = document.getElementById('playerName').value;
+            if (playerId) {
+                const player = allPlayers.find(p => p.id == playerId);
+                if (player) {
+                    // レーダーチャートページに遷移し、選手IDを渡す
+                    const url = `radar.html?player=${playerId}&name=${encodeURIComponent(player.name)}`;
+                    window.open(url, '_blank');
+                }
+            }
+        }
+
+        // URLパラメータから選手情報を自動選択
+        function checkUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const playerId = urlParams.get('player');
+            const playerName = urlParams.get('name');
+            const action = urlParams.get('action');
+            
+            if (playerId && playerName) {
+                // 選手を自動選択
+                const playerSelect = document.getElementById('playerName');
+                if (playerSelect) {
+                    // 選手IDで選択
+                    playerSelect.value = playerId;
+                    
+                    // 選手統計を表示
+                    showPlayerStats();
+                    
+                    // プラン作成タブに切り替え
+                    if (action === 'create-plan') {
+                        showTab('player-plans');
+                        // タブボタンのアクティブ状態を更新
+                        document.querySelectorAll('.tab').forEach(tab => {
+                            tab.classList.remove('active');
+                        });
+                        document.querySelector('[onclick="showTab(\'player-plans\')"]').classList.add('active');
+                    }
+                    
+                    showMessage(`${playerName}選手が選択されました`, 'success');
+                }
+            }
+        }
+
+        // メッセージ表示
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            messageDiv.style.position = 'fixed';
+            messageDiv.style.top = '20px';
+            messageDiv.style.right = '20px';
+            messageDiv.style.zIndex = '1000';
+            messageDiv.style.padding = '1rem';
+            messageDiv.style.borderRadius = '5px';
+            messageDiv.style.minWidth = '300px';
+
+            document.body.appendChild(messageDiv);
+
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+
+        // プラン選択機能
+        function selectPlan(planType) {
+            const planNames = {
+                'free': 'フリープラン',
+                'premium': 'プレミアムプラン',
+                'pro': 'プロプラン'
+            };
+
+            const planName = planNames[planType];
+            
+            if (planType === 'free') {
+                showMessage(`${planName}を選択しました！今すぐ無料でお使いいただけます。`, 'success');
+            } else {
+                // 実際の決済処理をここに実装
+                const confirmMessage = `${planName}（¥${planType === 'premium' ? '780' : '1,280'}/月）にアップグレードしますか？`;
+                if (confirm(confirmMessage)) {
+                    showMessage(`${planName}へのアップグレード処理を開始しました。決済ページにリダイレクトします。`, 'success');
+                    
+                    // 決済処理のシミュレーション
+                    setTimeout(() => {
+                        showMessage('決済処理が完了しました！プレミアム機能が利用可能になりました。', 'success');
+                        
+                        // ローカルストレージにプラン情報を保存
+                        localStorage.setItem('currentPlan', planType);
+                        
+                        // 現在のプラン表示を更新
+                        showCurrentPlan();
+                    }, 2000);
+                }
+            }
+        }
+
+        // 現在のプラン状態を表示
+        function showCurrentPlan() {
+            // ローカルストレージから現在のプランを取得
+            const currentPlan = localStorage.getItem('currentPlan') || 'free';
+            const planNames = {
+                'free': 'フリープラン',
+                'premium': 'プレミアムプラン',
+                'pro': 'プロプラン'
+            };
+
+            // 現在のプランに応じてUIを更新
+            const pricingCards = document.querySelectorAll('.pricing-card');
+            pricingCards.forEach(card => {
+                const planType = card.classList.contains('free') ? 'free' : 
+                               card.classList.contains('premium') ? 'premium' : 'pro';
+                
+                if (planType === currentPlan) {
+                    card.style.borderColor = '#00ff88';
+                    card.style.boxShadow = '0 0 20px rgba(0, 255, 136, 0.3)';
+                    
+                    // 現在のプランであることを示すバッジを追加
+                    let currentBadge = card.querySelector('.current-plan-badge');
+                    if (!currentBadge) {
+                        currentBadge = document.createElement('div');
+                        currentBadge.className = 'current-plan-badge';
+                        currentBadge.textContent = '現在のプラン';
+                        currentBadge.style.cssText = `
+                            position: absolute;
+                            top: -10px;
+                            left: -10px;
+                            background: #00ff88;
+                            color: #000000;
+                            padding: 0.5rem 1rem;
+                            border-radius: 20px;
+                            font-size: 0.8rem;
+                            font-weight: bold;
+                            z-index: 10;
+                        `;
+                        card.appendChild(currentBadge);
+                    }
+                }
+            });
+        }
+
+        // 料金プランタブが表示されたときに現在のプランを表示
+        function onPricingTabShow() {
+            setTimeout(() => {
+                showCurrentPlan();
+            }, 100);
+        }
+
+        // URLハッシュをチェックして適切なタブを表示
+        function checkUrlHash() {
+            const hash = window.location.hash;
+            if (hash === '#pricing') {
+                // 料金プランタブを表示
+                showTab('pricing');
+                
+                // タブボタンのアクティブ状態を更新
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelector('[onclick="showTab(\'pricing\')"]').classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>

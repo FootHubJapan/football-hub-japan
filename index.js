@@ -1402,6 +1402,39 @@ app.post('/api/ai/tactics', async (req, res) => {
     }
 });
 
+// AIプラン推奨API
+app.post('/api/ai/recommend-plan', async (req, res) => {
+    try {
+        const { player, stats, currentPlans } = req.body;
+        
+        if (!player || !stats) {
+            return res.status(400).json({ error: 'Missing required parameters' });
+        }
+
+        // AIによるプラン推奨を生成
+        const recommendation = await generatePlanRecommendation(player, stats, currentPlans);
+        res.json(recommendation);
+    } catch (error) {
+        console.error('AI recommendation error:', error);
+        res.status(500).json({ error: 'AI recommendation failed' });
+    }
+});
+
+// 週間試合スケジュールAPI
+app.get('/api/fixtures/week', async (req, res) => {
+    try {
+        const { date } = req.query;
+        const targetDate = date ? new Date(date) : new Date();
+        
+        // 週間の試合を取得
+        const weekFixtures = await getWeeklyFixtures(targetDate);
+        res.json(weekFixtures);
+    } catch (error) {
+        console.error('Weekly fixtures error:', error);
+        res.status(500).json({ error: 'Failed to fetch weekly fixtures' });
+    }
+});
+
 // FotMob-style database endpoints
 app.get('/api/fotmob/players', async (req, res) => {
     try {
@@ -1543,6 +1576,397 @@ app.get('/api/fotmob/init', async (req, res) => {
         res.status(500).json({ error: 'Failed to initialize service' });
     }
 });
+
+// 試合スケジュールAPI
+app.get('/api/fixtures', async (req, res) => {
+    try {
+        const { date, team, league } = req.query;
+        let fixtures = [];
+
+        // 日付が指定されている場合
+        if (date) {
+            const targetDate = new Date(date);
+            const dayOfWeek = targetDate.getDay();
+            
+            // フォールバックデータとして、その日の試合を生成
+            fixtures = generateFallbackFixtures(targetDate, team, league);
+        } else {
+            // 日付が指定されていない場合は今日の試合
+            const today = new Date();
+            fixtures = generateFallbackFixtures(today, team, league);
+        }
+
+        res.json(fixtures);
+    } catch (error) {
+        console.error('Error fetching fixtures:', error);
+        res.status(500).json({ error: 'Failed to fetch fixtures' });
+    }
+});
+
+// フォールバック試合データ生成
+function generateFallbackFixtures(date, team, league) {
+    const fixtures = [];
+    const baseTime = new Date(date);
+    baseTime.setHours(14, 0, 0, 0); // 14:00開始
+
+    // 日本代表関連の試合
+    if (!team || team === 'japan') {
+        fixtures.push({
+            id: `japan_${date.getTime()}`,
+            homeTeam: '日本代表',
+            awayTeam: 'ブラジル代表',
+            date: new Date(baseTime.getTime() + 2 * 60 * 60 * 1000), // 16:00
+            venue: '国立競技場',
+            competition: '国際親善試合',
+            status: 'scheduled'
+        });
+    }
+
+    // Jリーグ関連の試合
+    if (!league || league === 'j-league') {
+        fixtures.push({
+            id: `jleague_${date.getTime()}`,
+            homeTeam: '浦和レッズ',
+            awayTeam: '鹿島アントラーズ',
+            date: new Date(baseTime.getTime() + 4 * 60 * 60 * 1000), // 18:00
+            venue: '埼玉スタジアム',
+            competition: 'J1リーグ',
+            status: 'scheduled'
+        });
+
+        fixtures.push({
+            id: `jleague2_${date.getTime()}`,
+            homeTeam: '横浜F・マリノス',
+            awayTeam: '川崎フロンターレ',
+            date: new Date(baseTime.getTime() + 6 * 60 * 60 * 1000), // 20:00
+            venue: '日産スタジアム',
+            competition: 'J1リーグ',
+            status: 'scheduled'
+        });
+    }
+
+    // 欧州リーグ関連の試合
+    if (!league || league === 'europe') {
+        fixtures.push({
+            id: `europe_${date.getTime()}`,
+            homeTeam: 'レアル・マドリード',
+            awayTeam: 'バルセロナ',
+            date: new Date(baseTime.getTime() + 8 * 60 * 60 * 1000), // 22:00
+            venue: 'サンティアゴ・ベルナベウ',
+            competition: 'ラ・リーガ',
+            status: 'scheduled'
+        });
+    }
+
+    return fixtures;
+}
+
+// 選手プラン管理API
+app.post('/api/plans/player', async (req, res) => {
+    try {
+        const plan = req.body;
+        // 実際の実装ではデータベースに保存
+        res.json({ 
+            success: true, 
+            message: '選手プランが作成されました',
+            planId: Date.now().toString()
+        });
+    } catch (error) {
+        console.error('Error creating player plan:', error);
+        res.status(500).json({ error: 'Failed to create player plan' });
+    }
+});
+
+app.get('/api/plans/player', async (req, res) => {
+    try {
+        // 実際の実装ではデータベースから取得
+        const plans = [];
+        res.json(plans);
+    } catch (error) {
+        console.error('Error fetching player plans:', error);
+        res.status(500).json({ error: 'Failed to fetch player plans' });
+    }
+});
+
+// 戦術プラン管理API
+app.post('/api/plans/tactical', async (req, res) => {
+    try {
+        const plan = req.body;
+        // 実際の実装ではデータベースに保存
+        res.json({ 
+            success: true, 
+            message: '戦術プランが作成されました',
+            planId: Date.now().toString()
+        });
+    } catch (error) {
+        console.error('Error creating tactical plan:', error);
+        res.status(500).json({ error: 'Failed to create tactical plan' });
+    }
+});
+
+app.get('/api/plans/tactical', async (req, res) => {
+    try {
+        // 実際の実装ではデータベースから取得
+        const plans = [];
+        res.json(plans);
+    } catch (error) {
+        console.error('Error fetching tactical plans:', error);
+        res.status(500).json({ error: 'Failed to fetch tactical plans' });
+    }
+});
+
+// 選手統計データAPI
+app.get('/api/player-stats', async (req, res) => {
+    try {
+        const { playerId } = req.query;
+        
+        if (playerId) {
+            // 特定の選手の統計データを取得
+            const stats = await getPlayerStats(playerId);
+            res.json(stats);
+        } else {
+            // 全選手の統計データを取得
+            const allStats = await getAllPlayerStats();
+            res.json(allStats);
+        }
+    } catch (error) {
+        console.error('Error fetching player stats:', error);
+        res.status(500).json({ error: 'Failed to fetch player stats' });
+    }
+});
+
+// 選手統計データ取得
+async function getPlayerStats(playerId) {
+    try {
+        // 実際の実装ではデータベースから取得
+        // ここではサンプルデータを返す
+        const sampleStats = {
+            [playerId]: {
+                goals: Math.floor(Math.random() * 20) + 5,
+                assists: Math.floor(Math.random() * 15) + 3,
+                matches: Math.floor(Math.random() * 30) + 10,
+                rating: (Math.random() * 3 + 6).toFixed(1),
+                minutes: Math.floor(Math.random() * 2000) + 1000,
+                passes: Math.floor(Math.random() * 500) + 200,
+                tackles: Math.floor(Math.random() * 50) + 20,
+                shots: Math.floor(Math.random() * 100) + 30
+            }
+        };
+        
+        return sampleStats;
+    } catch (error) {
+        console.error('Error getting player stats:', error);
+        return {};
+    }
+}
+
+// 全選手統計データ取得
+async function getAllPlayerStats() {
+    try {
+        // 実際の実装ではデータベースから取得
+        // ここではサンプルデータを返す
+        const allStats = {};
+        
+        // 主要選手のサンプル統計データ
+        const samplePlayers = [
+            { id: 1, name: '久保建英' },
+            { id: 2, name: '三笘薫' },
+            { id: 3, name: '遠藤航' },
+            { id: 4, name: '伊東純也' },
+            { id: 5, name: '田中碧' }
+        ];
+        
+        samplePlayers.forEach(player => {
+            allStats[player.id] = {
+                goals: Math.floor(Math.random() * 20) + 5,
+                assists: Math.floor(Math.random() * 15) + 3,
+                matches: Math.floor(Math.random() * 30) + 10,
+                rating: (Math.random() * 3 + 6).toFixed(1),
+                minutes: Math.floor(Math.random() * 2000) + 1000,
+                passes: Math.floor(Math.random() * 500) + 200,
+                tackles: Math.floor(Math.random() * 50) + 20,
+                shots: Math.floor(Math.random() * 100) + 30
+            };
+        });
+        
+        return allStats;
+    } catch (error) {
+        console.error('Error getting all player stats:', error);
+        return {};
+    }
+}
+
+// プラン進捗更新API
+app.put('/api/plans/:planId/progress', async (req, res) => {
+    try {
+        const { planId } = req.params;
+        const { progress, completed } = req.body;
+        
+        // 実際の実装ではデータベースを更新
+        res.json({ 
+            success: true, 
+            message: 'プラン進捗が更新されました',
+            planId,
+            progress,
+            completed
+        });
+    } catch (error) {
+        console.error('Error updating plan progress:', error);
+        res.status(500).json({ error: 'Failed to update plan progress' });
+    }
+});
+
+// プラン完了API
+app.put('/api/plans/:planId/complete', async (req, res) => {
+    try {
+        const { planId } = req.params;
+        const { completed, completionDate } = req.body;
+        
+        // 実際の実装ではデータベースを更新
+        res.json({ 
+            success: true, 
+            message: 'プラン完了状態が更新されました',
+            planId,
+            completed,
+            completionDate
+        });
+    } catch (error) {
+        console.error('Error updating plan completion:', error);
+        res.status(500).json({ error: 'Failed to update plan completion' });
+    }
+});
+
+// プラン分析API
+app.get('/api/plans/analysis', async (req, res) => {
+    try {
+        const { period, type } = req.query;
+        
+        // 実際の実装ではデータベースから分析データを取得
+        const analysisData = await getPlanAnalysis(period, type);
+        res.json(analysisData);
+    } catch (error) {
+        console.error('Error fetching plan analysis:', error);
+        res.status(500).json({ error: 'Failed to fetch plan analysis' });
+    }
+});
+
+// プラン分析データ取得
+async function getPlanAnalysis(period, type) {
+    try {
+        // サンプル分析データ
+        const analysis = {
+            period: period || '1month',
+            type: type || 'all',
+            totalPlans: Math.floor(Math.random() * 50) + 20,
+            completedPlans: Math.floor(Math.random() * 30) + 10,
+            successRate: (Math.random() * 40 + 60).toFixed(1),
+            averageCompletionTime: Math.floor(Math.random() * 30) + 15,
+            topPerformingPlans: [
+                { name: 'フィジカル強化プラン', successRate: '85%' },
+                { name: '技術向上プラン', successRate: '78%' },
+                { name: '戦術理解プラン', successRate: '72%' }
+            ]
+        };
+        
+        return analysis;
+    } catch (error) {
+        console.error('Error getting plan analysis:', error);
+        return {};
+    }
+}
+
+// AIプラン推奨生成
+async function generatePlanRecommendation(player, stats, currentPlans) {
+    try {
+        // 選手の統計と現在のプランを分析して推奨を生成
+        let planType = 'technical';
+        let reason = '';
+        let suggestions = '';
+
+        // 統計に基づく推奨ロジック
+        if (stats.goals < 5) {
+            planType = 'goal-scoring';
+            reason = '得点力の向上が必要です';
+            suggestions = 'シュート練習、ポジショニング改善、フィニッシュング技術の向上を重点的に行いましょう';
+        } else if (stats.assists < 3) {
+            planType = 'playmaking';
+            reason = 'プレイメイキング能力の向上が必要です';
+            suggestions = 'パス精度向上、視野の拡大、創造性を高める練習を行いましょう';
+        } else if (stats.rating < 7.0) {
+            planType = 'technical';
+            reason = '技術面の向上が必要です';
+            suggestions = 'ボールコントロール、ドリブル技術、パス精度の向上を図りましょう';
+        } else {
+            planType = 'tactical';
+            reason = '戦術理解の向上が必要です';
+            suggestions = 'チーム戦術の理解、ポジショニング、ゲーム理解力の向上を目指しましょう';
+        }
+
+        // 現在のプランとの重複を避ける
+        const existingPlanTypes = currentPlans.map(p => p.planType);
+        if (existingPlanTypes.includes(planType)) {
+            // 代替プランを提案
+            const alternatives = ['fitness', 'mental', 'recovery', 'defensive'].filter(t => !existingPlanTypes.includes(t));
+            if (alternatives.length > 0) {
+                planType = alternatives[0];
+                reason = '現在のプランとの重複を避けて、' + getPlanTypeText(planType) + 'を提案します';
+                suggestions = 'フィジカル面やメンタル面の強化も重要です';
+            }
+        }
+
+        return {
+            planType: planType,
+            reason: reason,
+            suggestions: suggestions
+        };
+    } catch (error) {
+        console.error('Plan recommendation error:', error);
+        throw error;
+    }
+}
+
+// 週間試合スケジュール取得
+async function getWeeklyFixtures(targetDate) {
+    try {
+        const weekStart = new Date(targetDate);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+        
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        
+        // 週間の試合データを生成（実際のAPIから取得する場合はここを修正）
+        const weekFixtures = [];
+        
+        for (let i = 0; i < 7; i++) {
+            const currentDate = new Date(weekStart);
+            currentDate.setDate(currentDate.getDate() + i);
+            
+            // 各日に1-3試合を生成
+            const dailyFixtures = generateFallbackFixtures(currentDate, null, null);
+            weekFixtures.push(...dailyFixtures);
+        }
+        
+        return weekFixtures;
+    } catch (error) {
+        console.error('Weekly fixtures error:', error);
+        throw error;
+    }
+}
+
+// プランタイプテキスト取得
+function getPlanTypeText(type) {
+    const types = {
+        'fitness': 'フィジカル強化',
+        'technical': '技術向上',
+        'tactical': '戦術理解',
+        'mental': 'メンタル強化',
+        'recovery': 'リカバリー',
+        'goal-scoring': '得点力向上',
+        'defensive': '守備力向上',
+        'playmaking': 'プレイメイキング'
+    };
+    return types[type] || type;
+}
 
 // ヘルスチェックエンドポイント
 app.get('/health', (req, res) => {

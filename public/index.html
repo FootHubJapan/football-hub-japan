@@ -220,7 +220,7 @@
             <ul class="nav-menu">
                 <li><a href="#home">ホーム</a></li>
                 <li><a href="#features">機能</a></li>
-                <li><a href="#pricing">料金</a></li>
+                <li><a href="/plans.html#pricing">料金</a></li>
                 <li><a href="/login">ログイン</a></li>
             </ul>
         </nav>
@@ -239,7 +239,7 @@
             </div>
         </section>
 
-        <section class="features-preview">
+        <section id="features" class="features-preview">
             <h2 class="features-title">主な機能</h2>
             <div class="features-grid">
                 <div class="feature-card">
@@ -301,8 +301,8 @@
 
             // プランを見るボタンのイベントハンドラー
             document.querySelector('.cta-button.secondary').addEventListener('click', function() {
-                // 料金プランページに遷移（将来的に実装）
-                alert('料金プランページは準備中です');
+                // 料金プランページに遷移
+                window.location.href = '/plans.html#pricing';
             });
         });
     </script>

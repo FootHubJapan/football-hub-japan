@@ -868,7 +868,7 @@
                 
                 if (data.response) {
                     result.innerHTML = `<div class="success">${data.response}</div>`;
-            } else {
+                } else {
                     result.innerHTML = '<div class="error">AI分析を実行できませんでした</div>';
                 }
             } catch (error) {
@@ -878,6 +878,48 @@
                 loading.style.display = 'none';
             }
         }
+
+        // プランページとの連携機能
+        function createPlayerPlan(playerId, playerName) {
+            if (playerId && playerName) {
+                const url = `plans.html?player=${playerId}&name=${encodeURIComponent(playerName)}&action=create-plan`;
+                window.open(url, '_blank');
+            }
+        }
+
+        function viewPlayerInDatabase(playerId, playerName) {
+            if (playerId && playerName) {
+                const url = `database-new.html?player=${playerId}&name=${encodeURIComponent(playerName)}`;
+                window.open(url, '_blank');
+            }
+        }
+
+        // URLパラメータから選手情報を取得
+        function getPlayerFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const playerId = urlParams.get('player');
+            const playerName = urlParams.get('name');
+            
+            if (playerId && playerName) {
+                // 該当選手を自動選択
+                const playerSelect = document.getElementById('playerASelect');
+                if (playerSelect) {
+                    // 選手名で検索して選択
+                    for (let i = 0; i < playerSelect.options.length; i++) {
+                        if (playerSelect.options[i].text.includes(playerName)) {
+                            playerSelect.options[i].selected = true;
+                            updateRadarChart();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ページ読み込み時にURLパラメータをチェック
+        document.addEventListener('DOMContentLoaded', function() {
+            getPlayerFromUrl();
+        });
     </script>
 </body>
 </html> 
