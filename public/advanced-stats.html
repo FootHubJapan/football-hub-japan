@@ -456,11 +456,11 @@
                     <select id="leagueSelect" class="control-input">
                         <option value="">リーグを選択</option>
                         <option value="PL">プレミアリーグ（推奨・権限確認済み）</option>
-                        <option value="BL1">ブンデスリーガ</option>
-                        <option value="SA">セリエA</option>
-                        <option value="PD">ラ・リーガ</option>
-                        <option value="FL1">リーグ・アン</option>
-                        <option value="J1">J1リーグ（権限確認中）</option>
+                        <option value="BL1">ブンデスリーガ（推奨・権限確認済み）</option>
+                        <option value="SA">セリエA（推奨・権限確認済み）</option>
+                        <option value="PD">ラ・リーガ（推奨・権限確認済み）</option>
+                        <option value="FL1">リーグ・アン（推奨・権限確認済み）</option>
+                        <option value="J1">J1リーグ（権限なし・利用不可）</option>
                     </select>
                 </div>
                 <div class="control-item">
@@ -507,6 +507,10 @@
                     <div class="data-source-item">
                         <span class="data-source-icon">📊</span>
                         <span>football-data.org: Statistic Add-On</span>
+                    </div>
+                    <div class="data-source-item" style="border-left-color: #ff6b6b;">
+                        <span class="data-source-icon">⚠️</span>
+                        <span>J1リーグ: 現在のプランでは利用できません</span>
                     </div>
                 </div>
             </div>
@@ -1412,7 +1416,13 @@
         document.getElementById('leagueSelect').addEventListener('change', async function() {
             const league = this.value;
             if (league) {
-                await loadTeams(league);
+                if (league === 'J1') {
+                    alert('⚠️ J1リーグは現在のプランでは利用できません。\n\n利用可能なリーグ:\n• プレミアリーグ (PL)\n• ブンデスリーガ (BL1)\n• セリエA (SA)\n• ラ・リーガ (PD)\n• リーグ・アン (FL1)\n\nプレミアリーグなどの利用可能なリーグを選択してください。');
+                    this.value = 'PL'; // プレミアリーグに戻す
+                    await loadTeams('PL');
+                } else {
+                    await loadTeams(league);
+                }
                 document.getElementById('teamSelect').value = '';
                 document.getElementById('playerSelect').value = '';
             }
