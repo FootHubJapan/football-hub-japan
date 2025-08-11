@@ -87,16 +87,34 @@
         }
 
         .stats-card {
-            background: #1a1a1a;
+            background: linear-gradient(135deg, #1a1a1a, #222222);
             border: 2px solid #333333;
             border-radius: 15px;
             padding: 1.5rem;
             transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.1), transparent);
+            transition: left 0.5s;
         }
 
         .stats-card:hover {
             border-color: #00ff88;
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 255, 136, 0.2);
+        }
+
+        .stats-card:hover::before {
+            left: 100%;
         }
 
         .card-title {
@@ -136,6 +154,18 @@
             color: #00ff88;
             font-size: 1.3rem;
             margin-bottom: 1rem;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .chart-wrapper canvas {
+            max-height: 100%;
+            max-width: 100%;
         }
 
         .controls-section {
@@ -185,20 +215,43 @@
         }
 
         .btn {
-            background: #00ff88;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
             color: #000000;
             border: none;
-            border-radius: 5px;
-            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            padding: 0.8rem 1.5rem;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: bold;
             transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
         }
 
         .btn:hover {
-            background: #00cc6a;
-            transform: translateY(-1px);
+            background: linear-gradient(135deg, #00cc6a, #00ff88);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:active {
+            transform: translateY(0);
         }
 
         .btn-secondary {
@@ -253,6 +306,25 @@
             text-align: center;
             padding: 2rem;
             color: #cccccc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .loading::before {
+            content: '';
+            width: 40px;
+            height: 40px;
+            border: 4px solid #333333;
+            border-top: 4px solid #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .error {
@@ -415,12 +487,16 @@
         <!-- 詳細チャート -->
         <div class="chart-container">
             <h3 class="chart-title">パフォーマンス推移</h3>
-            <canvas id="performanceChart" width="400" height="200"></canvas>
+            <div class="chart-wrapper">
+                <canvas id="performanceChart"></canvas>
+            </div>
         </div>
 
         <div class="chart-container">
             <h3 class="chart-title">スタッツ比較</h3>
-            <canvas id="comparisonChart" width="400" height="200"></canvas>
+            <div class="chart-wrapper">
+                <canvas id="comparisonChart"></canvas>
+            </div>
         </div>
 
         <!-- ライブデータセクション -->
@@ -465,82 +541,173 @@
 
         // チャート初期化
         function initializeCharts() {
-            // パフォーマンス推移チャート
-            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
-            performanceChart = new Chart(performanceCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: '得点',
-                        data: [],
-                        borderColor: '#00ff88',
-                        backgroundColor: 'rgba(0, 255, 136, 0.1)',
-                        tension: 0.4
-                    }, {
-                        label: 'アシスト',
-                        data: [],
-                        borderColor: '#ff6b6b',
-                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: { color: '#ffffff' }
-                        }
+            try {
+                console.log('チャート初期化開始...');
+                
+                // パフォーマンス推移チャート
+                const performanceCanvas = document.getElementById('performanceChart');
+                if (!performanceCanvas) {
+                    console.error('パフォーマンスチャートのcanvas要素が見つかりません');
+                    return;
+                }
+                
+                const performanceCtx = performanceCanvas.getContext('2d');
+                if (!performanceCtx) {
+                    console.error('パフォーマンスチャートのコンテキストが取得できません');
+                    return;
+                }
+                
+                performanceChart = new Chart(performanceCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['8月', '9月', '10月', '11月', '12月'],
+                        datasets: [{
+                            label: '得点',
+                            data: [5, 8, 12, 15, 18],
+                            borderColor: '#00ff88',
+                            backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 3
+                        }, {
+                            label: 'アシスト',
+                            data: [3, 6, 9, 11, 14],
+                            borderColor: '#ff6b6b',
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 3
+                        }]
                     },
-                    scales: {
-                        x: {
-                            ticks: { color: '#cccccc' },
-                            grid: { color: '#333333' }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { 
+                                    color: '#ffffff',
+                                    font: { size: 14, weight: 'bold' }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: '#00ff88',
+                                bodyColor: '#ffffff'
+                            }
                         },
-                        y: {
-                            ticks: { color: '#cccccc' },
-                            grid: { color: '#333333' }
+                        scales: {
+                            x: {
+                                ticks: { 
+                                    color: '#cccccc',
+                                    font: { size: 12 }
+                                },
+                                grid: { 
+                                    color: '#333333',
+                                    borderColor: '#555555'
+                                }
+                            },
+                            y: {
+                                ticks: { 
+                                    color: '#cccccc',
+                                    font: { size: 12 }
+                                },
+                                grid: { 
+                                    color: '#333333',
+                                    borderColor: '#555555'
+                                },
+                                beginAtZero: true
+                            }
+                        },
+                        elements: {
+                            point: {
+                                radius: 6,
+                                hoverRadius: 8
+                            }
                         }
                     }
-                }
-            });
+                });
 
-            // 比較チャート
-            const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
-            comparisonChart = new Chart(comparisonCtx, {
-                type: 'radar',
-                data: {
-                    labels: ['得点', 'アシスト', 'シュート精度', 'パス精度', 'タックル', 'インターセプト'],
-                    datasets: [{
-                        label: '選手A',
-                        data: [0, 0, 0, 0, 0, 0],
-                        borderColor: '#00ff88',
-                        backgroundColor: 'rgba(0, 255, 136, 0.2)'
-                    }, {
-                        label: '選手B',
-                        data: [0, 0, 0, 0, 0, 0],
-                        borderColor: '#ff6b6b',
-                        backgroundColor: 'rgba(255, 107, 107, 0.2)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: { color: '#ffffff' }
-                        }
+                // 比較チャート
+                const comparisonCanvas = document.getElementById('comparisonChart');
+                if (!comparisonCanvas) {
+                    console.error('比較チャートのcanvas要素が見つかりません');
+                    return;
+                }
+                
+                const comparisonCtx = comparisonCanvas.getContext('2d');
+                if (!comparisonCtx) {
+                    console.error('比較チャートのコンテキストが取得できません');
+                    return;
+                }
+                
+                comparisonChart = new Chart(comparisonCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['得点', 'アシスト', 'シュート精度', 'パス精度', 'タックル', 'インターセプト'],
+                        datasets: [{
+                            label: '選手A',
+                            data: [15, 8, 65, 78, 12, 5],
+                            borderColor: '#00ff88',
+                            backgroundColor: 'rgba(0, 255, 136, 0.2)',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#00ff88',
+                            pointBorderColor: '#ffffff'
+                        }, {
+                            label: '選手B',
+                            data: [8, 15, 45, 85, 25, 18],
+                            borderColor: '#ff6b6b',
+                            backgroundColor: 'rgba(255, 107, 107, 0.2)',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#ff6b6b',
+                            pointBorderColor: '#ffffff'
+                        }]
                     },
-                    scales: {
-                        r: {
-                            ticks: { color: '#cccccc' },
-                            grid: { color: '#333333' },
-                            pointLabels: { color: '#cccccc' }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { 
+                                    color: '#ffffff',
+                                    font: { size: 14, weight: 'bold' }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: '#00ff88',
+                                bodyColor: '#ffffff'
+                            }
+                        },
+                        scales: {
+                            r: {
+                                ticks: { 
+                                    color: '#cccccc',
+                                    font: { size: 12 }
+                                },
+                                grid: { 
+                                    color: '#333333',
+                                    borderColor: '#555555'
+                                },
+                                pointLabels: { 
+                                    color: '#cccccc',
+                                    font: { size: 12, weight: 'bold' }
+                                },
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        },
+                        elements: {
+                            point: {
+                                radius: 4,
+                                hoverRadius: 6
+                            }
                         }
                     }
-                }
-            });
+                });
+                
+                console.log('チャート初期化完了');
+                
+            } catch (error) {
+                console.error('チャート初期化エラー:', error);
+            }
         }
 
         // 初期データ読み込み
