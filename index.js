@@ -1979,11 +1979,14 @@ app.get('/api/team-stats', async (req, res) => {
             return res.status(400).json({ error: 'チームIDとシーズンが必要です' });
         }
         
+        // リーグコードを取得（デフォルトはJ1）
+        const league = req.query.league || 'J1';
+        
         // まずAPI-Football v3から実データを取得
         try {
-            const apiFootballStats = await getApiFootballTeamStats(team, season);
+            const apiFootballStats = await getApiFootballTeamStats(team, season, league);
             if (apiFootballStats) {
-                console.log('API-Football v3からチーム統計を取得しました');
+                console.log(`API-Football v3からチーム統計を取得しました (リーグ: ${league})`);
                 return res.json(apiFootballStats);
             }
         } catch (apiFootballError) {
@@ -1992,9 +1995,9 @@ app.get('/api/team-stats', async (req, res) => {
         
         // API-Football v3が失敗した場合、football-data.orgを試行
         try {
-            const footballDataStats = await getFootballDataTeamStats(team, season);
+            const footballDataStats = await getFootballDataTeamStats(team, season, league);
             if (footballDataStats) {
-                console.log('football-data.orgからチーム統計を取得しました');
+                console.log(`football-data.orgからチーム統計を取得しました (リーグ: ${league})`);
                 return res.json(footballDataStats);
             }
         } catch (footballDataError) {
@@ -2383,7 +2386,7 @@ function predictMatchResult(homeStrength, awayStrength) {
 }
 
 // API-Football v3からチーム統計を取得
-async function getApiFootballTeamStats(teamId, season) {
+async function getApiFootballTeamStats(teamId, season, leagueCode = 'J1') {
     try {
         const apiKey = process.env.API_FOOTBALL_KEY;
         if (!apiKey) {
@@ -2396,7 +2399,18 @@ async function getApiFootballTeamStats(teamId, season) {
             throw new Error('無効なチームIDです');
         }
         
-        const url = `https://v3.football.api-sports.io/teams/statistics?team=${numericTeamId}&league=39&season=${season}`;
+        // リーグコードに応じてリーグIDを設定
+        const leagueIds = {
+            'J1': 98,      // J1リーグ
+            'PL': 39,      // プレミアリーグ
+            'BL1': 78,     // ブンデスリーガ
+            'SA': 135,     // セリエA
+            'PD': 140,     // ラ・リーガ
+            'FL1': 61      // リーグ・アン
+        };
+        
+        const leagueId = leagueIds[leagueCode] || 98; // デフォルトはJ1リーグ
+        const url = `https://v3.football.api-sports.io/teams/statistics?team=${numericTeamId}&league=${leagueId}&season=${season}`;
         
         const response = await fetch(url, {
             headers: {
@@ -2437,7 +2451,7 @@ async function getApiFootballTeamStats(teamId, season) {
 }
 
 // football-data.orgからチーム統計を取得
-async function getFootballDataTeamStats(teamId, season) {
+async function getFootballDataTeamStats(teamId, season, leagueCode = 'J1') {
     try {
         const apiKey = process.env.FOOTBALL_DATA_API_KEY;
         if (!apiKey) {
@@ -2458,8 +2472,18 @@ async function getFootballDataTeamStats(teamId, season) {
         
         const teamData = await teamResponse.json();
         
-        // リーグの順位表から統計を取得
-        const standingsUrl = `https://api.football-data.org/v4/competitions/2021/standings`;
+        // リーグコードに応じてリーグIDを設定
+        const leagueIds = {
+            'J1': 2152,    // J1リーグ
+            'PL': 2021,    // プレミアリーグ
+            'BL1': 2002,   // ブンデスリーガ
+            'SA': 2019,    // セリエA
+            'PD': 2014,    // ラ・リーガ
+            'FL1': 2015    // リーグ・アン
+        };
+        
+        const leagueId = leagueIds[leagueCode] || 2152; // デフォルトはJ1リーグ
+        const standingsUrl = `https://api.football-data.org/v4/competitions/${leagueId}/standings`;
         const standingsResponse = await fetch(standingsUrl, {
             headers: {
                 'X-Auth-Token': apiKey
