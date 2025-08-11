@@ -455,12 +455,12 @@
                     <label class="control-label">リーグ</label>
                     <select id="leagueSelect" class="control-input">
                         <option value="">リーグを選択</option>
-                        <option value="PL">プレミアリーグ</option>
+                        <option value="PL">プレミアリーグ（推奨・権限確認済み）</option>
                         <option value="BL1">ブンデスリーガ</option>
                         <option value="SA">セリエA</option>
                         <option value="PD">ラ・リーガ</option>
                         <option value="FL1">リーグ・アン</option>
-                        <option value="J1">J1リーグ</option>
+                        <option value="J1">J1リーグ（権限確認中）</option>
                     </select>
                 </div>
                 <div class="control-item">
@@ -801,9 +801,9 @@
                 // リーグデータ読み込み
                 await loadLeagues();
                 
-                // デフォルトでJ1リーグを選択
-                document.getElementById('leagueSelect').value = 'J1';
-                await loadTeams('J1');
+                                // デフォルトでプレミアリーグを選択（権限確認済み）
+        document.getElementById('leagueSelect').value = 'PL';
+        await loadTeams('PL');
                 
                 // デフォルトでJ1リーグのチームを選択
                 if (document.getElementById('teamSelect').options.length > 1) {

@@ -2403,15 +2403,16 @@ async function getApiFootballTeamStats(teamId, season, leagueCode = 'J1') {
         
         // リーグコードに応じてリーグIDを設定
         const leagueIds = {
-            'J1': 98,      // J1リーグ
-            'PL': 39,      // プレミアリーグ
+            'J1': 98,      // J1リーグ（権限確認が必要）
+            'PL': 39,      // プレミアリーグ（確実に利用可能）
             'BL1': 78,     // ブンデスリーガ
             'SA': 135,     // セリエA
             'PD': 140,     // ラ・リーガ
             'FL1': 61      // リーグ・アン
         };
         
-        const leagueId = leagueIds[leagueCode] || 98; // デフォルトはJ1リーグ
+        // デフォルトをプレミアリーグに変更（権限確認のため）
+        const leagueId = leagueIds[leagueCode] || 39;
         const url = `https://v3.football.api-sports.io/teams/statistics?team=${numericTeamId}&league=${leagueId}&season=${season}`;
         console.log('🌐 API-Football v3 URL:', url);
         
@@ -2425,7 +2426,14 @@ async function getApiFootballTeamStats(teamId, season, leagueCode = 'J1') {
         console.log('📡 API-Football v3 レスポンス:', response.status, response.statusText);
         
         if (!response.ok) {
-            throw new Error(`API-Football v3 エラー: ${response.status}`);
+            const errorData = await response.json().catch(() => ({}));
+            console.log('❌ API-Football v3 エラーレスポンス:', errorData);
+            
+            if (response.status === 403) {
+                throw new Error(`API-Football v3 権限エラー: ${errorData.message || 'リーグへのアクセス権限がありません'}`);
+            }
+            
+            throw new Error(`API-Football v3 エラー: ${response.status} - ${errorData.message || response.statusText}`);
         }
         
         const data = await response.json();
