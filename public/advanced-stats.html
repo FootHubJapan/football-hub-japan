@@ -718,7 +718,7 @@
                     shotAccuracy: Math.floor(Math.random() * 30) + 60,
                     possession: Math.floor(Math.random() * 20) + 45,
                     cleanSheets: Math.floor(Math.random() * 10) + 5,
-                    expectedGoals: (Math.random() * 2 + 1).toFixed(2),
+                    expectedGoals: Math.random() * 2 + 1, // 数値として保持
                     predictionAccuracy: Math.floor(Math.random() * 20) + 70,
                     performance: {
                         dates: ['8月', '9月', '10月', '11月', '12月'],
@@ -816,12 +816,54 @@
 
         // スタッツカード更新
         function updateStatsCards(stats) {
+            // デバッグ用ログ
+            console.log('updateStatsCards called with:', stats);
+            console.log('expectedGoals type:', typeof stats.expectedGoals, 'value:', stats.expectedGoals);
+            
+            // 各値を安全に処理
             document.getElementById('totalGoals').textContent = stats.goals || '-';
-            document.getElementById('shotAccuracy').textContent = stats.shotAccuracy ? `${stats.shotAccuracy}%` : '-';
-            document.getElementById('possession').textContent = stats.possession ? `${stats.possession}%` : '-';
+            
+            // shotAccuracyの値を安全に処理
+            let shotAccuracyValue = '-';
+            if (stats.shotAccuracy !== undefined && stats.shotAccuracy !== null) {
+                const numValue = parseFloat(stats.shotAccuracy);
+                if (!isNaN(numValue)) {
+                    shotAccuracyValue = `${numValue}%`;
+                }
+            }
+            document.getElementById('shotAccuracy').textContent = shotAccuracyValue;
+            
+            // possessionの値を安全に処理
+            let possessionValue = '-';
+            if (stats.possession !== undefined && stats.possession !== null) {
+                const numValue = parseFloat(stats.possession);
+                if (!isNaN(numValue)) {
+                    possessionValue = `${numValue}%`;
+                }
+            }
+            document.getElementById('possession').textContent = possessionValue;
+            
             document.getElementById('cleanSheets').textContent = stats.cleanSheets || '-';
-            document.getElementById('expectedGoals').textContent = stats.expectedGoals ? stats.expectedGoals.toFixed(2) : '-';
-            document.getElementById('predictionAccuracy').textContent = stats.predictionAccuracy ? `${stats.predictionAccuracy}%` : '-';
+            
+            // expectedGoalsの値を安全に処理
+            let expectedGoalsValue = '-';
+            if (stats.expectedGoals !== undefined && stats.expectedGoals !== null) {
+                const numValue = parseFloat(stats.expectedGoals);
+                if (!isNaN(numValue)) {
+                    expectedGoalsValue = numValue.toFixed(2);
+                }
+            }
+            document.getElementById('expectedGoals').textContent = expectedGoalsValue;
+            
+            // predictionAccuracyの値を安全に処理
+            let predictionAccuracyValue = '-';
+            if (stats.predictionAccuracy !== undefined && stats.predictionAccuracy !== null) {
+                const numValue = parseFloat(stats.predictionAccuracy);
+                if (!isNaN(numValue)) {
+                    predictionAccuracyValue = `${numValue}%`;
+                }
+            }
+            document.getElementById('predictionAccuracy').textContent = predictionAccuracyValue;
         }
 
         // パフォーマンスチャート更新
