@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高度なスタッツ分析 - Football Hub Japan</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #1a1a1a;
+            border-bottom: 2px solid #00ff88;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            color: #00ff88;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: #333333;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            color: #00ff88;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .page-subtitle {
+            color: #cccccc;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-card {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .stats-card:hover {
+            border-color: #00ff88;
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            color: #00ff88;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-icon {
+            font-size: 1.5rem;
+        }
+
+        .stats-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-label {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        .chart-container {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-title {
+            color: #00ff88;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .controls-section {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .controls-title {
+            color: #00ff88;
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-label {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        .control-input {
+            background: #333333;
+            color: #ffffff;
+            border: 1px solid #555555;
+            border-radius: 5px;
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .control-input:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        .btn {
+            background: #00ff88;
+            color: #000000;
+            border: none;
+            border-radius: 5px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #00cc6a;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #333333;
+            color: #ffffff;
+        }
+
+        .btn-secondary:hover {
+            background: #555555;
+        }
+
+        .live-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #ff4444;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #333333;
+        }
+
+        .comparison-table th {
+            background: #333333;
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .comparison-table tr:hover {
+            background: #222222;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #cccccc;
+        }
+
+        .error {
+            background: #ff4444;
+            color: #ffffff;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        .success {
+            background: #00ff88;
+            color: #000000;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        .stats-highlight {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: #000000;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 0.5rem 0;
+        }
+
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 1rem;
+        }
+
+        .trend-up {
+            color: #00ff88;
+        }
+
+        .trend-down {
+            color: #ff4444;
+        }
+
+        .trend-stable {
+            color: #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">⚽ Football Hub Japan</div>
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="location.href='index.html'">ホーム</button>
+            <button class="nav-btn" onclick="location.href='database-new.html'">データベース</button>
+            <button class="nav-btn" onclick="location.href='radar.html'">レーダーチャート</button>
+            <button class="nav-btn" onclick="location.href='plans.html'">プラン</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <h1 class="page-title">高度なスタッツ分析</h1>
+        <p class="page-subtitle">API-Football v3 Pro + football-data.org Statistic Add-On による詳細分析</p>
+
+        <!-- コントロールセクション -->
+        <div class="controls-section">
+            <h2 class="controls-title">分析設定</h2>
+            <div class="control-group">
+                <div class="control-item">
+                    <label class="control-label">リーグ</label>
+                    <select id="leagueSelect" class="control-input">
+                        <option value="">リーグを選択</option>
+                        <option value="PL">プレミアリーグ</option>
+                        <option value="BL1">ブンデスリーガ</option>
+                        <option value="SA">セリエA</option>
+                        <option value="PD">ラ・リーガ</option>
+                        <option value="FL1">リーグ・アン</option>
+                        <option value="J1">J1リーグ</option>
+                    </select>
+                </div>
+                <div class="control-item">
+                    <label class="control-label">チーム</label>
+                    <select id="teamSelect" class="control-input">
+                        <option value="">チームを選択</option>
+                    </select>
+                </div>
+                <div class="control-item">
+                    <label class="control-label">選手</label>
+                    <select id="playerSelect" class="control-input">
+                        <option value="">選手を選択</option>
+                    </select>
+                </div>
+                <div class="control-item">
+                    <label class="control-label">シーズン</label>
+                    <select id="seasonSelect" class="control-input">
+                        <option value="2024">2024/25</option>
+                        <option value="2023">2023/24</option>
+                        <option value="2022">2022/23</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control-group">
+                <button class="btn" onclick="loadAdvancedStats()">スタッツ分析開始</button>
+                <button class="btn btn-secondary" onclick="loadLiveData()">ライブデータ更新</button>
+                <button class="btn btn-secondary" onclick="loadPredictions()">予測データ表示</button>
+            </div>
+        </div>
+
+        <!-- 主要スタッツカード -->
+        <div class="stats-grid">
+            <div class="stats-card">
+                <div class="card-title">
+                    <span class="card-icon">⚽</span>
+                    総得点
+                </div>
+                <div class="stats-value" id="totalGoals">-</div>
+                <div class="stats-label">シーズン通算</div>
+            </div>
+            <div class="stats-card">
+                <div class="card-title">
+                    <span class="card-icon">🎯</span>
+                    シュート精度
+                </div>
+                <div class="stats-value" id="shotAccuracy">-</div>
+                <div class="stats-label">枠内シュート率</div>
+            </div>
+            <div class="stats-card">
+                <div class="card-title">
+                    <span class="card-icon">🔄</span>
+                    ボールポゼッション
+                </div>
+                <div class="stats-value" id="possession">-</div>
+                <div class="stats-label">平均保持率</div>
+            </div>
+            <div class="stats-card">
+                <div class="card-title">
+                    <span class="card-icon">🛡️</span>
+                    クリーンシート
+                </div>
+                <div class="stats-value" id="cleanSheets">-</div>
+                <div class="stats-label">無失点試合数</div>
+            </div>
+            <div class="stats-card">
+                <div class="card-title">
+                    <span class="card-icon">📊</span>
+                    期待値
+                </div>
+                <div class="stats-value" id="expectedGoals">-</div>
+                <div class="stats-label">xG (Expected Goals)</div>
+            </div>
+            <div class="stats-card">
+                <div class="card-title">
+                    <span class="card-icon">🎲</span>
+                    予測精度
+                </div>
+                <div class="stats-value" id="predictionAccuracy">-</div>
+                <div class="stats-label">AI予測的中率</div>
+            </div>
+        </div>
+
+        <!-- 詳細チャート -->
+        <div class="chart-container">
+            <h3 class="chart-title">パフォーマンス推移</h3>
+            <canvas id="performanceChart" width="400" height="200"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <h3 class="chart-title">スタッツ比較</h3>
+            <canvas id="comparisonChart" width="400" height="200"></canvas>
+        </div>
+
+        <!-- ライブデータセクション -->
+        <div class="chart-container">
+            <h3 class="chart-title">
+                <span class="live-indicator"></span>
+                ライブ試合データ
+            </h3>
+            <div id="liveDataContainer">
+                <div class="loading">ライブデータを読み込み中...</div>
+            </div>
+        </div>
+
+        <!-- 予測・オッズセクション -->
+        <div class="chart-container">
+            <h3 class="chart-title">試合予測・オッズ</h3>
+            <div id="predictionsContainer">
+                <div class="loading">予測データを読み込み中...</div>
+            </div>
+        </div>
+
+        <!-- 詳細分析テーブル -->
+        <div class="chart-container">
+            <h3 class="chart-title">詳細スタッツ分析</h3>
+            <div id="detailedStatsContainer">
+                <div class="loading">詳細データを読み込み中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // グローバル変数
+        let performanceChart = null;
+        let comparisonChart = null;
+        let currentData = null;
+
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadInitialData();
+        });
+
+        // チャート初期化
+        function initializeCharts() {
+            // パフォーマンス推移チャート
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(performanceCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '得点',
+                        data: [],
+                        borderColor: '#00ff88',
+                        backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'アシスト',
+                        data: [],
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#ffffff' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#cccccc' },
+                            grid: { color: '#333333' }
+                        },
+                        y: {
+                            ticks: { color: '#cccccc' },
+                            grid: { color: '#333333' }
+                        }
+                    }
+                }
+            });
+
+            // 比較チャート
+            const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
+            comparisonChart = new Chart(comparisonCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['得点', 'アシスト', 'シュート精度', 'パス精度', 'タックル', 'インターセプト'],
+                    datasets: [{
+                        label: '選手A',
+                        data: [0, 0, 0, 0, 0, 0],
+                        borderColor: '#00ff88',
+                        backgroundColor: 'rgba(0, 255, 136, 0.2)'
+                    }, {
+                        label: '選手B',
+                        data: [0, 0, 0, 0, 0, 0],
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.2)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#ffffff' }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            ticks: { color: '#cccccc' },
+                            grid: { color: '#333333' },
+                            pointLabels: { color: '#cccccc' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 初期データ読み込み
+        async function loadInitialData() {
+            try {
+                // リーグデータ読み込み
+                await loadLeagues();
+                
+                // デフォルトでJ1リーグを選択
+                document.getElementById('leagueSelect').value = 'J1';
+                await loadTeams('J1');
+                
+                // デフォルトでJ1リーグのチームを選択
+                if (document.getElementById('teamSelect').options.length > 1) {
+                    const firstTeam = document.getElementById('teamSelect').options[1].value;
+                    document.getElementById('teamSelect').value = firstTeam;
+                    await loadPlayers(firstTeam);
+                }
+            } catch (error) {
+                console.error('初期データ読み込みエラー:', error);
+            }
+        }
+
+        // リーグ読み込み
+        async function loadLeagues() {
+            try {
+                const response = await fetch('/api/leagues');
+                const leagues = await response.json();
+                
+                const leagueSelect = document.getElementById('leagueSelect');
+                leagueSelect.innerHTML = '<option value="">リーグを選択</option>';
+                
+                leagues.forEach(league => {
+                    const option = document.createElement('option');
+                    option.value = league.code;
+                    option.textContent = league.name;
+                    leagueSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('リーグ読み込みエラー:', error);
+            }
+        }
+
+        // チーム読み込み
+        async function loadTeams(leagueCode) {
+            try {
+                const response = await fetch(`/api/teams?league=${leagueCode}`);
+                const teams = await response.json();
+                
+                const teamSelect = document.getElementById('teamSelect');
+                teamSelect.innerHTML = '<option value="">チームを選択</option>';
+                
+                teams.forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team.id;
+                    option.textContent = team.name;
+                    teamSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('チーム読み込みエラー:', error);
+            }
+        }
+
+        // 選手読み込み
+        async function loadPlayers(teamId) {
+            try {
+                const response = await fetch(`/api/players?team=${teamId}`);
+                const players = await response.json();
+                
+                const playerSelect = document.getElementById('playerSelect');
+                playerSelect.innerHTML = '<option value="">選手を選択</option>';
+                
+                players.forEach(player => {
+                    const option = document.createElement('option');
+                    option.value = player.id;
+                    option.textContent = `${player.name} (${player.position})`;
+                    playerSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('選手読み込みエラー:', error);
+            }
+        }
+
+        // 高度なスタッツ読み込み
+        async function loadAdvancedStats() {
+            const league = document.getElementById('leagueSelect').value;
+            const team = document.getElementById('teamSelect').value;
+            const player = document.getElementById('playerSelect').value;
+            const season = document.getElementById('seasonSelect').value;
+
+            if (!league || !team) {
+                alert('リーグとチームを選択してください');
+                return;
+            }
+
+            try {
+                // チームスタッツ
+                if (team) {
+                    await loadTeamStats(team, season);
+                }
+
+                // 選手スタッツ
+                if (player) {
+                    await loadPlayerStats(player, season);
+                }
+
+                // 比較データ
+                await loadComparisonData(league, team, player, season);
+
+            } catch (error) {
+                console.error('スタッツ読み込みエラー:', error);
+                showError('スタッツの読み込みに失敗しました');
+            }
+        }
+
+        // チームスタッツ読み込み
+        async function loadTeamStats(teamId, season) {
+            try {
+                const response = await fetch(`/api/team-stats?team=${teamId}&season=${season}`);
+                const stats = await response.json();
+                
+                // スタッツカード更新
+                updateStatsCards(stats);
+                
+                // パフォーマンスチャート更新
+                updatePerformanceChart(stats);
+                
+            } catch (error) {
+                console.error('チームスタッツ読み込みエラー:', error);
+            }
+        }
+
+        // 選手スタッツ読み込み
+        async function loadPlayerStats(playerId, season) {
+            try {
+                const response = await fetch(`/api/player-stats?player=${playerId}&season=${season}`);
+                const stats = await response.json();
+                
+                // 詳細スタッツ表示
+                displayDetailedStats(stats);
+                
+            } catch (error) {
+                console.error('選手スタッツ読み込みエラー:', error);
+            }
+        }
+
+        // 比較データ読み込み
+        async function loadComparisonData(league, team, player, season) {
+            try {
+                const response = await fetch(`/api/comparison?league=${league}&team=${team}&player=${player}&season=${season}`);
+                const comparison = await response.json();
+                
+                // 比較チャート更新
+                updateComparisonChart(comparison);
+                
+            } catch (error) {
+                console.error('比較データ読み込みエラー:', error);
+            }
+        }
+
+        // スタッツカード更新
+        function updateStatsCards(stats) {
+            document.getElementById('totalGoals').textContent = stats.goals || '-';
+            document.getElementById('shotAccuracy').textContent = stats.shotAccuracy ? `${stats.shotAccuracy}%` : '-';
+            document.getElementById('possession').textContent = stats.possession ? `${stats.possession}%` : '-';
+            document.getElementById('cleanSheets').textContent = stats.cleanSheets || '-';
+            document.getElementById('expectedGoals').textContent = stats.expectedGoals ? stats.expectedGoals.toFixed(2) : '-';
+            document.getElementById('predictionAccuracy').textContent = stats.predictionAccuracy ? `${stats.predictionAccuracy}%` : '-';
+        }
+
+        // パフォーマンスチャート更新
+        function updatePerformanceChart(stats) {
+            if (performanceChart && stats.performance) {
+                performanceChart.data.labels = stats.performance.dates;
+                performanceChart.data.datasets[0].data = stats.performance.goals;
+                performanceChart.data.datasets[1].data = stats.performance.assists;
+                performanceChart.update();
+            }
+        }
+
+        // 比較チャート更新
+        function updateComparisonChart(comparison) {
+            if (comparisonChart && comparison.players) {
+                comparisonChart.data.datasets[0].data = comparison.players[0].stats;
+                comparisonChart.data.datasets[1].data = comparison.players[1].stats;
+                comparisonChart.update();
+            }
+        }
+
+        // 詳細スタッツ表示
+        function displayDetailedStats(stats) {
+            const container = document.getElementById('detailedStatsContainer');
+            
+            if (!stats || Object.keys(stats).length === 0) {
+                container.innerHTML = '<div class="loading">詳細データがありません</div>';
+                return;
+            }
+
+            let html = `
+                <div class="stats-highlight">${stats.name} - ${stats.position}</div>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>統計項目</th>
+                            <th>数値</th>
+                            <th>リーグ平均</th>
+                            <th>トレンド</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            // 主要スタッツ
+            const statItems = [
+                { key: 'goals', label: '得点', unit: '' },
+                { key: 'assists', label: 'アシスト', unit: '' },
+                { key: 'shots', label: 'シュート', unit: '' },
+                { key: 'shotsOnTarget', label: '枠内シュート', unit: '' },
+                { key: 'passes', label: 'パス', unit: '' },
+                { key: 'passAccuracy', label: 'パス精度', unit: '%' },
+                { key: 'tackles', label: 'タックル', unit: '' },
+                { key: 'interceptions', label: 'インターセプト', unit: '' },
+                { key: 'fouls', label: 'ファウル', unit: '' },
+                { key: 'cards', label: 'カード', unit: '' }
+            ];
+
+            statItems.forEach(item => {
+                if (stats[item.key] !== undefined) {
+                    const value = stats[item.key];
+                    const average = stats.averages ? stats.averages[item.key] : '-';
+                    const trend = getTrendIndicator(value, average);
+                    
+                    html += `
+                        <tr>
+                            <td>${item.label}</td>
+                            <td>${value}${item.unit}</td>
+                            <td>${average}${item.unit}</td>
+                            <td>${trend}</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // トレンドインジケーター取得
+        function getTrendIndicator(value, average) {
+            if (average === '-' || average === 0) return '<span class="trend-stable">-</span>';
+            
+            const ratio = value / average;
+            if (ratio > 1.2) return '<span class="trend-up">↗</span>';
+            if (ratio < 0.8) return '<span class="trend-down">↘</span>';
+            return '<span class="trend-stable">→</span>';
+        }
+
+        // ライブデータ読み込み
+        async function loadLiveData() {
+            try {
+                const response = await fetch('/api/live-matches');
+                const liveData = await response.json();
+                
+                displayLiveData(liveData);
+            } catch (error) {
+                console.error('ライブデータ読み込みエラー:', error);
+                showError('ライブデータの読み込みに失敗しました');
+            }
+        }
+
+        // ライブデータ表示
+        function displayLiveData(liveData) {
+            const container = document.getElementById('liveDataContainer');
+            
+            if (!liveData || liveData.length === 0) {
+                container.innerHTML = '<div class="loading">現在ライブの試合はありません</div>';
+                return;
+            }
+
+            let html = '<div class="stats-grid">';
+            
+            liveData.forEach(match => {
+                html += `
+                    <div class="stats-card">
+                        <div class="card-title">${match.homeTeam} vs ${match.awayTeam}</div>
+                        <div class="stats-value">${match.score}</div>
+                        <div class="stats-label">${match.minute}' - ${match.status}</div>
+                        <div class="stats-highlight">${match.league}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // 予測データ読み込み
+        async function loadPredictions() {
+            try {
+                const response = await fetch('/api/predictions');
+                const predictions = await response.json();
+                
+                displayPredictions(predictions);
+            } catch (error) {
+                console.error('予測データ読み込みエラー:', error);
+                showError('予測データの読み込みに失敗しました');
+            }
+        }
+
+        // 予測データ表示
+        function displayPredictions(predictions) {
+            const container = document.getElementById('predictionsContainer');
+            
+            if (!predictions || predictions.length === 0) {
+                container.innerHTML = '<div class="loading">予測データがありません</div>';
+                return;
+            }
+
+            let html = '<div class="stats-grid">';
+            
+            predictions.forEach(prediction => {
+                const confidence = prediction.confidence || 0;
+                const confidenceColor = confidence > 70 ? '#00ff88' : confidence > 50 ? '#ffaa00' : '#ff4444';
+                
+                html += `
+                    <div class="stats-card">
+                        <div class="card-title">${prediction.homeTeam} vs ${prediction.awayTeam}</div>
+                        <div class="stats-value" style="color: ${confidenceColor}">${prediction.predictedResult}</div>
+                        <div class="stats-label">予測的中率: ${confidence}%</div>
+                        <div class="stats-highlight">${prediction.league}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // エラー表示
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.querySelector('.main-container').appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        // 成功表示
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            document.querySelector('.main-container').appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 5000);
+        }
+
+        // イベントリスナー設定
+        document.getElementById('leagueSelect').addEventListener('change', async function() {
+            const league = this.value;
+            if (league) {
+                await loadTeams(league);
+                document.getElementById('teamSelect').value = '';
+                document.getElementById('playerSelect').value = '';
+            }
+        });
+
+        document.getElementById('teamSelect').addEventListener('change', async function() {
+            const team = this.value;
+            if (team) {
+                await loadPlayers(team);
+                document.getElementById('playerSelect').value = '';
+            }
+        });
+    </script>
+</body>
+</html> 

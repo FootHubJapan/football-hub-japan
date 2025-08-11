@@ -671,6 +671,182 @@
             background: #333333;
         }
 
+        /* 高度なデータタブのスタイル */
+        .advanced-data-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .data-section {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .data-section .section-title {
+            color: #00ff88;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #00ff88;
+            padding-bottom: 0.5rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .analysis-controls, .prediction-controls, .comparison-controls {
+            margin-bottom: 1.5rem;
+        }
+
+        .info-message {
+            background: #2a2a2a;
+            border: 1px solid #444444;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            color: #cccccc;
+            font-style: italic;
+        }
+
+        .live-match-item {
+            background: #2a2a2a;
+            border: 1px solid #444444;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .live-match-item.live {
+            border-color: #ff4444;
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+        }
+
+        .team-info {
+            text-align: center;
+        }
+
+        .team-name {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .team-score {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .match-status {
+            text-align: center;
+        }
+
+        .status-badge {
+            background: #ff4444;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .elapsed-time {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+
+        .match-details {
+            text-align: center;
+            color: #cccccc;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            border: 1px solid #444444;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .stat-title {
+            color: #00ff88;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .prediction-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a2a0a 100%);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .prediction-title {
+            color: #00ff88;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .prediction-confidence {
+            background: #00ff88;
+            color: #000000;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .odds-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .odds-table th,
+        .odds-table td {
+            padding: 0.5rem;
+            text-align: center;
+            border-bottom: 1px solid #444444;
+        }
+
+        .odds-table th {
+            background: #00ff88;
+            color: #000000;
+            font-weight: bold;
+        }
+
         @media (max-width: 768px) {
             .plans-grid {
                 grid-template-columns: 1fr;
@@ -715,6 +891,7 @@
             <button class="nav-btn" onclick="window.location.href='/'">ホーム</button>
             <button class="nav-btn" onclick="window.location.href='database-enhanced.html'">データベース</button>
             <button class="nav-btn" onclick="window.location.href='radar-enhanced.html'">レーダーチャート</button>
+            <button class="nav-btn" onclick="window.location.href='advanced-stats.html'">高度分析</button>
             <button class="nav-btn" onclick="window.location.href='ai-agent-enhanced.html'">AIエージェント</button>
             <button class="nav-btn" onclick="window.location.href='plans.html'" style="background: #00ff88; color: #000000;">プラン管理</button>
         </div>
@@ -729,6 +906,7 @@
             <button class="tab" onclick="showTab('player-plans')">選手プラン</button>
             <button class="tab" onclick="showTab('tactical-plans')">戦術プラン</button>
             <button class="tab" onclick="showTab('analysis')">分析・統計</button>
+            <button class="tab" onclick="showTab('advanced-data')">高度なデータ</button>
             <button class="tab" onclick="showTab('pricing')">料金プラン</button>
         </div>
 
@@ -1010,6 +1188,123 @@
                     <h2 class="section-title">📊 プラン効果測定</h2>
                     <div id="planEffectiveness">
                         <div class="loading">プラン効果データを読み込み中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 高度なデータタブ -->
+        <div id="advanced-data" class="tab-content">
+            <div class="advanced-data-container">
+                <h2 class="section-title">🚀 高度なデータ分析（Proプラン専用）</h2>
+                <p class="page-subtitle">API-Football v3 Pro + football-data.org Deep Data による豊富なデータ</p>
+                
+                <!-- ライブ試合データ -->
+                <div class="data-section">
+                    <h3 class="section-title">⚽ ライブ試合データ</h3>
+                    <div class="live-matches-container">
+                        <div class="controls">
+                            <button class="btn" onclick="loadLiveMatches()">🔄 ライブデータ更新</button>
+                            <select id="liveLeagueFilter" onchange="filterLiveMatches()">
+                                <option value="">すべてのリーグ</option>
+                                <option value="japan">日本</option>
+                                <option value="england">イングランド</option>
+                                <option value="spain">スペイン</option>
+                                <option value="germany">ドイツ</option>
+                                <option value="italy">イタリア</option>
+                            </select>
+                        </div>
+                        <div id="liveMatchesContent">
+                            <div class="loading">ライブ試合データを読み込み中...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 詳細統計分析 -->
+                <div class="data-section">
+                    <h3 class="section-title">📊 詳細統計分析</h3>
+                    <div class="stats-analysis-container">
+                        <div class="analysis-controls">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">試合ID</label>
+                                    <input type="text" class="form-input" id="matchIdInput" placeholder="試合IDを入力">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">選手ID</label>
+                                    <input type="text" class="form-input" id="playerIdInput" placeholder="選手IDを入力">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">シーズン</label>
+                                    <input type="number" class="form-input" id="seasonInput" value="2024" min="2020" max="2025">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <button class="btn" onclick="loadDetailedMatchStats()">📈 試合統計取得</button>
+                                <button class="btn" onclick="loadDetailedPlayerStats()">👤 選手統計取得</button>
+                                <button class="btn" onclick="loadDetailedTeamStats()">🏟️ チーム統計取得</button>
+                            </div>
+                        </div>
+                        <div id="detailedStatsContent">
+                            <div class="info-message">詳細な統計データを取得するには、試合ID、選手ID、シーズンを入力してください</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 予測・オッズデータ -->
+                <div class="data-section">
+                    <h3 class="section-title">🔮 予測・オッズデータ</h3>
+                    <div class="predictions-container">
+                        <div class="prediction-controls">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">試合ID</label>
+                                    <input type="text" class="form-input" id="predictionMatchId" placeholder="予測したい試合のID">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">オッズ取得</label>
+                                    <input type="text" class="form-input" id="oddsMatchId" placeholder="オッズを取得したい試合のID">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <button class="btn" onclick="loadMatchPredictions()">🔮 試合予測取得</button>
+                                <button class="btn" onclick="loadMatchOdds()">💰 オッズ情報取得</button>
+                            </div>
+                        </div>
+                        <div id="predictionsContent">
+                            <div class="info-message">AI予測とオッズ情報を取得するには、試合IDを入力してください</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- データ比較・分析 -->
+                <div class="data-section">
+                    <h3 class="section-title">📈 データ比較・分析</h3>
+                    <div class="comparison-container">
+                        <div class="comparison-controls">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">比較対象1</label>
+                                    <select class="form-select" id="comparisonType1">
+                                        <option value="player">選手</option>
+                                        <option value="team">チーム</option>
+                                        <option value="match">試合</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">比較対象2</label>
+                                    <select class="form-select" id="comparisonType2">
+                                        <option value="player">選手</option>
+                                        <option value="team">チーム</option>
+                                        <option value="match">試合</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="btn" onclick="performDataComparison()">🔄 データ比較実行</button>
+                        </div>
+                        <div id="comparisonContent">
+                            <div class="info-message">データ比較を実行するには、比較対象を選択してください</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2962,6 +3257,352 @@
             setTimeout(() => {
                 showCurrentPlan();
             }, 100);
+        }
+
+        // 高度なデータタブの機能
+        let liveMatches = [];
+        let detailedStats = {};
+
+        // ライブ試合データ読み込み
+        async function loadLiveMatches() {
+            const content = document.getElementById('liveMatchesContent');
+            content.innerHTML = '<div class="loading">ライブ試合データを読み込み中...</div>';
+
+            try {
+                const response = await fetch('/api/advanced/live-matches');
+                if (response.ok) {
+                    liveMatches = await response.json();
+                    displayLiveMatches(liveMatches);
+                } else {
+                    throw new Error('ライブデータの取得に失敗しました');
+                }
+            } catch (error) {
+                console.error('Error loading live matches:', error);
+                content.innerHTML = '<div class="error">ライブ試合データの読み込みに失敗しました: ' + error.message + '</div>';
+            }
+        }
+
+        // ライブ試合表示
+        function displayLiveMatches(matches) {
+            const content = document.getElementById('liveMatchesContent');
+            
+            if (matches.length === 0) {
+                content.innerHTML = '<div class="info-message">現在ライブの試合はありません</div>';
+                return;
+            }
+
+            let html = '';
+            matches.forEach(match => {
+                const isLive = match.status === '2H' || match.status === '1H';
+                html += `
+                    <div class="live-match-item ${isLive ? 'live' : ''}">
+                        <div class="team-info">
+                            <div class="team-name">${match.homeTeam}</div>
+                            <div class="team-score">${match.homeScore || 0}</div>
+                        </div>
+                        <div class="match-status">
+                            <div class="status-badge">${match.status}</div>
+                            ${match.elapsed ? `<div class="elapsed-time">${match.elapsed}分</div>` : ''}
+                            <div class="match-details">
+                                <div>${match.league}</div>
+                                <div>${match.country}</div>
+                                <div>${match.venue || '未定'}</div>
+                            </div>
+                        </div>
+                        <div class="team-info">
+                            <div class="team-name">${match.awayTeam}</div>
+                            <div class="team-score">${match.awayScore || 0}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            content.innerHTML = html;
+        }
+
+        // ライブ試合フィルタリング
+        function filterLiveMatches() {
+            const filter = document.getElementById('liveLeagueFilter').value;
+            if (!filter) {
+                displayLiveMatches(liveMatches);
+                return;
+            }
+
+            const filtered = liveMatches.filter(match => 
+                match.country.toLowerCase().includes(filter.toLowerCase()) ||
+                match.league.toLowerCase().includes(filter.toLowerCase())
+            );
+            displayLiveMatches(filtered);
+        }
+
+        // 詳細試合統計取得
+        async function loadDetailedMatchStats() {
+            const matchId = document.getElementById('matchIdInput').value;
+            if (!matchId) {
+                showMessage('試合IDを入力してください', 'error');
+                return;
+            }
+
+            const content = document.getElementById('detailedStatsContent');
+            content.innerHTML = '<div class="loading">詳細統計を読み込み中...</div>';
+
+            try {
+                const response = await fetch(`/api/advanced/match-stats/${matchId}`);
+                if (response.ok) {
+                    const stats = await response.json();
+                    displayDetailedMatchStats(stats);
+                } else {
+                    throw new Error('詳細統計の取得に失敗しました');
+                }
+            } catch (error) {
+                console.error('Error loading match stats:', error);
+                content.innerHTML = '<div class="error">詳細統計の読み込みに失敗しました: ' + error.message + '</div>';
+            }
+        }
+
+        // 詳細選手統計取得
+        async function loadDetailedPlayerStats() {
+            const playerId = document.getElementById('playerIdInput').value;
+            const season = document.getElementById('seasonInput').value;
+            
+            if (!playerId || !season) {
+                showMessage('選手IDとシーズンを入力してください', 'error');
+                return;
+            }
+
+            const content = document.getElementById('detailedStatsContent');
+            content.innerHTML = '<div class="loading">選手統計を読み込み中...</div>';
+
+            try {
+                const response = await fetch(`/api/advanced/player-stats/${playerId}/${season}`);
+                if (response.ok) {
+                    const stats = await response.json();
+                    displayDetailedPlayerStats(stats);
+                } else {
+                    throw new Error('選手統計の取得に失敗しました');
+                }
+            } catch (error) {
+                console.error('Error loading player stats:', error);
+                content.innerHTML = '<div class="error">選手統計の読み込みに失敗しました: ' + error.message + '</div>';
+            }
+        }
+
+        // 詳細チーム統計取得
+        async function loadDetailedTeamStats() {
+            const teamId = document.getElementById('playerIdInput').value; // 再利用
+            const season = document.getElementById('seasonInput').value;
+            
+            if (!teamId || !season) {
+                showMessage('チームIDとシーズンを入力してください', 'error');
+                return;
+            }
+
+            const content = document.getElementById('detailedStatsContent');
+            content.innerHTML = '<div class="loading">チーム統計を読み込み中...</div>';
+
+            try {
+                const response = await fetch(`/api/advanced/team-stats/${teamId}/1/${season}`); // リーグIDは1で固定
+                if (response.ok) {
+                    const stats = await response.json();
+                    displayDetailedTeamStats(stats);
+                } else {
+                    throw new Error('チーム統計の取得に失敗しました');
+                }
+            } catch (error) {
+                console.error('Error loading team stats:', error);
+                content.innerHTML = '<div class="error">チーム統計の読み込みに失敗しました: ' + error.message + '</div>';
+            }
+        }
+
+        // 試合予測取得
+        async function loadMatchPredictions() {
+            const matchId = document.getElementById('predictionMatchId').value;
+            if (!matchId) {
+                showMessage('試合IDを入力してください', 'error');
+                return;
+            }
+
+            const content = document.getElementById('predictionsContent');
+            content.innerHTML = '<div class="loading">予測データを読み込み中...</div>';
+
+            try {
+                const response = await fetch(`/api/advanced/predictions/${matchId}`);
+                if (response.ok) {
+                    const predictions = await response.json();
+                    displayMatchPredictions(predictions);
+                } else {
+                    throw new Error('予測データの取得に失敗しました');
+                }
+            } catch (error) {
+                console.error('Error loading predictions:', error);
+                content.innerHTML = '<div class="error">予測データの読み込みに失敗しました: ' + error.message + '</div>';
+            }
+        }
+
+        // オッズ情報取得
+        async function loadMatchOdds() {
+            const matchId = document.getElementById('oddsMatchId').value;
+            if (!matchId) {
+                showMessage('試合IDを入力してください', 'error');
+                return;
+            }
+
+            const content = document.getElementById('predictionsContent');
+            content.innerHTML = '<div class="loading">オッズ情報を読み込み中...</div>';
+
+            try {
+                const response = await fetch(`/api/advanced/odds/${matchId}`);
+                if (response.ok) {
+                    const odds = await response.json();
+                    displayMatchOdds(odds);
+                } else {
+                    throw new Error('オッズ情報の取得に失敗しました');
+                }
+            } catch (error) {
+                console.error('Error loading odds:', error);
+                content.innerHTML = '<div class="error">オッズ情報の読み込みに失敗しました: ' + error.message + '</div>';
+            }
+        }
+
+        // データ比較実行
+        function performDataComparison() {
+            const type1 = document.getElementById('comparisonType1').value;
+            const type2 = document.getElementById('comparisonType2').value;
+            
+            const content = document.getElementById('comparisonContent');
+            content.innerHTML = '<div class="info-message">データ比較機能は開発中です。今後、選手・チーム・試合の詳細比較が可能になります。</div>';
+        }
+
+        // 表示関数
+        function displayDetailedMatchStats(stats) {
+            const content = document.getElementById('detailedStatsContent');
+            
+            let html = `
+                <div class="stat-card">
+                    <div class="stat-title">試合情報</div>
+                    <div class="stat-value">${stats.homeTeam} vs ${stats.awayTeam}</div>
+                </div>
+            `;
+
+            if (stats.statistics) {
+                Object.entries(stats.statistics).forEach(([key, value]) => {
+                    if (value && typeof value === 'object') {
+                        html += `
+                            <div class="stat-card">
+                                <div class="stat-title">${key}</div>
+                                <div class="stat-value">ホーム: ${value.home || 'N/A'} | アウェイ: ${value.away || 'N/A'}</div>
+                            </div>
+                        `;
+                    }
+                });
+            }
+
+            content.innerHTML = `<div class="stats-grid">${html}</div>`;
+        }
+
+        function displayDetailedPlayerStats(stats) {
+            const content = document.getElementById('detailedStatsContent');
+            
+            let html = `
+                <div class="stat-card">
+                    <div class="stat-title">選手情報</div>
+                    <div class="stat-value">${stats.name} (${stats.team.name})</div>
+                </div>
+            `;
+
+            if (stats.statistics) {
+                Object.entries(stats.statistics).forEach(([key, value]) => {
+                    if (value && typeof value === 'object') {
+                        html += `
+                            <div class="stat-card">
+                                <div class="stat-title">${key}</div>
+                                <div class="stat-value">${JSON.stringify(value)}</div>
+                            </div>
+                        `;
+                    } else if (value !== null && value !== undefined) {
+                        html += `
+                            <div class="stat-card">
+                                <div class="stat-title">${key}</div>
+                                <div class="stat-value">${value}</div>
+                            </div>
+                        `;
+                    }
+                });
+            }
+
+            content.innerHTML = `<div class="stats-grid">${html}</div>`;
+        }
+
+        function displayDetailedTeamStats(stats) {
+            const content = document.getElementById('detailedStatsContent');
+            
+            let html = `
+                <div class="stat-card">
+                    <div class="stat-title">チーム情報</div>
+                    <div class="stat-value">${stats.name}</div>
+                </div>
+            `;
+
+            if (stats.players && stats.players.length > 0) {
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-title">選手数</div>
+                        <div class="stat-value">${stats.players.length}名</div>
+                    </div>
+                `;
+            }
+
+            content.innerHTML = `<div class="stats-grid">${html}</div>`;
+        }
+
+        function displayMatchPredictions(predictions) {
+            const content = document.getElementById('predictionsContent');
+            
+            const html = `
+                <div class="prediction-card">
+                    <div class="prediction-header">
+                        <div class="prediction-title">試合予測結果</div>
+                        <div class="prediction-confidence">${predictions.predictions.percent || 0}%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">予測勝者</div>
+                        <div class="stat-value">${predictions.predictions.winner || 'N/A'}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">アドバイス</div>
+                        <div class="stat-value">${predictions.predictions.advice || 'N/A'}</div>
+                    </div>
+                </div>
+            `;
+
+            content.innerHTML = html;
+        }
+
+        function displayMatchOdds(odds) {
+            const content = document.getElementById('predictionsContent');
+            
+            let html = `
+                <div class="stat-card">
+                    <div class="stat-title">オッズ情報</div>
+                    <div class="stat-value">${odds.homeTeam} vs ${odds.awayTeam}</div>
+                </div>
+            `;
+
+            if (odds.bookmakers && odds.bookmakers.length > 0) {
+                html += '<table class="odds-table"><thead><tr><th>ブックメーカー</th><th>ベットタイプ</th><th>オッズ</th></tr></thead><tbody>';
+                
+                odds.bookmakers.forEach(bookmaker => {
+                    bookmaker.bets.forEach(bet => {
+                        bet.values.forEach(value => {
+                            html += `<tr><td>${bookmaker.name}</td><td>${bet.name}</td><td>${value.odd}</td></tr>`;
+                        });
+                    });
+                });
+                
+                html += '</tbody></table>';
+            }
+
+            content.innerHTML = html;
         }
 
         // URLハッシュをチェックして適切なタブを表示

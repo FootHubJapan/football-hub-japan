@@ -1968,6 +1968,461 @@ function getPlanTypeText(type) {
     return types[type] || type;
 }
 
+// 高度なデータ取得エンドポイント（Proプラン用）
+const { advancedDataService } = require('./dataService');
+
+// 高度なスタッツ分析用APIエンドポイント
+app.get('/api/team-stats', async (req, res) => {
+    try {
+        const { team, season } = req.query;
+        if (!team || !season) {
+            return res.status(400).json({ error: 'チームIDとシーズンが必要です' });
+        }
+        
+        const teamStats = await advancedDataService.getDetailedTeamStats(team, null, season, { includeAdvanced: true });
+        res.json(teamStats);
+    } catch (error) {
+        console.error('Team stats error:', error);
+        res.status(500).json({ error: 'チーム統計の取得に失敗しました' });
+    }
+});
+
+app.get('/api/player-stats', async (req, res) => {
+    try {
+        const { player, season } = req.query;
+        if (!player || !season) {
+            return res.status(400).json({ error: '選手IDとシーズンが必要です' });
+        }
+        
+        const playerStats = await advancedDataService.getDetailedPlayerStats(player, season, { includeAdvanced: true });
+        res.json(playerStats);
+    } catch (error) {
+        console.error('Player stats error:', error);
+        res.status(500).json({ error: '選手統計の取得に失敗しました' });
+    }
+});
+
+app.get('/api/comparison', async (req, res) => {
+    try {
+        const { league, team, player, season } = req.query;
+        if (!league || !season) {
+            return res.status(400).json({ error: 'リーグとシーズンが必要です' });
+        }
+        
+        // 比較データを生成
+        const comparisonData = await generateComparisonData(league, team, player, season);
+        res.json(comparisonData);
+    } catch (error) {
+        console.error('Comparison error:', error);
+        res.status(500).json({ error: '比較データの取得に失敗しました' });
+    }
+});
+
+app.get('/api/live-matches', async (req, res) => {
+    try {
+        const liveMatches = await advancedDataService.getLiveMatches({ includeStats: true });
+        res.json(liveMatches);
+    } catch (error) {
+        console.error('Live matches error:', error);
+        res.status(500).json({ error: 'ライブ試合データの取得に失敗しました' });
+    }
+});
+
+app.get('/api/predictions', async (req, res) => {
+    try {
+        const { league, team } = req.query;
+        const predictions = await generateMatchPredictions(league, team);
+        res.json(predictions);
+    } catch (error) {
+        console.error('Predictions error:', error);
+        res.status(500).json({ error: '予測データの取得に失敗しました' });
+    }
+});
+
+// ライブ試合データ取得
+app.get('/api/advanced/live-matches', async (req, res) => {
+    try {
+        const options = req.query;
+        const liveMatches = await advancedDataService.getLiveMatches(options);
+        res.json(liveMatches);
+    } catch (error) {
+        console.error('Live matches error:', error);
+        res.status(500).json({ error: 'ライブ試合データの取得に失敗しました' });
+    }
+});
+
+// 詳細な試合統計取得
+app.get('/api/advanced/match-stats/:matchId', async (req, res) => {
+    try {
+        const { matchId } = req.params;
+        const options = req.query;
+        const matchStats = await advancedDataService.getDetailedMatchStats(matchId, options);
+        res.json(matchStats);
+    } catch (error) {
+        console.error('Match stats error:', error);
+        res.status(500).json({ error: '試合統計の取得に失敗しました' });
+    }
+});
+
+// 詳細な選手統計取得
+app.get('/api/advanced/player-stats/:playerId/:season', async (req, res) => {
+    try {
+        const { playerId, season } = req.params;
+        const options = req.query;
+        const playerStats = await advancedDataService.getDetailedPlayerStats(playerId, season, options);
+        res.json(playerStats);
+    } catch (error) {
+        console.error('Player stats error:', error);
+        res.status(500).json({ error: '選手統計の取得に失敗しました' });
+    }
+});
+
+// 詳細なチーム統計取得
+app.get('/api/advanced/team-stats/:teamId/:leagueId/:season', async (req, res) => {
+    try {
+        const { teamId, leagueId, season } = req.params;
+        const options = req.query;
+        const teamStats = await advancedDataService.getDetailedTeamStats(teamId, leagueId, season, options);
+        res.json(teamStats);
+    } catch (error) {
+        console.error('Team stats error:', error);
+        res.status(500).json({ error: 'チーム統計の取得に失敗しました' });
+    }
+});
+
+// 試合予測データ取得
+app.get('/api/advanced/predictions/:matchId', async (req, res) => {
+    try {
+        const { matchId } = req.params;
+        const options = req.query;
+        const predictions = await advancedDataService.getMatchPredictions(matchId, options);
+        res.json(predictions);
+    } catch (error) {
+        console.error('Predictions error:', error);
+        res.status(500).json({ error: '予測データの取得に失敗しました' });
+    }
+});
+
+// 試合オッズ情報取得
+app.get('/api/advanced/odds/:matchId', async (req, res) => {
+    try {
+        const { matchId } = req.params;
+        const options = req.query;
+        const odds = await advancedDataService.getMatchOdds(matchId, options);
+        res.json(odds);
+    } catch (error) {
+        console.error('Odds error:', error);
+        res.status(500).json({ error: 'オッズ情報の取得に失敗しました' });
+    }
+});
+
+// 比較データ生成関数
+async function generateComparisonData(league, team, player, season) {
+    try {
+        // リーグ全体の統計を取得
+        const leagueStats = await getLeagueAverageStats(league, season);
+        
+        // チーム統計を取得
+        let teamStats = null;
+        if (team) {
+            teamStats = await advancedDataService.getDetailedTeamStats(team, null, season, { includeAdvanced: true });
+        }
+        
+        // 選手統計を取得
+        let playerStats = null;
+        if (player) {
+            playerStats = await advancedDataService.getDetailedPlayerStats(player, season, { includeAdvanced: true });
+        }
+        
+        // 比較データを構築
+        const comparison = {
+            league: league,
+            season: season,
+            leagueAverages: leagueStats,
+            team: teamStats,
+            player: playerStats,
+            players: []
+        };
+        
+        // 選手比較データを生成
+        if (team && player) {
+            const teamPlayers = await getTeamPlayers(team);
+            const topPlayers = teamPlayers.slice(0, 6); // 上位6選手
+            
+            comparison.players = topPlayers.map(p => ({
+                id: p.id,
+                name: p.name,
+                position: p.position,
+                stats: [
+                    p.stats?.goals || 0,
+                    p.stats?.assists || 0,
+                    p.stats?.shotAccuracy || 0,
+                    p.stats?.passAccuracy || 0,
+                    p.stats?.tackles || 0,
+                    p.stats?.interceptions || 0
+                ]
+            }));
+        }
+        
+        return comparison;
+    } catch (error) {
+        console.error('Comparison data generation error:', error);
+        return getFallbackComparisonData();
+    }
+}
+
+// リーグ平均統計取得
+async function getLeagueAverageStats(league, season) {
+    try {
+        // リーグの全チーム統計を取得して平均を計算
+        const teams = await getTeamsByLeague(league);
+        let totalStats = {
+            goals: 0, assists: 0, shots: 0, possession: 0,
+            cleanSheets: 0, expectedGoals: 0
+        };
+        let teamCount = 0;
+        
+        for (const team of teams) {
+            try {
+                const stats = await advancedDataService.getDetailedTeamStats(team.id, null, season, { includeBasic: true });
+                if (stats) {
+                    totalStats.goals += stats.goals || 0;
+                    totalStats.assists += stats.assists || 0;
+                    totalStats.shots += stats.shots || 0;
+                    totalStats.possession += stats.possession || 0;
+                    totalStats.cleanSheets += stats.cleanSheets || 0;
+                    totalStats.expectedGoals += stats.expectedGoals || 0;
+                    teamCount++;
+                }
+            } catch (error) {
+                console.error(`Team stats error for ${team.id}:`, error);
+            }
+        }
+        
+        if (teamCount > 0) {
+            return {
+                goals: Math.round(totalStats.goals / teamCount),
+                assists: Math.round(totalStats.assists / teamCount),
+                shots: Math.round(totalStats.shots / teamCount),
+                possession: Math.round(totalStats.possession / teamCount),
+                cleanSheets: Math.round(totalStats.cleanSheets / teamCount),
+                expectedGoals: Math.round((totalStats.expectedGoals / teamCount) * 100) / 100
+            };
+        }
+        
+        return getFallbackLeagueAverages();
+    } catch (error) {
+        console.error('League average stats error:', error);
+        return getFallbackLeagueAverages();
+    }
+}
+
+// リーグ別チーム取得
+async function getTeamsByLeague(leagueCode) {
+    try {
+        const response = await fetch(`https://api.football-data.org/v4/competitions/${leagueCode}/teams`, {
+            headers: {
+                'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY || ''
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return data.teams || [];
+        }
+        
+        return getFallbackTeams();
+    } catch (error) {
+        console.error('Teams by league error:', error);
+        return getFallbackTeams();
+    }
+}
+
+// チーム選手取得
+async function getTeamPlayers(teamId) {
+    try {
+        const response = await fetch(`https://api.football-data.org/v4/teams/${teamId}`, {
+            headers: {
+                'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY || ''
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return data.squad || [];
+        }
+        
+        return getFallbackPlayers();
+    } catch (error) {
+        console.error('Team players error:', error);
+        return getFallbackPlayers();
+    }
+}
+
+// 試合予測生成
+async function generateMatchPredictions(league, team) {
+    try {
+        // 今後の試合を取得
+        const upcomingMatches = await getUpcomingMatches(league, team);
+        
+        // 予測データを生成
+        const predictions = upcomingMatches.map(match => {
+            const homeStrength = calculateTeamStrength(match.homeTeam);
+            const awayStrength = calculateTeamStrength(match.awayTeam);
+            const prediction = predictMatchResult(homeStrength, awayStrength);
+            
+            return {
+                id: match.id,
+                homeTeam: match.homeTeam.name,
+                awayTeam: match.awayTeam.name,
+                league: match.competition.name,
+                date: match.utcDate,
+                predictedResult: prediction.result,
+                confidence: prediction.confidence,
+                homeWinProb: prediction.homeWinProb,
+                drawProb: prediction.drawProb,
+                awayWinProb: prediction.awayWinProb
+            };
+        });
+        
+        return predictions;
+    } catch (error) {
+        console.error('Match predictions error:', error);
+        return getFallbackPredictions();
+    }
+}
+
+// 今後の試合取得
+async function getUpcomingMatches(league, team) {
+    try {
+        let url = `https://api.football-data.org/v4/competitions/${league}/matches?status=SCHEDULED&limit=10`;
+        if (team) {
+            url += `&team=${team}`;
+        }
+        
+        const response = await fetch(url, {
+            headers: {
+                'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY || ''
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return data.matches || [];
+        }
+        
+        return getFallbackUpcomingMatches();
+    } catch (error) {
+        console.error('Upcoming matches error:', error);
+        return getFallbackUpcomingMatches();
+    }
+}
+
+// チーム強度計算
+function calculateTeamStrength(team) {
+    // シンプルな強度計算（実際の実装ではより複雑なアルゴリズムを使用）
+    const baseStrength = 50;
+    const formBonus = Math.random() * 20 - 10; // -10 to +10
+    const homeBonus = Math.random() * 15; // 0 to +15
+    
+    return Math.max(0, Math.min(100, baseStrength + formBonus + homeBonus));
+}
+
+// 試合結果予測
+function predictMatchResult(homeStrength, awayStrength) {
+    const totalStrength = homeStrength + awayStrength;
+    const homeWinProb = (homeStrength / totalStrength) * 0.6; // ホーム有利
+    const awayWinProb = (awayStrength / totalStrength) * 0.3;
+    const drawProb = 1 - homeWinProb - awayWinProb;
+    
+    let result, confidence;
+    if (homeWinProb > 0.5) {
+        result = 'ホーム勝利';
+        confidence = Math.round(homeWinProb * 100);
+    } else if (awayWinProb > 0.4) {
+        result = 'アウェイ勝利';
+        confidence = Math.round(awayWinProb * 100);
+    } else {
+        result = '引き分け';
+        confidence = Math.round(drawProb * 100);
+    }
+    
+    return {
+        result,
+        confidence,
+        homeWinProb: Math.round(homeWinProb * 100),
+        drawProb: Math.round(drawProb * 100),
+        awayWinProb: Math.round(awayWinProb * 100)
+    };
+}
+
+// フォールバックデータ
+function getFallbackComparisonData() {
+    return {
+        league: 'J1',
+        season: '2024',
+        leagueAverages: getFallbackLeagueAverages(),
+        team: null,
+        player: null,
+        players: []
+    };
+}
+
+function getFallbackLeagueAverages() {
+    return {
+        goals: 45,
+        assists: 35,
+        shots: 12,
+        possession: 52,
+        cleanSheets: 8,
+        expectedGoals: 1.2
+    };
+}
+
+function getFallbackTeams() {
+    return [
+        { id: 1, name: '鹿島アントラーズ' },
+        { id: 2, name: '浦和レッズ' },
+        { id: 3, name: 'FC東京' }
+    ];
+}
+
+function getFallbackPlayers() {
+    return [
+        { id: 1, name: '選手A', position: 'FW', stats: { goals: 15, assists: 8, shotAccuracy: 65, passAccuracy: 78, tackles: 12, interceptions: 5 } },
+        { id: 2, name: '選手B', position: 'MF', stats: { goals: 8, assists: 15, shotAccuracy: 45, passAccuracy: 85, tackles: 25, interceptions: 18 } }
+    ];
+}
+
+function getFallbackUpcomingMatches() {
+    return [
+        {
+            id: 1,
+            homeTeam: { name: '鹿島アントラーズ' },
+            awayTeam: { name: '浦和レッズ' },
+            competition: { name: 'J1リーグ' },
+            utcDate: new Date().toISOString()
+        }
+    ];
+}
+
+function getFallbackPredictions() {
+    return [
+        {
+            id: 1,
+            homeTeam: '鹿島アントラーズ',
+            awayTeam: '浦和レッズ',
+            league: 'J1リーグ',
+            date: new Date().toISOString(),
+            predictedResult: 'ホーム勝利',
+            confidence: 65,
+            homeWinProb: 65,
+            drawProb: 20,
+            awayWinProb: 15
+        }
+    ];
+}
+
 // ヘルスチェックエンドポイント
 app.get('/health', (req, res) => {
     res.status(200).json({

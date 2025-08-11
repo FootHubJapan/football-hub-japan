@@ -2127,10 +2127,487 @@ class FotMobDataService {
     }
 }
 
+// Advanced Data Service for Pro Plans
+class AdvancedDataService {
+    constructor() {
+        this.apiFootballClient = createApiFootballClient();
+        this.footballDataClient = apiClient;
+        this.cache = cache;
+    }
+
+    // ライブ試合データ取得（API-Football v3 Pro）
+    async getLiveMatches(options = {}) {
+        const cacheKey = `live_matches_${JSON.stringify(options)}`;
+        const cached = this.cache.get(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const response = await this.apiFootballClient.get('/fixtures', {
+                params: {
+                    live: 'all',
+                    ...options
+                }
+            });
+
+            const liveMatches = response.data.response.map(match => ({
+                id: match.fixture.id,
+                homeTeam: match.teams.home.name,
+                awayTeam: match.teams.away.name,
+                homeScore: match.goals.home,
+                awayScore: match.goals.away,
+                status: match.fixture.status.short,
+                elapsed: match.fixture.status.elapsed,
+                venue: match.fixture.venue?.name,
+                league: match.league.name,
+                country: match.league.country,
+                round: match.league.round,
+                date: match.fixture.date,
+                events: match.events || [],
+                lineups: match.lineups || {},
+                statistics: match.statistics || {},
+                odds: match.odds || {}
+            }));
+
+            this.cache.set(cacheKey, liveMatches, 30); // 30秒キャッシュ
+            return liveMatches;
+        } catch (error) {
+            console.error('Error fetching live matches:', error);
+            return this.getFallbackLiveMatches();
+        }
+    }
+
+    // 詳細な試合統計取得（football-data.org Deep Data）
+    async getDetailedMatchStats(matchId, options = {}) {
+        const cacheKey = `match_stats_${matchId}_${JSON.stringify(options)}`;
+        const cached = this.cache.get(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const response = await this.footballDataClient.get(`/matches/${matchId}`, {
+                params: {
+                    ...options
+                }
+            });
+
+            const match = response.data;
+            const detailedStats = {
+                id: match.id,
+                homeTeam: match.homeTeam.name,
+                awayTeam: match.awayTeam.name,
+                score: match.score,
+                status: match.status,
+                date: match.utcDate,
+                competition: match.competition.name,
+                season: match.season.currentMatchday,
+                venue: match.venue,
+                referees: match.referees,
+                odds: match.odds,
+                // 詳細統計
+                statistics: {
+                    possession: match.statistics?.possession,
+                    shots: match.statistics?.shots,
+                    shotsOnTarget: match.statistics?.shotsOnTarget,
+                    corners: match.statistics?.corners,
+                    fouls: match.statistics?.fouls,
+                    yellowCards: match.statistics?.yellowCards,
+                    redCards: match.statistics?.redCards,
+                    offsides: match.statistics?.offsides,
+                    saves: match.statistics?.saves,
+                    freeKicks: match.statistics?.freeKicks,
+                    goalKicks: match.statistics?.goalKicks,
+                    throwIns: match.statistics?.throwIns
+                },
+                // イベント詳細
+                events: match.events?.map(event => ({
+                    id: event.id,
+                    minute: event.minute,
+                    type: event.type,
+                    player: event.player?.name,
+                    team: event.team?.name,
+                    detail: event.detail,
+                    position: event.position
+                })) || [],
+                // ラインアップ
+                lineups: {
+                    home: {
+                        formation: match.homeTeam.formation,
+                        starting: match.homeTeam.lineups?.starting || [],
+                        substitutes: match.homeTeam.lineups?.substitutes || [],
+                        coach: match.homeTeam.coach?.name
+                    },
+                    away: {
+                        formation: match.awayTeam.formation,
+                        starting: match.awayTeam.lineups?.starting || [],
+                        substitutes: match.awayTeam.lineups?.substitutes || [],
+                        coach: match.awayTeam.coach?.name
+                    }
+                }
+            };
+
+            this.cache.set(cacheKey, detailedStats, 300); // 5分キャッシュ
+            return detailedStats;
+        } catch (error) {
+            console.error('Error fetching detailed match stats:', error);
+            return this.getFallbackDetailedMatchStats(matchId);
+        }
+    }
+
+    // 選手の詳細パフォーマンス統計（API-Football v3 Pro）
+    async getDetailedPlayerStats(playerId, season, options = {}) {
+        const cacheKey = `player_stats_${playerId}_${season}_${JSON.stringify(options)}`;
+        const cached = this.cache.get(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const response = await this.apiFootballClient.get(`/players`, {
+                params: {
+                    id: playerId,
+                    season: season,
+                    ...options
+                }
+            });
+
+            const player = response.data.response[0];
+            const detailedStats = {
+                id: player.player.id,
+                name: player.player.name,
+                age: player.player.age,
+                nationality: player.player.nationality,
+                height: player.player.height,
+                weight: player.player.weight,
+                photo: player.player.photo,
+                team: {
+                    id: player.statistics[0].team.id,
+                    name: player.statistics[0].team.name,
+                    logo: player.statistics[0].team.logo
+                },
+                league: {
+                    id: player.statistics[0].league.id,
+                    name: player.statistics[0].league.name,
+                    country: player.statistics[0].league.country,
+                    logo: player.statistics[0].league.logo
+                },
+                season: player.statistics[0].league.season,
+                // 詳細統計
+                statistics: {
+                    games: player.statistics[0].games,
+                    goals: player.statistics[0].goals,
+                    assists: player.statistics[0].assists,
+                    shots: player.statistics[0].shots,
+                    shotsOnTarget: player.statistics[0].shots.on,
+                    passes: player.statistics[0].passes,
+                    keyPasses: player.statistics[0].passes.key,
+                    accuracy: player.statistics[0].passes.accuracy,
+                    tackles: player.statistics[0].tackles,
+                    blocks: player.statistics[0].tackles.blocks,
+                    interceptions: player.statistics[0].tackles.interceptions,
+                    duels: player.statistics[0].duels,
+                    duelsWon: player.statistics[0].duels.won,
+                    dribbles: player.statistics[0].dribbles,
+                    dribblesWon: player.statistics[0].dribbles.success,
+                    fouls: player.statistics[0].fouls,
+                    cards: {
+                        yellow: player.statistics[0].cards.yellow,
+                        red: player.statistics[0].cards.red
+                    },
+                    rating: player.statistics[0].games.rating,
+                    minutes: player.statistics[0].games.minutes,
+                    position: player.statistics[0].games.position
+                }
+            };
+
+            this.cache.set(cacheKey, detailedStats, 3600); // 1時間キャッシュ
+            return detailedStats;
+        } catch (error) {
+            console.error('Error fetching detailed player stats:', error);
+            return this.getFallbackDetailedPlayerStats(playerId, season);
+        }
+    }
+
+    // チームの詳細統計（football-data.org Deep Data）
+    async getDetailedTeamStats(teamId, leagueId, season, options = {}) {
+        const cacheKey = `team_stats_${teamId}_${leagueId}_${season}_${JSON.stringify(options)}`;
+        const cached = this.cache.get(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const response = await this.footballDataClient.get(`/teams/${teamId}`, {
+                params: {
+                    ...options
+                }
+            });
+
+            const team = response.data;
+            const detailedStats = {
+                id: team.id,
+                name: team.name,
+                shortName: team.shortName,
+                tla: team.tla,
+                crest: team.crest,
+                address: team.address,
+                website: team.website,
+                founded: team.founded,
+                clubColors: team.clubColors,
+                venue: team.venue,
+                // リーグ別統計
+                leagueStats: team.runningCompetitions?.map(comp => ({
+                    id: comp.id,
+                    name: comp.name,
+                    type: comp.type,
+                    emblem: comp.emblem,
+                    currentSeason: comp.currentSeason
+                })) || [],
+                // 選手一覧
+                players: team.squad?.map(player => ({
+                    id: player.id,
+                    name: player.name,
+                    firstName: player.firstName,
+                    lastName: player.lastName,
+                    dateOfBirth: player.dateOfBirth,
+                    nationality: player.nationality,
+                    position: player.position,
+                    shirtNumber: player.shirtNumber,
+                    lastUpdated: player.lastUpdated
+                })) || [],
+                // 試合結果
+                matches: team.matches || []
+            };
+
+            this.cache.set(cacheKey, detailedStats, 3600); // 1時間キャッシュ
+            return detailedStats;
+        } catch (error) {
+            console.error('Error fetching detailed team stats:', error);
+            return this.getFallbackDetailedTeamStats(teamId, leagueId, season);
+        }
+    }
+
+    // 予測データ取得（API-Football v3 Pro）
+    async getMatchPredictions(matchId, options = {}) {
+        const cacheKey = `predictions_${matchId}_${JSON.stringify(options)}`;
+        const cached = this.cache.get(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const response = await this.apiFootballClient.get(`/predictions`, {
+                params: {
+                    fixture: matchId,
+                    ...options
+                }
+            });
+
+            const predictions = response.data.response[0];
+            const predictionData = {
+                matchId: matchId,
+                homeTeam: predictions.teams.home.name,
+                awayTeam: predictions.teams.away.name,
+                // 予測結果
+                predictions: {
+                    winner: predictions.predictions.winner,
+                    winOrDraw: predictions.predictions.win_or_draw,
+                    underOver: predictions.predictions.under_over,
+                    goals: predictions.predictions.goals,
+                    advice: predictions.predictions.advice,
+                    percent: predictions.predictions.percent
+                },
+                // 比較統計
+                comparison: {
+                    form: predictions.comparison.form,
+                    att: predictions.comparison.att,
+                    def: predictions.comparison.def,
+                    poissonDistribution: predictions.comparison.poisson_distribution,
+                    h2h: predictions.comparison.h2h,
+                    goals: predictions.comparison.goals,
+                    total: predictions.comparison.total
+                },
+                // 詳細分析
+                analysis: {
+                    home: predictions.analysis.home,
+                    away: predictions.analysis.away
+                }
+            };
+
+            this.cache.set(cacheKey, predictionData, 1800); // 30分キャッシュ
+            return predictionData;
+        } catch (error) {
+            console.error('Error fetching match predictions:', error);
+            return this.getFallbackMatchPredictions(matchId);
+        }
+    }
+
+    // オッズ情報取得（API-Football v3 Pro）
+    async getMatchOdds(matchId, options = {}) {
+        const cacheKey = `odds_${matchId}_${JSON.stringify(options)}`;
+        const cached = this.cache.get(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const response = await this.apiFootballClient.get(`/odds`, {
+                params: {
+                    fixture: matchId,
+                    ...options
+                }
+            });
+
+            const odds = response.data.response[0];
+            const oddsData = {
+                matchId: matchId,
+                homeTeam: odds.teams.home.name,
+                awayTeam: odds.teams.away.name,
+                league: odds.league.name,
+                season: odds.league.season,
+                date: odds.fixture.date,
+                // ブックメーカー別オッズ
+                bookmakers: odds.bookmakers?.map(bookmaker => ({
+                    id: bookmaker.id,
+                    name: bookmaker.name,
+                    bets: bookmaker.bets?.map(bet => ({
+                        id: bet.id,
+                        name: bet.name,
+                        values: bet.values?.map(value => ({
+                            value: value.value,
+                            odd: value.odd
+                        })) || []
+                    })) || []
+                })) || []
+            };
+
+            this.cache.set(cacheKey, oddsData, 1800); // 30分キャッシュ
+            return oddsData;
+        } catch (error) {
+            console.error('Error fetching match odds:', error);
+            return this.getFallbackMatchOdds(matchId);
+        }
+    }
+
+    // フォールバックデータ
+    getFallbackLiveMatches() {
+        return [
+            {
+                id: 1,
+                homeTeam: '日本代表',
+                awayTeam: 'ブラジル代表',
+                homeScore: 2,
+                awayScore: 1,
+                status: '2H',
+                elapsed: 75,
+                venue: '国立競技場',
+                league: '国際親善試合',
+                country: '日本',
+                events: [],
+                lineups: {},
+                statistics: {},
+                odds: {}
+            }
+        ];
+    }
+
+    getFallbackDetailedMatchStats(matchId) {
+        return {
+            id: matchId,
+            homeTeam: '日本代表',
+            awayTeam: 'ブラジル代表',
+            score: { fullTime: { home: 2, away: 1 } },
+            status: 'FINISHED',
+            date: new Date().toISOString(),
+            competition: '国際親善試合',
+            statistics: {
+                possession: { home: 55, away: 45 },
+                shots: { home: 12, away: 8 },
+                shotsOnTarget: { home: 6, away: 4 },
+                corners: { home: 7, away: 5 },
+                fouls: { home: 8, away: 12 },
+                yellowCards: { home: 2, away: 3 },
+                redCards: { home: 0, away: 0 },
+                offsides: { home: 3, away: 2 },
+                saves: { home: 3, away: 5 },
+                freeKicks: { home: 15, away: 18 },
+                goalKicks: { home: 4, away: 6 },
+                throwIns: { home: 22, away: 19 }
+            },
+            events: [],
+            lineups: {}
+        };
+    }
+
+    getFallbackDetailedPlayerStats(playerId, season) {
+        return {
+            id: playerId,
+            name: 'サンプル選手',
+            age: 25,
+            nationality: '日本',
+            height: 175,
+            weight: 70,
+            team: { id: 1, name: 'サンプルチーム' },
+            statistics: {
+                games: { appearences: 30, lineups: 25, minutes: 2250 },
+                goals: { total: 15, conceded: 0, assists: 8, saves: null },
+                shots: { total: 45, on: 25 },
+                passes: { total: 1200, key: 45, accuracy: 85 },
+                tackles: { total: 25, blocks: 8, interceptions: 15 },
+                duels: { total: 180, won: 120 },
+                dribbles: { attempts: 60, success: 35, past: null },
+                fouls: { drawn: 25, committed: 15 },
+                cards: { yellow: 3, red: 0 },
+                rating: 7.5,
+                minutes: 2250,
+                position: 'FW'
+            }
+        };
+    }
+
+    getFallbackDetailedTeamStats(teamId, leagueId, season) {
+        return {
+            id: teamId,
+            name: 'サンプルチーム',
+            shortName: 'SAMPLE',
+            founded: 1990,
+            clubColors: 'Blue / White',
+            venue: 'サンプルスタジアム',
+            leagueStats: [],
+            players: [],
+            matches: []
+        };
+    }
+
+    getFallbackMatchPredictions(matchId) {
+        return {
+            matchId: matchId,
+            homeTeam: 'サンプルホーム',
+            awayTeam: 'サンプルアウェイ',
+            predictions: {
+                winner: 'home',
+                winOrDraw: 'home',
+                underOver: 'over',
+                goals: '2-3',
+                advice: 'ホームチームの勝利を予想',
+                percent: 65
+            },
+            comparison: {},
+            analysis: {}
+        };
+    }
+
+    getFallbackMatchOdds(matchId) {
+        return {
+            matchId: matchId,
+            homeTeam: 'サンプルホーム',
+            awayTeam: 'サンプルアウェイ',
+            league: 'サンプルリーグ',
+            season: 2024,
+            date: new Date().toISOString(),
+            bookmakers: []
+        };
+    }
+}
+
 // Create and export the service instance
 const fotMobDataService = new FotMobDataService();
+const advancedDataService = new AdvancedDataService();
 
 module.exports = {
     fotMobDataService,
-    FootballDataService: require('./dataService').FootballDataService
+    advancedDataService,
+    FootballDataService,
+    FotMobDataService,
+    AdvancedDataService
 }; 
