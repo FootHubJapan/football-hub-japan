@@ -2389,6 +2389,8 @@ function predictMatchResult(homeStrength, awayStrength) {
 async function getApiFootballTeamStats(teamId, season, leagueCode = 'J1') {
     try {
         const apiKey = process.env.API_FOOTBALL_KEY;
+        console.log('🔑 API-Football v3 キー確認:', apiKey ? `${apiKey.substring(0, 8)}...` : '未設定');
+        
         if (!apiKey) {
             throw new Error('API_FOOTBALL_KEYが設定されていません');
         }
@@ -2411,6 +2413,7 @@ async function getApiFootballTeamStats(teamId, season, leagueCode = 'J1') {
         
         const leagueId = leagueIds[leagueCode] || 98; // デフォルトはJ1リーグ
         const url = `https://v3.football.api-sports.io/teams/statistics?team=${numericTeamId}&league=${leagueId}&season=${season}`;
+        console.log('🌐 API-Football v3 URL:', url);
         
         const response = await fetch(url, {
             headers: {
@@ -2419,11 +2422,14 @@ async function getApiFootballTeamStats(teamId, season, leagueCode = 'J1') {
             }
         });
         
+        console.log('📡 API-Football v3 レスポンス:', response.status, response.statusText);
+        
         if (!response.ok) {
             throw new Error(`API-Football v3 エラー: ${response.status}`);
         }
         
         const data = await response.json();
+        console.log('📊 API-Football v3 データ:', JSON.stringify(data, null, 2).substring(0, 500) + '...');
         
         if (data.response && data.response.length > 0) {
             const stats = data.response[0];
@@ -2454,23 +2460,11 @@ async function getApiFootballTeamStats(teamId, season, leagueCode = 'J1') {
 async function getFootballDataTeamStats(teamId, season, leagueCode = 'J1') {
     try {
         const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+        console.log('🔑 football-data.org キー確認:', apiKey ? `${apiKey.substring(0, 8)}...` : '未設定');
+        
         if (!apiKey) {
             throw new Error('FOOTBALL_DATA_API_KEYが設定されていません');
         }
-        
-        // チームの詳細情報を取得
-        const teamUrl = `https://api.football-data.org/v4/teams/${teamId}`;
-        const teamResponse = await fetch(teamUrl, {
-            headers: {
-                'X-Auth-Token': apiKey
-            }
-        });
-        
-        if (!teamResponse.ok) {
-            throw new Error(`football-data.org チームエラー: ${teamResponse.status}`);
-        }
-        
-        const teamData = await teamResponse.json();
         
         // リーグコードに応じてリーグIDを設定
         const leagueIds = {
@@ -2483,24 +2477,43 @@ async function getFootballDataTeamStats(teamId, season, leagueCode = 'J1') {
         };
         
         const leagueId = leagueIds[leagueCode] || 2152; // デフォルトはJ1リーグ
+        console.log('🌐 football-data.org リーグID:', leagueId);
+        
+        // リーグの順位表から統計を取得（これが正しい方法）
         const standingsUrl = `https://api.football-data.org/v4/competitions/${leagueId}/standings`;
+        console.log('🌐 football-data.org Standings URL:', standingsUrl);
         const standingsResponse = await fetch(standingsUrl, {
             headers: {
                 'X-Auth-Token': apiKey
             }
         });
         
+        console.log('📡 football-data.org Standings レスポンス:', standingsResponse.status, standingsResponse.statusText);
+        
         if (standingsResponse.ok) {
             const standingsData = await standingsResponse.json();
+            console.log('📊 football-data.org Standings データ:', JSON.stringify(standingsData, null, 2).substring(0, 500) + '...');
+            
+            console.log('🔍 チームID検索:', teamId, 'vs', standingsData.standings[0]?.table?.map(t => t.team.id));
+            
             const teamStanding = standingsData.standings[0].table.find(t => t.team.id === parseInt(teamId));
+            console.log('🎯 見つかったチーム:', teamStanding ? teamStanding.team.name : '見つかりません');
             
             if (teamStanding) {
+                console.log('📈 チーム統計:', {
+                    goals: teamStanding.goalsFor,
+                    cleanSheets: teamStanding.cleanSheets,
+                    wins: teamStanding.won,
+                    draws: teamStanding.draw,
+                    losses: teamStanding.lost
+                });
+                
                 return {
                     goals: teamStanding.goalsFor || 0,
-                    shotAccuracy: 65, // デフォルト値
-                    possession: 52, // デフォルト値
+                    shotAccuracy: 65, // デフォルト値（Standings APIには含まれていない）
+                    possession: 52, // デフォルト値（Standings APIには含まれていない）
                     cleanSheets: teamStanding.cleanSheets || 0,
-                    expectedGoals: 1.2, // デフォルト値
+                    expectedGoals: 1.2, // デフォルト値（Standings APIには含まれていない）
                     predictionAccuracy: 70, // デフォルト値
                     performance: {
                         dates: ['8月', '9月', '10月', '11月', '12月'],
