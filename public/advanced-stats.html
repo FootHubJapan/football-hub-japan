@@ -371,6 +371,65 @@
         .trend-stable {
             color: #cccccc;
         }
+
+        .data-source-section {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .data-source-title {
+            color: #00ff88;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .data-source-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 10px;
+        }
+
+        .data-source-label {
+            color: #cccccc;
+            font-weight: bold;
+        }
+
+        .data-source-value {
+            color: #00ff88;
+            font-weight: bold;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 255, 136, 0.2);
+            border-radius: 20px;
+        }
+
+        .data-source-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .data-source-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem;
+            background: #222222;
+            border-radius: 8px;
+            border-left: 4px solid #00ff88;
+        }
+
+        .data-source-icon {
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
@@ -429,6 +488,27 @@
                 <button class="btn" onclick="loadAdvancedStats()">スタッツ分析開始</button>
                 <button class="btn btn-secondary" onclick="loadLiveData()">ライブデータ更新</button>
                 <button class="btn btn-secondary" onclick="loadPredictions()">予測データ表示</button>
+            </div>
+        </div>
+
+        <!-- データソース表示 -->
+        <div class="data-source-section">
+            <h3 class="data-source-title">📊 データソース情報</h3>
+            <div id="dataSourceContainer">
+                <div class="data-source-info">
+                    <span class="data-source-label">現在のデータ:</span>
+                    <span class="data-source-value" id="currentDataSource">読み込み中...</span>
+                </div>
+                <div class="data-source-details" id="dataSourceDetails">
+                    <div class="data-source-item">
+                        <span class="data-source-icon">📡</span>
+                        <span>API-Football v3 Pro: リアルタイム統計</span>
+                    </div>
+                    <div class="data-source-item">
+                        <span class="data-source-icon">📊</span>
+                        <span>football-data.org: Statistic Add-On</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -714,6 +794,9 @@
         async function loadInitialData() {
             try {
                 console.log('初期データ読み込み開始...');
+                
+                // 初期データソース表示
+                showDataSource('フォールバックデータ');
                 
                 // リーグデータ読み込み
                 await loadLeagues();
@@ -1258,45 +1341,59 @@
 
         // データソース表示
         function showDataSource(source) {
-            // 既存のデータソース表示を削除
-            const existingSource = document.querySelector('.data-source-indicator');
-            if (existingSource) {
-                existingSource.remove();
-            }
-            
-            const sourceDiv = document.createElement('div');
-            sourceDiv.className = 'data-source-indicator';
+            const currentDataSourceElement = document.getElementById('currentDataSource');
+            if (!currentDataSourceElement) return;
             
             let sourceText = '';
             let sourceColor = '';
+            let sourceDescription = '';
             
             switch (source) {
                 case 'API-Football v3':
                     sourceText = '📡 API-Football v3 Pro から取得';
                     sourceColor = '#00ff88';
+                    sourceDescription = 'リアルタイムの試合統計、詳細スタッツ、xG等の高度なデータ';
                     break;
                 case 'football-data.org':
                     sourceText = '📊 football-data.org Statistic Add-On から取得';
                     sourceColor = '#ff6b6b';
+                    sourceDescription = 'Statistic Add-Onによる詳細なアクション分析、ライブデータ';
                     break;
                 case 'フォールバックデータ':
                     sourceText = '⚠️ フォールバックデータ（サンプル）';
                     sourceColor = '#ffaa00';
+                    sourceDescription = 'APIが利用できない場合のサンプルデータ';
                     break;
                 default:
                     sourceText = `📊 ${source} から取得`;
                     sourceColor = '#00ff88';
+                    sourceDescription = '外部データソースからの統計情報';
             }
             
-            sourceDiv.innerHTML = `
-                <div style="color: ${sourceColor}; font-weight: bold; text-align: center; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 10px; margin: 1rem 0;">
-                    ${sourceText}
-                </div>
-            `;
+            // 現在のデータソースを更新
+            currentDataSourceElement.textContent = sourceText;
+            currentDataSourceElement.style.color = sourceColor;
             
-            // スタッツカードの下に挿入
-            const statsGrid = document.querySelector('.stats-grid');
-            statsGrid.parentNode.insertBefore(sourceDiv, statsGrid.nextSibling);
+            // データソース詳細を更新
+            const detailsContainer = document.getElementById('dataSourceDetails');
+            if (detailsContainer) {
+                detailsContainer.innerHTML = `
+                    <div class="data-source-item">
+                        <span class="data-source-icon">📡</span>
+                        <span>API-Football v3 Pro: リアルタイム統計</span>
+                    </div>
+                    <div class="data-source-item">
+                        <span class="data-source-icon">📊</span>
+                        <span>football-data.org: Statistic Add-On</span>
+                    </div>
+                    <div class="data-source-item" style="border-left-color: ${sourceColor};">
+                        <span class="data-source-icon">🎯</span>
+                        <span>現在使用中: ${sourceDescription}</span>
+                    </div>
+                `;
+            }
+            
+            console.log(`データソース更新: ${source}`);
         }
 
         // 成功表示
