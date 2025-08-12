@@ -1987,6 +1987,8 @@ app.get('/api/team-stats', async (req, res) => {
             const apiFootballStats = await getApiFootballTeamStats(team, season, league);
             if (apiFootballStats) {
                 console.log(`API-Football v3からチーム統計を取得しました (リーグ: ${league})`);
+                // API-Football v3のデータを優先的に使用
+                apiFootballStats.source = 'API-Football v3 Pro';
                 return res.json(apiFootballStats);
             }
         } catch (apiFootballError) {
@@ -1998,6 +2000,8 @@ app.get('/api/team-stats', async (req, res) => {
             const footballDataStats = await getFootballDataTeamStats(team, season, league);
             if (footballDataStats) {
                 console.log(`football-data.orgからチーム統計を取得しました (リーグ: ${league})`);
+                // football-data.orgのデータを使用
+                footballDataStats.source = 'football-data.org Statistic Add-On';
                 return res.json(footballDataStats);
             }
         } catch (footballDataError) {
@@ -2007,6 +2011,7 @@ app.get('/api/team-stats', async (req, res) => {
         // 両方のAPIが失敗した場合、フォールバックデータを返す
         console.log('両方のAPIが失敗、フォールバックデータを返します');
         const fallbackStats = generateFallbackTeamStats();
+        fallbackStats.source = 'フォールバックデータ';
         res.json(fallbackStats);
         
     } catch (error) {
@@ -2490,6 +2495,10 @@ async function getFootballDataTeamStats(teamId, season, leagueCode = 'J1') {
         // リーグの順位表から統計を取得（これが正しい方法）
         const standingsUrl = `https://api.football-data.org/v4/competitions/${leagueId}/standings`;
         console.log('🌐 football-data.org Standings URL:', standingsUrl);
+        
+        // シーズンの統一（2024 → 2025）
+        const unifiedSeason = season === '2024' ? '2025' : season;
+        console.log(`📅 シーズン統一: ${season} → ${unifiedSeason}`);
         
         // チームIDマッピング（API-Football v3 → football-data.org）
         const teamIdMapping = {
