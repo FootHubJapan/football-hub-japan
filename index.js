@@ -2490,6 +2490,25 @@ async function getFootballDataTeamStats(teamId, season, leagueCode = 'J1') {
         // リーグの順位表から統計を取得（これが正しい方法）
         const standingsUrl = `https://api.football-data.org/v4/competitions/${leagueId}/standings`;
         console.log('🌐 football-data.org Standings URL:', standingsUrl);
+        
+        // チームIDマッピング（API-Football v3 → football-data.org）
+        const teamIdMapping = {
+            // プレミアリーグ
+            50: 65,   // マンチェスター・シティ
+            42: 57,   // アーセナル
+            40: 64,   // リバプール
+            33: 66,   // マンチェスター・ユナイテッド
+            49: 61,   // チェルシー
+            47: 73,   // トッテナム
+            34: 67,   // ニューカッスル・ユナイテッド
+            48: 563,  // ウェストハム・ユナイテッド
+            51: 397,  // ブライトン・アンド・ホーヴ・アルビオン
+            66: 58    // アストン・ヴィラ
+        };
+        
+        // チームIDを変換
+        const mappedTeamId = teamIdMapping[parseInt(teamId)] || teamId;
+        console.log(`🔍 チームID変換: ${teamId} → ${mappedTeamId}`);
         const standingsResponse = await fetch(standingsUrl, {
             headers: {
                 'X-Auth-Token': apiKey
@@ -2504,8 +2523,8 @@ async function getFootballDataTeamStats(teamId, season, leagueCode = 'J1') {
             
             console.log('🔍 チームID検索:', teamId, 'vs', standingsData.standings[0]?.table?.map(t => t.team.id));
             
-            const teamStanding = standingsData.standings[0].table.find(t => t.team.id === parseInt(teamId));
-            console.log('🎯 見つかったチーム:', teamStanding ? teamStanding.team.name : '見つかりません');
+            const teamStanding = standingsData.standings[0].table.find(t => t.team.id === parseInt(mappedTeamId));
+            console.log(`🎯 見つかったチーム (ID: ${mappedTeamId}):`, teamStanding ? teamStanding.team.name : '見つかりません');
             
             if (teamStanding) {
                 console.log('📈 チーム統計:', {
