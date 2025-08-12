@@ -2023,16 +2023,36 @@ app.get('/api/team-stats', async (req, res) => {
 
 app.get('/api/player-stats', async (req, res) => {
     try {
-        const { player, season } = req.query;
-        if (!player || !season) {
-            return res.status(400).json({ error: '選手IDとシーズンが必要です' });
+        const { player, team, season, league } = req.query;
+        if (!player || !team || !season) {
+            return res.status(400).json({ error: '選手ID、チームID、シーズンが必要です' });
         }
         
-        const playerStats = await advancedDataService.getDetailedPlayerStats(player, season, { includeAdvanced: true });
-        res.json(playerStats);
+        const leagueCode = league || 'PL';
+        
+        // API-Football v3から選手統計を取得
+        try {
+            const playerStats = await getApiFootballPlayerStats(player, team, season, leagueCode);
+            if (playerStats) {
+                console.log(`API-Football v3から選手統計を取得しました (選手ID: ${player})`);
+                playerStats.source = 'API-Football v3 Pro';
+                return res.json(playerStats);
+            }
+        } catch (apiFootballError) {
+            console.log('API-Football v3からの選手統計取得に失敗:', apiFootballError.message);
+        }
+        
+        // フォールバックデータを返す
+        console.log('選手統計取得失敗、フォールバックデータを返します');
+        const fallbackPlayerStats = generateFallbackPlayerStats(player, team);
+        fallbackPlayerStats.source = 'フォールバックデータ';
+        res.json(fallbackPlayerStats);
+        
     } catch (error) {
         console.error('Player stats error:', error);
-        res.status(500).json({ error: '選手統計の取得に失敗しました' });
+        const fallbackPlayerStats = generateFallbackPlayerStats(req.query.player, req.query.team);
+        fallbackPlayerStats.source = 'フォールバックデータ';
+        res.json(fallbackPlayerStats);
     }
 });
 
@@ -2469,6 +2489,127 @@ async function getApiFootballTeamStats(teamId, season, leagueCode = 'J1') {
     }
 }
 
+// API-Football v3から選手統計を取得
+async function getApiFootballPlayerStats(playerId, teamId, season, leagueCode = 'PL') {
+    try {
+        const apiKey = process.env.API_FOOTBALL_KEY;
+        console.log('🔑 API-Football v3 選手統計キー確認:', apiKey ? `${apiKey.substring(0, 8)}...` : '未設定');
+        
+        if (!apiKey) {
+            throw new Error('API_FOOTBALL_KEYが設定されていません');
+        }
+        
+        // リーグコードに応じてリーグIDを設定
+        const leagueIds = {
+            'J1': 98,      // J1リーグ
+            'PL': 39,      // プレミアリーグ
+            'BL1': 78,     // ブンデスリーガ
+            'SA': 135,     // セリエA
+            'PD': 140,     // ラ・リーガ
+            'FL1': 61      // リーグ・アン
+        };
+        
+        const leagueId = leagueIds[leagueCode] || 39;
+        const url = `https://v3.football.api-sports.io/players?id=${playerId}&league=${leagueId}&season=${season}`;
+        console.log('🌐 API-Football v3 選手統計URL:', url);
+        
+        const response = await fetch(url, {
+            headers: {
+                'x-rapidapi-host': 'v3.football.api-sports.io',
+                'x-rapidapi-key': apiKey
+            }
+        });
+        
+        console.log('📡 API-Football v3 選手統計レスポンス:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.log('❌ API-Football v3 選手統計エラーレスポンス:', errorData);
+            
+            if (response.status === 403) {
+                throw new Error(`API-Football v3 権限エラー: ${errorData.message || 'リーグへのアクセス権限がありません'}`);
+            }
+            
+            throw new Error(`API-Football v3 選手統計エラー: ${response.status} - ${errorData.message || response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('📊 API-Football v3 選手統計データ:', JSON.stringify(data, null, 2).substring(0, 500) + '...');
+        
+        if (data.response && data.response.length > 0) {
+            const playerData = data.response[0];
+            const stats = playerData.statistics[0];
+            
+            return {
+                id: playerData.player.id,
+                name: playerData.player.name,
+                age: playerData.player.age,
+                nationality: playerData.player.nationality,
+                height: playerData.player.height,
+                weight: playerData.player.weight,
+                position: stats.games?.position || 'Unknown',
+                team: stats.team?.name || 'Unknown',
+                league: stats.league?.name || 'Unknown',
+                season: stats.league?.season || season,
+                games: {
+                    appearances: stats.games?.appearences || 0,
+                    lineups: stats.games?.lineups || 0,
+                    minutes: stats.games?.minutes || 0,
+                    number: stats.games?.number || 0,
+                    rating: stats.games?.rating || '0.0',
+                    captain: stats.games?.captain || false
+                },
+                goals: {
+                    total: stats.goals?.total || 0,
+                    assists: stats.goals?.assists || 0,
+                    conceded: stats.goals?.conceded || 0
+                },
+                shots: {
+                    total: stats.shots?.total || 0,
+                    on: stats.shots?.on || 0
+                },
+                passes: {
+                    total: stats.passes?.total || 0,
+                    key: stats.passes?.key || 0,
+                    accuracy: stats.passes?.accuracy || '0%'
+                },
+                tackles: {
+                    total: stats.tackles?.total || 0,
+                    blocks: stats.tackles?.blocks || 0,
+                    interceptions: stats.tackles?.interceptions || 0
+                },
+                duels: {
+                    total: stats.duels?.total || 0,
+                    won: stats.duels?.won || 0
+                },
+                dribbles: {
+                    attempts: stats.dribbles?.attempts || 0,
+                    success: stats.dribbles?.success || 0
+                },
+                fouls: {
+                    drawn: stats.fouls?.drawn || 0,
+                    committed: stats.fouls?.committed || 0
+                },
+                cards: {
+                    yellow: stats.cards?.yellow || 0,
+                    red: stats.cards?.red || 0
+                },
+                penalty: {
+                    won: stats.penalty?.won || 0,
+                    scored: stats.penalty?.scored || 0,
+                    missed: stats.penalty?.missed || 0
+                },
+                source: 'API-Football v3 Pro'
+            };
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('API-Football v3 選手統計エラー:', error);
+        return null;
+    }
+}
+
 // football-data.orgからチーム統計を取得
 async function getFootballDataTeamStats(teamId, season, leagueCode = 'J1') {
     try {
@@ -2581,6 +2722,74 @@ function generateFallbackTeamStats() {
             dates: ['8月', '9月', '10月', '11月', '12月'],
             goals: [5, 8, 12, 15, 18],
             assists: [3, 6, 9, 11, 14]
+        },
+        source: 'フォールバックデータ'
+    };
+}
+
+// フォールバック選手統計生成
+function generateFallbackPlayerStats(playerId, teamId) {
+    const positions = ['FW', 'MF', 'DF', 'GK'];
+    const position = positions[Math.floor(Math.random() * positions.length)];
+    
+    return {
+        id: playerId,
+        name: `選手${playerId}`,
+        age: Math.floor(Math.random() * 15) + 20,
+        nationality: 'Unknown',
+        height: `${Math.floor(Math.random() * 20) + 170} cm`,
+        weight: `${Math.floor(Math.random() * 20) + 70} kg`,
+        position: position,
+        team: `チーム${teamId}`,
+        league: 'Unknown',
+        season: 2024,
+        games: {
+            appearances: Math.floor(Math.random() * 30) + 10,
+            lineups: Math.floor(Math.random() * 25) + 8,
+            minutes: Math.floor(Math.random() * 2000) + 500,
+            number: Math.floor(Math.random() * 99) + 1,
+            rating: (Math.random() * 3 + 6).toFixed(2),
+            captain: Math.random() > 0.8
+        },
+        goals: {
+            total: Math.floor(Math.random() * 20) + 5,
+            assists: Math.floor(Math.random() * 15) + 3,
+            conceded: position === 'GK' ? Math.floor(Math.random() * 30) + 20 : 0
+        },
+        shots: {
+            total: Math.floor(Math.random() * 50) + 20,
+            on: Math.floor(Math.random() * 30) + 15
+        },
+        passes: {
+            total: Math.floor(Math.random() * 500) + 200,
+            key: Math.floor(Math.random() * 30) + 10,
+            accuracy: `${Math.floor(Math.random() * 20) + 75}%`
+        },
+        tackles: {
+            total: Math.floor(Math.random() * 40) + 20,
+            blocks: Math.floor(Math.random() * 15) + 5,
+            interceptions: Math.floor(Math.random() * 25) + 10
+        },
+        duels: {
+            total: Math.floor(Math.random() * 100) + 50,
+            won: Math.floor(Math.random() * 60) + 30
+        },
+        dribbles: {
+            attempts: Math.floor(Math.random() * 30) + 15,
+            success: Math.floor(Math.random() * 20) + 10
+        },
+        fouls: {
+            drawn: Math.floor(Math.random() * 15) + 5,
+            committed: Math.floor(Math.random() * 10) + 3
+        },
+        cards: {
+            yellow: Math.floor(Math.random() * 8) + 2,
+            red: Math.floor(Math.random() * 3) + 0
+        },
+        penalty: {
+            won: Math.floor(Math.random() * 5) + 1,
+            scored: Math.floor(Math.random() * 4) + 1,
+            missed: Math.floor(Math.random() * 2) + 0
         },
         source: 'フォールバックデータ'
     };
