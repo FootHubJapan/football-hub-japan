@@ -946,7 +946,7 @@
             try {
                 // チームスタッツ
                 if (team) {
-                    await loadTeamStats(team, season);
+                    await loadTeamStats(team, season, league);
                 }
 
                 // 選手スタッツ
@@ -966,19 +966,49 @@
         // チームスタッツ読み込み
         async function loadTeamStats(teamId, season) {
             try {
-                // 本番環境用のフォールバックデータ
+                const league = document.getElementById('leagueSelect').value;
+                
+                console.log(`API呼び出し開始: チームID=${teamId}, シーズン=${season}, リーグ=${league}`);
+                
+                // 実際のAPIを呼び出し
+                const response = await fetch(`/api/team-stats?team=${teamId}&season=${season}&league=${league}`);
+                
+                if (!response.ok) {
+                    throw new Error(`APIエラー: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('APIレスポンス:', data);
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // スタッツカード更新
+                updateStatsCards(data);
+                
+                // パフォーマンスチャート更新
+                updatePerformanceChart(data);
+                
+                console.log(`チームID ${teamId} のスタッツを読み込みました`);
+                
+            } catch (error) {
+                console.error('チームスタッツ読み込みエラー:', error);
+                
+                // エラー時はフォールバックデータを使用
                 const fallbackStats = {
                     goals: Math.floor(Math.random() * 50) + 30,
                     shotAccuracy: Math.floor(Math.random() * 30) + 60,
                     possession: Math.floor(Math.random() * 20) + 45,
                     cleanSheets: Math.floor(Math.random() * 10) + 5,
-                    expectedGoals: Math.random() * 2 + 1, // 数値として保持
+                    expectedGoals: Math.random() * 2 + 1,
                     predictionAccuracy: Math.floor(Math.random() * 20) + 70,
                     performance: {
                         dates: ['8月', '9月', '10月', '11月', '12月'],
                         goals: [5, 8, 12, 15, 18],
                         assists: [3, 6, 9, 11, 14]
-                    }
+                    },
+                    source: 'フォールバックデータ'
                 };
                 
                 // スタッツカード更新
@@ -987,10 +1017,8 @@
                 // パフォーマンスチャート更新
                 updatePerformanceChart(fallbackStats);
                 
-                console.log(`チームID ${teamId} のスタッツを読み込みました`);
-                
-            } catch (error) {
-                console.error('チームスタッツ読み込みエラー:', error);
+                // エラーメッセージを表示
+                showError(`API呼び出しエラー: ${error.message}`);
             }
         }
 
