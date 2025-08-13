@@ -7,7 +7,6 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="Thu, 01 Jan 1970 00:00:00 GMT">
     <title>強化データベース - Football Hub Japan</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -146,12 +145,12 @@
 
         .content-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 2rem;
             margin-bottom: 2rem;
         }
 
-        .data-section, .chart-section {
+        .data-section {
             background: #1a1a1a;
             border: 2px solid #333333;
             border-radius: 15px;
@@ -217,12 +216,118 @@
             border-radius: 3px;
         }
 
-        .chart-container {
+        /* 試合スケジュールセクション */
+        .schedule-section {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .schedule-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .schedule-controls select {
+            padding: 0.8rem;
+            border: 1px solid #333333;
+            border-radius: 5px;
             background: #0a0a0a;
+            color: #ffffff;
+            font-size: 1rem;
+            min-width: 150px;
+        }
+
+        .matches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1rem;
+        }
+
+        .match-card {
+            background: #333333;
+            border: 1px solid #00ff88;
             border-radius: 10px;
             padding: 1rem;
-            height: 400px;
-            position: relative;
+            transition: all 0.3s;
+        }
+
+        .match-card:hover {
+            background: #444444;
+            transform: translateY(-2px);
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #444444;
+        }
+
+        .match-league {
+            color: #00ff88;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .match-time {
+            color: #cccccc;
+            font-size: 0.8rem;
+        }
+
+        .match-teams {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            flex: 1;
+        }
+
+        .team-name {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .team-logo {
+            width: 40px;
+            height: 40px;
+            background: #222222;
+            border-radius: 50%;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #cccccc;
+        }
+
+        .match-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff88;
+            margin: 0 1rem;
+        }
+
+        .match-venue {
+            color: #cccccc;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 0.5rem;
         }
 
         .comparison-section {
@@ -253,7 +358,7 @@
 
         .comparison-stats {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 1rem;
         }
 
@@ -475,19 +580,37 @@
         <!-- メインコンテンツ -->
         <div class="content-grid">
             <!-- 選手データセクション -->
-            <div class="data-section">
+            <div class="data-section" style="grid-column: 1 / -1;">
                 <h2 class="section-title">選手一覧</h2>
                 <div class="players-grid" id="playersGrid">
                     <!-- 選手カードがここに表示されます -->
                 </div>
             </div>
+        </div>
 
-            <!-- レーダーチャートセクション -->
-            <div class="chart-section">
-                <h2 class="section-title">能力レーダーチャート</h2>
-                <div class="chart-container">
-                    <canvas id="radarChart"></canvas>
-                </div>
+        <!-- 試合スケジュールセクション -->
+        <div class="schedule-section">
+            <h2 class="section-title">試合スケジュール</h2>
+            <div class="schedule-controls">
+                <select id="scheduleLeagueSelect">
+                    <option value="">すべてのリーグ</option>
+                    <option value="PL">プレミアリーグ</option>
+                    <option value="PD">ラ・リーガ</option>
+                    <option value="SA">セリエA</option>
+                    <option value="BL1">ブンデスリーガ</option>
+                    <option value="FL1">リーグ・アン</option>
+                    <option value="J1">J1リーグ</option>
+                </select>
+                <select id="scheduleTimeSelect">
+                    <option value="today">今日</option>
+                    <option value="tomorrow">明日</option>
+                    <option value="week">今週</option>
+                    <option value="month">今月</option>
+                </select>
+                <button class="search-btn" onclick="loadMatches()">試合を表示</button>
+            </div>
+            <div class="matches-grid" id="matchesGrid">
+                <!-- 試合情報がここに表示されます -->
             </div>
         </div>
 
@@ -530,7 +653,6 @@
     </div>
 
     <script>
-        let radarChart = null;
         let currentPlayers = [];
         let selectedPlayers = [];
         let currentFilter = 'all';
@@ -538,7 +660,7 @@
         // 初期化
         document.addEventListener('DOMContentLoaded', () => {
             initInfiniteList();
-            initializeRadarChart();
+            loadMatches(); // 初期試合データを読み込み
         });
 
         // 無限スクロール用の状態
@@ -664,7 +786,20 @@
                     position: 'Midfielder',
                     nationality: 'Japan',
                     age: 22,
-                    stats: { goals: 8, assists: 6, appearances: 25, minutes: 1800, rating: 7.2 }
+                    stats: { 
+                        goals: 8, 
+                        assists: 6, 
+                        appearances: 25, 
+                        minutes: 1800, 
+                        rating: 7.2,
+                        shots: 45,
+                        shotsOnTarget: 28,
+                        passes: 1200,
+                        passAccuracy: '87%',
+                        tackles: 35,
+                        yellowCards: 2,
+                        redCards: 0
+                    }
                 },
                 {
                     id: '2',
@@ -674,7 +809,20 @@
                     position: 'Forward',
                     nationality: 'Japan',
                     age: 26,
-                    stats: { goals: 12, assists: 8, appearances: 30, minutes: 2400, rating: 7.5 }
+                    stats: { 
+                        goals: 12, 
+                        assists: 8, 
+                        appearances: 30, 
+                        minutes: 2400, 
+                        rating: 7.5,
+                        shots: 78,
+                        shotsOnTarget: 52,
+                        passes: 980,
+                        passAccuracy: '82%',
+                        tackles: 28,
+                        yellowCards: 3,
+                        redCards: 0
+                    }
                 },
                 {
                     id: '3',
@@ -684,7 +832,20 @@
                     position: 'Midfielder',
                     nationality: 'Japan',
                     age: 25,
-                    stats: { goals: 6, assists: 4, appearances: 28, minutes: 2000, rating: 6.8 }
+                    stats: { 
+                        goals: 6, 
+                        assists: 4, 
+                        appearances: 28, 
+                        minutes: 2000, 
+                        rating: 6.8,
+                        shots: 38,
+                        shotsOnTarget: 24,
+                        passes: 1100,
+                        passAccuracy: '85%',
+                        tackles: 42,
+                        yellowCards: 4,
+                        redCards: 0
+                    }
                 },
                 {
                     id: '4',
@@ -694,7 +855,20 @@
                     position: 'Midfielder',
                     nationality: 'Japan',
                     age: 25,
-                    stats: { goals: 3, assists: 2, appearances: 22, minutes: 1650, rating: 6.5 }
+                    stats: { 
+                        goals: 3, 
+                        assists: 2, 
+                        appearances: 22, 
+                        minutes: 1650, 
+                        rating: 6.5,
+                        shots: 22,
+                        shotsOnTarget: 15,
+                        passes: 950,
+                        passAccuracy: '88%',
+                        tackles: 55,
+                        yellowCards: 5,
+                        redCards: 0
+                    }
                 },
                 {
                     id: '5',
@@ -704,7 +878,20 @@
                     position: 'Defender',
                     nationality: 'Japan',
                     age: 24,
-                    stats: { goals: 1, assists: 3, appearances: 26, minutes: 2340, rating: 6.9 }
+                    stats: { 
+                        goals: 1, 
+                        assists: 3, 
+                        appearances: 26, 
+                        minutes: 2340, 
+                        rating: 6.9,
+                        shots: 18,
+                        shotsOnTarget: 12,
+                        passes: 1800,
+                        passAccuracy: '91%',
+                        tackles: 78,
+                        yellowCards: 6,
+                        redCards: 0
+                    }
                 },
                 {
                     id: '6',
@@ -714,7 +901,20 @@
                     position: 'Midfielder',
                     nationality: 'Japan',
                     age: 30,
-                    stats: { goals: 2, assists: 1, appearances: 18, minutes: 1620, rating: 6.7 }
+                    stats: { 
+                        goals: 2, 
+                        assists: 1, 
+                        appearances: 18, 
+                        minutes: 1620, 
+                        rating: 6.7,
+                        shots: 15,
+                        shotsOnTarget: 8,
+                        passes: 1200,
+                        passAccuracy: '89%',
+                        tackles: 65,
+                        yellowCards: 4,
+                        redCards: 0
+                    }
                 },
                 {
                     id: '7',
@@ -724,7 +924,20 @@
                     position: 'Forward',
                     nationality: 'Japan',
                     age: 28,
-                    stats: { goals: 5, assists: 4, appearances: 24, minutes: 1800, rating: 6.8 }
+                    stats: { 
+                        goals: 5, 
+                        assists: 4, 
+                        appearances: 24, 
+                        minutes: 1800, 
+                        rating: 6.8,
+                        shots: 42,
+                        shotsOnTarget: 28,
+                        passes: 850,
+                        passAccuracy: '84%',
+                        tackles: 22,
+                        yellowCards: 2,
+                        redCards: 0
+                    }
                 },
                 {
                     id: '8',
@@ -734,7 +947,20 @@
                     position: 'Forward',
                     nationality: 'Japan',
                     age: 29,
-                    stats: { goals: 4, assists: 2, appearances: 20, minutes: 1500, rating: 6.6 }
+                    stats: { 
+                        goals: 4, 
+                        assists: 2, 
+                        appearances: 20, 
+                        minutes: 1500, 
+                        rating: 6.6,
+                        shots: 35,
+                        shotsOnTarget: 22,
+                        passes: 720,
+                        passAccuracy: '79%',
+                        tackles: 18,
+                        yellowCards: 3,
+                        redCards: 0
+                    }
                 },
                 {
                     id: '9',
@@ -744,7 +970,20 @@
                     position: 'Forward',
                     nationality: 'Japan',
                     age: 25,
-                    stats: { goals: 7, assists: 3, appearances: 23, minutes: 1800, rating: 7.0 }
+                    stats: { 
+                        goals: 7, 
+                        assists: 3, 
+                        appearances: 23, 
+                        minutes: 1800, 
+                        rating: 7.0,
+                        shots: 48,
+                        shotsOnTarget: 32,
+                        passes: 780,
+                        passAccuracy: '81%',
+                        tackles: 25,
+                        yellowCards: 2,
+                        redCards: 0
+                    }
                 },
                 {
                     id: '10',
@@ -754,7 +993,20 @@
                     position: 'Forward',
                     nationality: 'Japan',
                     age: 26,
-                    stats: { goals: 9, assists: 5, appearances: 28, minutes: 2100, rating: 7.1 }
+                    stats: { 
+                        goals: 9, 
+                        assists: 5, 
+                        appearances: 28, 
+                        minutes: 2100, 
+                        rating: 7.1,
+                        shots: 52,
+                        shotsOnTarget: 35,
+                        passes: 820,
+                        passAccuracy: '83%',
+                        tackles: 28,
+                        yellowCards: 4,
+                        redCards: 0
+                    }
                 },
                 {
                     id: '11',
@@ -764,7 +1016,20 @@
                     position: 'Forward',
                     nationality: 'Norway',
                     age: 23,
-                    stats: { goals: 18, assists: 4, appearances: 15, minutes: 1350, rating: 8.2 }
+                    stats: { 
+                        goals: 18, 
+                        assists: 4, 
+                        appearances: 15, 
+                        minutes: 1350, 
+                        rating: 8.2,
+                        shots: 65,
+                        shotsOnTarget: 48,
+                        passes: 450,
+                        passAccuracy: '76%',
+                        tackles: 12,
+                        yellowCards: 1,
+                        redCards: 0
+                    }
                 },
                 {
                     id: '12',
@@ -774,7 +1039,20 @@
                     position: 'Midfielder',
                     nationality: 'Belgium',
                     age: 32,
-                    stats: { goals: 3, assists: 12, appearances: 20, minutes: 1800, rating: 7.8 }
+                    stats: { 
+                        goals: 3, 
+                        assists: 12, 
+                        appearances: 20, 
+                        minutes: 1800, 
+                        rating: 7.8,
+                        shots: 38,
+                        shotsOnTarget: 25,
+                        passes: 1500,
+                        passAccuracy: '89%',
+                        tackles: 45,
+                        yellowCards: 2,
+                        redCards: 0
+                    }
                 }
             ];
 
@@ -836,6 +1114,20 @@
                         <div>${stats.appearances || 0}</div>
                     </div>
                 </div>
+                <div class="player-stats" style="margin-top: 0.5rem;">
+                    <div class="stat-item">
+                        <div>分</div>
+                        <div>${stats.minutes || 0}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>評価</div>
+                        <div>${stats.rating || 'N/A'}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>黄</div>
+                        <div>${stats.yellowCards || 0}</div>
+                    </div>
+                </div>
             `;
 
             return card;
@@ -849,7 +1141,7 @@
             panel.style.position = 'fixed';
             panel.style.right = '24px';
             panel.style.bottom = '24px';
-            panel.style.width = '360px';
+            panel.style.width = '600px';
             panel.style.maxHeight = '75vh';
             panel.style.overflow = 'auto';
             panel.style.background = '#121212';
@@ -865,7 +1157,7 @@
                     <button id="detailsClose" style="background:#222;color:#aaa;border:1px solid #333;border-radius:8px;padding:4px 8px;cursor:pointer;">閉じる</button>
                 </div>
                 <div id="detailsMeta" style="color:#bdbdbd;font-size:12px;margin-bottom:8px;"></div>
-                <div id="detailsStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+                <div id="detailsStats" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;"></div>
                 <div style="margin-top:12px;display:flex;gap:8px;">
                     <a id="openRadar" href="/radar" style="flex:1;text-align:center;background:#14cf93;color:#000;padding:8px;border-radius:8px;text-decoration:none;font-weight:700;">レーダーチャートで表示</a>
                 </div>
@@ -904,24 +1196,26 @@
                 ['出場', stats.appearances || 0],
                 ['分', stats.minutes || 0],
                 ['評価', stats.rating || 'N/A'],
-                ['黄', stats.yellowCards || 0]
+                ['黄', stats.yellowCards || 0],
+                ['赤', stats.redCards || 0],
+                ['シュート', stats.shots || 0],
+                ['枠内', stats.shotsOnTarget || 0],
+                ['パス', stats.passes || 0],
+                ['成功率', stats.passAccuracy || 'N/A'],
+                ['タックル', stats.tackles || 0]
             ];
             items.forEach(([label, value]) => {
                 const box = document.createElement('div');
                 box.style.border = '1px solid #2a2a2a';
                 box.style.borderRadius = '8px';
-                box.style.padding = '8px';
+                box.style.padding = '6px';
                 box.style.textAlign = 'center';
-                box.innerHTML = `<div style=\"color:#888;font-size:12px;\">${label}</div><div style=\"color:#e5e5e5;font-weight:700;\">${value}</div>`;
+                box.innerHTML = `<div style=\"color:#888;font-size:11px;\">${label}</div><div style=\"color:#e5e5e5;font-weight:700;font-size:13px;\">${value}</div>`;
                 statsEl.appendChild(box);
             });
             const radarLink = document.getElementById('openRadar');
             radarLink.href = `/radar?player=${encodeURIComponent(name)}`;
             panel.style.display = 'block';
-
-            // レーダー更新（安全に初期化）
-            if (!window.radarChart) initializeRadarChart();
-            updateRadarChart([{ name, stats }]);
         }
 
         // 選手を選択
@@ -1007,78 +1301,6 @@
             displayPlayers(filteredPlayers);
         }
 
-        // レーダーチャート初期化
-        function initializeRadarChart() {
-            const ctx = document.getElementById('radarChart').getContext('2d');
-            
-            radarChart = new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: ['得点力', 'アシスト力', '出場率', '効率性', '総合力'],
-                    datasets: []
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        r: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                color: '#ffffff',
-                                backdropColor: 'transparent'
-                            },
-                            grid: {
-                                color: '#333333'
-                            },
-                            pointLabels: {
-                                color: '#ffffff'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#ffffff'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // レーダーチャート更新
-        function updateRadarChart(players) {
-            if (!radarChart) return;
-
-            const datasets = players.map((player, index) => {
-                const colors = ['#00ff88', '#ff4444', '#4444ff', '#ffaa00'];
-                const color = colors[index % colors.length];
-                
-                return {
-                    label: player.name,
-                    data: [
-                        normalizeStat(player.stats?.goals || 0, 20),
-                        normalizeStat(player.stats?.assists || 0, 15),
-                        normalizeStat(player.stats?.appearances || 0, 38),
-                        normalizeStat(player.stats?.minutes || 0, 3420),
-                        normalizeStat((player.stats?.goals || 0) + (player.stats?.assists || 0), 30)
-                    ],
-                    borderColor: color,
-                    backgroundColor: color.replace(')', ', 0.2)').replace('rgb', 'rgba'),
-                    borderWidth: 2
-                };
-            });
-
-            radarChart.data.datasets = datasets;
-            radarChart.update();
-        }
-
-        // 統計正規化
-        function normalizeStat(value, max) {
-            return Math.min((value / max) * 100, 100);
-        }
-
         // 選手比較更新
         async function updateComparison() {
             const player1Name = document.getElementById('player1Input').value.trim();
@@ -1096,21 +1318,6 @@
                 if (player2) {
                     displayPlayerStats(player2, 'player2Stats');
                 }
-            }
-
-            // レーダーチャートを更新
-            const players = [];
-            if (player1Name) {
-                const player1 = await searchPlayer(player1Name);
-                if (player1) players.push(player1);
-            }
-            if (player2Name) {
-                const player2 = await searchPlayer(player2Name);
-                if (player2) players.push(player2);
-            }
-            
-            if (players.length > 0) {
-                updateRadarChart(players);
             }
         }
 
@@ -1150,6 +1357,22 @@
                 <div class="comparison-stat">
                     <div class="stat-label">評価</div>
                     <div class="stat-value">${player.stats?.rating || 'N/A'}</div>
+                </div>
+                <div class="comparison-stat">
+                    <div class="stat-label">出場時間</div>
+                    <div class="stat-value">${player.stats?.minutes || 0}分</div>
+                </div>
+                <div class="comparison-stat">
+                    <div class="stat-label">シュート</div>
+                    <div class="stat-value">${player.stats?.shots || 0}</div>
+                </div>
+                <div class="comparison-stat">
+                    <div class="stat-label">枠内シュート</div>
+                    <div class="stat-value">${player.stats?.shotsOnTarget || 0}</div>
+                </div>
+                <div class="comparison-stat">
+                    <div class="stat-label">パス成功率</div>
+                    <div class="stat-value">${player.stats?.passAccuracy || 'N/A'}</div>
                 </div>
             `;
         }
