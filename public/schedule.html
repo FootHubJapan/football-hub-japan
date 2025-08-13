@@ -350,22 +350,43 @@
             const league = document.getElementById('leagueSelect').value;
             const timeRange = document.getElementById('timeRangeSelect').value;
             
+            console.log('Loading matches with:', { league, timeRange });
+            
             const contentDiv = document.getElementById('scheduleContent');
             contentDiv.innerHTML = '<div class="loading">試合データを読み込み中...</div>';
 
             try {
                 const response = await fetch(`/api/fotmob/matches?league=${league}&timeRange=${timeRange}`);
-                const data = await response.json();
+                console.log('API Response status:', response.status);
                 
-                if (data.matches && data.matches.length > 0) {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('API Response data:', data);
+                
+                if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
+                    console.log('Found matches:', data.matches.length);
                     currentMatches = data.matches;
                     displayMatches(data.matches);
                 } else {
-                    contentDiv.innerHTML = '<div class="no-matches">指定された条件に一致する試合が見つかりませんでした。</div>';
+                    console.log('No matches found in response. Response structure:', data);
+                    contentDiv.innerHTML = `
+                        <div class="no-matches">
+                            <p>指定された条件に一致する試合が見つかりませんでした。</p>
+                            <p>レスポンス: ${JSON.stringify(data, null, 2)}</p>
+                        </div>
+                    `;
                 }
             } catch (error) {
                 console.error('Error loading matches:', error);
-                contentDiv.innerHTML = '<div class="error">試合データの読み込みに失敗しました。</div>';
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        <p>試合データの読み込みに失敗しました。</p>
+                        <p>エラー: ${error.message}</p>
+                    </div>
+                `;
             }
         }
 

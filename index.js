@@ -1607,33 +1607,44 @@ app.get('/api/fixtures', async (req, res) => {
 app.get('/api/fotmob/matches', async (req, res) => {
     try {
         const { league, timeRange = 'week' } = req.query;
+        console.log('API called with:', { league, timeRange });
+        
         let matches = [];
 
         // 時間範囲に基づいて試合を取得
         switch (timeRange) {
             case 'today':
+                console.log('Getting matches for today');
                 matches = await getMatchesForDate(new Date(), league);
                 break;
             case 'tomorrow':
+                console.log('Getting matches for tomorrow');
                 const tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 matches = await getMatchesForDate(tomorrow, league);
                 break;
             case 'week':
+                console.log('Getting matches for this week');
                 matches = await getMatchesForWeek(new Date(), league);
                 break;
             case 'month':
+                console.log('Getting matches for this month');
                 matches = await getMatchesForMonth(new Date(), league);
                 break;
             default:
+                console.log('Getting matches for this week (default)');
                 matches = await getMatchesForWeek(new Date(), league);
         }
+
+        console.log('Generated matches count:', matches.length);
+        console.log('First few matches:', matches.slice(0, 3));
 
         res.json({ matches });
     } catch (error) {
         console.error('Error fetching matches:', error);
         // Return fallback matches if service fails
         const fallbackMatches = generateFallbackMatches();
+        console.log('Returning fallback matches:', fallbackMatches.length);
         res.json({ matches: fallbackMatches });
     }
 });
@@ -1717,25 +1728,49 @@ function generateFallbackMatchesForDate(date, league) {
         ]
     };
 
-    const selectedLeague = league || 'PL';
-    const leagueData = leagueMatches[selectedLeague] || leagueMatches['PL'];
+    // リーグが指定されていない場合は、すべてのリーグから試合を生成
+    if (!league || league === '') {
+        Object.keys(leagueMatches).forEach(leagueCode => {
+            const leagueData = leagueMatches[leagueCode];
+            leagueData.forEach((match, index) => {
+                const matchTime = new Date(date);
+                matchTime.setHours(15 + (index * 2), 0, 0, 0); // 15:00, 17:00, etc.
 
-    leagueData.forEach((match, index) => {
-        const matchTime = new Date(date);
-        matchTime.setHours(15 + (index * 2), 0, 0, 0); // 15:00, 17:00, etc.
-
-        matches.push({
-            id: `match_${dateStr}_${index}`,
-            league: selectedLeague,
-            homeTeam: match.homeTeam,
-            awayTeam: match.awayTeam,
-            homeScore: match.homeScore,
-            awayScore: match.awayScore,
-            date: matchTime.toISOString(),
-            venue: `${match.homeTeam} Stadium`,
-            status: match.status
+                matches.push({
+                    id: `match_${dateStr}_${leagueCode}_${index}`,
+                    league: leagueCode,
+                    homeTeam: match.homeTeam,
+                    awayTeam: match.awayTeam,
+                    homeScore: match.homeScore,
+                    awayScore: match.awayScore,
+                    date: matchTime.toISOString(),
+                    venue: `${match.homeTeam} Stadium`,
+                    status: match.status
+                });
+            });
         });
-    });
+    } else {
+        // 特定のリーグが指定されている場合
+        const selectedLeague = league;
+        const leagueData = leagueMatches[selectedLeague] || leagueMatches['PL'];
+
+        leagueData.forEach((match, index) => {
+            const matchTime = new Date(date);
+            matchTime.setHours(15 + (index * 2), 0, 0, 0); // 15:00, 17:00, etc.
+
+            matches.push({
+                id: `match_${dateStr}_${index}`,
+                league: selectedLeague,
+                homeTeam: match.homeTeam,
+                awayTeam: match.awayTeam,
+                homeScore: match.homeScore,
+                awayScore: match.awayScore,
+                date: matchTime.toISOString(),
+                venue: `${match.homeTeam} Stadium`,
+                status: match.status
+            });
+        });
+    }
 
     return matches;
 }
