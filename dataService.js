@@ -78,75 +78,116 @@ const rateLimitStore = {
     apiFootball: { requests: [], lastReset: Date.now() }
 };
 
-// Rate limiting function
-function checkRateLimit(apiType) {
-    const config = RATE_LIMIT_CONFIG[apiType];
-    const store = rateLimitStore[apiType];
-    const now = Date.now();
-    
-    if (now - store.lastReset > 60000) {
-        store.requests = [];
-        store.lastReset = now;
-    }
-    
-    if (store.requests.length >= config.requestsPerMinute) {
-        const oldestRequest = store.requests[0];
-        const timeSinceOldest = now - oldestRequest;
-        
-        if (timeSinceOldest < 60000) {
-            return false;
-        } else {
-            store.requests = store.requests.filter(req => now - req > 60000);
-        }
-    }
-    
-    store.requests.push(now);
-    return true;
+// Queue management for data ingestion
+const dataIngestionQueue = {
+    tasks: [],
+    isProcessing: false,
+    maxRetries: 3,
+    retryDelay: 5000
+};
+
+// Add task to ingestion queue
+function addToIngestionQueue(task) {
+    dataIngestionQueue.tasks.push({
+        ...task,
+        retries: 0,
+        status: 'pending',
+        createdAt: Date.now()
+    });
 }
 
-// Retry function with exponential backoff
-async function fetchWithRetry(url, apiType, maxRetries = 3) {
-    const config = RATE_LIMIT_CONFIG[apiType];
-    
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+// Process ingestion queue
+async function processIngestionQueue() {
+    if (dataIngestionQueue.isProcessing || dataIngestionQueue.tasks.length === 0) {
+        return;
+    }
+
+    dataIngestionQueue.isProcessing = true;
+    console.log(`Processing ${dataIngestionQueue.tasks.length} tasks in ingestion queue...`);
+
+    while (dataIngestionQueue.tasks.length > 0) {
+        const task = dataIngestionQueue.tasks.shift();
+        
         try {
-            if (!checkRateLimit(apiType)) {
-                const waitTime = config.retryDelay * (attempt + 1);
-                console.log(`Rate limit exceeded for ${apiType}, waiting ${waitTime}ms before retry ${attempt + 1}`);
-                await new Promise(resolve => setTimeout(resolve, waitTime));
-                continue;
-            }
-            
-            const client = apiType === 'apiFootball' ? createApiFootballClient() : apiClient;
-            console.log(`Making ${apiType} request to: ${url}`);
-            const response = await client.get(url);
-            console.log(`${apiType} response status: ${response.status}`);
-            
-            if (response.status === 429) {
-                const retryAfter = response.headers['retry-after'];
-                const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : config.retryDelay * (attempt + 1);
-                console.log(`429 error for ${apiType}, waiting ${waitTime}ms before retry ${attempt + 1}`);
-                await new Promise(resolve => setTimeout(resolve, waitTime));
-                continue;
-            }
-            
-            return response;
+            console.log(`Processing task: ${task.type} for ${task.target}`);
+            await executeTask(task);
+            task.status = 'completed';
+            console.log(`Task completed: ${task.type} for ${task.target}`);
         } catch (error) {
-            console.error(`${apiType} request error:`, error.message);
-            if (error.response) {
-                console.error(`${apiType} response status:`, error.response.status);
-                console.error(`${apiType} response data:`, error.response.data);
+            console.error(`Task failed: ${task.type} for ${task.target}:`, error);
+            task.retries++;
+            
+            if (task.retries < dataIngestionQueue.maxRetries) {
+                task.status = 'retry';
+                // Add back to queue with delay
+                setTimeout(() => {
+                    dataIngestionQueue.tasks.unshift(task);
+                }, dataIngestionQueue.retryDelay * task.retries);
+            } else {
+                task.status = 'failed';
+                console.error(`Task permanently failed after ${task.retries} retries: ${task.type} for ${task.target}`);
             }
-            if (attempt === maxRetries) {
-                throw error;
-            }
-            const waitTime = config.retryDelay * Math.pow(2, attempt);
-            console.log(`Request failed for ${apiType}, waiting ${waitTime}ms before retry ${attempt + 1}`);
-            await new Promise(resolve => setTimeout(resolve, waitTime));
         }
     }
+
+    dataIngestionQueue.isProcessing = false;
+    console.log('Ingestion queue processing completed');
+}
+
+// Execute individual task
+async function executeTask(task) {
+    switch (task.type) {
+        case 'fetchLeague':
+            return await fetchLeagueData(task.target);
+        case 'fetchTeam':
+            return await fetchTeamData(task.target);
+        case 'fetchPlayers':
+            return await fetchPlayerData(task.target);
+        case 'fetchStats':
+            return await fetchStatsData(task.target);
+        default:
+            throw new Error(`Unknown task type: ${task.type}`);
+    }
+}
+
+// Fetch league data with queue management
+async function fetchLeagueData(leagueId) {
+    if (!checkRateLimit('footballData')) {
+        throw new Error('Rate limit exceeded for football-data');
+    }
     
-    throw new Error(`Max retries exceeded for ${apiType}`);
+    const response = await apiClient.get(`/competitions/${leagueId}`);
+    return response.data;
+}
+
+// Fetch team data with queue management
+async function fetchTeamData(teamId) {
+    if (!checkRateLimit('footballData')) {
+        throw new Error('Rate limit exceeded for football-data');
+    }
+    
+    const response = await apiClient.get(`/teams/${teamId}`);
+    return response.data;
+}
+
+// Fetch player data with queue management
+async function fetchPlayerData(teamId) {
+    if (!checkRateLimit('footballData')) {
+        throw new Error('Rate limit exceeded for football-data');
+    }
+    
+    const response = await apiClient.get(`/teams/${teamId}`);
+    return response.data;
+}
+
+// Fetch stats data with queue management
+async function fetchStatsData(matchId) {
+    if (!checkRateLimit('footballData')) {
+        throw new Error('Rate limit exceeded for football-data');
+    }
+    
+    const response = await apiClient.get(`/matches/${matchId}`);
+    return response.data;
 }
 
 class FootballDataService {
@@ -1513,8 +1554,8 @@ class FotMobDataService {
             
             // Check if data needs updating
             if (this.shouldUpdateData()) {
-                console.log('Data is outdated, updating...');
-                await this.updateAllData();
+                console.log('Data is outdated, starting phased update...');
+                await this.phasedDataIngestion();
             } else {
                 console.log('Data is up to date');
             }
@@ -1578,55 +1619,150 @@ class FotMobDataService {
         try {
             console.log('Starting data update...');
             
-            // Update leagues
+            // Phase 1: Update leagues
+            console.log('Phase 1: Updating leagues...');
             const leagues = await this.fetchLeagues();
             if (leagues && leagues.length > 0) {
                 await saveDataToFile(LEAGUES_FILE, leagues);
                 this.cache.set('leagues', leagues);
+                console.log(`Updated ${leagues.length} leagues`);
             }
 
-            // Update teams
+            // Phase 2: Update teams (with queue management)
+            console.log('Phase 2: Updating teams...');
             const teams = await this.fetchTeams();
             if (teams && teams.length > 0) {
                 await saveDataToFile(TEAMS_FILE, teams);
                 this.cache.set('teams', teams);
+                console.log(`Updated ${teams.length} teams`);
             }
 
-            // Update players
+            // Phase 3: Update players (with queue management)
+            console.log('Phase 3: Updating players...');
             const players = await this.fetchPlayers();
             if (players && players.length > 0) {
                 await saveDataToFile(PLAYERS_FILE, players);
                 this.cache.set('players', players);
+                console.log(`Updated ${players.length} players`);
             }
 
-            // Update standings (optional best effort)
+            // Phase 4: Update standings (optional best effort)
+            console.log('Phase 4: Updating standings...');
             if (typeof this.fetchStandings === 'function') {
                 const standings = await this.fetchStandings();
                 if (standings && standings.length > 0) {
                     await saveDataToFile(STANDINGS_FILE, standings);
                     this.cache.set('standings', standings);
+                    console.log(`Updated ${standings.length} standings rows`);
                 }
             } else {
                 console.warn('fetchStandings is not defined; skipping standings update');
             }
 
-            // Update recent matches (best effort)
+            // Phase 5: Update recent matches (best effort)
+            console.log('Phase 5: Updating recent matches...');
             if (typeof this.fetchRecentMatches === 'function') {
                 const matches = await this.fetchRecentMatches();
                 if (matches && matches.length > 0) {
                     await saveDataToFile(MATCHES_FILE, matches);
                     this.cache.set('matches', matches);
+                    console.log(`Updated ${matches.length} recent matches`);
                 }
             } else {
                 console.warn('fetchRecentMatches is not defined; skipping matches update');
             }
 
             this.lastUpdate = Date.now();
-            console.log('Data update completed');
+            console.log('Data update completed successfully');
         } catch (error) {
             console.error('Error updating data:', error);
             // Use fallback data if update fails
             await this.loadFallbackData();
+        }
+    }
+
+    // Phased data ingestion for large datasets
+    async phasedDataIngestion() {
+        console.log('Starting phased data ingestion...');
+        
+        try {
+            // Phase 1: League ingestion
+            await this.ingestLeagues();
+            
+            // Phase 2: Team ingestion (with rate limiting)
+            await this.ingestTeams();
+            
+            // Phase 3: Player ingestion (with rate limiting)
+            await this.ingestPlayers();
+            
+            // Phase 4: Statistics ingestion (with rate limiting)
+            await this.ingestStatistics();
+            
+            console.log('Phased data ingestion completed');
+        } catch (error) {
+            console.error('Error in phased data ingestion:', error);
+        }
+    }
+
+    // Ingest leagues
+    async ingestLeagues() {
+        console.log('Ingesting leagues...');
+        const leagues = await this.fetchLeagues();
+        if (leagues && leagues.length > 0) {
+            await saveDataToFile(LEAGUES_FILE, leagues);
+            this.cache.set('leagues', leagues);
+            console.log(`Ingested ${leagues.length} leagues`);
+        }
+    }
+
+    // Ingest teams with rate limiting
+    async ingestTeams() {
+        console.log('Ingesting teams...');
+        const teams = await this.fetchTeams();
+        if (teams && teams.length > 0) {
+            await saveDataToFile(TEAMS_FILE, teams);
+            this.cache.set('teams', teams);
+            console.log(`Ingested ${teams.length} teams`);
+        }
+    }
+
+    // Ingest players with rate limiting
+    async ingestPlayers() {
+        console.log('Ingesting players...');
+        const players = await this.fetchPlayers();
+        if (players && players.length > 0) {
+            await saveDataToFile(PLAYERS_FILE, players);
+            this.cache.set('players', players);
+            console.log(`Ingested ${players.length} players`);
+        }
+    }
+
+    // Ingest statistics with rate limiting
+    async ingestStatistics() {
+        console.log('Ingesting statistics...');
+        
+        try {
+            // Update standings
+            if (typeof this.fetchStandings === 'function') {
+                const standings = await this.fetchStandings();
+                if (standings && standings.length > 0) {
+                    await saveDataToFile(STANDINGS_FILE, standings);
+                    this.cache.set('standings', standings);
+                    console.log(`Ingested ${standings.length} standings rows`);
+                }
+            }
+            
+            // Update recent matches
+            if (typeof this.fetchRecentMatches === 'function') {
+                const matches = await this.fetchRecentMatches();
+                if (matches && matches.length > 0) {
+                    await saveDataToFile(MATCHES_FILE, matches);
+                    this.cache.set('matches', matches);
+                    console.log(`Ingested ${matches.length} recent matches`);
+                }
+            }
+        } catch (error) {
+            console.error('Error ingesting statistics:', error);
         }
     }
 
@@ -1690,7 +1826,7 @@ class FotMobDataService {
     // Fetch teams from APIs
     async fetchTeams() {
         const teams = [];
-        const leagueIds = ['PL', 'PD', 'SA', 'BL1', 'FL1']; // Major leagues
+        const leagueIds = ['PL', 'PD', 'SA', 'BL1', 'FL1', 'J1', 'J2', 'J3']; // Major leagues + J-League
 
         for (const leagueId of leagueIds) {
             try {
@@ -1733,8 +1869,10 @@ class FotMobDataService {
         const players = [];
         const teams = this.cache.get('teams') || [];
 
-        // Limit to first 60 teams to balance coverage and rate limits
-        const teamsToProcess = teams.slice(0, 60);
+        // Process more teams for better coverage (increased from 60 to 200)
+        const teamsToProcess = teams.slice(0, 200);
+
+        console.log(`Processing ${teamsToProcess.length} teams for player data...`);
 
         for (const team of teamsToProcess) {
             try {
@@ -1768,6 +1906,8 @@ class FotMobDataService {
                 console.error(`Error fetching players for team ${team.id}:`, error);
             }
         }
+
+        console.log(`Fetched ${players.length} players from ${teamsToProcess.length} teams`);
 
         // Add fallback players if no data
         if (players.length === 0) {
@@ -2598,6 +2738,77 @@ class AdvancedDataService {
             bookmakers: []
         };
     }
+}
+
+// Rate limiting function
+function checkRateLimit(apiType) {
+    const config = RATE_LIMIT_CONFIG[apiType];
+    const store = rateLimitStore[apiType];
+    const now = Date.now();
+    
+    if (now - store.lastReset > 60000) {
+        store.requests = [];
+        store.lastReset = now;
+    }
+    
+    if (store.requests.length >= config.requestsPerMinute) {
+        const oldestRequest = store.requests[0];
+        const timeSinceOldest = now - oldestRequest;
+        
+        if (timeSinceOldest < 60000) {
+            return false;
+        } else {
+            store.requests = store.requests.filter(req => now - req > 60000);
+        }
+    }
+    
+    store.requests.push(now);
+    return true;
+}
+
+// Retry function with exponential backoff
+async function fetchWithRetry(url, apiType, maxRetries = 3) {
+    const config = RATE_LIMIT_CONFIG[apiType];
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            if (!checkRateLimit(apiType)) {
+                const waitTime = config.retryDelay * (attempt + 1);
+                console.log(`Rate limit exceeded for ${apiType}, waiting ${waitTime}ms before retry ${attempt + 1}`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+                continue;
+            }
+            
+            const client = apiType === 'apiFootball' ? createApiFootballClient() : apiClient;
+            console.log(`Making ${apiType} request to: ${url}`);
+            const response = await client.get(url);
+            console.log(`${apiType} response status: ${response.status}`);
+            
+            if (response.status === 429) {
+                const retryAfter = response.headers['retry-after'];
+                const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : config.retryDelay * (attempt + 1);
+                console.log(`429 error for ${apiType}, waiting ${waitTime}ms before retry ${attempt + 1}`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+                continue;
+            }
+            
+            return response;
+        } catch (error) {
+            console.error(`${apiType} request error:`, error.message);
+            if (error.response) {
+                console.error(`${apiType} response status:`, error.response.status);
+                console.error(`${apiType} response data:`, error.response.data);
+            }
+            if (attempt === maxRetries) {
+                throw error;
+            }
+            const waitTime = config.retryDelay * Math.pow(2, attempt);
+            console.log(`Request failed for ${apiType}, waiting ${waitTime}ms before retry ${attempt + 1}`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+    }
+    
+    throw new Error(`Max retries exceeded for ${apiType}`);
 }
 
 // Create and export the service instance

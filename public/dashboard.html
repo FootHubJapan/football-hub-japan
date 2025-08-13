@@ -333,7 +333,7 @@
                 <span class="feature-icon">📅</span>
                 <h3 class="feature-title">試合スケジュール</h3>
                 <p class="feature-description">
-                    お気に入りのチームや選手の試合スケジュールを一覧表示。重要な試合を見逃しません。
+                    データベースページに統合済み！お気に入りのチームや選手の試合スケジュールを一覧表示。重要な試合を見逃しません。
                 </p>
                 <button class="feature-btn">スケジュールを開く</button>
             </div>
@@ -435,9 +435,12 @@
             if (feature === 'database') {
                 window.location.href = '/database-enhanced';
             } else if (feature === 'radar') {
-                window.location.href = '/radar-enhanced';
+                window.location.href = '/radar';
+            } else if (feature === 'schedule') {
+                // 試合スケジュールはデータベースページに統合済み
+                window.location.href = '/database-enhanced';
             } else if (feature === 'ai-agent') {
-                window.location.href = '/ai-agent-enhanced';
+                window.location.href = '/ai-agent';
             } else if (feature === 'native-stats') {
                 window.location.href = '/native-stats';
             } else {
