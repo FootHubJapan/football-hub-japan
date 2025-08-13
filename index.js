@@ -1699,6 +1699,8 @@ async function getMatchesForMonth(date, league) {
 
 // 特定の日付のフォールバック試合データを生成
 function generateFallbackMatchesForDate(date, league) {
+    console.log('generateFallbackMatchesForDate called with:', { date, league });
+    
     const matches = [];
     const dateStr = date.toISOString().split('T')[0];
     
@@ -1730,15 +1732,21 @@ function generateFallbackMatchesForDate(date, league) {
         ]
     };
 
+    console.log('Available leagues:', Object.keys(leagueMatches));
+    console.log('League parameter:', league, 'Type:', typeof league);
+
     // リーグが指定されていない場合は、すべてのリーグから試合を生成
     if (!league || league === '') {
+        console.log('No league specified, generating matches for all leagues');
         Object.keys(leagueMatches).forEach(leagueCode => {
             const leagueData = leagueMatches[leagueCode];
+            console.log(`Processing league ${leagueCode} with ${leagueData.length} matches`);
+            
             leagueData.forEach((match, index) => {
                 const matchTime = new Date(date);
                 matchTime.setHours(15 + (index * 2), 0, 0, 0); // 15:00, 17:00, etc.
 
-                matches.push({
+                const matchData = {
                     id: `match_${dateStr}_${leagueCode}_${index}`,
                     league: leagueCode,
                     homeTeam: match.homeTeam,
@@ -1748,19 +1756,24 @@ function generateFallbackMatchesForDate(date, league) {
                     date: matchTime.toISOString(),
                     venue: `${match.homeTeam} Stadium`,
                     status: match.status
-                });
+                };
+                
+                matches.push(matchData);
+                console.log(`Added match: ${matchData.homeTeam} vs ${matchData.awayTeam}`);
             });
         });
     } else {
         // 特定のリーグが指定されている場合
+        console.log(`League specified: ${league}, generating matches for ${league}`);
         const selectedLeague = league;
         const leagueData = leagueMatches[selectedLeague] || leagueMatches['PL'];
+        console.log(`Using league data for ${selectedLeague}:`, leagueData);
 
         leagueData.forEach((match, index) => {
             const matchTime = new Date(date);
             matchTime.setHours(15 + (index * 2), 0, 0, 0); // 15:00, 17:00, etc.
 
-            matches.push({
+            const matchData = {
                 id: `match_${dateStr}_${index}`,
                 league: selectedLeague,
                 homeTeam: match.homeTeam,
@@ -1770,25 +1783,36 @@ function generateFallbackMatchesForDate(date, league) {
                 date: matchTime.toISOString(),
                 venue: `${match.homeTeam} Stadium`,
                 status: match.status
-            });
+            };
+            
+            matches.push(matchData);
+            console.log(`Added match: ${matchData.homeTeam} vs ${matchData.awayTeam}`);
         });
     }
 
+    console.log(`Total matches generated: ${matches.length}`);
     return matches;
 }
 
 // フォールバック試合データを生成
 function generateFallbackMatches(league = null) {
+    console.log('generateFallbackMatches called with league:', league);
+    
     const matches = [];
     const today = new Date();
     
     for (let i = 0; i < 7; i++) {
         const date = new Date(today);
         date.setDate(date.getDate() + i);
+        console.log(`Processing date ${i}:`, date.toISOString().split('T')[0]);
+        
         const dayMatches = generateFallbackMatchesForDate(date, league);
+        console.log(`Got ${dayMatches.length} matches for date ${i}`);
+        
         matches.push(...dayMatches);
     }
     
+    console.log(`Total fallback matches generated: ${matches.length}`);
     return matches;
 }
 
