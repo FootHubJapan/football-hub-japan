@@ -1639,12 +1639,14 @@ app.get('/api/fotmob/matches', async (req, res) => {
         console.log('Generated matches count:', matches.length);
         console.log('First few matches:', matches.slice(0, 3));
 
+        res.setHeader('Content-Type', 'application/json');
         res.json({ matches });
     } catch (error) {
         console.error('Error fetching matches:', error);
         // Return fallback matches if service fails
-        const fallbackMatches = generateFallbackMatches();
+        const fallbackMatches = generateFallbackMatches(league);
         console.log('Returning fallback matches:', fallbackMatches.length);
+        res.setHeader('Content-Type', 'application/json');
         res.json({ matches: fallbackMatches });
     }
 });
@@ -1674,7 +1676,7 @@ async function getMatchesForWeek(date, league) {
         return matches;
     } catch (error) {
         console.error('Error getting matches for week:', error);
-        return generateFallbackMatches();
+        return generateFallbackMatches(league);
     }
 }
 
@@ -1691,7 +1693,7 @@ async function getMatchesForMonth(date, league) {
         return matches;
     } catch (error) {
         console.error('Error getting matches for month:', error);
-        return generateFallbackMatches();
+        return generateFallbackMatches(league);
     }
 }
 
@@ -1776,14 +1778,14 @@ function generateFallbackMatchesForDate(date, league) {
 }
 
 // フォールバック試合データを生成
-function generateFallbackMatches() {
+function generateFallbackMatches(league = null) {
     const matches = [];
     const today = new Date();
     
     for (let i = 0; i < 7; i++) {
         const date = new Date(today);
         date.setDate(date.getDate() + i);
-        const dayMatches = generateFallbackMatchesForDate(date);
+        const dayMatches = generateFallbackMatchesForDate(date, league);
         matches.push(...dayMatches);
     }
     

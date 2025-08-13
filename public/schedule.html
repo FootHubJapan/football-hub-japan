@@ -358,13 +358,25 @@
             try {
                 const response = await fetch(`/api/fotmob/matches?league=${league}&timeRange=${timeRange}`);
                 console.log('API Response status:', response.status);
+                console.log('API Response headers:', response.headers);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
-                const data = await response.json();
-                console.log('API Response data:', data);
+                // 生のレスポンステキストを確認
+                const responseText = await response.text();
+                console.log('Raw response text:', responseText);
+                
+                // JSONとしてパース
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                    console.log('Parsed JSON data:', data);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    throw new Error(`JSON parse error: ${parseError.message}`);
+                }
                 
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
                     console.log('Found matches:', data.matches.length);
@@ -372,10 +384,15 @@
                     displayMatches(data.matches);
                 } else {
                     console.log('No matches found in response. Response structure:', data);
+                    console.log('Data type:', typeof data);
+                    console.log('Data keys:', data ? Object.keys(data) : 'null/undefined');
+                    
                     contentDiv.innerHTML = `
                         <div class="no-matches">
                             <p>指定された条件に一致する試合が見つかりませんでした。</p>
-                            <p>レスポンス: ${JSON.stringify(data, null, 2)}</p>
+                            <p>レスポンス構造: ${JSON.stringify(data, null, 2)}</p>
+                            <p>データ型: ${typeof data}</p>
+                            <p>キー: ${data ? Object.keys(data).join(', ') : 'null/undefined'}</p>
                         </div>
                     `;
                 }
