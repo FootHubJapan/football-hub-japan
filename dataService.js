@@ -905,21 +905,101 @@ class FootballDataService {
 
     getFallbackTeams() {
         return [
-            { team: { id: 1, name: '浦和レッズ', logo: null, founded: 1950, country: '日本' } },
-            { team: { id: 2, name: '横浜F・マリノス', logo: null, founded: 1972, country: '日本' } },
-            { team: { id: 3, name: '川崎フロンターレ', logo: null, founded: 1955, country: '日本' } }
+            { id: 57, name: 'Arsenal FC', shortName: 'Arsenal', tla: 'ARS', leagueId: 'PL' },
+            { id: 58, name: 'Aston Villa FC', shortName: 'Aston Villa', tla: 'AVL', leagueId: 'PL' },
+            { id: 61, name: 'Chelsea FC', shortName: 'Chelsea', tla: 'CHE', leagueId: 'PL' },
+            { id: 64, name: 'Liverpool FC', shortName: 'Liverpool', tla: 'LIV', leagueId: 'PL' },
+            { id: 65, name: 'Manchester City FC', shortName: 'Man City', tla: 'MCI', leagueId: 'PL' }
+        ];
+    }
+
+    getFallbackJLeagueTeams() {
+        return [
+            // J1リーグ
+            { id: 1001, name: '浦和レッズ', shortName: '浦和', tla: 'URA', leagueId: 'J1' },
+            { id: 1002, name: '横浜F・マリノス', shortName: '横浜FM', tla: 'YFM', leagueId: 'J1' },
+            { id: 1003, name: '川崎フロンターレ', shortName: '川崎', tla: 'KAW', leagueId: 'J1' },
+            { id: 1004, name: 'FC東京', shortName: 'FC東京', tla: 'FCT', leagueId: 'J1' },
+            { id: 1005, name: '鹿島アントラーズ', shortName: '鹿島', tla: 'KAS', leagueId: 'J1' },
+            { id: 1006, name: 'サンフレッチェ広島', shortName: '広島', tla: 'SAN', leagueId: 'J1' },
+            { id: 1007, name: 'セレッソ大阪', shortName: 'C大阪', tla: 'CER', leagueId: 'J1' },
+            { id: 1008, name: 'ガンバ大阪', shortName: 'G大阪', tla: 'GAM', leagueId: 'J1' },
+            { id: 1009, name: '名古屋グランパス', shortName: '名古屋', tla: 'NAG', leagueId: 'J1' },
+            { id: 1010, name: 'ヴィッセル神戸', shortName: '神戸', tla: 'VIS', leagueId: 'J1' },
+            { id: 1011, name: '柏レイソル', shortName: '柏', tla: 'KAS', leagueId: 'J1' },
+            { id: 1012, name: '清水エスパルス', shortName: '清水', tla: 'SHI', leagueId: 'J1' },
+            { id: 1013, name: '湘南ベルマーレ', shortName: '湘南', tla: 'SHO', leagueId: 'J1' },
+            { id: 1014, name: '北海道コンサドーレ札幌', shortName: '札幌', tla: 'CON', leagueId: 'J1' },
+            { id: 1015, name: 'ベガルタ仙台', shortName: '仙台', tla: 'VEG', leagueId: 'J1' },
+            { id: 1016, name: 'ジュビロ磐田', shortName: '磐田', tla: 'JUB', leagueId: 'J1' },
+            { id: 1017, name: '大分トリニータ', shortName: '大分', tla: 'OIT', leagueId: 'J1' },
+            { id: 1018, name: '徳島ヴォルティス', shortName: '徳島', tla: 'TOK', leagueId: 'J1' },
+            { id: 1019, name: 'アビスパ福岡', shortName: '福岡', tla: 'AVI', leagueId: 'J1' },
+            { id: 1020, name: 'サガン鳥栖', shortName: '鳥栖', tla: 'SAG', leagueId: 'J1' },
+            
+            // J2リーグ
+            { id: 2001, name: '京都サンガF.C.', shortName: '京都', tla: 'KYO', leagueId: 'J2' },
+            { id: 2002, name: 'ファジアーノ岡山', shortName: '岡山', tla: 'FAJ', leagueId: 'J2' },
+            { id: 2003, name: 'FC町田ゼルビア', shortName: '町田', tla: 'MAC', leagueId: 'J2' },
+            { id: 2004, name: 'レノファ山口FC', shortName: '山口', tla: 'REN', leagueId: 'J2' },
+            { id: 2005, name: 'FC琉球', shortName: '琉球', tla: 'RYK', leagueId: 'J2' },
+            
+            // J3リーグ
+            { id: 3001, name: 'FC今治', shortName: '今治', tla: 'IMA', leagueId: 'J3' },
+            { id: 3002, name: 'SC相模原', shortName: '相模原', tla: 'SAG', leagueId: 'J3' },
+            { id: 3003, name: 'FC岐阜', shortName: '岐阜', tla: 'GIF', leagueId: 'J3' }
         ];
     }
 
     getFallbackPlayers() {
         return [
             {
-                player: { id: 1, name: '久保建英', firstname: '久保', lastname: '建英', age: 22, nationality: '日本' },
-                statistics: [{ games: { position: 'MF' }, team: { name: 'レアル・ソシエダード' }, league: { name: 'ラ・リーガ' } }]
+                player: { id: 1, name: 'Erling Haaland', firstname: 'Erling', lastname: 'Haaland', age: 22, nationality: 'Norway', position: 'Forward', shirtNumber: 9, teamId: 65, teamName: 'Manchester City FC', leagueId: 'PL', source: 'fallback' },
+                statistics: [{ games: { position: 'Forward', rating: '9.0' }, goals: { total: 20 }, assists: { total: 5 }, team: { name: 'Manchester City FC' } }]
             },
             {
-                player: { id: 2, name: '三笘薫', firstname: '三笘', lastname: '薫', age: 26, nationality: '日本' },
-                statistics: [{ games: { position: 'FW' }, team: { name: 'ブライトン' }, league: { name: 'プレミアリーグ' } }]
+                player: { id: 2, name: 'Kevin De Bruyne', firstname: 'Kevin', lastname: 'De Bruyne', age: 30, nationality: 'Belgium', position: 'Midfielder', shirtNumber: 17, teamId: 65, teamName: 'Manchester City FC', leagueId: 'PL', source: 'fallback' },
+                statistics: [{ games: { position: 'Midfielder', rating: '8.5' }, goals: { total: 15 }, assists: { total: 10 }, team: { name: 'Manchester City FC' } }]
+            },
+            {
+                player: { id: 3, name: 'Takefusa Kubo', firstname: 'Takefusa', lastname: 'Kubo', age: 21, nationality: 'Japan', position: 'Midfielder', shirtNumber: 14, teamId: 201, teamName: 'Real Sociedad', currentTeam: 'Real Sociedad', leagueId: 'PD', source: 'fallback' },
+                statistics: [{ games: { position: 'Midfielder', rating: '7.5' }, goals: { total: 5 }, assists: { total: 5 }, team: { name: 'Real Sociedad' } }]
+            },
+            {
+                player: { id: 4, name: 'Kaoru Mitoma', firstname: 'Kaoru', lastname: 'Mitoma', age: 26, nationality: 'Japan', position: 'Forward', shirtNumber: 22, teamId: 397, teamName: 'Brighton & Hove Albion FC', currentTeam: 'Brighton & Hove Albion FC', leagueId: 'PL', source: 'fallback' },
+                statistics: [{ games: { position: 'Forward', rating: '7.8' }, goals: { total: 12 }, assists: { total: 5 }, team: { name: 'Brighton & Hove Albion FC' } }]
+            },
+            {
+                player: { id: 5, name: 'Ritsu Doan', firstname: 'Ritsu', lastname: 'Doan', age: 24, nationality: 'Japan', position: 'Forward', shirtNumber: 8, teamId: 165, teamName: 'SC Freiburg', currentTeam: 'SC Freiburg', leagueId: 'BL1', source: 'fallback' },
+                statistics: [{ games: { position: 'Forward', rating: '7.2' }, goals: { total: 7 }, assists: { total: 3 }, team: { name: 'SC Freiburg' } }]
+            },
+            {
+                player: { id: 6, name: 'Ao Tanaka', firstname: 'Ao', lastname: 'Tanaka', age: 23, nationality: 'Japan', position: 'Midfielder', shirtNumber: 6, teamId: 165, teamName: 'SC Freiburg', currentTeam: 'SC Freiburg', leagueId: 'BL1', source: 'fallback' },
+                statistics: [{ games: { position: 'Midfielder', rating: '7.0' }, goals: { total: 4 }, assists: { total: 3 }, team: { name: 'SC Freiburg' } }]
+            },
+            {
+                player: { id: 7, name: 'Hiroki Ito', firstname: 'Hiroki', lastname: 'Ito', age: 22, nationality: 'Japan', position: 'Defender', shirtNumber: 21, teamId: 165, teamName: 'VfB Stuttgart', currentTeam: 'VfB Stuttgart', leagueId: 'BL1', source: 'fallback' },
+                statistics: [{ games: { position: 'Defender', rating: '7.0' }, goals: { total: 1 }, assists: { total: 1 }, team: { name: 'VfB Stuttgart' } }]
+            },
+            {
+                player: { id: 8, name: 'Wataru Endo', firstname: 'Wataru', lastname: 'Endo', age: 28, nationality: 'Japan', position: 'Midfielder', shirtNumber: 3, teamId: 64, teamName: 'Liverpool FC', currentTeam: 'Liverpool FC', leagueId: 'PL', source: 'fallback' },
+                statistics: [{ games: { position: 'Midfielder', rating: '7.0' }, goals: { total: 5 }, assists: { total: 3 }, team: { name: 'Liverpool FC' } }]
+            },
+            {
+                player: { id: 9, name: 'Takumi Minamino', firstname: 'Takumi', lastname: 'Minamino', age: 28, nationality: 'Japan', position: 'Forward', shirtNumber: 18, teamId: 58, teamName: 'AS Monaco', currentTeam: 'AS Monaco', leagueId: 'FL1', source: 'fallback' },
+                statistics: [{ games: { position: 'Forward', rating: '7.0' }, goals: { total: 6 }, assists: { total: 3 }, team: { name: 'AS Monaco' } }]
+            },
+            {
+                player: { id: 10, name: 'Takuma Asano', firstname: 'Takuma', lastname: 'Asano', age: 27, nationality: 'Japan', position: 'Forward', shirtNumber: 9, teamId: 165, teamName: 'VfB Stuttgart', currentTeam: 'VfB Stuttgart', leagueId: 'BL1', source: 'fallback' },
+                statistics: [{ games: { position: 'Forward', rating: '7.0' }, goals: { total: 6 }, assists: { total: 2 }, team: { name: 'VfB Stuttgart' } }]
+            },
+            {
+                player: { id: 11, name: 'Ayase Ueda', firstname: 'Ayase', lastname: 'Ueda', age: 25, nationality: 'Japan', position: 'Forward', shirtNumber: 11, teamId: 165, teamName: 'Feyenoord', currentTeam: 'Feyenoord', leagueId: 'NL1', source: 'fallback' },
+                statistics: [{ games: { position: 'Forward', rating: '7.0' }, goals: { total: 5 }, assists: { total: 2 }, team: { name: 'Feyenoord' } }]
+            },
+            {
+                player: { id: 12, name: 'Daizen Maeda', firstname: 'Daizen', lastname: 'Maeda', age: 24, nationality: 'Japan', position: 'Forward', shirtNumber: 38, teamId: 247, teamName: 'Celtic FC', currentTeam: 'Celtic FC', leagueId: 'SC1', source: 'fallback' },
+                statistics: [{ games: { position: 'Forward', rating: '7.0' }, goals: { total: 5 }, assists: { total: 2 }, team: { name: 'Celtic FC' } }]
             }
         ];
     }
@@ -1826,7 +1906,8 @@ class FotMobDataService {
     // Fetch teams from APIs
     async fetchTeams() {
         const teams = [];
-        const leagueIds = ['PL', 'PD', 'SA', 'BL1', 'FL1', 'J1', 'J2', 'J3']; // Major leagues + J-League
+        // 正しいリーグIDを使用（Jリーグは実際のIDに変更）
+        const leagueIds = ['PL', 'PD', 'SA', 'BL1', 'FL1']; // Major leagues only
 
         for (const leagueId of leagueIds) {
             try {
@@ -1855,6 +1936,10 @@ class FotMobDataService {
                 console.error(`Error fetching teams for league ${leagueId}:`, error);
             }
         }
+
+        // Jリーグのチームをフォールバックデータから追加
+        const jLeagueTeams = this.getFallbackJLeagueTeams();
+        teams.push(...jLeagueTeams);
 
         // Add fallback teams if no data
         if (teams.length === 0) {
@@ -2053,215 +2138,93 @@ class FotMobDataService {
         ];
     }
 
+    getFallbackJLeagueTeams() {
+        return [
+            // J1リーグ
+            { id: 1001, name: '浦和レッズ', shortName: '浦和', tla: 'URA', leagueId: 'J1' },
+            { id: 1002, name: '横浜F・マリノス', shortName: '横浜FM', tla: 'YFM', leagueId: 'J1' },
+            { id: 1003, name: '川崎フロンターレ', shortName: '川崎', tla: 'KAW', leagueId: 'J1' },
+            { id: 1004, name: 'FC東京', shortName: 'FC東京', tla: 'FCT', leagueId: 'J1' },
+            { id: 1005, name: '鹿島アントラーズ', shortName: '鹿島', tla: 'KAS', leagueId: 'J1' },
+            { id: 1006, name: 'サンフレッチェ広島', shortName: '広島', tla: 'SAN', leagueId: 'J1' },
+            { id: 1007, name: 'セレッソ大阪', shortName: 'C大阪', tla: 'CER', leagueId: 'J1' },
+            { id: 1008, name: 'ガンバ大阪', shortName: 'G大阪', tla: 'GAM', leagueId: 'J1' },
+            { id: 1009, name: '名古屋グランパス', shortName: '名古屋', tla: 'NAG', leagueId: 'J1' },
+            { id: 1010, name: 'ヴィッセル神戸', shortName: '神戸', tla: 'VIS', leagueId: 'J1' },
+            { id: 1011, name: '柏レイソル', shortName: '柏', tla: 'KAS', leagueId: 'J1' },
+            { id: 1012, name: '清水エスパルス', shortName: '清水', tla: 'SHI', leagueId: 'J1' },
+            { id: 1013, name: '湘南ベルマーレ', shortName: '湘南', tla: 'SHO', leagueId: 'J1' },
+            { id: 1014, name: '北海道コンサドーレ札幌', shortName: '札幌', tla: 'CON', leagueId: 'J1' },
+            { id: 1015, name: 'ベガルタ仙台', shortName: '仙台', tla: 'VEG', leagueId: 'J1' },
+            { id: 1016, name: 'ジュビロ磐田', shortName: '磐田', tla: 'JUB', leagueId: 'J1' },
+            { id: 1017, name: '大分トリニータ', shortName: '大分', tla: 'OIT', leagueId: 'J1' },
+            { id: 1018, name: '徳島ヴォルティス', shortName: '徳島', tla: 'TOK', leagueId: 'J1' },
+            { id: 1019, name: 'アビスパ福岡', shortName: '福岡', tla: 'AVI', leagueId: 'J1' },
+            { id: 1020, name: 'サガン鳥栖', shortName: '鳥栖', tla: 'SAG', leagueId: 'J1' },
+            
+            // J2リーグ
+            { id: 2001, name: '京都サンガF.C.', shortName: '京都', tla: 'KYO', leagueId: 'J2' },
+            { id: 2002, name: 'ファジアーノ岡山', shortName: '岡山', tla: 'FAJ', leagueId: 'J2' },
+            { id: 2003, name: 'FC町田ゼルビア', shortName: '町田', tla: 'MAC', leagueId: 'J2' },
+            { id: 2004, name: 'レノファ山口FC', shortName: '山口', tla: 'REN', leagueId: 'J2' },
+            { id: 2005, name: 'FC琉球', shortName: '琉球', tla: 'RYK', leagueId: 'J2' },
+            
+            // J3リーグ
+            { id: 3001, name: 'FC今治', shortName: '今治', tla: 'IMA', leagueId: 'J3' },
+            { id: 3002, name: 'SC相模原', shortName: '相模原', tla: 'SAG', leagueId: 'J3' },
+            { id: 3003, name: 'FC岐阜', shortName: '岐阜', tla: 'GIF', leagueId: 'J3' }
+        ];
+    }
+
     getFallbackPlayers() {
         return [
             {
-                id: 1,
-                name: 'Erling Haaland',
-                firstName: 'Erling',
-                lastName: 'Haaland',
-                dateOfBirth: '2000-07-21',
-                nationality: 'Norway',
-                position: 'Forward',
-                shirtNumber: 9,
-                teamId: 65,
-                teamName: 'Manchester City FC',
-                leagueId: 'PL',
-                source: 'fallback'
+                player: { id: 1, name: 'Erling Haaland', firstname: 'Erling', lastname: 'Haaland', age: 22, nationality: 'Norway', position: 'Forward', shirtNumber: 9, teamId: 65, teamName: 'Manchester City FC', leagueId: 'PL', source: 'fallback' },
+                statistics: [{ games: { position: 'Forward', rating: '9.0' }, goals: { total: 20 }, assists: { total: 5 }, team: { name: 'Manchester City FC' } }]
             },
             {
-                id: 2,
-                name: 'Kevin De Bruyne',
-                firstName: 'Kevin',
-                lastName: 'De Bruyne',
-                dateOfBirth: '1991-06-28',
-                nationality: 'Belgium',
-                position: 'Midfielder',
-                shirtNumber: 17,
-                teamId: 65,
-                teamName: 'Manchester City FC',
-                leagueId: 'PL',
-                source: 'fallback'
+                player: { id: 2, name: 'Kevin De Bruyne', firstname: 'Kevin', lastname: 'De Bruyne', age: 30, nationality: 'Belgium', position: 'Midfielder', shirtNumber: 17, teamId: 65, teamName: 'Manchester City FC', leagueId: 'PL', source: 'fallback' },
+                statistics: [{ games: { position: 'Midfielder', rating: '8.5' }, goals: { total: 15 }, assists: { total: 10 }, team: { name: 'Manchester City FC' } }]
             },
             {
-                id: 3,
-                name: '久保建英',
-                fullName: '久保建英',
-                japaneseName: '久保建英',
-                englishName: 'Takefusa Kubo',
-                firstName: 'Takefusa',
-                lastName: 'Kubo',
-                dateOfBirth: '2001-06-04',
-                nationality: 'Japan',
-                position: 'Midfielder',
-                shirtNumber: 14,
-                teamId: 201,
-                teamName: 'Real Sociedad',
-                currentTeam: 'Real Sociedad',
-                leagueId: 'PD',
-                source: 'fallback'
+                player: { id: 3, name: 'Takefusa Kubo', firstname: 'Takefusa', lastname: 'Kubo', age: 21, nationality: 'Japan', position: 'Midfielder', shirtNumber: 14, teamId: 201, teamName: 'Real Sociedad', currentTeam: 'Real Sociedad', leagueId: 'PD', source: 'fallback' },
+                statistics: [{ games: { position: 'Midfielder', rating: '7.5' }, goals: { total: 5 }, assists: { total: 5 }, team: { name: 'Real Sociedad' } }]
             },
             {
-                id: 4,
-                name: '三笘薫',
-                fullName: '三笘薫',
-                japaneseName: '三笘薫',
-                englishName: 'Kaoru Mitoma',
-                firstName: 'Kaoru',
-                lastName: 'Mitoma',
-                dateOfBirth: '1997-05-20',
-                nationality: 'Japan',
-                position: 'Forward',
-                shirtNumber: 22,
-                teamId: 397,
-                teamName: 'Brighton & Hove Albion FC',
-                currentTeam: 'Brighton & Hove Albion FC',
-                leagueId: 'PL',
-                source: 'fallback'
+                player: { id: 4, name: 'Kaoru Mitoma', firstname: 'Kaoru', lastname: 'Mitoma', age: 26, nationality: 'Japan', position: 'Forward', shirtNumber: 22, teamId: 397, teamName: 'Brighton & Hove Albion FC', currentTeam: 'Brighton & Hove Albion FC', leagueId: 'PL', source: 'fallback' },
+                statistics: [{ games: { position: 'Forward', rating: '7.8' }, goals: { total: 12 }, assists: { total: 5 }, team: { name: 'Brighton & Hove Albion FC' } }]
             },
             {
-                id: 5,
-                name: '堂安律',
-                fullName: '堂安律',
-                japaneseName: '堂安律',
-                englishName: 'Ritsu Doan',
-                firstName: 'Ritsu',
-                lastName: 'Doan',
-                dateOfBirth: '1998-06-16',
-                nationality: 'Japan',
-                position: 'Midfielder',
-                shirtNumber: 8,
-                teamId: 165,
-                teamName: 'SC Freiburg',
-                currentTeam: 'SC Freiburg',
-                leagueId: 'BL1',
-                source: 'fallback'
+                player: { id: 5, name: 'Ritsu Doan', firstname: 'Ritsu', lastname: 'Doan', age: 24, nationality: 'Japan', position: 'Forward', shirtNumber: 8, teamId: 165, teamName: 'SC Freiburg', currentTeam: 'SC Freiburg', leagueId: 'BL1', source: 'fallback' },
+                statistics: [{ games: { position: 'Forward', rating: '7.2' }, goals: { total: 7 }, assists: { total: 3 }, team: { name: 'SC Freiburg' } }]
             },
             {
-                id: 6,
-                name: '田中碧',
-                fullName: '田中碧',
-                japaneseName: '田中碧',
-                englishName: 'Ao Tanaka',
-                firstName: 'Ao',
-                lastName: 'Tanaka',
-                dateOfBirth: '1998-09-10',
-                nationality: 'Japan',
-                position: 'Midfielder',
-                shirtNumber: 6,
-                teamId: 165,
-                teamName: 'SC Freiburg',
-                currentTeam: 'SC Freiburg',
-                leagueId: 'BL1',
-                source: 'fallback'
+                player: { id: 6, name: 'Ao Tanaka', firstname: 'Ao', lastname: 'Tanaka', age: 23, nationality: 'Japan', position: 'Midfielder', shirtNumber: 6, teamId: 165, teamName: 'SC Freiburg', currentTeam: 'SC Freiburg', leagueId: 'BL1', source: 'fallback' },
+                statistics: [{ games: { position: 'Midfielder', rating: '7.0' }, goals: { total: 4 }, assists: { total: 3 }, team: { name: 'SC Freiburg' } }]
             },
             {
-                id: 7,
-                name: '伊藤洋輝',
-                fullName: '伊藤洋輝',
-                japaneseName: '伊藤洋輝',
-                englishName: 'Hiroki Ito',
-                firstName: 'Hiroki',
-                lastName: 'Ito',
-                dateOfBirth: '1999-05-12',
-                nationality: 'Japan',
-                position: 'Defender',
-                shirtNumber: 21,
-                teamId: 165,
-                teamName: 'VfB Stuttgart',
-                currentTeam: 'VfB Stuttgart',
-                leagueId: 'BL1',
-                source: 'fallback'
+                player: { id: 7, name: 'Hiroki Ito', firstname: 'Hiroki', lastname: 'Ito', age: 22, nationality: 'Japan', position: 'Defender', shirtNumber: 21, teamId: 165, teamName: 'VfB Stuttgart', currentTeam: 'VfB Stuttgart', leagueId: 'BL1', source: 'fallback' },
+                statistics: [{ games: { position: 'Defender', rating: '7.0' }, goals: { total: 1 }, assists: { total: 1 }, team: { name: 'VfB Stuttgart' } }]
             },
             {
-                id: 8,
-                name: '遠藤航',
-                fullName: '遠藤航',
-                japaneseName: '遠藤航',
-                englishName: 'Wataru Endo',
-                firstName: 'Wataru',
-                lastName: 'Endo',
-                dateOfBirth: '1993-02-09',
-                nationality: 'Japan',
-                position: 'Midfielder',
-                shirtNumber: 3,
-                teamId: 64,
-                teamName: 'Liverpool FC',
-                currentTeam: 'Liverpool FC',
-                leagueId: 'PL',
-                source: 'fallback'
+                player: { id: 8, name: 'Wataru Endo', firstname: 'Wataru', lastname: 'Endo', age: 28, nationality: 'Japan', position: 'Midfielder', shirtNumber: 3, teamId: 64, teamName: 'Liverpool FC', currentTeam: 'Liverpool FC', leagueId: 'PL', source: 'fallback' },
+                statistics: [{ games: { position: 'Midfielder', rating: '7.0' }, goals: { total: 5 }, assists: { total: 3 }, team: { name: 'Liverpool FC' } }]
             },
             {
-                id: 9,
-                name: '南野拓実',
-                fullName: '南野拓実',
-                japaneseName: '南野拓実',
-                englishName: 'Takumi Minamino',
-                firstName: 'Takumi',
-                lastName: 'Minamino',
-                dateOfBirth: '1995-01-16',
-                nationality: 'Japan',
-                position: 'Forward',
-                shirtNumber: 18,
-                teamId: 58,
-                teamName: 'AS Monaco',
-                currentTeam: 'AS Monaco',
-                leagueId: 'FL1',
-                source: 'fallback'
+                player: { id: 9, name: 'Takumi Minamino', firstname: 'Takumi', lastname: 'Minamino', age: 28, nationality: 'Japan', position: 'Forward', shirtNumber: 18, teamId: 58, teamName: 'AS Monaco', currentTeam: 'AS Monaco', leagueId: 'FL1', source: 'fallback' },
+                statistics: [{ games: { position: 'Forward', rating: '7.0' }, goals: { total: 6 }, assists: { total: 3 }, team: { name: 'AS Monaco' } }]
             },
             {
-                id: 10,
-                name: '浅野拓磨',
-                fullName: '浅野拓磨',
-                japaneseName: '浅野拓磨',
-                englishName: 'Takuma Asano',
-                firstName: 'Takuma',
-                lastName: 'Asano',
-                dateOfBirth: '1994-11-10',
-                nationality: 'Japan',
-                position: 'Forward',
-                shirtNumber: 9,
-                teamId: 165,
-                teamName: 'VfB Stuttgart',
-                currentTeam: 'VfB Stuttgart',
-                leagueId: 'BL1',
-                source: 'fallback'
+                player: { id: 10, name: 'Takuma Asano', firstname: 'Takuma', lastname: 'Asano', age: 27, nationality: 'Japan', position: 'Forward', shirtNumber: 9, teamId: 165, teamName: 'VfB Stuttgart', currentTeam: 'VfB Stuttgart', leagueId: 'BL1', source: 'fallback' },
+                statistics: [{ games: { position: 'Forward', rating: '7.0' }, goals: { total: 6 }, assists: { total: 2 }, team: { name: 'VfB Stuttgart' } }]
             },
             {
-                id: 11,
-                name: '上田綺世',
-                fullName: '上田綺世',
-                japaneseName: '上田綺世',
-                englishName: 'Ayase Ueda',
-                firstName: 'Ayase',
-                lastName: 'Ueda',
-                dateOfBirth: '1998-08-28',
-                nationality: 'Japan',
-                position: 'Forward',
-                shirtNumber: 11,
-                teamId: 165,
-                teamName: 'Feyenoord',
-                currentTeam: 'Feyenoord',
-                leagueId: 'NL1',
-                source: 'fallback'
+                player: { id: 11, name: 'Ayase Ueda', firstname: 'Ayase', lastname: 'Ueda', age: 25, nationality: 'Japan', position: 'Forward', shirtNumber: 11, teamId: 165, teamName: 'Feyenoord', currentTeam: 'Feyenoord', leagueId: 'NL1', source: 'fallback' },
+                statistics: [{ games: { position: 'Forward', rating: '7.0' }, goals: { total: 5 }, assists: { total: 2 }, team: { name: 'Feyenoord' } }]
             },
             {
-                id: 12,
-                name: '前田大然',
-                fullName: '前田大然',
-                japaneseName: '前田大然',
-                englishName: 'Daizen Maeda',
-                firstName: 'Daizen',
-                lastName: 'Maeda',
-                dateOfBirth: '1997-10-20',
-                nationality: 'Japan',
-                position: 'Forward',
-                shirtNumber: 38,
-                teamId: 247,
-                teamName: 'Celtic FC',
-                currentTeam: 'Celtic FC',
-                leagueId: 'SC1',
-                source: 'fallback'
+                player: { id: 12, name: 'Daizen Maeda', firstname: 'Daizen', lastname: 'Maeda', age: 24, nationality: 'Japan', position: 'Forward', shirtNumber: 38, teamId: 247, teamName: 'Celtic FC', currentTeam: 'Celtic FC', leagueId: 'SC1', source: 'fallback' },
+                statistics: [{ games: { position: 'Forward', rating: '7.0' }, goals: { total: 5 }, assists: { total: 2 }, team: { name: 'Celtic FC' } }]
             }
         ];
     }
