@@ -219,6 +219,21 @@ app.get('/database-enhanced', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'database-enhanced.html'));
 });
 
+// 試合スケジュールページ
+app.get('/schedule', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'schedule.html'));
+});
+
+// ヘルスチェックエンドポイント
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
 // 強化レーダーチャートページ
 app.get('/radar-enhanced', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'radar-enhanced.html'));
