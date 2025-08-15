@@ -1024,6 +1024,27 @@ app.get('/api/fotmob/matches', async (req, res) => {
             console.log('Using fallback matches:', matches.length);
         }
 
+        // API-Footballからデータが取得できない場合は、Football-data.orgを試す
+        if (matches.length === 0) {
+            try {
+                console.log('Trying Football-data.org as backup...');
+                const footballDataMatches = await getMatchesFromFootballData(league, timeRange);
+                if (footballDataMatches.length > 0) {
+                    matches = footballDataMatches;
+                    console.log('Football-data.org matches count:', matches.length);
+                }
+            } catch (footballDataError) {
+                console.error('Football-data.org error:', footballDataError);
+            }
+        }
+
+        // どちらのAPIからもデータが取得できない場合は、フォールバックデータを使用
+        if (matches.length === 0) {
+            console.log('No data from APIs, using fallback data');
+            matches = generateFallbackMatches(league);
+            console.log('Fallback matches count:', matches.length);
+        }
+
         console.log('Final matches count:', matches.length);
         console.log('First few matches:', matches.slice(0, 3));
 
@@ -1102,7 +1123,7 @@ async function getMatchesFromAPIFootball(league, timeRange) {
             const response = await fetch(`https://v3.football.api-sports.io/fixtures?league=${leagueId}&season=${season}&from=${fromDate}&to=${toDate}`, {
                 headers: {
                     'x-rapidapi-host': 'v3.football.api-sports.io',
-                    'x-rapidapi-key': process.env.API_Football_KEY || '53cfd1d0'
+                    'x-rapidapi-key': process.env.API_FOOTBALL_KEY || '53cfd1d0'
                 }
             });
 
@@ -1137,7 +1158,7 @@ async function getMatchesFromAPIFootball(league, timeRange) {
                         const response = await fetch(`https://v3.football.api-sports.io/fixtures?league=${leagueId}&season=${season}&from=${fromDate}&to=${toDate}`, {
                             headers: {
                                 'x-rapidapi-host': 'v3.football.api-sports.io',
-                                'x-rapidapi-key': process.env.API_Football_KEY || '53cfd1d0'
+                                'x-rapidapi-key': process.env.API_FOOTBALL_KEY || '53cfd1d0'
                             }
                         });
 
@@ -1180,6 +1201,140 @@ async function getMatchesFromAPIFootball(league, timeRange) {
     } catch (error) {
         console.error('Error in getMatchesFromAPIFootball:', error);
         throw error;
+    }
+}
+
+// Football-data.orgから試合データを取得（バックアップ）
+async function getMatchesFromFootballData(league, timeRange) {
+    const matches = [];
+    
+    try {
+        if (!process.env.FOOTBALL_DATA_API_KEY) {
+            console.log('Football-data.org API key not configured');
+            return matches;
+        }
+
+        // リーグIDのマッピング（Football-data.org用）
+        const leagueMapping = {
+            'PL': 2021,  // Premier League
+            'PD': 2014,  // La Liga
+            'SA': 2019,  // Serie A
+            'BL1': 2002, // Bundesliga
+            'FL1': 2015, // Ligue 1
+        };
+
+        // 時間範囲の設定
+        let fromDate, toDate;
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth() + 1;
+        const season = currentMonth >= 8 ? currentYear + 1 : currentYear;
+        
+        switch (timeRange) {
+            case 'today':
+                fromDate = toDate = today.toISOString().split('T')[0];
+                break;
+            case 'tomorrow':
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                fromDate = toDate = tomorrow.toISOString().split('T')[0];
+                break;
+            case 'week':
+                fromDate = today.toISOString().split('T')[0];
+                const weekLater = new Date(today);
+                weekLater.setDate(today.getDate() + 7);
+                toDate = weekLater.toISOString().split('T')[0];
+                break;
+            case 'month':
+                fromDate = today.toISOString().split('T')[0];
+                const monthLater = new Date(today);
+                monthLater.setMonth(today.getMonth() + 1);
+                toDate = monthLater.toISOString().split('T')[0];
+                break;
+            default:
+                fromDate = today.toISOString().split('T')[0];
+                const defaultLater = new Date(today);
+                defaultLater.setDate(today.getDate() + 7);
+                toDate = defaultLater.toISOString().split('T')[0];
+        }
+
+        console.log('Football-data.org date range:', { fromDate, toDate, season });
+
+        // 特定のリーグが指定されている場合
+        if (league && leagueMapping[league]) {
+            const leagueId = leagueMapping[league];
+            console.log(`Fetching from Football-data.org for league ${league} (ID: ${leagueId})`);
+            
+            const response = await fetch(`https://api.football-data.org/v4/competitions/${leagueId}/matches?dateFrom=${fromDate}&dateTo=${toDate}`, {
+                headers: {
+                    'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Football-data.org response:', data);
+                
+                if (data.matches && Array.isArray(data.matches)) {
+                    data.matches.forEach(match => {
+                        matches.push({
+                            id: match.id,
+                            league: league,
+                            homeTeam: match.homeTeam.name,
+                            awayTeam: match.awayTeam.name,
+                            homeScore: match.score.fullTime.home,
+                            awayScore: match.score.fullTime.away,
+                            date: match.utcDate,
+                            venue: match.venue || 'Unknown',
+                            status: match.status,
+                            statusLong: match.status
+                        });
+                    });
+                }
+            }
+        } else if (!league) {
+            // リーグが指定されていない場合は、主要リーグから試合を取得
+            console.log('Fetching from Football-data.org for all major leagues');
+            
+            for (const [leagueCode, leagueId] of Object.entries(leagueMapping)) {
+                try {
+                    const response = await fetch(`https://api.football-data.org/v4/competitions/${leagueId}/matches?dateFrom=${fromDate}&dateTo=${toDate}`, {
+                        headers: {
+                            'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.matches && Array.isArray(data.matches)) {
+                            data.matches.slice(0, 2).forEach(match => {
+                                matches.push({
+                                    id: match.id,
+                                    league: leagueCode,
+                                    homeTeam: match.homeTeam.name,
+                                    awayTeam: match.awayTeam.name,
+                                    homeScore: match.score.fullTime.home,
+                                    awayScore: match.score.fullTime.away,
+                                    date: match.utcDate,
+                                    venue: match.venue || 'Unknown',
+                                    status: match.status,
+                                    statusLong: match.status
+                                });
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Error fetching ${leagueCode} from Football-data.org:`, error);
+                }
+            }
+        }
+
+        console.log(`Total Football-data.org matches: ${matches.length}`);
+        return matches;
+        
+    } catch (error) {
+        console.error('Error in getMatchesFromFootballData:', error);
+        return matches;
     }
 }
 
