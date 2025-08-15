@@ -10,7 +10,7 @@
         .loading {
             text-align: center;
             padding: 2rem;
-            color: #9ca3af;
+            color: #10b981;
             font-size: 1.1rem;
         }
         
@@ -26,7 +26,7 @@
         .no-matches {
             text-align: center;
             padding: 2rem;
-            color: #9ca3af;
+            color: #10b981;
             font-size: 1.1rem;
         }
         
@@ -44,38 +44,38 @@
         }
         
         ::-webkit-scrollbar-track {
-            background: #374151;
+            background: #111827;
         }
         
         ::-webkit-scrollbar-thumb {
-            background: #6b7280;
+            background: #10b981;
             border-radius: 4px;
         }
         
         ::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
+            background: #059669;
         }
     </style>
 </head>
 <body>
     <div class="min-h-screen bg-gray-900 text-white">
         <!-- ヘッダー -->
-        <header class="bg-gray-800 border-b border-gray-700">
+        <header class="bg-black border-b-2 border-green-500">
             <div class="container mx-auto px-4 py-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
                             <span class="text-xl">⚽</span>
                         </div>
-                        <h1 class="text-2xl font-bold text-white">
+                        <h1 class="text-2xl font-bold text-green-500">
                             Football Hub Japan
                         </h1>
                     </div>
                     <nav class="flex space-x-6">
-                        <a href="#" class="text-gray-300 hover:text-white transition-colors">ダッシュボード</a>
-                        <a href="#" class="text-gray-300 hover:text-white transition-colors">データベース</a>
-                        <a href="#" class="text-gray-300 hover:text-white transition-colors">レーダーチャート</a>
-                        <a href="#" class="text-gray-300 hover:text-white transition-colors">AIエージェント</a>
+                        <a href="#" class="text-gray-300 hover:text-green-500 transition-colors">ダッシュボード</a>
+                        <a href="#" class="text-gray-300 hover:text-green-500 transition-colors">データベース</a>
+                        <a href="#" class="text-gray-300 hover:text-green-500 transition-colors">レーダーチャート</a>
+                        <a href="#" class="text-gray-300 hover:text-green-500 transition-colors">AIエージェント</a>
                     </nav>
                 </div>
             </div>
@@ -84,11 +84,11 @@
         <!-- メインコンテンツ -->
         <main class="container mx-auto px-4 py-8">
             <!-- フィルターセクション -->
-            <div class="bg-gray-800 rounded-lg p-6 mb-8 border border-gray-700">
+            <div class="bg-black border-2 border-green-500 rounded-lg p-6 mb-8">
                 <div class="flex flex-col md:flex-row gap-4 items-center">
                     <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-300 mb-2">リーグ</label>
-                        <select id="leagueSelect" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <label class="block text-sm font-medium text-green-500 mb-2">リーグ</label>
+                        <select id="leagueSelect" class="w-full bg-gray-900 border-2 border-green-500 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
                             <option value="">すべてのリーグ</option>
                             <option value="PL">プレミアリーグ</option>
                             <option value="PD">ラ・リーガ</option>
@@ -99,8 +99,8 @@
                         </select>
                     </div>
                     <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-300 mb-2">期間</label>
-                        <select id="timeRangeSelect" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <label class="block text-sm font-medium text-green-500 mb-2">期間</label>
+                        <select id="timeRangeSelect" class="w-full bg-gray-900 border-2 border-green-500 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
                             <option value="today">今日</option>
                             <option value="tomorrow">明日</option>
                             <option value="week" selected>今週</option>
@@ -108,8 +108,8 @@
                         </select>
                     </div>
                     <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-300 mb-2">更新</label>
-                        <button id="refreshBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                        <label class="block text-sm font-medium text-green-500 mb-2">更新</label>
+                        <button id="refreshBtn" class="w-full bg-green-500 hover:bg-green-600 text-black font-bold py-2 px-4 rounded-lg transition-colors">
                             🔄 更新
                         </button>
                     </div>
@@ -246,18 +246,18 @@
                 }
                 
                 const matchHtml = `
-                        <div class="bg-gray-800 rounded-lg p-4 mb-4 border border-gray-700">
+                        <div class="bg-black border-2 border-green-500 rounded-lg p-4 mb-4">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center space-x-3">
                                     <div class="px-2 py-1 rounded text-xs font-bold league-${match.league}">${match.league}</div>
-                                    <div class="text-xs text-gray-400">${statusDisplay}</div>
+                                    <div class="text-xs text-green-400">${statusDisplay}</div>
                                 </div>
-                                <div class="text-xs text-gray-400">${formatDate(match.date)}</div>
+                                <div class="text-xs text-green-400">${formatDate(match.date)}</div>
                             </div>
                             
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">${match.homeTeam.charAt(0)}</div>
+                                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-black font-bold">${match.homeTeam.charAt(0)}</div>
                                     <div class="text-white font-medium">${match.homeTeam}</div>
                                 </div>
                                 
@@ -267,12 +267,12 @@
                                 
                                 <div class="flex items-center space-x-3">
                                     <div class="text-white font-medium">${match.awayTeam}</div>
-                                    <div class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold">${match.awayTeam.charAt(0)}</div>
+                                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-black font-bold">${match.awayTeam.charAt(0)}</div>
                                 </div>
                             </div>
                             
                             ${match.venue && match.venue !== 'Unknown' ? `
-                                <div class="text-xs text-gray-500 mt-3 text-center">🏟️ ${match.venue}</div>
+                                <div class="text-xs text-green-400 mt-3 text-center">🏟️ ${match.venue}</div>
                             ` : ''}
                         </div>
                     `;
