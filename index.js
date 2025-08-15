@@ -1082,7 +1082,12 @@ async function getMatchesFromAPIFootball(league, timeRange) {
         const currentMonth = today.getMonth() + 1; // 0-indexed
         
         // シーズンの決定（8月以降は新しいシーズン）
-        const season = currentMonth >= 8 ? currentYear + 1 : currentYear;
+        const season = currentMonth >= 8 ? currentYear : currentYear - 1;
+        
+        // J1リーグの場合は2024-25シーズンを使用
+        if (league === 'J1') {
+            season = 2024;
+        }
         
         switch (timeRange) {
             case 'today':
@@ -1228,7 +1233,12 @@ async function getMatchesFromFootballData(league, timeRange) {
         const today = new Date();
         const currentYear = today.getFullYear();
         const currentMonth = today.getMonth() + 1;
-        const season = currentMonth >= 8 ? currentYear + 1 : currentYear;
+        const season = currentMonth >= 8 ? currentYear : currentYear - 1;
+        
+        // J1リーグの場合は2024-25シーズンを使用
+        if (league === 'J1') {
+            season = 2024;
+        }
         
         switch (timeRange) {
             case 'today':
