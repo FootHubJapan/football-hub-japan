@@ -331,6 +331,11 @@
                     </select>
                 </div>
 
+                <div class="control-group">
+                    <label class="control-label">検索</label>
+                    <input type="text" id="searchInput" class="control-select" placeholder="チーム名や選手名で検索..." />
+                </div>
+
                 <button class="control-button" onclick="loadMatches()">試合を表示</button>
             </div>
 
@@ -354,6 +359,9 @@
             // 期間選択の変更を監視
             document.getElementById('timeRangeSelect').addEventListener('change', loadMatches);
             
+            // 検索入力の変更を監視
+            document.getElementById('searchInput').addEventListener('input', loadMatches);
+            
             // 更新ボタンのクリックを監視
             document.getElementById('refreshBtn').addEventListener('click', loadMatches);
         });
@@ -362,8 +370,9 @@
         async function loadMatches() {
             const league = document.getElementById('leagueSelect').value;
             const timeRange = document.getElementById('timeRangeSelect').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             
-            console.log('Loading matches with:', { league, timeRange });
+            console.log('Loading matches with:', { league, timeRange, searchTerm });
             
             const contentDiv = document.getElementById('scheduleContent');
             contentDiv.innerHTML = '<div class="loading">試合データを読み込み中...</div>';
@@ -394,7 +403,82 @@
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
                     console.log('Found matches:', data.matches.length);
                     currentMatches = data.matches;
-                    displayMatches(data.matches);
+                    // フィルタリングを適用
+                    const filteredMatches = filterMatches(currentMatches, league, timeRange, searchTerm);
+                    
+                    if (filteredMatches.length === 0) {
+                        contentDiv.innerHTML = '<div class="no-matches">条件に一致する試合が見つかりませんでした。</div>';
+                        return;
+                    }
+                    
+                    // 試合カードを生成
+                    const matchesHtml = filteredMatches.map(match => {
+                        const matchDate = new Date(match.date);
+                        const timeString = matchDate.toLocaleTimeString('ja-JP', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                        });
+                        const dateString = matchDate.toLocaleDateString('ja-JP', { 
+                            month: 'short', 
+                            day: 'numeric' 
+                        });
+
+                        // スコアの表示を元のnull表示に戻す
+                        const homeScore = match.homeScore;
+                        const awayScore = match.awayScore;
+                        
+                        // 試合の状態に応じた表示
+                        let statusDisplay = '';
+                        let scoreDisplay = '';
+                        
+                        if (match.status === 'TIMED' || match.status === 'Scheduled') {
+                            statusDisplay = '予定';
+                            scoreDisplay = `<span class="text-gray-400">null</span>`;
+                        } else if (match.status === 'Finished' || match.status === 'FT') {
+                            statusDisplay = '終了';
+                            scoreDisplay = `<span class="text-white font-bold">${homeScore} - ${awayScore}</span>`;
+                        } else if (match.status === 'LIVE' || match.status === 'HT') {
+                            statusDisplay = '試合中';
+                            scoreDisplay = `<span class="text-green-400 font-bold">${homeScore} - ${awayScore}</span>`;
+                        } else {
+                            statusDisplay = match.status || '未定';
+                            scoreDisplay = `<span class="text-gray-400">null</span>`;
+                        }
+                        
+                        const matchHtml = `
+                                <div class="match-card">
+                                    <div class="match-header">
+                                        <span class="match-league">${getLeagueName(match.league)}</span>
+                                        <span class="match-status ${getStatusClass(match.status)}">${getStatusText(match.status)}</span>
+                                    </div>
+                                    
+                                    <div class="match-teams">
+                                        <div class="team">
+                                            <div class="team-logo">🏟️</div>
+                                            <div class="team-name">${match.homeTeam}</div>
+                                        </div>
+                                        
+                                        <div class="match-score">
+                                            <span>${match.homeScore !== undefined && match.homeScore !== null ? match.homeScore : ''}</span>
+                                            <span>${match.homeScore !== undefined && match.homeScore !== null && match.awayScore !== undefined && match.awayScore !== null ? '-' : ''}</span>
+                                            <span>${match.awayScore !== undefined && match.awayScore !== null ? match.awayScore : ''}</span>
+                                        </div>
+                                        
+                                        <div class="team">
+                                            <div class="team-logo">🏟️</div>
+                                            <div class="team-name">${match.awayTeam}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="match-venue">${match.venue}</div>
+                                    <div class="match-time">${dateString} ${timeString}</div>
+                                </div>
+                            `;
+
+                        return matchHtml;
+                    }).join('');
+
+                    contentDiv.innerHTML = `<div class="schedule-grid">${matchesHtml}</div>`;
                 } else {
                     console.log('No matches found in response. Response structure:', data);
                     console.log('Data type:', typeof data);
@@ -476,9 +560,9 @@
                                 </div>
                                 
                                 <div class="match-score">
-                                    <span>${match.homeScore !== undefined ? match.homeScore : 'null'}</span>
-                                    <span>-</span>
-                                    <span>${match.awayScore !== undefined ? match.awayScore : 'null'}</span>
+                                    <span>${match.homeScore !== undefined && match.homeScore !== null ? match.homeScore : ''}</span>
+                                    <span>${match.homeScore !== undefined && match.homeScore !== null && match.awayScore !== undefined && match.awayScore !== null ? '-' : ''}</span>
+                                    <span>${match.awayScore !== undefined && match.awayScore !== null ? match.awayScore : ''}</span>
                                 </div>
                                 
                                 <div class="team">
@@ -498,48 +582,7 @@
             contentDiv.innerHTML = `<div class="schedule-grid">${matchesHtml}</div>`;
         }
 
-        // リーグ名を取得
-        function getLeagueName(leagueCode) {
-            const leagueNames = {
-                'PL': 'プレミアリーグ',
-                'PD': 'ラ・リーガ',
-                'SA': 'セリエA',
-                'BL1': 'ブンデスリーガ',
-                'FL1': 'リーグ・アン',
-                'J1': 'J1リーグ'
-            };
-            return leagueNames[leagueCode] || leagueCode;
-        }
 
-
-
-        // ステータスアイコンを取得
-        function getStatusIcon(status) {
-            switch (status) {
-                case 'Finished':
-                    return '<span class="text-green-400">✅</span>';
-                case 'LIVE':
-                case 'HT':
-                    return '<span class="text-red-400">🔴</span>';
-                case 'Scheduled':
-                case 'TIMED':
-                    return '<span class="text-yellow-400">⚪</span>';
-                default:
-                    return '';
-            }
-        }
-
-        // 日付をフォーマット
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return `${date.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })} ${date.toLocaleTimeString('ja-JP', { hour: 'numeric', minute: 'numeric' })}`;
-        }
-
-        // 時間をフォーマット
-        function formatTime(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleTimeString('ja-JP', { hour: 'numeric', minute: 'numeric' });
-        }
 
         // ステータスクラスを取得
         function getStatusClass(status) {
@@ -567,6 +610,31 @@
                 default:
                     return '予定';
             }
+        }
+
+        // 試合データをフィルタリング
+        function filterMatches(matches, league, timeRange, searchTerm) {
+            let filteredMatches = matches;
+            
+            // リーグでフィルタリング
+            if (league && league !== '') {
+                filteredMatches = filteredMatches.filter(match => match.league === league);
+            }
+            
+            // 検索語でフィルタリング
+            if (searchTerm && searchTerm.trim() !== '') {
+                filteredMatches = filteredMatches.filter(match => {
+                    const homeTeam = match.homeTeam.toLowerCase();
+                    const awayTeam = match.awayTeam.toLowerCase();
+                    const venue = match.venue ? match.venue.toLowerCase() : '';
+                    
+                    return homeTeam.includes(searchTerm) || 
+                           awayTeam.includes(searchTerm) || 
+                           venue.includes(searchTerm);
+                });
+            }
+            
+            return filteredMatches;
         }
     </script>
 </body>
