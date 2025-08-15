@@ -250,9 +250,9 @@
                     day: 'numeric' 
                 });
 
-                // スコアの表示を改善
-                const homeScore = match.homeScore !== null ? match.homeScore : '-';
-                const awayScore = match.awayScore !== null ? match.awayScore : '-';
+                // スコアの表示を元のnull表示に戻す
+                const homeScore = match.homeScore;
+                const awayScore = match.awayScore;
                 
                 // 試合の状態に応じた表示
                 let statusDisplay = '';
@@ -260,7 +260,7 @@
                 
                 if (match.status === 'TIMED' || match.status === 'Scheduled') {
                     statusDisplay = '予定';
-                    scoreDisplay = `<span class="text-gray-400">vs</span>`;
+                    scoreDisplay = `<span class="text-gray-400">null</span>`;
                 } else if (match.status === 'Finished' || match.status === 'FT') {
                     statusDisplay = '終了';
                     scoreDisplay = `<span class="text-white font-bold">${homeScore} - ${awayScore}</span>`;
@@ -269,11 +269,11 @@
                     scoreDisplay = `<span class="text-green-400 font-bold">${homeScore} - ${awayScore}</span>`;
                 } else {
                     statusDisplay = match.status || '未定';
-                    scoreDisplay = `<span class="text-gray-400">vs</span>`;
+                    scoreDisplay = `<span class="text-gray-400">null</span>`;
                 }
                 
-                const matchHtml = `
-                    <div class="bg-gray-800 rounded-lg p-4 mb-4 border border-gray-700 hover:border-blue-500 transition-colors">
+                                    const matchHtml = `
+                        <div class="match-card bg-gray-800 rounded-lg p-4 mb-4 border border-gray-700 hover:border-blue-500 transition-colors">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
                                 <div class="px-2 py-1 rounded text-xs font-bold league-${match.league}">${match.league}</div>
@@ -320,25 +320,7 @@
             return leagueNames[leagueCode] || leagueCode;
         }
 
-        // リーグカラーを取得
-        function getLeagueColor(leagueCode) {
-            switch (leagueCode) {
-                case 'PL':
-                    return 'bg-blue-500';
-                case 'PD':
-                    return 'bg-purple-500';
-                case 'SA':
-                    return 'bg-green-500';
-                case 'BL1':
-                    return 'bg-red-500';
-                case 'FL1':
-                    return 'bg-orange-500';
-                case 'J1':
-                    return 'bg-yellow-500';
-                default:
-                    return 'bg-gray-500';
-            }
-        }
+
 
         // ステータスアイコンを取得
         function getStatusIcon(status) {
