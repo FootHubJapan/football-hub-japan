@@ -4,123 +4,340 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>試合スケジュール - Football Hub Japan</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #1a1a1a;
+            border-bottom: 2px solid #00ff88;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            color: #00ff88;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: #cccccc;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover {
+            color: #00ff88;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            color: #00ff88;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .page-subtitle {
+            color: #cccccc;
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .schedule-controls {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-label {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .control-select {
+            background: #2a2a2a;
+            border: 1px solid #444444;
+            color: #ffffff;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            min-width: 200px;
+        }
+
+        .control-select:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        .control-button {
+            background: #00ff88;
+            color: #000000;
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .control-button:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+        }
+
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .match-card {
+            background: #1a1a1a;
+            border: 2px solid #333333;
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .match-card:hover {
+            border-color: #00ff88;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #333333;
+        }
+
+        .match-league {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .match-time {
+            color: #888888;
+            font-size: 0.9rem;
+        }
+
+        .match-teams {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .team-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .team-logo {
+            width: 40px;
+            height: 40px;
+            background: #333333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .match-score {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .match-venue {
+            color: #888888;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .match-status {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-finished {
+            background: #00ff88;
+            color: #000000;
+        }
+
+        .status-scheduled {
+            background: #ffaa00;
+            color: #000000;
+        }
+
+        .status-live {
+            background: #ff4444;
+            color: #ffffff;
+        }
+
         .loading {
             text-align: center;
-            padding: 2rem;
-            color: #10b981;
-            font-size: 1.1rem;
+            color: #888888;
+            font-size: 1.2rem;
+            padding: 3rem;
         }
-        
+
         .error {
-            background-color: #dc2626;
-            color: white;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin: 1rem 0;
             text-align: center;
+            color: #ff4444;
+            font-size: 1.2rem;
+            padding: 3rem;
         }
-        
+
         .no-matches {
             text-align: center;
-            padding: 2rem;
-            color: #10b981;
-            font-size: 1.1rem;
+            color: #888888;
+            font-size: 1.2rem;
+            padding: 3rem;
         }
-        
-        /* リーグカラーのシンプルなスタイル */
-        .league-PL { background-color: #3b82f6; }
-        .league-PD { background-color: #8b5cf6; }
-        .league-SA { background-color: #10b981; }
-        .league-BL1 { background-color: #ef4444; }
-        .league-FL1 { background-color: #f97316; }
-        .league-J1 { background-color: #eab308; }
-        
-        /* カスタムスクロールバー */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #111827;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #10b981;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #059669;
+
+        @media (max-width: 768px) {
+            .schedule-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-select {
+                min-width: auto;
+            }
+
+            .schedule-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .match-teams {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .match-score {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="min-h-screen bg-gray-900 text-white">
+
         <!-- ヘッダー -->
-        <header class="bg-black border-b-2 border-green-500">
-            <div class="container mx-auto px-4 py-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                            <span class="text-xl">⚽</span>
-                        </div>
-                        <h1 class="text-2xl font-bold text-green-500">
-                            Football Hub Japan
-                        </h1>
-                    </div>
-                    <nav class="flex space-x-6">
-                        <a href="#" class="text-gray-300 hover:text-green-500 transition-colors">ダッシュボード</a>
-                        <a href="#" class="text-gray-300 hover:text-green-500 transition-colors">データベース</a>
-                        <a href="#" class="text-gray-300 hover:text-green-500 transition-colors">レーダーチャート</a>
-                        <a href="#" class="text-gray-300 hover:text-green-500 transition-colors">AIエージェント</a>
-                    </nav>
-                </div>
-            </div>
+        <header class="header">
+            <a href="/dashboard" class="logo">⚽ Football Hub Japan</a>
+            <nav class="nav-links">
+                <a href="/dashboard" class="nav-link">ダッシュボード</a>
+                <a href="/database-enhanced" class="nav-link">データベース</a>
+                <a href="/radar" class="nav-link">レーダーチャート</a>
+                <a href="/ai-agent" class="nav-link">AIエージェント</a>
+            </nav>
         </header>
 
-        <!-- メインコンテンツ -->
-        <main class="container mx-auto px-4 py-8">
-            <!-- フィルターセクション -->
-            <div class="bg-black border-2 border-green-500 rounded-lg p-6 mb-8">
-                <div class="flex flex-col md:flex-row gap-4 items-center">
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-green-500 mb-2">リーグ</label>
-                        <select id="leagueSelect" class="w-full bg-gray-900 border-2 border-green-500 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                            <option value="">すべてのリーグ</option>
-                            <option value="PL">プレミアリーグ</option>
-                            <option value="PD">ラ・リーガ</option>
-                            <option value="SA">セリエA</option>
-                            <option value="BL1">ブンデスリーガ</option>
-                            <option value="FL1">リーグ・アン</option>
-                            <option value="J1">J1リーグ</option>
-                        </select>
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-green-500 mb-2">期間</label>
-                        <select id="timeRangeSelect" class="w-full bg-gray-900 border-2 border-green-500 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                            <option value="today">今日</option>
-                            <option value="tomorrow">明日</option>
-                            <option value="week" selected>今週</option>
-                            <option value="month">今月</option>
-                        </select>
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-green-500 mb-2">更新</label>
-                        <button id="refreshBtn" class="w-full bg-green-500 hover:bg-green-600 text-black font-bold py-2 px-4 rounded-lg transition-colors">
-                            🔄 更新
-                        </button>
-                    </div>
+        <div class="main-container">
+            <h1 class="page-title">試合スケジュール</h1>
+            <p class="page-subtitle">お気に入りのチームや選手の試合スケジュールを一覧表示</p>
+
+            <div class="schedule-controls">
+                <div class="control-group">
+                    <label class="control-label">リーグ</label>
+                    <select class="control-select" id="leagueSelect">
+                        <option value="">すべてのリーグ</option>
+                        <option value="PL">プレミアリーグ</option>
+                        <option value="PD">ラ・リーガ</option>
+                        <option value="SA">セリエA</option>
+                        <option value="BL1">ブンデスリーガ</option>
+                        <option value="FL1">リーグ・アン</option>
+                        <option value="J1">J1リーグ</option>
+                    </select>
                 </div>
+
+                <div class="control-group">
+                    <label class="control-label">期間</label>
+                    <select class="control-select" id="timeRangeSelect">
+                        <option value="today">今日</option>
+                        <option value="tomorrow">明日</option>
+                        <option value="week" selected>今週</option>
+                        <option value="month">今月</option>
+                    </select>
+                </div>
+
+                <button class="control-button" onclick="loadMatches()">試合を表示</button>
             </div>
 
             <div id="scheduleContent">
                 <div class="loading">試合データを読み込み中...</div>
             </div>
-        </main>
-    </div>
+
 
     <script src="/ai-widget.js"></script>
     <script>
@@ -246,34 +463,32 @@
                 }
                 
                 const matchHtml = `
-                        <div class="bg-black border-2 border-green-500 rounded-lg p-4 mb-4">
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="flex items-center space-x-3">
-                                    <div class="px-2 py-1 rounded text-xs font-bold league-${match.league}">${match.league}</div>
-                                    <div class="text-xs text-green-400">${statusDisplay}</div>
-                                </div>
-                                <div class="text-xs text-green-400">${formatDate(match.date)}</div>
+                        <div class="match-card">
+                            <div class="match-header">
+                                <span class="match-league">${getLeagueName(match.league)}</span>
+                                <span class="match-status ${getStatusClass(match.status)}">${getStatusText(match.status)}</span>
                             </div>
                             
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-black font-bold">${match.homeTeam.charAt(0)}</div>
-                                    <div class="text-white font-medium">${match.homeTeam}</div>
+                            <div class="match-teams">
+                                <div class="team">
+                                    <div class="team-logo">🏟️</div>
+                                    <div class="team-name">${match.homeTeam}</div>
                                 </div>
                                 
-                                <div class="text-center">
-                                    ${scoreDisplay}
+                                <div class="match-score">
+                                    <span>${match.homeScore !== undefined ? match.homeScore : 'null'}</span>
+                                    <span>-</span>
+                                    <span>${match.awayScore !== undefined ? match.awayScore : 'null'}</span>
                                 </div>
                                 
-                                <div class="flex items-center space-x-3">
-                                    <div class="text-white font-medium">${match.awayTeam}</div>
-                                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-black font-bold">${match.awayTeam.charAt(0)}</div>
+                                <div class="team">
+                                    <div class="team-logo">🏟️</div>
+                                    <div class="team-name">${match.awayTeam}</div>
                                 </div>
                             </div>
                             
-                            ${match.venue && match.venue !== 'Unknown' ? `
-                                <div class="text-xs text-green-400 mt-3 text-center">🏟️ ${match.venue}</div>
-                            ` : ''}
+                            <div class="match-venue">${match.venue}</div>
+                            <div class="match-time">${dateString} ${timeString}</div>
                         </div>
                     `;
 
