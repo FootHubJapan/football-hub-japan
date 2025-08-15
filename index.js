@@ -1,15 +1,45 @@
 const express = require('express');
 const path = require('path');
 const helmet = require('helmet');
-const dataService = require('./dataService');
-const aiService = require('./ai-service');
-const { fotMobDataService } = require('./dataService');
+
+// エラーハンドリング付きでデータサービスをインポート
+let dataService;
+let aiService;
+let fotMobDataService;
+
+try {
+    console.log('Loading dataService...');
+    dataService = require('./dataService');
+    console.log('dataService loaded successfully');
+} catch (error) {
+    console.error('Error loading dataService:', error);
+    dataService = null;
+}
+
+try {
+    console.log('Loading aiService...');
+    aiService = require('./ai-service');
+    console.log('aiService loaded successfully');
+} catch (error) {
+    console.error('Error loading aiService:', error);
+    aiService = null;
+}
+
+try {
+    console.log('Loading fotMobDataService...');
+    const dataServiceModule = require('./dataService');
+    fotMobDataService = dataServiceModule.fotMobDataService;
+    console.log('fotMobDataService loaded successfully');
+} catch (error) {
+    console.error('Error loading fotMobDataService:', error);
+    fotMobDataService = null;
+}
 
 // Load environment variables
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 // Rate limiting and retry configuration
 const RATE_LIMIT_CONFIG = {
@@ -1012,5 +1042,27 @@ app.get('/api/japanese-players/search-v2', async (req, res) => {
         console.error('Japanese players search v2 error:', error);
         res.status(500).json({ error: '日本語選手検索に失敗しました' });
     }
+});
+
+// サーバー起動処理
+
+// グローバルエラーハンドラー
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
+});
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
+}).on('error', (error) => {
+    console.error('Server error:', error);
+    process.exit(1);
 });
 
