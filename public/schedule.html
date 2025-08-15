@@ -362,8 +362,7 @@
             // 検索入力の変更を監視
             document.getElementById('searchInput').addEventListener('input', loadMatches);
             
-            // 更新ボタンのクリックを監視
-            document.getElementById('refreshBtn').addEventListener('click', loadMatches);
+
         });
 
         // 試合データを読み込む
@@ -590,8 +589,12 @@
                 case 'Finished':
                     return 'status-finished';
                 case 'Scheduled':
+                case 'NS':
                     return 'status-scheduled';
                 case 'Live':
+                case 'LIVE':
+                    return 'status-live';
+                case 'HT':
                     return 'status-live';
                 default:
                     return 'status-scheduled';
@@ -604,12 +607,29 @@
                 case 'Finished':
                     return '終了';
                 case 'Scheduled':
+                case 'NS':
                     return '予定';
                 case 'Live':
+                case 'LIVE':
                     return '生中継';
+                case 'HT':
+                    return 'ハーフタイム';
                 default:
                     return '予定';
             }
+        }
+
+        // リーグ名を取得
+        function getLeagueName(leagueCode) {
+            const leagueNames = {
+                'PL': 'プレミアリーグ',
+                'PD': 'ラ・リーガ',
+                'SA': 'セリエA',
+                'BL1': 'ブンデスリーガ',
+                'FL1': 'リーグ・アン',
+                'J1': 'J1リーグ'
+            };
+            return leagueNames[leagueCode] || leagueCode;
         }
 
         // 試合データをフィルタリング
