@@ -1082,11 +1082,23 @@ async function getMatchesFromAPIFootball(league, timeRange) {
         const currentMonth = today.getMonth() + 1; // 0-indexed
         
         // シーズンの決定（8月以降は新しいシーズン）
-        const season = currentMonth >= 8 ? currentYear : currentYear - 1;
+        let season = currentMonth >= 8 ? currentYear : currentYear - 1;
         
         // J1リーグの場合は2024-25シーズンを使用
         if (league === 'J1') {
             season = 2024;
+            console.log(`J1 League: Using season ${season}`);
+            
+            // J1リーグの場合は、より広い日付範囲で試合を取得
+            if (timeRange === 'week') {
+                const weekStart = new Date(today);
+                weekStart.setDate(today.getDate() - 7); // 1週間前から
+                fromDate = weekStart.toISOString().split('T')[0];
+            } else if (timeRange === 'month') {
+                const monthStart = new Date(today);
+                monthStart.setMonth(today.getMonth() - 1); // 1ヶ月前から
+                fromDate = monthStart.toISOString().split('T')[0];
+            }
         }
         
         switch (timeRange) {
@@ -1379,7 +1391,10 @@ function generateFallbackMatchesForDate(date, league) {
         ],
         'J1': [
             { homeTeam: '浦和レッズ', awayTeam: '横浜F・マリノス', homeScore: 2, awayScore: 1, status: 'Finished' },
-            { homeTeam: '川崎フロンターレ', awayTeam: 'FC東京', homeScore: 0, awayScore: 0, status: 'Scheduled' }
+            { homeTeam: '川崎フロンターレ', awayTeam: 'FC東京', homeScore: 0, awayScore: 0, status: 'Scheduled' },
+            { homeTeam: 'アルビレックス新潟', awayTeam: '川崎フロンターレ', homeScore: null, awayScore: null, status: 'Scheduled' },
+            { homeTeam: '鹿島アントラーズ', awayTeam: '名古屋グランパス', homeScore: 1, awayScore: 1, status: 'Finished' },
+            { homeTeam: 'セレッソ大阪', awayTeam: 'ガンバ大阪', homeScore: null, awayScore: null, status: 'Scheduled' }
         ]
     };
 

@@ -427,38 +427,55 @@
                     day: 'numeric' 
                 });
 
-                const statusClass = getStatusClass(match.status);
-                const statusText = getStatusText(match.status);
-
-                return `
-                    <div class="match-card">
-                        <div class="match-header">
-                            <span class="match-league">${getLeagueName(match.league)}</span>
-                            <span class="match-status ${statusClass}">${statusText}</span>
+                // スコアの表示を改善
+                const homeScore = match.homeScore !== null ? match.homeScore : '-';
+                const awayScore = match.awayScore !== null ? match.awayScore : '-';
+                
+                // 試合の状態に応じた表示
+                let statusDisplay = '';
+                let scoreDisplay = '';
+                
+                if (match.status === 'TIMED' || match.status === 'Scheduled') {
+                    statusDisplay = '予定';
+                    scoreDisplay = `<span class="text-gray-400">vs</span>`;
+                } else if (match.status === 'Finished' || match.status === 'FT') {
+                    statusDisplay = '終了';
+                    scoreDisplay = `<span class="text-white font-bold">${homeScore} - ${awayScore}</span>`;
+                } else if (match.status === 'LIVE' || match.status === 'HT') {
+                    statusDisplay = '試合中';
+                    scoreDisplay = `<span class="text-green-400 font-bold">${homeScore} - ${awayScore}</span>`;
+                } else {
+                    statusDisplay = match.status || '未定';
+                    scoreDisplay = `<span class="text-gray-400">vs</span>`;
+                }
+                
+                const matchHtml = `
+                    <div class="bg-gray-800 rounded-lg p-4 mb-4 border border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="text-sm text-gray-400">${match.league}</div>
+                                <div class="text-xs text-gray-500">${statusDisplay}</div>
+                            </div>
+                            <div class="text-xs text-gray-400">${dateString} ${timeString}</div>
                         </div>
-                        
-                        <div class="match-teams">
-                            <div class="team">
-                                <div class="team-logo">🏟️</div>
-                                <div class="team-name">${match.homeTeam}</div>
+                        <div class="flex items-center justify-between mt-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-xs font-bold">${match.homeTeam.charAt(0)}</div>
+                                <div class="text-white">${match.homeTeam}</div>
                             </div>
-                            
-                            <div class="match-score">
-                                <span>${match.homeScore !== undefined ? match.homeScore : '-'}</span>
-                                <span>-</span>
-                                <span>${match.awayScore !== undefined ? match.awayScore : '-'}</span>
+                            <div class="text-center">
+                                ${scoreDisplay}
                             </div>
-                            
-                            <div class="team">
-                                <div class="team-logo">🏟️</div>
-                                <div class="team-name">${match.awayTeam}</div>
+                            <div class="flex items-center space-x-3">
+                                <div class="text-white">${match.awayTeam}</div>
+                                <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-xs font-bold">${match.awayTeam.charAt(0)}</div>
                             </div>
                         </div>
-                        
-                        <div class="match-venue">${match.venue}</div>
-                        <div class="match-time">${dateString} ${timeString}</div>
+                        ${match.venue && match.venue !== 'Unknown' ? `<div class="text-xs text-gray-500 mt-2 text-center">${match.venue}</div>` : ''}
                     </div>
                 `;
+
+                return matchHtml;
             }).join('');
 
             contentDiv.innerHTML = `<div class="schedule-grid">${matchesHtml}</div>`;
