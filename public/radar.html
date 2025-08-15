@@ -836,8 +836,8 @@
                     <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: #333333; margin-bottom: 0.5rem; border-radius: 5px;">
                         <span>${statObj ? statObj.label : stat}:</span>
                         <span style="color: #00ff88; font-weight: bold;">${value}</span>
-                    </div>
-                `;
+                </div>
+            `;
             });
             html += `</div>`;
             return html;
@@ -869,7 +869,7 @@
                 
                 if (data.response) {
                     result.innerHTML = `<div class="success">${data.response}</div>`;
-                } else {
+            } else {
                     result.innerHTML = '<div class="error">AI分析を実行できませんでした</div>';
                 }
             } catch (error) {

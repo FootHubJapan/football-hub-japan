@@ -123,7 +123,7 @@ async function processIngestionQueue() {
                 setTimeout(() => {
                     dataIngestionQueue.tasks.unshift(task);
                 }, dataIngestionQueue.retryDelay * task.retries);
-            } else {
+        } else {
                 task.status = 'failed';
                 console.error(`Task permanently failed after ${task.retries} retries: ${task.type} for ${task.target}`);
             }

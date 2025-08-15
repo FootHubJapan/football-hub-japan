@@ -568,26 +568,26 @@
                         <div class="player-avatar">
                             ${player.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                         </div>
-                        <div class="player-info">
+                                <div class="player-info">
                             <div class="player-name">${player.name}</div>
                             <div class="player-team">${player.teamName || 'Unknown Team'}</div>
                             <div class="player-position">${player.position || 'Unknown Position'}</div>
-                        </div>
-                    </div>
+                                </div>
+                            </div>
                     <div class="player-stats">
-                        <div class="stat-item">
+                            <div class="stat-item">
                             <div class="stat-value">${player.nationality || 'N/A'}</div>
                             <div class="stat-label">国籍</div>
-                        </div>
-                        <div class="stat-item">
+                            </div>
+                            <div class="stat-item">
                             <div class="stat-value">${player.shirtNumber || 'N/A'}</div>
                             <div class="stat-label">背番号</div>
-                        </div>
-                        <div class="stat-item">
+                            </div>
+                            <div class="stat-item">
                             <div class="stat-value">${player.dateOfBirth ? new Date(player.dateOfBirth).getFullYear() : 'N/A'}</div>
                             <div class="stat-label">生年</div>
-                        </div>
-                    </div>
+                            </div>
+                            </div>
                     <div class="player-actions">
                         <button class="action-btn plan-btn" onclick="createPlayerPlan(${player.id})" title="プラン作成">
                             📋 プラン作成
@@ -595,8 +595,8 @@
                         <button class="action-btn radar-btn" onclick="viewPlayerRadar(${player.id})" title="レーダーチャート">
                             📈 レーダー
                         </button>
-                    </div>
-                </div>
+                            </div>
+                            </div>
             `).join('');
         }
 
