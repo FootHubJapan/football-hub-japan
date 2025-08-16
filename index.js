@@ -1582,6 +1582,350 @@ app.get('/api/japanese-players/search-v2', async (req, res) => {
     }
 });
 
+// 試合詳細データを取得するエンドポイント
+app.get('/api/match/:id/details', async (req, res) => {
+    try {
+        const matchId = req.params.id;
+        const { league } = req.query;
+        
+        console.log(`Fetching match details for ID: ${matchId}, League: ${league}`);
+        
+        let matchDetails = null;
+        
+        // API-Footballから試合詳細を取得
+        if (process.env.API_FOOTBALL_KEY) {
+            try {
+                const response = await fetch(`https://v3.football.api-sports.io/fixtures?id=${matchId}`, {
+                    headers: {
+                        'x-rapidapi-host': 'v3.football.api-sports.io',
+                        'x-rapidapi-key': process.env.API_FOOTBALL_KEY
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('API-Football match details response:', data);
+                    
+                    if (data.response && data.response.length > 0) {
+                        const fixture = data.response[0];
+                        matchDetails = {
+                            id: fixture.fixture.id,
+                            league: league || 'Unknown',
+                            homeTeam: fixture.teams.home.name,
+                            awayTeam: fixture.teams.away.name,
+                            homeScore: fixture.goals.home,
+                            awayScore: fixture.goals.away,
+                            date: fixture.fixture.date,
+                            venue: fixture.fixture.venue?.name || 'Unknown',
+                            status: fixture.fixture.status.short,
+                            statusLong: fixture.fixture.status.long,
+                            referee: fixture.fixture.referee || 'Unknown',
+                            // 試合統計
+                            stats: fixture.statistics ? {
+                                possession: {
+                                    home: fixture.statistics.find(s => s.team.id === fixture.teams.home.id)?.statistics?.find(stat => stat.type === 'Ball Possession')?.value || 0,
+                                    away: fixture.statistics.find(s => s.team.id === fixture.teams.away.id)?.statistics?.find(stat => stat.type === 'Ball Possession')?.value || 0
+                                },
+                                shots: {
+                                    home: fixture.statistics.find(s => s.team.id === fixture.teams.home.id)?.statistics?.find(stat => stat.type === 'Total Shots')?.value || 0,
+                                    away: fixture.statistics.find(s => s.team.id === fixture.teams.away.id)?.statistics?.find(stat => stat.type === 'Total Shots')?.value || 0
+                                },
+                                shotsOnTarget: {
+                                    home: fixture.statistics.find(s => s.team.id === fixture.teams.home.id)?.statistics?.find(stat => stat.type === 'Shots on Goal')?.value || 0,
+                                    away: fixture.statistics.find(s => s.team.id === fixture.teams.away.id)?.statistics?.find(stat => stat.type === 'Shots on Goal')?.value || 0
+                                },
+                                corners: {
+                                    home: fixture.statistics.find(s => s.team.id === fixture.teams.home.id)?.statistics?.find(stat => stat.type === 'Corner Kicks')?.value || 0,
+                                    away: fixture.statistics.find(s => s.team.id === fixture.teams.away.id)?.statistics?.find(stat => stat.type === 'Corner Kicks')?.value || 0
+                                },
+                                fouls: {
+                                    home: fixture.statistics.find(s => s.team.id === fixture.teams.home.id)?.statistics?.find(stat => stat.type === 'Fouls')?.value || 0,
+                                    away: fixture.statistics.find(s => s.team.id === fixture.teams.away.id)?.statistics?.find(stat => stat.type === 'Fouls')?.value || 0
+                                }
+                            } : null,
+                            // 試合イベント
+                            events: fixture.events ? fixture.events.map(event => ({
+                                time: event.time.elapsed,
+                                type: event.type,
+                                detail: event.detail,
+                                team: event.team.name,
+                                player: event.player.name,
+                                assist: event.assist?.name || null
+                            })) : [],
+                            // ラインアップ
+                            lineups: fixture.lineups ? {
+                                home: fixture.lineups.find(l => l.team.id === fixture.teams.home.id) || null,
+                                away: fixture.lineups.find(l => l.team.id === fixture.teams.away.id) || null
+                            } : null
+                        };
+                    }
+                }
+            } catch (apiError) {
+                console.error('API-Football match details error:', apiError);
+            }
+        }
+        
+        // データが見つからない場合はフォールバックデータを生成
+        if (!matchDetails) {
+            console.log('Generating fallback match details');
+            matchDetails = generateFallbackMatchDetails(matchId, league);
+        }
+        
+        res.setHeader('Content-Type', 'application/json');
+        res.json({ success: true, data: matchDetails });
+        
+    } catch (error) {
+        console.error('Error fetching match details:', error);
+        res.status(500).json({ success: false, error: '試合詳細の取得に失敗しました' });
+    }
+});
+
+// 試合イベントを取得するエンドポイント
+app.get('/api/match/:id/events', async (req, res) => {
+    try {
+        const matchId = req.params.id;
+        console.log(`Fetching match events for ID: ${matchId}`);
+        
+        // API-Footballから試合イベントを取得
+        if (process.env.API_FOOTBALL_KEY) {
+            try {
+                const response = await fetch(`https://v3.football.api-sports.io/fixtures/events?fixture=${matchId}`, {
+                    headers: {
+                        'x-rapidapi-host': 'v3.football.api-sports.io',
+                        'x-rapidapi-key': process.env.API_FOOTBALL_KEY
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('API-Football events response:', data);
+                    
+                    if (data.response && Array.isArray(data.response)) {
+                        const events = data.response.map(event => ({
+                            time: event.time.elapsed,
+                            type: event.type,
+                            detail: event.detail,
+                            team: event.team.name,
+                            player: event.player.name,
+                            assist: event.assist?.name || null,
+                            comments: event.comments || null
+                        }));
+                        
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json({ success: true, data: events });
+                        return;
+                    }
+                }
+            } catch (apiError) {
+                console.error('API-Football events error:', apiError);
+            }
+        }
+        
+        // フォールバックイベントデータ
+        const fallbackEvents = generateFallbackMatchEvents(matchId);
+        res.setHeader('Content-Type', 'application/json');
+        res.json({ success: true, data: fallbackEvents });
+        
+    } catch (error) {
+        console.error('Error fetching match events:', error);
+        res.status(500).json({ success: false, error: '試合イベントの取得に失敗しました' });
+    }
+});
+
+// 試合統計を取得するエンドポイント
+app.get('/api/match/:id/stats', async (req, res) => {
+    try {
+        const matchId = req.params.id;
+        console.log(`Fetching match stats for ID: ${matchId}`);
+        
+        // API-Footballから試合統計を取得
+        if (process.env.API_FOOTBALL_KEY) {
+            try {
+                const response = await fetch(`https://v3.football.api-sports.io/fixtures/statistics?fixture=${matchId}`, {
+                    headers: {
+                        'x-rapidapi-host': 'v3.football.api-sports.io',
+                        'x-rapidapi-key': process.env.API_FOOTBALL_KEY
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('API-Football stats response:', data);
+                    
+                    if (data.response && Array.isArray(data.response)) {
+                        const stats = data.response.map(teamStats => ({
+                            team: teamStats.team.name,
+                            statistics: teamStats.statistics.map(stat => ({
+                                type: stat.type,
+                                value: stat.value
+                            }))
+                        }));
+                        
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json({ success: true, data: stats });
+                        return;
+                    }
+                }
+            } catch (apiError) {
+                console.error('API-Football stats error:', apiError);
+            }
+        }
+        
+        // フォールバック統計データ
+        const fallbackStats = generateFallbackMatchStats(matchId);
+        res.setHeader('Content-Type', 'application/json');
+        res.json({ success: true, data: fallbackStats });
+        
+    } catch (error) {
+        console.error('Error fetching match stats:', error);
+        res.status(500).json({ success: false, error: '試合統計の取得に失敗しました' });
+    }
+});
+
+// フォールバック試合詳細データを生成
+function generateFallbackMatchDetails(matchId, league) {
+    const today = new Date();
+    const homeTeam = getRandomTeam(league);
+    const awayTeam = getRandomTeam(league);
+    
+    return {
+        id: matchId,
+        league: league || 'Unknown',
+        homeTeam: homeTeam,
+        awayTeam: awayTeam,
+        homeScore: Math.floor(Math.random() * 4),
+        awayScore: Math.floor(Math.random() * 4),
+        date: today.toISOString(),
+        venue: `${homeTeam} Stadium`,
+        status: 'Finished',
+        statusLong: 'Match Finished',
+        referee: 'Referee Name',
+        stats: {
+            possession: {
+                home: Math.floor(Math.random() * 30) + 35,
+                away: Math.floor(Math.random() * 30) + 35
+            },
+            shots: {
+                home: Math.floor(Math.random() * 10) + 5,
+                away: Math.floor(Math.random() * 10) + 5
+            },
+            shotsOnTarget: {
+                home: Math.floor(Math.random() * 8) + 3,
+                away: Math.floor(Math.random() * 8) + 3
+            },
+            corners: {
+                home: Math.floor(Math.random() * 8) + 2,
+                away: Math.floor(Math.random() * 8) + 2
+            },
+            fouls: {
+                home: Math.floor(Math.random() * 10) + 5,
+                away: Math.floor(Math.random() * 10) + 5
+            }
+        },
+        events: generateFallbackMatchEvents(matchId),
+        lineups: generateFallbackLineups(homeTeam, awayTeam)
+    };
+}
+
+// フォールバック試合イベントを生成
+function generateFallbackMatchEvents(matchId) {
+    const events = [];
+    const eventTypes = ['Goal', 'Card', 'Subst'];
+    
+    for (let i = 0; i < 8; i++) {
+        const time = Math.floor(Math.random() * 90) + 1;
+        const type = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+        
+        let event = {
+            time: time,
+            type: type,
+            detail: type === 'Goal' ? 'Normal Goal' : (type === 'Card' ? 'Yellow Card' : 'Substitution'),
+            team: Math.random() > 0.5 ? 'Home Team' : 'Away Team',
+            player: `Player ${i + 1}`,
+            assist: type === 'Goal' && Math.random() > 0.5 ? `Assist Player ${i + 1}` : null
+        };
+        
+        events.push(event);
+    }
+    
+    return events.sort((a, b) => a.time - b.time);
+}
+
+// フォールバック試合統計を生成
+function generateFallbackMatchStats(matchId) {
+    return [
+        {
+            team: 'Home Team',
+            statistics: [
+                { type: 'Ball Possession', value: '55%' },
+                { type: 'Total Shots', value: '12' },
+                { type: 'Shots on Goal', value: '6' },
+                { type: 'Corner Kicks', value: '7' },
+                { type: 'Fouls', value: '8' }
+            ]
+        },
+        {
+            team: 'Away Team',
+            statistics: [
+                { type: 'Ball Possession', value: '45%' },
+                { type: 'Total Shots', value: '8' },
+                { type: 'Shots on Goal', value: '4' },
+                { type: 'Corner Kicks', value: '5' },
+                { type: 'Fouls', value: '10' }
+            ]
+        }
+    ];
+}
+
+// フォールバックラインアップを生成
+function generateFallbackLineups(homeTeam, awayTeam) {
+    const generatePlayers = (teamName) => {
+        const players = [];
+        const positions = ['GK', 'DF', 'MF', 'FW'];
+        
+        for (let i = 0; i < 11; i++) {
+            const position = positions[Math.floor(i / 3)];
+            players.push({
+                name: `${teamName} Player ${i + 1}`,
+                number: i + 1,
+                position: position
+            });
+        }
+        
+        return players;
+    };
+    
+    return {
+        home: {
+            formation: '4-3-3',
+            startXI: generatePlayers(homeTeam).slice(0, 11),
+            substitutes: generatePlayers(homeTeam).slice(11, 16),
+            coach: `${homeTeam} Coach`
+        },
+        away: {
+            formation: '4-4-2',
+            startXI: generatePlayers(awayTeam).slice(0, 11),
+            substitutes: generatePlayers(awayTeam).slice(11, 16),
+            coach: `${awayTeam} Coach`
+        }
+    };
+}
+
+// ランダムチーム名を取得
+function getRandomTeam(league) {
+    const teams = {
+        'PL': ['Arsenal', 'Chelsea', 'Liverpool', 'Manchester United', 'Manchester City'],
+        'PD': ['Real Madrid', 'Barcelona', 'Atletico Madrid', 'Sevilla', 'Valencia'],
+        'SA': ['Juventus', 'AC Milan', 'Inter Milan', 'Napoli', 'Roma'],
+        'BL1': ['Bayern Munich', 'Borussia Dortmund', 'RB Leipzig', 'Bayer Leverkusen'],
+        'FL1': ['PSG', 'Marseille', 'Lyon', 'Monaco', 'Nice'],
+        'J1': ['浦和レッズ', '横浜F・マリノス', '川崎フロンターレ', 'FC東京', '鹿島アントラーズ']
+    };
+    
+    const leagueTeams = teams[league] || teams['PL'];
+    return leagueTeams[Math.floor(Math.random() * leagueTeams.length)];
+}
+
 // サーバー起動処理
 
 // グローバルエラーハンドラー
