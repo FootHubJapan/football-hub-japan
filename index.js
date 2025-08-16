@@ -1020,7 +1020,7 @@ app.get('/api/fotmob/matches', async (req, res) => {
         } catch (apiError) {
             console.error('API-Football error:', apiError);
             // API-Footballが失敗した場合はフォールバックデータを使用
-            matches = generateFallbackMatches(league);
+            matches = generateFallbackMatches(league, timeRange);
             console.log('Using fallback matches:', matches.length);
         }
 
@@ -1041,7 +1041,7 @@ app.get('/api/fotmob/matches', async (req, res) => {
         // どちらのAPIからもデータが取得できない場合は、フォールバックデータを使用
         if (matches.length === 0) {
             console.log('No data from APIs, using fallback data');
-            matches = generateFallbackMatches(league);
+            matches = generateFallbackMatches(league, timeRange);
             console.log('Fallback matches count:', matches.length);
         }
 
@@ -1053,7 +1053,7 @@ app.get('/api/fotmob/matches', async (req, res) => {
     } catch (error) {
         console.error('Error fetching matches:', error);
         // Return fallback matches if service fails
-        const fallbackMatches = generateFallbackMatches(league);
+        const fallbackMatches = generateFallbackMatches(league, timeRange);
         console.log('Returning fallback matches:', fallbackMatches.length);
         res.setHeader('Content-Type', 'application/json');
         res.json({ matches: fallbackMatches });
@@ -1115,6 +1115,12 @@ async function getMatchesFromAPIFootball(league, timeRange) {
                 const weekLater = new Date(today);
                 weekLater.setDate(today.getDate() + 7);
                 toDate = weekLater.toISOString().split('T')[0];
+                break;
+            case 'lastweek':
+                const lastWeekStart = new Date(today);
+                lastWeekStart.setDate(today.getDate() - 7);
+                fromDate = lastWeekStart.toISOString().split('T')[0];
+                toDate = today.toISOString().split('T')[0];
                 break;
             case 'month':
                 fromDate = today.toISOString().split('T')[0];
@@ -1266,6 +1272,12 @@ async function getMatchesFromFootballData(league, timeRange) {
                 const weekLater = new Date(today);
                 weekLater.setDate(today.getDate() + 7);
                 toDate = weekLater.toISOString().split('T')[0];
+                break;
+            case 'lastweek':
+                const lastWeekStart = new Date(today);
+                lastWeekStart.setDate(today.getDate() - 7);
+                fromDate = lastWeekStart.toISOString().split('T')[0];
+                toDate = today.toISOString().split('T')[0];
                 break;
             case 'month':
                 fromDate = today.toISOString().split('T')[0];
@@ -1461,21 +1473,55 @@ function generateFallbackMatchesForDate(date, league) {
 }
 
 // フォールバック試合データを生成
-function generateFallbackMatches(league = null) {
-    console.log('generateFallbackMatches called with league:', league);
+function generateFallbackMatches(league = null, timeRange = 'week') {
+    console.log('generateFallbackMatches called with league:', league, 'timeRange:', timeRange);
     
     const matches = [];
     const today = new Date();
     
-    for (let i = 0; i < 7; i++) {
-        const date = new Date(today);
-        date.setDate(date.getDate() + i);
-        console.log(`Processing date ${i}:`, date.toISOString().split('T')[0]);
+    let startDate, endDate;
+    
+    switch (timeRange) {
+        case 'today':
+            startDate = endDate = today;
+            break;
+        case 'tomorrow':
+            startDate = endDate = new Date(today);
+            startDate.setDate(today.getDate() + 1);
+            break;
+        case 'week':
+            startDate = today;
+            endDate = new Date(today);
+            endDate.setDate(today.getDate() + 7);
+            break;
+        case 'lastweek':
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 7);
+            endDate = today;
+            break;
+        case 'month':
+            startDate = today;
+            endDate = new Date(today);
+            endDate.setMonth(today.getMonth() + 1);
+            break;
+        default:
+            startDate = today;
+            endDate = new Date(today);
+            endDate.setDate(today.getDate() + 7);
+    }
+    
+    // 日付範囲内の各日について試合データを生成
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+        console.log(`Processing date:`, currentDate.toISOString().split('T')[0]);
         
-        const dayMatches = generateFallbackMatchesForDate(date, league);
-        console.log(`Got ${dayMatches.length} matches for date ${i}`);
+        const dayMatches = generateFallbackMatchesForDate(currentDate, league);
+        console.log(`Got ${dayMatches.length} matches for date`);
         
         matches.push(...dayMatches);
+        
+        // 次の日へ
+        currentDate.setDate(currentDate.getDate() + 1);
     }
     
     console.log(`Total fallback matches generated: ${matches.length}`);
