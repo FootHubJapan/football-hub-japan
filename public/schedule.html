@@ -287,14 +287,44 @@
         /* タブコンテンツ */
         .tab-content {
             margin-top: 20px;
+            min-height: 200px;
         }
 
         .tab-pane {
             display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .tab-pane.active {
             display: block;
+            opacity: 1;
+        }
+
+        /* タブボタンのスタイル調整 */
+        .tab-button {
+            background: #333333;
+            color: #cccccc;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-right: 5px;
+        }
+
+        .tab-button:hover {
+            background: #4CAF50;
+            color: #000000;
+            transform: translateY(-2px);
+        }
+
+        .tab-button.active {
+            background: #4CAF50;
+            color: #000000;
+            box-shadow: 0 2px 10px rgba(76, 175, 80, 0.3);
         }
 
         /* ラインアップセクション */
@@ -1067,6 +1097,14 @@
             
             // ラインアップタブの内容を更新
             updateLineupTab(matchData);
+            
+            // 最初のタブ（基本情報）をアクティブにする
+            setTimeout(() => {
+                const firstTab = document.querySelector('.tab-button');
+                if (firstTab) {
+                    firstTab.click();
+                }
+            }, 100);
         }
 
         // 基本情報タブを更新
@@ -1113,6 +1151,7 @@
         function updateStatsTab(matchData) {
             console.log('Updating stats tab with data:', matchData.stats);
             const statsContainer = document.getElementById('statsContainer');
+            console.log('Stats container found:', !!statsContainer);
             
             if (matchData.stats) {
                 const stats = matchData.stats;
@@ -1130,7 +1169,7 @@
                 const foulsHome = stats.fouls?.home || stats.fouls?.home === 0 ? stats.fouls.home : 0;
                 const foulsAway = stats.fouls?.away || stats.fouls?.away === 0 ? stats.fouls.away : 0;
                 
-                statsContainer.innerHTML = `
+                const statsHtml = `
                     <div class="stat-item">
                         <div class="stat-label">ボール支配率</div>
                         <div class="stat-value">${possessionHome}% - ${possessionAway}%</div>
@@ -1152,6 +1191,9 @@
                         <div class="stat-value">${foulsHome} - ${foulsAway}</div>
                     </div>
                 `;
+                
+                statsContainer.innerHTML = statsHtml;
+                console.log('Stats HTML updated:', statsHtml);
             } else {
                 console.log('No stats data available');
                 statsContainer.innerHTML = '<div class="no-data">統計データが利用できません</div>';
@@ -1162,6 +1204,7 @@
         function updateEventsTab(matchData) {
             console.log('Updating events tab with data:', matchData.events);
             const eventsContainer = document.getElementById('eventsContainer');
+            console.log('Events container found:', !!eventsContainer);
             
             if (matchData.events && matchData.events.length > 0) {
                 console.log('Processing events:', matchData.events);
@@ -1182,6 +1225,7 @@
                 }).join('');
                 
                 eventsContainer.innerHTML = eventsHtml;
+                console.log('Events HTML updated, events count:', matchData.events.length);
             } else {
                 console.log('No events data available');
                 eventsContainer.innerHTML = '<div class="no-data">イベントデータが利用できません</div>';
@@ -1192,6 +1236,7 @@
         function updateLineupTab(matchData) {
             console.log('Updating lineup tab with data:', matchData.lineups);
             const lineupContainer = document.getElementById('lineupContainer');
+            console.log('Lineup container found:', !!lineupContainer);
             
             if (matchData.lineups) {
                 const homeLineup = matchData.lineups.home;
@@ -1236,6 +1281,7 @@
                 
                 if (lineupHtml) {
                     lineupContainer.innerHTML = lineupHtml;
+                    console.log('Lineup HTML updated');
                 } else {
                     lineupContainer.innerHTML = '<div class="no-data">ラインアップデータが利用できません</div>';
                 }
@@ -1269,20 +1315,36 @@
 
         // タブ切り替え機能
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Setting up tab functionality...');
+            
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabPanes = document.querySelectorAll('.tab-pane');
+            
+            console.log('Found tab buttons:', tabButtons.length);
+            console.log('Found tab panes:', tabPanes.length);
             
             tabButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const targetTab = this.getAttribute('data-tab');
+                    console.log('Tab clicked:', targetTab);
                     
                     // アクティブなタブボタンを更新
                     tabButtons.forEach(btn => btn.classList.remove('active'));
                     this.classList.add('active');
                     
                     // タブペインを更新
-                    tabPanes.forEach(pane => pane.classList.remove('active'));
-                    document.getElementById(targetTab).classList.add('active');
+                    tabPanes.forEach(pane => {
+                        pane.classList.remove('active');
+                        console.log('Removing active class from:', pane.id);
+                    });
+                    
+                    const targetPane = document.getElementById(targetTab);
+                    if (targetPane) {
+                        targetPane.classList.add('active');
+                        console.log('Added active class to:', targetPane.id);
+                    } else {
+                        console.error('Target tab pane not found:', targetTab);
+                    }
                 });
             });
         });
