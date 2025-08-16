@@ -1608,6 +1608,109 @@ app.get('/api/match/:id/details', async (req, res) => {
                     
                     if (data.response && data.response.length > 0) {
                         const fixture = data.response[0];
+                        console.log('Processing fixture data:', fixture);
+                        
+                        // 統計データの処理
+                        let stats = null;
+                        if (fixture.statistics && Array.isArray(fixture.statistics)) {
+                            console.log('Processing statistics:', fixture.statistics);
+                            stats = {
+                                possession: {
+                                    home: 0,
+                                    away: 0
+                                },
+                                shots: {
+                                    home: 0,
+                                    away: 0
+                                },
+                                shotsOnTarget: {
+                                    home: 0,
+                                    away: 0
+                                },
+                                corners: {
+                                    home: 0,
+                                    away: 0
+                                },
+                                fouls: {
+                                    home: 0,
+                                    away: 0
+                                }
+                            };
+                            
+                            fixture.statistics.forEach(teamStats => {
+                                if (teamStats.team && teamStats.statistics) {
+                                    const isHome = teamStats.team.id === fixture.teams.home.id;
+                                    const teamKey = isHome ? 'home' : 'away';
+                                    
+                                    teamStats.statistics.forEach(stat => {
+                                        switch (stat.type) {
+                                            case 'Ball Possession':
+                                                stats.possession[teamKey] = parseInt(stat.value) || 0;
+                                                break;
+                                            case 'Total Shots':
+                                                stats.shots[teamKey] = parseInt(stat.value) || 0;
+                                                break;
+                                            case 'Shots on Goal':
+                                                stats.shotsOnTarget[teamKey] = parseInt(stat.value) || 0;
+                                                break;
+                                            case 'Corner Kicks':
+                                                stats.corners[teamKey] = parseInt(stat.value) || 0;
+                                                break;
+                                            case 'Fouls':
+                                                stats.fouls[teamKey] = parseInt(stat.value) || 0;
+                                                break;
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                        
+                        // イベントデータの処理
+                        let events = [];
+                        if (fixture.events && Array.isArray(fixture.events)) {
+                            console.log('Processing events:', fixture.events);
+                            events = fixture.events.map(event => ({
+                                time: event.time?.elapsed || 0,
+                                type: event.type || 'Unknown',
+                                detail: event.detail || 'Unknown',
+                                team: event.team?.name || 'Unknown',
+                                player: event.player?.name || 'Unknown',
+                                assist: event.assist?.name || null
+                            }));
+                        }
+                        
+                        // ラインアップデータの処理
+                        let lineups = null;
+                        if (fixture.lineups && Array.isArray(fixture.lineups)) {
+                            console.log('Processing lineups:', fixture.lineups);
+                            lineups = {
+                                home: null,
+                                away: null
+                            };
+                            
+                            fixture.lineups.forEach(lineup => {
+                                if (lineup.team && lineup.startXI) {
+                                    const isHome = lineup.team.id === fixture.teams.home.id;
+                                    const teamKey = isHome ? 'home' : 'away';
+                                    
+                                    lineups[teamKey] = {
+                                        formation: lineup.formation || 'Unknown',
+                                        startXI: lineup.startXI.map(player => ({
+                                            name: player.name || 'Unknown',
+                                            number: player.pos || 0,
+                                            position: player.pos || 'Unknown'
+                                        })),
+                                        substitutes: lineup.substitutes ? lineup.substitutes.map(player => ({
+                                            name: player.name || 'Unknown',
+                                            number: player.pos || 0,
+                                            position: player.pos || 'Unknown'
+                                        })) : [],
+                                        coach: lineup.coach?.name || 'Unknown'
+                                    };
+                                }
+                            });
+                        }
+                        
                         matchDetails = {
                             id: fixture.fixture.id,
                             league: league || 'Unknown',
@@ -1620,44 +1723,12 @@ app.get('/api/match/:id/details', async (req, res) => {
                             status: fixture.fixture.status.short,
                             statusLong: fixture.fixture.status.long,
                             referee: fixture.fixture.referee || 'Unknown',
-                            // 試合統計
-                            stats: fixture.statistics ? {
-                                possession: {
-                                    home: fixture.statistics.find(s => s.team.id === fixture.teams.home.id)?.statistics?.find(stat => stat.type === 'Ball Possession')?.value || 0,
-                                    away: fixture.statistics.find(s => s.team.id === fixture.teams.away.id)?.statistics?.find(stat => stat.type === 'Ball Possession')?.value || 0
-                                },
-                                shots: {
-                                    home: fixture.statistics.find(s => s.team.id === fixture.teams.home.id)?.statistics?.find(stat => stat.type === 'Total Shots')?.value || 0,
-                                    away: fixture.statistics.find(s => s.team.id === fixture.teams.away.id)?.statistics?.find(stat => stat.type === 'Total Shots')?.value || 0
-                                },
-                                shotsOnTarget: {
-                                    home: fixture.statistics.find(s => s.team.id === fixture.teams.home.id)?.statistics?.find(stat => stat.type === 'Shots on Goal')?.value || 0,
-                                    away: fixture.statistics.find(s => s.team.id === fixture.teams.away.id)?.statistics?.find(stat => stat.type === 'Shots on Goal')?.value || 0
-                                },
-                                corners: {
-                                    home: fixture.statistics.find(s => s.team.id === fixture.teams.home.id)?.statistics?.find(stat => stat.type === 'Corner Kicks')?.value || 0,
-                                    away: fixture.statistics.find(s => s.team.id === fixture.teams.away.id)?.statistics?.find(stat => stat.type === 'Corner Kicks')?.value || 0
-                                },
-                                fouls: {
-                                    home: fixture.statistics.find(s => s.team.id === fixture.teams.home.id)?.statistics?.find(stat => stat.type === 'Fouls')?.value || 0,
-                                    away: fixture.statistics.find(s => s.team.id === fixture.teams.away.id)?.statistics?.find(stat => stat.type === 'Fouls')?.value || 0
-                                }
-                            } : null,
-                            // 試合イベント
-                            events: fixture.events ? fixture.events.map(event => ({
-                                time: event.time.elapsed,
-                                type: event.type,
-                                detail: event.detail,
-                                team: event.team.name,
-                                player: event.player.name,
-                                assist: event.assist?.name || null
-                            })) : [],
-                            // ラインアップ
-                            lineups: fixture.lineups ? {
-                                home: fixture.lineups.find(l => l.team.id === fixture.teams.home.id) || null,
-                                away: fixture.lineups.find(l => l.team.id === fixture.teams.away.id) || null
-                            } : null
+                            stats: stats,
+                            events: events,
+                            lineups: lineups
                         };
+                        
+                        console.log('Processed match details:', matchDetails);
                     }
                 }
             } catch (apiError) {
@@ -1788,13 +1859,21 @@ function generateFallbackMatchDetails(matchId, league) {
     const homeTeam = getRandomTeam(league);
     const awayTeam = getRandomTeam(league);
     
+    // より現実的なスコア生成
+    const homeScore = Math.floor(Math.random() * 4);
+    const awayScore = Math.floor(Math.random() * 4);
+    
+    // ボール支配率の合計が100%になるように調整
+    const homePossession = Math.floor(Math.random() * 30) + 35;
+    const awayPossession = 100 - homePossession;
+    
     return {
         id: matchId,
         league: league || 'Unknown',
         homeTeam: homeTeam,
         awayTeam: awayTeam,
-        homeScore: Math.floor(Math.random() * 4),
-        awayScore: Math.floor(Math.random() * 4),
+        homeScore: homeScore,
+        awayScore: awayScore,
         date: today.toISOString(),
         venue: `${homeTeam} Stadium`,
         status: 'Finished',
@@ -1802,8 +1881,8 @@ function generateFallbackMatchDetails(matchId, league) {
         referee: 'Referee Name',
         stats: {
             possession: {
-                home: Math.floor(Math.random() * 30) + 35,
-                away: Math.floor(Math.random() * 30) + 35
+                home: homePossession,
+                away: awayPossession
             },
             shots: {
                 home: Math.floor(Math.random() * 10) + 5,
@@ -1822,30 +1901,63 @@ function generateFallbackMatchDetails(matchId, league) {
                 away: Math.floor(Math.random() * 10) + 5
             }
         },
-        events: generateFallbackMatchEvents(matchId),
+        events: generateFallbackMatchEvents(matchId, homeTeam, awayTeam, homeScore, awayScore),
         lineups: generateFallbackLineups(homeTeam, awayTeam)
     };
 }
 
-// フォールバック試合イベントを生成
-function generateFallbackMatchEvents(matchId) {
+// フォールバック試合イベントを生成（より現実的に）
+function generateFallbackMatchEvents(matchId, homeTeam, awayTeam, homeScore, awayTeam) {
     const events = [];
-    const eventTypes = ['Goal', 'Card', 'Subst'];
+    const totalGoals = homeScore + awayTeam;
     
-    for (let i = 0; i < 8; i++) {
+    // ゴールイベントを生成
+    for (let i = 0; i < totalGoals; i++) {
         const time = Math.floor(Math.random() * 90) + 1;
-        const type = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+        const isHomeGoal = i < homeScore;
+        const team = isHomeGoal ? homeTeam : awayTeam;
         
-        let event = {
+        events.push({
             time: time,
-            type: type,
-            detail: type === 'Goal' ? 'Normal Goal' : (type === 'Card' ? 'Yellow Card' : 'Substitution'),
-            team: Math.random() > 0.5 ? 'Home Team' : 'Away Team',
-            player: `Player ${i + 1}`,
-            assist: type === 'Goal' && Math.random() > 0.5 ? `Assist Player ${i + 1}` : null
-        };
+            type: 'Goal',
+            detail: 'Normal Goal',
+            team: team,
+            player: `${team} Player ${i + 1}`,
+            assist: Math.random() > 0.5 ? `${team} Player ${i + 2}` : null
+        });
+    }
+    
+    // カードイベントを生成
+    const cardCount = Math.floor(Math.random() * 6) + 2;
+    for (let i = 0; i < cardCount; i++) {
+        const time = Math.floor(Math.random() * 90) + 1;
+        const team = Math.random() > 0.5 ? homeTeam : awayTeam;
+        const cardType = Math.random() > 0.7 ? 'Red Card' : 'Yellow Card';
         
-        events.push(event);
+        events.push({
+            time: time,
+            type: 'Card',
+            detail: cardType,
+            team: team,
+            player: `${team} Player ${Math.floor(Math.random() * 11) + 1}`,
+            assist: null
+        });
+    }
+    
+    // 交代イベントを生成
+    const subCount = Math.floor(Math.random() * 4) + 3;
+    for (let i = 0; i < subCount; i++) {
+        const time = Math.floor(Math.random() * 60) + 30;
+        const team = Math.random() > 0.5 ? homeTeam : awayTeam;
+        
+        events.push({
+            time: time,
+            type: 'Subst',
+            detail: 'Substitution',
+            team: team,
+            player: `${team} Player ${Math.floor(Math.random() * 11) + 1}`,
+            assist: null
+        });
     }
     
     return events.sort((a, b) => a.time - b.time);

@@ -1124,6 +1124,8 @@
 
         // 詳細な試合情報を表示
         function displayDetailedMatchInfo(matchData) {
+            console.log('Displaying detailed match info:', matchData);
+            
             // モーダルタイトルを更新
             document.getElementById('modalTitle').textContent = `${matchData.homeTeam} vs ${matchData.awayTeam}`;
             
@@ -1190,42 +1192,60 @@
 
         // 統計タブを更新
         function updateStatsTab(matchData) {
+            console.log('Updating stats tab with data:', matchData.stats);
             const statsContainer = document.getElementById('statsContainer');
             
             if (matchData.stats) {
                 const stats = matchData.stats;
+                console.log('Processing stats:', stats);
+                
+                // 統計データの存在確認と安全なアクセス
+                const possessionHome = stats.possession?.home || stats.possession?.home === 0 ? stats.possession.home : 0;
+                const possessionAway = stats.possession?.away || stats.possession?.away === 0 ? stats.possession.away : 0;
+                const shotsHome = stats.shots?.home || stats.shots?.home === 0 ? stats.shots.home : 0;
+                const shotsAway = stats.shots?.away || stats.shots?.away === 0 ? stats.shots.away : 0;
+                const shotsOnTargetHome = stats.shotsOnTarget?.home || stats.shotsOnTarget?.home === 0 ? stats.shotsOnTarget.home : 0;
+                const shotsOnTargetAway = stats.shotsOnTarget?.away || stats.shotsOnTarget?.away === 0 ? stats.shotsOnTarget.away : 0;
+                const cornersHome = stats.corners?.home || stats.corners?.home === 0 ? stats.corners.home : 0;
+                const cornersAway = stats.corners?.away || stats.corners?.away === 0 ? stats.corners.away : 0;
+                const foulsHome = stats.fouls?.home || stats.fouls?.home === 0 ? stats.fouls.home : 0;
+                const foulsAway = stats.fouls?.away || stats.fouls?.away === 0 ? stats.fouls.away : 0;
+                
                 statsContainer.innerHTML = `
                     <div class="stat-item">
                         <div class="stat-label">ボール支配率</div>
-                        <div class="stat-value">${stats.possession?.home || 0}% - ${stats.possession?.away || 0}%</div>
+                        <div class="stat-value">${possessionHome}% - ${possessionAway}%</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">シュート数</div>
-                        <div class="stat-value">${stats.shots?.home || 0} - ${stats.shots?.away || 0}</div>
+                        <div class="stat-value">${shotsHome} - ${shotsAway}</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">枠内シュート</div>
-                        <div class="stat-value">${stats.shotsOnTarget?.home || 0} - ${stats.shotsOnTarget?.away || 0}</div>
+                        <div class="stat-value">${shotsOnTargetHome} - ${shotsOnTargetAway}</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">コーナーキック</div>
-                        <div class="stat-value">${stats.corners?.home || 0} - ${stats.corners?.away || 0}</div>
+                        <div class="stat-value">${cornersHome} - ${cornersAway}</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-label">ファウル</div>
-                        <div class="stat-value">${stats.fouls?.home || 0} - ${stats.fouls?.away || 0}</div>
+                        <div class="stat-value">${foulsHome} - ${foulsAway}</div>
                     </div>
                 `;
             } else {
+                console.log('No stats data available');
                 statsContainer.innerHTML = '<div class="no-data">統計データが利用できません</div>';
             }
         }
 
         // イベントタブを更新
         function updateEventsTab(matchData) {
+            console.log('Updating events tab with data:', matchData.events);
             const eventsContainer = document.getElementById('eventsContainer');
             
             if (matchData.events && matchData.events.length > 0) {
+                console.log('Processing events:', matchData.events);
                 const eventsHtml = matchData.events.map(event => {
                     const eventIcon = getEventIcon(event.type);
                     const eventColor = getEventColor(event.type);
@@ -1244,29 +1264,34 @@
                 
                 eventsContainer.innerHTML = eventsHtml;
             } else {
+                console.log('No events data available');
                 eventsContainer.innerHTML = '<div class="no-data">イベントデータが利用できません</div>';
             }
         }
 
         // ラインアップタブを更新
         function updateLineupTab(matchData) {
+            console.log('Updating lineup tab with data:', matchData.lineups);
             const lineupContainer = document.getElementById('lineupContainer');
             
             if (matchData.lineups) {
                 const homeLineup = matchData.lineups.home;
                 const awayLineup = matchData.lineups.away;
                 
+                console.log('Home lineup:', homeLineup);
+                console.log('Away lineup:', awayLineup);
+                
                 let lineupHtml = '';
                 
-                if (homeLineup) {
+                if (homeLineup && homeLineup.startXI) {
                     lineupHtml += `
                         <div class="lineup-section">
-                            <h3>${matchData.homeTeam} (${homeLineup.formation})</h3>
+                            <h3>${matchData.homeTeam} (${homeLineup.formation || '不明'})</h3>
                             <div class="lineup-players">
                                 ${homeLineup.startXI.map(player => `
                                     <div class="lineup-item">
-                                        <div class="lineup-position">${player.position}</div>
-                                        <div class="lineup-name">${player.name}</div>
+                                        <div class="lineup-position">${player.position || '不明'}</div>
+                                        <div class="lineup-name">${player.name || '不明'}</div>
                                     </div>
                                 `).join('')}
                             </div>
@@ -1274,15 +1299,15 @@
                     `;
                 }
                 
-                if (awayLineup) {
+                if (awayLineup && awayLineup.startXI) {
                     lineupHtml += `
                         <div class="lineup-section">
-                            <h3>${matchData.awayTeam} (${awayLineup.formation})</h3>
+                            <h3>${matchData.awayTeam} (${awayLineup.formation || '不明'})</h3>
                             <div class="lineup-players">
                                 ${awayLineup.startXI.map(player => `
                                     <div class="lineup-item">
-                                        <div class="lineup-position">${player.position}</div>
-                                        <div class="lineup-name">${player.name}</div>
+                                        <div class="lineup-position">${player.position || '不明'}</div>
+                                        <div class="lineup-name">${player.name || '不明'}</div>
                                     </div>
                                 `).join('')}
                             </div>
@@ -1290,8 +1315,13 @@
                     `;
                 }
                 
-                lineupContainer.innerHTML = lineupHtml;
+                if (lineupHtml) {
+                    lineupContainer.innerHTML = lineupHtml;
+                } else {
+                    lineupContainer.innerHTML = '<div class="no-data">ラインアップデータが利用できません</div>';
+                }
             } else {
+                console.log('No lineup data available');
                 lineupContainer.innerHTML = '<div class="no-data">ラインアップデータが利用できません</div>';
             }
         }
