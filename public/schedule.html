@@ -291,13 +291,13 @@
         }
 
         .tab-pane {
-            display: none !important;
+            display: none;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
 
         .tab-pane.active {
-            display: block !important;
+            display: block;
             opacity: 1;
         }
 
@@ -1105,8 +1105,8 @@
                 if (firstTab && firstPane) {
                     // すべてのタブペインを非表示
                     document.querySelectorAll('.tab-pane').forEach(pane => {
-                        pane.style.setProperty('display', 'none', 'important');
-                        pane.style.setProperty('opacity', '0', 'important');
+                        pane.style.display = 'none';
+                        pane.style.opacity = '0';
                         pane.classList.remove('active');
                     });
                     
@@ -1115,8 +1115,8 @@
                     firstTab.classList.add('active');
                     
                     // 最初のタブペインを表示
-                    firstPane.style.setProperty('display', 'block', 'important');
-                    firstPane.style.setProperty('opacity', '1', 'important');
+                    firstPane.style.display = 'block';
+                    firstPane.style.opacity = '1';
                     firstPane.classList.add('active');
                     
                     console.log('First tab activated and displayed');
@@ -1364,15 +1364,15 @@
                         console.log('Target pane display style:', targetPane.style.display);
                         console.log('Target pane classes:', targetPane.className);
                         
-                        // 強制的に表示（CSSの!importantを上書き）
-                        targetPane.style.setProperty('display', 'block', 'important');
-                        targetPane.style.setProperty('opacity', '1', 'important');
+                        // シンプルに表示
+                        targetPane.style.display = 'block';
+                        targetPane.style.opacity = '1';
                         
-                        // 他のタブペインを確実に非表示
+                        // 他のタブペインを非表示
                         tabPanes.forEach(pane => {
                             if (pane !== targetPane) {
-                                pane.style.setProperty('display', 'none', 'important');
-                                pane.style.setProperty('opacity', '0', 'important');
+                                pane.style.display = 'none';
+                                pane.style.opacity = '0';
                             }
                         });
                     } else {
