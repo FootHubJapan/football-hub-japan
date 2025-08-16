@@ -290,13 +290,14 @@
             min-height: 200px;
         }
 
-        .tab-pane {
+        /* より具体的なセレクターで優先度を下げる */
+        .modal-content .tab-pane {
             display: none;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
 
-        .tab-pane.active {
+        .modal-content .tab-pane.active {
             display: block;
             opacity: 1;
         }
@@ -1103,10 +1104,9 @@
                 const firstTab = document.querySelector('.tab-button');
                 const firstPane = document.getElementById('overview');
                 if (firstTab && firstPane) {
-                    // すべてのタブペインを非表示
+                    // すべてのタブペインを強力に非表示
                     document.querySelectorAll('.tab-pane').forEach(pane => {
-                        pane.style.display = 'none';
-                        pane.style.opacity = '0';
+                        pane.style.cssText = 'display: none !important; opacity: 0 !important;';
                         pane.classList.remove('active');
                     });
                     
@@ -1114,12 +1114,11 @@
                     document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
                     firstTab.classList.add('active');
                     
-                    // 最初のタブペインを表示
-                    firstPane.style.display = 'block';
-                    firstPane.style.opacity = '1';
+                    // 最初のタブペインを強力に表示
+                    firstPane.style.cssText = 'display: block !important; opacity: 1 !important;';
                     firstPane.classList.add('active');
                     
-                    console.log('First tab activated and displayed');
+                    console.log('First tab activated and displayed with force');
                 }
             }, 100);
         }
@@ -1361,20 +1360,21 @@
                         console.log('Added active class to:', targetPane.id);
                         
                         // タブコンテンツの表示状態を確認
-                        console.log('Target pane display style:', targetPane.style.display);
+                        console.log('Target pane display style before:', targetPane.style.display);
                         console.log('Target pane classes:', targetPane.className);
                         
-                        // シンプルに表示
-                        targetPane.style.display = 'block';
-                        targetPane.style.opacity = '1';
+                        // 強力に表示（CSSの優先度を上書き）
+                        targetPane.style.cssText = 'display: block !important; opacity: 1 !important;';
                         
-                        // 他のタブペインを非表示
+                        // 他のタブペインを強力に非表示
                         tabPanes.forEach(pane => {
                             if (pane !== targetPane) {
-                                pane.style.display = 'none';
-                                pane.style.opacity = '0';
+                                pane.style.cssText = 'display: none !important; opacity: 0 !important;';
+                                pane.classList.remove('active');
                             }
                         });
+                        
+                        console.log('Target pane display style after:', targetPane.style.display);
                     } else {
                         console.error('Target tab pane not found:', targetTab);
                     }
