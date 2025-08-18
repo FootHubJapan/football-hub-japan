@@ -288,6 +288,7 @@
         .tab-content {
             margin-top: 20px;
             min-height: 200px;
+            position: relative;
         }
 
         /* より具体的なセレクターで優先度を下げる */
@@ -295,11 +296,24 @@
             display: none;
             opacity: 0;
             transition: opacity 0.3s ease;
+            position: relative;
+            min-height: 100px;
         }
 
         .modal-content .tab-pane.active {
-            display: block;
-            opacity: 1;
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            height: auto !important;
+            width: auto !important;
+            position: relative !important;
+        }
+
+        /* 強制表示用のスタイル */
+        .modal-content .tab-pane[style*="display: block"] {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
         }
 
         /* タブボタンのスタイル調整 */
@@ -1339,6 +1353,19 @@
             console.log('Found tab buttons:', tabButtons.length);
             console.log('Found tab panes:', tabPanes.length);
             
+            // デバッグ用：タブペインの詳細情報をログ出力
+            tabPanes.forEach((pane, index) => {
+                console.log(`Tab pane ${index}:`, {
+                    id: pane.id,
+                    classes: pane.className,
+                    display: pane.style.display,
+                    computedDisplay: window.getComputedStyle(pane).display,
+                    offsetHeight: pane.offsetHeight,
+                    offsetWidth: pane.offsetWidth,
+                    innerHTML: pane.innerHTML.substring(0, 100) + '...'
+                });
+            });
+            
             tabButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const targetTab = this.getAttribute('data-tab');
@@ -1362,19 +1389,32 @@
                         // タブコンテンツの表示状態を確認
                         console.log('Target pane display style before:', targetPane.style.display);
                         console.log('Target pane classes:', targetPane.className);
+                        console.log('Target pane computed display:', window.getComputedStyle(targetPane).display);
+                        console.log('Target pane offset dimensions:', targetPane.offsetWidth, 'x', targetPane.offsetHeight);
                         
                         // 強力に表示（CSSの優先度を上書き）
-                        targetPane.style.cssText = 'display: block !important; opacity: 1 !important;';
+                        targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: auto !important;';
                         
                         // 他のタブペインを強力に非表示
                         tabPanes.forEach(pane => {
                             if (pane !== targetPane) {
-                                pane.style.cssText = 'display: none !important; opacity: 0 !important;';
+                                pane.style.cssText = 'display: none !important; opacity: 0 !important; visibility: hidden !important;';
                                 pane.classList.remove('active');
                             }
                         });
                         
                         console.log('Target pane display style after:', targetPane.style.display);
+                        console.log('Target pane computed display after:', window.getComputedStyle(targetPane).display);
+                        console.log('Target pane offset dimensions after:', targetPane.offsetWidth, 'x', targetPane.offsetHeight);
+                        
+                        // 強制リフロー
+                        targetPane.offsetHeight;
+                        
+                        // さらに強制的に表示
+                        setTimeout(() => {
+                            targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: auto !important; position: relative !important;';
+                            console.log('Final force display applied');
+                        }, 10);
                     } else {
                         console.error('Target tab pane not found:', targetTab);
                     }
