@@ -395,6 +395,34 @@
             gap: 10px;
         }
 
+        .lineup-item {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .lineup-item:hover {
+            background: rgba(76, 175, 80, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .lineup-position {
+            color: #4CAF50;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .lineup-name {
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
         /* データなし表示 */
         .no-data {
             text-align: center;
@@ -1323,6 +1351,29 @@
                 console.log('Home lineup:', homeLineup);
                 console.log('Away lineup:', awayLineup);
                 
+                // プレイヤーデータの詳細をログ出力
+                if (homeLineup && homeLineup.startXI) {
+                    console.log('Home team startXI details:');
+                    homeLineup.startXI.forEach((player, index) => {
+                        console.log(`  Player ${index + 1}:`, {
+                            name: player.name,
+                            position: player.position,
+                            rawData: player
+                        });
+                    });
+                }
+                
+                if (awayLineup && awayLineup.startXI) {
+                    console.log('Away team startXI details:');
+                    awayLineup.startXI.forEach((player, index) => {
+                        console.log(`  Player ${index + 1}:`, {
+                            name: player.name,
+                            position: player.position,
+                            rawData: player
+                        });
+                    });
+                }
+                
                 let lineupHtml = '';
                 
                 if (homeLineup && homeLineup.startXI) {
@@ -1359,7 +1410,8 @@
                 
                 if (lineupHtml) {
                     lineupContainer.innerHTML = lineupHtml;
-                    console.log('Lineup HTML updated');
+                    console.log('Lineup HTML updated with actual player data');
+                    console.log('Lineup HTML content:', lineupHtml.substring(0, 200) + '...');
                 } else {
                     lineupContainer.innerHTML = '<div class="no-data">ラインアップデータが利用できません</div>';
                 }
