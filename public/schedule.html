@@ -298,6 +298,7 @@
             transition: opacity 0.3s ease;
             position: relative;
             min-height: 100px;
+            width: 100%;
         }
 
         .modal-content .tab-pane.active {
@@ -305,8 +306,9 @@
             opacity: 1 !important;
             visibility: visible !important;
             height: auto !important;
-            width: auto !important;
+            width: 100% !important;
             position: relative !important;
+            min-height: 200px !important;
         }
 
         /* 強制表示用のスタイル */
@@ -314,6 +316,20 @@
             display: block !important;
             opacity: 1 !important;
             visibility: visible !important;
+            min-height: 200px !important;
+            width: 100% !important;
+        }
+
+        /* タブペイン内のコンテナを確実に表示 */
+        .modal-content .tab-pane .stats-container,
+        .modal-content .tab-pane .events-container,
+        .modal-content .tab-pane .lineup-container {
+            display: block !important;
+            min-height: 150px !important;
+            width: 100% !important;
+            padding: 20px !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-radius: 8px !important;
         }
 
         /* タブボタンのスタイル調整 */
@@ -1120,7 +1136,7 @@
                 if (firstTab && firstPane) {
                     // すべてのタブペインを強力に非表示
                     document.querySelectorAll('.tab-pane').forEach(pane => {
-                        pane.style.cssText = 'display: none !important; opacity: 0 !important;';
+                        pane.style.cssText = 'display: none !important; opacity: 0 !important; visibility: hidden !important;';
                         pane.classList.remove('active');
                     });
                     
@@ -1129,10 +1145,17 @@
                     firstTab.classList.add('active');
                     
                     // 最初のタブペインを強力に表示
-                    firstPane.style.cssText = 'display: block !important; opacity: 1 !important;';
+                    firstPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 200px !important; position: relative !important;';
                     firstPane.classList.add('active');
                     
+                    // 基本情報タブの内容も強制表示
+                    const basicInfo = firstPane.querySelector('#basicInfo');
+                    if (basicInfo) {
+                        basicInfo.style.cssText = 'display: block !important; min-height: 100px !important; width: 100% !important; padding: 20px !important;';
+                    }
+                    
                     console.log('First tab activated and displayed with force');
+                    console.log('First tab dimensions:', firstPane.offsetWidth, 'x', firstPane.offsetHeight);
                 }
             }, 100);
         }
@@ -1393,7 +1416,13 @@
                         console.log('Target pane offset dimensions:', targetPane.offsetWidth, 'x', targetPane.offsetHeight);
                         
                         // 強力に表示（CSSの優先度を上書き）
-                        targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: auto !important;';
+                        targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 200px !important; position: relative !important;';
+                        
+                        // タブペイン内のコンテナも強制表示
+                        const containers = targetPane.querySelectorAll('.stats-container, .events-container, .lineup-container');
+                        containers.forEach(container => {
+                            container.style.cssText = 'display: block !important; min-height: 150px !important; width: 100% !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important;';
+                        });
                         
                         // 他のタブペインを強力に非表示
                         tabPanes.forEach(pane => {
@@ -1412,8 +1441,15 @@
                         
                         // さらに強制的に表示
                         setTimeout(() => {
-                            targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: auto !important; position: relative !important;';
+                            targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 200px !important; position: relative !important;';
+                            
+                            // コンテナも再度強制表示
+                            containers.forEach(container => {
+                                container.style.cssText = 'display: block !important; min-height: 150px !important; width: 100% !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important;';
+                            });
+                            
                             console.log('Final force display applied');
+                            console.log('Final dimensions:', targetPane.offsetWidth, 'x', targetPane.offsetHeight);
                         }, 10);
                     } else {
                         console.error('Target tab pane not found:', targetTab);
