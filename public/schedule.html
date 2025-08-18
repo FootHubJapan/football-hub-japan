@@ -171,10 +171,12 @@
             padding: 30px;
             border: 2px solid #4CAF50;
             border-radius: 15px;
-            width: 80%;
-            max-width: 600px;
+            width: 90%;
+            max-width: none !important;
+            min-width: 800px !important;
             position: relative;
             color: white;
+            overflow: visible !important;
         }
 
         .close {
@@ -287,11 +289,12 @@
         /* タブコンテンツ */
         .tab-content {
             margin-top: 20px;
-            min-height: 200px;
-            position: relative;
-            width: 100%;
-            height: auto;
-            overflow: visible;
+            min-height: 300px !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+            position: relative !important;
+            display: block !important;
         }
 
         /* より具体的なセレクターで優先度を下げる */
@@ -300,10 +303,10 @@
             opacity: 0;
             transition: opacity 0.3s ease;
             position: relative;
-            min-height: 200px;
-            width: 100%;
-            height: auto;
-            overflow: visible;
+            min-height: 250px !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
         }
 
         .modal-content .tab-pane.active {
@@ -313,7 +316,7 @@
             height: auto !important;
             width: 100% !important;
             position: relative !important;
-            min-height: 200px !important;
+            min-height: 250px !important;
             overflow: visible !important;
         }
 
@@ -322,7 +325,7 @@
             display: block !important;
             opacity: 1 !important;
             visibility: visible !important;
-            min-height: 200px !important;
+            min-height: 250px !important;
             width: 100% !important;
             overflow: visible !important;
         }
@@ -332,7 +335,7 @@
         .modal-content .tab-pane .events-container,
         .modal-content .tab-pane .lineup-container {
             display: block !important;
-            min-height: 150px !important;
+            min-height: 200px !important;
             width: 100% !important;
             padding: 20px !important;
             background: rgba(255, 255, 255, 0.05) !important;
@@ -1437,19 +1440,25 @@
                         console.log('Target pane computed display:', window.getComputedStyle(targetPane).display);
                         console.log('Target pane offset dimensions:', targetPane.offsetWidth, 'x', targetPane.offsetHeight);
                         
+                        // モーダル全体の寸法を強制制御
+                        const modalContent = targetPane.closest('.modal-content');
+                        if (modalContent) {
+                            modalContent.style.cssText = 'width: 90% !important; max-width: none !important; min-width: 800px !important; overflow: visible !important; position: relative !important;';
+                        }
+                        
                         // 強力に表示（CSSの優先度を上書き）
-                        targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 200px !important; position: relative !important; overflow: visible !important;';
+                        targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: visible !important;';
                         
                         // タブペイン内のコンテナも強制表示
                         const containers = targetPane.querySelectorAll('.stats-container, .events-container, .lineup-container');
                         containers.forEach(container => {
-                            container.style.cssText = 'display: block !important; min-height: 150px !important; width: 100% !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; overflow: visible !important; position: relative !important;';
+                            container.style.cssText = 'display: block !important; min-height: 200px !important; width: 100% !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; overflow: visible !important; position: relative !important;';
                         });
                         
                         // 親要素の寸法制限も解除
                         const tabContent = targetPane.closest('.tab-content');
                         if (tabContent) {
-                            tabContent.style.cssText = 'min-height: 200px !important; width: 100% !important; height: auto !important; overflow: visible !important; position: relative !important;';
+                            tabContent.style.cssText = 'min-height: 300px !important; width: 100% !important; height: auto !important; overflow: visible !important; position: relative !important; display: block !important;';
                         }
                         
                         // 他のタブペインを強力に非表示
@@ -1469,22 +1478,28 @@
                         
                         // さらに強制的に表示
                         setTimeout(() => {
-                            targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 200px !important; position: relative !important; overflow: visible !important;';
+                            // モーダル全体も再度強制
+                            if (modalContent) {
+                                modalContent.style.cssText = 'width: 90% !important; max-width: none !important; min-width: 800px !important; overflow: visible !important; position: relative !important;';
+                            }
+                            
+                            targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: visible !important;';
                             
                             // コンテナも再度強制表示
                             containers.forEach(container => {
-                                container.style.cssText = 'display: block !important; min-height: 150px !important; width: 100% !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; overflow: visible !important; position: relative !important;';
+                                container.style.cssText = 'display: block !important; min-height: 200px !important; width: 100% !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; overflow: visible !important; position: relative !important;';
                             });
                             
                             // 親要素も再度強制
                             if (tabContent) {
-                                tabContent.style.cssText = 'min-height: 200px !important; width: 100% !important; height: auto !important; overflow: visible !important; position: relative !important;';
+                                tabContent.style.cssText = 'min-height: 300px !important; width: 100% !important; height: auto !important; overflow: visible !important; position: relative !important; display: block !important;';
                             }
                             
                             console.log('Final force display applied');
                             console.log('Final dimensions:', targetPane.offsetWidth, 'x', targetPane.offsetHeight);
                             console.log('Container count:', containers.length);
                             console.log('Parent tab-content dimensions:', tabContent ? tabContent.offsetWidth + ' x ' + tabContent.offsetHeight : 'not found');
+                            console.log('Modal content dimensions:', modalContent ? modalContent.offsetWidth + ' x ' + modalContent.offsetHeight : 'not found');
                         }, 10);
                     } else {
                         console.error('Target tab pane not found:', targetTab);
