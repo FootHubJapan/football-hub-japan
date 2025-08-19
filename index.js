@@ -1695,16 +1695,38 @@ app.get('/api/match/:id/details', async (req, res) => {
                                     
                                     lineups[teamKey] = {
                                         formation: lineup.formation || 'Unknown',
-                                        startXI: lineup.startXI.map(player => ({
-                                            name: player.name || 'Unknown',
-                                            number: player.pos || 0,
-                                            position: player.pos || 'Unknown'
-                                        })),
-                                        substitutes: lineup.substitutes ? lineup.substitutes.map(player => ({
-                                            name: player.name || 'Unknown',
-                                            number: player.pos || 0,
-                                            position: player.pos || 'Unknown'
-                                        })) : [],
+                                        startXI: lineup.startXI.map(player => {
+                                            // API-Footballの正しいデータ構造に対応
+                                            const playerName = player.player?.name || player.name || 'Unknown';
+                                            const playerPosition = player.player?.pos || player.pos || 'Unknown';
+                                            const playerNumber = player.player?.number || player.number || 0;
+                                            
+                                            console.log(`  Processing player:`, {
+                                                playerObject: player,
+                                                playerKeys: Object.keys(player),
+                                                playerName: playerName,
+                                                playerPosition: playerPosition,
+                                                playerNumber: playerNumber
+                                            });
+                                            
+                                            return {
+                                                name: playerName,
+                                                number: playerNumber,
+                                                position: playerPosition
+                                            };
+                                        }),
+                                        substitutes: lineup.substitutes ? lineup.substitutes.map(player => {
+                                            // API-Footballの正しいデータ構造に対応
+                                            const playerName = player.player?.name || player.name || 'Unknown';
+                                            const playerPosition = player.player?.pos || player.pos || 'Unknown';
+                                            const playerNumber = player.player?.number || player.number || 0;
+                                            
+                                            return {
+                                                name: playerName,
+                                                number: playerNumber,
+                                                position: playerPosition
+                                            };
+                                        }) : [],
                                         coach: lineup.coach?.name || 'Unknown'
                                     };
                                 }
@@ -1964,7 +1986,10 @@ function generateFallbackMatchEvents(matchId, homeTeam, awayTeam, homeScore, awa
 }
 
 // フォールバック試合統計を生成
-function generateFallbackMatchStats(matchId) {
+function generateFallbackMatchStats(matchId) {基本情報
+試合統計
+試合イベント
+ラインアップ
     return [
         {
             team: 'Home Team',
