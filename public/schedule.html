@@ -1062,6 +1062,9 @@
             overflow-y: auto;
             overflow-x: hidden;
             padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(76, 175, 80, 0.3);
         }
 
         .basic-info.fotmob-style::-webkit-scrollbar {
@@ -1382,92 +1385,7 @@
             overflow: visible;
         }
 
-        /* 統計タブのスクロール設定 */
-        .stats-container {
-            max-height: 60vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            border: 1px solid rgba(76, 175, 80, 0.3);
-        }
 
-        .stats-container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .stats-container::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
-
-        .stats-container::-webkit-scrollbar-thumb {
-            background: rgba(76, 175, 80, 0.6);
-            border-radius: 4px;
-        }
-
-        .stats-container::-webkit-scrollbar-thumb:hover {
-            background: rgba(76, 175, 80, 0.8);
-        }
-
-        /* イベントタブのスクロール設定 */
-        .events-container {
-            max-height: 60vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            border: 1px solid rgba(76, 175, 80, 0.3);
-        }
-
-        .events-container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .events-container::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
-
-        .events-container::-webkit-scrollbar-thumb {
-            background: rgba(76, 175, 80, 0.6);
-            border-radius: 4px;
-        }
-
-        .events-container::-webkit-scrollbar-thumb:hover {
-            background: rgba(76, 175, 80, 0.8);
-        }
-
-        /* ラインアップタブのスクロール設定 */
-        .lineup-container {
-            max-height: 60vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            border: 1px solid rgba(76, 175, 80, 0.3);
-        }
-
-        .lineup-container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .lineup-container::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
-
-        .lineup-container::-webkit-scrollbar-thumb {
-            background: rgba(76, 175, 80, 0.6);
-            border-radius: 4px;
-        }
-
-        .lineup-container::-webkit-scrollbar-thumb:hover {
-            background: rgba(76, 175, 80, 0.8);
-        }
 
         /* タブペイン自体のスクロール設定を調整 */
         .tab-pane {
@@ -1475,7 +1393,7 @@
             padding: 20px;
             min-height: 400px;
             max-height: none;
-            overflow: visible;
+            overflow: hidden;
         }
 
         .tab-pane.active {
@@ -1806,6 +1724,22 @@
                 });
             });
             
+            // スクロールイベントの伝播を防ぐ
+            const scrollableContainers = document.querySelectorAll('.basic-info.fotmob-style, .stats-container, .events-container, .lineup-container, .formation-display, .lineup-players.fotmob-grid');
+            scrollableContainers.forEach(container => {
+                container.addEventListener('wheel', function(e) {
+                    e.stopPropagation();
+                });
+                
+                container.addEventListener('touchstart', function(e) {
+                    e.stopPropagation();
+                });
+                
+                container.addEventListener('touchmove', function(e) {
+                    e.stopPropagation();
+                });
+            });
+            
             tabButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const targetTab = this.getAttribute('data-tab');
@@ -1842,7 +1776,7 @@
                         }
                         
                         // 強力に表示（CSSの優先度を上書き）
-                        targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: visible !important;';
+                        targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: hidden !important;';
                         
                         // タブペイン内のコンテナも強制表示
                         const containers = targetPane.querySelectorAll('.stats-container, .events-container, .lineup-container');
@@ -1853,7 +1787,7 @@
                         // 親要素の寸法制限も解除
                         const tabContent = targetPane.closest('.tab-content');
                         if (tabContent) {
-                            tabContent.style.cssText = 'min-height: 300px !important; width: 100% !important; height: auto !important; overflow: visible !important; position: relative !important; display: block !important;';
+                            tabContent.style.cssText = 'min-height: 300px !important; width: 100% !important; height: auto !important; overflow: hidden !important; position: relative !important; display: block !important;';
                         }
                         
                         // 他のタブペインを強力に非表示
@@ -1878,7 +1812,7 @@
                                 modalContent.style.cssText = 'width: 90% !important; max-width: none !important; min-width: 800px !important; overflow: visible !important; position: relative !important;';
                             }
                             
-                            targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: visible !important;';
+                            targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: hidden !important;';
                             
                             // コンテナも再度強制表示
                             containers.forEach(container => {
@@ -1887,7 +1821,7 @@
                             
                             // 親要素も再度強制
                             if (tabContent) {
-                                tabContent.style.cssText = 'min-height: 300px !important; width: 100% !important; height: auto !important; overflow: visible !important; position: relative !important; display: block !important;';
+                                tabContent.style.cssText = 'min-height: 300px !important; width: 100% !important; height: auto !important; overflow: hidden !important; position: relative !important; display: block !important;';
                             }
                             
                             console.log('Final force display applied');
