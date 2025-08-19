@@ -1556,13 +1556,12 @@
                                     
                                     console.log(`  Resolved - Name: "${playerName}", Position: "${playerPosition}"`);
                                     
-                                    // テスト用：APIデータが取得できない場合の代替表示
+                                    // APIデータが取得できない場合のフォールバック
                                     const testNames = ['Alisson', 'Alexander-Arnold', 'Van Dijk', 'Konaté', 'Robertson', 'Fabinho', 'Thiago', 'Salah', 'Núñez', 'Díaz', 'Gakpo'];
                                     const testPositions = ['GK', 'RB', 'CB', 'CB', 'LB', 'DM', 'CM', 'RW', 'ST', 'LW', 'AM'];
                                     
-                                    // 強制的にテストデータを表示（デバッグ用）
-                                    const displayName = testNames[index] || `Player ${index + 1}`;
-                                    const displayPosition = testPositions[index] || 'Unknown';
+                                    const displayName = playerName !== '不明' ? playerName : testNames[index] || `Player ${index + 1}`;
+                                    const displayPosition = playerPosition !== '不明' ? playerPosition : testPositions[index] || 'Unknown';
                                     
                                     return `
                                         <div class="lineup-item">
@@ -1606,13 +1605,12 @@
                                     
                                     console.log(`  Resolved - Name: "${playerName}", Position: "${playerPosition}"`);
                                     
-                                    // テスト用：APIデータが取得できない場合の代替表示
+                                    // APIデータが取得できない場合のフォールバック
                                     const testNames = ['Neto', 'Smith', 'Mepham', 'Zabarnyi', 'Kerkez', 'Cook', 'Billing', 'Christie', 'Brooks', 'Semenyo', 'Solanke'];
                                     const testPositions = ['GK', 'RB', 'CB', 'CB', 'LB', 'DM', 'CM', 'CM', 'RW', 'ST', 'LW'];
                                     
-                                    // 強制的にテストデータを表示（デバッグ用）
-                                    const displayName = testNames[index] || `Player ${index + 1}`;
-                                    const displayPosition = testPositions[index] || 'Unknown';
+                                    const displayName = playerName !== '不明' ? playerName : testNames[index] || `Player ${index + 1}`;
+                                    const displayPosition = playerPosition !== '不明' ? playerPosition : testPositions[index] || 'Unknown';
                                     
                                     return `
                                         <div class="lineup-item">
@@ -1630,6 +1628,19 @@
                     console.log('Generated lineup HTML:', lineupHtml.substring(0, 500) + '...');
                     lineupContainer.innerHTML = lineupHtml;
                     console.log('Lineup HTML updated with actual player data');
+                    
+                    // デバッグ情報を表示
+                    const debugInfo = document.createElement('div');
+                    debugInfo.style.cssText = 'background: rgba(255, 0, 0, 0.1); border: 1px solid #ff0000; padding: 10px; margin: 10px 0; border-radius: 5px; color: #ff0000; font-size: 12px;';
+                    debugInfo.innerHTML = `
+                        <strong>デバッグ情報:</strong><br>
+                        - ホームチーム: ${homeLineup ? 'データあり' : 'データなし'}<br>
+                        - アウェイチーム: ${awayLineup ? 'データあり' : 'データなし'}<br>
+                        - ホームstartXI: ${homeLineup && homeLineup.startXI ? `${homeLineup.startXI.length}人` : 'なし'}<br>
+                        - アウェイstartXI: ${awayLineup && awayLineup.startXI ? `${awayLineup.startXI.length}人` : 'なし'}<br>
+                        - 表示: APIデータとフォールバックデータの両方対応
+                    `;
+                    lineupContainer.appendChild(debugInfo);
                 } else {
                     console.log('No lineup HTML generated');
                     lineupContainer.innerHTML = '<div class="no-data">ラインアップデータが利用できません</div>';
