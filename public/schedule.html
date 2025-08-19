@@ -1406,9 +1406,8 @@
             display: none;
             padding: 20px;
             min-height: 400px;
-            max-height: 600px;
-            overflow-y: auto;
-            overflow-x: hidden;
+            max-height: none;
+            overflow: visible;
         }
 
         .tab-pane.active {
@@ -1470,7 +1469,7 @@
 
         /* 統計タブのスクロール設定 */
         .stats-container {
-            max-height: 500px;
+            max-height: 400px;
             overflow-y: auto;
             padding: 20px;
             background: rgba(255, 255, 255, 0.05);
@@ -1498,7 +1497,7 @@
 
         /* イベントタブのスクロール設定 */
         .events-container {
-            max-height: 500px;
+            max-height: 400px;
             overflow-y: auto;
             padding: 20px;
             background: rgba(255, 255, 255, 0.05);
@@ -1526,7 +1525,7 @@
 
         /* ラインアップタブのスクロール設定 */
         .lineup-container {
-            max-height: 600px;
+            max-height: 500px;
             overflow-y: auto;
             padding: 20px;
             background: rgba(255, 255, 255, 0.05);
@@ -1552,45 +1551,17 @@
             background: rgba(76, 175, 80, 0.8);
         }
 
-        /* モバイル対応のスクロール設定 */
-        @media (max-width: 768px) {
-            .modal-content {
-                width: 95%;
-                min-width: auto;
-                max-height: 95vh;
-                margin: 2% auto;
-            }
-            
-            .tab-pane {
-                max-height: 70vh;
-                padding: 15px;
-            }
-            
-            .stats-container,
-            .events-container,
-            .lineup-container {
-                max-height: 60vh;
-                padding: 15px;
-            }
-            
-            .formation-display {
-                padding: 15px;
-            }
-            
-            .football-pitch {
-                height: 250px;
-            }
-            
-            .fotmob-grid {
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-                gap: 10px;
-            }
+        /* タブペイン自体のスクロール設定を調整 */
+        .tab-pane {
+            display: none;
+            padding: 20px;
+            min-height: 400px;
+            max-height: none;
+            overflow: visible;
         }
 
-        /* タッチデバイスでのスクロール改善 */
-        .tab-pane {
-            -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
+        .tab-pane.active {
+            display: block;
         }
 
         /* エラーメッセージとフォールバック情報のスタイル */
@@ -1639,6 +1610,139 @@
 
         .fallback-info strong {
             color: #4CAF50;
+        }
+
+        /* 統計表示のスタイル */
+        .stats-container h3,
+        .events-container h3 {
+            color: #4CAF50;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0 0 20px 0;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            background: rgba(76, 175, 80, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* イベント表示のスタイル */
+        .events-header {
+            display: grid;
+            grid-template-columns: 60px 40px 1fr;
+            gap: 15px;
+            padding: 10px 15px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #4CAF50;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .event-item {
+            display: grid;
+            grid-template-columns: 60px 40px 1fr;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid #4CAF50;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .event-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        .event-time {
+            color: #4CAF50;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .event-icon {
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .event-details {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .event-type {
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .event-player {
+            color: #ccc;
+            font-size: 13px;
+        }
+
+        .event-team {
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .event-assist {
+            color: #4CAF50;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        /* データなし表示のスタイル */
+        .no-data {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 40px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
@@ -2226,117 +2330,193 @@
         }
 
         // 統計タブを更新
-        function updateStatsTab(matchData) {
-            console.log('Updating stats tab with data:', matchData.stats);
-            const statsContainer = document.getElementById('statsContainer');
-            console.log('Stats container found:', !!statsContainer);
+        function updateStatsTab(statsData) {
+            const statsContainer = document.getElementById('stats');
+            if (!statsContainer) return;
+
+            console.log('Updating stats tab with data:', statsData);
             
-            if (matchData.stats) {
-                const stats = matchData.stats;
-                console.log('Processing stats:', stats);
+            if (statsData && Object.keys(statsData).length > 0) {
+                let statsHTML = '';
                 
-                // 統計データの存在確認と安全なアクセス
-                const possessionHome = stats.possession?.home || stats.possession?.home === 0 ? stats.possession.home : 0;
-                const possessionAway = stats.possession?.away || stats.possession?.away === 0 ? stats.possession.away : 0;
-                const shotsHome = stats.shots?.home || stats.shots?.home === 0 ? stats.shots.home : 0;
-                const shotsAway = stats.shots?.away || stats.shots?.away === 0 ? stats.shots.away : 0;
-                const shotsOnTargetHome = stats.shotsOnTarget?.home || stats.shotsOnTarget?.home === 0 ? stats.shotsOnTarget.home : 0;
-                const shotsOnTargetAway = stats.shotsOnTarget?.away || stats.shotsOnTarget?.away === 0 ? stats.shotsOnTarget.away : 0;
-                const cornersHome = stats.corners?.home || stats.corners?.home === 0 ? stats.corners.home : 0;
-                const cornersAway = stats.corners?.away || stats.corners?.away === 0 ? stats.corners.away : 0;
-                const foulsHome = stats.fouls?.home || stats.fouls?.home === 0 ? stats.fouls.home : 0;
-                const foulsAway = stats.fouls?.away || stats.fouls?.away === 0 ? stats.fouls.away : 0;
+                // 各統計項目を処理
+                Object.entries(statsData).forEach(([key, value]) => {
+                    if (value && typeof value === 'object') {
+                        const homeValue = value.home || 0;
+                        const awayValue = value.away || 0;
+                        
+                        let statLabel = '';
+                        let statValue = '';
+                        
+                        // 統計項目に応じたラベルと値の設定
+                        switch(key) {
+                            case 'possession':
+                                statLabel = 'ボール支配率';
+                                statValue = `${homeValue}% - ${awayValue}%`;
+                                break;
+                            case 'shots':
+                                statLabel = 'シュート数';
+                                statValue = `${homeValue} - ${awayValue}`;
+                                break;
+                            case 'shotsOnTarget':
+                                statLabel = '枠内シュート';
+                                statValue = `${homeValue} - ${awayValue}`;
+                                break;
+                            case 'corners':
+                                statLabel = 'コーナーキック';
+                                statValue = `${homeValue} - ${awayValue}`;
+                                break;
+                            case 'fouls':
+                                statLabel = 'ファウル';
+                                statValue = `${homeValue} - ${awayValue}`;
+                                break;
+                            case 'yellowCards':
+                                statLabel = 'イエローカード';
+                                statValue = `${homeValue} - ${awayValue}`;
+                                break;
+                            case 'redCards':
+                                statLabel = 'レッドカード';
+                                statValue = `${homeValue} - ${awayValue}`;
+                                break;
+                            case 'offsides':
+                                statLabel = 'オフサイド';
+                                statValue = `${homeValue} - ${awayValue}`;
+                                break;
+                            case 'saves':
+                                statLabel = 'セーブ';
+                                statValue = `${homeValue} - ${awayValue}`;
+                                break;
+                            default:
+                                statLabel = key.charAt(0).toUpperCase() + key.slice(1);
+                                statValue = `${homeValue} - ${awayValue}`;
+                        }
+                        
+                        statsHTML += `
+                            <div class="stat-item">
+                                <div class="stat-label">${statLabel}</div>
+                                <div class="stat-value">${statValue}</div>
+                            </div>
+                        `;
+                    }
+                });
                 
-                const statsHtml = `
-                    <div class="stat-item">
-                        <div class="stat-label">ボール支配率</div>
-                        <div class="stat-value">${possessionHome}% - ${possessionAway}%</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">シュート数</div>
-                        <div class="stat-value">${shotsHome} - ${shotsAway}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">枠内シュート</div>
-                        <div class="stat-value">${shotsOnTargetHome} - ${shotsOnTargetAway}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">コーナーキック</div>
-                        <div class="stat-value">${cornersHome} - ${cornersAway}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">ファウル</div>
-                        <div class="stat-value">${foulsHome} - ${foulsAway}</div>
+                if (statsHTML) {
+                    statsContainer.innerHTML = `
+                        <div class="stats-container">
+                            <h3>試合統計</h3>
+                            <div class="stats-grid">
+                                ${statsHTML}
+                            </div>
+                        </div>
+                    `;
+                    console.log('Stats HTML updated:', statsHTML);
+                } else {
+                    statsContainer.innerHTML = `
+                        <div class="stats-container">
+                            <h3>試合統計</h3>
+                            <div class="no-data">統計データが利用できません</div>
+                        </div>
+                    `;
+                }
+            } else {
+                // データがない場合のフォールバック表示
+                statsContainer.innerHTML = `
+                    <div class="stats-container">
+                        <h3>試合統計</h3>
+                        <div class="no-data">統計データが利用できません</div>
                     </div>
                 `;
-                
-                statsContainer.innerHTML = statsHtml;
-                console.log('Stats HTML updated:', statsHtml);
-            } else {
-                console.log('No stats data available');
-                statsContainer.innerHTML = '<div class="no-data">統計データが利用できません</div>';
             }
         }
 
         // イベントタブを更新
-        function updateEventsTab(matchData) {
-            console.log('Updating events tab with data:', matchData.events);
-            const eventsContainer = document.getElementById('eventsContainer');
-            console.log('Events container found:', !!eventsContainer);
+        function updateEventsTab(eventsData) {
+            const eventsContainer = document.getElementById('events');
+            if (!eventsContainer) return;
+
+            console.log('Updating events tab with data:', eventsData);
             
-            if (matchData.events && matchData.events.length > 0) {
-                const eventsHtml = matchData.events.map(event => {
-                    const time = event.time || '?';
+            if (eventsData && Array.isArray(eventsData) && eventsData.length > 0) {
+                let eventsHTML = '';
+                
+                // イベントを時間順にソート
+                const sortedEvents = eventsData.sort((a, b) => (a.time || 0) - (b.time || 0));
+                
+                sortedEvents.forEach((event, index) => {
+                    const time = event.time || 0;
                     const type = event.type || 'Unknown';
-                    const player = event.player || 'Unknown';
-                    const team = event.team || 'Unknown';
-                    const assist = event.assist;
+                    const detail = event.detail || '';
+                    const team = event.team || '';
+                    const player = event.player || '';
+                    const assist = event.assist || '';
                     
-                    let eventTypeText = '';
-                    let eventColor = '#4CAF50';
+                    // イベントタイプに応じたアイコンと色を設定
+                    let eventIcon = '';
+                    let eventColor = '';
                     
-                    switch(type) {
-                        case 'Goal':
-                            eventTypeText = '⚽ ゴール';
-                            eventColor = '#FFD700';
-                            break;
-                        case 'Card':
-                            eventTypeText = '🟨 カード';
-                            eventColor = '#FFA500';
-                            break;
-                        case 'subst':
-                            eventTypeText = '🔄 交代';
+                    switch(type.toLowerCase()) {
+                        case 'goal':
+                            eventIcon = '⚽';
                             eventColor = '#4CAF50';
                             break;
+                        case 'card':
+                            eventIcon = '🟨';
+                            eventColor = '#FFC107';
+                            break;
+                        case 'subst':
+                            eventIcon = '🔄';
+                            eventColor = '#2196F3';
+                            break;
                         default:
-                            eventTypeText = type;
+                            eventIcon = '📝';
+                            eventColor = '#9E9E9E';
                     }
                     
-                    return `
+                    eventsHTML += `
                         <div class="event-item" style="border-left-color: ${eventColor}">
                             <div class="event-time">${time}'</div>
+                            <div class="event-icon">${eventIcon}</div>
                             <div class="event-details">
-                                <div class="event-type">${eventTypeText}</div>
+                                <div class="event-type">${detail}</div>
                                 <div class="event-player">${player}</div>
                                 <div class="event-team">${team}</div>
                                 ${assist ? `<div class="event-assist">アシスト: ${assist}</div>` : ''}
                             </div>
                         </div>
                     `;
-                }).join('');
+                });
                 
+                if (eventsHTML) {
+                    eventsContainer.innerHTML = `
+                        <div class="events-container">
+                            <h3>試合イベント</h3>
+                            <div class="events-header">
+                                <span>時間</span>
+                                <span>イベント</span>
+                                <span>詳細</span>
+                            </div>
+                            <div class="events-list">
+                                ${eventsHTML}
+                            </div>
+                        </div>
+                    `;
+                    console.log('Events HTML updated with', eventsData.length, 'events');
+                } else {
+                    eventsContainer.innerHTML = `
+                        <div class="events-container">
+                            <h3>試合イベント</h3>
+                            <div class="no-data">イベントデータが利用できません</div>
+                        </div>
+                    `;
+                }
+            } else {
+                // データがない場合のフォールバック表示
                 eventsContainer.innerHTML = `
-                    <div class="events-header">
-                        <h3>試合イベント (${matchData.events.length}件)</h3>
-                    </div>
-                    <div class="events-list">
-                        ${eventsHtml}
+                    <div class="events-container">
+                        <h3>試合イベント</h3>
+                        <div class="no-data">イベントデータが利用できません</div>
                     </div>
                 `;
-                console.log('Events HTML updated with', matchData.events.length, 'events');
-            } else {
-                eventsContainer.innerHTML = '<div class="no-data">イベントデータが利用できません</div>';
-                console.log('No events data available');
             }
         }
 
