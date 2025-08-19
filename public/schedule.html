@@ -1352,19 +1352,32 @@
         }
 
         /* 各タブコンテンツのスクロール設定 */
-        .basic-info.fotmob-style {
-            padding: 0;
-            max-height: none;
-            overflow: visible;
-        }
-
         .formation-display {
             margin-top: 20px;
             padding: 20px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
-            max-height: none;
-            overflow: visible;
+            max-height: 40vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .formation-display::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .formation-display::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .formation-display::-webkit-scrollbar-thumb {
+            background: rgba(76, 175, 80, 0.6);
+            border-radius: 4px;
+        }
+
+        .formation-display::-webkit-scrollbar-thumb:hover {
+            background: rgba(76, 175, 80, 0.8);
         }
 
         .football-pitch {
@@ -1381,8 +1394,27 @@
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 15px;
             margin-top: 20px;
-            max-height: none;
-            overflow: visible;
+            max-height: 30vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .lineup-players.fotmob-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .lineup-players.fotmob-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .lineup-players.fotmob-grid::-webkit-scrollbar-thumb {
+            background: rgba(76, 175, 80, 0.6);
+            border-radius: 4px;
+        }
+
+        .lineup-players.fotmob-grid::-webkit-scrollbar-thumb:hover {
+            background: rgba(76, 175, 80, 0.8);
         }
 
 
@@ -1781,8 +1813,41 @@
                         // タブペイン内のコンテナも強制表示
                         const containers = targetPane.querySelectorAll('.stats-container, .events-container, .lineup-container');
                         containers.forEach(container => {
-                            container.style.cssText = 'display: block !important; min-height: 200px !important; width: 100% !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; overflow: visible !important; position: relative !important;';
+                            container.style.cssText = 'display: block !important; min-height: 200px !important; width: 100% !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; overflow: visible !important; position: relative !important; max-height: 60vh !important; overflow-y: auto !important; overflow-x: hidden !important;';
                         });
+                        
+                        // 基本情報タブのコンテナも強制設定
+                        const basicInfoContainer = targetPane.querySelector('.basic-info.fotmob-style');
+                        if (basicInfoContainer) {
+                            basicInfoContainer.style.cssText = 'max-height: 60vh !important; overflow-y: auto !important; overflow-x: hidden !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; border: 1px solid rgba(76, 175, 80, 0.3) !important;';
+                            
+                            // カスタムスクロールバーを強制適用
+                            basicInfoContainer.style.setProperty('--scrollbar-width', '8px', 'important');
+                            basicInfoContainer.style.setProperty('--scrollbar-track-color', 'rgba(255, 255, 255, 0.1)', 'important');
+                            basicInfoContainer.style.setProperty('--scrollbar-thumb-color', 'rgba(76, 175, 80, 0.6)', 'important');
+                        }
+                        
+                        // フォーメーション表示も強制設定
+                        const formationDisplay = targetPane.querySelector('.formation-display');
+                        if (formationDisplay) {
+                            formationDisplay.style.cssText = 'margin-top: 20px !important; padding: 20px !important; background: rgba(255, 255, 255, 0.1) !important; border-radius: 10px !important; max-height: 40vh !important; overflow-y: auto !important; overflow-x: hidden !important;';
+                            
+                            // カスタムスクロールバーを強制適用
+                            formationDisplay.style.setProperty('--scrollbar-width', '8px', 'important');
+                            formationDisplay.style.setProperty('--scrollbar-track-color', 'rgba(255, 255, 255, 0.1)', 'important');
+                            formationDisplay.style.setProperty('--scrollbar-thumb-color', 'rgba(76, 175, 80, 0.6)', 'important');
+                        }
+                        
+                        // プレイヤーグリッドも強制設定
+                        const lineupGrid = targetPane.querySelector('.lineup-players.fotmob-grid');
+                        if (lineupGrid) {
+                            lineupGrid.style.cssText = 'display: grid !important; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important; gap: 15px !important; margin-top: 20px !important; max-height: 30vh !important; overflow-y: auto !important; overflow-x: hidden !important;';
+                            
+                            // カスタムスクロールバーを強制適用
+                            lineupGrid.style.setProperty('--scrollbar-width', '8px', 'important');
+                            lineupGrid.style.setProperty('--scrollbar-track-color', 'rgba(255, 255, 255, 0.1)', 'important');
+                            lineupGrid.style.setProperty('--scrollbar-thumb-color', 'rgba(76, 175, 80, 0.6)', 'important');
+                        }
                         
                         // 親要素の寸法制限も解除
                         const tabContent = targetPane.closest('.tab-content');
@@ -1816,8 +1881,41 @@
                             
                             // コンテナも再度強制表示
                             containers.forEach(container => {
-                                container.style.cssText = 'display: block !important; min-height: 200px !important; width: 100% !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; overflow: visible !important; position: relative !important;';
+                                container.style.cssText = 'display: block !important; min-height: 200px !important; width: 100% !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; overflow: visible !important; position: relative !important; max-height: 60vh !important; overflow-y: auto !important; overflow-x: hidden !important;';
                             });
+                            
+                            // 基本情報タブのコンテナも強制設定
+                            const basicInfoContainer = targetPane.querySelector('.basic-info.fotmob-style');
+                            if (basicInfoContainer) {
+                                basicInfoContainer.style.cssText = 'max-height: 60vh !important; overflow-y: auto !important; overflow-x: hidden !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; border: 1px solid rgba(76, 175, 80, 0.3) !important;';
+                                
+                                // カスタムスクロールバーを強制適用
+                                basicInfoContainer.style.setProperty('--scrollbar-width', '8px', 'important');
+                                basicInfoContainer.style.setProperty('--scrollbar-track-color', 'rgba(255, 255, 255, 0.1)', 'important');
+                                basicInfoContainer.style.setProperty('--scrollbar-thumb-color', 'rgba(76, 175, 80, 0.6)', 'important');
+                            }
+                            
+                            // フォーメーション表示も強制設定
+                            const formationDisplay = targetPane.querySelector('.formation-display');
+                            if (formationDisplay) {
+                                formationDisplay.style.cssText = 'margin-top: 20px !important; padding: 20px !important; background: rgba(255, 255, 255, 0.1) !important; border-radius: 10px !important; max-height: 40vh !important; overflow-y: auto !important; overflow-x: hidden !important;';
+                                
+                                // カスタムスクロールバーを強制適用
+                                formationDisplay.style.setProperty('--scrollbar-width', '8px', 'important');
+                                formationDisplay.style.setProperty('--scrollbar-track-color', 'rgba(255, 255, 255, 0.1)', 'important');
+                                formationDisplay.style.setProperty('--scrollbar-thumb-color', 'rgba(76, 175, 80, 0.6)', 'important');
+                            }
+                            
+                            // プレイヤーグリッドも強制設定
+                            const lineupGrid = targetPane.querySelector('.lineup-players.fotmob-grid');
+                            if (lineupGrid) {
+                                lineupGrid.style.cssText = 'display: grid !important; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important; gap: 15px !important; margin-top: 20px !important; max-height: 30vh !important; overflow-y: auto !important; overflow-x: hidden !important;';
+                                
+                                // カスタムスクロールバーを強制適用
+                                lineupGrid.style.setProperty('--scrollbar-width', '8px', 'important');
+                                lineupGrid.style.setProperty('--scrollbar-track-color', 'rgba(255, 255, 255, 0.1)', 'important');
+                                lineupGrid.style.setProperty('--scrollbar-thumb-color', 'rgba(76, 175, 80, 0.6)', 'important');
+                            }
                             
                             // 親要素も再度強制
                             if (tabContent) {
