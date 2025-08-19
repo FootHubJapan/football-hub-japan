@@ -1592,6 +1592,54 @@
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
         }
+
+        /* エラーメッセージとフォールバック情報のスタイル */
+        .error-message {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .error-message h3 {
+            color: #F44336;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        }
+
+        .error-message p {
+            color: #888;
+            margin: 0 0 20px 0;
+            font-size: 14px;
+        }
+
+        .fallback-info {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: left;
+        }
+
+        .fallback-info h4 {
+            color: #4CAF50;
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .fallback-info p {
+            color: white;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+
+        .fallback-info strong {
+            color: #4CAF50;
+        }
     </style>
 </head>
 <body>
@@ -2028,16 +2076,29 @@
                 
                 // 詳細モーダルを開く
                 const detailedModal = document.getElementById('matchDetailsModal');
+                if (!detailedModal) {
+                    console.error('Detailed modal not found');
+                    return;
+                }
+                
                 detailedModal.style.display = 'block';
                 
-                // ローディング表示
-                document.getElementById('modalTitle').textContent = 'データを読み込み中...';
+                // モーダルタイトルを更新
+                const modalTitle = document.getElementById('modalTitle');
+                if (modalTitle) {
+                    modalTitle.textContent = 'データを読み込み中...';
+                }
                 
                 // 試合詳細データを取得
                 const response = await fetch(`/api/match/${matchId}/details?league=${league}`);
                 const result = await response.json();
                 
                 if (result.success && result.data) {
+                    // モーダルタイトルを試合情報で更新
+                    if (modalTitle) {
+                        modalTitle.textContent = `${result.data.homeTeam} vs ${result.data.awayTeam}`;
+                    }
+                    
                     displayDetailedMatchInfo(result.data);
                 } else {
                     throw new Error('データの取得に失敗しました');
@@ -2045,73 +2106,16 @@
                 
             } catch (error) {
                 console.error('Error loading detailed match info:', error);
-                document.getElementById('modalTitle').textContent = 'エラーが発生しました';
-            }
-        }
-
-        // 詳細な試合情報を表示
-        function displayDetailedMatchInfo(matchData) {
-            console.log('Displaying detailed match info:', matchData);
-            
-            // モーダルタイトルを更新
-            document.getElementById('modalTitle').textContent = `${matchData.homeTeam} vs ${matchData.awayTeam}`;
-            
-            // 基本情報を更新
-            document.getElementById('homeTeamName').textContent = matchData.homeTeam;
-            document.getElementById('awayTeamName').textContent = matchData.awayTeam;
-            
-            const homeScore = matchData.homeScore !== null && matchData.homeScore !== undefined ? matchData.homeScore : '-';
-            const awayScore = matchData.awayScore !== null && matchData.awayScore !== undefined ? matchData.awayScore : '-';
-            document.getElementById('modalScore').textContent = `${homeScore} - ${awayScore}`;
-            
-            // 基本情報タブの内容を更新
-            updateBasicInfo(matchData);
-            
-            // 統計タブの内容を更新
-            updateStatsTab(matchData);
-            
-            // イベントタブの内容を更新
-            updateEventsTab(matchData);
-            
-            // ラインアップタブの内容を更新
-            updateLineupTab(matchData);
-            
-            // 最初のタブ（基本情報）をアクティブにする
-            setTimeout(() => {
-                const firstTab = document.querySelector('.tab-button');
-                const firstPane = document.getElementById('overview');
-                if (firstTab && firstPane) {
-                    // すべてのタブペインを強力に非表示
-                    document.querySelectorAll('.tab-pane').forEach(pane => {
-                        pane.style.cssText = 'display: none !important; opacity: 0 !important; visibility: hidden !important;';
-                        pane.classList.remove('active');
-                    });
-                    
-                    // 最初のタブをアクティブ化
-                    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                    firstTab.classList.add('active');
-                    
-                    // 最初のタブペインを強力に表示
-                    firstPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 200px !important; position: relative !important; overflow: visible !important;';
-                    firstPane.classList.add('active');
-                    
-                    // 基本情報タブの内容も強制表示
-                    const basicInfo = firstPane.querySelector('#basicInfo');
-                    if (basicInfo) {
-                        basicInfo.style.cssText = 'display: block !important; min-height: 100px !important; width: 100% !important; padding: 20px !important; overflow: visible !important; position: relative !important;';
-                    }
-                    
-                    // 親要素の寸法制限も解除
-                    const tabContent = firstPane.closest('.tab-content');
-                    if (tabContent) {
-                        tabContent.style.cssText = 'min-height: 200px !important; width: 100% !important; height: auto !important; overflow: visible !important; position: relative !important;';
-                    }
-                    
-                    console.log('First tab activated and displayed with force');
-                    console.log('First tab dimensions:', firstPane.offsetWidth, 'x', firstPane.offsetHeight);
-                    console.log('Parent tab-content dimensions:', tabContent ? tabContent.offsetWidth + ' x ' + tabContent.offsetHeight : 'not found');
+                
+                // エラーメッセージを表示
+                const modalTitle = document.getElementById('modalTitle');
+                if (modalTitle) {
+                    modalTitle.textContent = 'エラーが発生しました';
                 }
-            }, 100);
+                
+                // エラー内容をコンソールに表示
+                console.error('Error details:', error);
+            }
         }
 
         // 基本情報タブを更新
@@ -2940,6 +2944,76 @@
             });
             
             return html;
+        }
+
+        // 詳細な試合情報を表示
+        function displayDetailedMatchInfo(matchData) {
+            console.log('Displaying detailed match info:', matchData);
+            
+            try {
+                // 基本情報タブを更新
+                updateBasicInfo(matchData);
+                
+                // 統計タブを更新
+                if (matchData.stats) {
+                    updateStatsTab(matchData.stats);
+                }
+                
+                // イベントタブを更新
+                if (matchData.events && Array.isArray(matchData.events)) {
+                    updateEventsTab(matchData.events);
+                }
+                
+                // ラインアップタブを更新
+                if (matchData.lineups) {
+                    updateLineupTab(matchData);
+                }
+                
+                // 最初のタブをアクティブにして表示
+                setTimeout(() => {
+                    const firstTab = document.querySelector('.tab-button');
+                    const firstPane = document.querySelector('.tab-pane');
+                    
+                    if (firstTab && firstPane) {
+                        firstTab.classList.add('active');
+                        firstPane.classList.add('active');
+                        
+                        // 強制的に表示
+                        firstPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: visible !important;';
+                        
+                        console.log('First tab activated and displayed with force');
+                        console.log('First tab dimensions:', firstPane.offsetWidth, 'x', firstPane.offsetHeight);
+                        
+                        const tabContent = firstPane.closest('.tab-content');
+                        if (tabContent) {
+                            console.log('Parent tab-content dimensions:', tabContent.offsetWidth, 'x', tabContent.offsetHeight);
+                        }
+                    } else {
+                        console.error('First tab or pane not found');
+                    }
+                }, 100);
+                
+            } catch (error) {
+                console.error('Error in displayDetailedMatchInfo:', error);
+                
+                // エラーが発生した場合のフォールバック表示
+                const overviewTab = document.getElementById('overview');
+                if (overviewTab) {
+                    overviewTab.innerHTML = `
+                        <div class="error-message">
+                            <h3>データの表示中にエラーが発生しました</h3>
+                            <p>エラー詳細: ${error.message}</p>
+                            <div class="fallback-info">
+                                <h4>基本情報</h4>
+                                <p><strong>試合:</strong> ${matchData.homeTeam} vs ${matchData.awayTeam}</p>
+                                <p><strong>リーグ:</strong> ${getLeagueName(matchData.league)}</p>
+                                <p><strong>日時:</strong> ${new Date(matchData.date).toLocaleString('ja-JP')}</p>
+                                <p><strong>会場:</strong> ${matchData.venue || '未定'}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
         }
     </script>
 </body>
