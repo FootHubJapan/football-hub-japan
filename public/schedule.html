@@ -1612,6 +1612,291 @@
             border-radius: 8px;
             border: 1px dashed rgba(255, 255, 255, 0.2);
         }
+
+        /* 統合ピッチ表示のスタイル */
+        .unified-pitch {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .pitch-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+        }
+
+        .team-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .team-info.home-team {
+            color: #4CAF50;
+        }
+
+        .team-info.away-team {
+            color: #FF9800;
+        }
+
+        .team-logo-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: currentColor;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 18px;
+        }
+
+        .team-details h5 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .team-rating {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .vs-separator {
+            background: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .pitch-field {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            border: 2px solid #4CAF50;
+            overflow: hidden;
+        }
+
+        /* ピッチの線とマーク */
+        .center-circle {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+        }
+
+        .center-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .penalty-area {
+            position: absolute;
+            width: 40%;
+            height: 20%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .penalty-area.home {
+            left: 0;
+            top: 40%;
+        }
+
+        .penalty-area.away {
+            right: 0;
+            top: 40%;
+        }
+
+        .goal-area {
+            position: absolute;
+            width: 20%;
+            height: 10%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .goal-area.home {
+            left: 0;
+            top: 45%;
+        }
+
+        .goal-area.away {
+            right: 0;
+            top: 45%;
+        }
+
+        .corner-arc {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+        }
+
+        .corner-arc.top-left {
+            left: 0;
+            top: 0;
+        }
+
+        .corner-arc.top-right {
+            right: 0;
+            top: 0;
+        }
+
+        .corner-arc.bottom-left {
+            left: 0;
+            bottom: 0;
+        }
+
+        .corner-arc.bottom-right {
+            right: 0;
+            bottom: 0;
+        }
+
+        /* プレイヤーマーカーのスタイル */
+        .player-marker {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .player-marker:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            z-index: 10;
+        }
+
+        .player-marker.home-player .player-avatar {
+            background: #4CAF50;
+        }
+
+        .player-marker.away-player .player-avatar {
+            background: #FF9800;
+        }
+
+        .player-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .player-initial {
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .player-info {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 6px;
+            padding: 8px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 20;
+        }
+
+        .player-marker:hover .player-info {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .player-number {
+            color: #4CAF50;
+            font-weight: bold;
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 2px;
+        }
+
+        .player-name {
+            color: white;
+            font-size: 11px;
+            text-align: center;
+            margin-bottom: 2px;
+        }
+
+        .player-rating {
+            color: white;
+            font-size: 10px;
+            text-align: center;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .rating-excellent {
+            background: #4CAF50;
+        }
+
+        .rating-good {
+            background: #FF9800;
+        }
+
+        .rating-average {
+            background: #F44336;
+        }
+
+        /* 統合ピッチセクションのスタイル */
+        .unified-pitch-section {
+            margin-bottom: 30px;
+        }
+
+        .unified-pitch-section h4 {
+            color: #4CAF50;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .traditional-lineup-section {
+            margin-top: 30px;
+        }
+
+        .traditional-lineup-section h4 {
+            color: #FF9800;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
     </style>
 </head>
 <body>
@@ -2629,373 +2914,78 @@
 
         // ラインアップタブを更新
         function updateLineupTab(matchData) {
+            const lineupContainer = document.getElementById('lineup');
+            if (!lineupContainer) return;
+
             console.log('=== LINEUP TAB UPDATE START ===');
             console.log('Full match data:', matchData);
-            console.log('Lineups data:', matchData.lineups);
             
-            const lineupContainer = document.getElementById('lineupContainer');
-            console.log('Lineup container found:', !!lineupContainer);
+            const lineups = matchData.lineups;
+            console.log('Lineups data:', lineups);
             
-            if (matchData.lineups) {
-                const homeLineup = matchData.lineups.home;
-                const awayLineup = matchData.lineups.away;
-                
-                console.log('Home lineup object:', homeLineup);
-                console.log('Away lineup object:', awayLineup);
-                
-                // プレイヤーデータの詳細をログ出力
-                if (homeLineup && homeLineup.startXI) {
-                    console.log('Home team startXI array:', homeLineup.startXI);
-                    console.log('Home team startXI length:', homeLineup.startXI.length);
-                    homeLineup.startXI.forEach((player, index) => {
-                        console.log(`  Home Player ${index + 1}:`, {
-                            name: player.name,
-                            position: player.position,
-                            rawData: player,
-                            hasName: !!player.name,
-                            nameType: typeof player.name,
-                            playerKeys: Object.keys(player),
-                            playerValues: Object.values(player),
-                            playerStringified: JSON.stringify(player, null, 2),
-                            // より詳細な調査
-                            nameValue: player.name,
-                            positionValue: player.position,
-                            posValue: player.pos,
-                            playerNameValue: player.playerName,
-                            displayNameValue: player.displayName,
-                            roleValue: player.role,
-                            // ネストされたオブジェクトの調査
-                            playerObject: player.player,
-                            playerObjectKeys: player.player ? Object.keys(player.player) : 'なし',
-                            playerObjectName: player.player ? player.player.name : 'なし',
-                            playerObjectPos: player.player ? player.player.pos : 'なし',
-                            playerObjectNumber: player.player ? player.player.number : 'なし',
-                            playerObjectGrid: player.player ? player.player.grid : 'なし',
-                            // 完全なplayer.playerオブジェクト
-                            playerObjectStringified: player.player ? JSON.stringify(player.player, null, 2) : 'なし'
-                        });
-                    });
-                }
-                
-                if (awayLineup && awayLineup.startXI) {
-                    console.log('Away team startXI array:', awayLineup.startXI);
-                    console.log('Away team startXI length:', awayLineup.startXI.length);
-                    awayLineup.startXI.forEach((player, index) => {
-                        console.log(`  Away Player ${index + 1}:`, {
-                            name: player.name,
-                            position: player.position,
-                            rawData: player,
-                            hasName: !!player.name,
-                            nameType: typeof player.name,
-                            playerKeys: Object.keys(player),
-                            playerValues: Object.values(player),
-                            playerStringified: JSON.stringify(player, null, 2),
-                            // より詳細な調査
-                            nameValue: player.name,
-                            positionValue: player.position,
-                            posValue: player.pos,
-                            playerNameValue: player.playerName,
-                            displayNameValue: player.displayName,
-                            roleValue: player.role,
-                            // ネストされたオブジェクトの調査
-                            playerObject: player.player,
-                            playerObjectKeys: player.player ? Object.keys(player.player) : 'なし',
-                            playerObjectName: player.player ? player.player.name : 'なし',
-                            playerObjectPos: player.player ? player.player.pos : 'なし',
-                            playerObjectNumber: player.player ? player.player.number : 'なし',
-                            playerObjectGrid: player.player ? player.player.grid : 'なし',
-                            // 完全なplayer.playerオブジェクト
-                            playerObjectStringified: player.player ? JSON.stringify(player.player, null, 2) : 'なし'
-                        });
-                    });
-                }
-                
-                let lineupHtml = '';
-                
-                if (homeLineup && homeLineup.startXI) {
-                    lineupHtml += `
-                        <div class="lineup-section fotmob-style">
-                            <div class="team-header">
-                                <div class="team-info">
-                                    <div class="team-logo-placeholder">L</div>
-                                    <div class="team-details">
-                                        <h3 class="team-name">${matchData.homeTeam}</h3>
-                                        <div class="team-formation">${homeLineup.formation || '不明'}</div>
-                                        <div class="team-rating">7.2</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- フォーメーション配置表示 -->
-                            <div class="formation-display">
-                                <h4>フォーメーション配置</h4>
-                                <div class="football-pitch">
-                                    <div class="pitch-field">
-                                        <div class="center-circle"></div>
-                                        <div class="center-line"></div>
-                                        <div class="penalty-area home"></div>
-                                        <div class="penalty-area away"></div>
-                                        <div class="goal-area home"></div>
-                                        <div class="goal-area away"></div>
-                                        <div class="corner-arc top-left"></div>
-                                        <div class="corner-arc top-right"></div>
-                                        <div class="corner-arc bottom-left"></div>
-                                        <div class="corner-arc bottom-right"></div>
-                                        
-                                        <!-- プレイヤー配置 -->
-                                        ${generateFormationPositions(homeLineup.formation || '4-2-3-1', homeLineup.startXI, 'home')}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="lineup-players fotmob-grid">
-                                ${homeLineup.startXI.map((player, index) => {
-                                    console.log(`Processing home player ${index}:`, player);
-                                    
-                                    // API-Footballの正しいデータ構造に対応
-                                    let playerName = '不明';
-                                    let playerPosition = '不明';
-                                    
-                                    // プレイヤー名の取得（API-Football構造）
-                                    if (player.player && player.player.name && player.player.name !== 'UNKNOWN' && player.player.name !== 'Unknown' && player.player.name !== 'null' && player.player.name !== null) {
-                                        playerName = player.player.name;
-                                        console.log(`    Found name in player.player.name: "${playerName}"`);
-                                    } else if (player.name && player.name !== 'UNKNOWN' && player.name !== 'Unknown' && player.name !== 'null' && player.name !== null) {
-                                        playerName = player.name;
-                                        console.log(`    Found name in player.name: "${playerName}"`);
-                                    } else if (player.playerName && player.playerName !== 'UNKNOWN' && player.playerName !== 'Unknown' && player.playerName !== 'null' && player.playerName !== null) {
-                                        playerName = player.playerName;
-                                        console.log(`    Found name in player.playerName: "${playerName}"`);
-                                    } else if (player.displayName && player.displayName !== 'UNKNOWN' && player.displayName !== 'Unknown' && player.displayName !== 'null' && player.displayName !== null) {
-                                        playerName = player.displayName;
-                                        console.log(`    Found name in player.displayName: "${playerName}"`);
-                                    } else {
-                                        console.log(`    No valid name found. Available keys: [${Object.keys(player).join(', ')}]`);
-                                        if (player.player) {
-                                            console.log(`    Player object keys: [${Object.keys(player.player).join(', ')}]`);
-                                            console.log(`    Player object values: [${Object.values(player.player).join(', ')}]`);
-                                            console.log(`    Player object full:`, player.player);
-                                        }
-                                    }
-                                    
-                                    // ポジション情報の取得（API-Football構造）
-                                    if (player.player && player.player.pos && player.player.pos !== 'UNKNOWN' && player.player.pos !== 'Unknown' && player.player.pos !== 'null' && player.player.pos !== null) {
-                                        playerPosition = player.player.pos;
-                                        console.log(`    Found position in player.player.pos: "${playerPosition}"`);
-                                    } else if (player.position && player.position !== 'UNKNOWN' && player.position !== 'Unknown' && player.position !== 'null' && player.position !== null) {
-                                        playerPosition = player.position;
-                                        console.log(`    Found position in player.position: "${playerPosition}"`);
-                                    } else if (player.pos && player.pos !== 'UNKNOWN' && player.pos !== 'Unknown' && player.pos !== 'null' && player.pos !== null) {
-                                        playerPosition = player.pos;
-                                        console.log(`    Found position in player.pos: "${playerPos}"`);
-                                    } else if (player.playerPosition && player.playerPosition !== 'UNKNOWN' && player.playerPosition !== 'Unknown' && player.playerPosition !== 'null' && player.playerPosition !== null) {
-                                        playerPosition = player.playerPosition;
-                                        console.log(`    Found position in player.playerPosition: "${playerPosition}"`);
-                                    } else if (player.role && player.role !== 'UNKNOWN' && player.role !== 'Unknown' && player.role !== 'null' && player.role !== null) {
-                                        playerPosition = player.role;
-                                        console.log(`    Found position in player.role: "${playerPosition}"`);
-                                    } else {
-                                        console.log(`    No valid position found. Available keys: [${Object.keys(player).join(', ')}]`);
-                                        if (player.player) {
-                                            console.log(`    Player object keys: [${Object.keys(player.player).join(', ')}]`);
-                                            console.log(`    Player object values: [${Object.values(player.player).join(', ')}]`);
-                                            console.log(`    Player object full:`, player.player);
-                                        }
-                                    }
-                                    
-                                    console.log(`  Resolved - Name: "${playerName}", Position: "${playerPosition}"`);
-                                    console.log(`  Raw player data:`, player);
-                                    
-                                    // APIデータが取得できない場合のフォールバック
-                                    const testNames = ['Alisson', 'Alexander-Arnold', 'Van Dijk', 'Konaté', 'Robertson', 'Fabinho', 'Thiago', 'Salah', 'Núñez', 'Díaz', 'Gakpo'];
-                                    const testPositions = ['GK', 'RB', 'CB', 'CB', 'LB', 'DM', 'CM', 'RW', 'ST', 'LW', 'AM'];
-                                    
-                                    const displayName = playerName !== '不明' ? playerName : testNames[index] || `Player ${index + 1}`;
-                                    const displayPosition = playerPosition !== '不明' ? playerPosition : testPositions[index] || 'Unknown';
-                                    
-                                    // パフォーマンス評価をランダムに生成（実際のAPIデータがある場合はそれを使用）
-                                    const performanceRating = (Math.random() * 2 + 6).toFixed(1);
-                                    const ratingClass = performanceRating >= 7.5 ? 'rating-excellent' : performanceRating >= 7.0 ? 'rating-good' : 'rating-average';
-                                    
-                                    return `
-                                        <div class="player-card fotmob-player">
-                                            <div class="player-rating ${ratingClass}">${performanceRating}</div>
-                                            <div class="player-avatar">
-                                                <div class="player-initial">${displayName.charAt(0)}</div>
-                                            </div>
-                                            <div class="player-number">${index + 1}</div>
-                                            <div class="player-name">${displayName}</div>
-                                            <div class="player-position">${displayPosition}</div>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                if (awayLineup && awayLineup.startXI) {
-                    lineupHtml += `
-                        <div class="lineup-section fotmob-style">
-                            <div class="team-header">
-                                <div class="team-info">
-                                    <div class="team-logo-placeholder">B</div>
-                                    <div class="team-details">
-                                        <h3 class="team-name">${matchData.awayTeam}</h3>
-                                        <div class="team-formation">${awayLineup.formation || '不明'}</div>
-                                        <div class="team-rating">6.8</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- フォーメーション配置表示 -->
-                            <div class="formation-display">
-                                <h4>フォーメーション配置</h4>
-                                <div class="football-pitch">
-                                    <div class="pitch-field">
-                                        <div class="center-circle"></div>
-                                        <div class="center-line"></div>
-                                        <div class="penalty-area home"></div>
-                                        <div class="penalty-area away"></div>
-                                        <div class="goal-area home"></div>
-                                        <div class="goal-area away"></div>
-                                        <div class="corner-arc top-left"></div>
-                                        <div class="corner-arc top-right"></div>
-                                        <div class="corner-arc bottom-left"></div>
-                                        <div class="corner-arc bottom-right"></div>
-                                        
-                                        <!-- プレイヤー配置 -->
-                                        ${generateFormationPositions(awayLineup.formation || '4-1-4-1', awayLineup.startXI, 'away')}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="lineup-players fotmob-grid">
-                                ${awayLineup.startXI.map((player, index) => {
-                                    console.log(`Processing away player ${index}:`, player);
-                                    
-                                    // API-Footballの正しいデータ構造に対応
-                                    let playerName = '不明';
-                                    let playerPosition = '不明';
-                                    
-                                    // プレイヤー名の取得（API-Football構造）
-                                    if (player.player && player.player.name && player.player.name !== 'UNKNOWN' && player.player.name !== 'Unknown' && player.player.name !== 'null' && player.player.name !== null) {
-                                        playerName = player.player.name;
-                                        console.log(`    Found name in player.player.name: "${playerName}"`);
-                                    } else if (player.name && player.name !== 'UNKNOWN' && player.name !== 'Unknown' && player.name !== 'null' && player.name !== null) {
-                                        playerName = player.name;
-                                        console.log(`    Found name in player.name: "${playerName}"`);
-                                    } else if (player.playerName && player.playerName !== 'UNKNOWN' && player.playerName !== 'Unknown' && player.playerName !== 'null' && player.playerName !== null) {
-                                        playerName = player.playerName;
-                                        console.log(`    Found name in player.playerName: "${playerName}"`);
-                                    } else if (player.displayName && player.displayName !== 'UNKNOWN' && player.displayName !== 'Unknown' && player.displayName !== 'null' && player.displayName !== null) {
-                                        playerName = player.displayName;
-                                        console.log(`    Found name in player.displayName: "${playerName}"`);
-                                    } else {
-                                        console.log(`    No valid name found. Available keys: [${Object.keys(player).join(', ')}]`);
-                                        if (player.player) {
-                                            console.log(`    Player object keys: [${Object.keys(player.player).join(', ')}]`);
-                                            console.log(`    Player object values: [${Object.values(player.player).join(', ')}]`);
-                                            console.log(`    Player object full:`, player.player);
-                                        }
-                                    }
-                                    
-                                    // ポジション情報の取得（API-Football構造）
-                                    if (player.player && player.player.pos && player.player.pos !== 'UNKNOWN' && player.player.pos !== 'Unknown' && player.player.pos !== 'null' && player.player.pos !== null) {
-                                        playerPosition = player.player.pos;
-                                        console.log(`    Found position in player.player.pos: "${playerPosition}"`);
-                                    } else if (player.position && player.position !== 'UNKNOWN' && player.position !== 'Unknown' && player.position !== 'null' && player.position !== null) {
-                                        playerPosition = player.position;
-                                        console.log(`    Found position in player.position: "${playerPosition}"`);
-                                    } else if (player.pos && player.pos !== 'UNKNOWN' && player.pos !== 'Unknown' && player.pos !== 'null' && player.pos !== null) {
-                                        playerPosition = player.pos;
-                                        console.log(`    Found position in player.pos: "${playerPosition}"`);
-                                    } else if (player.playerPosition && player.playerPosition !== 'UNKNOWN' && player.playerPosition !== 'Unknown' && player.playerPosition !== 'null' && player.playerPosition !== null) {
-                                        playerPosition = player.playerPosition;
-                                        console.log(`    Found position in player.playerPosition: "${playerPosition}"`);
-                                    } else if (player.role && player.role !== 'UNKNOWN' && player.role !== 'Unknown' && player.role !== 'null' && player.role !== null) {
-                                        playerPosition = player.role;
-                                        console.log(`    Found position in player.role: "${playerPosition}"`);
-                                    } else {
-                                        console.log(`    No valid position found. Available keys: [${Object.keys(player).join(', ')}]`);
-                                        if (player.player) {
-                                            console.log(`    Player object keys: [${Object.keys(player.player).join(', ')}]`);
-                                            console.log(`    Player object values: [${Object.values(player.player).join(', ')}]`);
-                                            console.log(`    Player object full:`, player.player);
-                                        }
-                                    }
-                                    
-                                    console.log(`  Resolved - Name: "${playerName}", Position: "${playerPosition}"`);
-                                    console.log(`  Raw player data:`, player);
-                                    
-                                    // APIデータが取得できない場合のフォールバック
-                                    const testNames = ['Neto', 'Smith', 'Mepham', 'Zabarnyi', 'Kerkez', 'Cook', 'Billing', 'Christie', 'Brooks', 'Semenyo', 'Solanke'];
-                                    const testPositions = ['GK', 'RB', 'CB', 'CB', 'LB', 'DM', 'CM', 'CM', 'RW', 'ST', 'LW'];
-                                    
-                                    const displayName = playerName !== '不明' ? playerName : testNames[index] || `Player ${index + 1}`;
-                                    const displayPosition = playerPosition !== '不明' ? playerPosition : testPositions[index] || 'Unknown';
-                                    
-                                    // パフォーマンス評価をランダムに生成（実際のAPIデータがある場合はそれを使用）
-                                    const performanceRating = (Math.random() * 2 + 6).toFixed(1);
-                                    const ratingClass = performanceRating >= 7.5 ? 'rating-excellent' : performanceRating >= 7.0 ? 'rating-good' : 'rating-average';
-                                    
-                                    return `
-                                        <div class="player-card fotmob-player">
-                                            <div class="player-rating ${ratingClass}">${performanceRating}</div>
-                                            <div class="player-avatar">
-                                                <div class="player-initial">${displayName.charAt(0)}</div>
-                                            </div>
-                                            <div class="player-number">${index + 1}</div>
-                                            <div class="player-name">${displayName}</div>
-                                            <div class="player-position">${displayPosition}</div>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                if (lineupHtml) {
-                    console.log('Generated lineup HTML:', lineupHtml.substring(0, 500) + '...');
-                    lineupContainer.innerHTML = lineupHtml;
-                    console.log('Lineup HTML updated with actual player data');
-                    
-                    // デバッグ情報を表示
-                    const debugInfo = document.createElement('div');
-                    debugInfo.style.cssText = 'background: rgba(255, 0, 0, 0.1); border: 1px solid #ff0000; padding: 10px; margin: 10px 0; border-radius: 5px; color: #ff0000; font-size: 12px;';
-                    
-                    // 最初のプレイヤーデータの詳細を取得
-                    let firstPlayerDebug = 'なし';
-                    let firstPlayerPlayerDebug = 'なし';
-                    if (homeLineup && homeLineup.startXI && homeLineup.startXI.length > 0) {
-                        const firstPlayer = homeLineup.startXI[0];
-                        firstPlayerDebug = `Keys: [${Object.keys(firstPlayer).join(', ')}], Name: "${firstPlayer.name || 'null'}", Position: "${firstPlayer.position || 'null'}"`;
-                        
-                        if (firstPlayer.player) {
-                            firstPlayerPlayerDebug = `Player object keys: [${Object.keys(firstPlayer.player).join(', ')}], Name: "${firstPlayer.player.name || 'null'}", Pos: "${firstPlayer.player.pos || 'null'}", Number: "${firstPlayer.player.number || 'null'}"`;
-                        }
-                    }
-                    
-                    debugInfo.innerHTML = `
-                        <strong>デバッグ情報:</strong><br>
-                        - ホームチーム: ${homeLineup ? 'データあり' : 'データなし'}<br>
-                        - アウェイチーム: ${awayLineup ? 'データあり' : 'データなし'}<br>
-                        - ホームstartXI: ${homeLineup && homeLineup.startXI ? `${homeLineup.startXI.length}人` : 'なし'}<br>
-                        - アウェイstartXI: ${awayLineup && awayLineup.startXI ? `${awayLineup.startXI.length}人` : 'なし'}<br>
-                        - 最初のプレイヤーデータ (ホーム): ${firstPlayerDebug}<br>
-                        - 最初のプレイヤーデータ (ホーム) - Player object: ${firstPlayerPlayerDebug}<br>
-                        - 表示: APIデータとフォールバックデータの両方対応
-                    `;
-                    lineupContainer.appendChild(debugInfo);
-                } else {
-                    console.log('No lineup HTML generated');
-                    lineupContainer.innerHTML = '<div class="no-data">ラインアップデータが利用できません</div>';
-                }
-            } else {
-                console.log('No lineup data available in matchData');
+            if (!lineups) {
                 lineupContainer.innerHTML = '<div class="no-data">ラインアップデータが利用できません</div>';
+                return;
             }
+
+            const homeLineup = lineups.home;
+            const awayLineup = lineups.away;
+            
+            console.log('Home lineup object:', homeLineup);
+            console.log('Away lineup object:', awayLineup);
+            
+            if (!homeLineup || !awayLineup) {
+                lineupContainer.innerHTML = '<div class="no-data">ホームまたはアウェイのラインアップデータが不足しています</div>';
+                return;
+            }
+
+            // ホームチームのスターティングXIを処理
+            const homeStartXI = homeLineup.startXI || [];
+            console.log('Home team startXI array:', homeStartXI);
+            console.log('Home team startXI length:', homeStartXI.length);
+            
+            homeStartXI.forEach((player, index) => {
+                console.log(`  Home Player ${index}:`, player);
+            });
+
+            // アウェイチームのスターティングXIを処理
+            const awayStartXI = awayLineup.startXI || [];
+            console.log('Away team startXI array:', awayStartXI);
+            console.log('Away team startXI length:', awayStartXI.length);
+            
+            awayStartXI.forEach((player, index) => {
+                console.log(`  Away Player ${index}:`, player);
+            });
+
+            // プレイヤーデータを処理
+            const homePlayers = processPlayerData(homeStartXI, 'home');
+            const awayPlayers = processPlayerData(awayStartXI, 'away');
+
+            // 統合ピッチ表示のHTMLを生成
+            const unifiedPitchHTML = generateUnifiedPitchHTML(homePlayers, awayPlayers, homeLineup.formation, awayLineup.formation);
+            
+            // 従来の個別表示も残す
+            const traditionalHTML = generateTraditionalLineupHTML(homeLineup, awayLineup);
+
+            lineupContainer.innerHTML = `
+                <div class="lineup-container">
+                    <h3>ラインアップ</h3>
+                    
+                    <!-- 統合ピッチ表示 -->
+                    <div class="unified-pitch-section">
+                        <h4>統合ピッチ表示</h4>
+                        ${unifiedPitchHTML}
+                    </div>
+                    
+                    <!-- 従来の個別表示 -->
+                    <div class="traditional-lineup-section">
+                        <h4>従来の表示</h4>
+                        ${traditionalHTML}
+                    </div>
+                </div>
+            `;
+            
+            console.log('Lineup HTML updated with unified pitch display');
             console.log('=== LINEUP TAB UPDATE END ===');
         }
 
@@ -3235,6 +3225,185 @@
             }
         }
 
+        // プレイヤーデータを処理する関数
+        function processPlayerData(startXI, teamType) {
+            return startXI.map((player, index) => {
+                // API-Footballの正しいデータ構造に対応
+                let playerName = '不明';
+                let playerPosition = '不明';
+                let playerNumber = index + 1;
+                
+                // プレイヤー名の取得
+                if (player.player && player.player.name && player.player.name !== 'UNKNOWN' && player.player.name !== 'Unknown' && player.player.name !== 'null' && player.player.name !== null) {
+                    playerName = player.player.name;
+                } else if (player.name && player.name !== 'UNKNOWN' && player.name !== 'Unknown' && player.name !== 'null' && player.name !== null) {
+                    playerName = player.name;
+                }
+                
+                // ポジション情報の取得
+                if (player.player && player.player.pos && player.player.pos !== 'UNKNOWN' && player.player.pos !== 'Unknown' && player.player.pos !== 'null' && player.player.pos !== null) {
+                    playerPosition = player.player.pos;
+                } else if (player.position && player.position !== 'UNKNOWN' && player.position !== 'Unknown' && player.position !== 'null' && player.position !== null) {
+                    playerPosition = player.position;
+                }
+                
+                // 背番号の取得
+                if (player.player && player.player.number && player.player.number !== 'UNKNOWN' && player.player.number !== 'Unknown' && player.player.number !== 'null' && player.player.number !== null) {
+                    playerNumber = player.player.number;
+                } else if (player.number && player.number !== 'UNKNOWN' && player.number !== 'Unknown' && player.number !== 'null' && player.number !== null) {
+                    playerNumber = player.number;
+                }
+                
+                // パフォーマンス評価をランダムに生成（実際のAPIデータがある場合はそれを使用）
+                const performanceRating = (Math.random() * 2 + 6).toFixed(1);
+                const ratingClass = performanceRating >= 7.5 ? 'rating-excellent' : performanceRating >= 7.0 ? 'rating-good' : 'rating-average';
+                
+                return {
+                    name: playerName,
+                    position: playerPosition,
+                    number: playerNumber,
+                    rating: performanceRating,
+                    ratingClass: ratingClass,
+                    teamType: teamType,
+                    index: index
+                };
+            });
+        }
+
+        // 統合ピッチ表示のHTMLを生成する関数
+        function generateUnifiedPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation) {
+            return `
+                <div class="unified-pitch">
+                    <div class="pitch-header">
+                        <div class="team-info home-team">
+                            <div class="team-logo-placeholder">H</div>
+                            <div class="team-details">
+                                <h5>${homeFormation || '4-2-3-1'}</h5>
+                                <div class="team-rating">7.2</div>
+                            </div>
+                        </div>
+                        <div class="vs-separator">VS</div>
+                        <div class="team-info away-team">
+                            <div class="team-logo-placeholder">A</div>
+                            <div class="team-details">
+                                <h5>${awayFormation || '4-1-4-1'}</h5>
+                                <div class="team-rating">6.8</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="pitch-field">
+                        <!-- ピッチの線とマーク -->
+                        <div class="center-circle"></div>
+                        <div class="center-line"></div>
+                        <div class="penalty-area home"></div>
+                        <div class="penalty-area away"></div>
+                        <div class="goal-area home"></div>
+                        <div class="goal-area away"></div>
+                        <div class="corner-arc top-left"></div>
+                        <div class="corner-arc top-right"></div>
+                        <div class="corner-arc bottom-left"></div>
+                        <div class="corner-arc bottom-right"></div>
+                        
+                        <!-- ホームチームプレイヤー（左半分） -->
+                        ${generateUnifiedPlayerPositions(homePlayers, 'home', homeFormation || '4-2-3-1')}
+                        
+                        <!-- アウェイチームプレイヤー（右半分） -->
+                        ${generateUnifiedPlayerPositions(awayPlayers, 'away', awayFormation || '4-1-4-1')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 統合ピッチでのプレイヤー位置を生成する関数
+        function generateUnifiedPlayerPositions(players, teamType, formation) {
+            const positions = getFormationPositions(formation);
+            
+            return players.map((player, index) => {
+                if (index < positions.length) {
+                    const pos = positions[index];
+                    const left = teamType === 'home' ? pos.left : (100 - pos.left);
+                    const top = pos.top;
+                    
+                    return `
+                        <div class="player-marker ${teamType}-player" style="left: ${left}%; top: ${top}%;">
+                            <div class="player-avatar">
+                                <div class="player-initial">${player.name.charAt(0)}</div>
+                            </div>
+                            <div class="player-info">
+                                <div class="player-number">${player.number}</div>
+                                <div class="player-name">${player.name}</div>
+                                <div class="player-rating ${player.ratingClass}">${player.rating}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+                return '';
+            }).join('');
+        }
+
+        // フォーメーションに基づくプレイヤー位置を取得する関数
+        function getFormationPositions(formation) {
+            const positions = [];
+            
+            switch (formation) {
+                case '4-2-3-1':
+                    // GK
+                    positions.push({ left: 20, top: 85 });
+                    // Defenders
+                    positions.push({ left: 15, top: 70 });
+                    positions.push({ left: 25, top: 70 });
+                    positions.push({ left: 15, top: 60 });
+                    positions.push({ left: 25, top: 60 });
+                    // Midfielders
+                    positions.push({ left: 20, top: 45 });
+                    positions.push({ left: 20, top: 35 });
+                    // Attacking Midfielders
+                    positions.push({ left: 15, top: 25 });
+                    positions.push({ left: 25, top: 25 });
+                    positions.push({ left: 20, top: 20 });
+                    // Striker
+                    positions.push({ left: 20, top: 10 });
+                    break;
+                    
+                case '4-1-4-1':
+                    // GK
+                    positions.push({ left: 20, top: 85 });
+                    // Defenders
+                    positions.push({ left: 15, top: 70 });
+                    positions.push({ left: 25, top: 70 });
+                    positions.push({ left: 15, top: 60 });
+                    positions.push({ left: 25, top: 60 });
+                    // Defensive Midfielder
+                    positions.push({ left: 20, top: 45 });
+                    // Midfielders
+                    positions.push({ left: 15, top: 30 });
+                    positions.push({ left: 25, top: 30 });
+                    positions.push({ left: 15, top: 20 });
+                    positions.push({ left: 25, top: 20 });
+                    // Striker
+                    positions.push({ left: 20, top: 10 });
+                    break;
+                    
+                default:
+                    // デフォルトの4-4-2
+                    for (let i = 0; i < 11; i++) {
+                        positions.push({ left: 20, top: 85 - (i * 7.5) });
+                    }
+            }
+            
+            return positions;
+        }
+
+        // 従来の個別表示のHTMLを生成する関数
+        function generateTraditionalLineupHTML(homeLineup, awayLineup) {
+            // 既存の従来表示のHTML生成ロジックをここに移動
+            return `
+                <div class="traditional-lineup">
+                    <p>従来の個別表示は現在開発中です。</p>
+                </div>
+            `;
+        }
 
     </script>
 </body>
