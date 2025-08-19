@@ -1784,19 +1784,158 @@
 
         // イベントリスナーを設定
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Setting up tab functionality...');
+            
+            // タブボタンにイベントリスナーを追加
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            
+            console.log('Found tab buttons:', tabButtons.length);
+            console.log('Found tab panes:', tabPanes.length);
+            
+            // デバッグ用：タブペインの詳細情報をログ出力
+            tabPanes.forEach((pane, index) => {
+                console.log(`Tab pane ${index}:`, {
+                    id: pane.id,
+                    classes: pane.className,
+                    display: pane.style.display,
+                    computedDisplay: window.getComputedStyle(pane).display,
+                    offsetHeight: pane.offsetHeight,
+                    offsetWidth: pane.offsetWidth,
+                    innerHTML: pane.innerHTML.substring(0, 100) + '...'
+                });
+            });
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    console.log('Tab clicked:', targetTab);
+                    
+                    // アクティブなタブボタンを更新
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // タブペインを更新
+                    tabPanes.forEach(pane => {
+                        pane.classList.remove('active');
+                        console.log('Removing active class from:', pane.id);
+                    });
+                    
+                    const targetPane = document.getElementById(targetTab);
+                    if (targetPane) {
+                        targetPane.classList.add('active');
+                        console.log('Added active class to:', targetPane.id);
+                        
+                        // スクロール位置をリセット
+                        targetPane.scrollTop = 0;
+                        
+                        // タブコンテンツの表示状態を確認
+                        console.log('Target pane display style before:', targetPane.style.display);
+                        console.log('Target pane classes:', targetPane.className);
+                        console.log('Target pane computed display:', window.getComputedStyle(targetPane).display);
+                        console.log('Target pane offset dimensions:', targetPane.offsetWidth, 'x', targetPane.offsetHeight);
+                        
+                        // モーダル全体の寸法を強制制御
+                        const modalContent = targetPane.closest('.modal-content');
+                        if (modalContent) {
+                            modalContent.style.cssText = 'width: 90% !important; max-width: none !important; min-width: 800px !important; overflow: visible !important; position: relative !important;';
+                        }
+                        
+                        // 強力に表示（CSSの優先度を上書き）
+                        targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: visible !important;';
+                        
+                        // タブペイン内のコンテナも強制表示
+                        const containers = targetPane.querySelectorAll('.stats-container, .events-container, .lineup-container');
+                        containers.forEach(container => {
+                            container.style.cssText = 'display: block !important; min-height: 200px !important; width: 100% !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; overflow: visible !important; position: relative !important;';
+                        });
+                        
+                        // 親要素の寸法制限も解除
+                        const tabContent = targetPane.closest('.tab-content');
+                        if (tabContent) {
+                            tabContent.style.cssText = 'min-height: 300px !important; width: 100% !important; height: auto !important; overflow: visible !important; position: relative !important; display: block !important;';
+                        }
+                        
+                        // 他のタブペインを強力に非表示
+                        tabPanes.forEach(pane => {
+                            if (pane !== targetPane) {
+                                pane.style.cssText = 'display: none !important; opacity: 0 !important; visibility: hidden !important;';
+                                pane.classList.remove('active');
+                            }
+                        });
+                        
+                        console.log('Target pane display style after:', targetPane.style.display);
+                        console.log('Target pane computed display after:', window.getComputedStyle(targetPane).display);
+                        console.log('Target pane offset dimensions after:', targetPane.offsetWidth, 'x', targetPane.offsetHeight);
+                        
+                        // 強制リフロー
+                        targetPane.offsetHeight;
+                        
+                        // さらに強制的に表示
+                        setTimeout(() => {
+                            // モーダル全体も再度強制
+                            if (modalContent) {
+                                modalContent.style.cssText = 'width: 90% !important; max-width: none !important; min-width: 800px !important; overflow: visible !important; position: relative !important;';
+                            }
+                            
+                            targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: visible !important;';
+                            
+                            // コンテナも再度強制表示
+                            containers.forEach(container => {
+                                container.style.cssText = 'display: block !important; min-height: 200px !important; width: 100% !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; overflow: visible !important; position: relative !important;';
+                            });
+                            
+                            // 親要素も再度強制
+                            if (tabContent) {
+                                tabContent.style.cssText = 'min-height: 300px !important; width: 100% !important; height: auto !important; overflow: visible !important; position: relative !important; display: block !important;';
+                            }
+                            
+                            console.log('Final force display applied');
+                            console.log('Final dimensions:', targetPane.offsetWidth, 'x', targetPane.offsetHeight);
+                            console.log('Container count:', containers.length);
+                            console.log('Parent tab-content dimensions:', tabContent ? tabContent.offsetWidth + ' x ' + tabContent.offsetHeight : 'not found');
+                            console.log('Modal content dimensions:', modalContent ? modalContent.offsetWidth + ' x ' + modalContent.offsetHeight : 'not found');
+                        }, 10);
+                    } else {
+                        console.error('Target tab pane not found:', targetTab);
+                    }
+                });
+            });
+            
+            // モーダルの初期化確認
+            const modal = document.getElementById('matchDetailsModal');
+            const modalTitle = document.getElementById('modalTitle');
+            if (modal) {
+                console.log('Modal found:', modal.id);
+            } else {
+                console.error('Modal not found');
+            }
+            if (modalTitle) {
+                console.log('Modal title found:', modalTitle.id);
+            } else {
+                console.error('Modal title not found');
+            }
+            
             // 初期データを読み込み
             loadMatches();
             
             // リーグ選択の変更を監視
-            document.getElementById('leagueSelect').addEventListener('change', loadMatches);
+            const leagueSelect = document.getElementById('leagueSelect');
+            if (leagueSelect) {
+                leagueSelect.addEventListener('change', loadMatches);
+            }
             
             // 期間選択の変更を監視
-            document.getElementById('timeRangeSelect').addEventListener('change', loadMatches);
+            const timeRangeSelect = document.getElementById('timeRangeSelect');
+            if (timeRangeSelect) {
+                timeRangeSelect.addEventListener('change', loadMatches);
+            }
             
             // 検索入力の変更を監視
-            document.getElementById('searchInput').addEventListener('input', loadMatches);
-            
-
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', loadMatches);
+            }
         });
 
         // 試合データを読み込む
@@ -2094,9 +2233,8 @@
         // 詳細な試合情報を表示する関数
         async function showDetailedMatchInfo(matchId, league) {
             try {
-                console.log(`Loading detailed match info for ID: ${matchId}, League: ${league}`);
+                console.log('Loading detailed match info for ID:', matchId, 'League:', league);
                 
-                // 詳細モーダルを開く
                 const detailedModal = document.getElementById('matchDetailsModal');
                 if (!detailedModal) {
                     console.error('Detailed modal not found');
@@ -2109,6 +2247,8 @@
                 const modalTitle = document.getElementById('modalTitle');
                 if (modalTitle) {
                     modalTitle.textContent = 'データを読み込み中...';
+                } else {
+                    console.warn('Modal title element not found, continuing without title update');
                 }
                 
                 // 試合詳細データを取得
@@ -2137,6 +2277,23 @@
                 
                 // エラー内容をコンソールに表示
                 console.error('Error details:', error);
+                
+                // エラーが発生した場合のフォールバック表示
+                const overviewTab = document.getElementById('overview');
+                if (overviewTab) {
+                    overviewTab.innerHTML = `
+                        <div class="error-message">
+                            <h3>データの表示中にエラーが発生しました</h3>
+                            <p>エラー詳細: ${error.message}</p>
+                            <div class="fallback-info">
+                                <h4>基本情報</h4>
+                                <p><strong>試合ID:</strong> ${matchId}</p>
+                                <p><strong>リーグ:</strong> ${league}</p>
+                                <p><strong>エラー:</strong> ${error.message}</p>
+                            </div>
+                        </div>
+                    `;
+                }
             }
         }
 
