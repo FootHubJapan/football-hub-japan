@@ -992,6 +992,413 @@
             display: inline-block;
             border: 1px solid rgba(76, 175, 80, 0.3);
         }
+
+        /* フォーメーション配置表示 */
+        .formation-display {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .football-pitch {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .pitch-field {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .center-line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: #fff;
+            transform: translate(-50%, -50%);
+        }
+
+        .penalty-area.home, .penalty-area.away {
+            position: absolute;
+            top: 50%;
+            width: 100px;
+            height: 100px;
+            border: 2px dashed #fff;
+            transform: translateY(-50%);
+        }
+
+        .penalty-area.home {
+            left: 10%;
+        }
+
+        .penalty-area.away {
+            right: 10%;
+        }
+
+        .goal-area.home, .goal-area.away {
+            position: absolute;
+            top: 50%;
+            width: 100px;
+            height: 100px;
+            border: 2px dashed #fff;
+            transform: translateY(-50%);
+        }
+
+        .goal-area.home {
+            left: 10%;
+        }
+
+        .goal-area.away {
+            right: 10%;
+        }
+
+        .corner-arc.top-left, .corner-arc.top-right, .corner-arc.bottom-left, .corner-arc.bottom-right {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 2px dashed #fff;
+            border-radius: 50%;
+        }
+
+        .corner-arc.top-left {
+            top: 10%;
+            left: 10%;
+        }
+
+        .corner-arc.top-right {
+            top: 10%;
+            right: 10%;
+        }
+
+        .corner-arc.bottom-left {
+            bottom: 10%;
+            left: 10%;
+        }
+
+        .corner-arc.bottom-right {
+            bottom: 10%;
+            right: 10%;
+        }
+
+        /* ピッチ上のプレイヤー表示 */
+        .pitch-player {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pitch-player:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            z-index: 10;
+        }
+
+        .pitch-player-avatar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .pitch-player-number {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            border: 1px solid white;
+        }
+
+        /* フォーメーション表示のタイトル */
+        .formation-display h4 {
+            color: #4CAF50;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 基本情報タブのFotMobスタイル */
+        .basic-info.fotmob-style {
+            padding: 0;
+        }
+
+        .match-header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .match-title h2 {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .match-status {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .match-status.ft {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid rgba(76, 175, 80, 0.5);
+        }
+
+        .match-status.ns {
+            background: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
+            border: 1px solid rgba(255, 193, 7, 0.5);
+        }
+
+        .match-status.live {
+            background: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+            border: 1px solid rgba(244, 67, 54, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .match-score {
+            text-align: center;
+        }
+
+        .score-display {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .home-score, .away-score {
+            color: white;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .score-separator {
+            color: #888;
+            font-size: 24px;
+        }
+
+        .match-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .detail-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .detail-card:hover {
+            background: rgba(76, 175, 80, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+        }
+
+        .detail-icon {
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            background: rgba(76, 175, 80, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .detail-content {
+            flex: 1;
+        }
+
+        .detail-label {
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .detail-sub {
+            color: #4CAF50;
+            font-size: 14px;
+        }
+
+        .team-comparison {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+        }
+
+        .team-card {
+            flex: 1;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .team-card.home-team {
+            border-left: 4px solid #4CAF50;
+        }
+
+        .team-card.away-team {
+            border-right: 4px solid #4CAF50;
+        }
+
+        .team-card .team-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .team-card .team-logo-placeholder {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .team-card h3 {
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .team-stats {
+            margin-top: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            color: #4CAF50;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .vs-separator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vs-circle {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #FFD700, #FFA000);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -1516,41 +1923,108 @@
 
         // 基本情報タブを更新
         function updateBasicInfo(matchData) {
-            const basicInfoDiv = document.getElementById('basicInfo');
+            const basicInfoContainer = document.getElementById('overview');
+            if (!basicInfoContainer) return;
+
             const matchDate = new Date(matchData.date);
-            const formattedDate = matchDate.toLocaleDateString('ja-JP', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+            const formattedDate = matchDate.toLocaleDateString('ja-JP', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
             });
-            const formattedTime = matchDate.toLocaleTimeString('ja-JP', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
+            const formattedTime = matchDate.toLocaleTimeString('ja-JP', {
+                hour: '2-digit',
+                minute: '2-digit'
             });
-            
-            basicInfoDiv.innerHTML = `
-                <div class="match-detail-item">
-                    <span class="match-detail-label">日時:</span>
-                    <span class="match-detail-value">${formattedDate} ${formattedTime}</span>
+
+            basicInfoContainer.innerHTML = `
+                <div class="basic-info fotmob-style">
+                    <div class="match-header-section">
+                        <div class="match-title">
+                            <h2>${matchData.homeTeam} vs ${matchData.awayTeam}</h2>
+                            <div class="match-status ${getStatusClass(matchData.status)}">${getStatusText(matchData.status)}</div>
+                        </div>
+                        <div class="match-score">
+                            <div class="score-display">
+                                <span class="home-score">${matchData.homeScore || '-'}</span>
+                                <span class="score-separator">-</span>
+                                <span class="away-score">${matchData.awayScore || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="match-details-grid">
+                        <div class="detail-card">
+                            <div class="detail-icon">📅</div>
+                            <div class="detail-content">
+                                <div class="detail-label">試合日時</div>
+                                <div class="detail-value">${formattedDate}</div>
+                                <div class="detail-sub">${formattedTime}</div>
+                            </div>
+                        </div>
+
+                        <div class="detail-card">
+                            <div class="detail-icon">🏟️</div>
+                            <div class="detail-content">
+                                <div class="detail-label">会場</div>
+                                <div class="detail-value">${matchData.venue || '未定'}</div>
+                            </div>
+                        </div>
+
+                        <div class="detail-card">
+                            <div class="detail-icon">⚽</div>
+                            <div class="detail-content">
+                                <div class="detail-label">リーグ</div>
+                                <div class="detail-value">${getLeagueName(matchData.league)}</div>
+                            </div>
+                        </div>
+
+                        <div class="detail-card">
+                            <div class="detail-icon">👨‍⚖️</div>
+                            <div class="detail-content">
+                                <div class="detail-label">主審</div>
+                                <div class="detail-value">${matchData.referee || '未定'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="team-comparison">
+                        <div class="team-card home-team">
+                            <div class="team-header">
+                                <div class="team-logo-placeholder">${matchData.homeTeam.charAt(0)}</div>
+                                <div class="team-info">
+                                    <h3>${matchData.homeTeam}</h3>
+                                    <div class="team-stats">
+                                        <span class="stat-item">
+                                            <span class="stat-label">スコア</span>
+                                            <span class="stat-value">${matchData.homeScore || '-'}</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="vs-separator">
+                            <div class="vs-circle">VS</div>
+                        </div>
+
+                        <div class="team-card away-team">
+                            <div class="team-header">
+                                <div class="team-logo-placeholder">${matchData.awayTeam.charAt(0)}</div>
+                                <div class="team-info">
+                                    <h3>${matchData.awayTeam}</h3>
+                                    <div class="team-stats">
+                                        <span class="stat-item">
+                                            <span class="stat-label">スコア</span>
+                                            <span class="stat-value">${matchData.awayScore || '-'}</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="match-detail-item">
-                    <span class="match-detail-label">会場:</span>
-                    <span class="match-detail-value">${matchData.venue || '会場未定'}</span>
-                </div>
-                <div class="match-detail-item">
-                    <span class="match-detail-label">ステータス:</span>
-                    <span class="match-detail-value"><span class="status-badge ${getStatusClass(matchData.status)}">${getStatusText(matchData.status)}</span></span>
-                </div>
-                <div class="match-detail-item">
-                    <span class="match-detail-label">リーグ:</span>
-                    <span class="match-detail-value">${getLeagueName(matchData.league)}</span>
-                </div>
-                ${matchData.referee ? `
-                <div class="match-detail-item">
-                    <span class="match-detail-label">主審:</span>
-                    <span class="match-detail-value">${matchData.referee}</span>
-                </div>
-                ` : ''}
             `;
         }
 
@@ -1767,6 +2241,29 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- フォーメーション配置表示 -->
+                            <div class="formation-display">
+                                <h4>フォーメーション配置</h4>
+                                <div class="football-pitch">
+                                    <div class="pitch-field">
+                                        <div class="center-circle"></div>
+                                        <div class="center-line"></div>
+                                        <div class="penalty-area home"></div>
+                                        <div class="penalty-area away"></div>
+                                        <div class="goal-area home"></div>
+                                        <div class="goal-area away"></div>
+                                        <div class="corner-arc top-left"></div>
+                                        <div class="corner-arc top-right"></div>
+                                        <div class="corner-arc bottom-left"></div>
+                                        <div class="corner-arc bottom-right"></div>
+                                        
+                                        <!-- プレイヤー配置 -->
+                                        ${generateFormationPositions(homeLineup.formation || '4-2-3-1', homeLineup.startXI, 'home')}
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="lineup-players fotmob-grid">
                                 ${homeLineup.startXI.map((player, index) => {
                                     console.log(`Processing home player ${index}:`, player);
@@ -1806,7 +2303,7 @@
                                         console.log(`    Found position in player.position: "${playerPosition}"`);
                                     } else if (player.pos && player.pos !== 'UNKNOWN' && player.pos !== 'Unknown' && player.pos !== 'null' && player.pos !== null) {
                                         playerPosition = player.pos;
-                                        console.log(`    Found position in player.pos: "${playerPosition}"`);
+                                        console.log(`    Found position in player.pos: "${playerPos}"`);
                                     } else if (player.playerPosition && player.playerPosition !== 'UNKNOWN' && player.playerPosition !== 'Unknown' && player.playerPosition !== 'null' && player.playerPosition !== null) {
                                         playerPosition = player.playerPosition;
                                         console.log(`    Found position in player.playerPosition: "${playerPosition}"`);
@@ -1866,6 +2363,29 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- フォーメーション配置表示 -->
+                            <div class="formation-display">
+                                <h4>フォーメーション配置</h4>
+                                <div class="football-pitch">
+                                    <div class="pitch-field">
+                                        <div class="center-circle"></div>
+                                        <div class="center-line"></div>
+                                        <div class="penalty-area home"></div>
+                                        <div class="penalty-area away"></div>
+                                        <div class="goal-area home"></div>
+                                        <div class="goal-area away"></div>
+                                        <div class="corner-arc top-left"></div>
+                                        <div class="corner-arc top-right"></div>
+                                        <div class="corner-arc bottom-left"></div>
+                                        <div class="corner-arc bottom-right"></div>
+                                        
+                                        <!-- プレイヤー配置 -->
+                                        ${generateFormationPositions(awayLineup.formation || '4-1-4-1', awayLineup.startXI, 'away')}
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="lineup-players fotmob-grid">
                                 ${awayLineup.startXI.map((player, index) => {
                                     console.log(`Processing away player ${index}:`, player);
@@ -2124,6 +2644,107 @@
         document.querySelector('.close').addEventListener('click', function() {
             document.getElementById('matchDetailsModal').style.display = 'none';
         });
+
+        // フォーメーション配置の生成関数
+        function generateFormationPositions(formation, players, team) {
+            // フォーメーションごとのポジション配置マップ
+            const formationMap = {
+                '4-2-3-1': {
+                    GK: { x: 10, y: 50 },
+                    LB: { x: 20, y: 20 },
+                    CB: { x: 20, y: 40 },
+                    CB2: { x: 20, y: 60 },
+                    RB: { x: 20, y: 80 },
+                    DM: { x: 35, y: 50 },
+                    CM: { x: 35, y: 35 },
+                    CM2: { x: 35, y: 65 },
+                    LW: { x: 50, y: 25 },
+                    AM: { x: 50, y: 50 },
+                    RW: { x: 50, y: 75 },
+                    ST: { x: 65, y: 50 }
+                },
+                '4-1-4-1': {
+                    GK: { x: 10, y: 50 },
+                    LB: { x: 20, y: 20 },
+                    CB: { x: 20, y: 40 },
+                    CB2: { x: 20, y: 60 },
+                    RB: { x: 20, y: 80 },
+                    DM: { x: 35, y: 50 },
+                    LM: { x: 50, y: 25 },
+                    CM: { x: 50, y: 40 },
+                    CM2: { x: 50, y: 60 },
+                    RM: { x: 50, y: 75 },
+                    ST: { x: 65, y: 50 }
+                },
+                '4-4-2': {
+                    GK: { x: 10, y: 50 },
+                    LB: { x: 20, y: 20 },
+                    CB: { x: 20, y: 40 },
+                    CB2: { x: 20, y: 60 },
+                    RB: { x: 20, y: 80 },
+                    LM: { x: 35, y: 25 },
+                    CM: { x: 35, y: 40 },
+                    CM2: { x: 35, y: 60 },
+                    RM: { x: 35, y: 75 },
+                    ST: { x: 50, y: 35 },
+                    ST2: { x: 50, y: 65 }
+                },
+                '3-5-2': {
+                    GK: { x: 10, y: 50 },
+                    CB: { x: 20, y: 30 },
+                    CB2: { x: 20, y: 50 },
+                    CB3: { x: 20, y: 70 },
+                    LWB: { x: 35, y: 20 },
+                    CM: { x: 35, y: 40 },
+                    CM2: { x: 35, y: 50 },
+                    CM3: { x: 35, y: 60 },
+                    RWB: { x: 35, y: 80 },
+                    ST: { x: 50, y: 35 },
+                    ST2: { x: 50, y: 65 }
+                }
+            };
+            
+            const positions = formationMap[formation] || formationMap['4-2-3-1'];
+            let html = '';
+            
+            // プレイヤーをポジションに配置
+            players.forEach((player, index) => {
+                const playerName = player.player?.name || player.name || `Player ${index + 1}`;
+                const playerPosition = player.player?.pos || player.position || player.pos || 'Unknown';
+                
+                // ポジションに応じた座標を取得
+                let coords = null;
+                if (playerPosition === 'GK') coords = positions.GK;
+                else if (playerPosition === 'CB') coords = positions.CB;
+                else if (playerPosition === 'LB') coords = positions.LB;
+                else if (playerPosition === 'RB') coords = positions.RB;
+                else if (playerPosition === 'DM') coords = positions.DM;
+                else if (playerPosition === 'CM') coords = positions.CM;
+                else if (playerPosition === 'LW' || playerPosition === 'LM') coords = positions.LW || positions.LM;
+                else if (playerPosition === 'RW' || playerPosition === 'RM') coords = positions.RW || positions.RM;
+                else if (playerPosition === 'ST') coords = positions.ST;
+                else if (playerPosition === 'AM') coords = positions.AM;
+                
+                // デフォルト位置（フォーメーションに基づく）
+                if (!coords) {
+                    const defaultPositions = Object.values(positions);
+                    coords = defaultPositions[index] || { x: 50, y: 50 };
+                }
+                
+                // アウェイチームの場合は左右反転
+                const x = team === 'away' ? (100 - coords.x) : coords.x;
+                const y = coords.y;
+                
+                html += `
+                    <div class="pitch-player" style="left: ${x}%; top: ${y}%;" title="${playerName} (${playerPosition})">
+                        <div class="pitch-player-avatar">${playerName.charAt(0)}</div>
+                        <div class="pitch-player-number">${index + 1}</div>
+                    </div>
+                `;
+            });
+            
+            return html;
+        }
     </script>
 </body>
 </html>
