@@ -926,9 +926,10 @@
             left: 50%;
             top: 0;
             bottom: 0;
-            width: 2px;
-            background: rgba(255, 255, 255, 0.8);
+            width: 4px;
+            background: linear-gradient(to bottom, #4CAF50, #45a049);
             transform: translateX(-50%);
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
         }
 
         .center-circle {
@@ -937,9 +938,22 @@
             top: 50%;
             width: 60px;
             height: 60px;
-            border: 2px solid rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(76, 175, 80, 0.8);
             border-radius: 50%;
             transform: translate(-50%, -50%);
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        /* ハーフコートの境界を明確化 */
+        .half-court-divider {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 100px;
+            background: linear-gradient(to right, transparent, rgba(76, 175, 80, 0.1), transparent);
+            transform: translateX(-50%);
+            pointer-events: none;
         }
 
         .penalty-area {
@@ -1730,8 +1744,8 @@
         }
 
         .player-avatar {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -1751,7 +1765,7 @@
         .player-initial {
             color: white;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 16px;
         }
 
         .player-info {
@@ -3303,6 +3317,7 @@
                         <!-- ピッチの線とマーク -->
                         <div class="center-line"></div>
                         <div class="center-circle"></div>
+                        <div class="half-court-divider"></div>
                         
                         <!-- ペナルティエリア -->
                         <div class="penalty-area left"></div>
@@ -3328,7 +3343,7 @@
             `;
         }
 
-        // 統合ピッチでのプレイヤー位置を生成する関数（90度回転版）
+        // 統合ピッチでのプレイヤー位置を生成する関数（ハーフコート分離版）
         function generateUnifiedPlayerPositions(players, teamType, formation) {
             const positions = getFormationPositions(formation);
             
@@ -3343,8 +3358,16 @@
                         top = pos.top;
                     } else {
                         // アウェイチーム（右側、右のゴール）
-                        left = 100 - pos.left; // 左右反転
-                        top = pos.top;         // 上下は同じ
+                        // アウェイチームは右側のハーフコートに配置
+                        if (formation === '4-1-4-1') {
+                            // 4-1-4-1フォーメーションは既に右側用に設定済み
+                            left = pos.left;
+                            top = pos.top;
+                        } else {
+                            // その他のフォーメーションは右側に反転
+                            left = 100 - pos.left;
+                            top = pos.top;
+                        }
                     }
                     
                     return `
@@ -3367,83 +3390,83 @@
             }).join('');
         }
 
-        // フォーメーションに基づくプレイヤー位置を取得する関数（90度回転版）
+        // フォーメーションに基づくプレイヤー位置を取得する関数（ハーフコート分離版）
         function getFormationPositions(formation) {
             const positions = [];
             
             switch (formation) {
                 case '4-2-3-1':
                     // GK (左のゴール)
-                    positions.push({ left: 5, top: 50 });
-                    // Defenders (左から2番目のライン)
-                    positions.push({ left: 20, top: 30 });
-                    positions.push({ left: 20, top: 50 });
-                    positions.push({ left: 20, top: 70 });
-                    positions.push({ left: 20, top: 90 });
-                    // Midfielders (左から3番目のライン)
-                    positions.push({ left: 35, top: 40 });
-                    positions.push({ left: 35, top: 60 });
-                    // Attacking Midfielders (左から4番目のライン)
-                    positions.push({ left: 50, top: 35 });
-                    positions.push({ left: 50, top: 50 });
-                    positions.push({ left: 50, top: 65 });
-                    // Striker (左から5番目のライン、ハーフライン付近)
-                    positions.push({ left: 65, top: 50 });
-                    break;
-                    
-                case '4-1-4-1':
-                    // GK (左のゴール)
-                    positions.push({ left: 5, top: 50 });
-                    // Defenders (左から2番目のライン)
-                    positions.push({ left: 20, top: 30 });
-                    positions.push({ left: 20, top: 50 });
-                    positions.push({ left: 20, top: 70 });
-                    positions.push({ left: 20, top: 90 });
-                    // Defensive Midfielder (左から3番目のライン)
-                    positions.push({ left: 35, top: 50 });
-                    // Midfielders (左から4番目のライン)
-                    positions.push({ left: 50, top: 25 });
-                    positions.push({ left: 50, top: 40 });
-                    positions.push({ left: 50, top: 60 });
-                    positions.push({ left: 50, top: 75 });
-                    // Striker (左から5番目のライン、ハーフライン付近)
-                    positions.push({ left: 65, top: 50 });
-                    break;
-                    
-                case '4-4-2':
-                    // GK (左のゴール)
-                    positions.push({ left: 5, top: 50 });
+                    positions.push({ left: 8, top: 50 });
                     // Defenders (左から2番目のライン)
                     positions.push({ left: 20, top: 25 });
                     positions.push({ left: 20, top: 40 });
                     positions.push({ left: 20, top: 60 });
                     positions.push({ left: 20, top: 75 });
                     // Midfielders (左から3番目のライン)
-                    positions.push({ left: 35, top: 25 });
-                    positions.push({ left: 35, top: 40 });
-                    positions.push({ left: 35, top: 60 });
-                    positions.push({ left: 35, top: 75 });
+                    positions.push({ left: 32, top: 35 });
+                    positions.push({ left: 32, top: 65 });
+                    // Attacking Midfielders (左から4番目のライン)
+                    positions.push({ left: 44, top: 30 });
+                    positions.push({ left: 44, top: 50 });
+                    positions.push({ left: 44, top: 70 });
+                    // Striker (左から5番目のライン、ハーフライン付近)
+                    positions.push({ left: 56, top: 50 });
+                    break;
+                    
+                case '4-1-4-1':
+                    // GK (右のゴール)
+                    positions.push({ left: 92, top: 50 });
+                    // Defenders (右から2番目のライン)
+                    positions.push({ left: 80, top: 25 });
+                    positions.push({ left: 80, top: 40 });
+                    positions.push({ left: 80, top: 60 });
+                    positions.push({ left: 80, top: 75 });
+                    // Defensive Midfielder (右から3番目のライン)
+                    positions.push({ left: 68, top: 50 });
+                    // Midfielders (右から4番目のライン)
+                    positions.push({ left: 56, top: 25 });
+                    positions.push({ left: 56, top: 40 });
+                    positions.push({ left: 56, top: 60 });
+                    positions.push({ left: 56, top: 75 });
+                    // Striker (右から5番目のライン、ハーフライン付近)
+                    positions.push({ left: 44, top: 50 });
+                    break;
+                    
+                case '4-4-2':
+                    // GK (左のゴール)
+                    positions.push({ left: 8, top: 50 });
+                    // Defenders (左から2番目のライン)
+                    positions.push({ left: 20, top: 20 });
+                    positions.push({ left: 20, top: 35 });
+                    positions.push({ left: 20, top: 65 });
+                    positions.push({ left: 20, top: 80 });
+                    // Midfielders (左から3番目のライン)
+                    positions.push({ left: 32, top: 20 });
+                    positions.push({ left: 32, top: 35 });
+                    positions.push({ left: 32, top: 65 });
+                    positions.push({ left: 32, top: 80 });
                     // Strikers (左から4番目のライン、ハーフライン付近)
-                    positions.push({ left: 50, top: 40 });
-                    positions.push({ left: 50, top: 60 });
+                    positions.push({ left: 44, top: 40 });
+                    positions.push({ left: 44, top: 60 });
                     break;
                     
                 case '3-5-2':
                     // GK (左のゴール)
-                    positions.push({ left: 5, top: 50 });
+                    positions.push({ left: 8, top: 50 });
                     // Defenders (左から2番目のライン)
                     positions.push({ left: 20, top: 30 });
                     positions.push({ left: 20, top: 50 });
                     positions.push({ left: 20, top: 70 });
                     // Midfielders (左から3番目のライン)
-                    positions.push({ left: 35, top: 20 });
-                    positions.push({ left: 35, top: 35 });
-                    positions.push({ left: 35, top: 50 });
-                    positions.push({ left: 35, top: 65 });
-                    positions.push({ left: 35, top: 80 });
+                    positions.push({ left: 32, top: 20 });
+                    positions.push({ left: 32, top: 35 });
+                    positions.push({ left: 32, top: 50 });
+                    positions.push({ left: 32, top: 65 });
+                    positions.push({ left: 32, top: 80 });
                     // Strikers (左から4番目のライン、ハーフライン付近)
-                    positions.push({ left: 50, top: 40 });
-                    positions.push({ left: 50, top: 60 });
+                    positions.push({ left: 44, top: 40 });
+                    positions.push({ left: 44, top: 60 });
                     break;
                     
                 default:
@@ -3451,16 +3474,16 @@
                     for (let i = 0; i < 11; i++) {
                         if (i === 0) {
                             // GK
-                            positions.push({ left: 5, top: 50 });
+                            positions.push({ left: 8, top: 50 });
                         } else if (i <= 4) {
                             // Defenders
                             positions.push({ left: 20, top: 20 + (i - 1) * 15 });
                         } else if (i <= 8) {
                             // Midfielders
-                            positions.push({ left: 35, top: 20 + (i - 5) * 15 });
+                            positions.push({ left: 32, top: 20 + (i - 5) * 15 });
                         } else {
                             // Strikers
-                            positions.push({ left: 50, top: 35 + (i - 9) * 20 });
+                            positions.push({ left: 44, top: 35 + (i - 9) * 20 });
                         }
                     }
             }
@@ -3483,33 +3506,33 @@
             return {
                 home: {
                     startXI: [
-                        { player: { name: 'Alisson', number: 1, pos: 'G' } },
-                        { player: { name: 'van Dijk', number: 4, pos: 'D' } },
-                        { player: { name: 'Konaté', number: 5, pos: 'D' } },
-                        { player: { name: 'Robertson', number: 26, pos: 'D' } },
-                        { player: { name: 'Alexander-Arnold', number: 66, pos: 'D' } },
-                        { player: { name: 'Fabinho', number: 3, pos: 'M' } },
-                        { player: { name: 'Thiago', number: 6, pos: 'M' } },
-                        { player: { name: 'Salah', number: 11, pos: 'F' } },
-                        { player: { name: 'Mane', number: 10, pos: 'F' } },
-                        { player: { name: 'Jota', number: 20, pos: 'F' } },
-                        { player: { name: 'Firmino', number: 9, pos: 'F' } }
+                        { player: { name: 'Alisson', number: 1, pos: 'G', photo: 'https://media.api-sports.io/football/players/1.png' } },
+                        { player: { name: 'van Dijk', number: 4, pos: 'D', photo: 'https://media.api-sports.io/football/players/4.png' } },
+                        { player: { name: 'Konaté', number: 5, pos: 'D', photo: 'https://media.api-sports.io/football/players/5.png' } },
+                        { player: { name: 'Robertson', number: 26, pos: 'D', photo: 'https://media.api-sports.io/football/players/26.png' } },
+                        { player: { name: 'Alexander-Arnold', number: 66, pos: 'D', photo: 'https://media.api-sports.io/football/players/66.png' } },
+                        { player: { name: 'Fabinho', number: 3, pos: 'M', photo: 'https://media.api-sports.io/football/players/3.png' } },
+                        { player: { name: 'Thiago', number: 6, pos: 'M', photo: 'https://media.api-sports.io/football/players/6.png' } },
+                        { player: { name: 'Salah', number: 11, pos: 'F', photo: 'https://media.api-sports.io/football/players/11.png' } },
+                        { player: { name: 'Mane', number: 10, pos: 'F', photo: 'https://media.api-sports.io/football/players/10.png' } },
+                        { player: { name: 'Jota', number: 20, pos: 'F', photo: 'https://media.api-sports.io/football/players/20.png' } },
+                        { player: { name: 'Firmino', number: 9, pos: 'F', photo: 'https://media.api-sports.io/football/players/9.png' } }
                     ],
                     formation: '4-2-3-1'
                 },
                 away: {
                     startXI: [
-                        { player: { name: 'Travers', number: 1, pos: 'G' } },
-                        { player: { name: 'Smith', number: 2, pos: 'D' } },
-                        { player: { name: 'Mepham', number: 6, pos: 'D' } },
-                        { player: { name: 'Kelly', number: 5, pos: 'D' } },
-                        { player: { name: 'Zemura', number: 33, pos: 'D' } },
-                        { player: { name: 'Lerma', number: 8, pos: 'M' } },
-                        { player: { name: 'Cook', number: 16, pos: 'M' } },
-                        { player: { name: 'Billing', number: 29, pos: 'M' } },
-                        { player: { name: 'Christie', number: 10, pos: 'M' } },
-                        { player: { name: 'Solanke', number: 9, pos: 'F' } },
-                        { player: { name: 'Anthony', number: 32, pos: 'F' } }
+                        { player: { name: 'Travers', number: 1, pos: 'G', photo: 'https://media.api-sports.io/football/players/101.png' } },
+                        { player: { name: 'Smith', number: 2, pos: 'D', photo: 'https://media.api-sports.io/football/players/102.png' } },
+                        { player: { name: 'Mepham', number: 6, pos: 'D', photo: 'https://media.api-sports.io/football/players/106.png' } },
+                        { player: { name: 'Kelly', number: 5, pos: 'D', photo: 'https://media.api-sports.io/football/players/105.png' } },
+                        { player: { name: 'Zemura', number: 33, pos: 'D', photo: 'https://media.api-sports.io/football/players/133.png' } },
+                        { player: { name: 'Lerma', number: 8, pos: 'M', photo: 'https://media.api-sports.io/football/players/108.png' } },
+                        { player: { name: 'Cook', number: 16, pos: 'M', photo: 'https://media.api-sports.io/football/players/116.png' } },
+                        { player: { name: 'Billing', number: 29, pos: 'M', photo: 'https://media.api-sports.io/football/players/129.png' } },
+                        { player: { name: 'Christie', number: 10, pos: 'M', photo: 'https://media.api-sports.io/football/players/110.png' } },
+                        { player: { name: 'Solanke', number: 9, pos: 'F', photo: 'https://media.api-sports.io/football/players/109.png' } },
+                        { player: { name: 'Anthony', number: 32, pos: 'F', photo: 'https://media.api-sports.io/football/players/132.png' } }
                     ],
                     formation: '4-1-4-1'
                 }
