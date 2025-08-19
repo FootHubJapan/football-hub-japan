@@ -1517,7 +1517,12 @@
                             // ネストされたオブジェクトの調査
                             playerObject: player.player,
                             playerObjectKeys: player.player ? Object.keys(player.player) : 'なし',
-                            playerObjectName: player.player ? player.player.name : 'なし'
+                            playerObjectName: player.player ? player.player.name : 'なし',
+                            playerObjectPos: player.player ? player.player.pos : 'なし',
+                            playerObjectNumber: player.player ? player.player.number : 'なし',
+                            playerObjectGrid: player.player ? player.player.grid : 'なし',
+                            // 完全なplayer.playerオブジェクト
+                            playerObjectStringified: player.player ? JSON.stringify(player.player, null, 2) : 'なし'
                         });
                     });
                 }
@@ -1545,7 +1550,12 @@
                             // ネストされたオブジェクトの調査
                             playerObject: player.player,
                             playerObjectKeys: player.player ? Object.keys(player.player) : 'なし',
-                            playerObjectName: player.player ? player.player.name : 'なし'
+                            playerObjectName: player.player ? player.player.name : 'なし',
+                            playerObjectPos: player.player ? player.player.pos : 'なし',
+                            playerObjectNumber: player.player ? player.player.number : 'なし',
+                            playerObjectGrid: player.player ? player.player.grid : 'なし',
+                            // 完全なplayer.playerオブジェクト
+                            playerObjectStringified: player.player ? JSON.stringify(player.player, null, 2) : 'なし'
                         });
                     });
                 }
@@ -1581,6 +1591,8 @@
                                         console.log(`    No valid name found. Available keys: [${Object.keys(player).join(', ')}]`);
                                         if (player.player) {
                                             console.log(`    Player object keys: [${Object.keys(player.player).join(', ')}]`);
+                                            console.log(`    Player object values: [${Object.values(player.player).join(', ')}]`);
+                                            console.log(`    Player object full:`, player.player);
                                         }
                                     }
                                     
@@ -1604,6 +1616,8 @@
                                         console.log(`    No valid position found. Available keys: [${Object.keys(player).join(', ')}]`);
                                         if (player.player) {
                                             console.log(`    Player object keys: [${Object.keys(player.player).join(', ')}]`);
+                                            console.log(`    Player object values: [${Object.values(player.player).join(', ')}]`);
+                                            console.log(`    Player object full:`, player.player);
                                         }
                                     }
                                     
@@ -1658,6 +1672,8 @@
                                         console.log(`    No valid name found. Available keys: [${Object.keys(player).join(', ')}]`);
                                         if (player.player) {
                                             console.log(`    Player object keys: [${Object.keys(player.player).join(', ')}]`);
+                                            console.log(`    Player object values: [${Object.values(player.player).join(', ')}]`);
+                                            console.log(`    Player object full:`, player.player);
                                         }
                                     }
                                     
@@ -1681,6 +1697,8 @@
                                         console.log(`    No valid position found. Available keys: [${Object.keys(player).join(', ')}]`);
                                         if (player.player) {
                                             console.log(`    Player object keys: [${Object.keys(player.player).join(', ')}]`);
+                                            console.log(`    Player object values: [${Object.values(player.player).join(', ')}]`);
+                                            console.log(`    Player object full:`, player.player);
                                         }
                                     }
                                     
@@ -1717,9 +1735,14 @@
                     
                     // 最初のプレイヤーデータの詳細を取得
                     let firstPlayerDebug = 'なし';
+                    let firstPlayerPlayerDebug = 'なし';
                     if (homeLineup && homeLineup.startXI && homeLineup.startXI.length > 0) {
                         const firstPlayer = homeLineup.startXI[0];
                         firstPlayerDebug = `Keys: [${Object.keys(firstPlayer).join(', ')}], Name: "${firstPlayer.name || 'null'}", Position: "${firstPlayer.position || 'null'}"`;
+                        
+                        if (firstPlayer.player) {
+                            firstPlayerPlayerDebug = `Player object keys: [${Object.keys(firstPlayer.player).join(', ')}], Name: "${firstPlayer.player.name || 'null'}", Pos: "${firstPlayer.player.pos || 'null'}", Number: "${firstPlayer.player.number || 'null'}"`;
+                        }
                     }
                     
                     debugInfo.innerHTML = `
@@ -1728,7 +1751,8 @@
                         - アウェイチーム: ${awayLineup ? 'データあり' : 'データなし'}<br>
                         - ホームstartXI: ${homeLineup && homeLineup.startXI ? `${homeLineup.startXI.length}人` : 'なし'}<br>
                         - アウェイstartXI: ${awayLineup && awayLineup.startXI ? `${awayLineup.startXI.length}人` : 'なし'}<br>
-                        - 最初のプレイヤー: ${firstPlayerDebug}<br>
+                        - 最初のプレイヤーデータ (ホーム): ${firstPlayerDebug}<br>
+                        - 最初のプレイヤーデータ (ホーム) - Player object: ${firstPlayerPlayerDebug}<br>
                         - 表示: APIデータとフォールバックデータの両方対応
                     `;
                     lineupContainer.appendChild(debugInfo);
