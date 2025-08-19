@@ -1504,7 +1504,9 @@
                             rawData: player,
                             hasName: !!player.name,
                             nameType: typeof player.name,
-                            playerKeys: Object.keys(player)
+                            playerKeys: Object.keys(player),
+                            playerValues: Object.values(player),
+                            playerStringified: JSON.stringify(player, null, 2)
                         });
                     });
                 }
@@ -1519,7 +1521,9 @@
                             rawData: player,
                             hasName: !!player.name,
                             nameType: typeof player.name,
-                            playerKeys: Object.keys(player)
+                            playerKeys: Object.keys(player),
+                            playerValues: Object.values(player),
+                            playerStringified: JSON.stringify(player, null, 2)
                         });
                     });
                 }
@@ -1538,23 +1542,30 @@
                                     let playerName = '不明';
                                     let playerPosition = '不明';
                                     
-                                    if (player.name) {
+                                    // プレイヤー名の取得（複数のパターンを試行）
+                                    if (player.name && player.name !== 'UNKNOWN' && player.name !== 'Unknown') {
                                         playerName = player.name;
-                                    } else if (player.player && player.player.name) {
+                                    } else if (player.player && player.player.name && player.player.name !== 'UNKNOWN' && player.player.name !== 'Unknown') {
                                         playerName = player.player.name;
-                                    } else if (player.playerName) {
+                                    } else if (player.playerName && player.playerName !== 'UNKNOWN' && player.playerName !== 'Unknown') {
                                         playerName = player.playerName;
+                                    } else if (player.displayName && player.displayName !== 'UNKNOWN' && player.displayName !== 'Unknown') {
+                                        playerName = player.displayName;
                                     }
                                     
-                                    if (player.position) {
+                                    // ポジション情報の取得（複数のパターンを試行）
+                                    if (player.position && player.position !== 'UNKNOWN' && player.position !== 'Unknown') {
                                         playerPosition = player.position;
-                                    } else if (player.pos) {
+                                    } else if (player.pos && player.pos !== 'UNKNOWN' && player.pos !== 'Unknown') {
                                         playerPosition = player.pos;
-                                    } else if (player.playerPosition) {
+                                    } else if (player.playerPosition && player.playerPosition !== 'UNKNOWN' && player.playerPosition !== 'Unknown') {
                                         playerPosition = player.playerPosition;
+                                    } else if (player.role && player.role !== 'UNKNOWN' && player.role !== 'Unknown') {
+                                        playerPosition = player.role;
                                     }
                                     
                                     console.log(`  Resolved - Name: "${playerName}", Position: "${playerPosition}"`);
+                                    console.log(`  Raw player data:`, player);
                                     
                                     // APIデータが取得できない場合のフォールバック
                                     const testNames = ['Alisson', 'Alexander-Arnold', 'Van Dijk', 'Konaté', 'Robertson', 'Fabinho', 'Thiago', 'Salah', 'Núñez', 'Díaz', 'Gakpo'];
@@ -1587,20 +1598,26 @@
                                     let playerName = '不明';
                                     let playerPosition = '不明';
                                     
-                                    if (player.name) {
+                                    // プレイヤー名の取得（複数のパターンを試行）
+                                    if (player.name && player.name !== 'UNKNOWN' && player.name !== 'Unknown') {
                                         playerName = player.name;
-                                    } else if (player.player && player.player.name) {
+                                    } else if (player.player && player.player.name && player.player.name !== 'UNKNOWN' && player.player.name !== 'Unknown') {
                                         playerName = player.player.name;
-                                    } else if (player.playerName) {
+                                    } else if (player.playerName && player.playerName !== 'UNKNOWN' && player.playerName !== 'Unknown') {
                                         playerName = player.playerName;
+                                    } else if (player.displayName && player.displayName !== 'UNKNOWN' && player.displayName !== 'Unknown') {
+                                        playerName = player.displayName;
                                     }
                                     
-                                    if (player.position) {
+                                    // ポジション情報の取得（複数のパターンを試行）
+                                    if (player.position && player.position !== 'UNKNOWN' && player.position !== 'Unknown') {
                                         playerPosition = player.position;
-                                    } else if (player.pos) {
+                                    } else if (player.pos && player.pos !== 'UNKNOWN' && player.pos !== 'Unknown') {
                                         playerPosition = player.pos;
-                                    } else if (player.playerPosition) {
+                                    } else if (player.playerPosition && player.playerPosition !== 'UNKNOWN' && player.playerPosition !== 'Unknown') {
                                         playerPosition = player.playerPosition;
+                                    } else if (player.role && player.role !== 'UNKNOWN' && player.role !== 'Unknown') {
+                                        playerPosition = player.role;
                                     }
                                     
                                     console.log(`  Resolved - Name: "${playerName}", Position: "${playerPosition}"`);
@@ -1632,12 +1649,21 @@
                     // デバッグ情報を表示
                     const debugInfo = document.createElement('div');
                     debugInfo.style.cssText = 'background: rgba(255, 0, 0, 0.1); border: 1px solid #ff0000; padding: 10px; margin: 10px 0; border-radius: 5px; color: #ff0000; font-size: 12px;';
+                    
+                    // 最初のプレイヤーデータの詳細を取得
+                    let firstPlayerDebug = 'なし';
+                    if (homeLineup && homeLineup.startXI && homeLineup.startXI.length > 0) {
+                        const firstPlayer = homeLineup.startXI[0];
+                        firstPlayerDebug = `Keys: [${Object.keys(firstPlayer).join(', ')}], Name: "${firstPlayer.name || 'null'}", Position: "${firstPlayer.position || 'null'}"`;
+                    }
+                    
                     debugInfo.innerHTML = `
                         <strong>デバッグ情報:</strong><br>
                         - ホームチーム: ${homeLineup ? 'データあり' : 'データなし'}<br>
                         - アウェイチーム: ${awayLineup ? 'データあり' : 'データなし'}<br>
                         - ホームstartXI: ${homeLineup && homeLineup.startXI ? `${homeLineup.startXI.length}人` : 'なし'}<br>
                         - アウェイstartXI: ${awayLineup && awayLineup.startXI ? `${awayLineup.startXI.length}人` : 'なし'}<br>
+                        - 最初のプレイヤー: ${firstPlayerDebug}<br>
                         - 表示: APIデータとフォールバックデータの両方対応
                     `;
                     lineupContainer.appendChild(debugInfo);
