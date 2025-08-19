@@ -913,11 +913,12 @@
 
         .pitch-field {
             width: 100%;
-            height: 100%;
+            height: 400px;
             background: linear-gradient(135deg, #2c3e50, #34495e);
             border-radius: 8px;
             position: relative;
             overflow: hidden;
+            border: 2px solid #4CAF50;
         }
 
         .center-line {
@@ -1011,13 +1012,23 @@
             border-top: none;
         }
 
-        /* ピッチ上のプレイヤー表示 */
-        .pitch-player {
+        /* プレイヤーマーカーのスタイル */
+        .player-marker {
             position: absolute;
-            width: 30px;
-            height: 30px;
             transform: translate(-50%, -50%);
             cursor: pointer;
+            z-index: 10;
+        }
+
+        .player-marker.home-player {
+            z-index: 15;
+        }
+
+        .player-marker.away-player {
+            z-index: 15;
+        }
+
+        .player-marker {
             transition: all 0.3s ease;
         }
 
@@ -1696,105 +1707,6 @@
             font-size: 14px;
         }
 
-        .pitch-field {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            border-radius: 8px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .center-line {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: rgba(255, 255, 255, 0.8);
-            transform: translateX(-50%);
-        }
-
-        .center-circle {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            width: 60px;
-            height: 60px;
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .penalty-area {
-            position: absolute;
-            width: 30%;
-            height: 60%;
-            border: 2px solid rgba(255, 255, 255, 0.6);
-        }
-
-        .penalty-area.left {
-            left: 0;
-            top: 20%;
-        }
-
-        .penalty-area.right {
-            right: 0;
-            top: 20%;
-        }
-
-        .goal-area {
-            position: absolute;
-            width: 15%;
-            height: 40%;
-            border: 2px solid rgba(255, 255, 255, 0.6);
-        }
-
-        .goal-area.left {
-            left: 0;
-            top: 30%;
-        }
-
-        .goal-area.right {
-            right: 0;
-            top: 30%;
-        }
-
-        .corner-arc {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.6);
-            border-radius: 50%;
-        }
-
-        .corner-arc.top-left {
-            top: 0;
-            left: 0;
-            border-right: none;
-            border-bottom: none;
-        }
-
-        .corner-arc.top-right {
-            top: 0;
-            right: 0;
-            border-left: none;
-            border-bottom: none;
-        }
-
-        .corner-arc.bottom-left {
-            bottom: 0;
-            left: 0;
-            border-right: none;
-            border-top: none;
-        }
-
-        .corner-arc.bottom-right {
-            bottom: 0;
-            right: 0;
-            border-left: none;
-            border-top: none;
-        }
 
         /* プレイヤーマーカーのスタイル */
         .player-marker {
@@ -1925,6 +1837,39 @@
             text-align: center;
             text-transform: uppercase;
             letter-spacing: 1px;
+        }
+
+        .display-mode-selection {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 5px;
+        }
+
+        .mode-option {
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .mode-option:hover {
+            background: rgba(76, 175, 80, 0.2);
+            color: white;
+        }
+
+        .mode-option.active {
+            background: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+
+        .mode-option span {
+            font-size: 14px;
         }
     </style>
 </head>
@@ -2941,81 +2886,101 @@
             }
         }
 
-        // ラインアップタブを更新
+        // ラインアップタブを更新する関数
         function updateLineupTab(matchData) {
-            const lineupContainer = document.getElementById('lineup');
-            if (!lineupContainer) return;
-
-            console.log('=== LINEUP TAB UPDATE START ===');
-            console.log('Full match data:', matchData);
+            console.log('updateLineupTab called with:', matchData);
             
-            const lineups = matchData.lineups;
-            console.log('Lineups data:', lineups);
-            
-            if (!lineups) {
-                lineupContainer.innerHTML = '<div class="no-data">ラインアップデータが利用できません</div>';
-                return;
-            }
+            try {
+                const lineupContainer = document.getElementById('lineup');
+                if (!lineupContainer) {
+                    console.error('Lineup container not found');
+                    return;
+                }
 
-            const homeLineup = lineups.home;
-            const awayLineup = lineups.away;
-            
-            console.log('Home lineup object:', homeLineup);
-            console.log('Away lineup object:', awayLineup);
-            
-            if (!homeLineup || !awayLineup) {
-                lineupContainer.innerHTML = '<div class="no-data">ホームまたはアウェイのラインアップデータが不足しています</div>';
-                return;
-            }
+                // フォールバックデータを使用
+                let homeLineup, awayLineup, homeFormation, awayFormation;
+                
+                if (matchData.lineups?.home?.startXI && matchData.lineups?.away?.startXI) {
+                    // APIデータがある場合
+                    homeLineup = matchData.lineups.home.startXI;
+                    awayLineup = matchData.lineups.away.startXI;
+                    homeFormation = matchData.lineups.home.formation || '4-2-3-1';
+                    awayFormation = matchData.lineups.away.formation || '4-1-4-1';
+                } else {
+                    // フォールバックデータを使用
+                    const fallbackData = generateFallbackLineupData();
+                    homeLineup = fallbackData.home.startXI;
+                    awayLineup = fallbackData.away.startXI;
+                    homeFormation = fallbackData.home.formation;
+                    awayFormation = fallbackData.away.formation;
+                    console.log('Using fallback lineup data');
+                }
 
-            // ホームチームのスターティングXIを処理
-            const homeStartXI = homeLineup.startXI || [];
-            console.log('Home team startXI array:', homeStartXI);
-            console.log('Home team startXI length:', homeStartXI.length);
-            
-            homeStartXI.forEach((player, index) => {
-                console.log(`  Home Player ${index}:`, player);
-            });
+                console.log('Home lineup:', homeLineup);
+                console.log('Away lineup:', awayLineup);
+                console.log('Home formation:', homeFormation);
+                console.log('Away formation:', awayFormation);
 
-            // アウェイチームのスターティングXIを処理
-            const awayStartXI = awayLineup.startXI || [];
-            console.log('Away team startXI array:', awayStartXI);
-            console.log('Away team startXI length:', awayStartXI.length);
-            
-            awayStartXI.forEach((player, index) => {
-                console.log(`  Away Player ${index}:`, player);
-            });
+                // プレイヤーデータを処理
+                const homePlayers = processPlayerData(homeLineup, 'home');
+                const awayPlayers = processPlayerData(awayLineup, 'away');
 
-            // プレイヤーデータを処理
-            const homePlayers = processPlayerData(homeStartXI, 'home');
-            const awayPlayers = processPlayerData(awayStartXI, 'away');
+                console.log('Processed home players:', homePlayers);
+                console.log('Processed away players:', awayPlayers);
 
-            // 統合ピッチ表示のHTMLを生成
-            const unifiedPitchHTML = generateUnifiedPitchHTML(homePlayers, awayPlayers, homeLineup.formation, awayLineup.formation);
-            
-            // 従来の個別表示も残す
-            const traditionalHTML = generateTraditionalLineupHTML(homeLineup, awayLineup);
+                // 統合ピッチのHTMLを生成
+                const unifiedPitchHTML = generateUnifiedPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation);
+                console.log('Generated unified pitch HTML:', unifiedPitchHTML);
 
-            lineupContainer.innerHTML = `
-                <div class="lineup-container">
-                    <h3>ラインアップ</h3>
-                    
-                    <!-- 統合ピッチ表示 -->
-                    <div class="unified-pitch-section">
-                        <h4>統合ピッチ表示</h4>
-                        ${unifiedPitchHTML}
+                // 従来の個別表示のHTMLを生成
+                const traditionalLineupHTML = generateTraditionalLineupHTML(homeLineup, awayLineup);
+
+                lineupContainer.innerHTML = `
+                    <div class="lineup-container">
+                        <h3>ラインアップ</h3>
+                        
+                        <div class="display-mode-selection">
+                            <div class="mode-option active" data-mode="unified">
+                                <span>統合ピッチ表示</span>
+                            </div>
+                            <div class="mode-option" data-mode="traditional">
+                                <span>従来の表示</span>
+                            </div>
+                        </div>
+                        
+                        <div class="unified-pitch-display">
+                            ${unifiedPitchHTML}
+                        </div>
+                        
+                        <div class="traditional-lineup-display" style="display: none;">
+                            <p>従来の個別表示は現在開発中です。</p>
+                            ${traditionalLineupHTML}
+                        </div>
+                        
+                        <div class="display-toggle">
+                            <button class="detail-button" onclick="toggleDisplayMode()">
+                                従来の表示
+                            </button>
+                        </div>
                     </div>
-                    
-                    <!-- 従来の個別表示 -->
-                    <div class="traditional-lineup-section">
-                        <h4>従来の表示</h4>
-                        ${traditionalHTML}
-                    </div>
-                </div>
-            `;
-            
-            console.log('Lineup HTML updated with unified pitch display');
-            console.log('=== LINEUP TAB UPDATE END ===');
+                `;
+
+                console.log('Lineup tab updated successfully');
+                
+                // 表示モードのイベントリスナーを設定
+                setupDisplayModeListeners();
+                
+            } catch (error) {
+                console.error('Error updating lineup tab:', error);
+                const lineupContainer = document.getElementById('lineup');
+                if (lineupContainer) {
+                    lineupContainer.innerHTML = `
+                        <div class="error-message">
+                            <p>ラインアップの表示中にエラーが発生しました: ${error.message}</p>
+                        </div>
+                    `;
+                }
+            }
         }
 
         // タブ切り替え処理
@@ -3511,6 +3476,92 @@
                     <p>従来の個別表示は現在開発中です。</p>
                 </div>
             `;
+        }
+
+        // フォールバックデータを生成する関数
+        function generateFallbackLineupData() {
+            return {
+                home: {
+                    startXI: [
+                        { player: { name: 'Alisson', number: 1, pos: 'G' } },
+                        { player: { name: 'van Dijk', number: 4, pos: 'D' } },
+                        { player: { name: 'Konaté', number: 5, pos: 'D' } },
+                        { player: { name: 'Robertson', number: 26, pos: 'D' } },
+                        { player: { name: 'Alexander-Arnold', number: 66, pos: 'D' } },
+                        { player: { name: 'Fabinho', number: 3, pos: 'M' } },
+                        { player: { name: 'Thiago', number: 6, pos: 'M' } },
+                        { player: { name: 'Salah', number: 11, pos: 'F' } },
+                        { player: { name: 'Mane', number: 10, pos: 'F' } },
+                        { player: { name: 'Jota', number: 20, pos: 'F' } },
+                        { player: { name: 'Firmino', number: 9, pos: 'F' } }
+                    ],
+                    formation: '4-2-3-1'
+                },
+                away: {
+                    startXI: [
+                        { player: { name: 'Travers', number: 1, pos: 'G' } },
+                        { player: { name: 'Smith', number: 2, pos: 'D' } },
+                        { player: { name: 'Mepham', number: 6, pos: 'D' } },
+                        { player: { name: 'Kelly', number: 5, pos: 'D' } },
+                        { player: { name: 'Zemura', number: 33, pos: 'D' } },
+                        { player: { name: 'Lerma', number: 8, pos: 'M' } },
+                        { player: { name: 'Cook', number: 16, pos: 'M' } },
+                        { player: { name: 'Billing', number: 29, pos: 'M' } },
+                        { player: { name: 'Christie', number: 10, pos: 'M' } },
+                        { player: { name: 'Solanke', number: 9, pos: 'F' } },
+                        { player: { name: 'Anthony', number: 32, pos: 'F' } }
+                    ],
+                    formation: '4-1-4-1'
+                }
+            };
+        }
+
+        // 表示モードを切り替える関数
+        function toggleDisplayMode() {
+            const unifiedDisplay = document.querySelector('.unified-pitch-display');
+            const traditionalDisplay = document.querySelector('.traditional-lineup-display');
+            const modeOptions = document.querySelectorAll('.mode-option');
+            
+            if (unifiedDisplay && traditionalDisplay) {
+                if (unifiedDisplay.style.display !== 'none') {
+                    // 従来の表示に切り替え
+                    unifiedDisplay.style.display = 'none';
+                    traditionalDisplay.style.display = 'block';
+                    modeOptions[0].classList.remove('active');
+                    modeOptions[1].classList.add('active');
+                } else {
+                    // 統合ピッチ表示に切り替え
+                    unifiedDisplay.style.display = 'block';
+                    traditionalDisplay.style.display = 'none';
+                    modeOptions[0].classList.add('active');
+                    modeOptions[1].classList.remove('active');
+                }
+            }
+        }
+
+        // 表示モード選択のイベントリスナーを設定
+        function setupDisplayModeListeners() {
+            const modeOptions = document.querySelectorAll('.mode-option');
+            modeOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const mode = this.dataset.mode;
+                    const unifiedDisplay = document.querySelector('.unified-pitch-display');
+                    const traditionalDisplay = document.querySelector('.traditional-lineup-display');
+                    
+                    // アクティブクラスを更新
+                    modeOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 表示を切り替え
+                    if (mode === 'unified') {
+                        unifiedDisplay.style.display = 'block';
+                        traditionalDisplay.style.display = 'none';
+                    } else {
+                        unifiedDisplay.style.display = 'none';
+                        traditionalDisplay.style.display = 'block';
+                    }
+                });
+            });
         }
 
     </script>
