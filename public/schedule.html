@@ -1506,7 +1506,18 @@
                             nameType: typeof player.name,
                             playerKeys: Object.keys(player),
                             playerValues: Object.values(player),
-                            playerStringified: JSON.stringify(player, null, 2)
+                            playerStringified: JSON.stringify(player, null, 2),
+                            // より詳細な調査
+                            nameValue: player.name,
+                            positionValue: player.position,
+                            posValue: player.pos,
+                            playerNameValue: player.playerName,
+                            displayNameValue: player.displayName,
+                            roleValue: player.role,
+                            // ネストされたオブジェクトの調査
+                            playerObject: player.player,
+                            playerObjectKeys: player.player ? Object.keys(player.player) : 'なし',
+                            playerObjectName: player.player ? player.player.name : 'なし'
                         });
                     });
                 }
@@ -1523,7 +1534,18 @@
                             nameType: typeof player.name,
                             playerKeys: Object.keys(player),
                             playerValues: Object.values(player),
-                            playerStringified: JSON.stringify(player, null, 2)
+                            playerStringified: JSON.stringify(player, null, 2),
+                            // より詳細な調査
+                            nameValue: player.name,
+                            positionValue: player.position,
+                            posValue: player.pos,
+                            playerNameValue: player.playerName,
+                            displayNameValue: player.displayName,
+                            roleValue: player.role,
+                            // ネストされたオブジェクトの調査
+                            playerObject: player.player,
+                            playerObjectKeys: player.player ? Object.keys(player.player) : 'なし',
+                            playerObjectName: player.player ? player.player.name : 'なし'
                         });
                     });
                 }
@@ -1538,30 +1560,51 @@
                                 ${homeLineup.startXI.map((player, index) => {
                                     console.log(`Processing home player ${index}:`, player);
                                     
-                                    // より柔軟なデータ取得
+                                    // API-Footballの正しいデータ構造に対応
                                     let playerName = '不明';
                                     let playerPosition = '不明';
                                     
-                                    // プレイヤー名の取得（複数のパターンを試行）
-                                    if (player.name && player.name !== 'UNKNOWN' && player.name !== 'Unknown') {
-                                        playerName = player.name;
-                                    } else if (player.player && player.player.name && player.player.name !== 'UNKNOWN' && player.player.name !== 'Unknown') {
+                                    // プレイヤー名の取得（API-Football構造）
+                                    if (player.player && player.player.name && player.player.name !== 'UNKNOWN' && player.player.name !== 'Unknown' && player.player.name !== 'null' && player.player.name !== null) {
                                         playerName = player.player.name;
-                                    } else if (player.playerName && player.playerName !== 'UNKNOWN' && player.playerName !== 'Unknown') {
+                                        console.log(`    Found name in player.player.name: "${playerName}"`);
+                                    } else if (player.name && player.name !== 'UNKNOWN' && player.name !== 'Unknown' && player.name !== 'null' && player.name !== null) {
+                                        playerName = player.name;
+                                        console.log(`    Found name in player.name: "${playerName}"`);
+                                    } else if (player.playerName && player.playerName !== 'UNKNOWN' && player.playerName !== 'Unknown' && player.playerName !== 'null' && player.playerName !== null) {
                                         playerName = player.playerName;
-                                    } else if (player.displayName && player.displayName !== 'UNKNOWN' && player.displayName !== 'Unknown') {
+                                        console.log(`    Found name in player.playerName: "${playerName}"`);
+                                    } else if (player.displayName && player.displayName !== 'UNKNOWN' && player.displayName !== 'Unknown' && player.displayName !== 'null' && player.displayName !== null) {
                                         playerName = player.displayName;
+                                        console.log(`    Found name in player.displayName: "${playerName}"`);
+                                    } else {
+                                        console.log(`    No valid name found. Available keys: [${Object.keys(player).join(', ')}]`);
+                                        if (player.player) {
+                                            console.log(`    Player object keys: [${Object.keys(player.player).join(', ')}]`);
+                                        }
                                     }
                                     
-                                    // ポジション情報の取得（複数のパターンを試行）
-                                    if (player.position && player.position !== 'UNKNOWN' && player.position !== 'Unknown') {
+                                    // ポジション情報の取得（API-Football構造）
+                                    if (player.player && player.player.pos && player.player.pos !== 'UNKNOWN' && player.player.pos !== 'Unknown' && player.player.pos !== 'null' && player.player.pos !== null) {
+                                        playerPosition = player.player.pos;
+                                        console.log(`    Found position in player.player.pos: "${playerPosition}"`);
+                                    } else if (player.position && player.position !== 'UNKNOWN' && player.position !== 'Unknown' && player.position !== 'null' && player.position !== null) {
                                         playerPosition = player.position;
-                                    } else if (player.pos && player.pos !== 'UNKNOWN' && player.pos !== 'Unknown') {
+                                        console.log(`    Found position in player.position: "${playerPosition}"`);
+                                    } else if (player.pos && player.pos !== 'UNKNOWN' && player.pos !== 'Unknown' && player.pos !== 'null' && player.pos !== null) {
                                         playerPosition = player.pos;
-                                    } else if (player.playerPosition && player.playerPosition !== 'UNKNOWN' && player.playerPosition !== 'Unknown') {
+                                        console.log(`    Found position in player.pos: "${playerPosition}"`);
+                                    } else if (player.playerPosition && player.playerPosition !== 'UNKNOWN' && player.playerPosition !== 'Unknown' && player.playerPosition !== 'null' && player.playerPosition !== null) {
                                         playerPosition = player.playerPosition;
-                                    } else if (player.role && player.role !== 'UNKNOWN' && player.role !== 'Unknown') {
+                                        console.log(`    Found position in player.playerPosition: "${playerPosition}"`);
+                                    } else if (player.role && player.role !== 'UNKNOWN' && player.role !== 'Unknown' && player.role !== 'null' && player.role !== null) {
                                         playerPosition = player.role;
+                                        console.log(`    Found position in player.role: "${playerPosition}"`);
+                                    } else {
+                                        console.log(`    No valid position found. Available keys: [${Object.keys(player).join(', ')}]`);
+                                        if (player.player) {
+                                            console.log(`    Player object keys: [${Object.keys(player.player).join(', ')}]`);
+                                        }
                                     }
                                     
                                     console.log(`  Resolved - Name: "${playerName}", Position: "${playerPosition}"`);
@@ -1594,33 +1637,55 @@
                                 ${awayLineup.startXI.map((player, index) => {
                                     console.log(`Processing away player ${index}:`, player);
                                     
-                                    // より柔軟なデータ取得
+                                    // API-Footballの正しいデータ構造に対応
                                     let playerName = '不明';
                                     let playerPosition = '不明';
                                     
-                                    // プレイヤー名の取得（複数のパターンを試行）
-                                    if (player.name && player.name !== 'UNKNOWN' && player.name !== 'Unknown') {
-                                        playerName = player.name;
-                                    } else if (player.player && player.player.name && player.player.name !== 'UNKNOWN' && player.player.name !== 'Unknown') {
+                                    // プレイヤー名の取得（API-Football構造）
+                                    if (player.player && player.player.name && player.player.name !== 'UNKNOWN' && player.player.name !== 'Unknown' && player.player.name !== 'null' && player.player.name !== null) {
                                         playerName = player.player.name;
-                                    } else if (player.playerName && player.playerName !== 'UNKNOWN' && player.playerName !== 'Unknown') {
+                                        console.log(`    Found name in player.player.name: "${playerName}"`);
+                                    } else if (player.name && player.name !== 'UNKNOWN' && player.name !== 'Unknown' && player.name !== 'null' && player.name !== null) {
+                                        playerName = player.name;
+                                        console.log(`    Found name in player.name: "${playerName}"`);
+                                    } else if (player.playerName && player.playerName !== 'UNKNOWN' && player.playerName !== 'Unknown' && player.playerName !== 'null' && player.playerName !== null) {
                                         playerName = player.playerName;
-                                    } else if (player.displayName && player.displayName !== 'UNKNOWN' && player.displayName !== 'Unknown') {
+                                        console.log(`    Found name in player.playerName: "${playerName}"`);
+                                    } else if (player.displayName && player.displayName !== 'UNKNOWN' && player.displayName !== 'Unknown' && player.displayName !== 'null' && player.displayName !== null) {
                                         playerName = player.displayName;
+                                        console.log(`    Found name in player.displayName: "${playerName}"`);
+                                    } else {
+                                        console.log(`    No valid name found. Available keys: [${Object.keys(player).join(', ')}]`);
+                                        if (player.player) {
+                                            console.log(`    Player object keys: [${Object.keys(player.player).join(', ')}]`);
+                                        }
                                     }
                                     
-                                    // ポジション情報の取得（複数のパターンを試行）
-                                    if (player.position && player.position !== 'UNKNOWN' && player.position !== 'Unknown') {
+                                    // ポジション情報の取得（API-Football構造）
+                                    if (player.player && player.player.pos && player.player.pos !== 'UNKNOWN' && player.player.pos !== 'Unknown' && player.player.pos !== 'null' && player.player.pos !== null) {
+                                        playerPosition = player.player.pos;
+                                        console.log(`    Found position in player.player.pos: "${playerPosition}"`);
+                                    } else if (player.position && player.position !== 'UNKNOWN' && player.position !== 'Unknown' && player.position !== 'null' && player.position !== null) {
                                         playerPosition = player.position;
-                                    } else if (player.pos && player.pos !== 'UNKNOWN' && player.pos !== 'Unknown') {
+                                        console.log(`    Found position in player.position: "${playerPosition}"`);
+                                    } else if (player.pos && player.pos !== 'UNKNOWN' && player.pos !== 'Unknown' && player.pos !== 'null' && player.pos !== null) {
                                         playerPosition = player.pos;
-                                    } else if (player.playerPosition && player.playerPosition !== 'UNKNOWN' && player.playerPosition !== 'Unknown') {
+                                        console.log(`    Found position in player.pos: "${playerPosition}"`);
+                                    } else if (player.playerPosition && player.playerPosition !== 'UNKNOWN' && player.playerPosition !== 'Unknown' && player.playerPosition !== 'null' && player.playerPosition !== null) {
                                         playerPosition = player.playerPosition;
-                                    } else if (player.role && player.role !== 'UNKNOWN' && player.role !== 'Unknown') {
+                                        console.log(`    Found position in player.playerPosition: "${playerPosition}"`);
+                                    } else if (player.role && player.role !== 'UNKNOWN' && player.role !== 'Unknown' && player.role !== 'null' && player.role !== null) {
                                         playerPosition = player.role;
+                                        console.log(`    Found position in player.role: "${playerPosition}"`);
+                                    } else {
+                                        console.log(`    No valid position found. Available keys: [${Object.keys(player).join(', ')}]`);
+                                        if (player.player) {
+                                            console.log(`    Player object keys: [${Object.keys(player.player).join(', ')}]`);
+                                        }
                                     }
                                     
                                     console.log(`  Resolved - Name: "${playerName}", Position: "${playerPosition}"`);
+                                    console.log(`  Raw player data:`, player);
                                     
                                     // APIデータが取得できない場合のフォールバック
                                     const testNames = ['Neto', 'Smith', 'Mepham', 'Zabarnyi', 'Kerkez', 'Cook', 'Billing', 'Christie', 'Brooks', 'Semenyo', 'Solanke'];
