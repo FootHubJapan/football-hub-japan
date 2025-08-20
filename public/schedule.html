@@ -963,12 +963,12 @@
             left: 50%;
             top: 0;
             bottom: 0;
-            width: 80px;
+            width: 60px;
             background: linear-gradient(to right, transparent, rgba(76, 175, 80, 0.05), transparent);
             transform: translateX(-50%);
             pointer-events: none;
-            border-left: 2px solid rgba(76, 175, 80, 0.3);
-            border-right: 2px solid rgba(76, 175, 80, 0.3);
+            border-left: 2px solid rgba(76, 175, 80, 0.2);
+            border-right: 2px solid rgba(76, 175, 80, 0.2);
         }
 
         .penalty-area {
@@ -1816,6 +1816,17 @@
             font-size: 11px;
             text-align: center;
             margin-bottom: 2px;
+        }
+
+        .player-position {
+            color: #4CAF50;
+            font-size: 10px;
+            text-align: center;
+            margin-bottom: 2px;
+            font-weight: bold;
+            background: rgba(76, 175, 80, 0.2);
+            padding: 1px 4px;
+            border-radius: 3px;
         }
 
         .player-rating {
@@ -3311,8 +3322,8 @@
                             <div class="team-logo-placeholder"></div>
                             <div class="team-details">
                                 <div class="team-name">Liverpool</div>
-                                <div class="team-formation">${homeFormation}</div>
-                                <div class="team-rating">7.2</div>
+                                <div class="team-formation">Formation: ${homeFormation}</div>
+                                <div class="team-rating">Rating: 7.2</div>
                             </div>
                         </div>
                         
@@ -3322,8 +3333,8 @@
                             <div class="team-logo-placeholder"></div>
                             <div class="team-details">
                                 <div class="team-name">Bournemouth</div>
-                                <div class="team-formation">${awayFormation}</div>
-                                <div class="team-rating">6.8</div>
+                                <div class="team-formation">Formation: ${awayFormation}</div>
+                                <div class="team-rating">Rating: 6.8</div>
                             </div>
                         </div>
                     </div>
@@ -3373,9 +3384,9 @@
                         left = pos.left;
                         top = pos.top;
                         
-                        // 中央安全ゾーン（40%-60%）に入らないように制限
-                        if (left >= 40 && left <= 60) {
-                            left = 38; // 左側に移動
+                        // 中央安全ゾーン（45%-55%）に入らないように制限
+                        if (left >= 45 && left <= 55) {
+                            left = 43; // 左側に移動
                         }
                     } else {
                         // アウェイチーム（右側、右のゴール）
@@ -3385,18 +3396,18 @@
                             left = pos.left;
                             top = pos.top;
                             
-                            // 中央安全ゾーン（40%-60%）に入らないように制限
-                            if (left >= 40 && left <= 60) {
-                                left = 62; // 右側に移動
+                            // 中央安全ゾーン（45%-55%）に入らないように制限
+                            if (left >= 45 && left <= 55) {
+                                left = 57; // 右側に移動
                             }
                         } else {
                             // その他のフォーメーションは右側に反転
                             left = 100 - pos.left;
                             top = pos.top;
                             
-                            // 中央安全ゾーン（40%-60%）に入らないように制限
-                            if (left >= 40 && left <= 60) {
-                                left = 62; // 右側に移動
+                            // 中央安全ゾーン（45%-55%）に入らないように制限
+                            if (left >= 45 && left <= 55) {
+                                left = 57; // 右側に移動
                             }
                         }
                     }
@@ -3412,6 +3423,7 @@
                             <div class="player-info">
                                 <div class="player-number">${player.number}</div>
                                 <div class="player-name">${player.name}</div>
+                                <div class="player-position">${getPositionLabel(player.position)}</div>
                                 <div class="player-rating ${player.ratingClass}">${player.rating}</div>
                             </div>
                         </div>
@@ -3421,7 +3433,7 @@
             }).join('');
         }
 
-        // フォーメーションに基づくプレイヤー位置を取得する関数（中央線分離版）
+        // フォーメーションに基づくプレイヤー位置を取得する関数（ポジション明確化版）
         function getFormationPositions(formation) {
             const positions = [];
             
@@ -3429,55 +3441,55 @@
                 case '4-2-3-1':
                     // GK (左のゴール)
                     positions.push({ left: 8, top: 50 });
-                    // Defenders (左から2番目のライン)
-                    positions.push({ left: 20, top: 25 });
-                    positions.push({ left: 20, top: 40 });
-                    positions.push({ left: 20, top: 60 });
-                    positions.push({ left: 20, top: 75 });
-                    // Midfielders (左から3番目のライン)
+                    // Defenders (左から2番目のライン、縦一列)
+                    positions.push({ left: 20, top: 20 });
+                    positions.push({ left: 20, top: 35 });
+                    positions.push({ left: 20, top: 65 });
+                    positions.push({ left: 20, top: 80 });
+                    // Midfielders (左から3番目のライン、縦一列)
                     positions.push({ left: 32, top: 35 });
                     positions.push({ left: 32, top: 65 });
-                    // Attacking Midfielders (左から4番目のライン)
-                    positions.push({ left: 44, top: 30 });
+                    // Attacking Midfielders (左から4番目のライン、横一列)
+                    positions.push({ left: 44, top: 25 });
                     positions.push({ left: 44, top: 50 });
-                    positions.push({ left: 44, top: 70 });
-                    // Striker (左から5番目のライン、中央線から離す)
-                    positions.push({ left: 52, top: 50 });
+                    positions.push({ left: 44, top: 75 });
+                    // Striker (左から5番目のライン、中央)
+                    positions.push({ left: 56, top: 50 });
                     break;
                     
                 case '4-1-4-1':
                     // GK (右のゴール)
                     positions.push({ left: 92, top: 50 });
-                    // Defenders (右から2番目のライン)
-                    positions.push({ left: 80, top: 25 });
-                    positions.push({ left: 80, top: 40 });
-                    positions.push({ left: 80, top: 60 });
-                    positions.push({ left: 80, top: 75 });
-                    // Defensive Midfielder (右から3番目のライン)
+                    // Defenders (右から2番目のライン、縦一列)
+                    positions.push({ left: 80, top: 20 });
+                    positions.push({ left: 80, top: 35 });
+                    positions.push({ left: 80, top: 65 });
+                    positions.push({ left: 80, top: 80 });
+                    // Defensive Midfielder (右から3番目のライン、中央)
                     positions.push({ left: 68, top: 50 });
-                    // Midfielders (右から4番目のライン)
+                    // Midfielders (右から4番目のライン、横一列)
                     positions.push({ left: 56, top: 25 });
                     positions.push({ left: 56, top: 40 });
                     positions.push({ left: 56, top: 60 });
                     positions.push({ left: 56, top: 75 });
-                    // Striker (右から5番目のライン、中央線から離す)
-                    positions.push({ left: 48, top: 50 });
+                    // Striker (右から5番目のライン、中央)
+                    positions.push({ left: 44, top: 50 });
                     break;
                     
                 case '4-4-2':
                     // GK (左のゴール)
                     positions.push({ left: 8, top: 50 });
-                    // Defenders (左から2番目のライン)
+                    // Defenders (左から2番目のライン、縦一列)
                     positions.push({ left: 20, top: 20 });
                     positions.push({ left: 20, top: 35 });
                     positions.push({ left: 20, top: 65 });
                     positions.push({ left: 20, top: 80 });
-                    // Midfielders (左から3番目のライン)
-                    positions.push({ left: 32, top: 20 });
-                    positions.push({ left: 32, top: 35 });
-                    positions.push({ left: 32, top: 65 });
-                    positions.push({ left: 32, top: 80 });
-                    // Strikers (左から4番目のライン、中央線から離す)
+                    // Midfielders (左から3番目のライン、横一列)
+                    positions.push({ left: 32, top: 25 });
+                    positions.push({ left: 32, top: 40 });
+                    positions.push({ left: 32, top: 60 });
+                    positions.push({ left: 32, top: 75 });
+                    // Strikers (左から4番目のライン、横一列)
                     positions.push({ left: 44, top: 40 });
                     positions.push({ left: 44, top: 60 });
                     break;
@@ -3485,17 +3497,17 @@
                 case '3-5-2':
                     // GK (左のゴール)
                     positions.push({ left: 8, top: 50 });
-                    // Defenders (左から2番目のライン)
+                    // Defenders (左から2番目のライン、横一列)
                     positions.push({ left: 20, top: 30 });
                     positions.push({ left: 20, top: 50 });
                     positions.push({ left: 20, top: 70 });
-                    // Midfielders (左から3番目のライン)
+                    // Midfielders (左から3番目のライン、横一列)
                     positions.push({ left: 32, top: 20 });
                     positions.push({ left: 32, top: 35 });
                     positions.push({ left: 32, top: 50 });
                     positions.push({ left: 32, top: 65 });
                     positions.push({ left: 32, top: 80 });
-                    // Strikers (左から4番目のライン、中央線から離す)
+                    // Strikers (左から4番目のライン、横一列)
                     positions.push({ left: 44, top: 40 });
                     positions.push({ left: 44, top: 60 });
                     break;
@@ -3616,6 +3628,21 @@
                     }
                 });
             });
+        }
+
+        // ポジションを日本語ラベルに変換する関数
+        function getPositionLabel(position) {
+            const positionMap = {
+                'G': 'GK',
+                'D': 'DF',
+                'M': 'MF',
+                'F': 'FW',
+                'GK': 'GK',
+                'DF': 'DF',
+                'MF': 'MF',
+                'FW': 'FW'
+            };
+            return positionMap[position] || position;
         }
 
     </script>
