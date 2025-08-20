@@ -926,10 +926,11 @@
             left: 50%;
             top: 0;
             bottom: 0;
-            width: 4px;
+            width: 6px;
             background: linear-gradient(to bottom, #4CAF50, #45a049);
             transform: translateX(-50%);
-            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+            z-index: 5;
         }
 
         .center-circle {
@@ -950,10 +951,24 @@
             left: 50%;
             top: 0;
             bottom: 0;
-            width: 100px;
-            background: linear-gradient(to right, transparent, rgba(76, 175, 80, 0.1), transparent);
+            width: 120px;
+            background: linear-gradient(to right, transparent, rgba(76, 175, 80, 0.15), transparent);
             transform: translateX(-50%);
             pointer-events: none;
+        }
+
+        /* 中央安全ゾーン */
+        .center-safe-zone {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 80px;
+            background: linear-gradient(to right, transparent, rgba(76, 175, 80, 0.05), transparent);
+            transform: translateX(-50%);
+            pointer-events: none;
+            border-left: 2px solid rgba(76, 175, 80, 0.3);
+            border-right: 2px solid rgba(76, 175, 80, 0.3);
         }
 
         .penalty-area {
@@ -3318,6 +3333,7 @@
                         <div class="center-line"></div>
                         <div class="center-circle"></div>
                         <div class="half-court-divider"></div>
+                        <div class="center-safe-zone"></div>
                         
                         <!-- ペナルティエリア -->
                         <div class="penalty-area left"></div>
@@ -3343,7 +3359,7 @@
             `;
         }
 
-        // 統合ピッチでのプレイヤー位置を生成する関数（ハーフコート分離版）
+        // 統合ピッチでのプレイヤー位置を生成する関数（中央線分離版）
         function generateUnifiedPlayerPositions(players, teamType, formation) {
             const positions = getFormationPositions(formation);
             
@@ -3356,6 +3372,11 @@
                         // ホームチーム（左側、左のゴール）
                         left = pos.left;
                         top = pos.top;
+                        
+                        // 中央安全ゾーン（40%-60%）に入らないように制限
+                        if (left >= 40 && left <= 60) {
+                            left = 38; // 左側に移動
+                        }
                     } else {
                         // アウェイチーム（右側、右のゴール）
                         // アウェイチームは右側のハーフコートに配置
@@ -3363,10 +3384,20 @@
                             // 4-1-4-1フォーメーションは既に右側用に設定済み
                             left = pos.left;
                             top = pos.top;
+                            
+                            // 中央安全ゾーン（40%-60%）に入らないように制限
+                            if (left >= 40 && left <= 60) {
+                                left = 62; // 右側に移動
+                            }
                         } else {
                             // その他のフォーメーションは右側に反転
                             left = 100 - pos.left;
                             top = pos.top;
+                            
+                            // 中央安全ゾーン（40%-60%）に入らないように制限
+                            if (left >= 40 && left <= 60) {
+                                left = 62; // 右側に移動
+                            }
                         }
                     }
                     
@@ -3390,7 +3421,7 @@
             }).join('');
         }
 
-        // フォーメーションに基づくプレイヤー位置を取得する関数（ハーフコート分離版）
+        // フォーメーションに基づくプレイヤー位置を取得する関数（中央線分離版）
         function getFormationPositions(formation) {
             const positions = [];
             
@@ -3410,8 +3441,8 @@
                     positions.push({ left: 44, top: 30 });
                     positions.push({ left: 44, top: 50 });
                     positions.push({ left: 44, top: 70 });
-                    // Striker (左から5番目のライン、ハーフライン付近)
-                    positions.push({ left: 56, top: 50 });
+                    // Striker (左から5番目のライン、中央線から離す)
+                    positions.push({ left: 52, top: 50 });
                     break;
                     
                 case '4-1-4-1':
@@ -3429,8 +3460,8 @@
                     positions.push({ left: 56, top: 40 });
                     positions.push({ left: 56, top: 60 });
                     positions.push({ left: 56, top: 75 });
-                    // Striker (右から5番目のライン、ハーフライン付近)
-                    positions.push({ left: 44, top: 50 });
+                    // Striker (右から5番目のライン、中央線から離す)
+                    positions.push({ left: 48, top: 50 });
                     break;
                     
                 case '4-4-2':
@@ -3446,7 +3477,7 @@
                     positions.push({ left: 32, top: 35 });
                     positions.push({ left: 32, top: 65 });
                     positions.push({ left: 32, top: 80 });
-                    // Strikers (左から4番目のライン、ハーフライン付近)
+                    // Strikers (左から4番目のライン、中央線から離す)
                     positions.push({ left: 44, top: 40 });
                     positions.push({ left: 44, top: 60 });
                     break;
@@ -3464,7 +3495,7 @@
                     positions.push({ left: 32, top: 50 });
                     positions.push({ left: 32, top: 65 });
                     positions.push({ left: 32, top: 80 });
-                    // Strikers (左から4番目のライン、ハーフライン付近)
+                    // Strikers (左から4番目のライン、中央線から離す)
                     positions.push({ left: 44, top: 40 });
                     positions.push({ left: 44, top: 60 });
                     break;
