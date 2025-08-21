@@ -854,14 +854,14 @@
         }
 
         .player-avatar {
-            width: 50px;
-            height: 50px;
+            width: 38px; /* 42pxから38pxに縮小 */
+            height: 38px; /* 42pxから38pxに縮小 */
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 3px solid white;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
             overflow: hidden;
         }
 
@@ -870,38 +870,50 @@
             height: 100%;
             object-fit: cover;
             border-radius: 50%;
+            transition: all 0.3s ease;
         }
 
         .player-initial {
             color: white;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 14px; /* 16pxから14pxに縮小 */
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
         }
 
         .player-number {
             position: absolute;
-            top: 10px;
-            left: 10px;
+            top: -6px; /* -8pxから-6pxに調整 */
+            left: -6px; /* -8pxから-6pxに調整 */
             background: rgba(76, 175, 80, 0.9);
             color: white;
-            width: 24px;
-            height: 24px;
+            width: 20px; /* 22pxから20pxに縮小 */
+            height: 20px; /* 22pxから20pxに縮小 */
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 10px; /* 11pxから10pxに縮小 */
             font-weight: bold;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border: 2px solid white;
+            z-index: 25;
         }
 
         .player-name {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
             color: white;
-            font-size: 14px;
+            font-size: 8px; /* 9pxから8pxに縮小 */
             font-weight: bold;
-            margin: 8px 0 5px 0;
-            line-height: 1.2;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            white-space: nowrap;
+            margin-top: 10px; /* 8pxから10pxに増加 */
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            z-index: 20;
+            max-width: 70px; /* 80pxから70pxに縮小 */
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .player-position {
@@ -1019,36 +1031,36 @@
 
         .penalty-area {
             position: absolute;
-            width: 30%;
-            height: 60%;
+            width: 15%; /* 20%から15%に縮小 */
+            height: 40%; /* 50%から40%に縮小 */
             border: 2px solid rgba(255, 255, 255, 0.6);
         }
 
         .penalty-area.left {
             left: 0;
-            top: 20%;
+            top: 25%; /* 20%から25%に調整 */
         }
 
         .penalty-area.right {
             right: 0;
-            top: 20%;
+            top: 25%; /* 20%から25%に調整 */
         }
 
         .goal-area {
             position: absolute;
-            width: 15%;
-            height: 40%;
+            width: 8%; /* 10%から8%に縮小 */
+            height: 25%; /* 30%から25%に縮小 */
             border: 2px solid rgba(255, 255, 255, 0.6);
         }
 
         .goal-area.left {
             left: 0;
-            top: 30%;
+            top: 35%; /* 30%から35%に調整 */
         }
 
         .goal-area.right {
             right: 0;
-            top: 30%;
+            top: 35%; /* 30%から35%に調整 */
         }
 
         .corner-arc {
@@ -1093,6 +1105,9 @@
             transform: translate(-50%, -50%);
             cursor: pointer;
             z-index: 10;
+            /* 選手マーカー間の最小距離を確保 */
+            min-width: 50px;
+            min-height: 50px;
         }
 
         .player-marker.home-player {
@@ -1105,6 +1120,11 @@
 
         .player-marker {
             transition: all 0.3s ease;
+        }
+
+        .player-marker:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            z-index: 20;
         }
 
         .pitch-player:hover {
@@ -2799,8 +2819,8 @@
                                     <div class="match-teams">
                                         <div class="team">
                                             <div class="team-logo">
-                                                <img src="https://media.api-sports.io/football/teams/${getTeamId(match.homeTeam)}.png" alt="${match.homeTeam}" class="team-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                <div class="team-logo-fallback">${match.homeTeam.charAt(0)}</div>
+                                                                                    <img src="https://media.api-sports.io/football/teams/${getTeamId(match.homeTeam)}.png" alt="${match.homeTeam}" class="team-logo-img" onerror="console.log('Image load failed for team:', '${match.homeTeam}', 'ID:', '${getTeamId(match.homeTeam)}'); this.style.display='none'; this.nextElementSibling.style.display='flex'; this.src='https://via.placeholder.com/40x40/333/fff?text=${encodeURIComponent(match.homeTeam.charAt(0))}';">
+                                    <div class="team-logo-fallback">${match.homeTeam.charAt(0)}</div>
                                             </div>
                                             <div class="team-name">${match.homeTeam}</div>
                                         </div>
@@ -2813,8 +2833,8 @@
                                         
                                         <div class="team">
                                             <div class="team-logo">
-                                                <img src="https://media.api-sports.io/football/teams/${getTeamId(match.awayTeam)}.png" alt="${match.awayTeam}" class="team-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                <div class="team-logo-fallback">${match.awayTeam.charAt(0)}</div>
+                                                                                    <img src="https://media.api-sports.io/football/teams/${getTeamId(match.awayTeam)}.png" alt="${match.awayTeam}" class="team-logo-img" onerror="console.log('Image load failed for team:', '${match.awayTeam}', 'ID:', '${getTeamId(match.awayTeam)}'); this.style.display='none'; this.nextElementSibling.style.display='flex'; this.src='https://via.placeholder.com/40x40/333/fff?text=${encodeURIComponent(match.awayTeam.charAt(0))}';">
+                                    <div class="team-logo-fallback">${match.awayTeam.charAt(0)}</div>
                                             </div>
                                             <div class="team-name">${match.awayTeam}</div>
                                         </div>
@@ -3123,12 +3143,54 @@
             }
 
             return goals.map(goal => {
-                const playerName = goal.player?.name || goal.player?.displayName || goal.scorer?.name || goal.scorer?.displayName || '不明';
-                const team = goal.team === 'home' ? matchData.homeTeam : matchData.awayTeam;
-                const time = goal.time?.elapsed || goal.minute || goal.time || '?';
-                const detail = goal.detail || goal.type || goal.eventType || '';
+                // APIから取得したデータの構造に対応
+                let playerName, team, time, detail;
                 
-                console.log('Processing goal:', { playerName, team, time, detail });
+                // プレイヤー名の取得を改善
+                if (goal.player && typeof goal.player === 'object') {
+                    // オブジェクトの場合（FotMob形式）
+                    playerName = goal.player.name || goal.player.displayName || goal.player.firstName || '不明';
+                    if (goal.player.lastName) {
+                        playerName = `${playerName} ${goal.player.lastName}`;
+                    }
+                } else if (typeof goal.player === 'string') {
+                    // 文字列の場合（API-Football形式）
+                    playerName = goal.player;
+                } else if (goal.scorer && typeof goal.scorer === 'object') {
+                    // scorerオブジェクトがある場合
+                    playerName = goal.scorer.name || goal.scorer.displayName || '不明';
+                } else if (goal.scorer && typeof goal.scorer === 'string') {
+                    // scorerが文字列の場合
+                    playerName = goal.scorer;
+                } else {
+                    playerName = '不明';
+                }
+                
+                // チーム名の取得を改善
+                if (goal.team === 'home' || goal.team === 'Liverpool') {
+                    team = matchData.homeTeam;
+                } else if (goal.team === 'away' || goal.team === 'Bournemouth') {
+                    team = matchData.awayTeam;
+                } else if (goal.team && typeof goal.team === 'object') {
+                    team = goal.team.name || goal.team.shortName || '不明';
+                } else {
+                    team = goal.team || '不明';
+                }
+                
+                // 時間の取得を改善
+                if (typeof goal.time === 'object' && goal.time.elapsed) {
+                    time = goal.time.elapsed;
+                } else if (typeof goal.time === 'number') {
+                    time = goal.time;
+                } else if (goal.minute) {
+                    time = goal.minute;
+                } else {
+                    time = '?';
+                }
+                
+                detail = goal.detail || goal.goalType || 'Normal Goal';
+                
+                console.log('Processing goal:', { playerName, team, time, detail, originalGoal: goal });
                 
                 return `
                     <div class="scorer-item">
@@ -3158,7 +3220,7 @@
             const assists = matchData.events.filter(event => {
                 const eventType = event.type || event.eventType || event.name;
                 return (eventType === 'Goal' || eventType === 'goal' || eventType === 'GOAL') && 
-                       (event.assist || event.assistPlayer || event.assistName);
+                       (event.assist || event.assistPlayer || event.assistName || event.assistPlayerName);
             });
             
             console.log('Filtered assists:', assists);
@@ -3168,12 +3230,58 @@
             }
 
             return assists.map(assist => {
-                const assistName = assist.assist?.name || assist.assist?.displayName || 
-                                  assist.assistPlayer?.name || assist.assistName || '不明';
-                const team = assist.team === 'home' ? matchData.homeTeam : matchData.awayTeam;
-                const time = assist.time?.elapsed || assist.minute || assist.time || '?';
+                // APIから取得したデータの構造に対応
+                let assistName, team, time;
                 
-                console.log('Processing assist:', { assistName, team, time });
+                // アシスト者名の取得を改善
+                if (assist.assist && typeof assist.assist === 'object') {
+                    // オブジェクトの場合（FotMob形式）
+                    assistName = assist.assist.name || assist.assist.displayName || assist.assist.firstName || '不明';
+                    if (assist.assist.lastName) {
+                        assistName = `${assistName} ${assist.assist.lastName}`;
+                    }
+                } else if (typeof assist.assist === 'string') {
+                    // 文字列の場合（API-Football形式）
+                    assistName = assist.assist;
+                } else if (assist.assistPlayer && typeof assist.assistPlayer === 'object') {
+                    // assistPlayerオブジェクトがある場合
+                    assistName = assist.assistPlayer.name || assist.assistPlayer.displayName || '不明';
+                } else if (assist.assistPlayer && typeof assist.assistPlayer === 'string') {
+                    // assistPlayerが文字列の場合
+                    assistName = assist.assistPlayer;
+                } else if (assist.assistName) {
+                    // assistNameがある場合
+                    assistName = assist.assistName;
+                } else if (assist.assistPlayerName) {
+                    // assistPlayerNameがある場合
+                    assistName = assist.assistPlayerName;
+                } else {
+                    assistName = '不明';
+                }
+                
+                // チーム名の取得を改善
+                if (assist.team === 'home' || assist.team === 'Liverpool') {
+                    team = matchData.homeTeam;
+                } else if (assist.team === 'away' || assist.team === 'Bournemouth') {
+                    team = matchData.awayTeam;
+                } else if (assist.team && typeof assist.team === 'object') {
+                    team = assist.team.name || assist.team.shortName || '不明';
+                } else {
+                    team = assist.team || '不明';
+                }
+                
+                // 時間の取得を改善
+                if (typeof assist.time === 'object' && assist.time.elapsed) {
+                    time = assist.time.elapsed;
+                } else if (typeof assist.time === 'number') {
+                    time = assist.time;
+                } else if (assist.minute) {
+                    time = assist.minute;
+                } else {
+                    time = '?';
+                }
+                
+                console.log('Processing assist:', { assistName, team, time, originalAssist: assist });
                 
                 return `
                     <div class="assist-item">
@@ -4126,76 +4234,76 @@
             switch (formation) {
                 case '4-2-3-1':
                     // GK (左のゴール、より後ろに)
-                    positions.push({ left: 12, top: 50 });
-                    // Defenders (左から2番目のライン、より後ろに)
-                    positions.push({ left: 22, top: 15 });
-                    positions.push({ left: 22, top: 30 });
-                    positions.push({ left: 22, top: 70 });
-                    positions.push({ left: 22, top: 85 });
-                    // Midfielders (左から3番目のライン)
-                    positions.push({ left: 32, top: 35 });
-                    positions.push({ left: 32, top: 65 });
-                    // Attacking Midfielders (左から4番目のライン、ハーフライン手前)
-                    positions.push({ left: 42, top: 20 });
-                    positions.push({ left: 42, top: 50 });
-                    positions.push({ left: 42, top: 80 });
+                    positions.push({ left: 8, top: 50 });
+                    // Defenders (左から2番目のライン、より後ろに、CB間隔を大幅に広げる)
+                    positions.push({ left: 18, top: 20 });
+                    positions.push({ left: 18, top: 35 });
+                    positions.push({ left: 18, top: 65 });
+                    positions.push({ left: 18, top: 80 });
+                    // Midfielders (左から3番目のライン、間隔を広げる)
+                    positions.push({ left: 28, top: 30 });
+                    positions.push({ left: 28, top: 70 });
+                    // Attacking Midfielders (左から4番目のライン、ハーフライン手前、間隔を広げる)
+                    positions.push({ left: 38, top: 15 });
+                    positions.push({ left: 38, top: 50 });
+                    positions.push({ left: 38, top: 85 });
                     // Striker (左から5番目のライン、ハーフライン手前)
-                    positions.push({ left: 49, top: 50 });
+                    positions.push({ left: 45, top: 50 });
                     break;
                     
                 case '4-1-4-1':
                     // GK (右のゴール、より後ろに)
-                    positions.push({ left: 88, top: 50 });
-                    // Defenders (右から2番目のライン、より後ろに)
-                    positions.push({ left: 78, top: 15 });
-                    positions.push({ left: 78, top: 30 });
-                    positions.push({ left: 78, top: 70 });
-                    positions.push({ left: 78, top: 85 });
+                    positions.push({ left: 92, top: 50 });
+                    // Defenders (右から2番目のライン、より後ろに、CB間隔を大幅に広げる)
+                    positions.push({ left: 82, top: 20 });
+                    positions.push({ left: 82, top: 35 });
+                    positions.push({ left: 82, top: 65 });
+                    positions.push({ left: 82, top: 80 });
                     // Defensive Midfielder (右から3番目のライン)
-                    positions.push({ left: 68, top: 50 });
-                    // Midfielders (右から4番目のライン、ハーフライン手前)
-                    positions.push({ left: 58, top: 20 });
-                    positions.push({ left: 58, top: 35 });
-                    positions.push({ left: 58, top: 65 });
-                    positions.push({ left: 58, top: 80 });
+                    positions.push({ left: 72, top: 50 });
+                    // Midfielders (右から4番目のライン、ハーフライン手前、間隔を広げる)
+                    positions.push({ left: 62, top: 15 });
+                    positions.push({ left: 62, top: 30 });
+                    positions.push({ left: 62, top: 70 });
+                    positions.push({ left: 62, top: 85 });
                     // Striker (右から5番目のライン、ハーフライン手前)
-                    positions.push({ left: 51, top: 50 });
+                    positions.push({ left: 55, top: 50 });
                     break;
                     
                 case '4-4-2':
                     // GK (左のゴール、より後ろに)
                     positions.push({ left: 8, top: 50 });
-                    // Defenders (左から2番目のライン、より後ろに)
-                    positions.push({ left: 18, top: 20 });
-                    positions.push({ left: 18, top: 35 });
-                    positions.push({ left: 18, top: 65 });
-                    positions.push({ left: 18, top: 80 });
-                    // Midfielders (左から3番目のライン)
-                    positions.push({ left: 28, top: 20 });
-                    positions.push({ left: 28, top: 35 });
-                    positions.push({ left: 28, top: 65 });
-                    positions.push({ left: 28, top: 80 });
-                    // Strikers (左から4番目のライン、ハーフライン手前)
-                    positions.push({ left: 38, top: 35 });
-                    positions.push({ left: 38, top: 65 });
+                    // Defenders (左から2番目のライン、より後ろに、CB間隔を広げる)
+                    positions.push({ left: 18, top: 15 });
+                    positions.push({ left: 18, top: 30 });
+                    positions.push({ left: 18, top: 70 });
+                    positions.push({ left: 18, top: 85 });
+                    // Midfielders (左から3番目のライン、間隔を広げる)
+                    positions.push({ left: 28, top: 15 });
+                    positions.push({ left: 28, top: 30 });
+                    positions.push({ left: 28, top: 70 });
+                    positions.push({ left: 28, top: 85 });
+                    // Strikers (左から4番目のライン、ハーフライン手前、間隔を広げる)
+                    positions.push({ left: 38, top: 30 });
+                    positions.push({ left: 38, top: 70 });
                     break;
                     
                 case '3-5-2':
                     // GK (左のゴール、より後ろに)
                     positions.push({ left: 8, top: 50 });
-                    // Defenders (左から2番目のライン、より後ろに)
-                    positions.push({ left: 18, top: 25 });
+                    // Defenders (左から2番目のライン、より後ろに、CB間隔を広げる)
+                    positions.push({ left: 18, top: 20 });
                     positions.push({ left: 18, top: 50 });
-                    positions.push({ left: 18, top: 75 });
-                    // Midfielders (左から3番目のライン)
-                    positions.push({ left: 28, top: 15 });
-                    positions.push({ left: 28, top: 30 });
+                    positions.push({ left: 18, top: 80 });
+                    // Midfielders (左から3番目のライン、間隔を広げる)
+                    positions.push({ left: 28, top: 10 });
+                    positions.push({ left: 28, top: 25 });
                     positions.push({ left: 28, top: 50 });
-                    positions.push({ left: 28, top: 70 });
-                    positions.push({ left: 28, top: 85 });
-                    // Strikers (左から4番目のライン、ハーフライン手前)
-                    positions.push({ left: 38, top: 35 });
-                    positions.push({ left: 38, top: 65 });
+                    positions.push({ left: 28, top: 75 });
+                    positions.push({ left: 28, top: 90 });
+                    // Strikers (左から4番目のライン、ハーフライン手前、間隔を広げる)
+                    positions.push({ left: 38, top: 30 });
+                    positions.push({ left: 38, top: 70 });
                     break;
                     
                 default:
@@ -4205,16 +4313,17 @@
                             // GK
                             positions.push({ left: 8, top: 50 });
                         } else if (i <= 4) {
-                            // Defenders
-                            positions.push({ left: 18, top: 15 + (i - 1) * 18 });
+                            // Defenders (間隔を広げる)
+                            positions.push({ left: 18, top: 10 + (i - 1) * 20 });
                         } else if (i <= 8) {
-                            // Midfielders
-                            positions.push({ left: 28, top: 20 + (i - 5) * 18 });
+                            // Midfielders (間隔を広げる)
+                            positions.push({ left: 28, top: 15 + (i - 5) * 20 });
                         } else {
-                            // Strikers
-                            positions.push({ left: 38, top: 35 + (i - 9) * 25 });
+                            // Strikers (間隔を広げる)
+                            positions.push({ left: 38, top: 25 + (i - 9) * 50 });
                         }
                     }
+                    break;
             }
             
             return positions;
@@ -4413,7 +4522,7 @@
                 'Real Madrid': '541',
                 'Barcelona': '529',
                 'Atletico Madrid': '530',
-                'Girona': '530',
+                'Girona': '540',
                 'Rayo Vallecano': '728',
                 'Villarreal': '533',
                 'Oviedo': '534',
@@ -4425,9 +4534,9 @@
                 'Valencia': '532',
                 'Osasuna': '727',
                 'Real Sociedad': '548',
-                'Espanyol': '558',
+                'Espanyol': '559',
                 'Sevilla': '536',
-                'Getafe': '798',
+                'Getafe': '799',
                 'Athletic Club': '531',
                 
                 // Serie A

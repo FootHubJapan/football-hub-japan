@@ -1929,23 +1929,37 @@ function generateFallbackMatchDetails(matchId, league) {
 }
 
 // フォールバック試合イベントを生成（より現実的に）
-function generateFallbackMatchEvents(matchId, homeTeam, awayTeam, homeScore, awayTeam) {
+function generateFallbackMatchEvents(matchId, homeTeam, awayTeam, homeScore, awayScore) {
     const events = [];
-    const totalGoals = homeScore + awayTeam;
+    const totalGoals = homeScore + awayScore;
     
     // ゴールイベントを生成
     for (let i = 0; i < totalGoals; i++) {
         const time = Math.floor(Math.random() * 90) + 1;
         const isHomeGoal = i < homeScore;
-        const team = isHomeGoal ? homeTeam : awayTeam;
+        const isHomeTeam = isHomeGoal;
+        
+        // 得点者名を生成
+        const scorerNames = isHomeTeam ? 
+            ['Mohamed Salah', 'Darwin Núñez', 'Diogo Jota', 'Cody Gakpo', 'Harvey Elliott'] :
+            ['Dominic Solanke', 'Philip Billing', 'Ryan Christie', 'Marcus Tavernier', 'Dango Ouattara'];
+        
+        const scorerName = scorerNames[i % scorerNames.length];
+        
+        // アシスト名を生成
+        const assistNames = isHomeTeam ?
+            ['Trent Alexander-Arnold', 'Andy Robertson', 'Thiago Alcântara', 'Jordan Henderson', 'Fabinho'] :
+            ['Jaidon Anthony', 'Adam Smith', 'Lewis Cook', 'Jefferson Lerma', 'Junior Stanislas'];
+        
+        const assistName = assistNames[i % assistNames.length];
         
         events.push({
-            time: time,
+            time: { elapsed: time },
             type: 'Goal',
             detail: 'Normal Goal',
-            team: team,
-            player: `${team} Player ${i + 1}`,
-            assist: Math.random() > 0.5 ? `${team} Player ${i + 2}` : null
+            team: isHomeTeam ? 'home' : 'away',
+            player: { name: scorerName, displayName: scorerName },
+            assist: { name: assistName, displayName: assistName }
         });
     }
     
@@ -1957,12 +1971,11 @@ function generateFallbackMatchEvents(matchId, homeTeam, awayTeam, homeScore, awa
         const cardType = Math.random() > 0.7 ? 'Red Card' : 'Yellow Card';
         
         events.push({
-            time: time,
+            time: { elapsed: time },
             type: 'Card',
             detail: cardType,
-            team: team,
-            player: `${team} Player ${Math.floor(Math.random() * 11) + 1}`,
-            assist: null
+            team: Math.random() > 0.5 ? 'home' : 'away',
+            player: { name: `${team} Player ${Math.floor(Math.random() * 11) + 1}` }
         });
     }
     
@@ -1973,16 +1986,15 @@ function generateFallbackMatchEvents(matchId, homeTeam, awayTeam, homeScore, awa
         const team = Math.random() > 0.5 ? homeTeam : awayTeam;
         
         events.push({
-            time: time,
+            time: { elapsed: time },
             type: 'Subst',
             detail: 'Substitution',
-            team: team,
-            player: `${team} Player ${Math.floor(Math.random() * 11) + 1}`,
-            assist: null
+            team: Math.random() > 0.5 ? 'home' : 'away',
+            player: { name: `${team} Player ${Math.floor(Math.random() * 11) + 1}` }
         });
     }
     
-    return events.sort((a, b) => a.time - b.time);
+    return events.sort((a, b) => a.time.elapsed - b.time.elapsed);
 }
 
 // フォールバック試合統計を生成
@@ -2084,4 +2096,155 @@ app.listen(PORT, () => {
     console.error('Server error:', error);
     process.exit(1);
 });
+
+// データベース用のFotMob APIエンドポイント
+app.get('/api/fotmob/init', async (req, res) => {
+    try {
+        res.json({ 
+            status: 'success', 
+            message: 'FotMob service initialized',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('FotMob init error:', error);
+        res.status(500).json({ error: '初期化に失敗しました' });
+    }
+});
+
+app.get('/api/fotmob/players', async (req, res) => {
+    try {
+        const { page = 1, limit = 20, league, position } = req.query;
+        console.log('Players API called with:', { page, limit, league, position });
+        
+        // フォールバック選手データを生成
+        const fallbackPlayers = generateFallbackPlayers(parseInt(limit));
+        
+        res.json({
+            players: fallbackPlayers,
+            total: 1000,
+            totalPages: Math.ceil(1000 / parseInt(limit)),
+            currentPage: parseInt(page)
+        });
+    } catch (error) {
+        console.error('Players API error:', error);
+        res.status(500).json({ error: '選手データの取得に失敗しました' });
+    }
+});
+
+app.get('/api/fotmob/teams', async (req, res) => {
+    try {
+        const fallbackTeams = generateFallbackTeams();
+        res.json(fallbackTeams);
+    } catch (error) {
+        console.error('Teams API error:', error);
+        res.status(500).json({ error: 'チームデータの取得に失敗しました' });
+    }
+});
+
+app.get('/api/fotmob/leagues', async (req, res) => {
+    try {
+        const fallbackLeagues = generateFallbackLeagues();
+        res.json(fallbackLeagues);
+    } catch (error) {
+        console.error('Leagues API error:', error);
+        res.status(500).json({ error: 'リーグデータの取得に失敗しました' });
+    }
+});
+
+app.get('/api/fotmob/search', async (req, res) => {
+    try {
+        const { q, league, position, limit = 20 } = req.query;
+        console.log('Search API called with:', { q, league, position, limit });
+        
+        // 検索クエリに基づくフォールバック選手データを生成
+        const searchResults = generateFallbackSearchResults(q, parseInt(limit));
+        
+        res.json({
+            players: searchResults,
+            total: searchResults.length,
+            query: q
+        });
+    } catch (error) {
+        console.error('Search API error:', error);
+        res.status(500).json({ error: '検索に失敗しました' });
+    }
+});
+
+// フォールバック選手データを生成
+function generateFallbackPlayers(limit) {
+    const players = [];
+    const names = [
+        '久保建英', '三笘薫', '堂安律', '田中碧', '伊藤洋輝', '遠藤航', '南野拓実', '浅野拓磨', '上田綺世', '前田大然',
+        '孫興慜', '金玟哉', '李剛仁', '黄喜燦', '久保裕也', '原口元気', '柴崎岳', '酒井宏樹', '吉田麻也', '長友佑都'
+    ];
+    const teams = ['レアル・ソシエダード', 'ブライトン', 'フライブルク', 'フォルタレーザ', 'シュトゥットガルト', 'リバプール', 'モナコ', 'ボーフム', 'フエンラブラド', 'セルティック'];
+    const positions = ['Forward', 'Midfielder', 'Defender', 'Goalkeeper'];
+    const nationalities = ['Japan', 'South Korea', 'Germany', 'Brazil', 'England', 'France', 'Spain', 'Italy'];
+    
+    for (let i = 0; i < limit; i++) {
+        players.push({
+            id: i + 1,
+            name: names[i % names.length],
+            fullName: names[i % names.length],
+            currentTeam: teams[i % teams.length],
+            position: positions[i % positions.length],
+            nationality: nationalities[i % nationalities.length],
+            age: 20 + (i % 15),
+            photo: `https://via.placeholder.com/60x60?text=${encodeURIComponent(names[i % names.length].charAt(0))}`,
+            stats: {
+                goals: Math.floor(Math.random() * 20),
+                assists: Math.floor(Math.random() * 15),
+                appearances: 20 + Math.floor(Math.random() * 20),
+                minutes: 1500 + Math.floor(Math.random() * 1000),
+                rating: (6.0 + Math.random() * 2.0).toFixed(1),
+                yellowCards: Math.floor(Math.random() * 5)
+            }
+        });
+    }
+    
+    return players;
+}
+
+// フォールバックチームデータを生成
+function generateFallbackTeams() {
+    return [
+        { id: 1, name: '浦和レッズ', league: 'J1', country: 'Japan' },
+        { id: 2, name: '横浜F・マリノス', league: 'J1', country: 'Japan' },
+        { id: 3, name: '川崎フロンターレ', league: 'J1', country: 'Japan' },
+        { id: 4, name: 'FC東京', league: 'J1', country: 'Japan' },
+        { id: 5, name: '鹿島アントラーズ', league: 'J1', country: 'Japan' },
+        { id: 6, name: 'Arsenal', league: 'PL', country: 'England' },
+        { id: 7, name: 'Chelsea', league: 'PL', country: 'England' },
+        { id: 8, name: 'Liverpool', league: 'PL', country: 'England' },
+        { id: 9, name: 'Manchester United', league: 'PL', country: 'England' },
+        { id: 10, name: 'Manchester City', league: 'PL', country: 'England' }
+    ];
+}
+
+// フォールバックリーグデータを生成
+function generateFallbackLeagues() {
+    return [
+        { id: 'J1', name: 'J1リーグ', country: 'Japan', level: 1 },
+        { id: 'PL', name: 'Premier League', country: 'England', level: 1 },
+        { id: 'PD', name: 'La Liga', country: 'Spain', level: 1 },
+        { id: 'SA', name: 'Serie A', country: 'Italy', level: 1 },
+        { id: 'BL1', name: 'Bundesliga', country: 'Germany', level: 1 },
+        { id: 'FL1', name: 'Ligue 1', country: 'France', level: 1 }
+    ];
+}
+
+// フォールバック検索結果を生成
+function generateFallbackSearchResults(query, limit) {
+    const allPlayers = generateFallbackPlayers(100);
+    
+    if (!query) return allPlayers.slice(0, limit);
+    
+    const filteredPlayers = allPlayers.filter(player => 
+        player.name.toLowerCase().includes(query.toLowerCase()) ||
+        player.currentTeam.toLowerCase().includes(query.toLowerCase()) ||
+        player.position.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    return filteredPlayers.slice(0, limit);
+}
 
