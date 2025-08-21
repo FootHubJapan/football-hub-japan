@@ -1779,15 +1779,21 @@
         }
 
         .player-avatar {
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             border: 3px solid white;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
             overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .player-marker:hover .player-avatar {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
         }
 
         .player-photo {
@@ -1808,19 +1814,23 @@
             top: 100%;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.9);
-            border-radius: 6px;
-            padding: 8px;
+            background: rgba(0, 0, 0, 0.95);
+            border-radius: 8px;
+            padding: 10px;
             white-space: nowrap;
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
             z-index: 20;
+            min-width: 120px;
+            text-align: center;
+            border: 1px solid rgba(76, 175, 80, 0.3);
         }
 
         .player-marker:hover .player-info {
             opacity: 1;
             visibility: visible;
+            transform: translateX(-50%) translateY(5px);
         }
 
         .player-number {
@@ -1851,11 +1861,14 @@
 
         .player-rating {
             color: white;
-            font-size: 10px;
+            font-size: 12px;
             text-align: center;
-            padding: 2px 6px;
-            border-radius: 10px;
+            padding: 4px 8px;
+            border-radius: 12px;
             font-weight: bold;
+            margin-bottom: 5px;
+            display: inline-block;
+            min-width: 30px;
         }
 
         .rating-excellent {
@@ -3445,10 +3458,10 @@
                                 }
                             </div>
                             <div class="player-info">
+                                <div class="player-rating ${player.ratingClass}">${player.rating}</div>
                                 <div class="player-number">${player.number}</div>
                                 <div class="player-name">${player.name}</div>
                                 <div class="player-position">${getPositionLabel(player.position)}</div>
-                                <div class="player-rating ${player.ratingClass}">${player.rating}</div>
                             </div>
                         </div>
                     `;
@@ -3573,33 +3586,33 @@
             return {
                 home: {
                     startXI: [
-                        { player: { name: 'Alisson', number: 1, pos: 'G', photo: 'https://media.api-sports.io/football/players/1.png' } },
-                        { player: { name: 'van Dijk', number: 4, pos: 'D', photo: 'https://media.api-sports.io/football/players/4.png' } },
-                        { player: { name: 'Konaté', number: 5, pos: 'D', photo: 'https://media.api-sports.io/football/players/5.png' } },
-                        { player: { name: 'Robertson', number: 26, pos: 'D', photo: 'https://media.api-sports.io/football/players/26.png' } },
-                        { player: { name: 'Alexander-Arnold', number: 66, pos: 'D', photo: 'https://media.api-sports.io/football/players/66.png' } },
-                        { player: { name: 'Fabinho', number: 3, pos: 'M', photo: 'https://media.api-sports.io/football/players/3.png' } },
-                        { player: { name: 'Thiago', number: 6, pos: 'M', photo: 'https://media.api-sports.io/football/players/6.png' } },
-                        { player: { name: 'Salah', number: 11, pos: 'F', photo: 'https://media.api-sports.io/football/players/11.png' } },
-                        { player: { name: 'Mane', number: 10, pos: 'F', photo: 'https://media.api-sports.io/football/players/10.png' } },
-                        { player: { name: 'Jota', number: 20, pos: 'F', photo: 'https://media.api-sports.io/football/players/20.png' } },
-                        { player: { name: 'Firmino', number: 9, pos: 'F', photo: 'https://media.api-sports.io/football/players/9.png' } }
+                        { player: { name: 'Alisson', number: 1, pos: 'G', photo: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'van Dijk', number: 4, pos: 'D', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Konaté', number: 5, pos: 'D', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Robertson', number: 26, pos: 'D', photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Alexander-Arnold', number: 66, pos: 'D', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Fabinho', number: 3, pos: 'M', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Thiago', number: 6, pos: 'M', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Salah', number: 11, pos: 'F', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Mane', number: 10, pos: 'F', photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Jota', number: 20, pos: 'F', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&face' } },
+                        { player: { name: 'Firmino', number: 9, pos: 'F', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face' } }
                     ],
                     formation: '4-2-3-1'
                 },
                 away: {
                     startXI: [
-                        { player: { name: 'Travers', number: 1, pos: 'G', photo: 'https://media.api-sports.io/football/players/101.png' } },
-                        { player: { name: 'Smith', number: 2, pos: 'D', photo: 'https://media.api-sports.io/football/players/102.png' } },
-                        { player: { name: 'Mepham', number: 6, pos: 'D', photo: 'https://media.api-sports.io/football/players/106.png' } },
-                        { player: { name: 'Kelly', number: 5, pos: 'D', photo: 'https://media.api-sports.io/football/players/105.png' } },
-                        { player: { name: 'Zemura', number: 33, pos: 'D', photo: 'https://media.api-sports.io/football/players/133.png' } },
-                        { player: { name: 'Lerma', number: 8, pos: 'M', photo: 'https://media.api-sports.io/football/players/108.png' } },
-                        { player: { name: 'Cook', number: 16, pos: 'M', photo: 'https://media.api-sports.io/football/players/116.png' } },
-                        { player: { name: 'Billing', number: 29, pos: 'M', photo: 'https://media.api-sports.io/football/players/129.png' } },
-                        { player: { name: 'Christie', number: 10, pos: 'M', photo: 'https://media.api-sports.io/football/players/110.png' } },
-                        { player: { name: 'Solanke', number: 9, pos: 'F', photo: 'https://media.api-sports.io/football/players/109.png' } },
-                        { player: { name: 'Anthony', number: 32, pos: 'F', photo: 'https://media.api-sports.io/football/players/132.png' } }
+                        { player: { name: 'Travers', number: 1, pos: 'G', photo: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Smith', number: 2, pos: 'D', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Mepham', number: 6, pos: 'D', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Kelly', number: 5, pos: 'D', photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Zemura', number: 33, pos: 'D', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Lerma', number: 8, pos: 'M', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Cook', number: 16, pos: 'M', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Billing', number: 29, pos: 'M', photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Christie', number: 10, pos: 'M', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Solanke', number: 9, pos: 'F', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face' } },
+                        { player: { name: 'Anthony', number: 32, pos: 'F', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face' } }
                     ],
                     formation: '4-1-4-1'
                 }
