@@ -517,6 +517,16 @@
             color: #ffffff;
         }
 
+        .status-postponed {
+            background: #9C27B0;
+            color: #ffffff;
+        }
+
+        .status-cancelled {
+            background: #607D8B;
+            color: #ffffff;
+        }
+
         .loading {
             text-align: center;
             color: #888888;
@@ -1102,38 +1112,7 @@
             z-index: 10;
         }
 
-        .pitch-player-avatar {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            border: 2px solid white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
 
-        .pitch-player-number {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: rgba(76, 175, 80, 0.9);
-            color: white;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: bold;
-            border: 1px solid white;
-        }
 
         /* フォーメーション表示のタイトル */
         .formation-display h4 {
@@ -2957,36 +2936,60 @@
 
         // ステータスクラスを取得
         function getStatusClass(status) {
+            console.log('Getting status class for:', status);
+            
             switch (status) {
                 case 'Finished':
+                case 'FT':
+                case 'FINISHED':
                     return 'status-finished';
                 case 'Scheduled':
                 case 'NS':
+                case 'NOT_STARTED':
                     return 'status-scheduled';
                 case 'Live':
                 case 'LIVE':
+                case 'IN_PLAY':
                     return 'status-live';
                 case 'HT':
+                case 'HALF_TIME':
                     return 'status-live';
+                case 'POSTPONED':
+                    return 'status-postponed';
+                case 'CANCELLED':
+                    return 'status-cancelled';
                 default:
+                    console.log('Unknown status class:', status, 'defaulting to status-scheduled');
                     return 'status-scheduled';
             }
         }
 
         // ステータステキストを取得
         function getStatusText(status) {
+            console.log('Getting status text for:', status);
+            
             switch (status) {
                 case 'Finished':
+                case 'FT':
+                case 'FINISHED':
                     return '終了';
                 case 'Scheduled':
                 case 'NS':
+                case 'NOT_STARTED':
                     return '予定';
                 case 'Live':
                 case 'LIVE':
+                case 'IN_PLAY':
                     return '生中継';
                 case 'HT':
+                case 'HALF_TIME':
                     return 'ハーフタイム';
+                case 'POSTPONED':
+                    return '延期';
+                case 'CANCELLED':
+                    return '中止';
                 default:
+                    console.log('Unknown status:', status, 'defaulting to 予定');
                     return '予定';
             }
         }
@@ -3098,51 +3101,92 @@
 
         // 得点者リストを生成する関数
         function generateScorersList(matchData) {
+            console.log('Generating scorers list with matchData:', matchData);
+            
             if (!matchData.events || matchData.events.length === 0) {
+                console.log('No events data available');
                 return '<div class="no-data">得点者情報がありません</div>';
             }
 
-            const goals = matchData.events.filter(event => event.type === 'Goal');
+            console.log('Available events:', matchData.events);
+            
+            // ゴールイベントをフィルタリング（複数のパターンに対応）
+            const goals = matchData.events.filter(event => {
+                const eventType = event.type || event.eventType || event.name;
+                return eventType === 'Goal' || eventType === 'goal' || eventType === 'GOAL';
+            });
+            
+            console.log('Filtered goals:', goals);
+            
             if (goals.length === 0) {
                 return '<div class="no-data">得点者情報がありません</div>';
             }
 
-            return goals.map(goal => `
-                <div class="scorer-item">
-                    <div class="scorer-info">
-                        <span class="scorer-name">${goal.player?.name || goal.player?.displayName || '不明'}</span>
-                        <span class="scorer-team">${goal.team === 'home' ? matchData.homeTeam : matchData.awayTeam}</span>
+            return goals.map(goal => {
+                const playerName = goal.player?.name || goal.player?.displayName || goal.scorer?.name || goal.scorer?.displayName || '不明';
+                const team = goal.team === 'home' ? matchData.homeTeam : matchData.awayTeam;
+                const time = goal.time?.elapsed || goal.minute || goal.time || '?';
+                const detail = goal.detail || goal.type || goal.eventType || '';
+                
+                console.log('Processing goal:', { playerName, team, time, detail });
+                
+                return `
+                    <div class="scorer-item">
+                        <div class="scorer-info">
+                            <span class="scorer-name">${playerName}</span>
+                            <span class="scorer-team">${team}</span>
+                        </div>
+                        <div class="scorer-details">
+                            <span class="scorer-time">${time}'</span>
+                            <span class="scorer-type">${detail}</span>
+                        </div>
                     </div>
-                    <div class="scorer-details">
-                        <span class="scorer-time">${goal.time?.elapsed || goal.minute || '?'}'</span>
-                        <span class="scorer-type">${goal.detail || goal.type || ''}</span>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // アシストリストを生成する関数
         function generateAssistsList(matchData) {
+            console.log('Generating assists list with matchData:', matchData);
+            
             if (!matchData.events || matchData.events.length === 0) {
+                console.log('No events data available for assists');
                 return '<div class="no-data">アシスト情報がありません</div>';
             }
 
-            const assists = matchData.events.filter(event => event.type === 'Goal' && event.assist);
+            // アシストイベントをフィルタリング（複数のパターンに対応）
+            const assists = matchData.events.filter(event => {
+                const eventType = event.type || event.eventType || event.name;
+                return (eventType === 'Goal' || eventType === 'goal' || eventType === 'GOAL') && 
+                       (event.assist || event.assistPlayer || event.assistName);
+            });
+            
+            console.log('Filtered assists:', assists);
+            
             if (assists.length === 0) {
                 return '<div class="no-data">アシスト情報がありません</div>';
             }
 
-            return assists.map(assist => `
-                <div class="assist-item">
-                    <div class="assist-info">
-                        <span class="assist-name">${assist.assist?.name || assist.assist?.displayName || '不明'}</span>
-                        <span class="assist-team">${assist.team === 'home' ? matchData.homeTeam : matchData.awayTeam}</span>
+            return assists.map(assist => {
+                const assistName = assist.assist?.name || assist.assist?.displayName || 
+                                  assist.assistPlayer?.name || assist.assistName || '不明';
+                const team = assist.team === 'home' ? matchData.homeTeam : matchData.awayTeam;
+                const time = assist.time?.elapsed || assist.minute || assist.time || '?';
+                
+                console.log('Processing assist:', { assistName, team, time });
+                
+                return `
+                    <div class="assist-item">
+                        <div class="assist-info">
+                            <span class="assist-name">${assistName}</span>
+                            <span class="assist-team">${team}</span>
+                        </div>
+                        <div class="assist-details">
+                            <span class="assist-time">${time}'</span>
+                        </div>
                     </div>
-                    <div class="assist-details">
-                        <span class="assist-time">${assist.time?.elapsed || assist.minute || '?'}'</span>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // 基本情報タブを更新
@@ -3842,6 +3886,19 @@
                     if (tabContent) {
                         console.log('Parent tab-content dimensions:', tabContent.offsetWidth, 'x', tabContent.offsetHeight);
                     }
+                    
+                    // タブコンテンツの表示を強制
+                    const tabContentElement = firstPane.querySelector('.tab-content');
+                    if (tabContentElement) {
+                        tabContentElement.style.cssText = 'display: flex !important; flex-direction: column !important; height: auto !important; min-height: 400px !important;';
+                    }
+                    
+                    // 基本情報コンテンツの表示を強制
+                    const basicInfo = firstPane.querySelector('.basic-info.fotmob-style');
+                    if (basicInfo) {
+                        basicInfo.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; min-height: 300px !important;';
+                    }
+                    
                 } else {
                     console.error('First tab or pane not found');
                 }
