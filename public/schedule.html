@@ -3315,6 +3315,15 @@
                     playerPhoto = player.photo;
                 }
                 
+                // デバッグ情報をコンソールに出力
+                console.log(`Player ${index + 1} (${teamType}):`, {
+                    name: playerName,
+                    position: playerPosition,
+                    number: playerNumber,
+                    photo: playerPhoto,
+                    hasPhoto: !!playerPhoto
+                });
+                
                 // パフォーマンス評価をランダムに生成（実際のAPIデータがある場合はそれを使用）
                 const performanceRating = (Math.random() * 2 + 6).toFixed(1);
                 const ratingClass = performanceRating >= 7.5 ? 'rating-excellent' : performanceRating >= 7.0 ? 'rating-good' : 'rating-average';
@@ -3462,10 +3471,10 @@
                     // GK (左のゴール、より後ろに)
                     positions.push({ left: 10, top: 50 });
                     // Defenders (左から2番目のライン、より後ろに)
-                    positions.push({ left: 20, top: 10 });
-                    positions.push({ left: 20, top: 25 });
-                    positions.push({ left: 20, top: 75 });
-                    positions.push({ left: 20, top: 90 });
+                    positions.push({ left: 20, top: 20 });
+                    positions.push({ left: 20, top: 35 });
+                    positions.push({ left: 20, top: 65 });
+                    positions.push({ left: 20, top: 80 });
                     // Midfielders (左から3番目のライン)
                     positions.push({ left: 30, top: 35 });
                     positions.push({ left: 30, top: 65 });
@@ -3500,10 +3509,10 @@
                     // GK (左のゴール、より後ろに)
                     positions.push({ left: 8, top: 50 });
                     // Defenders (左から2番目のライン、より後ろに)
-                    positions.push({ left: 18, top: 15 });
-                    positions.push({ left: 18, top: 30 });
-                    positions.push({ left: 18, top: 70 });
-                    positions.push({ left: 18, top: 85 });
+                    positions.push({ left: 18, top: 20 });
+                    positions.push({ left: 18, top: 35 });
+                    positions.push({ left: 18, top: 65 });
+                    positions.push({ left: 18, top: 80 });
                     // Midfielders (左から3番目のライン)
                     positions.push({ left: 28, top: 20 });
                     positions.push({ left: 28, top: 35 });
@@ -3569,17 +3578,17 @@
             return {
                 home: {
                     startXI: [
-                        { player: { name: 'Alisson', number: 1, pos: 'G', photo: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=100&h=100&fit=crop&crop=face' } },
-                        { player: { name: 'van Dijk', number: 4, pos: 'D', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face' } },
-                        { player: { name: 'Konaté', number: 5, pos: 'D', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face' } },
-                        { player: { name: 'Robertson', number: 26, pos: 'D', photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face' } },
-                        { player: { name: 'Alexander-Arnold', number: 66, pos: 'D', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face' } },
-                        { player: { name: 'Fabinho', number: 3, pos: 'M', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face' } },
-                        { player: { name: 'Thiago', number: 6, pos: 'M', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face' } },
-                        { player: { name: 'Salah', number: 11, pos: 'F', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face' } },
-                        { player: { name: 'Mane', number: 10, pos: 'F', photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face' } },
-                        { player: { name: 'Jota', number: 20, pos: 'F', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&face' } },
-                        { player: { name: 'Firmino', number: 9, pos: 'F', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face' } }
+                        { player: { name: 'Alisson', number: 1, pos: 'G', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face' } },
+                        { player: { name: 'van Dijk', number: 4, pos: 'D', photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face' } },
+                        { player: { name: 'Konaté', number: 5, pos: 'D', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face' } },
+                        { player: { name: 'Robertson', number: 26, pos: 'D', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face' } },
+                        { player: { name: 'Alexander-Arnold', number: 66, pos: 'D', photo: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=150&h=150&fit=crop&crop=face' } },
+                        { player: { name: 'Fabinho', number: 3, pos: 'M', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face' } },
+                        { player: { name: 'Thiago', number: 6, pos: 'M', photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face' } },
+                        { player: { name: 'Salah', number: 11, pos: 'F', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face' } },
+                        { player: { name: 'Mane', number: 10, pos: 'F', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face' } },
+                        { player: { name: 'Jota', number: 20, pos: 'F', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face' } },
+                        { player: { name: 'Firmino', number: 9, pos: 'F', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face' } }
                     ],
                     formation: '4-2-3-1'
                 },
