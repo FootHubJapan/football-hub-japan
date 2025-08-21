@@ -96,45 +96,25 @@
 
         .search-controls {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .detailed-position-filters {
-            margin-top: 1rem;
-            padding: 1rem;
-            background: #2a2a2a;
-            border-radius: 8px;
-        }
-
-        .detailed-position-filters h4 {
-            color: #00ff88;
-            margin-bottom: 0.5rem;
-        }
-
-        .checkbox-group {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 0.5rem;
-        }
-
-        .checkbox-group label {
-            display: flex;
+            grid-template-columns: 1fr auto auto auto auto;
+            gap: 0.75rem;
             align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            padding: 0.25rem;
-            border-radius: 4px;
-            transition: background-color 0.2s;
         }
 
-        .checkbox-group label:hover {
-            background-color: #333333;
+        .search-select {
+            background: #333333;
+            color: #ffffff;
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            padding: 0.6rem;
+            font-size: 0.9rem;
+            min-width: 150px;
         }
 
-        .checkbox-group input[type="checkbox"] {
-            accent-color: #00ff88;
-        }
+        .search-select:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
         }
 
         .search-input {
@@ -142,8 +122,8 @@
             color: #ffffff;
             border: 2px solid #00ff88;
             border-radius: 8px;
-            padding: 0.8rem;
-            font-size: 1rem;
+            padding: 0.6rem;
+            font-size: 0.9rem;
             width: 100%;
         }
 
@@ -165,10 +145,10 @@
             color: #ffffff;
             border: 2px solid #00ff88;
             border-radius: 20px;
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 0.8rem;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .filter-btn:hover,
@@ -182,8 +162,8 @@
             color: #000000;
             border: none;
             border-radius: 8px;
-            padding: 0.8rem 2rem;
-            font-size: 1rem;
+            padding: 0.6rem 1.5rem;
+            font-size: 0.9rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
@@ -756,27 +736,25 @@
                     </optgroup>
                 </select>
                 
-                <!-- 詳細ポジションのチェックボックス -->
-                <div class="detailed-position-filters">
-                    <h4>詳細ポジション</h4>
-                    <div class="checkbox-group">
-                        <label><input type="checkbox" name="detailedPosition" value="ST"> ストライカー</label>
-                        <label><input type="checkbox" name="detailedPosition" value="CF"> センターフォワード</label>
-                        <label><input type="checkbox" name="detailedPosition" value="SS"> セカンドストライカー</label>
-                        <label><input type="checkbox" name="detailedPosition" value="LW"> レフトウィング</label>
-                        <label><input type="checkbox" name="detailedPosition" value="RW"> ライトウィング</label>
-                        <label><input type="checkbox" name="detailedPosition" value="AM"> 攻撃的MF</label>
-                        <label><input type="checkbox" name="detailedPosition" value="CM"> センターミッドフィルダー</label>
-                        <label><input type="checkbox" name="detailedPosition" value="DM"> 守備的MF</label>
-                        <label><input type="checkbox" name="detailedPosition" value="LM"> レフトMF</label>
-                        <label><input type="checkbox" name="detailedPosition" value="RM"> ライトMF</label>
-                        <label><input type="checkbox" name="detailedPosition" value="CB"> センターバック</label>
-                        <label><input type="checkbox" name="detailedPosition" value="LB"> レフトバック</label>
-                        <label><input type="checkbox" name="detailedPosition" value="RB"> ライトバック</label>
-                        <label><input type="checkbox" name="detailedPosition" value="WB"> ウィングバック</label>
-                        <label><input type="checkbox" name="detailedPosition" value="GK"> ゴールキーパー</label>
-                    </div>
-                </div>
+                <!-- 詳細ポジションのプルダウン -->
+                <select id="detailedPositionSelect" class="search-select">
+                    <option value="">詳細ポジションを選択</option>
+                    <option value="ST">ストライカー (ST)</option>
+                    <option value="CF">センターフォワード (CF)</option>
+                    <option value="SS">セカンドストライカー (SS)</option>
+                    <option value="LW">レフトウィング (LW)</option>
+                    <option value="RW">ライトウィング (RW)</option>
+                    <option value="AM">攻撃的MF (AM)</option>
+                    <option value="CM">センターミッドフィルダー (CM)</option>
+                    <option value="DM">守備的MF (DM)</option>
+                    <option value="LM">レフトMF (LM)</option>
+                    <option value="RM">ライトMF (RM)</option>
+                    <option value="CB">センターバック (CB)</option>
+                    <option value="LB">レフトバック (LB)</option>
+                    <option value="RB">ライトバック (RB)</option>
+                    <option value="WB">ウィングバック (WB)</option>
+                    <option value="GK">ゴールキーパー (GK)</option>
+                </select>
                 
                 <button class="search-btn" onclick="performSearch()">検索</button>
             </div>
@@ -907,8 +885,8 @@
 
         // 不足している関数を追加
         function getSelectedDetailedPositions() {
-            const checkboxes = document.querySelectorAll('input[name="detailedPosition"]:checked');
-            return Array.from(checkboxes).map(cb => cb.value);
+            const select = document.getElementById('detailedPositionSelect');
+            return select && select.value ? [select.value] : [];
         }
 
         // 選手表示関数
