@@ -1982,6 +1982,36 @@
             gap: 15px;
         }
 
+        .stats-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .stats-list .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            text-align: left;
+        }
+
+        .stats-list .stat-label {
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+
+        .stats-list .stat-value {
+            color: #4CAF50;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
         .stat-item {
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(76, 175, 80, 0.3);
@@ -3080,12 +3110,12 @@
             return goals.map(goal => `
                 <div class="scorer-item">
                     <div class="scorer-info">
-                        <span class="scorer-name">${goal.player?.name || '不明'}</span>
+                        <span class="scorer-name">${goal.player?.name || goal.player?.displayName || '不明'}</span>
                         <span class="scorer-team">${goal.team === 'home' ? matchData.homeTeam : matchData.awayTeam}</span>
                     </div>
                     <div class="scorer-details">
-                        <span class="scorer-time">${goal.time?.elapsed || '?'}'</span>
-                        <span class="scorer-type">${goal.detail || ''}</span>
+                        <span class="scorer-time">${goal.time?.elapsed || goal.minute || '?'}'</span>
+                        <span class="scorer-type">${goal.detail || goal.type || ''}</span>
                     </div>
                 </div>
             `).join('');
@@ -3105,11 +3135,11 @@
             return assists.map(assist => `
                 <div class="assist-item">
                     <div class="assist-info">
-                        <span class="assist-name">${assist.assist?.name || '不明'}</span>
+                        <span class="assist-name">${assist.assist?.name || assist.assist?.displayName || '不明'}</span>
                         <span class="assist-team">${assist.team === 'home' ? matchData.homeTeam : matchData.awayTeam}</span>
                     </div>
                     <div class="assist-details">
-                        <span class="assist-time">${assist.time?.elapsed || '?'}'</span>
+                        <span class="assist-time">${assist.time?.elapsed || assist.minute || '?'}'</span>
                     </div>
                 </div>
             `).join('');
@@ -3322,7 +3352,7 @@
                     statsContainer.innerHTML = `
                         <div class="stats-container">
                             <h3>試合統計</h3>
-                            <div class="stats-grid">
+                            <div class="stats-list">
                                 ${statsHTML}
                             </div>
                         </div>
@@ -3484,21 +3514,13 @@
                 const unifiedPitchHTML = generateUnifiedPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation, matchData.homeTeam, matchData.awayTeam);
                 console.log('Generated unified pitch HTML:', unifiedPitchHTML);
 
-                // 従来の個別表示のHTMLを生成
-                const traditionalLineupHTML = generateTraditionalLineupHTML(homeLineup, awayLineup);
+
 
                 lineupContainer.innerHTML = `
                     <div class="lineup-container">
                         <h3>ラインアップ</h3>
                         
-                        <div class="display-mode-selection">
-                            <div class="mode-option active" data-mode="unified">
-                                <span>統合ピッチ表示</span>
-                            </div>
-                            <div class="mode-option" data-mode="traditional">
-                                <span>従来の表示</span>
-                            </div>
-                        </div>
+
                         
                         <div class="unified-pitch-display">
                             ${unifiedPitchHTML}
@@ -3519,16 +3541,9 @@
                             </div>
                         </div>
                         
-                        <div class="traditional-lineup-display" style="display: none;">
-                            <p>従来の個別表示は現在開発中です。</p>
-                            ${traditionalLineupHTML}
-                        </div>
+
                         
-                        <div class="display-toggle">
-                            <button class="detail-button" onclick="toggleDisplayMode()">
-                                従来の表示
-                            </button>
-                        </div>
+
                     </div>
                 `;
 
@@ -3537,8 +3552,7 @@
 
                 console.log('Lineup tab updated successfully');
                 
-                // 表示モードのイベントリスナーを設定
-                setupDisplayModeListeners();
+
                 
             } catch (error) {
                 console.error('Error updating lineup tab:', error);
@@ -3811,28 +3825,26 @@
                 }
                 
                 // 最初のタブをアクティブにして表示
-                setTimeout(() => {
-                    const firstTab = document.querySelector('.tab-button');
-                    const firstPane = document.querySelector('.tab-pane');
+                const firstTab = document.querySelector('.tab-button');
+                const firstPane = document.querySelector('.tab-pane');
+                
+                if (firstTab && firstPane) {
+                    firstTab.classList.add('active');
+                    firstPane.classList.add('active');
                     
-                    if (firstTab && firstPane) {
-                        firstTab.classList.add('active');
-                        firstPane.classList.add('active');
-                        
-                        // 強制的に表示
-                        firstPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: visible !important;';
-                        
-                        console.log('First tab activated and displayed with force');
-                        console.log('First tab dimensions:', firstPane.offsetWidth, 'x', firstPane.offsetHeight);
-                        
-                        const tabContent = firstPane.closest('.tab-content');
-                        if (tabContent) {
-                            console.log('Parent tab-content dimensions:', tabContent.offsetWidth, 'x', tabContent.offsetHeight);
-                        }
-                    } else {
-                        console.error('First tab or pane not found');
+                    // 強制的に表示
+                    firstPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: visible !important;';
+                    
+                    console.log('First tab activated and displayed with force');
+                    console.log('First tab dimensions:', firstPane.offsetWidth, 'x', firstPane.offsetHeight);
+                    
+                    const tabContent = firstPane.closest('.tab-content');
+                    if (tabContent) {
+                        console.log('Parent tab-content dimensions:', tabContent.offsetWidth, 'x', tabContent.offsetHeight);
                     }
-                }, 100);
+                } else {
+                    console.error('First tab or pane not found');
+                }
                 
             } catch (error) {
                 console.error('Error in displayDetailedMatchInfo:', error);
@@ -4151,15 +4163,7 @@
             return positions;
         }
 
-        // 従来の個別表示のHTMLを生成する関数
-        function generateTraditionalLineupHTML(homeLineup, awayLineup) {
-            // 既存の従来表示のHTML生成ロジックをここに移動
-            return `
-                <div class="traditional-lineup">
-                    <p>従来の個別表示は現在開発中です。</p>
-                </div>
-            `;
-        }
+
 
         // フォールバックのベンチデータを生成する関数
         function generateFallbackBenchData() {
@@ -4223,53 +4227,7 @@
             };
         }
 
-        // 表示モードを切り替える関数
-        function toggleDisplayMode() {
-            const unifiedDisplay = document.querySelector('.unified-pitch-display');
-            const traditionalDisplay = document.querySelector('.traditional-lineup-display');
-            const modeOptions = document.querySelectorAll('.mode-option');
-            
-            if (unifiedDisplay && traditionalDisplay) {
-                if (unifiedDisplay.style.display !== 'none') {
-                    // 従来の表示に切り替え
-                    unifiedDisplay.style.display = 'none';
-                    traditionalDisplay.style.display = 'block';
-                    modeOptions[0].classList.remove('active');
-                    modeOptions[1].classList.add('active');
-                } else {
-                    // 統合ピッチ表示に切り替え
-                    unifiedDisplay.style.display = 'block';
-                    traditionalDisplay.style.display = 'none';
-                    modeOptions[0].classList.add('active');
-                    modeOptions[1].classList.remove('active');
-                }
-            }
-        }
 
-        // 表示モード選択のイベントリスナーを設定
-        function setupDisplayModeListeners() {
-            const modeOptions = document.querySelectorAll('.mode-option');
-            modeOptions.forEach(option => {
-                option.addEventListener('click', function() {
-                    const mode = this.dataset.mode;
-                    const unifiedDisplay = document.querySelector('.unified-pitch-display');
-                    const traditionalDisplay = document.querySelector('.traditional-lineup-display');
-                    
-                    // アクティブクラスを更新
-                    modeOptions.forEach(opt => opt.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // 表示を切り替え
-                    if (mode === 'unified') {
-                        unifiedDisplay.style.display = 'block';
-                        traditionalDisplay.style.display = 'none';
-                    } else {
-                        unifiedDisplay.style.display = 'none';
-                        traditionalDisplay.style.display = 'block';
-                    }
-                });
-            });
-        }
 
         // 選手詳細を表示する関数
         function showPlayerDetails(playerName, teamName) {
