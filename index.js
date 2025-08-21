@@ -1842,7 +1842,7 @@ app.get('/api/match/:id/stats', async (req, res) => {
                 });
                 
                 if (response.ok) {
-                    const data = await response.json();
+        const data = await response.json();
                     console.log('API-Football stats response:', data);
                     
                     if (data.response && Array.isArray(data.response)) {
