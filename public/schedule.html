@@ -737,6 +737,20 @@
             border-radius: 50%;
         }
 
+        .team-logo-fallback {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
         .team-details {
             flex: 1;
         }
@@ -1781,8 +1795,8 @@
         }
 
         .player-avatar {
-            width: 35px;
-            height: 35px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -1811,16 +1825,16 @@
 
         .player-rating {
             position: absolute;
-            top: -5px;
-            right: -5px;
+            top: -8px;
+            right: -8px;
             background: rgba(0, 0, 0, 0.9);
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 9px;
+            font-size: 10px;
             font-weight: bold;
             border: 2px solid white;
             z-index: 25;
@@ -1828,17 +1842,17 @@
 
         .player-number {
             position: absolute;
-            top: -5px;
-            left: -5px;
+            top: -8px;
+            left: -8px;
             background: rgba(76, 175, 80, 0.9);
             color: white;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
             border: 2px solid white;
             z-index: 25;
@@ -2720,7 +2734,10 @@
                     <div class="team-comparison">
                         <div class="team-card home-team">
                             <div class="team-header">
-                                <div class="team-logo-placeholder">${matchData.homeTeam.charAt(0)}</div>
+                                <div class="team-logo">
+                                    <img src="https://media.api-sports.io/football/teams/${getTeamId(matchData.homeTeam)}.png" alt="${matchData.homeTeam}" class="team-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="team-logo-fallback">${matchData.homeTeam.charAt(0)}</div>
+                                </div>
                                 <div class="team-info">
                                     <h3>${matchData.homeTeam}</h3>
                                     <div class="team-stats">
@@ -2739,7 +2756,10 @@
 
                         <div class="team-card away-team">
                             <div class="team-header">
-                                <div class="team-logo-placeholder">${matchData.awayTeam.charAt(0)}</div>
+                                <div class="team-logo">
+                                    <img src="https://media.api-sports.io/football/teams/${getTeamId(matchData.awayTeam)}.png" alt="${matchData.awayTeam}" class="team-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="team-logo-fallback">${matchData.awayTeam.charAt(0)}</div>
+                                </div>
                                 <div class="team-info">
                                     <h3>${matchData.awayTeam}</h3>
                                     <div class="team-stats">
@@ -3683,6 +3703,84 @@
                 'FW': 'FW'
             };
             return positionMap[position] || position;
+        }
+
+        // チーム名からチームIDを取得する関数
+        function getTeamId(teamName) {
+            const teamIdMap = {
+                // Premier League
+                'Liverpool': '40',
+                'Manchester City': '50',
+                'Manchester United': '33',
+                'Chelsea': '49',
+                'Arsenal': '42',
+                'Tottenham': '47',
+                'Aston Villa': '66',
+                'Newcastle': '34',
+                'Bournemouth': '35',
+                'Brighton': '51',
+                'Fulham': '36',
+                'West Ham': '48',
+                'Wolves': '39',
+                'Burnley': '44',
+                'Crystal Palace': '52',
+                'Sunderland': '37',
+                
+                // La Liga
+                'Real Madrid': '541',
+                'Barcelona': '529',
+                'Atletico Madrid': '530',
+                'Girona': '530',
+                'Rayo Vallecano': '728',
+                'Villarreal': '533',
+                'Oviedo': '534',
+                'Real Betis': '150',
+                'Alaves': '1108',
+                'Mallorca': '798',
+                'Celta Vigo': '558',
+                'Levante': '797',
+                'Valencia': '532',
+                'Osasuna': '727',
+                'Real Sociedad': '548',
+                'Espanyol': '558',
+                'Sevilla': '536',
+                'Getafe': '798',
+                'Athletic Club': '531',
+                
+                // Serie A
+                'Sassuolo': '471',
+                'Napoli': '492',
+                'Genoa': '495',
+                'Lecce': '867',
+                
+                // Bundesliga
+                'Bayern München': '157',
+                'RB Leipzig': '173',
+                'SC Freiburg': '160',
+                'FC Augsburg': '161',
+                
+                // Ligue 1
+                'Paris Saint Germain': '85',
+                'Angers': '91',
+                'Rennes': '94',
+                'Marseille': '81',
+                'Paris FC': '91',
+                'Lens': '116',
+                'Lyon': '80',
+                
+                // J1 League
+                '浦和レッズ': '1001',
+                '横浜F・マリノス': '1002',
+                '川崎フロンターレ': '1003',
+                'FC東京': '1004',
+                'アルビレックス新潟': '1005',
+                '鹿島アントラーズ': '1006',
+                '名古屋グランパス': '1007',
+                'セレッソ大阪': '1008',
+                'ガンバ大阪': '1009'
+            };
+            
+            return teamIdMap[teamName] || '1'; // デフォルトは1
         }
 
     </script>
