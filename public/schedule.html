@@ -1779,8 +1779,8 @@
         }
 
         .player-avatar {
-            width: 45px;
-            height: 45px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -1812,29 +1812,29 @@
             transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.95);
             border-radius: 8px;
-            padding: 8px;
+            padding: 6px 8px;
             white-space: nowrap;
             opacity: 1;
             visibility: visible;
             z-index: 20;
-            min-width: 100px;
+            min-width: 80px;
             text-align: center;
             border: 1px solid rgba(76, 175, 80, 0.3);
-            margin-top: 5px;
+            margin-top: 8px;
         }
 
         .player-rating {
             position: absolute;
-            top: -8px;
-            right: -8px;
+            top: -6px;
+            right: -6px;
             background: rgba(0, 0, 0, 0.9);
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: bold;
             border: 2px solid white;
             z-index: 25;
@@ -3461,76 +3461,76 @@
             switch (formation) {
                 case '4-2-3-1':
                     // GK (左のゴール、より後ろに)
-                    positions.push({ left: 5, top: 50 });
+                    positions.push({ left: 8, top: 50 });
                     // Defenders (左から2番目のライン、より後ろに)
-                    positions.push({ left: 15, top: 20 });
-                    positions.push({ left: 15, top: 35 });
-                    positions.push({ left: 15, top: 65 });
-                    positions.push({ left: 15, top: 80 });
+                    positions.push({ left: 18, top: 15 });
+                    positions.push({ left: 18, top: 30 });
+                    positions.push({ left: 18, top: 70 });
+                    positions.push({ left: 18, top: 85 });
                     // Midfielders (左から3番目のライン)
-                    positions.push({ left: 25, top: 35 });
-                    positions.push({ left: 25, top: 65 });
+                    positions.push({ left: 28, top: 35 });
+                    positions.push({ left: 28, top: 65 });
                     // Attacking Midfielders (左から4番目のライン、ハーフライン手前)
-                    positions.push({ left: 35, top: 25 });
-                    positions.push({ left: 35, top: 50 });
-                    positions.push({ left: 35, top: 75 });
+                    positions.push({ left: 38, top: 20 });
+                    positions.push({ left: 38, top: 50 });
+                    positions.push({ left: 38, top: 80 });
                     // Striker (左から5番目のライン、ハーフライン手前)
-                    positions.push({ left: 42, top: 50 });
+                    positions.push({ left: 45, top: 50 });
                     break;
                     
                 case '4-1-4-1':
                     // GK (右のゴール、より後ろに)
-                    positions.push({ left: 95, top: 50 });
+                    positions.push({ left: 92, top: 50 });
                     // Defenders (右から2番目のライン、より後ろに)
-                    positions.push({ left: 85, top: 20 });
-                    positions.push({ left: 85, top: 35 });
-                    positions.push({ left: 85, top: 65 });
-                    positions.push({ left: 85, top: 80 });
+                    positions.push({ left: 82, top: 15 });
+                    positions.push({ left: 82, top: 30 });
+                    positions.push({ left: 82, top: 70 });
+                    positions.push({ left: 82, top: 85 });
                     // Defensive Midfielder (右から3番目のライン)
-                    positions.push({ left: 75, top: 50 });
+                    positions.push({ left: 72, top: 50 });
                     // Midfielders (右から4番目のライン、ハーフライン手前)
-                    positions.push({ left: 65, top: 25 });
-                    positions.push({ left: 65, top: 40 });
-                    positions.push({ left: 65, top: 60 });
-                    positions.push({ left: 65, top: 75 });
+                    positions.push({ left: 62, top: 20 });
+                    positions.push({ left: 62, top: 35 });
+                    positions.push({ left: 62, top: 65 });
+                    positions.push({ left: 62, top: 80 });
                     // Striker (右から5番目のライン、ハーフライン手前)
-                    positions.push({ left: 58, top: 50 });
+                    positions.push({ left: 55, top: 50 });
                     break;
                     
                 case '4-4-2':
                     // GK (左のゴール、より後ろに)
-                    positions.push({ left: 5, top: 50 });
+                    positions.push({ left: 8, top: 50 });
                     // Defenders (左から2番目のライン、より後ろに)
-                    positions.push({ left: 15, top: 20 });
-                    positions.push({ left: 15, top: 35 });
-                    positions.push({ left: 15, top: 65 });
-                    positions.push({ left: 15, top: 80 });
+                    positions.push({ left: 18, top: 15 });
+                    positions.push({ left: 18, top: 30 });
+                    positions.push({ left: 18, top: 70 });
+                    positions.push({ left: 18, top: 85 });
                     // Midfielders (左から3番目のライン)
-                    positions.push({ left: 25, top: 25 });
-                    positions.push({ left: 25, top: 40 });
-                    positions.push({ left: 25, top: 60 });
-                    positions.push({ left: 25, top: 75 });
+                    positions.push({ left: 28, top: 20 });
+                    positions.push({ left: 28, top: 35 });
+                    positions.push({ left: 28, top: 65 });
+                    positions.push({ left: 28, top: 80 });
                     // Strikers (左から4番目のライン、ハーフライン手前)
-                    positions.push({ left: 35, top: 40 });
-                    positions.push({ left: 35, top: 60 });
+                    positions.push({ left: 38, top: 35 });
+                    positions.push({ left: 38, top: 65 });
                     break;
                     
                 case '3-5-2':
                     // GK (左のゴール、より後ろに)
-                    positions.push({ left: 5, top: 50 });
+                    positions.push({ left: 8, top: 50 });
                     // Defenders (左から2番目のライン、より後ろに)
-                    positions.push({ left: 15, top: 30 });
-                    positions.push({ left: 15, top: 50 });
-                    positions.push({ left: 15, top: 70 });
+                    positions.push({ left: 18, top: 25 });
+                    positions.push({ left: 18, top: 50 });
+                    positions.push({ left: 18, top: 75 });
                     // Midfielders (左から3番目のライン)
-                    positions.push({ left: 25, top: 20 });
-                    positions.push({ left: 25, top: 35 });
-                    positions.push({ left: 25, top: 50 });
-                    positions.push({ left: 25, top: 65 });
-                    positions.push({ left: 25, top: 80 });
+                    positions.push({ left: 28, top: 15 });
+                    positions.push({ left: 28, top: 30 });
+                    positions.push({ left: 28, top: 50 });
+                    positions.push({ left: 28, top: 70 });
+                    positions.push({ left: 28, top: 85 });
                     // Strikers (左から4番目のライン、ハーフライン手前)
-                    positions.push({ left: 35, top: 40 });
-                    positions.push({ left: 35, top: 60 });
+                    positions.push({ left: 38, top: 35 });
+                    positions.push({ left: 38, top: 65 });
                     break;
                     
                 default:
@@ -3538,16 +3538,16 @@
                     for (let i = 0; i < 11; i++) {
                         if (i === 0) {
                             // GK
-                            positions.push({ left: 5, top: 50 });
+                            positions.push({ left: 8, top: 50 });
                         } else if (i <= 4) {
                             // Defenders
-                            positions.push({ left: 15, top: 20 + (i - 1) * 15 });
+                            positions.push({ left: 18, top: 15 + (i - 1) * 18 });
                         } else if (i <= 8) {
                             // Midfielders
-                            positions.push({ left: 25, top: 20 + (i - 5) * 15 });
+                            positions.push({ left: 28, top: 20 + (i - 5) * 18 });
                         } else {
                             // Strikers
-                            positions.push({ left: 35, top: 35 + (i - 9) * 20 });
+                            positions.push({ left: 38, top: 35 + (i - 9) * 25 });
                         }
                     }
             }
