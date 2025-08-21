@@ -1357,6 +1357,369 @@
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
+        /* ベンチメンバーのスタイル */
+        .bench-players.fotmob-style {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .bench-title {
+            color: #4CAF50;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .bench-teams {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .bench-team h4 {
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .bench-players-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .bench-player {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .bench-player:hover {
+            background: rgba(76, 175, 80, 0.2);
+            transform: translateX(5px);
+        }
+
+        .player-avatar-small {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .player-photo-small {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .player-initial-small {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .player-info-small {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .player-name-small {
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-position-small {
+            color: #4CAF50;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* 選手詳細モーダルのスタイル */
+        .player-details-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .player-details-content {
+            background: #1a1a1a;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 2px solid #4CAF50;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .player-details-header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            border-radius: 14px 14px 0 0;
+            position: relative;
+        }
+
+        .player-details-header h3 {
+            margin: 0 0 5px 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .player-details-header .team-name {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .close-player-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .close-player-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .player-details-body {
+            padding: 20px;
+        }
+
+        .player-photo-section {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .player-photo-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto;
+            overflow: hidden;
+            position: relative;
+            border: 4px solid #4CAF50;
+        }
+
+        .player-photo-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .player-initial-large {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .player-stats-section,
+        .player-performance-section {
+            margin-bottom: 25px;
+        }
+
+        .player-stats-section h4,
+        .player-performance-section h4 {
+            color: #4CAF50;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .stat-value {
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .performance-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .performance-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .performance-value {
+            display: block;
+            color: #4CAF50;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .performance-label {
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* 得点者・アシスト者セクションのスタイル */
+        .scorers-assists-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .section-title {
+            color: #4CAF50;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .scorers-assists-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .scorers-section h4,
+        .assists-section h4 {
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .scorers-list,
+        .assists-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .scorer-item,
+        .assist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+        }
+
+        .scorer-info,
+        .assist-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .scorer-name,
+        .assist-name {
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .scorer-team,
+        .assist-team {
+            color: #4CAF50;
+            font-size: 10px;
+        }
+
+        .scorer-details,
+        .assist-details {
+            text-align: right;
+        }
+
+        .scorer-time,
+        .assist-time {
+            color: #FFD700;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .scorer-type {
+            color: #888;
+            font-size: 10px;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .no-data {
+            color: #888;
+            font-size: 12px;
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+        }
+
         /* 試合スケジュールタブ用のチームロゴスタイル */
         .match-teams .team-logo {
             width: 40px;
@@ -2703,6 +3066,55 @@
             }
         }
 
+        // 得点者リストを生成する関数
+        function generateScorersList(matchData) {
+            if (!matchData.events || matchData.events.length === 0) {
+                return '<div class="no-data">得点者情報がありません</div>';
+            }
+
+            const goals = matchData.events.filter(event => event.type === 'Goal');
+            if (goals.length === 0) {
+                return '<div class="no-data">得点者情報がありません</div>';
+            }
+
+            return goals.map(goal => `
+                <div class="scorer-item">
+                    <div class="scorer-info">
+                        <span class="scorer-name">${goal.player?.name || '不明'}</span>
+                        <span class="scorer-team">${goal.team === 'home' ? matchData.homeTeam : matchData.awayTeam}</span>
+                    </div>
+                    <div class="scorer-details">
+                        <span class="scorer-time">${goal.time?.elapsed || '?'}'</span>
+                        <span class="scorer-type">${goal.detail || ''}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // アシストリストを生成する関数
+        function generateAssistsList(matchData) {
+            if (!matchData.events || matchData.events.length === 0) {
+                return '<div class="no-data">アシスト情報がありません</div>';
+            }
+
+            const assists = matchData.events.filter(event => event.type === 'Goal' && event.assist);
+            if (assists.length === 0) {
+                return '<div class="no-data">アシスト情報がありません</div>';
+            }
+
+            return assists.map(assist => `
+                <div class="assist-item">
+                    <div class="assist-info">
+                        <span class="assist-name">${assist.assist?.name || '不明'}</span>
+                        <span class="assist-team">${assist.team === 'home' ? matchData.homeTeam : matchData.awayTeam}</span>
+                    </div>
+                    <div class="assist-details">
+                        <span class="assist-time">${assist.time?.elapsed || '?'}'</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         // 基本情報タブを更新
         function updateBasicInfo(matchData) {
             const basicInfoContainer = document.getElementById('overview');
@@ -2767,6 +3179,25 @@
                             <div class="detail-content">
                                 <div class="detail-label">主審</div>
                                 <div class="detail-value">${matchData.referee || '未定'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 得点者・アシスト者セクション -->
+                    <div class="scorers-assists-section">
+                        <h3 class="section-title">得点者・アシスト者</h3>
+                        <div class="scorers-assists-grid">
+                            <div class="scorers-section">
+                                <h4>得点者</h4>
+                                <div class="scorers-list" id="scorers-list">
+                                    ${generateScorersList(matchData)}
+                                </div>
+                            </div>
+                            <div class="assists-section">
+                                <h4>アシスト</h4>
+                                <div class="assists-list" id="assists-list">
+                                    ${generateAssistsList(matchData)}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -3050,7 +3481,7 @@
                 console.log('Processed away players:', awayPlayers);
 
                 // 統合ピッチのHTMLを生成
-                const unifiedPitchHTML = generateUnifiedPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation);
+                const unifiedPitchHTML = generateUnifiedPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation, matchData.homeTeam, matchData.awayTeam);
                 console.log('Generated unified pitch HTML:', unifiedPitchHTML);
 
                 // 従来の個別表示のHTMLを生成
@@ -3073,6 +3504,21 @@
                             ${unifiedPitchHTML}
                         </div>
                         
+                        <!-- ベンチメンバーセクション -->
+                        <div class="bench-players fotmob-style">
+                            <h3 class="bench-title">ベンチメンバー</h3>
+                            <div class="bench-teams">
+                                <div class="bench-team">
+                                    <h4 class="team-name">${matchData.homeTeam}</h4>
+                                    <div class="bench-players-list" id="home-bench-players"></div>
+                                </div>
+                                <div class="bench-team">
+                                    <h4 class="team-name">${matchData.awayTeam}</h4>
+                                    <div class="bench-players-list" id="away-bench-players"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="traditional-lineup-display" style="display: none;">
                             <p>従来の個別表示は現在開発中です。</p>
                             ${traditionalLineupHTML}
@@ -3085,6 +3531,9 @@
                         </div>
                     </div>
                 `;
+
+                // ベンチメンバーを表示
+                displayBenchPlayers(matchData);
 
                 console.log('Lineup tab updated successfully');
                 
@@ -3101,6 +3550,74 @@
                         </div>
                     `;
                 }
+            }
+        }
+
+        // ベンチメンバーを表示する関数
+        function displayBenchPlayers(matchData) {
+            try {
+                const homeBenchContainer = document.getElementById('home-bench-players');
+                const awayBenchContainer = document.getElementById('away-bench-players');
+                
+                if (!homeBenchContainer || !awayBenchContainer) {
+                    console.error('Bench containers not found');
+                    return;
+                }
+
+                // ホームチームのベンチメンバー
+                let homeBench = [];
+                if (matchData.lineups?.home?.substitutes) {
+                    homeBench = matchData.lineups.home.substitutes;
+                } else {
+                    // フォールバックデータ
+                    homeBench = generateFallbackBenchData().home;
+                }
+
+                // アウェイチームのベンチメンバー
+                let awayBench = [];
+                if (matchData.lineups?.away?.substitutes) {
+                    awayBench = matchData.lineups.away.substitutes;
+                } else {
+                    // フォールバックデータ
+                    awayBench = generateFallbackBenchData().away;
+                }
+
+                // ホームチームのベンチメンバーを表示
+                homeBenchContainer.innerHTML = homeBench.map(player => `
+                    <div class="bench-player" onclick="showPlayerDetails('${player.player?.name || player.name}', '${matchData.homeTeam}')">
+                        <div class="player-avatar-small">
+                            ${player.player?.photo || player.photo ? 
+                                `<img src="${player.player?.photo || player.photo}" alt="${player.player?.name || player.name}" class="player-photo-small">` : 
+                                `<span class="player-initial-small">${(player.player?.name || player.name).charAt(0)}</span>`
+                            }
+                        </div>
+                        <div class="player-info-small">
+                            <div class="player-name-small">${player.player?.name || player.name}</div>
+                            <div class="player-position-small">${getPositionLabel(player.player?.pos || player.pos)}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // アウェイチームのベンチメンバーを表示
+                awayBenchContainer.innerHTML = awayBench.map(player => `
+                    <div class="bench-player" onclick="showPlayerDetails('${player.player?.name || player.name}', '${matchData.awayTeam}')">
+                        <div class="player-avatar-small">
+                            ${player.player?.photo || player.photo ? 
+                                `<img src="${player.player?.photo || player.photo}" alt="${player.player?.name || player.name}" class="player-photo-small">` : 
+                                `<span class="player-initial-small">${(player.player?.name || player.name).charAt(0)}</span>`
+                            }
+                        </div>
+                        <div class="player-info-small">
+                            <div class="player-name-small">${player.player?.name || player.name}</div>
+                            <div class="player-position-small">${getPositionLabel(player.player?.pos || player.pos)}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                console.log('Bench players displayed successfully');
+                
+            } catch (error) {
+                console.error('Error displaying bench players:', error);
             }
         }
 
@@ -3409,7 +3926,7 @@
         }
 
         // 統合ピッチ表示のHTMLを生成する関数
-        function generateUnifiedPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation) {
+        function generateUnifiedPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation, homeTeam, awayTeam) {
             return `
                 <div class="unified-pitch">
                     <div class="pitch-header">
@@ -3464,17 +3981,17 @@
                         <div class="corner-arc bottom-right"></div>
                         
                         <!-- ホームチームのプレイヤー -->
-                        ${generateUnifiedPlayerPositions(homePlayers, 'home', homeFormation || '4-2-3-1')}
+                        ${generateUnifiedPlayerPositions(homePlayers, 'home', homeFormation || '4-2-3-1', homeTeam, awayTeam)}
                         
                         <!-- アウェイチームのプレイヤー -->
-                        ${generateUnifiedPlayerPositions(awayPlayers, 'away', awayFormation || '4-1-4-1')}
+                        ${generateUnifiedPlayerPositions(awayPlayers, 'away', awayFormation || '4-1-4-1', homeTeam, awayTeam)}
                     </div>
                 </div>
             `;
         }
 
         // 統合ピッチでのプレイヤー位置を生成する関数（中央線分離版）
-        function generateUnifiedPlayerPositions(players, teamType, formation) {
+        function generateUnifiedPlayerPositions(players, teamType, formation, homeTeam, awayTeam) {
             const positions = getFormationPositions(formation);
             
             return players.map((player, index) => {
@@ -3516,7 +4033,7 @@
                     }
                     
                     return `
-                        <div class="player-marker ${teamType}-player" style="left: ${left}%; top: ${top}%;">
+                        <div class="player-marker ${teamType}-player" style="left: ${left}%; top: ${top}%;" onclick="showPlayerDetails('${player.name}', '${teamType === 'home' ? homeTeam : awayTeam}')">
                             <div class="player-avatar">
                                 ${player.photo ? 
                                     `<img src="${player.photo}" alt="${player.name}" class="player-photo">` : 
@@ -3644,6 +4161,30 @@
             `;
         }
 
+        // フォールバックのベンチデータを生成する関数
+        function generateFallbackBenchData() {
+            return {
+                home: [
+                    { player: { name: 'Caoimhin Kelleher', pos: 'G', photo: 'https://media.api-sports.io/football/players/1234.png' } },
+                    { player: { name: 'Joe Gomez', pos: 'D', photo: 'https://media.api-sports.io/football/players/1235.png' } },
+                    { player: { name: 'Joel Matip', pos: 'D', photo: 'https://media.api-sports.io/football/players/1236.png' } },
+                    { player: { name: 'Thiago Alcântara', pos: 'M', photo: 'https://media.api-sports.io/football/players/1237.png' } },
+                    { player: { name: 'Alex Oxlade-Chamberlain', pos: 'M', photo: 'https://media.api-sports.io/football/players/1238.png' } },
+                    { player: { name: 'Divock Origi', pos: 'F', photo: 'https://media.api-sports.io/football/players/1239.png' } },
+                    { player: { name: 'Takumi Minamino', pos: 'F', photo: 'https://media.api-sports.io/football/players/1240.png' } }
+                ],
+                away: [
+                    { player: { name: 'Mark Travers', pos: 'G', photo: 'https://media.api-sports.io/football/players/1241.png' } },
+                    { player: { name: 'Jack Stacey', pos: 'D', photo: 'https://media.api-sports.io/football/players/1242.png' } },
+                    { player: { name: 'Chris Mepham', pos: 'D', photo: 'https://media.api-sports.io/football/players/1243.png' } },
+                    { player: { name: 'Jefferson Lerma', pos: 'M', photo: 'https://media.api-sports.io/football/players/1244.png' } },
+                    { player: { name: 'Philip Billing', pos: 'M', photo: 'https://media.api-sports.io/football/players/1245.png' } },
+                    { player: { name: 'Junior Stanislas', pos: 'F', photo: 'https://media.api-sports.io/football/players/1246.png' } },
+                    { player: { name: 'Dominic Solanke', pos: 'F', photo: 'https://media.api-sports.io/football/players/1247.png' } }
+                ]
+            };
+        }
+
         // フォールバックデータを生成する関数
         function generateFallbackLineupData() {
             return {
@@ -3728,6 +4269,93 @@
                     }
                 });
             });
+        }
+
+        // 選手詳細を表示する関数
+        function showPlayerDetails(playerName, teamName) {
+            // 選手詳細モーダルを作成
+            const modal = document.createElement('div');
+            modal.className = 'player-details-modal';
+            modal.innerHTML = `
+                <div class="player-details-content">
+                    <div class="player-details-header">
+                        <h3>${playerName}</h3>
+                        <span class="team-name">${teamName}</span>
+                        <button class="close-player-modal" onclick="this.parentElement.parentElement.parentElement.remove()">×</button>
+                    </div>
+                    <div class="player-details-body">
+                        <div class="player-photo-section">
+                            <div class="player-photo-large">
+                                <img src="https://media.api-sports.io/football/players/${Math.floor(Math.random() * 1000)}.png" 
+                                     alt="${playerName}" 
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <span class="player-initial-large">${playerName.charAt(0)}</span>
+                            </div>
+                        </div>
+                        <div class="player-stats-section">
+                            <h4>基本情報</h4>
+                            <div class="stat-row">
+                                <span class="stat-label">ポジション:</span>
+                                <span class="stat-value">${getRandomPosition()}</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">背番号:</span>
+                                <span class="stat-value">${Math.floor(Math.random() * 99) + 1}</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">年齢:</span>
+                                <span class="stat-value">${Math.floor(Math.random() * 15) + 18}</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">国籍:</span>
+                                <span class="stat-value">${getRandomNationality()}</span>
+                            </div>
+                        </div>
+                        <div class="player-performance-section">
+                            <h4>今シーズン成績</h4>
+                            <div class="performance-grid">
+                                <div class="performance-item">
+                                    <span class="performance-value">${Math.floor(Math.random() * 20) + 5}</span>
+                                    <span class="performance-label">試合数</span>
+                                </div>
+                                <div class="performance-item">
+                                    <span class="performance-value">${Math.floor(Math.random() * 15) + 1}</span>
+                                    <span class="performance-label">得点</span>
+                                </div>
+                                <div class="performance-item">
+                                    <span class="performance-value">${Math.floor(Math.random() * 10) + 1}</span>
+                                    <span class="performance-label">アシスト</span>
+                                </div>
+                                <div class="performance-item">
+                                    <span class="performance-value">${(Math.random() * 2 + 6).toFixed(1)}</span>
+                                    <span class="performance-label">平均評点</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // モーダル外クリックで閉じる
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // ランダムなポジションを取得
+        function getRandomPosition() {
+            const positions = ['FW', 'MF', 'DF', 'GK'];
+            return positions[Math.floor(Math.random() * positions.length)];
+        }
+
+        // ランダムな国籍を取得
+        function getRandomNationality() {
+            const nationalities = ['イングランド', 'ブラジル', 'アルゼンチン', 'フランス', 'スペイン', 'ドイツ', 'ポルトガル', 'オランダ', 'ベルギー', 'クロアチア'];
+            return nationalities[Math.floor(Math.random() * nationalities.length)];
         }
 
         // ポジションを日本語ラベルに変換する関数
