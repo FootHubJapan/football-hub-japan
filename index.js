@@ -2501,7 +2501,7 @@ app.get('/api/japanese-players', async (req, res) => {
 
         for (const player of players) {
             try {
-                const apiUrl = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(player.englishName)}&league=${player.league}&season=2024`;
+                const apiUrl = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(player.englishName)}&league=${player.league}&season=2025`;
                 console.log(`Searching for ${player.japaneseName} (${player.englishName}) in league ${player.league}: ${apiUrl}`);
                 
                 const response = await fetch(apiUrl, {
