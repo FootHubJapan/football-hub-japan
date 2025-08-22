@@ -2499,19 +2499,29 @@ app.get('/api/japanese-players', async (req, res) => {
 
         const playerData = [];
 
-        // 既知の選手IDを使用して直接検索
-        const playerIds = [
-            { japaneseName: '久保建英', englishName: 'Takefusa Kubo', id: 32862 },
-            { japaneseName: '三苫薫', englishName: 'Kaoru Mitoma', id: 106835 },
-            { japaneseName: '堂安律', englishName: 'Ritsu Doan', id: 2598 },
-            { japaneseName: '田中碧', englishName: 'Ao Tanaka', id: 32863 },
-            { japaneseName: '伊藤洋輝', englishName: 'Hiroki Ito', id: 32864 },
-            { japaneseName: '遠藤航', englishName: 'Wataru Endo', id: 32865 },
-            { japaneseName: '南野拓実', englishName: 'Takumi Minamino', id: 32866 },
-            { japaneseName: '浅野拓磨', englishName: 'Takuma Asano', id: 32867 }
+        // 各リーグの日本人選手データ（重複なし）
+        const allPlayers = [
+            // Premier League
+            { japaneseName: '三苫薫', englishName: 'Kaoru Mitoma', id: 106835, league: 'Premier League' },
+            { japaneseName: '富安健洋', englishName: 'Takehiro Tomiyasu', id: 32868, league: 'Premier League' },
+            { japaneseName: '遠藤航', englishName: 'Wataru Endo', id: 32865, league: 'Premier League' },
+            
+            // La Liga
+            { japaneseName: '久保建英', englishName: 'Takefusa Kubo', id: 32862, league: 'La Liga' },
+            
+            // Bundesliga
+            { japaneseName: '堂安律', englishName: 'Ritsu Doan', id: 2598, league: 'Bundesliga' },
+            { japaneseName: '伊藤洋輝', englishName: 'Hiroki Ito', id: 32864, league: 'Bundesliga' },
+            { japaneseName: '浅野拓磨', englishName: 'Takuma Asano', id: 32867, league: 'Bundesliga' },
+            
+            // Serie A
+            { japaneseName: '南野拓実', englishName: 'Takumi Minamino', id: 32866, league: 'Serie A' },
+            
+            // Ligue 1
+            { japaneseName: '田中碧', englishName: 'Ao Tanaka', id: 32863, league: 'Ligue 1' }
         ];
 
-        for (const player of playerIds) {
+        for (const player of allPlayers) {
             try {
                 const apiUrl = `https://v3.football.api-sports.io/players?id=${player.id}&season=2025`;
                 console.log(`Searching for ${player.japaneseName} (${player.englishName}) with ID ${player.id}: ${apiUrl}`);
