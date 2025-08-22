@@ -2328,7 +2328,7 @@ function generateFallbackPlayers(limit) {
             position: 'Forward',
             nationality: 'Japan',
             age: 22,
-            photo: 'https://media.api-sports.io/football/players/874.png'
+            photo: 'https://media.api-sports.io/football/players/32862.png'
         },
         {
             name: '三苫薫',
@@ -2337,7 +2337,7 @@ function generateFallbackPlayers(limit) {
             position: 'Midfielder',
             nationality: 'Japan',
             age: 26,
-            photo: 'https://media.api-sports.io/football/players/875.png'
+            photo: 'https://media.api-sports.io/football/players/106835.png'
         },
         {
             name: '堂安律',
@@ -2346,7 +2346,7 @@ function generateFallbackPlayers(limit) {
             position: 'Midfielder',
             nationality: 'Japan',
             age: 25,
-            photo: 'https://media.api-sports.io/football/players/876.png'
+            photo: 'https://media.api-sports.io/football/players/2598.png'
         },
         {
             name: '田中碧',

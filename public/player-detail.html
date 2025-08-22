@@ -230,7 +230,7 @@
         @media (max-width: 768px) {
             .player-header {
                 flex-direction: column;
-                text-align: center;
+            text-align: center;
             }
 
             .stats-section {
@@ -484,7 +484,7 @@
                     const fallbackPlayer = generateFallbackPlayer(playerId);
                     displayPlayerData(fallbackPlayer);
                 }
-            } catch (error) {
+                    } catch (error) {
                 console.error('選手データの読み込みエラー:', error);
                 const fallbackPlayer = generateFallbackPlayer(playerId);
                 displayPlayerData(fallbackPlayer);
