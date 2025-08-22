@@ -2088,14 +2088,7 @@ process.on('unhandledRejection', (reason, promise) => {
     process.exit(1);
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`Health check: http://localhost:${PORT}/health`);
-}).on('error', (error) => {
-    console.error('Server error:', error);
-    process.exit(1);
-});
+// サーバー起動は最後に統合
 
 // データベース用のFotMob APIエンドポイント
 app.get('/api/fotmob/init', async (req, res) => {
@@ -2481,4 +2474,80 @@ function generateFallbackSearchResults(query, limit) {
     
     return filteredPlayers.slice(0, limit);
 }
+
+// 動的に日本人選手データを取得するAPIエンドポイント
+app.get('/api/japanese-players', async (req, res) => {
+    try {
+        console.log('Japanese players API called');
+        
+        if (!process.env.API_FOOTBALL_KEY || process.env.API_FOOTBALL_KEY === 'NOT SET') {
+            console.log('API key not available, using fallback data');
+            return res.json(generateFallbackPlayers(8));
+        }
+
+        // 主要な日本人選手の検索クエリ
+        const players = [
+            { name: 'Takefusa Kubo', team: 'Real Sociedad', league: 140 },
+            { name: 'Kaoru Mitoma', team: 'Brighton', league: 39 },
+            { name: 'Ritsu Doan', team: 'SC Freiburg', league: 78 },
+            { name: 'Wataru Endo', team: 'Liverpool', league: 39 },
+            { name: 'Hiroki Ito', team: 'VfB Stuttgart', league: 78 },
+            { name: 'Takumi Minamino', team: 'Monaco', league: 61 },
+            { name: 'Takuma Asano', team: 'VfL Bochum', league: 78 }
+        ];
+
+        const playerData = [];
+
+        for (const player of players) {
+            try {
+                const response = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(player.name)}&league=${player.league}&season=2024`, {
+                    headers: {
+                        'x-rapidapi-host': 'v3.football.api-sports.io',
+                        'x-rapidapi-key': process.env.API_FOOTBALL_KEY
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.response && data.response.length > 0) {
+                        const playerInfo = data.response[0];
+                        playerData.push({
+                            name: playerInfo.player.name,
+                            fullName: `${playerInfo.player.firstname} ${playerInfo.player.lastname}`,
+                            currentTeam: playerInfo.statistics[0]?.team?.name || 'Unknown',
+                            position: playerInfo.statistics[0]?.games?.position || 'Unknown',
+                            nationality: playerInfo.player.nationality,
+                            age: playerInfo.player.age,
+                            photo: playerInfo.player.photo
+                        });
+                    }
+                }
+            } catch (error) {
+                console.log(`Error fetching ${player.name}:`, error.message);
+            }
+        }
+
+        // APIから取得できた選手が少ない場合は、フォールバックデータを補完
+        if (playerData.length < 5) {
+            console.log('Using fallback data to complement API data');
+            const fallbackData = generateFallbackPlayers(8);
+            playerData.push(...fallbackData.slice(playerData.length));
+        }
+
+        res.json(playerData);
+    } catch (error) {
+        console.error('Japanese players API error:', error);
+        res.status(500).json({ error: 'Failed to fetch Japanese players' });
+    }
+});
+
+// サーバーを起動
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
+}).on('error', (error) => {
+    console.error('Server error:', error);
+    process.exit(1);
+});
 
