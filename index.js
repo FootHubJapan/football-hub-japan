@@ -2116,7 +2116,73 @@ app.get('/api/fotmob/players', async (req, res) => {
         const { page = 1, limit = 20, league, position } = req.query;
         console.log('Players API called with:', { page, limit, league, position });
         
-        // フォールバック選手データを生成
+        // API-Footballから選手データを取得
+        if (process.env.API_FOOTBALL_KEY) {
+            try {
+                console.log('Attempting to fetch from API-Football...');
+                
+                // 有名選手のIDリスト（API-Footballで利用可能）
+                const famousPlayerIds = [882, 184, 276, 874, 874, 874, 874, 874, 874, 874]; // Bruno Fernandes, Haaland, Varane, etc.
+                
+                const players = [];
+                for (let i = 0; i < Math.min(limit, famousPlayerIds.length); i++) {
+                    const playerId = famousPlayerIds[i];
+                    try {
+                        const response = await fetch(`https://v3.football.api-sports.io/players?id=${playerId}`, {
+                            headers: {
+                                'x-rapidapi-host': 'v3.football.api-sports.io',
+                                'x-rapidapi-key': process.env.API_FOOTBALL_KEY
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.response && data.response.length > 0) {
+                                const playerData = data.response[0];
+                                const player = {
+                                    id: playerData.player.id,
+                                    name: playerData.player.name,
+                                    fullName: playerData.player.name,
+                                    currentTeam: playerData.statistics?.[0]?.team?.name || 'Unknown Team',
+                                    position: playerData.statistics?.[0]?.games?.position || 'Unknown',
+                                    nationality: playerData.player.nationality || 'Unknown',
+                                    age: playerData.player.age || 25,
+                                    photo: playerData.player.photo || null,
+                                    stats: {
+                                        goals: playerData.statistics?.[0]?.goals?.total || 0,
+                                        assists: playerData.statistics?.[0]?.goals?.assists || 0,
+                                        appearances: playerData.statistics?.[0]?.games?.appearences || 0,
+                                        minutes: playerData.statistics?.[0]?.games?.minutes || 0,
+                                        rating: playerData.statistics?.[0]?.games?.rating || '6.0',
+                                        yellowCards: playerData.statistics?.[0]?.cards?.yellow || 0
+                                    }
+                                };
+                                players.push(player);
+                                console.log(`Successfully fetched player: ${player.name} with photo: ${player.photo}`);
+                            }
+                        }
+                    } catch (playerError) {
+                        console.error(`Error fetching player ${playerId}:`, playerError);
+                    }
+                }
+                
+                if (players.length > 0) {
+                    console.log(`Successfully fetched ${players.length} players from API-Football`);
+                    res.json({
+                        players: players,
+                        total: 1000,
+                        totalPages: Math.ceil(1000 / parseInt(limit)),
+                        currentPage: parseInt(page)
+                    });
+                    return;
+                }
+            } catch (apiError) {
+                console.error('API-Football error:', apiError);
+            }
+        }
+        
+        // API-Footballで取得できない場合、フォールバックデータを使用
+        console.log('Using fallback data');
         const fallbackPlayers = generateFallbackPlayers(parseInt(limit));
         
         res.json({
@@ -2156,7 +2222,56 @@ app.get('/api/fotmob/search', async (req, res) => {
         const { q, league, position, limit = 20 } = req.query;
         console.log('Search API called with:', { q, league, position, limit });
         
-        // 検索クエリに基づくフォールバック選手データを生成
+        // API-Footballから選手検索
+        if (process.env.API_FOOTBALL_KEY && q) {
+            try {
+                console.log('Attempting to search from API-Football...');
+                
+                const response = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(q)}`, {
+                    headers: {
+                        'x-rapidapi-host': 'v3.football.api-sports.io',
+                        'x-rapidapi-key': process.env.API_FOOTBALL_KEY
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.response && data.response.length > 0) {
+                        const players = data.response.slice(0, limit).map(playerData => ({
+                            id: playerData.player.id,
+                            name: playerData.player.name,
+                            fullName: playerData.player.name,
+                            currentTeam: playerData.statistics?.[0]?.team?.name || 'Unknown Team',
+                            position: playerData.statistics?.[0]?.games?.position || 'Unknown',
+                            nationality: playerData.player.nationality || 'Unknown',
+                            age: playerData.player.age || 25,
+                            photo: playerData.player.photo || null,
+                            stats: {
+                                goals: playerData.statistics?.[0]?.goals?.total || 0,
+                                assists: playerData.statistics?.[0]?.goals?.assists || 0,
+                                appearances: playerData.statistics?.[0]?.games?.appearences || 0,
+                                minutes: playerData.statistics?.[0]?.games?.minutes || 0,
+                                rating: playerData.statistics?.[0]?.games?.rating || '6.0',
+                                yellowCards: playerData.statistics?.[0]?.cards?.yellow || 0
+                            }
+                        }));
+                        
+                        console.log(`Successfully searched ${players.length} players from API-Football`);
+                        res.json({
+                            players: players,
+                            total: players.length,
+                            query: q
+                        });
+                        return;
+                    }
+                }
+            } catch (apiError) {
+                console.error('API-Football search error:', apiError);
+            }
+        }
+        
+        // API-Footballで検索できない場合、フォールバックデータを使用
+        console.log('Using fallback search data');
         const searchResults = generateFallbackSearchResults(q, parseInt(limit));
         
         res.json({
@@ -2190,7 +2305,7 @@ function generateFallbackPlayers(limit) {
             position: positions[i % positions.length],
             nationality: nationalities[i % nationalities.length],
             age: 20 + (i % 15),
-            photo: `https://via.placeholder.com/60x60?text=${encodeURIComponent(names[i % names.length].charAt(0))}`,
+            photo: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjMzMzMzMzIi8+Cjx0ZXh0IHg9IjMwIiB5PSIzNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPj88L3RleHQ+Cjwvc3ZnPg==`,
             stats: {
                 goals: Math.floor(Math.random() * 20),
                 assists: Math.floor(Math.random() * 15),
