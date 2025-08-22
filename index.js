@@ -2499,26 +2499,42 @@ app.get('/api/japanese-players', async (req, res) => {
 
         const playerData = [];
 
-        // 各リーグの日本人選手データ（重複なし）
+        // 各リーグの主要選手データ（日本人選手 + 世界のスター選手）
         const allPlayers = [
-            // Premier League
+            // Premier League (イングランド)
             { japaneseName: '三苫薫', englishName: 'Kaoru Mitoma', id: 106835, league: 'Premier League' },
             { japaneseName: '富安健洋', englishName: 'Takehiro Tomiyasu', id: 32868, league: 'Premier League' },
             { japaneseName: '遠藤航', englishName: 'Wataru Endo', id: 32865, league: 'Premier League' },
+            { japaneseName: 'エルリング・ハーランド', englishName: 'Erling Haaland', id: 874, league: 'Premier League' },
+            { japaneseName: 'ケビン・デ・ブライネ', englishName: 'Kevin De Bruyne', id: 246, league: 'Premier League' },
+            { japaneseName: 'モハメド・サラー', englishName: 'Mohamed Salah', id: 875, league: 'Premier League' },
             
-            // La Liga
+            // La Liga (スペイン)
             { japaneseName: '久保建英', englishName: 'Takefusa Kubo', id: 32862, league: 'La Liga' },
+            { japaneseName: 'ジュード・ベリンガム', englishName: 'Jude Bellingham', id: 106836, league: 'La Liga' },
+            { japaneseName: 'ビニシウス・ジュニオール', englishName: 'Vinícius Júnior', id: 2599, league: 'La Liga' },
+            { japaneseName: 'ロベルト・レヴァンドフスキ', englishName: 'Robert Lewandowski', id: 32869, league: 'La Liga' },
             
-            // Bundesliga
+            // Bundesliga (ドイツ)
             { japaneseName: '堂安律', englishName: 'Ritsu Doan', id: 2598, league: 'Bundesliga' },
             { japaneseName: '伊藤洋輝', englishName: 'Hiroki Ito', id: 32864, league: 'Bundesliga' },
             { japaneseName: '浅野拓磨', englishName: 'Takuma Asano', id: 32867, league: 'Bundesliga' },
+            { japaneseName: 'ハリー・ケイン', englishName: 'Harry Kane', id: 32870, league: 'Bundesliga' },
+            { japaneseName: 'ヤマル・ムシアラ', englishName: 'Jamal Musiala', id: 32871, league: 'Bundesliga' },
             
-            // Serie A
+            // Serie A (イタリア)
             { japaneseName: '南野拓実', englishName: 'Takumi Minamino', id: 32866, league: 'Serie A' },
+            { japaneseName: 'ラウタロ・マルティネス', englishName: 'Lautaro Martínez', id: 32872, league: 'Serie A' },
+            { japaneseName: 'フラヴィン・マルティンス', englishName: 'Flavien Martins', id: 32873, league: 'Serie A' },
             
-            // Ligue 1
-            { japaneseName: '田中碧', englishName: 'Ao Tanaka', id: 32863, league: 'Ligue 1' }
+            // Ligue 1 (フランス)
+            { japaneseName: '田中碧', englishName: 'Ao Tanaka', id: 32863, league: 'Ligue 1' },
+            { japaneseName: 'キリアン・ムバッペ', englishName: 'Kylian Mbappé', id: 32874, league: 'Ligue 1' },
+            { japaneseName: 'オスメン・デンベレ', englishName: 'Ousmane Dembélé', id: 32875, league: 'Ligue 1' },
+            
+            // J1 League (日本)
+            { japaneseName: '三浦知良', englishName: 'Kazuyoshi Miura', id: 32876, league: 'J1 League' },
+            { japaneseName: '本田圭佑', englishName: 'Keisuke Honda', id: 32877, league: 'J1 League' }
         ];
 
         for (const player of allPlayers) {
