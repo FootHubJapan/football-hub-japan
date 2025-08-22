@@ -2319,51 +2319,121 @@ app.get('/api/fotmob/search', async (req, res) => {
 // フォールバック選手データを生成
 function generateFallbackPlayers(limit) {
     const players = [];
-    const names = [
-        '久保建英', '三笘薫', '堂安律', '田中碧', '伊藤洋輝', '遠藤航', '南野拓実', '浅野拓磨', '上田綺世', '前田大然',
-        '孫興慜', '金玟哉', '李剛仁', '黄喜燦', '久保裕也', '原口元気', '柴崎岳', '酒井宏樹', '吉田麻也', '長友佑都'
+    // 現実的な日本人選手データ
+    const realPlayers = [
+        {
+            name: '久保建英',
+            fullName: '久保建英',
+            currentTeam: 'レアル・ソシエダード',
+            position: 'Forward',
+            nationality: 'Japan',
+            age: 22,
+            photo: 'https://media.api-sports.io/football/players/874.png'
+        },
+        {
+            name: '三苫薫',
+            fullName: '三苫薫',
+            currentTeam: 'ブライトン',
+            position: 'Midfielder',
+            nationality: 'Japan',
+            age: 26,
+            photo: 'https://media.api-sports.io/football/players/184.png'
+        },
+        {
+            name: '堂安律',
+            fullName: '堂安律',
+            currentTeam: 'フライブルク',
+            position: 'Midfielder',
+            nationality: 'Japan',
+            age: 25,
+            photo: 'https://media.api-sports.io/football/players/276.png'
+        },
+        {
+            name: '田中碧',
+            fullName: '田中碧',
+            currentTeam: 'フォルタレーザ',
+            position: 'Midfielder',
+            nationality: 'Japan',
+            age: 24,
+            photo: 'https://media.api-sports.io/football/players/882.png'
+        },
+        {
+            name: '伊藤洋輝',
+            fullName: '伊藤洋輝',
+            currentTeam: 'シュトゥットガルト',
+            position: 'Defender',
+            nationality: 'Japan',
+            age: 24,
+            photo: 'https://media.api-sports.io/football/players/874.png'
+        },
+        {
+            name: '遠藤航',
+            fullName: '遠藤航',
+            currentTeam: 'リバプール',
+            position: 'Midfielder',
+            nationality: 'Japan',
+            age: 30,
+            photo: 'https://media.api-sports.io/football/players/184.png'
+        },
+        {
+            name: '南野拓実',
+            fullName: '南野拓実',
+            currentTeam: 'モナコ',
+            position: 'Forward',
+            nationality: 'Japan',
+            age: 28,
+            photo: 'https://media.api-sports.io/football/players/276.png'
+        },
+        {
+            name: '浅野拓磨',
+            fullName: '浅野拓磨',
+            currentTeam: 'ボーフム',
+            position: 'Forward',
+            nationality: 'Japan',
+            age: 29,
+            photo: 'https://media.api-sports.io/football/players/882.png'
+        }
     ];
-    const teams = ['レアル・ソシエダード', 'ブライトン', 'フライブルク', 'フォルタレーザ', 'シュトゥットガルト', 'リバプール', 'モナコ', 'ボーフム', 'フエンラブラド', 'セルティック'];
-    const positions = ['Forward', 'Midfielder', 'Defender', 'Goalkeeper'];
-    const nationalities = ['Japan', 'South Korea', 'Germany', 'Brazil', 'England', 'France', 'Spain', 'Italy'];
     
     for (let i = 0; i < limit; i++) {
-        players.push({
+        const basePlayer = realPlayers[i % realPlayers.length];
+        const player = {
             id: i + 1,
-            name: names[i % names.length],
-            fullName: names[i % names.length],
-            currentTeam: teams[i % teams.length],
-            position: positions[i % positions.length],
-            nationality: nationalities[i % nationalities.length],
-            age: 20 + (i % 15),
-            photo: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjMzMzMzMzIi8+Cjx0ZXh0IHg9IjMwIiB5PSIzNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPj88L3RleHQ+Cjwvc3ZnPg==`,
-                            stats: {
-                    goals: Math.floor(Math.random() * 20),
-                    assists: Math.floor(Math.random() * 15),
-                    appearances: 20 + Math.floor(Math.random() * 20),
-                    minutes: 1500 + Math.floor(Math.random() * 1000),
-                    rating: (6.0 + Math.random() * 2.0).toFixed(1),
-                    yellowCards: Math.floor(Math.random() * 5),
-                    // 詳細統計
-                    shotsTotal: Math.floor(Math.random() * 100),
-                    shotsOnTarget: Math.floor(Math.random() * 50),
-                    expectedGoals: (Math.random() * 10).toFixed(1),
-                    shotAccuracy: Math.floor(60 + Math.random() * 30) + '%',
-                    passesTotal: Math.floor(Math.random() * 500),
-                    keyPasses: Math.floor(Math.random() * 20),
-                    longPasses: Math.floor(Math.random() * 30),
-                    crosses: Math.floor(Math.random() * 15),
-                    passAccuracy: Math.floor(70 + Math.random() * 25) + '%',
-                    tackles: Math.floor(Math.random() * 50),
-                    interceptions: Math.floor(Math.random() * 20),
-                    duelsWon: Math.floor(Math.random() * 100),
-                    aerialDuels: Math.floor(Math.random() * 50),
-                    dribblesAttempted: Math.floor(Math.random() * 40),
-                    dribblesSuccess: Math.floor(Math.random() * 25),
-                    chancesCreated: Math.floor(Math.random() * 15),
-                    foulsDrawn: Math.floor(Math.random() * 20)
-                }
-        });
+            name: basePlayer.name,
+            fullName: basePlayer.fullName,
+            currentTeam: basePlayer.currentTeam,
+            position: basePlayer.position,
+            nationality: basePlayer.nationality,
+            age: basePlayer.age,
+            photo: basePlayer.photo,
+            stats: {
+                goals: Math.floor(Math.random() * 20),
+                assists: Math.floor(Math.random() * 15),
+                appearances: 20 + Math.floor(Math.random() * 20),
+                minutes: 1500 + Math.floor(Math.random() * 1000),
+                rating: (6.0 + Math.random() * 2.0).toFixed(1),
+                yellowCards: Math.floor(Math.random() * 5),
+                // 詳細統計
+                shotsTotal: Math.floor(Math.random() * 50),
+                shotsOnTarget: Math.floor(Math.random() * 25),
+                expectedGoals: (Math.random() * 10).toFixed(1),
+                shotAccuracy: Math.floor(60 + Math.random() * 30) + '%',
+                passesTotal: Math.floor(Math.random() * 500),
+                keyPasses: Math.floor(Math.random() * 20),
+                longPasses: Math.floor(Math.random() * 30),
+                crosses: Math.floor(Math.random() * 15),
+                passAccuracy: Math.floor(70 + Math.random() * 25) + '%',
+                tackles: Math.floor(Math.random() * 50),
+                interceptions: Math.floor(Math.random() * 20),
+                duelsWon: Math.floor(Math.random() * 100),
+                aerialDuels: Math.floor(Math.random() * 50),
+                dribblesAttempted: Math.floor(Math.random() * 40),
+                dribblesSuccess: Math.floor(Math.random() * 25),
+                chancesCreated: Math.floor(Math.random() * 15),
+                foulsDrawn: Math.floor(Math.random() * 20)
+            }
+        };
+        players.push(player);
     }
     
     return players;
