@@ -2355,7 +2355,7 @@ function generateFallbackPlayers(limit) {
             position: 'Midfielder',
             nationality: 'Japan',
             age: 24,
-            photo: 'https://media.api-sports.io/football/players/877.png'
+            photo: 'https://media.api-sports.io/football/players/32863.png'
         },
         {
             name: '伊藤洋輝',
@@ -2364,7 +2364,7 @@ function generateFallbackPlayers(limit) {
             position: 'Defender',
             nationality: 'Japan',
             age: 24,
-            photo: 'https://media.api-sports.io/football/players/878.png'
+            photo: 'https://media.api-sports.io/football/players/32864.png'
         },
         {
             name: '遠藤航',
@@ -2373,7 +2373,7 @@ function generateFallbackPlayers(limit) {
             position: 'Midfielder',
             nationality: 'Japan',
             age: 30,
-            photo: 'https://media.api-sports.io/football/players/879.png'
+            photo: 'https://media.api-sports.io/football/players/32865.png'
         },
         {
             name: '南野拓実',
@@ -2382,7 +2382,7 @@ function generateFallbackPlayers(limit) {
             position: 'Forward',
             nationality: 'Japan',
             age: 28,
-            photo: 'https://media.api-sports.io/football/players/880.png'
+            photo: 'https://media.api-sports.io/football/players/32866.png'
         },
         {
             name: '浅野拓磨',
@@ -2391,7 +2391,7 @@ function generateFallbackPlayers(limit) {
             position: 'Forward',
             nationality: 'Japan',
             age: 29,
-            photo: 'https://media.api-sports.io/football/players/881.png'
+            photo: 'https://media.api-sports.io/football/players/32867.png'
         }
     ];
     
