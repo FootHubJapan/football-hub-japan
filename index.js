@@ -2501,7 +2501,10 @@ app.get('/api/japanese-players', async (req, res) => {
 
         for (const player of players) {
             try {
-                const response = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(player.englishName)}&league=${player.league}&season=2024`, {
+                const apiUrl = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(player.englishName)}&league=${player.league}&season=2024`;
+                console.log(`Searching for ${player.japaneseName} (${player.englishName}) in league ${player.league}: ${apiUrl}`);
+                
+                const response = await fetch(apiUrl, {
                     headers: {
                         'x-rapidapi-host': 'v3.football.api-sports.io',
                         'x-rapidapi-key': process.env.API_FOOTBALL_KEY
@@ -2510,6 +2513,8 @@ app.get('/api/japanese-players', async (req, res) => {
 
                 if (response.ok) {
                     const data = await response.json();
+                    console.log(`API response for ${player.japaneseName}:`, JSON.stringify(data, null, 2));
+                    
                     if (data.response && data.response.length > 0) {
                         const playerInfo = data.response[0];
                         playerData.push({
@@ -2523,7 +2528,11 @@ app.get('/api/japanese-players', async (req, res) => {
                             photo: playerInfo.player.photo
                         });
                         console.log(`Successfully fetched ${player.japaneseName}: ${playerInfo.player.photo}`);
+                    } else {
+                        console.log(`No response data for ${player.japaneseName}`);
                     }
+                } else {
+                    console.log(`API error for ${player.japaneseName}: ${response.status} ${response.statusText}`);
                 }
             } catch (error) {
                 console.log(`Error fetching ${player.japaneseName}:`, error.message);
