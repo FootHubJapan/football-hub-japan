@@ -2499,10 +2499,22 @@ app.get('/api/japanese-players', async (req, res) => {
 
         const playerData = [];
 
-        for (const player of players) {
+        // 既知の選手IDを使用して直接検索
+        const playerIds = [
+            { japaneseName: '久保建英', englishName: 'Takefusa Kubo', id: 32862 },
+            { japaneseName: '三苫薫', englishName: 'Kaoru Mitoma', id: 106835 },
+            { japaneseName: '堂安律', englishName: 'Ritsu Doan', id: 2598 },
+            { japaneseName: '田中碧', englishName: 'Ao Tanaka', id: 32863 },
+            { japaneseName: '伊藤洋輝', englishName: 'Hiroki Ito', id: 32864 },
+            { japaneseName: '遠藤航', englishName: 'Wataru Endo', id: 32865 },
+            { japaneseName: '南野拓実', englishName: 'Takumi Minamino', id: 32866 },
+            { japaneseName: '浅野拓磨', englishName: 'Takuma Asano', id: 32867 }
+        ];
+
+        for (const player of playerIds) {
             try {
-                const apiUrl = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(player.englishName)}&league=${player.league}&season=2025`;
-                console.log(`Searching for ${player.japaneseName} (${player.englishName}) in league ${player.league}: ${apiUrl}`);
+                const apiUrl = `https://v3.football.api-sports.io/players?id=${player.id}&season=2025`;
+                console.log(`Searching for ${player.japaneseName} (${player.englishName}) with ID ${player.id}: ${apiUrl}`);
                 
                 const response = await fetch(apiUrl, {
                     headers: {
