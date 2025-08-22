@@ -2485,22 +2485,23 @@ app.get('/api/japanese-players', async (req, res) => {
             return res.json(generateFallbackPlayers(8));
         }
 
-        // 主要な日本人選手の検索クエリ
+        // 主要な日本人選手の検索クエリ（日本語名 → 英語名マッピング）
         const players = [
-            { name: 'Takefusa Kubo', team: 'Real Sociedad', league: 140 },
-            { name: 'Kaoru Mitoma', team: 'Brighton', league: 39 },
-            { name: 'Ritsu Doan', team: 'SC Freiburg', league: 78 },
-            { name: 'Wataru Endo', team: 'Liverpool', league: 39 },
-            { name: 'Hiroki Ito', team: 'VfB Stuttgart', league: 78 },
-            { name: 'Takumi Minamino', team: 'Monaco', league: 61 },
-            { name: 'Takuma Asano', team: 'VfL Bochum', league: 78 }
+            { japaneseName: '久保建英', englishName: 'Takefusa Kubo', team: 'Real Sociedad', league: 140 },
+            { japaneseName: '三苫薫', englishName: 'Kaoru Mitoma', team: 'Brighton', league: 39 },
+            { japaneseName: '堂安律', englishName: 'Ritsu Doan', team: 'SC Freiburg', league: 78 },
+            { japaneseName: '田中碧', englishName: 'Ao Tanaka', team: 'Fortaleza', league: 71 },
+            { japaneseName: '伊藤洋輝', englishName: 'Hiroki Ito', team: 'VfB Stuttgart', league: 78 },
+            { japaneseName: '遠藤航', englishName: 'Wataru Endo', team: 'Liverpool', league: 39 },
+            { japaneseName: '南野拓実', englishName: 'Takumi Minamino', team: 'Monaco', league: 61 },
+            { japaneseName: '浅野拓磨', englishName: 'Takuma Asano', team: 'VfL Bochum', league: 78 }
         ];
 
         const playerData = [];
 
         for (const player of players) {
             try {
-                const response = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(player.name)}&league=${player.league}&season=2024`, {
+                const response = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(player.englishName)}&league=${player.league}&season=2024`, {
                     headers: {
                         'x-rapidapi-host': 'v3.football.api-sports.io',
                         'x-rapidapi-key': process.env.API_FOOTBALL_KEY
@@ -2512,7 +2513,8 @@ app.get('/api/japanese-players', async (req, res) => {
                     if (data.response && data.response.length > 0) {
                         const playerInfo = data.response[0];
                         playerData.push({
-                            name: playerInfo.player.name,
+                            name: player.japaneseName, // 日本語名を保持
+                            englishName: playerInfo.player.name, // 英語名も追加
                             fullName: `${playerInfo.player.firstname} ${playerInfo.player.lastname}`,
                             currentTeam: playerInfo.statistics[0]?.team?.name || 'Unknown',
                             position: playerInfo.statistics[0]?.games?.position || 'Unknown',
@@ -2520,18 +2522,27 @@ app.get('/api/japanese-players', async (req, res) => {
                             age: playerInfo.player.age,
                             photo: playerInfo.player.photo
                         });
+                        console.log(`Successfully fetched ${player.japaneseName}: ${playerInfo.player.photo}`);
                     }
                 }
             } catch (error) {
-                console.log(`Error fetching ${player.name}:`, error.message);
+                console.log(`Error fetching ${player.japaneseName}:`, error.message);
             }
         }
 
         // APIから取得できた選手が少ない場合は、フォールバックデータを補完
         if (playerData.length < 5) {
-            console.log('Using fallback data to complement API data');
+            console.log(`Only ${playerData.length} players fetched from API, using fallback data to complement`);
             const fallbackData = generateFallbackPlayers(8);
-            playerData.push(...fallbackData.slice(playerData.length));
+            // APIで取得できなかった選手のみをフォールバックから追加
+            const missingPlayers = players.filter(p => !playerData.find(pd => pd.name === p.japaneseName));
+            for (const missingPlayer of missingPlayers) {
+                const fallbackPlayer = fallbackData.find(fp => fp.name === missingPlayer.japaneseName);
+                if (fallbackPlayer) {
+                    playerData.push(fallbackPlayer);
+                    console.log(`Added fallback data for ${missingPlayer.japaneseName}`);
+                }
+            }
         }
 
         res.json(playerData);
