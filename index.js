@@ -2306,14 +2306,32 @@ function generateFallbackPlayers(limit) {
             nationality: nationalities[i % nationalities.length],
             age: 20 + (i % 15),
             photo: `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjMzMzMzMzIi8+Cjx0ZXh0IHg9IjMwIiB5PSIzNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPj88L3RleHQ+Cjwvc3ZnPg==`,
-            stats: {
-                goals: Math.floor(Math.random() * 20),
-                assists: Math.floor(Math.random() * 15),
-                appearances: 20 + Math.floor(Math.random() * 20),
-                minutes: 1500 + Math.floor(Math.random() * 1000),
-                rating: (6.0 + Math.random() * 2.0).toFixed(1),
-                yellowCards: Math.floor(Math.random() * 5)
-            }
+                            stats: {
+                    goals: Math.floor(Math.random() * 20),
+                    assists: Math.floor(Math.random() * 15),
+                    appearances: 20 + Math.floor(Math.random() * 20),
+                    minutes: 1500 + Math.floor(Math.random() * 1000),
+                    rating: (6.0 + Math.random() * 2.0).toFixed(1),
+                    yellowCards: Math.floor(Math.random() * 5),
+                    // 詳細統計
+                    shotsTotal: Math.floor(Math.random() * 100),
+                    shotsOnTarget: Math.floor(Math.random() * 50),
+                    expectedGoals: (Math.random() * 10).toFixed(1),
+                    shotAccuracy: Math.floor(60 + Math.random() * 30) + '%',
+                    passesTotal: Math.floor(Math.random() * 500),
+                    keyPasses: Math.floor(Math.random() * 20),
+                    longPasses: Math.floor(Math.random() * 30),
+                    crosses: Math.floor(Math.random() * 15),
+                    passAccuracy: Math.floor(70 + Math.random() * 25) + '%',
+                    tackles: Math.floor(Math.random() * 50),
+                    interceptions: Math.floor(Math.random() * 20),
+                    duelsWon: Math.floor(Math.random() * 100),
+                    aerialDuels: Math.floor(Math.random() * 50),
+                    dribblesAttempted: Math.floor(Math.random() * 40),
+                    dribblesSuccess: Math.floor(Math.random() * 25),
+                    chancesCreated: Math.floor(Math.random() * 15),
+                    foulsDrawn: Math.floor(Math.random() * 20)
+                }
         });
     }
     

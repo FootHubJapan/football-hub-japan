@@ -166,6 +166,13 @@
             margin-top: 0.5rem;
         }
 
+        .detailed-stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
         .career-section {
             background: #1a1a1a;
             padding: 2rem;
@@ -338,6 +345,97 @@
             </div>
         </div>
 
+        <!-- 個人スタッツ詳細セクション -->
+        <div class="detailed-stats-section">
+            <div class="stats-card">
+                <h2 class="stats-title">シュート統計</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="shotsTotal">--</div>
+                        <div class="stat-label">総シュート</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="shotsOnTarget">--</div>
+                        <div class="stat-label">枠内シュート</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="expectedGoals">--</div>
+                        <div class="stat-label">期待値(xG)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="shotAccuracy">--</div>
+                        <div class="stat-label">シュート精度</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card">
+                <h2 class="stats-title">パス・ポゼッション</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="passesTotal">--</div>
+                        <div class="stat-label">総パス</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="keyPasses">--</div>
+                        <div class="stat-label">キーパス</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="longPasses">--</div>
+                        <div class="stat-label">ロングパス</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="crosses">--</div>
+                        <div class="stat-label">クロス</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card">
+                <h2 class="stats-title">守備・対戦</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="tacklesTotal">--</div>
+                        <div class="stat-label">総タックル</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="interceptions">--</div>
+                        <div class="stat-label">インターセプト</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="duelsWon">--</div>
+                        <div class="stat-label">対戦勝利</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="aerialDuels">--</div>
+                        <div class="stat-label">空中戦</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card">
+                <h2 class="stats-title">ドリブル・創造性</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="dribblesAttempted">--</div>
+                        <div class="stat-label">ドリブル試行</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="dribblesSuccess">--</div>
+                        <div class="stat-label">ドリブル成功</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="chancesCreated">--</div>
+                        <div class="stat-label">チャンス創出</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="foulsDrawn">--</div>
+                        <div class="stat-label">ファウル獲得</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="career-section">
             <h2 class="career-title">キャリア履歴</h2>
             <table class="career-table">
@@ -451,8 +549,38 @@
             document.getElementById('tackles').textContent = player.stats?.tackles || 0;
             document.getElementById('shots').textContent = player.stats?.shots || 0;
 
+            // 詳細統計（個人スタッツ）
+            displayDetailedStats(player);
+
             // キャリア履歴を生成
             generateCareerHistory(player);
+        }
+
+        // 詳細統計を表示
+        function displayDetailedStats(player) {
+            // シュート統計
+            document.getElementById('shotsTotal').textContent = player.stats?.shotsTotal || player.stats?.shots || 0;
+            document.getElementById('shotsOnTarget').textContent = player.stats?.shotsOnTarget || 0;
+            document.getElementById('expectedGoals').textContent = player.stats?.expectedGoals || 'N/A';
+            document.getElementById('shotAccuracy').textContent = player.stats?.shotAccuracy || 'N/A';
+
+            // パス・ポゼッション
+            document.getElementById('passesTotal').textContent = player.stats?.passesTotal || player.stats?.passes || 0;
+            document.getElementById('keyPasses').textContent = player.stats?.keyPasses || 0;
+            document.getElementById('longPasses').textContent = player.stats?.longPasses || 0;
+            document.getElementById('crosses').textContent = player.stats?.crosses || 0;
+
+            // 守備・対戦
+            document.getElementById('tacklesTotal').textContent = player.stats?.tacklesTotal || player.stats?.tackles || 0;
+            document.getElementById('interceptions').textContent = player.stats?.interceptions || 0;
+            document.getElementById('duelsWon').textContent = player.stats?.duelsWon || 0;
+            document.getElementById('aerialDuels').textContent = player.stats?.aerialDuels || 0;
+
+            // ドリブル・創造性
+            document.getElementById('dribblesAttempted').textContent = player.stats?.dribblesAttempted || 0;
+            document.getElementById('dribblesSuccess').textContent = player.stats?.dribblesSuccess || 0;
+            document.getElementById('chancesCreated').textContent = player.stats?.chancesCreated || 0;
+            document.getElementById('foulsDrawn').textContent = player.stats?.foulsDrawn || 0;
         }
 
         // キャリア履歴を生成
