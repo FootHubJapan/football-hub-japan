@@ -2499,81 +2499,81 @@ app.get('/api/japanese-players', async (req, res) => {
 
         const playerData = [];
 
-        // 各リーグの主要選手データ（日本人選手 + 世界のスター選手）
-        const allPlayers = [
+        // 動的に選手データを検索・取得する
+        const playersToSearch = [
             // Premier League (イングランド)
-            { japaneseName: '三苫薫', englishName: 'Kaoru Mitoma', id: 106835, league: 'Premier League' },
-            { japaneseName: '富安健洋', englishName: 'Takehiro Tomiyasu', id: 32868, league: 'Premier League' },
-            { japaneseName: '遠藤航', englishName: 'Wataru Endo', id: 32865, league: 'Premier League' },
-            { japaneseName: 'エルリング・ハーランド', englishName: 'Erling Haaland', id: 874, league: 'Premier League' },
-            { japaneseName: 'ケビン・デ・ブライネ', englishName: 'Kevin De Bruyne', id: 246, league: 'Premier League' },
-            { japaneseName: 'モハメド・サラー', englishName: 'Mohamed Salah', id: 875, league: 'Premier League' },
+            { japaneseName: '三苫薫', englishName: 'Kaoru Mitoma', league: 'Premier League' },
+            { japaneseName: '富安健洋', englishName: 'Takehiro Tomiyasu', league: 'Premier League' },
+            { japaneseName: '遠藤航', englishName: 'Wataru Endo', league: 'Premier League' },
+            { japaneseName: 'エルリング・ハーランド', englishName: 'Erling Haaland', league: 'Premier League' },
+            { japaneseName: 'ケビン・デ・ブライネ', englishName: 'Kevin De Bruyne', league: 'Premier League' },
+            { japaneseName: 'モハメド・サラー', englishName: 'Mohamed Salah', league: 'Premier League' },
             
             // La Liga (スペイン)
-            { japaneseName: '久保建英', englishName: 'Takefusa Kubo', id: 32862, league: 'La Liga' },
-            { japaneseName: 'ジュード・ベリンガム', englishName: 'Jude Bellingham', id: 106836, league: 'La Liga' },
-            { japaneseName: 'ビニシウス・ジュニオール', englishName: 'Vinícius Júnior', id: 2599, league: 'La Liga' },
-            { japaneseName: 'ロベルト・レヴァンドフスキ', englishName: 'Robert Lewandowski', id: 32869, league: 'La Liga' },
+            { japaneseName: '久保建英', englishName: 'Takefusa Kubo', league: 'La Liga' },
+            { japaneseName: 'ジュード・ベリンガム', englishName: 'Jude Bellingham', league: 'La Liga' },
+            { japaneseName: 'ビニシウス・ジュニオール', englishName: 'Vinícius Júnior', league: 'La Liga' },
+            { japaneseName: 'ロベルト・レヴァンドフスキ', englishName: 'Robert Lewandowski', league: 'La Liga' },
             
             // Bundesliga (ドイツ)
-            { japaneseName: '堂安律', englishName: 'Ritsu Doan', id: 2598, league: 'Bundesliga' },
-            { japaneseName: '伊藤洋輝', englishName: 'Hiroki Ito', id: 32864, league: 'Bundesliga' },
-            { japaneseName: '浅野拓磨', englishName: 'Takuma Asano', id: 32867, league: 'Bundesliga' },
-            { japaneseName: 'ハリー・ケイン', englishName: 'Harry Kane', id: 32870, league: 'Bundesliga' },
-            { japaneseName: 'ヤマル・ムシアラ', englishName: 'Jamal Musiala', id: 32871, league: 'Bundesliga' },
+            { japaneseName: '堂安律', englishName: 'Ritsu Doan', league: 'Bundesliga' },
+            { japaneseName: '伊藤洋輝', englishName: 'Hiroki Ito', league: 'Bundesliga' },
+            { japaneseName: '浅野拓磨', englishName: 'Takuma Asano', league: 'Bundesliga' },
+            { japaneseName: 'ハリー・ケイン', englishName: 'Harry Kane', league: 'Bundesliga' },
+            { japaneseName: 'ヤマル・ムシアラ', englishName: 'Jamal Musiala', league: 'Bundesliga' },
             
             // Serie A (イタリア)
-            { japaneseName: '南野拓実', englishName: 'Takumi Minamino', id: 32866, league: 'Serie A' },
-            { japaneseName: 'ラウタロ・マルティネス', englishName: 'Lautaro Martínez', id: 32872, league: 'Serie A' },
-            { japaneseName: 'フラヴィン・マルティンス', englishName: 'Flavien Martins', id: 32873, league: 'Serie A' },
+            { japaneseName: '南野拓実', englishName: 'Takumi Minamino', league: 'Serie A' },
+            { japaneseName: 'ラウタロ・マルティネス', englishName: 'Lautaro Martínez', league: 'Serie A' },
             
             // Ligue 1 (フランス)
-            { japaneseName: '田中碧', englishName: 'Ao Tanaka', id: 32863, league: 'Ligue 1' },
-            { japaneseName: 'キリアン・ムバッペ', englishName: 'Kylian Mbappé', id: 32874, league: 'Ligue 1' },
-            { japaneseName: 'オスメン・デンベレ', englishName: 'Ousmane Dembélé', id: 32875, league: 'Ligue 1' },
-            
-            // J1 League (日本)
-            { japaneseName: '三浦知良', englishName: 'Kazuyoshi Miura', id: 32876, league: 'J1 League' },
-            { japaneseName: '本田圭佑', englishName: 'Keisuke Honda', id: 32877, league: 'J1 League' }
+            { japaneseName: '田中碧', englishName: 'Ao Tanaka', league: 'Ligue 1' },
+            { japaneseName: 'キリアン・ムバッペ', englishName: 'Kylian Mbappé', league: 'Ligue 1' },
+            { japaneseName: 'オスメン・デンベレ', englishName: 'Ousmane Dembélé', league: 'Ligue 1' }
         ];
 
-        for (const player of allPlayers) {
+        // 動的に選手を検索して正しいIDを取得
+        for (const player of playersToSearch) {
             try {
-                const apiUrl = `https://v3.football.api-sports.io/players?id=${player.id}&season=2025`;
-                console.log(`Searching for ${player.japaneseName} (${player.englishName}) with ID ${player.id}: ${apiUrl}`);
+                // 選手名で検索してIDを取得
+                const searchUrl = `https://v3.football.api-sports.io/players?search=${encodeURIComponent(player.englishName)}`;
+                console.log(`Searching for ${player.japaneseName} (${player.englishName}): ${searchUrl}`);
                 
-                const response = await fetch(apiUrl, {
+                const searchResponse = await fetch(searchUrl, {
                     headers: {
                         'x-rapidapi-host': 'v3.football.api-sports.io',
                         'x-rapidapi-key': process.env.API_FOOTBALL_KEY
                     }
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log(`API response for ${player.japaneseName}:`, JSON.stringify(data, null, 2));
+                if (searchResponse.ok) {
+                    const searchData = await searchResponse.json();
+                    console.log(`Search results for ${player.japaneseName}:`, searchData.results);
                     
-                    if (data.response && data.response.length > 0) {
-                        const playerInfo = data.response[0];
+                    if (searchData.response && searchData.response.length > 0) {
+                        // 最も関連性の高い選手を選択（最初の結果）
+                        const playerInfo = searchData.response[0];
+                        
                         playerData.push({
                             name: player.japaneseName, // 日本語名を保持
-                            englishName: playerInfo.player.name, // 英語名も追加
+                            englishName: playerInfo.player.name, // API から取得した正確な英語名
                             fullName: `${playerInfo.player.firstname} ${playerInfo.player.lastname}`,
                             currentTeam: playerInfo.statistics[0]?.team?.name || 'Unknown',
                             position: playerInfo.statistics[0]?.games?.position || 'Unknown',
                             nationality: playerInfo.player.nationality,
                             age: playerInfo.player.age,
-                            photo: playerInfo.player.photo
+                            photo: playerInfo.player.photo,
+                            league: player.league
                         });
-                        console.log(`Successfully fetched ${player.japaneseName}: ${playerInfo.player.photo}`);
+                        console.log(`Successfully found ${player.japaneseName}: ${playerInfo.player.name} (ID: ${playerInfo.player.id})`);
                     } else {
-                        console.log(`No response data for ${player.japaneseName}`);
+                        console.log(`No search results for ${player.japaneseName}`);
                     }
                 } else {
-                    console.log(`API error for ${player.japaneseName}: ${response.status} ${response.statusText}`);
+                    console.log(`Search API error for ${player.japaneseName}: ${searchResponse.status} ${searchResponse.statusText}`);
                 }
             } catch (error) {
-                console.log(`Error fetching ${player.japaneseName}:`, error.message);
+                console.log(`Error searching ${player.japaneseName}:`, error.message);
             }
         }
 
