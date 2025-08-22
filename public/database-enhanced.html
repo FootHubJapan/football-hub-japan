@@ -784,16 +784,25 @@
         // APIの可用性をチェックして初期化
         async function checkAPIAndInitialize() {
             try {
-                const response = await fetch('/api/fotmob/players?page=1&limit=5&_t=' + Date.now());
+                console.log('Checking Japanese players API...');
+                const response = await fetch('/api/japanese-players?_t=' + Date.now());
                 if (response.ok) {
-                    console.log('API available, loading from server');
-                    await loadSamplePlayers();
+                    console.log('Japanese players API available, loading from server');
+                    const players = await response.json();
+                    if (players && players.length > 0) {
+                        currentPlayers = players;
+                        displayPlayers(players);
+                        console.log('Loaded', players.length, 'Japanese players from API');
+                    } else {
+                        console.log('No players returned from API, using fallback data');
+                        loadFallbackData();
+                    }
                 } else {
-                    console.log('API unavailable, using fallback data');
+                    console.log('Japanese players API unavailable, using fallback data');
                     loadFallbackData();
                 }
             } catch (error) {
-                console.log('API error, using fallback data:', error);
+                console.log('Japanese players API error, using fallback data:', error);
                 loadFallbackData();
             }
         }
@@ -975,58 +984,24 @@
         // サンプル選手データを読み込み（バックアップ用）
         async function loadSamplePlayers() {
             try {
-                const resp = await fetch(`/api/fotmob/players?page=1&limit=60&_t=${Date.now()}`);
+                console.log('Loading sample players from Japanese players API...');
+                const resp = await fetch(`/api/japanese-players?_t=${Date.now()}`);
                 if (resp.ok) {
                     const data = await resp.json();
-                    if (Array.isArray(data.players) && data.players.length > 0) {
-                        currentPlayers = data.players;
-                        totalPages = data.totalPages || 1;
-                        console.log(`Loaded ${currentPlayers.length} players from persistent API`);
+                    if (Array.isArray(data) && data.length > 0) {
+                        currentPlayers = data;
+                        totalPages = 1; // 日本人選手は1ページ分
+                        console.log(`Loaded ${currentPlayers.length} Japanese players from API`);
                         displayPlayers(currentPlayers);
                         return;
                     }
                 }
-                const playerMappings = {
-                    '久保建英': 'Takefusa Kubo',
-                    '三笘薫': 'Kaoru Mitoma',
-                    '堂安律': 'Ritsu Doan',
-                    '田中碧': 'Ao Tanaka',
-                    '伊藤洋輝': 'Hiroki Ito',
-                    '遠藤航': 'Wataru Endo',
-                    '南野拓実': 'Takumi Minamino',
-                    '浅野拓磨': 'Takuma Asano',
-                    '上田綺世': 'Ayase Ueda',
-                    '前田大然': 'Daizen Maeda'
-                };
-
-                console.log('Loading sample players with mappings:', playerMappings);
-
-                const searchPromises = Object.entries(playerMappings).map(([japaneseName, englishName]) => 
-                    fetch(`/api/fotmob/search?q=${encodeURIComponent(englishName)}&limit=1`)
-                        .then(response => {
-                            if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
-                            return response.json();
-                        })
-                        .then(data => {
-                            console.log(`Search result for ${englishName}:`, data);
-                            const player = data.players?.[0];
-                            if (player) {
-                                return { ...player, name: japaneseName, fullName: japaneseName, japaneseName, englishName };
-                            }
-                            return null;
-                        })
-                        .catch(() => null)
-                );
-
-                const results = await Promise.all(searchPromises);
-                currentPlayers = results.filter(player => player !== null);
-                if (currentPlayers.length === 0) {
-                    console.log('No players found from API, using fallback data');
-                    currentPlayers = getFallbackPlayers();
-                }
+                
+                console.log('No players returned from Japanese players API, using fallback data');
+                currentPlayers = getFallbackPlayers();
                 displayPlayers(currentPlayers);
             } catch (error) {
-                console.error('Error loading players:', error);
+                console.error('Error loading Japanese players:', error);
                 currentPlayers = getFallbackPlayers();
                 displayPlayers(currentPlayers);
             }
