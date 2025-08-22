@@ -2121,14 +2121,16 @@ app.get('/api/fotmob/players', async (req, res) => {
             try {
                 console.log('Attempting to fetch from API-Football...');
                 
-                // 有名選手のIDリスト（API-Footballで利用可能）
-                const famousPlayerIds = [882, 184, 276, 874, 874, 874, 874, 874, 874, 874]; // Bruno Fernandes, Haaland, Varane, etc.
-                
+                // リーグ別の選手データを取得
+                const leagues = ['PL', 'PD', 'SA', 'BL1', 'FL1'];
                 const players = [];
-                for (let i = 0; i < Math.min(limit, famousPlayerIds.length); i++) {
-                    const playerId = famousPlayerIds[i];
+                
+                for (const league of leagues) {
+                    if (players.length >= limit) break;
+                    
                     try {
-                        const response = await fetch(`https://v3.football.api-sports.io/players?id=${playerId}`, {
+                        console.log(`Fetching players from league: ${league}`);
+                        const response = await fetch(`https://v3.football.api-sports.io/players?league=${league}&season=2024&page=1`, {
                             headers: {
                                 'x-rapidapi-host': 'v3.football.api-sports.io',
                                 'x-rapidapi-key': process.env.API_FOOTBALL_KEY
@@ -2138,31 +2140,48 @@ app.get('/api/fotmob/players', async (req, res) => {
                         if (response.ok) {
                             const data = await response.json();
                             if (data.response && data.response.length > 0) {
-                                const playerData = data.response[0];
-                                const player = {
-                                    id: playerData.player.id,
-                                    name: playerData.player.name,
-                                    fullName: playerData.player.name,
-                                    currentTeam: playerData.statistics?.[0]?.team?.name || 'Unknown Team',
-                                    position: playerData.statistics?.[0]?.games?.position || 'Unknown',
-                                    nationality: playerData.player.nationality || 'Unknown',
-                                    age: playerData.player.age || 25,
-                                    photo: playerData.player.photo || null,
-                                    stats: {
-                                        goals: playerData.statistics?.[0]?.goals?.total || 0,
-                                        assists: playerData.statistics?.[0]?.goals?.assists || 0,
-                                        appearances: playerData.statistics?.[0]?.games?.appearences || 0,
-                                        minutes: playerData.statistics?.[0]?.games?.minutes || 0,
-                                        rating: playerData.statistics?.[0]?.games?.rating || '6.0',
-                                        yellowCards: playerData.statistics?.[0]?.cards?.yellow || 0
-                                    }
-                                };
-                                players.push(player);
-                                console.log(`Successfully fetched player: ${player.name} with photo: ${player.photo}`);
+                                const leaguePlayers = data.response.slice(0, Math.ceil(limit / leagues.length));
+                                
+                                for (const playerData of leaguePlayers) {
+                                    if (players.length >= limit) break;
+                                    
+                                    const player = {
+                                        id: playerData.player.id,
+                                        name: playerData.player.name,
+                                        fullName: playerData.player.name,
+                                        currentTeam: playerData.statistics?.[0]?.team?.name || 'Unknown Team',
+                                        position: playerData.statistics?.[0]?.games?.position || 'Unknown',
+                                        nationality: playerData.player.nationality || 'Unknown',
+                                        age: playerData.player.age || 25,
+                                        photo: playerData.player.photo || null,
+                                        stats: {
+                                            goals: playerData.statistics?.[0]?.goals?.total || 0,
+                                            assists: playerData.statistics?.[0]?.goals?.assists || 0,
+                                            appearances: playerData.statistics?.[0]?.games?.appearences || 0,
+                                            minutes: playerData.statistics?.[0]?.games?.minutes || 0,
+                                            rating: playerData.statistics?.[0]?.games?.rating || '6.0',
+                                            yellowCards: playerData.statistics?.[0]?.cards?.yellow || 0,
+                                            // 詳細統計
+                                            shotsTotal: playerData.statistics?.[0]?.shots?.total || 0,
+                                            shotsOnTarget: playerData.statistics?.[0]?.shots?.on || 0,
+                                            passesTotal: playerData.statistics?.[0]?.passes?.total || 0,
+                                            passAccuracy: playerData.statistics?.[0]?.passes?.accuracy || 'N/A',
+                                            tackles: playerData.statistics?.[0]?.tackles?.total || 0,
+                                            dribblesAttempted: playerData.statistics?.[0]?.dribbles?.attempts || 0,
+                                            dribblesSuccess: playerData.statistics?.[0]?.dribbles?.success || 0,
+                                            duelsWon: playerData.statistics?.[0]?.duels?.won || 0,
+                                            aerialDuels: playerData.statistics?.[0]?.duels?.won || 0,
+                                            keyPasses: playerData.statistics?.[0]?.passes?.key || 0,
+                                            chancesCreated: playerData.statistics?.[0]?.passes?.key || 0
+                                        }
+                                    };
+                                    players.push(player);
+                                    console.log(`Successfully fetched player: ${player.name} (${player.currentTeam}) with photo: ${player.photo ? 'YES' : 'NO'}`);
+                                }
                             }
                         }
-                    } catch (playerError) {
-                        console.error(`Error fetching player ${playerId}:`, playerError);
+                    } catch (leagueError) {
+                        console.error(`Error fetching from league ${league}:`, leagueError);
                     }
                 }
                 
@@ -2252,7 +2271,19 @@ app.get('/api/fotmob/search', async (req, res) => {
                                 appearances: playerData.statistics?.[0]?.games?.appearences || 0,
                                 minutes: playerData.statistics?.[0]?.games?.minutes || 0,
                                 rating: playerData.statistics?.[0]?.games?.rating || '6.0',
-                                yellowCards: playerData.statistics?.[0]?.cards?.yellow || 0
+                                yellowCards: playerData.statistics?.[0]?.cards?.yellow || 0,
+                                // 詳細統計
+                                shotsTotal: playerData.statistics?.[0]?.shots?.total || 0,
+                                shotsOnTarget: playerData.statistics?.[0]?.shots?.on || 0,
+                                passesTotal: playerData.statistics?.[0]?.passes?.total || 0,
+                                passAccuracy: playerData.statistics?.[0]?.passes?.accuracy || 'N/A',
+                                tackles: playerData.statistics?.[0]?.tackles?.total || 0,
+                                dribblesAttempted: playerData.statistics?.[0]?.dribbles?.attempts || 0,
+                                dribblesSuccess: playerData.statistics?.[0]?.dribbles?.success || 0,
+                                duelsWon: playerData.statistics?.[0]?.duels?.won || 0,
+                                aerialDuels: playerData.statistics?.[0]?.duels?.won || 0,
+                                keyPasses: playerData.statistics?.[0]?.passes?.key || 0,
+                                chancesCreated: playerData.statistics?.[0]?.passes?.key || 0
                             }
                         }));
                         
