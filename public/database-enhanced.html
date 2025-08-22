@@ -603,92 +603,7 @@
             color: #000000;
         }
         
-        /* モーダルスタイル */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-        }
-        
-        .modal-content {
-            background-color: #1a1a1a;
-            margin: 5% auto;
-            padding: 2rem;
-            border: 2px solid #00ff88;
-            border-radius: 15px;
-            width: 80%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
-        }
-        
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            position: absolute;
-            top: 1rem;
-            right: 1.5rem;
-        }
-        
-        .close:hover {
-            color: #00ff88;
-        }
-        
-        .player-detail-header {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #333;
-        }
-        
-        .player-detail-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 3px solid #00ff88;
-        }
-        
-        .player-detail-info h2 {
-            color: #00ff88;
-            margin-bottom: 0.5rem;
-        }
-        
-        .player-detail-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-        
-        .stat-item {
-            background: #333;
-            padding: 1rem;
-            border-radius: 8px;
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #00ff88;
-        }
-        
-        .stat-label {
-            color: #ccc;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
-        }
+
 
 
 
@@ -746,13 +661,7 @@
                     <option value="FL1">リーグ・アン</option>
                     <option value="J1">J1リーグ</option>
                 </select>
-                <select id="positionSelect">
-                    <option value="">すべてのポジション</option>
-                    <option value="FW">フォワード (FW)</option>
-                    <option value="MF">ミッドフィルダー (MF)</option>
-                    <option value="DF">ディフェンダー (DF)</option>
-                    <option value="GK">ゴールキーパー (GK)</option>
-                </select>
+
                 
                 <!-- 詳細ポジションのプルダウン -->
                 <select id="detailedPositionSelect" class="search-select">
@@ -789,15 +698,7 @@
             </div>
         </div>
         
-        <!-- 選手詳細モーダル -->
-        <div id="playerModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <div id="playerModalContent">
-                    <!-- 選手詳細情報がここに表示されます -->
-                </div>
-            </div>
-        </div>
+
 
         <!-- 試合スケジュールセクション -->
         <div class="schedule-section">
@@ -877,17 +778,7 @@
                 loadScheduleMatches();
             }
             
-            // モーダルの閉じるイベントを設定
-            const modal = document.getElementById('playerModal');
-            const closeBtn = modal.querySelector('.close');
-            closeBtn.addEventListener('click', closePlayerModal);
-            
-            // モーダル外クリックで閉じる
-            window.addEventListener('click', (event) => {
-                if (event.target === modal) {
-                    closePlayerModal();
-                }
-            });
+
         });
 
         // APIの可用性をチェックして初期化
@@ -961,66 +852,21 @@
                 </div>
             `;
             
-            // クリックイベントを追加
-            card.addEventListener('click', () => showPlayerDetails(player));
+            // クリックイベントを追加（ページ遷移）
+            card.addEventListener('click', () => {
+                // 選手データをローカルストレージに保存
+                if (!Array.isArray(currentPlayers)) currentPlayers = [];
+                localStorage.setItem('currentPlayers', JSON.stringify(currentPlayers));
+                
+                // 選手詳細ページに遷移
+                window.location.href = `/player-detail?id=${player.id}`;
+            });
             card.style.cursor = 'pointer';
             
             return card;
         }
 
-        // 選手詳細表示関数
-        function showPlayerDetails(player) {
-            const modal = document.getElementById('playerModal');
-            const content = document.getElementById('playerModalContent');
-            
-            content.innerHTML = `
-                <div class="player-detail-header">
-                    <img src="${player.photo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjMzMzMzMzIi8+Cjx0ZXh0IHg9IjMwIiB5PSIzNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPj88L3RleHQ+Cjwvc3ZnPg=='}" alt="${player.name}" class="player-detail-avatar">
-                    <div class="player-detail-info">
-                        <h2>${player.name}</h2>
-                        <p><strong>チーム:</strong> ${player.currentTeam || '不明'}</p>
-                        <p><strong>ポジション:</strong> ${player.position || '不明'}</p>
-                        <p><strong>国籍:</strong> ${player.nationality || '不明'}</p>
-                        <p><strong>年齢:</strong> ${player.age || '不明'}歳</p>
-                    </div>
-                </div>
-                
-                <div class="player-detail-stats">
-                    <div class="stat-item">
-                        <div class="stat-value">${player.stats?.goals || 0}</div>
-                        <div class="stat-label">ゴール</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">${player.stats?.assists || 0}</div>
-                        <div class="stat-label">アシスト</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">${player.stats?.appearances || 0}</div>
-                        <div class="stat-label">出場試合</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">${player.stats?.rating || 'N/A'}</div>
-                        <div class="stat-label">評価</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">${player.stats?.minutes || 0}</div>
-                        <div class="stat-label">出場時間(分)</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">${player.stats?.yellowCards || 0}</div>
-                        <div class="stat-label">イエローカード</div>
-                    </div>
-                </div>
-            `;
-            
-            modal.style.display = 'block';
-        }
-        
-        // モーダルを閉じる関数
-        function closePlayerModal() {
-            const modal = document.getElementById('playerModal');
-            modal.style.display = 'none';
-        }
+
         
         // エラー表示関数
         function showError(message) {
