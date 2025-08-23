@@ -2388,8 +2388,9 @@ function generateFallbackPlayers(limit) {
         }
     ];
     
-    for (let i = 0; i < limit; i++) {
-        const basePlayer = realPlayers[i % realPlayers.length];
+    // フォールバックデータを生成（API制限を回避）
+    for (let i = 0; i < Math.min(limit, allPlayers.length); i++) {
+        const basePlayer = allPlayers[i];
         const player = {
             id: i + 1,
             name: basePlayer.name,
@@ -2399,6 +2400,8 @@ function generateFallbackPlayers(limit) {
             nationality: basePlayer.nationality,
             age: basePlayer.age,
             photo: basePlayer.photo,
+            league: basePlayer.league || 'Unknown',
+            englishName: basePlayer.englishName || basePlayer.name,
             stats: {
                 goals: Math.floor(Math.random() * 20),
                 assists: Math.floor(Math.random() * 15),
