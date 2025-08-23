@@ -2762,18 +2762,26 @@ app.get('/api/japanese-players', async (req, res) => {
                             }
                             
                             // API制限を避けるため少し待機
-                            await new Promise(resolve => setTimeout(resolve, 50));
+                            await new Promise(resolve => setTimeout(resolve, 100));
                             
                         } catch (error) {
                             console.log(`Error fetching player ${player.id}:`, error.message);
+                            // エラーが続く場合はスキップ
+                            continue;
                         }
                     }
                 } else {
                     console.log(`❌ Failed to fetch squad for ${team.name}: ${squadResponse.status}`);
+                    // ステータスコードに応じた待機時間を設定
+                    if (squadResponse.status === 429) { // Rate limit
+                        console.log(`Rate limit hit, waiting 5 seconds...`);
+                        await new Promise(resolve => setTimeout(resolve, 5000));
+                    }
                 }
                 
-                // チーム間の待機
-                await new Promise(resolve => setTimeout(resolve, 200));
+                // チーム間の待機（本番環境では長めに）
+                const waitTime = process.env.NODE_ENV === 'production' ? 500 : 200;
+                await new Promise(resolve => setTimeout(resolve, waitTime));
                 
             } catch (error) {
                 console.log(`💥 Error collecting from ${team.name}:`, error.message);
@@ -2783,7 +2791,7 @@ app.get('/api/japanese-players', async (req, res) => {
         console.log(`\n🎯 Total players collected: ${playerData.length}`);
 
         // APIから取得できた選手が少ない場合は、フォールバックデータを補完
-        if (playerData.length < 100) {
+        if (playerData.length < 50) {
             console.log(`Only ${playerData.length} players fetched from API, using fallback data to complement`);
             const fallbackData = generateFallbackPlayers(8);
             // APIで取得できなかった選手のみをフォールバックから追加
@@ -2795,6 +2803,12 @@ app.get('/api/japanese-players', async (req, res) => {
                     console.log(`Added fallback data for ${missingPlayer.japaneseName}`);
                 }
             }
+        }
+        
+        // 本番環境での追加ログ
+        if (process.env.NODE_ENV === 'production') {
+            console.log(`\n🚀 Production environment: ${playerData.length} players collected`);
+            console.log(`📊 API success rate: ${((playerData.length / (majorTeams.length * 25)) * 100).toFixed(1)}%`);
         }
 
         res.json(playerData);

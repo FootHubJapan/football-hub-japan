@@ -878,8 +878,11 @@
                 if (!Array.isArray(currentPlayers)) currentPlayers = [];
                 localStorage.setItem('currentPlayers', JSON.stringify(currentPlayers));
                 
+                // 選手IDを確実に取得（複数の可能性を考慮）
+                const playerId = player.id || player.playerId || player.player_id || 'unknown';
+                
                 // 選手詳細ページに遷移
-                window.location.href = `/player-detail?id=${player.id}`;
+                window.location.href = `/player-detail?id=${playerId}`;
             });
             card.style.cursor = 'pointer';
             
