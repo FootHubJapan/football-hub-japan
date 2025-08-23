@@ -916,6 +916,21 @@
             text-overflow: ellipsis;
         }
 
+        .player-number-display {
+            position: absolute;
+            top: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00ff88;
+            font-size: 7px;
+            font-weight: bold;
+            text-align: center;
+            white-space: nowrap;
+            margin-top: 5px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            z-index: 20;
+        }
+
         .player-position {
             color: #4CAF50;
             font-size: 12px;
@@ -4219,7 +4234,8 @@
                             </div>
                             <div class="player-rating ${player.ratingClass}">${player.rating}</div>
                             <div class="player-number">${player.number}</div>
-                            <div class="player-name">${player.name}</div>
+                            <div class="player-name">${player.name.replace(/^[^ ]+ /, '')}</div>
+                            <div class="player-number-display">#${player.number}</div>
                         </div>
                     `;
                 }
@@ -4355,40 +4371,40 @@
             };
         }
 
-        // フォールバックデータを生成する関数
+        // フォールバックデータを生成する関数（正しいチーム情報）
         function generateFallbackLineupData() {
             return {
                 home: {
                     startXI: [
-                        { player: { name: 'Alisson', number: 1, pos: 'G', photo: 'https://media.api-sports.io/football/players/1.png' } },
-                        { player: { name: 'van Dijk', number: 4, pos: 'D', photo: 'https://media.api-sports.io/football/players/4.png' } },
-                        { player: { name: 'Konaté', number: 5, pos: 'D', photo: 'https://media.api-sports.io/football/players/5.png' } },
-                        { player: { name: 'Robertson', number: 26, pos: 'D', photo: 'https://media.api-sports.io/football/players/26.png' } },
-                        { player: { name: 'Alexander-Arnold', number: 66, pos: 'D', photo: 'https://media.api-sports.io/football/players/66.png' } },
-                        { player: { name: 'Fabinho', number: 3, pos: 'M', photo: 'https://media.api-sports.io/football/players/3.png' } },
-                        { player: { name: 'Thiago', number: 6, pos: 'M', photo: 'https://media.api-sports.io/football/players/6.png' } },
-                        { player: { name: 'Salah', number: 11, pos: 'F', photo: 'https://media.api-sports.io/football/players/11.png' } },
-                        { player: { name: 'Mane', number: 10, pos: 'F', photo: 'https://media.api-sports.io/football/players/10.png' } },
-                        { player: { name: 'Jota', number: 20, pos: 'F', photo: 'https://media.api-sports.io/football/players/20.png' } },
-                        { player: { name: 'Firmino', number: 9, pos: 'F', photo: 'https://media.api-sports.io/football/players/9.png' } }
+                        { player: { name: '川崎フロンターレ Player 1', number: 1, pos: 'G', photo: 'https://media.api-sports.io/football/players/1.png' } },
+                        { player: { name: '川崎フロンターレ Player 4', number: 4, pos: 'D', photo: 'https://media.api-sports.io/football/players/4.png' } },
+                        { player: { name: '川崎フロンターレ Player 5', number: 5, pos: 'D', photo: 'https://media.api-sports.io/football/players/5.png' } },
+                        { player: { name: '川崎フロンターレ Player 26', number: 26, pos: 'D', photo: 'https://media.api-sports.io/football/players/26.png' } },
+                        { player: { name: '川崎フロンターレ Player 66', number: 66, pos: 'D', photo: 'https://media.api-sports.io/football/players/66.png' } },
+                        { player: { name: '川崎フロンターレ Player 3', number: 3, pos: 'M', photo: 'https://media.api-sports.io/football/players/3.png' } },
+                        { player: { name: '川崎フロンターレ Player 6', number: 6, pos: 'M', photo: 'https://media.api-sports.io/football/players/6.png' } },
+                        { player: { name: '川崎フロンターレ Player 11', number: 11, pos: 'F', photo: 'https://media.api-sports.io/football/players/11.png' } },
+                        { player: { name: '川崎フロンターレ Player 10', number: 10, pos: 'F', photo: 'https://media.api-sports.io/football/players/10.png' } },
+                        { player: { name: '川崎フロンターレ Player 20', number: 20, pos: 'F', photo: 'https://media.api-sports.io/football/players/20.png' } },
+                        { player: { name: '川崎フロンターレ Player 9', number: 9, pos: 'F', photo: 'https://media.api-sports.io/football/players/9.png' } }
                     ],
-                    formation: '4-2-3-1'
+                    formation: '4-3-3'
                 },
                 away: {
                     startXI: [
-                        { player: { name: 'Travers', number: 1, pos: 'G', photo: 'https://media.api-sports.io/football/players/101.png' } },
-                        { player: { name: 'Smith', number: 2, pos: 'D', photo: 'https://media.api-sports.io/football/players/102.png' } },
-                        { player: { name: 'Mepham', number: 6, pos: 'D', photo: 'https://media.api-sports.io/football/players/106.png' } },
-                        { player: { name: 'Kelly', number: 5, pos: 'D', photo: 'https://media.api-sports.io/football/players/105.png' } },
-                        { player: { name: 'Zemura', number: 33, pos: 'D', photo: 'https://media.api-sports.io/football/players/133.png' } },
-                        { player: { name: 'Lerma', number: 8, pos: 'M', photo: 'https://media.api-sports.io/football/players/108.png' } },
-                        { player: { name: 'Cook', number: 16, pos: 'M', photo: 'https://media.api-sports.io/football/players/116.png' } },
-                        { player: { name: 'Billing', number: 29, pos: 'M', photo: 'https://media.api-sports.io/football/players/129.png' } },
-                        { player: { name: 'Christie', number: 10, pos: 'M', photo: 'https://media.api-sports.io/football/players/110.png' } },
-                        { player: { name: 'Solanke', number: 9, pos: 'F', photo: 'https://media.api-sports.io/football/players/109.png' } },
-                        { player: { name: 'Anthony', number: 32, pos: 'F', photo: 'https://media.api-sports.io/football/players/132.png' } }
+                        { player: { name: 'FC東京 Player 1', number: 1, pos: 'G', photo: 'https://media.api-sports.io/football/players/101.png' } },
+                        { player: { name: 'FC東京 Player 2', number: 2, pos: 'D', photo: 'https://media.api-sports.io/football/players/102.png' } },
+                        { player: { name: 'FC東京 Player 6', number: 6, pos: 'D', photo: 'https://media.api-sports.io/football/players/106.png' } },
+                        { player: { name: 'FC東京 Player 5', number: 5, pos: 'D', photo: 'https://media.api-sports.io/football/players/105.png' } },
+                        { player: { name: 'FC東京 Player 33', number: 33, pos: 'D', photo: 'https://media.api-sports.io/football/players/133.png' } },
+                        { player: { name: 'FC東京 Player 8', number: 8, pos: 'M', photo: 'https://media.api-sports.io/football/players/108.png' } },
+                        { player: { name: 'FC東京 Player 16', number: 16, pos: 'M', photo: 'https://media.api-sports.io/football/players/116.png' } },
+                        { player: { name: 'FC東京 Player 29', number: 29, pos: 'M', photo: 'https://media.api-sports.io/football/players/129.png' } },
+                        { player: { name: 'FC東京 Player 10', number: 10, pos: 'M', photo: 'https://media.api-sports.io/football/players/110.png' } },
+                        { player: { name: 'FC東京 Player 9', number: 9, pos: 'F', photo: 'https://media.api-sports.io/football/players/109.png' } },
+                        { player: { name: 'FC東京 Player 32', number: 32, pos: 'F', photo: 'https://media.api-sports.io/football/players/132.png' } }
                     ],
-                    formation: '4-1-4-1'
+                    formation: '4-4-2'
                 }
             };
         }

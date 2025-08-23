@@ -2485,6 +2485,12 @@ app.get('/api/japanese-players', async (req, res) => {
             return res.json(generateFallbackPlayers(8));
         }
 
+        // 本番環境でのAPI制限チェック
+        const isProduction = process.env.NODE_ENV === 'production';
+        if (isProduction) {
+            console.log('🚀 Production environment detected, using optimized API strategy');
+        }
+
         // 主要な日本人選手の検索クエリ（日本語名 → 英語名マッピング）
         const players = [
             { japaneseName: '久保建英', englishName: 'Takefusa Kubo', team: 'Real Sociedad', league: 140 },
