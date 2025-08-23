@@ -185,7 +185,7 @@ class CacheManager {
     // フォールバックデータの取得
     getFallbackPlayers() {
         try {
-            // 直接フォールバックデータを生成
+            // 直接フォールバックデータを生成（顔写真付き）
             const japanesePlayers = [
                 { name: '久保建英', fullName: '久保建英', currentTeam: 'Real Sociedad', position: 'Forward', nationality: 'Japan', age: 22, photo: 'https://media.api-sports.io/football/players/32862.png', league: 'PD', englishName: 'Takefusa Kubo' },
                 { name: '三苫薫', fullName: '三苫薫', currentTeam: 'Brighton', position: 'Midfielder', nationality: 'Japan', age: 25, photo: 'https://media.api-sports.io/football/players/106835.png', league: 'PL', englishName: 'Kaoru Mitoma' },
@@ -214,7 +214,7 @@ class CacheManager {
             const allPlayers = [...japanesePlayers, ...worldStars];
             const players = [];
 
-            // フォールバックデータを生成
+            // フォールバックデータを生成（顔写真付き）
             for (let i = 0; i < Math.min(19, allPlayers.length); i++) {
                 const basePlayer = allPlayers[i];
                 const player = {
@@ -225,7 +225,7 @@ class CacheManager {
                     position: basePlayer.position,
                     nationality: basePlayer.nationality,
                     age: basePlayer.age,
-                    photo: basePlayer.photo,
+                    photo: basePlayer.photo, // 正しい顔写真URL
                     league: basePlayer.league,
                     englishName: basePlayer.englishName,
                     stats: {
@@ -246,6 +246,7 @@ class CacheManager {
                 players.push(player);
             }
 
+            console.log(`📊 Generated ${players.length} fallback players with photos`);
             return players;
         } catch (error) {
             console.error('Error generating fallback players:', error);
