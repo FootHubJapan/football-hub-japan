@@ -2309,86 +2309,41 @@ app.get('/api/fotmob/search', async (req, res) => {
     }
 });
 
-// フォールバック選手データを生成
+// フォールバック選手データを生成（修正版）
 function generateFallbackPlayers(limit) {
     const players = [];
-    // 現実的な日本人選手データ
-    const realPlayers = [
-        {
-            name: '久保建英',
-            fullName: '久保建英',
-            currentTeam: 'レアル・ソシエダード',
-            position: 'Forward',
-            nationality: 'Japan',
-            age: 22,
-            photo: 'https://media.api-sports.io/football/players/32862.png'
-        },
-        {
-            name: '三苫薫',
-            fullName: '三苫薫',
-            currentTeam: 'ブライトン',
-            position: 'Midfielder',
-            nationality: 'Japan',
-            age: 26,
-            photo: 'https://media.api-sports.io/football/players/106835.png'
-        },
-        {
-            name: '堂安律',
-            fullName: '堂安律',
-            currentTeam: 'フライブルク',
-            position: 'Midfielder',
-            nationality: 'Japan',
-            age: 25,
-            photo: 'https://media.api-sports.io/football/players/2598.png'
-        },
-        {
-            name: '田中碧',
-            fullName: '田中碧',
-            currentTeam: 'フォルタレーザ',
-            position: 'Midfielder',
-            nationality: 'Japan',
-            age: 24,
-            photo: 'https://media.api-sports.io/football/players/32863.png'
-        },
-        {
-            name: '伊藤洋輝',
-            fullName: '伊藤洋輝',
-            currentTeam: 'シュトゥットガルト',
-            position: 'Defender',
-            nationality: 'Japan',
-            age: 24,
-            photo: 'https://media.api-sports.io/football/players/32864.png'
-        },
-        {
-            name: '遠藤航',
-            fullName: '遠藤航',
-            currentTeam: 'リバプール',
-            position: 'Midfielder',
-            nationality: 'Japan',
-            age: 30,
-            photo: 'https://media.api-sports.io/football/players/32865.png'
-        },
-        {
-            name: '南野拓実',
-            fullName: '南野拓実',
-            currentTeam: 'モナコ',
-            position: 'Forward',
-            nationality: 'Japan',
-            age: 28,
-            photo: 'https://media.api-sports.io/football/players/32866.png'
-        },
-        {
-            name: '浅野拓磨',
-            fullName: '浅野拓磨',
-            currentTeam: 'ボーフム',
-            position: 'Forward',
-            nationality: 'Japan',
-            age: 29,
-            photo: 'https://media.api-sports.io/football/players/32867.png'
-        }
-    ];
     
-    // フォールバックデータを生成（API制限を回避）
+    // 日本人選手（詳細データ付き）
+    const japanesePlayers = [
+        { name: '久保建英', fullName: '久保建英', currentTeam: 'Real Sociedad', position: 'Forward', nationality: 'Japan', age: 22, photo: 'https://media.api-sports.io/football/players/32862.png', league: 'PD', englishName: 'Takefusa Kubo' },
+        { name: '三苫薫', fullName: '三苫薫', currentTeam: 'Brighton', position: 'Midfielder', nationality: 'Japan', age: 25, photo: 'https://media.api-sports.io/football/players/106835.png', league: 'PL', englishName: 'Kaoru Mitoma' },
+        { name: '堂安律', fullName: '堂安律', currentTeam: 'SC Freiburg', position: 'Midfielder', nationality: 'Japan', age: 25, photo: 'https://media.api-sports.io/football/players/2598.png', league: 'BL1', englishName: 'Ritsu Doan' },
+        { name: '田中碧', fullName: '田中碧', currentTeam: 'Fortuna Düsseldorf', position: 'Midfielder', nationality: 'Japan', age: 24, photo: 'https://media.api-sports.io/football/players/32863.png', league: 'BL1', englishName: 'Ao Tanaka' },
+        { name: '伊藤洋輝', fullName: '伊藤洋輝', currentTeam: 'VfB Stuttgart', position: 'Defender', nationality: 'Japan', age: 24, photo: 'https://media.api-sports.io/football/players/32864.png', league: 'BL1', englishName: 'Hiroki Ito' },
+        { name: '遠藤航', fullName: '遠藤航', currentTeam: 'Liverpool', position: 'Midfielder', nationality: 'Japan', age: 30, photo: 'https://media.api-sports.io/football/players/32865.png', league: 'PL', englishName: 'Wataru Endo' },
+        { name: '南野拓実', fullName: '南野拓実', currentTeam: 'Monaco', position: 'Forward', nationality: 'Japan', age: 28, photo: 'https://media.api-sports.io/football/players/32866.png', league: 'FL1', englishName: 'Takumi Minamino' },
+        { name: '浅野拓磨', fullName: '浅野拓磨', currentTeam: 'VfL Bochum', position: 'Forward', nationality: 'Japan', age: 29, photo: 'https://media.api-sports.io/football/players/32867.png', league: 'BL1', englishName: 'Takuma Asano' }
+    ];
+
+    // 世界のスター選手を追加
+    const worldStars = [
+        { name: 'Erling Haaland', fullName: 'Erling Haaland', currentTeam: 'Manchester City', position: 'Forward', nationality: 'Norway', age: 23, photo: 'https://media.api-sports.io/football/players/874.png', league: 'PL', englishName: 'Erling Haaland' },
+        { name: 'Kevin De Bruyne', fullName: 'Kevin De Bruyne', currentTeam: 'Manchester City', position: 'Midfielder', nationality: 'Belgium', age: 32, photo: 'https://media.api-sports.io/football/players/882.png', league: 'PL', englishName: 'Kevin De Bruyne' },
+        { name: 'Mohamed Salah', fullName: 'Mohamed Salah', currentTeam: 'Liverpool', position: 'Forward', nationality: 'Egypt', age: 31, photo: 'https://media.api-sports.io/football/players/306.png', league: 'PL', englishName: 'Mohamed Salah' },
+        { name: 'Jude Bellingham', fullName: 'Jude Bellingham', currentTeam: 'Real Madrid', position: 'Midfielder', nationality: 'England', age: 20, photo: 'https://media.api-sports.io/football/players/762.png', league: 'PD', englishName: 'Jude Bellingham' },
+        { name: 'Vinícius Júnior', fullName: 'Vinícius Júnior', currentTeam: 'Real Madrid', position: 'Forward', nationality: 'Brazil', age: 23, photo: 'https://media.api-sports.io/football/players/762.png', league: 'PD', englishName: 'Vinícius Júnior' },
+        { name: 'Robert Lewandowski', fullName: 'Robert Lewandowski', currentTeam: 'Barcelona', position: 'Forward', nationality: 'Poland', age: 35, photo: 'https://media.api-sports.io/football/players/874.png', league: 'PD', englishName: 'Robert Lewandowski' },
+        { name: 'Harry Kane', fullName: 'Harry Kane', currentTeam: 'Bayern Munich', position: 'Forward', nationality: 'England', age: 30, photo: 'https://media.api-sports.io/football/players/874.png', league: 'BL1', englishName: 'Harry Kane' },
+        { name: 'Jamal Musiala', fullName: 'Jamal Musiala', currentTeam: 'Bayern Munich', position: 'Midfielder', nationality: 'Germany', age: 20, photo: 'https://media.api-sports.io/football/players/874.png', league: 'BL1', englishName: 'Jamal Musiala' },
+        { name: 'Lautaro Martínez', fullName: 'Lautaro Martínez', currentTeam: 'Inter Milan', position: 'Forward', nationality: 'Argentina', age: 26, photo: 'https://media.api-sports.io/football/players/874.png', league: 'SA', englishName: 'Lautaro Martínez' },
+        { name: 'Kylian Mbappé', fullName: 'Kylian Mbappé', currentTeam: 'PSG', position: 'Forward', nationality: 'France', age: 24, photo: 'https://media.api-sports.io/football/players/874.png', league: 'FL1', englishName: 'Kylian Mbappé' },
+        { name: 'Ousmane Dembélé', fullName: 'Ousmane Dembélé', currentTeam: 'PSG', position: 'Forward', nationality: 'France', age: 26, photo: 'https://media.api-sports.io/football/players/874.png', league: 'FL1', englishName: 'Ousmane Dembélé' }
+    ];
+
+    // 全選手を統合
+    const allPlayers = [...japanesePlayers, ...worldStars];
+    
+    // フォールバックデータを生成
     for (let i = 0; i < Math.min(limit, allPlayers.length); i++) {
         const basePlayer = allPlayers[i];
         const player = {

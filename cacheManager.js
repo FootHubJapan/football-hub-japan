@@ -184,9 +184,73 @@ class CacheManager {
 
     // フォールバックデータの取得
     getFallbackPlayers() {
-        // 既存のフォールバックデータ生成関数を使用
-        const { generateFallbackPlayers } = require('./index.js');
-        return generateFallbackPlayers(19);
+        try {
+            // 直接フォールバックデータを生成
+            const japanesePlayers = [
+                { name: '久保建英', fullName: '久保建英', currentTeam: 'Real Sociedad', position: 'Forward', nationality: 'Japan', age: 22, photo: 'https://media.api-sports.io/football/players/32862.png', league: 'PD', englishName: 'Takefusa Kubo' },
+                { name: '三苫薫', fullName: '三苫薫', currentTeam: 'Brighton', position: 'Midfielder', nationality: 'Japan', age: 25, photo: 'https://media.api-sports.io/football/players/106835.png', league: 'PL', englishName: 'Kaoru Mitoma' },
+                { name: '堂安律', fullName: '堂安律', currentTeam: 'SC Freiburg', position: 'Midfielder', nationality: 'Japan', age: 25, photo: 'https://media.api-sports.io/football/players/2598.png', league: 'BL1', englishName: 'Ritsu Doan' },
+                { name: '田中碧', fullName: '田中碧', currentTeam: 'Fortuna Düsseldorf', position: 'Midfielder', nationality: 'Japan', age: 24, photo: 'https://media.api-sports.io/football/players/32863.png', league: 'BL1', englishName: 'Ao Tanaka' },
+                { name: '伊藤洋輝', fullName: '伊藤洋輝', currentTeam: 'VfB Stuttgart', position: 'Defender', nationality: 'Japan', age: 24, photo: 'https://media.api-sports.io/football/players/32864.png', league: 'BL1', englishName: 'Hiroki Ito' },
+                { name: '遠藤航', fullName: '遠藤航', currentTeam: 'Liverpool', position: 'Midfielder', nationality: 'Japan', age: 30, photo: 'https://media.api-sports.io/football/players/32865.png', league: 'PL', englishName: 'Wataru Endo' },
+                { name: '南野拓実', fullName: '南野拓実', currentTeam: 'Monaco', position: 'Forward', nationality: 'Japan', age: 28, photo: 'https://media.api-sports.io/football/players/32866.png', league: 'FL1', englishName: 'Takumi Minamino' },
+                { name: '浅野拓磨', fullName: '浅野拓磨', currentTeam: 'VfL Bochum', position: 'Forward', nationality: 'Japan', age: 29, photo: 'https://media.api-sports.io/football/players/32867.png', league: 'BL1', englishName: 'Takuma Asano' }
+            ];
+
+            const worldStars = [
+                { name: 'Erling Haaland', fullName: 'Erling Haaland', currentTeam: 'Manchester City', position: 'Forward', nationality: 'Norway', age: 23, photo: 'https://media.api-sports.io/football/players/874.png', league: 'PL', englishName: 'Erling Haaland' },
+                { name: 'Kevin De Bruyne', fullName: 'Kevin De Bruyne', currentTeam: 'Manchester City', position: 'Midfielder', nationality: 'Belgium', age: 32, photo: 'https://media.api-sports.io/football/players/882.png', league: 'PL', englishName: 'Kevin De Bruyne' },
+                { name: 'Mohamed Salah', fullName: 'Mohamed Salah', currentTeam: 'Liverpool', position: 'Forward', nationality: 'Egypt', age: 31, photo: 'https://media.api-sports.io/football/players/306.png', league: 'PL', englishName: 'Mohamed Salah' },
+                { name: 'Jude Bellingham', fullName: 'Jude Bellingham', currentTeam: 'Real Madrid', position: 'Midfielder', nationality: 'England', age: 20, photo: 'https://media.api-sports.io/football/players/762.png', league: 'PD', englishName: 'Jude Bellingham' },
+                { name: 'Vinícius Júnior', fullName: 'Vinícius Júnior', currentTeam: 'Real Madrid', position: 'Forward', nationality: 'Brazil', age: 23, photo: 'https://media.api-sports.io/football/players/762.png', league: 'PD', englishName: 'Vinícius Júnior' },
+                { name: 'Robert Lewandowski', fullName: 'Robert Lewandowski', currentTeam: 'Barcelona', position: 'Forward', nationality: 'Poland', age: 35, photo: 'https://media.api-sports.io/football/players/874.png', league: 'PD', englishName: 'Robert Lewandowski' },
+                { name: 'Harry Kane', fullName: 'Harry Kane', currentTeam: 'Bayern Munich', position: 'Forward', nationality: 'England', age: 30, photo: 'https://media.api-sports.io/football/players/874.png', league: 'BL1', englishName: 'Harry Kane' },
+                { name: 'Jamal Musiala', fullName: 'Jamal Musiala', currentTeam: 'Bayern Munich', position: 'Midfielder', nationality: 'Germany', age: 20, photo: 'https://media.api-sports.io/football/players/874.png', league: 'BL1', englishName: 'Jamal Musiala' },
+                { name: 'Lautaro Martínez', fullName: 'Lautaro Martínez', currentTeam: 'Inter Milan', position: 'Forward', nationality: 'Argentina', age: 26, photo: 'https://media.api-sports.io/football/players/874.png', league: 'SA', englishName: 'Lautaro Martínez' },
+                { name: 'Kylian Mbappé', fullName: 'Kylian Mbappé', currentTeam: 'PSG', position: 'Forward', nationality: 'France', age: 24, photo: 'https://media.api-sports.io/football/players/874.png', league: 'FL1', englishName: 'Kylian Mbappé' },
+                { name: 'Ousmane Dembélé', fullName: 'Ousmane Dembélé', currentTeam: 'PSG', position: 'Forward', nationality: 'France', age: 26, photo: 'https://media.api-sports.io/football/players/874.png', league: 'FL1', englishName: 'Ousmane Dembélé' }
+            ];
+
+            const allPlayers = [...japanesePlayers, ...worldStars];
+            const players = [];
+
+            // フォールバックデータを生成
+            for (let i = 0; i < Math.min(19, allPlayers.length); i++) {
+                const basePlayer = allPlayers[i];
+                const player = {
+                    id: i + 1,
+                    name: basePlayer.name,
+                    fullName: basePlayer.fullName,
+                    currentTeam: basePlayer.currentTeam,
+                    position: basePlayer.position,
+                    nationality: basePlayer.nationality,
+                    age: basePlayer.age,
+                    photo: basePlayer.photo,
+                    league: basePlayer.league,
+                    englishName: basePlayer.englishName,
+                    stats: {
+                        goals: Math.floor(Math.random() * 20),
+                        assists: Math.floor(Math.random() * 15),
+                        appearances: 20 + Math.floor(Math.random() * 20),
+                        minutes: 1500 + Math.random() * 1000,
+                        rating: (6.0 + Math.random() * 2.0).toFixed(1),
+                        yellowCards: Math.floor(Math.random() * 5),
+                        shotsTotal: Math.floor(Math.random() * 50),
+                        shotsOnTarget: Math.floor(Math.random() * 25),
+                        expectedGoals: (Math.random() * 10).toFixed(1),
+                        passAccuracy: Math.floor(70 + Math.random() * 25) + '%',
+                        tackles: Math.floor(Math.random() * 50),
+                        interceptions: Math.floor(Math.random() * 20)
+                    }
+                };
+                players.push(player);
+            }
+
+            return players;
+        } catch (error) {
+            console.error('Error generating fallback players:', error);
+            return [];
+        }
     }
 
     // キャッシュされたデータのフォーマット
