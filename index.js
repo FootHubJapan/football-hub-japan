@@ -2489,6 +2489,8 @@ app.get('/api/japanese-players', async (req, res) => {
         const isProduction = process.env.NODE_ENV === 'production';
         if (isProduction) {
             console.log('🚀 Production environment detected, using optimized API strategy');
+            console.log('🔑 API Key status:', process.env.API_FOOTBALL_KEY ? 'Configured' : 'NOT SET');
+            console.log('📊 API Key length:', process.env.API_FOOTBALL_KEY ? process.env.API_FOOTBALL_KEY.length : 0);
         }
 
         // 主要な日本人選手の検索クエリ（日本語名 → 英語名マッピング）
