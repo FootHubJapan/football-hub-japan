@@ -876,10 +876,36 @@
             card.addEventListener('click', () => {
                 // 選手データをローカルストレージに保存
                 if (!Array.isArray(currentPlayers)) currentPlayers = [];
+                
+                // クリックされた選手のデータを確実に保存
+                const clickedPlayer = {
+                    ...player,
+                    // IDフィールドを統一
+                    id: player.id || player.playerId || player.player_id || player.name,
+                    playerId: player.id || player.playerId || player.player_id || player.name,
+                    // 統計データを確実に含める
+                    stats: player.stats || {
+                        goals: player.goals || 0,
+                        assists: player.assists || 0,
+                        appearances: player.appearances || 0,
+                        minutes: player.minutes || 0,
+                        rating: player.rating || 'N/A',
+                        yellowCards: player.yellowCards || 0,
+                        passAccuracy: player.passAccuracy || 'N/A',
+                        tackles: player.tackles || 0,
+                        shots: player.shots || 0
+                    }
+                };
+                
+                // 選手データをローカルストレージに保存
                 localStorage.setItem('currentPlayers', JSON.stringify(currentPlayers));
+                localStorage.setItem('clickedPlayer', JSON.stringify(clickedPlayer));
                 
                 // 選手IDを確実に取得（複数の可能性を考慮）
-                const playerId = player.id || player.playerId || player.player_id || 'unknown';
+                const playerId = clickedPlayer.id;
+                
+                console.log('Clicked player:', clickedPlayer);
+                console.log('Player ID for detail page:', playerId);
                 
                 // 選手詳細ページに遷移
                 window.location.href = `/player-detail?id=${playerId}`;

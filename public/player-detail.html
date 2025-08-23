@@ -473,18 +473,40 @@
             }
 
             try {
+                // まず、クリックされた選手のデータを確認
+                const clickedPlayer = JSON.parse(localStorage.getItem('clickedPlayer') || 'null');
+                
+                if (clickedPlayer && (clickedPlayer.id == playerId || clickedPlayer.playerId == playerId)) {
+                    console.log('Using clicked player data:', clickedPlayer);
+                    displayPlayerData(clickedPlayer);
+                    return;
+                }
+                
                 // ローカルストレージから選手データを取得
                 const storedPlayers = JSON.parse(localStorage.getItem('currentPlayers') || '[]');
-                const player = storedPlayers.find(p => p.id == playerId);
+                
+                // 複数のIDフィールドで検索（選手カードと一致させる）
+                const player = storedPlayers.find(p => 
+                    p.id == playerId || 
+                    p.playerId == playerId || 
+                    p.player_id == playerId ||
+                    p.englishName === playerId || // 英語名でも検索
+                    p.name === playerId // 日本語名でも検索
+                );
+                
+                console.log('Searching for player ID:', playerId);
+                console.log('Available players:', storedPlayers.length);
+                console.log('Found player:', player);
                 
                 if (player) {
                     displayPlayerData(player);
                 } else {
                     // フォールバックデータを使用
+                    console.log('Player not found, using fallback data');
                     const fallbackPlayer = generateFallbackPlayer(playerId);
                     displayPlayerData(fallbackPlayer);
                 }
-                    } catch (error) {
+            } catch (error) {
                 console.error('選手データの読み込みエラー:', error);
                 const fallbackPlayer = generateFallbackPlayer(playerId);
                 displayPlayerData(fallbackPlayer);
