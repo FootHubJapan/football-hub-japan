@@ -2659,44 +2659,117 @@ app.get('/api/japanese-players', async (req, res) => {
             { japaneseName: 'オスメン・デンベレ', englishName: 'Ousmane Dembélé', league: 'Ligue 1', leagueId: 61, teamId: 85 } // PSG
         ];
 
-        // 高度な選手検索を実行
-        console.log(`Starting advanced player search for ${playersToSearch.length} players...`);
-        
-        for (const player of playersToSearch) {
-            try {
-                console.log(`\n🔍 Searching for ${player.japaneseName} (${player.englishName})...`);
-                
-                // PlayerDataManagerを使用して複数の戦略で検索
-                const playerInfo = await playerManager.searchPlayer(player);
-                
-                if (playerInfo && playerInfo.player) {
-                    const apiPlayer = playerInfo.player;
-                    const stats = playerInfo.statistics && playerInfo.statistics.length > 0 ? playerInfo.statistics[0] : null;
-                    
-                    playerData.push({
-                        name: player.japaneseName, // 日本語名を保持
-                        englishName: apiPlayer.name, // API から取得した正確な英語名
-                        fullName: `${apiPlayer.firstname} ${apiPlayer.lastname}`,
-                        currentTeam: stats?.team?.name || 'Unknown',
-                        position: stats?.games?.position || 'Unknown',
-                        nationality: apiPlayer.nationality,
-                        age: apiPlayer.age,
-                        photo: apiPlayer.photo,
-                        league: player.league,
-                        playerId: apiPlayer.id
-                    });
-                    
-                    console.log(`✅ Successfully found ${player.japaneseName}: ${apiPlayer.name} (ID: ${apiPlayer.id}) - ${stats?.team?.name || 'Unknown'}`);
-                } else {
-                    console.log(`❌ Could not find verified data for ${player.japaneseName}`);
-                }
-            } catch (error) {
-                console.log(`💥 Error searching ${player.japaneseName}:`, error.message);
-            }
+        // 主要リーグのチーム一覧（各チームから選手データを取得）
+        const majorTeams = [
+            // Premier League (イングランド)
+            { id: 40, name: 'Liverpool', league: 'Premier League', country: 'England' },
+            { id: 42, name: 'Arsenal', league: 'Premier League', country: 'England' },
+            { id: 50, name: 'Manchester City', league: 'Premier League', country: 'England' },
+            { id: 33, name: 'Manchester United', league: 'Premier League', country: 'England' },
+            { id: 51, name: 'Brighton', league: 'Premier League', country: 'England' },
+            { id: 47, name: 'Tottenham', league: 'Premier League', country: 'England' },
+            { id: 49, name: 'Chelsea', league: 'Premier League', country: 'England' },
+            { id: 34, name: 'Newcastle', league: 'Premier League', country: 'England' },
             
-            // API制限を避けるため少し待機
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // La Liga (スペイン)
+            { id: 541, name: 'Real Madrid', league: 'La Liga', country: 'Spain' },
+            { id: 529, name: 'Barcelona', league: 'La Liga', country: 'Spain' },
+            { id: 548, name: 'Real Sociedad', league: 'La Liga', country: 'Spain' },
+            { id: 530, name: 'Atletico Madrid', league: 'La Liga', country: 'Spain' },
+            { id: 543, name: 'Sevilla', league: 'La Liga', country: 'Spain' },
+            { id: 536, name: 'Valencia', league: 'La Liga', country: 'Spain' },
+            
+            // Bundesliga (ドイツ)
+            { id: 157, name: 'Bayern Munich', league: 'Bundesliga', country: 'Germany' },
+            { id: 165, name: 'Borussia Dortmund', league: 'Bundesliga', country: 'Germany' },
+            { id: 172, name: 'Stuttgart', league: 'Bundesliga', country: 'Germany' },
+            { id: 160, name: 'Eintracht Frankfurt', league: 'Bundesliga', country: 'Germany' },
+            { id: 164, name: 'Bochum', league: 'Bundesliga', country: 'Germany' },
+            { id: 161, name: 'Bayer Leverkusen', league: 'Bundesliga', country: 'Germany' },
+            
+            // Serie A (イタリア)
+            { id: 505, name: 'Inter Milan', league: 'Serie A', country: 'Italy' },
+            { id: 492, name: 'AC Milan', league: 'Serie A', country: 'Italy' },
+            { id: 496, name: 'Juventus', league: 'Serie A', country: 'Italy' },
+            { id: 499, name: 'Napoli', league: 'Serie A', country: 'Italy' },
+            { id: 487, name: 'AS Monaco', league: 'Serie A', country: 'Italy' },
+            
+            // Ligue 1 (フランス)
+            { id: 85, name: 'Paris Saint-Germain', league: 'Ligue 1', country: 'France' },
+            { id: 80, name: 'Marseille', league: 'Ligue 1', country: 'France' },
+            { id: 91, name: 'Lyon', league: 'Ligue 1', country: 'France' },
+            { id: 99, name: 'Fortuna Düsseldorf', league: 'Ligue 1', country: 'France' },
+            
+            // J1 League (日本)
+            { id: 288, name: 'Nagoya Grampus', league: 'J1 League', country: 'Japan' },
+            { id: 301, name: 'JEF United Chiba', league: 'J1 League', country: 'Japan' },
+            { id: 313, name: 'Omiya Ardija', league: 'J1 League', country: 'Japan' }
+        ];
+
+        console.log(`🏆 Starting team-based player data collection from ${majorTeams.length} major teams...`);
+        
+        // 各チームから選手データを取得
+        for (const team of majorTeams) {
+            try {
+                console.log(`\n🔍 Fetching players from ${team.name} (${team.league})...`);
+                
+                // チームのスカッドを取得
+                const squadResponse = await fetch(`${playerManager.baseUrl}/players/squads?team=${team.id}`, {
+                    headers: playerManager.getHeaders()
+                });
+                
+                if (squadResponse.ok) {
+                    const squadData = await squadResponse.json();
+                    const players = squadData.response[0]?.players || [];
+                    
+                    console.log(`✅ Found ${players.length} players in ${team.name}`);
+                    
+                    // 各選手の詳細情報を取得
+                    for (const player of players.slice(0, 25)) { // 各チーム最大25名まで
+                        try {
+                            const playerStats = await playerManager.getPlayerStats(player.id, 2025);
+                            
+                            if (playerStats && playerStats.player) {
+                                const apiPlayer = playerStats.player;
+                                const stats = playerStats.statistics && playerStats.statistics.length > 0 ? playerStats.statistics[0] : null;
+                                
+                                playerData.push({
+                                    name: apiPlayer.name, // 英語名
+                                    englishName: apiPlayer.name,
+                                    fullName: `${apiPlayer.firstname} ${apiPlayer.lastname}`,
+                                    currentTeam: team.name,
+                                    position: stats?.games?.position || 'Unknown',
+                                    nationality: apiPlayer.nationality,
+                                    age: apiPlayer.age,
+                                    photo: apiPlayer.photo,
+                                    league: team.league,
+                                    country: team.country,
+                                    playerId: apiPlayer.id
+                                });
+                            }
+                            
+                            // API制限を避けるため少し待機
+                            await new Promise(resolve => setTimeout(resolve, 50));
+                            
+                        } catch (error) {
+                            console.log(`⚠️ Error fetching player ${player.name}:`, error.message);
+                            continue;
+                        }
+                    }
+                } else {
+                    console.log(`❌ Failed to fetch squad for ${team.name}: ${squadResponse.status}`);
+                }
+                
+                // チーム間の待機
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+            } catch (error) {
+                console.log(`💥 Error fetching team ${team.name}:`, error.message);
+                continue;
+            }
         }
+        
+        console.log(`🎉 Total players collected: ${playerData.length}`);
 
         // APIから取得できた選手が少ない場合は、フォールバックデータを補完
         if (playerData.length < 5) {
