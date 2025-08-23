@@ -95,9 +95,10 @@
         }
 
         .search-controls {
-            display: grid;
-            grid-template-columns: 1fr auto auto auto auto;
-            gap: 0.75rem;
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
             align-items: center;
         }
 
@@ -687,6 +688,32 @@
             </div>
         </div>
 
+        <!-- 検索セクション -->
+        <div class="search-section">
+            <h2 class="section-title">選手検索</h2>
+            <div class="search-controls">
+                <input type="text" id="searchInput" placeholder="選手名を入力..." class="search-input">
+                <select id="leagueSelect" class="search-select">
+                    <option value="">すべてのリーグ</option>
+                    <option value="PL">プレミアリーグ</option>
+                    <option value="PD">ラ・リーガ</option>
+                    <option value="SA">セリエA</option>
+                    <option value="BL1">ブンデスリーガ</option>
+                    <option value="FL1">リーグ・アン</option>
+                    <option value="J1">J1リーグ</option>
+                </select>
+                <select id="positionSelect" class="search-select">
+                    <option value="">すべてのポジション</option>
+                    <option value="FW">フォワード (FW)</option>
+                    <option value="MF">ミッドフィルダー (MF)</option>
+                    <option value="DF">ディフェンダー (DF)</option>
+                    <option value="GK">ゴールキーパー (GK)</option>
+                </select>
+                <button class="search-btn" onclick="performSearch()">検索</button>
+                <button class="clear-btn" onclick="clearSearch()">クリア</button>
+            </div>
+        </div>
+
         <!-- メインコンテンツ -->
         <div class="content-grid">
             <!-- 選手データセクション -->
@@ -829,11 +856,12 @@
             return select && select.value ? [select.value] : [];
         }
 
-        // 選手表示関数
+        // 選手表示関数（パフォーマンス最適化）
         function displayPlayers(players) {
             const grid = document.getElementById('playersGrid');
             if (!grid) return;
             
+            // 表示をクリア
             grid.innerHTML = '';
             
             // 最大1000名まで表示（パフォーマンス向上のため）
@@ -841,16 +869,37 @@
             
             console.log(`Displaying ${displayPlayers.length} players out of ${players.length} total`);
             
-            displayPlayers.forEach((player, index) => {
-                if (player && player.name) {
-                    grid.appendChild(createPlayerCard(player));
-                    
-                    // 大量データ表示時のパフォーマンス向上
-                    if (index % 100 === 0) {
-                        console.log(`Displayed ${index} players...`);
+            // バッチ処理で表示（パフォーマンス向上）
+            const batchSize = 50;
+            let currentIndex = 0;
+            
+            function displayBatch() {
+                const endIndex = Math.min(currentIndex + batchSize, displayPlayers.length);
+                
+                for (let i = currentIndex; i < endIndex; i++) {
+                    const player = displayPlayers[i];
+                    if (player && player.name) {
+                        grid.appendChild(createPlayerCard(player));
                     }
                 }
-            });
+                
+                currentIndex = endIndex;
+                
+                // 進捗ログ
+                if (currentIndex % 100 === 0) {
+                    console.log(`Displayed ${currentIndex} players...`);
+                }
+                
+                // 次のバッチを表示
+                if (currentIndex < displayPlayers.length) {
+                    requestAnimationFrame(displayBatch);
+                } else {
+                    console.log(`Displayed ${displayPlayers.length} players...`);
+                }
+            }
+            
+            // 最初のバッチを開始
+            requestAnimationFrame(displayBatch);
         }
 
         // 選手カード作成関数
@@ -1441,34 +1490,54 @@
             const query = searchInput.value.trim();
             const league = leagueSelect.value;
             const position = positionSelect.value;
-            const detailedPositions = getSelectedDetailedPositions();
 
-            if (!query && !league && !position && detailedPositions.length === 0) {
-                loadSamplePlayers();
+            if (!query && !league && !position) {
+                // 検索条件がない場合は全選手を表示
+                if (currentPlayers && currentPlayers.length > 0) {
+                    displayPlayers(currentPlayers);
+                } else {
+                    loadSamplePlayers();
+                }
                 return;
             }
 
             try {
-                // 新しいFotMobスタイルのAPIを使用
-                const searchParams = new URLSearchParams();
-                if (query) searchParams.append('q', query);
-                if (league) searchParams.append('league', league);
-                if (position) searchParams.append('position', position);
-                searchParams.append('limit', '20');
-
-                const response = await fetch(`/api/fotmob/search?${searchParams.toString()}&_t=' + Date.now()}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.players && data.players.length > 0) {
-                        currentPlayers = data.players;
-                        displayPlayers(currentPlayers);
-                        return;
+                // 現在の選手データから検索（高速化）
+                if (currentPlayers && currentPlayers.length > 0) {
+                    let filteredPlayers = currentPlayers;
+                    
+                    // 名前検索
+                    if (query) {
+                        filteredPlayers = filteredPlayers.filter(player => 
+                            player.name.toLowerCase().includes(query.toLowerCase()) ||
+                            player.englishName?.toLowerCase().includes(query.toLowerCase()) ||
+                            player.currentTeam?.toLowerCase().includes(query.toLowerCase())
+                        );
                     }
+                    
+                    // リーグ検索
+                    if (league) {
+                        filteredPlayers = filteredPlayers.filter(player => 
+                            player.league === league
+                        );
+                    }
+                    
+                    // ポジション検索
+                    if (position) {
+                        filteredPlayers = filteredPlayers.filter(player => 
+                            player.position?.toLowerCase().includes(position.toLowerCase())
+                        );
+                    }
+                    
+                    // 検索結果を表示
+                    displayPlayers(filteredPlayers);
+                    console.log(`Search results: ${filteredPlayers.length} players found`);
+                    return;
                 }
                 
-                // APIが利用できない場合、フォールバック検索を実行
-                console.log('API search failed, using fallback search');
-                const fallbackResults = performFallbackSearch(query, league, position, detailedPositions);
+                // フォールバック検索
+                console.log('Using fallback search');
+                const fallbackResults = performFallbackSearch(query, league, position);
                 if (fallbackResults.length > 0) {
                     currentPlayers = fallbackResults;
                     displayPlayers(fallbackResults);
@@ -1477,14 +1546,24 @@
                 }
             } catch (error) {
                 console.error('Search error:', error);
-                // エラー時もフォールバック検索を実行
-                const fallbackResults = performFallbackSearch(query, league, position, detailedPositions);
-                if (fallbackResults.length > 0) {
-                    currentPlayers = fallbackResults;
-                    displayPlayers(fallbackResults);
-                } else {
-                    showError('検索中にエラーが発生しました');
-                }
+                showError('検索中にエラーが発生しました');
+            }
+        }
+
+        // 検索クリア機能
+        function clearSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const leagueSelect = document.getElementById('leagueSelect');
+            const titleSelect = document.getElementById('positionSelect');
+            
+            if (searchInput) searchInput.value = '';
+            if (leagueSelect) leagueSelect.value = '';
+            if (positionSelect) positionSelect.value = '';
+            
+            // 全選手を再表示
+            if (currentPlayers && currentPlayers.length > 0) {
+                displayPlayers(currentPlayers);
+                console.log('Search cleared, showing all players');
             }
         }
 
