@@ -2478,14 +2478,30 @@ function generateFallbackSearchResults(query, limit) {
     return filteredPlayers.slice(0, limit);
 }
 
+// キャッシュマネージャーの初期化
+const CacheManager = require('./cacheManager');
+const cacheManager = new CacheManager();
+
 // 動的に日本人選手データを取得するAPIエンドポイント
 app.get('/api/japanese-players', async (req, res) => {
     try {
         console.log('Japanese players API called');
         
+        // キャッシュからデータを取得
+        const cachedPlayers = await cacheManager.getCachedPlayers();
+        
+        if (cachedPlayers.length > 0) {
+            console.log(`📊 Returning ${cachedPlayers.length} players from cache`);
+            return res.json({ 
+                players: cachedPlayers, 
+                source: 'cache',
+                cacheStats: cacheManager.getCacheStats()
+            });
+        }
+        
         if (!process.env.API_FOOTBALL_KEY || process.env.API_FOOTBALL_KEY === 'NOT SET') {
             console.log('API key not available, using fallback data');
-            return res.json(generateFallbackPlayers(8));
+            return res.json(generateFallbackPlayers(19));
         }
 
         // 本番環境でのAPI制限チェック
@@ -2822,10 +2838,45 @@ app.get('/api/japanese-players', async (req, res) => {
             console.log(`📊 API success rate: ${((playerData.length / (majorTeams.length * 25)) * 100).toFixed(1)}%`);
         }
 
-        res.json(playerData);
+        // 取得したデータをキャッシュに保存
+        for (const player of playerData) {
+            await cacheManager.savePlayerData(player);
+        }
+        
+        res.json({ 
+            players: playerData, 
+            source: 'api',
+            cacheStats: cacheManager.getCacheStats()
+        });
     } catch (error) {
         console.error('Japanese players API error:', error);
         res.status(500).json({ error: 'Failed to fetch Japanese players' });
+    }
+});
+
+// キャッシュ統計APIエンドポイント
+app.get('/api/cache-stats', (req, res) => {
+    try {
+        const stats = cacheManager.getCacheStats();
+        res.json(stats);
+    } catch (error) {
+        console.error('Error getting cache stats:', error);
+        res.status(500).json({ error: 'Failed to get cache stats' });
+    }
+});
+
+// キャッシュクリアAPIエンドポイント
+app.post('/api/cache-clear', async (req, res) => {
+    try {
+        const cleanedCount = await cacheManager.cleanupCache();
+        res.json({ 
+            message: 'Cache cleared successfully', 
+            cleanedCount,
+            cacheStats: cacheManager.getCacheStats()
+        });
+    } catch (error) {
+        console.error('Error clearing cache:', error);
+        res.status(500).json({ error: 'Failed to clear cache' });
     }
 });
 
