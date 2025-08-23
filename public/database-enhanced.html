@@ -835,9 +835,20 @@
             if (!grid) return;
             
             grid.innerHTML = '';
-            players.forEach(player => {
+            
+            // 最大1000名まで表示（パフォーマンス向上のため）
+            const displayPlayers = players.slice(0, 1000);
+            
+            console.log(`Displaying ${displayPlayers.length} players out of ${players.length} total`);
+            
+            displayPlayers.forEach((player, index) => {
                 if (player && player.name) {
                     grid.appendChild(createPlayerCard(player));
+                    
+                    // 大量データ表示時のパフォーマンス向上
+                    if (index % 100 === 0) {
+                        console.log(`Displayed ${index} players...`);
+                    }
                 }
             });
         }
@@ -1389,9 +1400,18 @@
 
         // 検索処理
         async function performSearch() {
-            const query = document.getElementById('searchInput').value.trim();
-            const league = document.getElementById('leagueSelect').value;
-            const position = document.getElementById('positionSelect').value;
+            const searchInput = document.getElementById('searchInput');
+            const leagueSelect = document.getElementById('leagueSelect');
+            const positionSelect = document.getElementById('positionSelect');
+            
+            if (!searchInput || !leagueSelect || !positionSelect) {
+                console.error('Search elements not found');
+                return;
+            }
+            
+            const query = searchInput.value.trim();
+            const league = leagueSelect.value;
+            const position = positionSelect.value;
             const detailedPositions = getSelectedDetailedPositions();
 
             if (!query && !league && !position && detailedPositions.length === 0) {
