@@ -2847,11 +2847,12 @@ app.get('/api/japanese-players', async (req, res) => {
         if (playerData.length < 50) {
             console.log(`⚠️ Only ${playerData.length} players fetched from teams - executing comprehensive team collection...`);
             
-            // 包括的なチームベース収集を実行
-            console.log(`🚀 Executing comprehensive team-based collection for 98 teams...`);
-            
-            // 各チームから選手データを取得（強制実行）
-            for (const team of majorTeams) {
+                    // 包括的なチームベース収集を実行
+        console.log(`🚀 Executing comprehensive team-based collection for 98 teams...`);
+        
+        // 各チームから選手データを取得（強制実行）
+        let teamCollectionCount = 0;
+        for (const team of majorTeams) {
                 try {
                     console.log(`\n🏟️ Collecting players from ${team.name} (${team.league})...`);
                     
@@ -2900,6 +2901,11 @@ app.get('/api/japanese-players', async (req, res) => {
                                         league: team.league,
                                         playerId: apiPlayer.id
                                     });
+                                    
+                                    teamCollectionCount++;
+                                    if (teamCollectionCount % 10 === 0) {
+                                        console.log(`📊 Progress: ${teamCollectionCount} players collected so far...`);
+                                    }
                                 }
                                 
                                 // API制限を避けるため少し待機
