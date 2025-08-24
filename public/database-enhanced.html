@@ -876,11 +876,12 @@
             const allPlayers = [...japanesePlayers, ...worldStars];
             const players = [];
 
-            // フォールバックデータを生成（顔写真付き）
-            for (let i = 0; i < Math.min(limit, allPlayers.length); i++) {
-                const basePlayer = allPlayers[i];
+            // フォールバックデータを生成（顔写真付き）- 重複なし
+            const uniquePlayers = allPlayers.slice(0, Math.min(limit, allPlayers.length));
+            
+            uniquePlayers.forEach((basePlayer, index) => {
                 const player = {
-                    id: i + 1,
+                    id: index + 1,
                     name: basePlayer.name,
                     fullName: basePlayer.fullName,
                     currentTeam: basePlayer.currentTeam,
@@ -906,7 +907,7 @@
                     }
                 };
                 players.push(player);
-            }
+            });
 
             console.log(`📊 Generated ${players.length} fallback players with photos`);
             return players;
@@ -922,6 +923,7 @@
             fallbackData.forEach((player, index) => {
                 console.log(`Player ${index + 1}: ${player.name} - Photo: ${player.photo}`);
                 console.log(`Player ${index + 1}: ${player.name} - Team: ${player.currentTeam} - Position: ${player.position} - Nationality: ${player.nationality}`);
+                console.log(`Player ${index + 1}: ${player.name} - Photo URL exists: ${!!player.photo}, Photo type: ${typeof player.photo}`);
             });
             
             displayPlayers(fallbackData);
