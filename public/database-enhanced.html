@@ -916,7 +916,7 @@
         // フォールバックデータを直接読み込み
         function loadFallbackData() {
             console.log('Loading fallback data...');
-            const fallbackData = generateFallbackPlayers(60);
+            const fallbackData = generateFallbackPlayers(19); // 19名に制限
             currentPlayers = fallbackData;
             
             // デバッグ用：各選手の顔写真URLを確認
@@ -924,6 +924,7 @@
                 console.log(`Player ${index + 1}: ${player.name} - Photo: ${player.photo}`);
                 console.log(`Player ${index + 1}: ${player.name} - Team: ${player.currentTeam} - Position: ${player.position} - Nationality: ${player.nationality}`);
                 console.log(`Player ${index + 1}: ${player.name} - Photo URL exists: ${!!player.photo}, Photo type: ${typeof player.photo}`);
+                console.log(`Player ${index + 1}: ${player.name} - Full player object:`, player);
             });
             
             displayPlayers(fallbackData);
