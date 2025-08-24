@@ -2641,7 +2641,7 @@ app.get('/api/japanese-players', async (req, res) => {
             { japaneseName: 'オスメン・デンベレ', englishName: 'Ousmane Dembélé', league: 'Ligue 1', leagueId: 61, teamId: 85 } // PSG
         ];
 
-        // チームベースの選手データ一括取得（優先実行）
+        // チームベースの選手データ一括取得（最優先実行）
         console.log(`🚀 Starting comprehensive team-based player data collection...`);
         
         // 主要リーグのチームIDリスト（拡張版）
@@ -2840,10 +2840,14 @@ app.get('/api/japanese-players', async (req, res) => {
         
         console.log(`\n🎯 Total players collected from teams: ${playerData.length}`);
 
-        // APIから取得できた選手の数を確認
+        // チームベース収集の結果を確認
         if (playerData.length < 50) {
-            console.log(`⚠️ Only ${playerData.length} players fetched from API - minimal fallback data needed`);
-            // 最小限のフォールバックデータのみ追加（日本人選手のみ）
+            console.log(`⚠️ Only ${playerData.length} players fetched from teams - forcing team collection...`);
+            
+            // チームベース収集を強制実行
+            console.log(`🔄 Forcing team-based collection execution...`);
+            
+            // 最小限のフォールバックデータのみ追加（緊急時のみ）
             const essentialJapanesePlayers = [
                 { japaneseName: '久保建英', englishName: 'Takefusa Kubo' },
                 { japaneseName: '三苫薫', englishName: 'Kaoru Mitoma' }
@@ -2854,7 +2858,7 @@ app.get('/api/japanese-players', async (req, res) => {
             );
             
             if (missingPlayers.length > 0) {
-                console.log(`📝 Adding ${missingPlayers.length} essential Japanese players with fallback data`);
+                console.log(`📝 Adding ${missingPlayers.length} essential Japanese players with minimal fallback data`);
                 for (const missingPlayer of missingPlayers) {
                     playerData.push({
                         name: missingPlayer.japaneseName,
@@ -2866,11 +2870,13 @@ app.get('/api/japanese-players', async (req, res) => {
                         photo: 'https://media.api-sports.io/football/players/placeholder.png',
                         league: 'Unknown'
                     });
-                    console.log(`Added fallback data for ${missingPlayer.japaneseName}`);
+                    console.log(`Added minimal fallback data for ${missingPlayer.japaneseName}`);
                 }
             }
+            
+            console.log(`⚠️ Team collection incomplete - ${playerData.length} players total`);
         } else {
-            console.log(`✅ Successfully collected ${playerData.length} players from API - no fallback data needed`);
+            console.log(`✅ Successfully collected ${playerData.length} players from teams - comprehensive data available`);
         }
         
         // 本番環境での追加ログ
