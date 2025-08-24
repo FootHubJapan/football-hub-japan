@@ -2442,10 +2442,13 @@ app.get('/api/japanese-players', async (req, res) => {
     try {
         console.log('Japanese players API called');
         
-        // キャッシュからデータを取得
+        // キャッシュからデータを取得（ただし最小限のデータのみ）
         const cachedPlayers = await cacheManager.getCachedPlayers();
         
-        if (cachedPlayers.length > 0) {
+        // キャッシュに十分なデータがない場合は、チームベース収集を実行
+        if (cachedPlayers.length < 50) {
+            console.log(`📊 Cache has only ${cachedPlayers.length} players - executing team-based collection...`);
+        } else {
             console.log(`📊 Returning ${cachedPlayers.length} players from cache`);
             return res.json({ 
                 players: cachedPlayers, 
