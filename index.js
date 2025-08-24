@@ -6,6 +6,7 @@ const helmet = require('helmet');
 let dataService;
 let aiService;
 let fotMobDataService;
+let footballDataService;
 
 try {
     console.log('Loading dataService...');
@@ -33,6 +34,16 @@ try {
 } catch (error) {
     console.error('Error loading fotMobDataService:', error);
     fotMobDataService = null;
+}
+
+try {
+    console.log('Loading FootballDataService...');
+    const FootballDataService = require('./footballDataService');
+    const footballDataService = new FootballDataService(process.env.FOOTBALL_DATA_API_KEY);
+    console.log('FootballDataService loaded successfully');
+} catch (error) {
+    console.error('Error loading FootballDataService:', error);
+    footballDataService = null;
 }
 
 // Load environment variables
@@ -2540,8 +2551,35 @@ app.get('/api/japanese-players', async (req, res) => {
             return await executeComprehensiveCollection();
         }
     } catch (error) {
-        console.error('Japanese players API error:', error);
-        res.status(500).json({ error: 'Failed to fetch Japanese players' });
+        console.error('❌ Error in /api/japanese-players:', error);
+        res.status(500).json({ 
+            error: 'Internal server error', 
+            message: error.message 
+        });
+    }
+});
+
+// ハイブリッド収集を手動実行するエンドポイント
+app.post('/api/execute-hybrid-collection', async (req, res) => {
+    try {
+        console.log('🚀 Manual hybrid collection requested');
+        
+        const result = await executeHybridCollection();
+        
+        res.json({
+            success: true,
+            message: 'ハイブリッド収集が完了しました',
+            playersCollected: result,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ Error in manual hybrid collection:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            message: error.message
+        });
     }
 });
 
@@ -2649,6 +2687,95 @@ async function executeEfficientCollection() {
     
     console.log(`🎯 Efficient collection completed: ${totalPlayers} players`);
     return totalPlayers;
+}
+
+// ハイブリッドデータ収集（football-data.org + API-Football）
+async function executeHybridCollection() {
+    console.log('🚀 ハイブリッドデータ収集を開始...');
+    
+    if (!footballDataService) {
+        console.log('⚠️ FootballDataService not available, falling back to efficient collection');
+        return await executeEfficientCollection();
+    }
+    
+    try {
+        // Step 1: football-data.orgから基本データを取得
+        console.log('📡 Step 1: football-data.orgから基本データを取得中...');
+        const japanesePlayers = await footballDataService.getJapanesePlayers();
+        console.log(`✅ football-data.orgから${japanesePlayers.length}名の日本人選手を取得`);
+        
+        // Step 2: 主要リーグの選手データを取得
+        const competitions = [2021, 2014, 2002, 2019, 2015]; // 主要5リーグ
+        let allPlayers = [];
+        
+        for (const compId of competitions) {
+            try {
+                const teams = await footballDataService.getLeaguePlayers(compId);
+                console.log(`🏟️ ${compId}リーグから${teams.length}チームを取得`);
+                
+                for (const team of teams.slice(0, 5)) { // 各リーグ上位5チームのみ
+                    const squad = await footballDataService.getTeamSquad(team.id);
+                    console.log(`👥 ${team.name}から${squad.length}名の選手を取得`);
+                    
+                    // 選手データを整形
+                    const formattedPlayers = squad.map(player => ({
+                        id: `hybrid_${player.id || Math.random().toString(36).substr(2, 9)}`,
+                        name: player.name,
+                        fullName: player.name,
+                        currentTeam: team.name,
+                        position: player.position || 'Unknown',
+                        nationality: player.nationality || 'Unknown',
+                        age: player.age || null,
+                        league: getLeagueName(compId),
+                        photo: team.crest || 'https://media.api-sports.io/football/players/placeholder.png',
+                        englishName: player.name,
+                        stats: generateRealisticStats(player.name)
+                    }));
+                    
+                    allPlayers.push(...formattedPlayers);
+                }
+                
+                // レート制限を考慮して待機
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+            } catch (error) {
+                console.error(`❌ リーグ${compId}の取得に失敗:`, error.message);
+            }
+        }
+        
+        // Step 3: データベースに保存
+        console.log(`💾 ${allPlayers.length}名の選手データをデータベースに保存中...`);
+        let savedCount = 0;
+        
+        for (const player of allPlayers) {
+            try {
+                await savePlayerData(player);
+                savedCount++;
+            } catch (error) {
+                console.error(`❌ 選手保存エラー (${player.name}):`, error.message);
+            }
+        }
+        
+        console.log(`🎯 ハイブリッド収集完了: ${savedCount}名の選手を保存`);
+        return savedCount;
+        
+    } catch (error) {
+        console.error('❌ ハイブリッド収集エラー:', error);
+        console.log('⚠️ フォールバック: 効率的な収集を実行');
+        return await executeEfficientCollection();
+    }
+}
+
+// リーグIDからリーグ名を取得
+function getLeagueName(competitionId) {
+    const leagueMap = {
+        2021: 'Premier League',
+        2014: 'La Liga',
+        2002: 'Bundesliga',
+        2019: 'Serie A',
+        2015: 'Ligue 1'
+    };
+    return leagueMap[competitionId] || 'Unknown League';
 }
 
 // 包括的なデータ収集（API制限がない場合）
@@ -3149,8 +3276,8 @@ async function performAutoUpdate() {
         
         // データが少ない場合は効率的な収集を実行
         if (currentStats.totalPlayers < 50) {
-            console.log('⚠️ データが不足しています。効率的な収集を実行します。');
-            await executeEfficientCollection();
+            console.log('⚠️ データが不足しています。ハイブリッド収集を実行します。');
+            await executeHybridCollection();
         } else {
             console.log('✅ 十分なデータがあります。増分更新を実行します。');
             await performIncrementalUpdate();
