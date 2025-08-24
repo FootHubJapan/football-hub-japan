@@ -2499,6 +2499,18 @@ app.get('/api/japanese-players', async (req, res) => {
                 };
             }
             
+            // リーグIDを取得
+            getLeagueId(leagueName) {
+                const leagueMap = {
+                    'Premier League': 39,
+                    'La Liga': 140,
+                    'Bundesliga': 78,
+                    'Serie A': 135,
+                    'Ligue 1': 61
+                };
+                return leagueMap[leagueName] || 39;
+            }
+            
             // 選手検索（複数の戦略を使用）
             async searchPlayer(playerInfo) {
                 const strategies = [
@@ -2767,19 +2779,62 @@ app.get('/api/japanese-players', async (req, res) => {
             try {
                 console.log(`\n🏟️ Collecting players from ${team.name} (${team.league})...`);
                 
-                // チームのスカッドを取得
-                const squadResponse = await fetch(`${playerManager.baseUrl}/players/squads?team=${team.id}`, {
-                    headers: playerManager.getHeaders()
-                });
+                // チームのスカッドを取得（複数のAPIエンドポイントを試行）
+                let players = [];
                 
-                if (squadResponse.ok) {
-                    const squadData = await squadResponse.json();
-                    const players = squadData.response[0]?.players || [];
+                // 方法1: スカッドエンドポイント
+                try {
+                    const squadResponse = await fetch(`${playerManager.baseUrl}/players/squads?team=${team.id}`, {
+                        headers: playerManager.getHeaders()
+                    });
                     
-                    console.log(`📊 Found ${players.length} players in ${team.name}`);
-                    
-                    // 各選手の詳細情報を取得
-                    for (const player of players.slice(0, 25)) { // 各チーム最大25名まで
+                    if (squadResponse.ok) {
+                        const squadData = await squadResponse.json();
+                        players = squadData.response[0]?.players || [];
+                        console.log(`📊 Found ${players.length} players in ${team.name} via squads endpoint`);
+                    }
+                } catch (error) {
+                    console.log(`❌ Squad endpoint failed for ${team.name}:`, error.message);
+                }
+                
+                // 方法2: チーム別選手検索（スカッドが失敗した場合）
+                if (players.length === 0) {
+                    try {
+                        const teamResponse = await fetch(`${playerManager.baseUrl}/players?team=${team.id}&season=2025`, {
+                            headers: playerManager.getHeaders()
+                        });
+                        
+                        if (teamResponse.ok) {
+                            const teamData = await teamResponse.json();
+                            players = teamData.response || [];
+                            console.log(`📊 Found ${players.length} players in ${team.name} via team endpoint`);
+                        }
+                    } catch (error) {
+                        console.log(`❌ Team endpoint failed for ${team.name}:`, error.message);
+                    }
+                }
+                
+                // 方法3: リーグ別選手検索（最後の手段）
+                if (players.length === 0) {
+                    try {
+                        const leagueResponse = await fetch(`${playerManager.baseUrl}/players?league=${playerManager.getLeagueId(team.league)}&season=2025&page=1`, {
+                            headers: playerManager.getHeaders()
+                        });
+                        
+                        if (leagueResponse.ok) {
+                            const leagueData = await leagueResponse.json();
+                            players = leagueData.response || [];
+                            console.log(`📊 Found ${players.length} players in ${team.name} via league endpoint`);
+                        }
+                    } catch (error) {
+                        console.log(`❌ League endpoint failed for ${team.name}:`, error.message);
+                    }
+                }
+                
+                console.log(`📊 Final result: ${players.length} players in ${team.name}`);
+                
+                // 各選手の詳細情報を取得
+                for (const player of players.slice(0, 25)) { // 各チーム最大25名まで
                         try {
                             const playerStats = await playerManager.getPlayerStats(player.id, 2025);
                             
@@ -2847,76 +2902,119 @@ app.get('/api/japanese-players', async (req, res) => {
         if (playerData.length < 50) {
             console.log(`⚠️ Only ${playerData.length} players fetched from teams - executing comprehensive team collection...`);
             
-                    // 包括的なチームベース収集を実行
-        console.log(`🚀 Executing comprehensive team-based collection for 98 teams...`);
-        
-        // 各チームから選手データを取得（強制実行）
-        let teamCollectionCount = 0;
-        for (const team of majorTeams) {
+            // 包括的なチームベース収集を実行
+            console.log(`🚀 Executing comprehensive team-based collection for 98 teams...`);
+            
+            // 各チームから選手データを取得（強制実行）
+            let teamCollectionCount = 0;
+            for (const team of majorTeams) {
                 try {
                     console.log(`\n🏟️ Collecting players from ${team.name} (${team.league})...`);
                     
-                    // チームのスカッドを取得
-                    const squadResponse = await fetch(`${playerManager.baseUrl}/players/squads?team=${team.id}`, {
-                        headers: playerManager.getHeaders()
-                    });
+                    // チームのスカッドを取得（複数のAPIエンドポイントを試行）
+                    let players = [];
                     
-                    if (squadResponse.ok) {
-                        const squadData = await squadResponse.json();
-                        const players = squadData.response[0]?.players || [];
+                    // 方法1: スカッドエンドポイント
+                    try {
+                        const squadResponse = await fetch(`${playerManager.baseUrl}/players/squads?team=${team.id}`, {
+                            headers: playerManager.getHeaders()
+                        });
                         
-                        console.log(`📊 Found ${players.length} players in ${team.name}`);
-                        
-                        // 各選手の詳細情報を取得
-                        for (const player of players.slice(0, 25)) { // 各チーム最大25名まで
-                            try {
-                                const playerStats = await playerManager.getPlayerStats(player.id, 2025);
-                                
-                                if (playerStats && playerStats.player) {
-                                    const apiPlayer = playerStats.player;
-                                    const stats = playerStats.statistics && playerStats.statistics.length > 0 ? playerStats.statistics[0] : null;
-                                    
-                                    // 日本語名のマッピング（主要選手のみ）
-                                    const japaneseNameMap = {
-                                        'Takefusa Kubo': '久保建英',
-                                        'Kaoru Mitoma': '三苫薫',
-                                        'Takehiro Tomiyasu': '富安健洋',
-                                        'Wataru Endo': '遠藤航',
-                                        'Ritsu Doan': '堂安律',
-                                        'Hiroki Ito': '伊藤洋輝',
-                                        'Takuma Asano': '浅野拓磨',
-                                        'Takumi Minamino': '南野拓実',
-                                        'Ao Tanaka': '田中碧'
-                                    };
-                                    
-                                    playerData.push({
-                                        name: japaneseNameMap[apiPlayer.name] || apiPlayer.name,
-                                        englishName: apiPlayer.name,
-                                        fullName: `${apiPlayer.firstname} ${apiPlayer.lastname}`,
-                                        currentTeam: stats?.team?.name || team.name,
-                                        position: stats?.games?.position || 'Unknown',
-                                        nationality: apiPlayer.nationality,
-                                        age: apiPlayer.age,
-                                        photo: apiPlayer.photo,
-                                        league: team.league,
-                                        playerId: apiPlayer.id
-                                    });
-                                    
-                                    teamCollectionCount++;
-                                    if (teamCollectionCount % 10 === 0) {
-                                        console.log(`📊 Progress: ${teamCollectionCount} players collected so far...`);
-                                    }
-                                }
-                                
-                                // API制限を避けるため少し待機
-                                await new Promise(resolve => setTimeout(resolve, 100));
-                                
-                            } catch (error) {
-                                console.log(`Error fetching player ${player.id}:`, error.message);
-                                continue;
-                            }
+                        if (squadResponse.ok) {
+                            const squadData = await squadResponse.json();
+                            players = squadData.response[0]?.players || [];
+                            console.log(`📊 Found ${players.length} players in ${team.name} via squads endpoint`);
                         }
-                    } else {
+                    } catch (error) {
+                        console.log(`❌ Squad endpoint failed for ${team.name}:`, error.message);
+                    }
+                    
+                    // 方法2: チーム別選手検索（スカッドが失敗した場合）
+                    if (players.length === 0) {
+                        try {
+                            const teamResponse = await fetch(`${playerManager.baseUrl}/players?team=${team.id}&season=2025`, {
+                                headers: playerManager.getHeaders()
+                            });
+                            
+                            if (teamResponse.ok) {
+                                const teamData = await teamResponse.json();
+                                players = teamData.response || [];
+                                console.log(`📊 Found ${players.length} players in ${team.name} via team endpoint`);
+                            }
+                        } catch (error) {
+                            console.log(`❌ Team endpoint failed for ${team.name}:`, error.message);
+                        }
+                    }
+                    
+                    // 方法3: リーグ別選手検索（最後の手段）
+                    if (players.length === 0) {
+                        try {
+                            const leagueResponse = await fetch(`${playerManager.baseUrl}/players?league=${playerManager.getLeagueId(team.league)}&season=2025&page=1`, {
+                                headers: playerManager.getHeaders()
+                            });
+                            
+                            if (leagueResponse.ok) {
+                                const leagueData = await leagueResponse.json();
+                                players = leagueData.response || [];
+                                console.log(`📊 Found ${players.length} players in ${team.name} via league endpoint`);
+                            }
+                        } catch (error) {
+                            console.log(`❌ League endpoint failed for ${team.name}:`, error.message);
+                        }
+                    }
+                    
+                    console.log(`📊 Final result: ${players.length} players in ${team.name}`);
+                    
+                    // 各選手の詳細情報を取得
+                    for (const player of players.slice(0, 25)) { // 各チーム最大25名まで
+                        try {
+                            const playerStats = await playerManager.getPlayerStats(player.id, 2025);
+                            
+                            if (playerStats && playerStats.player) {
+                                const apiPlayer = playerStats.player;
+                                const stats = playerStats.statistics && playerStats.statistics.length > 0 ? playerStats.statistics[0] : null;
+                                
+                                // 日本語名のマッピング（主要選手のみ）
+                                const japaneseNameMap = {
+                                    'Takefusa Kubo': '久保建英',
+                                    'Kaoru Mitoma': '三苫薫',
+                                    'Takehiro Tomiyasu': '富安健洋',
+                                    'Wataru Endo': '遠藤航',
+                                    'Ritsu Doan': '堂安律',
+                                    'Hiroki Ito': '伊藤洋輝',
+                                    'Takuma Asano': '浅野拓磨',
+                                    'Takumi Minamino': '南野拓実',
+                                    'Ao Tanaka': '田中碧'
+                                };
+                                
+                                playerData.push({
+                                    name: japaneseNameMap[apiPlayer.name] || apiPlayer.name,
+                                    englishName: apiPlayer.name,
+                                    fullName: `${apiPlayer.firstname} ${apiPlayer.lastname}`,
+                                    currentTeam: stats?.team?.name || team.name,
+                                    position: stats?.games?.position || 'Unknown',
+                                    nationality: apiPlayer.nationality,
+                                    age: apiPlayer.age,
+                                    photo: apiPlayer.photo,
+                                    league: team.league,
+                                    playerId: apiPlayer.id
+                                });
+                                
+                                teamCollectionCount++;
+                                if (teamCollectionCount % 10 === 0) {
+                                    console.log(`📊 Progress: ${teamCollectionCount} players collected so far...`);
+                                }
+                            }
+                            
+                            // API制限を避けるため少し待機
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            
+                        } catch (error) {
+                            console.log(`Error fetching player ${player.id}:`, error.message);
+                            continue;
+                        }
+                    }
+                } else {
                         console.log(`❌ Failed to fetch squad for ${team.name}: ${squadResponse.status}`);
                         if (squadResponse.status === 429) { // Rate limit
                             console.log(`Rate limit hit, waiting 5 seconds...`);
