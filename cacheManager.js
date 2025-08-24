@@ -138,6 +138,16 @@ class CacheManager {
         }
     }
 
+    // 選手名で選手を取得
+    async getPlayerByName(name) {
+        try {
+            return this.db.getPlayerByName(name);
+        } catch (error) {
+            console.error('Error getting player by name:', error);
+            return null;
+        }
+    }
+
     // 最後の更新時刻を取得
     getLastUpdateTime(dataType) {
         try {
