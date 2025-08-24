@@ -2642,7 +2642,7 @@ app.get('/api/japanese-players', async (req, res) => {
         ];
 
         // チームベースの選手データ一括取得（優先実行）
-        console.log(`Starting team-based player data collection...`);
+        console.log(`🚀 Starting comprehensive team-based player data collection...`);
         
         // 主要リーグのチームIDリスト（拡張版）
         const majorTeams = [
@@ -2757,7 +2757,7 @@ app.get('/api/japanese-players', async (req, res) => {
             { id: 100, name: 'Nantes', league: 'Ligue 1' }
         ];
         
-        console.log(`Collecting players from ${majorTeams.length} major teams...`);
+        console.log(`🎯 Collecting players from ${majorTeams.length} major teams across 5 leagues...`);
         
         // 各チームから選手データを取得
         for (const team of majorTeams) {
@@ -2838,7 +2838,7 @@ app.get('/api/japanese-players', async (req, res) => {
             }
         }
         
-        console.log(`\n🎯 Total players collected: ${playerData.length}`);
+        console.log(`\n🎯 Total players collected from teams: ${playerData.length}`);
 
         // APIから取得できた選手の数を確認
         if (playerData.length < 50) {
