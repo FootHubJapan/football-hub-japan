@@ -2442,13 +2442,10 @@ app.get('/api/japanese-players', async (req, res) => {
     try {
         console.log('Japanese players API called');
         
-        // キャッシュからデータを取得（ただし最小限のデータのみ）
+        // キャッシュからデータを取得
         const cachedPlayers = await cacheManager.getCachedPlayers();
         
-        // キャッシュに十分なデータがない場合は、チームベース収集を実行
-        if (cachedPlayers.length < 50) {
-            console.log(`📊 Cache has only ${cachedPlayers.length} players - executing team-based collection...`);
-        } else {
+        if (cachedPlayers.length > 0) {
             console.log(`📊 Returning ${cachedPlayers.length} players from cache`);
             return res.json({ 
                 players: cachedPlayers, 
@@ -2497,18 +2494,6 @@ app.get('/api/japanese-players', async (req, res) => {
                     'x-rapidapi-host': 'v3.football.api-sports.io',
                     'x-rapidapi-key': this.apiKey
                 };
-            }
-            
-            // リーグIDを取得
-            getLeagueId(leagueName) {
-                const leagueMap = {
-                    'Premier League': 39,
-                    'La Liga': 140,
-                    'Bundesliga': 78,
-                    'Serie A': 135,
-                    'Ligue 1': 61
-                };
-                return leagueMap[leagueName] || 39;
             }
             
             // 選手検索（複数の戦略を使用）
@@ -2656,12 +2641,12 @@ app.get('/api/japanese-players', async (req, res) => {
             { japaneseName: 'オスメン・デンベレ', englishName: 'Ousmane Dembélé', league: 'Ligue 1', leagueId: 61, teamId: 85 } // PSG
         ];
 
-        // チームベースの選手データ一括取得（最優先実行）
-        console.log(`🚀 Starting comprehensive team-based player data collection...`);
+        // チームベースの選手データ一括取得
+        console.log(`Starting team-based player data collection...`);
         
-        // 主要リーグのチームIDリスト（拡張版）
+        // 主要リーグのチームIDリスト
         const majorTeams = [
-            // Premier League (イングランド) - 20チーム
+            // Premier League (イングランド)
             { id: 40, name: 'Liverpool', league: 'Premier League' },
             { id: 42, name: 'Arsenal', league: 'Premier League' },
             { id: 50, name: 'Manchester City', league: 'Premier League' },
@@ -2670,171 +2655,60 @@ app.get('/api/japanese-players', async (req, res) => {
             { id: 47, name: 'Tottenham', league: 'Premier League' },
             { id: 49, name: 'Chelsea', league: 'Premier League' },
             { id: 34, name: 'Newcastle', league: 'Premier League' },
-            { id: 45, name: 'Everton', league: 'Premier League' },
-            { id: 52, name: 'Crystal Palace', league: 'Premier League' },
-            { id: 39, name: 'Wolves', league: 'Premier League' },
-            { id: 48, name: 'West Ham', league: 'Premier League' },
-            { id: 35, name: 'Aston Villa', league: 'Premier League' },
-            { id: 55, name: 'Brentford', league: 'Premier League' },
-            { id: 41, name: 'Leeds', league: 'Premier League' },
-            { id: 46, name: 'Leicester', league: 'Premier League' },
-            { id: 44, name: 'Burnley', league: 'Premier League' },
-            { id: 43, name: 'Fulham', league: 'Premier League' },
-            { id: 38, name: 'Watford', league: 'Premier League' },
-            { id: 53, name: 'Southampton', league: 'Premier League' },
             
-            // La Liga (スペイン) - 20チーム
+            // La Liga (スペイン)
             { id: 541, name: 'Real Madrid', league: 'La Liga' },
             { id: 529, name: 'Barcelona', league: 'La Liga' },
             { id: 530, name: 'Atletico Madrid', league: 'La Liga' },
             { id: 548, name: 'Real Sociedad', league: 'La Liga' },
             { id: 543, name: 'Sevilla', league: 'La Liga' },
             { id: 536, name: 'Valencia', league: 'La Liga' },
-            { id: 531, name: 'Athletic Bilbao', league: 'La Liga' },
-            { id: 532, name: 'Osasuna', league: 'La Liga' },
-            { id: 533, name: 'Villarreal', league: 'La Liga' },
-            { id: 534, name: 'Celta Vigo', league: 'La Liga' },
-            { id: 535, name: 'Real Betis', league: 'La Liga' },
-            { id: 537, name: 'Getafe', league: 'La Liga' },
-            { id: 538, name: 'Levante', league: 'La Liga' },
-            { id: 539, name: 'Granada', league: 'La Liga' },
-            { id: 540, name: 'Alaves', league: 'La Liga' },
-            { id: 542, name: 'Rayo Vallecano', league: 'La Liga' },
-            { id: 544, name: 'Mallorca', league: 'La Liga' },
-            { id: 545, name: 'Girona', league: 'La Liga' },
-            { id: 546, name: 'Cadiz', league: 'La Liga' },
-            { id: 547, name: 'Las Palmas', league: 'La Liga' },
             
-            // Bundesliga (ドイツ) - 18チーム
+            // Bundesliga (ドイツ)
             { id: 157, name: 'Bayern Munich', league: 'Bundesliga' },
             { id: 165, name: 'Borussia Dortmund', league: 'Bundesliga' },
             { id: 172, name: 'Stuttgart', league: 'Bundesliga' },
             { id: 160, name: 'Eintracht Frankfurt', league: 'Bundesliga' },
             { id: 164, name: 'Bochum', league: 'Bundesliga' },
             { id: 161, name: 'Bayer Leverkusen', league: 'Bundesliga' },
-            { id: 159, name: 'Hertha Berlin', league: 'Bundesliga' },
-            { id: 162, name: 'Hoffenheim', league: 'Bundesliga' },
-            { id: 163, name: 'Mainz', league: 'Bundesliga' },
-            { id: 166, name: 'Schalke', league: 'Bundesliga' },
-            { id: 167, name: 'Werder Bremen', league: 'Bundesliga' },
-            { id: 168, name: 'Augsburg', league: 'Bundesliga' },
-            { id: 169, name: 'Freiburg', league: 'Bundesliga' },
-            { id: 170, name: 'Hannover', league: 'Bundesliga' },
-            { id: 171, name: 'Nürnberg', league: 'Bundesliga' },
-            { id: 173, name: 'Hamburger SV', league: 'Bundesliga' },
-            { id: 174, name: 'Hannover 96', league: 'Bundesliga' },
-            { id: 175, name: 'Kaiserslautern', league: 'Bundesliga' },
-            { id: 176, name: 'Karlsruher SC', league: 'Bundesliga' },
             
-            // Serie A (イタリア) - 20チーム
+            // Serie A (イタリア)
             { id: 505, name: 'Inter Milan', league: 'Serie A' },
             { id: 492, name: 'AC Milan', league: 'Serie A' },
             { id: 496, name: 'Juventus', league: 'Serie A' },
             { id: 487, name: 'AS Monaco', league: 'Serie A' },
             { id: 499, name: 'Napoli', league: 'Serie A' },
             { id: 502, name: 'Roma', league: 'Serie A' },
-            { id: 488, name: 'Lazio', league: 'Serie A' },
-            { id: 489, name: 'Fiorentina', league: 'Serie A' },
-            { id: 490, name: 'Atalanta', league: 'Serie A' },
-            { id: 491, name: 'Bologna', league: 'Serie A' },
-            { id: 493, name: 'Cagliari', league: 'Serie A' },
-            { id: 494, name: 'Empoli', league: 'Serie A' },
-            { id: 495, name: 'Genoa', league: 'Serie A' },
-            { id: 497, name: 'Lecce', league: 'Serie A' },
-            { id: 498, name: 'Monza', league: 'Serie A' },
-            { id: 500, name: 'Salernitana', league: 'Serie A' },
-            { id: 501, name: 'Sassuolo', league: 'Serie A' },
-            { id: 503, name: 'Torino', league: 'Serie A' },
-            { id: 504, name: 'Udinese', league: 'Serie A' },
-            { id: 506, name: 'Verona', league: 'Serie A' },
             
-            // Ligue 1 (フランス) - 20チーム
+            // Ligue 1 (フランス)
             { id: 85, name: 'PSG', league: 'Ligue 1' },
             { id: 80, name: 'Marseille', league: 'Ligue 1' },
             { id: 91, name: 'Lyon', league: 'Ligue 1' },
             { id: 99, name: 'Fortuna Düsseldorf', league: 'Ligue 1' },
             { id: 93, name: 'Monaco', league: 'Ligue 1' },
-            { id: 95, name: 'Nice', league: 'Ligue 1' },
-            { id: 81, name: 'Bordeaux', league: 'Ligue 1' },
-            { id: 82, name: 'Lille', league: 'Ligue 1' },
-            { id: 83, name: 'Lens', league: 'Ligue 1' },
-            { id: 84, name: 'Montpellier', league: 'Ligue 1' },
-            { id: 86, name: 'Reims', league: 'Ligue 1' },
-            { id: 87, name: 'Rennes', league: 'Ligue 1' },
-            { id: 88, name: 'Saint-Etienne', league: 'Ligue 1' },
-            { id: 89, name: 'Strasbourg', league: 'Ligue 1' },
-            { id: 90, name: 'Toulouse', league: 'Ligue 1' },
-            { id: 92, name: 'Troyes', league: 'Ligue 1' },
-            { id: 94, name: 'Angers', league: 'Ligue 1' },
-            { id: 96, name: 'Brest', league: 'Ligue 1' },
-            { id: 97, name: 'Clermont', league: 'Ligue 1' },
-            { id: 98, name: 'Lorient', league: 'Ligue 1' },
-            { id: 100, name: 'Nantes', league: 'Ligue 1' }
+            { id: 95, name: 'Nice', league: 'Ligue 1' }
         ];
         
-        console.log(`🎯 Collecting players from ${majorTeams.length} major teams across 5 leagues...`);
+        console.log(`Collecting players from ${majorTeams.length} major teams...`);
         
         // 各チームから選手データを取得
         for (const team of majorTeams) {
             try {
                 console.log(`\n🏟️ Collecting players from ${team.name} (${team.league})...`);
                 
-                // チームのスカッドを取得（複数のAPIエンドポイントを試行）
-                let players = [];
+                // チームのスカッドを取得
+                const squadResponse = await fetch(`${playerManager.baseUrl}/players/squads?team=${team.id}`, {
+                    headers: playerManager.getHeaders()
+                });
                 
-                // 方法1: スカッドエンドポイント
-                try {
-                    const squadResponse = await fetch(`${playerManager.baseUrl}/players/squads?team=${team.id}`, {
-                        headers: playerManager.getHeaders()
-                    });
+                if (squadResponse.ok) {
+                    const squadData = await squadResponse.json();
+                    const players = squadData.response[0]?.players || [];
                     
-                    if (squadResponse.ok) {
-                        const squadData = await squadResponse.json();
-                        players = squadData.response[0]?.players || [];
-                        console.log(`📊 Found ${players.length} players in ${team.name} via squads endpoint`);
-                    }
-                } catch (error) {
-                    console.log(`❌ Squad endpoint failed for ${team.name}:`, error.message);
-                }
-                
-                // 方法2: チーム別選手検索（スカッドが失敗した場合）
-                if (players.length === 0) {
-                    try {
-                        const teamResponse = await fetch(`${playerManager.baseUrl}/players?team=${team.id}&season=2025`, {
-                            headers: playerManager.getHeaders()
-                        });
-                        
-                        if (teamResponse.ok) {
-                            const teamData = await teamResponse.json();
-                            players = teamData.response || [];
-                            console.log(`📊 Found ${players.length} players in ${team.name} via team endpoint`);
-                        }
-                    } catch (error) {
-                        console.log(`❌ Team endpoint failed for ${team.name}:`, error.message);
-                    }
-                }
-                
-                // 方法3: リーグ別選手検索（最後の手段）
-                if (players.length === 0) {
-                    try {
-                        const leagueResponse = await fetch(`${playerManager.baseUrl}/players?league=${playerManager.getLeagueId(team.league)}&season=2025&page=1`, {
-                            headers: playerManager.getHeaders()
-                        });
-                        
-                        if (leagueResponse.ok) {
-                            const leagueData = await leagueResponse.json();
-                            players = leagueData.response || [];
-                            console.log(`📊 Found ${players.length} players in ${team.name} via league endpoint`);
-                        }
-                    } catch (error) {
-                        console.log(`❌ League endpoint failed for ${team.name}:`, error.message);
-                    }
-                }
-                
-                console.log(`📊 Final result: ${players.length} players in ${team.name}`);
-                
-                // 各選手の詳細情報を取得
-                for (const player of players.slice(0, 25)) { // 各チーム最大25名まで
+                    console.log(`📊 Found ${players.length} players in ${team.name}`);
+                    
+                    // 各選手の詳細情報を取得
+                    for (const player of players.slice(0, 25)) { // 各チーム最大25名まで
                         try {
                             const playerStats = await playerManager.getPlayerStats(player.id, 2025);
                             
@@ -2896,179 +2770,21 @@ app.get('/api/japanese-players', async (req, res) => {
             }
         }
         
-        console.log(`\n🎯 Total players collected from teams: ${playerData.length}`);
+        console.log(`\n🎯 Total players collected: ${playerData.length}`);
 
-        // チームベース収集の結果を確認
+        // APIから取得できた選手が少ない場合は、フォールバックデータを補完
         if (playerData.length < 50) {
-            console.log(`⚠️ Only ${playerData.length} players fetched from teams - executing comprehensive team collection...`);
-            
-            // 包括的なチームベース収集を実行
-            console.log(`🚀 Executing comprehensive team-based collection for 98 teams...`);
-            
-            // 各チームから選手データを取得（強制実行）
-            let teamCollectionCount = 0;
-            for (const team of majorTeams) {
-                try {
-                    console.log(`\n🏟️ Collecting players from ${team.name} (${team.league})...`);
-                    
-                    // チームのスカッドを取得（複数のAPIエンドポイントを試行）
-                    let players = [];
-                    
-                    // 方法1: スカッドエンドポイント
-                    try {
-                        const squadResponse = await fetch(`${playerManager.baseUrl}/players/squads?team=${team.id}`, {
-                            headers: playerManager.getHeaders()
-                        });
-                        
-                        if (squadResponse.ok) {
-                            const squadData = await squadResponse.json();
-                            players = squadData.response[0]?.players || [];
-                            console.log(`📊 Found ${players.length} players in ${team.name} via squads endpoint`);
-                        }
-                    } catch (error) {
-                        console.log(`❌ Squad endpoint failed for ${team.name}:`, error.message);
-                    }
-                    
-                    // 方法2: チーム別選手検索（スカッドが失敗した場合）
-                    if (players.length === 0) {
-                        try {
-                            const teamResponse = await fetch(`${playerManager.baseUrl}/players?team=${team.id}&season=2025`, {
-                                headers: playerManager.getHeaders()
-                            });
-                            
-                            if (teamResponse.ok) {
-                                const teamData = await teamResponse.json();
-                                players = teamData.response || [];
-                                console.log(`📊 Found ${players.length} players in ${team.name} via team endpoint`);
-                            }
-                        } catch (error) {
-                            console.log(`❌ Team endpoint failed for ${team.name}:`, error.message);
-                        }
-                    }
-                    
-                    // 方法3: リーグ別選手検索（最後の手段）
-                    if (players.length === 0) {
-                        try {
-                            const leagueResponse = await fetch(`${playerManager.baseUrl}/players?league=${playerManager.getLeagueId(team.league)}&season=2025&page=1`, {
-                                headers: playerManager.getHeaders()
-                            });
-                            
-                            if (leagueResponse.ok) {
-                                const leagueData = await leagueResponse.json();
-                                players = leagueData.response || [];
-                                console.log(`📊 Found ${players.length} players in ${team.name} via league endpoint`);
-                            }
-                        } catch (error) {
-                            console.log(`❌ League endpoint failed for ${team.name}:`, error.message);
-                        }
-                    }
-                    
-                    console.log(`📊 Final result: ${players.length} players in ${team.name}`);
-                    
-                    // 各選手の詳細情報を取得
-                    for (const player of players.slice(0, 25)) { // 各チーム最大25名まで
-                        try {
-                            const playerStats = await playerManager.getPlayerStats(player.id, 2025);
-                            
-                            if (playerStats && playerStats.player) {
-                                const apiPlayer = playerStats.player;
-                                const stats = playerStats.statistics && playerStats.statistics.length > 0 ? playerStats.statistics[0] : null;
-                                
-                                // 日本語名のマッピング（主要選手のみ）
-                                const japaneseNameMap = {
-                                    'Takefusa Kubo': '久保建英',
-                                    'Kaoru Mitoma': '三苫薫',
-                                    'Takehiro Tomiyasu': '富安健洋',
-                                    'Wataru Endo': '遠藤航',
-                                    'Ritsu Doan': '堂安律',
-                                    'Hiroki Ito': '伊藤洋輝',
-                                    'Takuma Asano': '浅野拓磨',
-                                    'Takumi Minamino': '南野拓実',
-                                    'Ao Tanaka': '田中碧'
-                                };
-                                
-                                playerData.push({
-                                    name: japaneseNameMap[apiPlayer.name] || apiPlayer.name,
-                                    englishName: apiPlayer.name,
-                                    fullName: `${apiPlayer.firstname} ${apiPlayer.lastname}`,
-                                    currentTeam: stats?.team?.name || team.name,
-                                    position: stats?.games?.position || 'Unknown',
-                                    nationality: apiPlayer.nationality,
-                                    age: apiPlayer.age,
-                                    photo: apiPlayer.photo,
-                                    league: team.league,
-                                    playerId: apiPlayer.id
-                                });
-                                
-                                teamCollectionCount++;
-                                if (teamCollectionCount % 10 === 0) {
-                                    console.log(`📊 Progress: ${teamCollectionCount} players collected so far...`);
-                                }
-                            }
-                            
-                            // API制限を避けるため少し待機
-                            await new Promise(resolve => setTimeout(resolve, 100));
-                            
-                        } catch (error) {
-                            console.log(`Error fetching player ${player.id}:`, error.message);
-                            continue;
-                        }
-                    }
-                } else {
-                        console.log(`❌ Failed to fetch squad for ${team.name}: ${squadResponse.status}`);
-                        if (squadResponse.status === 429) { // Rate limit
-                            console.log(`Rate limit hit, waiting 5 seconds...`);
-                            await new Promise(resolve => setTimeout(resolve, 5000));
-                        }
-                    }
-                    
-                    // チーム間の待機
-                    const waitTime = process.env.NODE_ENV === 'production' ? 500 : 200;
-                    await new Promise(resolve => setTimeout(resolve, waitTime));
-                    
-                } catch (error) {
-                    console.log(`💥 Error collecting from ${team.name}:`, error.message);
+            console.log(`Only ${playerData.length} players fetched from API, using fallback data to complement`);
+            const fallbackData = generateFallbackPlayers(8);
+            // APIで取得できなかった選手のみをフォールバックから追加
+            const missingPlayers = players.filter(p => !playerData.find(pd => pd.name === p.japaneseName));
+            for (const missingPlayer of missingPlayers) {
+                const fallbackPlayer = fallbackData.find(fp => fp.name === missingPlayer.japaneseName);
+                if (fallbackPlayer) {
+                    playerData.push(fallbackPlayer);
+                    console.log(`Added fallback data for ${missingPlayer.japaneseName}`);
                 }
             }
-            
-            console.log(`\n🎯 Total players collected from comprehensive team collection: ${playerData.length}`);
-            
-            // 最小限のフォールバックデータのみ追加（緊急時のみ）
-            if (playerData.length < 10) {
-                const essentialJapanesePlayers = [
-                    { japaneseName: '久保建英', englishName: 'Takefusa Kubo' },
-                    { japaneseName: '三苫薫', englishName: 'Kaoru Mitoma' }
-                ];
-                
-                const missingPlayers = essentialJapanesePlayers.filter(p => 
-                    !playerData.find(pd => pd.englishName === p.englishName)
-                );
-                
-                if (missingPlayers.length > 0) {
-                    console.log(`📝 Adding ${missingPlayers.length} essential Japanese players with minimal fallback data`);
-                    for (const missingPlayer of missingPlayers) {
-                        playerData.push({
-                            name: missingPlayer.japaneseName,
-                            englishName: missingPlayer.englishName,
-                            currentTeam: 'Unknown',
-                            position: 'Unknown',
-                            nationality: 'Japan',
-                            age: 25,
-                            photo: 'https://media.api-sports.io/football/players/placeholder.png',
-                            league: 'Unknown'
-                        });
-                        console.log(`Added minimal fallback data for ${missingPlayer.japaneseName}`);
-                    }
-                }
-            }
-            
-            if (playerData.length < 50) {
-                console.log(`⚠️ Comprehensive team collection incomplete - ${playerData.length} players total`);
-            } else {
-                console.log(`✅ Successfully collected ${playerData.length} players from comprehensive team collection`);
-            }
-        } else {
-            console.log(`✅ Successfully collected ${playerData.length} players from initial team collection`);
         }
         
         // 本番環境での追加ログ
