@@ -2845,41 +2845,126 @@ app.get('/api/japanese-players', async (req, res) => {
 
         // チームベース収集の結果を確認
         if (playerData.length < 50) {
-            console.log(`⚠️ Only ${playerData.length} players fetched from teams - forcing team collection...`);
+            console.log(`⚠️ Only ${playerData.length} players fetched from teams - executing comprehensive team collection...`);
             
-            // チームベース収集を強制実行
-            console.log(`🔄 Forcing team-based collection execution...`);
+            // 包括的なチームベース収集を実行
+            console.log(`🚀 Executing comprehensive team-based collection for 98 teams...`);
             
-            // 最小限のフォールバックデータのみ追加（緊急時のみ）
-            const essentialJapanesePlayers = [
-                { japaneseName: '久保建英', englishName: 'Takefusa Kubo' },
-                { japaneseName: '三苫薫', englishName: 'Kaoru Mitoma' }
-            ];
-            
-            const missingPlayers = essentialJapanesePlayers.filter(p => 
-                !playerData.find(pd => pd.englishName === p.englishName)
-            );
-            
-            if (missingPlayers.length > 0) {
-                console.log(`📝 Adding ${missingPlayers.length} essential Japanese players with minimal fallback data`);
-                for (const missingPlayer of missingPlayers) {
-                    playerData.push({
-                        name: missingPlayer.japaneseName,
-                        englishName: missingPlayer.englishName,
-                        currentTeam: 'Unknown',
-                        position: 'Unknown',
-                        nationality: 'Japan',
-                        age: 25,
-                        photo: 'https://media.api-sports.io/football/players/placeholder.png',
-                        league: 'Unknown'
+            // 各チームから選手データを取得（強制実行）
+            for (const team of majorTeams) {
+                try {
+                    console.log(`\n🏟️ Collecting players from ${team.name} (${team.league})...`);
+                    
+                    // チームのスカッドを取得
+                    const squadResponse = await fetch(`${playerManager.baseUrl}/players/squads?team=${team.id}`, {
+                        headers: playerManager.getHeaders()
                     });
-                    console.log(`Added minimal fallback data for ${missingPlayer.japaneseName}`);
+                    
+                    if (squadResponse.ok) {
+                        const squadData = await squadResponse.json();
+                        const players = squadData.response[0]?.players || [];
+                        
+                        console.log(`📊 Found ${players.length} players in ${team.name}`);
+                        
+                        // 各選手の詳細情報を取得
+                        for (const player of players.slice(0, 25)) { // 各チーム最大25名まで
+                            try {
+                                const playerStats = await playerManager.getPlayerStats(player.id, 2025);
+                                
+                                if (playerStats && playerStats.player) {
+                                    const apiPlayer = playerStats.player;
+                                    const stats = playerStats.statistics && playerStats.statistics.length > 0 ? playerStats.statistics[0] : null;
+                                    
+                                    // 日本語名のマッピング（主要選手のみ）
+                                    const japaneseNameMap = {
+                                        'Takefusa Kubo': '久保建英',
+                                        'Kaoru Mitoma': '三苫薫',
+                                        'Takehiro Tomiyasu': '富安健洋',
+                                        'Wataru Endo': '遠藤航',
+                                        'Ritsu Doan': '堂安律',
+                                        'Hiroki Ito': '伊藤洋輝',
+                                        'Takuma Asano': '浅野拓磨',
+                                        'Takumi Minamino': '南野拓実',
+                                        'Ao Tanaka': '田中碧'
+                                    };
+                                    
+                                    playerData.push({
+                                        name: japaneseNameMap[apiPlayer.name] || apiPlayer.name,
+                                        englishName: apiPlayer.name,
+                                        fullName: `${apiPlayer.firstname} ${apiPlayer.lastname}`,
+                                        currentTeam: stats?.team?.name || team.name,
+                                        position: stats?.games?.position || 'Unknown',
+                                        nationality: apiPlayer.nationality,
+                                        age: apiPlayer.age,
+                                        photo: apiPlayer.photo,
+                                        league: team.league,
+                                        playerId: apiPlayer.id
+                                    });
+                                }
+                                
+                                // API制限を避けるため少し待機
+                                await new Promise(resolve => setTimeout(resolve, 100));
+                                
+                            } catch (error) {
+                                console.log(`Error fetching player ${player.id}:`, error.message);
+                                continue;
+                            }
+                        }
+                    } else {
+                        console.log(`❌ Failed to fetch squad for ${team.name}: ${squadResponse.status}`);
+                        if (squadResponse.status === 429) { // Rate limit
+                            console.log(`Rate limit hit, waiting 5 seconds...`);
+                            await new Promise(resolve => setTimeout(resolve, 5000));
+                        }
+                    }
+                    
+                    // チーム間の待機
+                    const waitTime = process.env.NODE_ENV === 'production' ? 500 : 200;
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                    
+                } catch (error) {
+                    console.log(`💥 Error collecting from ${team.name}:`, error.message);
                 }
             }
             
-            console.log(`⚠️ Team collection incomplete - ${playerData.length} players total`);
+            console.log(`\n🎯 Total players collected from comprehensive team collection: ${playerData.length}`);
+            
+            // 最小限のフォールバックデータのみ追加（緊急時のみ）
+            if (playerData.length < 10) {
+                const essentialJapanesePlayers = [
+                    { japaneseName: '久保建英', englishName: 'Takefusa Kubo' },
+                    { japaneseName: '三苫薫', englishName: 'Kaoru Mitoma' }
+                ];
+                
+                const missingPlayers = essentialJapanesePlayers.filter(p => 
+                    !playerData.find(pd => pd.englishName === p.englishName)
+                );
+                
+                if (missingPlayers.length > 0) {
+                    console.log(`📝 Adding ${missingPlayers.length} essential Japanese players with minimal fallback data`);
+                    for (const missingPlayer of missingPlayers) {
+                        playerData.push({
+                            name: missingPlayer.japaneseName,
+                            englishName: missingPlayer.englishName,
+                            currentTeam: 'Unknown',
+                            position: 'Unknown',
+                            nationality: 'Japan',
+                            age: 25,
+                            photo: 'https://media.api-sports.io/football/players/placeholder.png',
+                            league: 'Unknown'
+                        });
+                        console.log(`Added minimal fallback data for ${missingPlayer.japaneseName}`);
+                    }
+                }
+            }
+            
+            if (playerData.length < 50) {
+                console.log(`⚠️ Comprehensive team collection incomplete - ${playerData.length} players total`);
+            } else {
+                console.log(`✅ Successfully collected ${playerData.length} players from comprehensive team collection`);
+            }
         } else {
-            console.log(`✅ Successfully collected ${playerData.length} players from teams - comprehensive data available`);
+            console.log(`✅ Successfully collected ${playerData.length} players from initial team collection`);
         }
         
         // 本番環境での追加ログ
