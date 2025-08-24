@@ -3,9 +3,9 @@ const DatabaseManager = require('./databaseManager');
 class CacheManager {
     constructor() {
         this.db = new DatabaseManager();
-        this.cacheExpiry = 24 * 60 * 60 * 1000; // 24時間
+        this.cacheExpiry = 60 * 60 * 1000; // 1時間
         this.updateIntervals = {
-            players: 24 * 60 * 60 * 1000,      // 選手データ：24時間
+            players: 60 * 60 * 1000,      // 選手データ：1時間
             stats: 7 * 24 * 60 * 60 * 1000,    // 統計データ：7日
             teams: 30 * 24 * 60 * 60 * 1000    // チームデータ：30日
         };

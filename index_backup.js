@@ -2442,10 +2442,13 @@ app.get('/api/japanese-players', async (req, res) => {
     try {
         console.log('Japanese players API called');
         
-        // キャッシュからデータを取得
+        // キャッシュからデータを取得（ただし最小限のデータのみ）
         const cachedPlayers = await cacheManager.getCachedPlayers();
         
-        if (cachedPlayers.length > 0) {
+        // キャッシュに十分なデータがない場合は、チームベース収集を実行
+        if (cachedPlayers.length < 50) {
+            console.log(`📊 Cache has only ${cachedPlayers.length} players - executing team-based collection...`);
+        } else {
             console.log(`📊 Returning ${cachedPlayers.length} players from cache`);
             return res.json({ 
                 players: cachedPlayers, 
@@ -2481,8 +2484,141 @@ app.get('/api/japanese-players', async (req, res) => {
 
         const playerData = [];
 
-        // チームベースの選手データ一括取得
-        console.log(`Starting comprehensive team-based player data collection...`);
+        // 包括的な選手データ管理クラス
+        class PlayerDataManager {
+            constructor(apiKey) {
+                this.apiKey = apiKey;
+                this.baseUrl = 'https://v3.football.api-sports.io';
+            }
+            
+            // APIヘッダー設定
+            getHeaders() {
+                return {
+                    'x-rapidapi-host': 'v3.football.api-sports.io',
+                    'x-rapidapi-key': this.apiKey
+                };
+            }
+            
+            // リーグIDを取得
+            getLeagueId(leagueName) {
+                const leagueMap = {
+                    'Premier League': 39,
+                    'La Liga': 140,
+                    'Bundesliga': 78,
+                    'Serie A': 135,
+                    'Ligue 1': 61
+                };
+                return leagueMap[leagueName] || 39;
+            }
+            
+            // 選手検索（複数の戦略を使用）
+            async searchPlayer(playerInfo) {
+                const strategies = [
+                    // 戦略1: 名前検索
+                    () => this.searchByName(playerInfo.englishName),
+                    // 戦略2: チーム検索（もしチーム情報があれば）
+                    () => playerInfo.teamId ? this.searchByTeam(playerInfo.teamId, playerInfo.englishName) : null,
+                    // 戦略3: リーグ検索（もしリーグIDがあれば）
+                    () => playerInfo.leagueId ? this.searchByLeague(playerInfo.leagueId, playerInfo.englishName) : null
+                ];
+                
+                for (const strategy of strategies) {
+                    try {
+                        const result = await strategy();
+                        if (result && this.verifyPlayer(result, playerInfo)) {
+                            return result;
+                        }
+                    } catch (error) {
+                        console.log(`Search strategy failed for ${playerInfo.japaneseName}:`, error.message);
+                        continue;
+                    }
+                }
+                
+                return null;
+            }
+            
+            // 名前で検索
+            async searchByName(playerName) {
+                const response = await fetch(`${this.baseUrl}/players?search=${encodeURIComponent(playerName)}`, {
+                    headers: this.getHeaders()
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                return data.response && data.response.length > 0 ? data.response[0] : null;
+            }
+            
+            // チームで検索
+            async searchByTeam(teamId, playerName) {
+                const response = await fetch(`${this.baseUrl}/players/squads?team=${teamId}`, {
+                    headers: this.getHeaders()
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                const squad = data.response[0]?.players || [];
+                
+                // スカッドから該当する選手を見つける
+                const foundPlayer = squad.find(player => 
+                    player.name.toLowerCase().includes(playerName.toLowerCase()) ||
+                    playerName.toLowerCase().includes(player.name.toLowerCase())
+                );
+                
+                if (foundPlayer) {
+                    // 見つかった選手の詳細統計を取得
+                    return await this.getPlayerStats(foundPlayer.id, 2025);
+                }
+                
+                return null;
+            }
+            
+            // 選手詳細統計を取得
+            async getPlayerStats(playerId, season = 2025) {
+                try {
+                    const response = await fetch(`${this.baseUrl}/players?id=${playerId}&season=${season}`, {
+                        headers: this.getHeaders()
+                    });
+                    
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const data = await response.json();
+                    return data.response && data.response.length > 0 ? data.response[0] : null;
+                } catch (error) {
+                    console.error(`Error fetching player stats for ID ${playerId}:`, error);
+                    return null;
+                }
+            }
+            
+            // リーグで検索
+            async searchByLeague(leagueId, playerName, season = 2025) {
+                const response = await fetch(`${this.baseUrl}/players?league=${leagueId}&season=${season}&search=${encodeURIComponent(playerName)}`, {
+                    headers: this.getHeaders()
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                return data.response && data.response.length > 0 ? data.response[0] : null;
+            }
+            
+            // 選手データの検証
+            verifyPlayer(playerData, expectedInfo) {
+                if (!playerData || !playerData.player) return false;
+                
+                const player = playerData.player;
+                const name = player.name.toLowerCase();
+                const expectedName = expectedInfo.englishName.toLowerCase();
+                
+                // 名前の部分一致をチェック
+                const nameWords = expectedName.split(' ');
+                const matchedWords = nameWords.filter(word => name.includes(word.toLowerCase()));
+                
+                // 最低50%の単語が一致する必要がある
+                return matchedWords.length >= Math.ceil(nameWords.length * 0.5);
+            }
+        }
 
         // 選手データ管理インスタンスを作成
         const playerManager = new PlayerDataManager(process.env.API_FOOTBALL_KEY);
@@ -2520,523 +2656,435 @@ app.get('/api/japanese-players', async (req, res) => {
             { japaneseName: 'オスメン・デンベレ', englishName: 'Ousmane Dembélé', league: 'Ligue 1', leagueId: 61, teamId: 85 } // PSG
         ];
 
-        // チームベースの選手データ一括取得
-        console.log(`Starting comprehensive team-based player data collection...`);
+        // チームベースの選手データ一括取得（最優先実行）
+        console.log(`🚀 Starting comprehensive team-based player data collection...`);
         
-        // 本番環境では常に効率的な収集戦略を使用
-        if (process.env.NODE_ENV === 'production') {
-            console.log(`🚀 Production environment detected, using efficient collection strategy`);
-            return await executeEfficientCollection();
+        // 主要リーグのチームIDリスト（拡張版）
+        const majorTeams = [
+            // Premier League (イングランド) - 20チーム
+            { id: 40, name: 'Liverpool', league: 'Premier League' },
+            { id: 42, name: 'Arsenal', league: 'Premier League' },
+            { id: 50, name: 'Manchester City', league: 'Premier League' },
+            { id: 33, name: 'Manchester United', league: 'Premier League' },
+            { id: 51, name: 'Brighton', league: 'Premier League' },
+            { id: 47, name: 'Tottenham', league: 'Premier League' },
+            { id: 49, name: 'Chelsea', league: 'Premier League' },
+            { id: 34, name: 'Newcastle', league: 'Premier League' },
+            { id: 45, name: 'Everton', league: 'Premier League' },
+            { id: 52, name: 'Crystal Palace', league: 'Premier League' },
+            { id: 39, name: 'Wolves', league: 'Premier League' },
+            { id: 48, name: 'West Ham', league: 'Premier League' },
+            { id: 35, name: 'Aston Villa', league: 'Premier League' },
+            { id: 55, name: 'Brentford', league: 'Premier League' },
+            { id: 41, name: 'Leeds', league: 'Premier League' },
+            { id: 46, name: 'Leicester', league: 'Premier League' },
+            { id: 44, name: 'Burnley', league: 'Premier League' },
+            { id: 43, name: 'Fulham', league: 'Premier League' },
+            { id: 38, name: 'Watford', league: 'Premier League' },
+            { id: 53, name: 'Southampton', league: 'Premier League' },
+            
+            // La Liga (スペイン) - 20チーム
+            { id: 541, name: 'Real Madrid', league: 'La Liga' },
+            { id: 529, name: 'Barcelona', league: 'La Liga' },
+            { id: 530, name: 'Atletico Madrid', league: 'La Liga' },
+            { id: 548, name: 'Real Sociedad', league: 'La Liga' },
+            { id: 543, name: 'Sevilla', league: 'La Liga' },
+            { id: 536, name: 'Valencia', league: 'La Liga' },
+            { id: 531, name: 'Athletic Bilbao', league: 'La Liga' },
+            { id: 532, name: 'Osasuna', league: 'La Liga' },
+            { id: 533, name: 'Villarreal', league: 'La Liga' },
+            { id: 534, name: 'Celta Vigo', league: 'La Liga' },
+            { id: 535, name: 'Real Betis', league: 'La Liga' },
+            { id: 537, name: 'Getafe', league: 'La Liga' },
+            { id: 538, name: 'Levante', league: 'La Liga' },
+            { id: 539, name: 'Granada', league: 'La Liga' },
+            { id: 540, name: 'Alaves', league: 'La Liga' },
+            { id: 542, name: 'Rayo Vallecano', league: 'La Liga' },
+            { id: 544, name: 'Mallorca', league: 'La Liga' },
+            { id: 545, name: 'Girona', league: 'La Liga' },
+            { id: 546, name: 'Cadiz', league: 'La Liga' },
+            { id: 547, name: 'Las Palmas', league: 'La Liga' },
+            
+            // Bundesliga (ドイツ) - 18チーム
+            { id: 157, name: 'Bayern Munich', league: 'Bundesliga' },
+            { id: 165, name: 'Borussia Dortmund', league: 'Bundesliga' },
+            { id: 172, name: 'Stuttgart', league: 'Bundesliga' },
+            { id: 160, name: 'Eintracht Frankfurt', league: 'Bundesliga' },
+            { id: 164, name: 'Bochum', league: 'Bundesliga' },
+            { id: 161, name: 'Bayer Leverkusen', league: 'Bundesliga' },
+            { id: 159, name: 'Hertha Berlin', league: 'Bundesliga' },
+            { id: 162, name: 'Hoffenheim', league: 'Bundesliga' },
+            { id: 163, name: 'Mainz', league: 'Bundesliga' },
+            { id: 166, name: 'Schalke', league: 'Bundesliga' },
+            { id: 167, name: 'Werder Bremen', league: 'Bundesliga' },
+            { id: 168, name: 'Augsburg', league: 'Bundesliga' },
+            { id: 169, name: 'Freiburg', league: 'Bundesliga' },
+            { id: 170, name: 'Hannover', league: 'Bundesliga' },
+            { id: 171, name: 'Nürnberg', league: 'Bundesliga' },
+            { id: 173, name: 'Hamburger SV', league: 'Bundesliga' },
+            { id: 174, name: 'Hannover 96', league: 'Bundesliga' },
+            { id: 175, name: 'Kaiserslautern', league: 'Bundesliga' },
+            { id: 176, name: 'Karlsruher SC', league: 'Bundesliga' },
+            
+            // Serie A (イタリア) - 20チーム
+            { id: 505, name: 'Inter Milan', league: 'Serie A' },
+            { id: 492, name: 'AC Milan', league: 'Serie A' },
+            { id: 496, name: 'Juventus', league: 'Serie A' },
+            { id: 487, name: 'AS Monaco', league: 'Serie A' },
+            { id: 499, name: 'Napoli', league: 'Serie A' },
+            { id: 502, name: 'Roma', league: 'Serie A' },
+            { id: 488, name: 'Lazio', league: 'Serie A' },
+            { id: 489, name: 'Fiorentina', league: 'Serie A' },
+            { id: 490, name: 'Atalanta', league: 'Serie A' },
+            { id: 491, name: 'Bologna', league: 'Serie A' },
+            { id: 493, name: 'Cagliari', league: 'Serie A' },
+            { id: 494, name: 'Empoli', league: 'Serie A' },
+            { id: 495, name: 'Genoa', league: 'Serie A' },
+            { id: 497, name: 'Lecce', league: 'Serie A' },
+            { id: 498, name: 'Monza', league: 'Serie A' },
+            { id: 500, name: 'Salernitana', league: 'Serie A' },
+            { id: 501, name: 'Sassuolo', league: 'Serie A' },
+            { id: 503, name: 'Torino', league: 'Serie A' },
+            { id: 504, name: 'Udinese', league: 'Serie A' },
+            { id: 506, name: 'Verona', league: 'Serie A' },
+            
+            // Ligue 1 (フランス) - 20チーム
+            { id: 85, name: 'PSG', league: 'Ligue 1' },
+            { id: 80, name: 'Marseille', league: 'Ligue 1' },
+            { id: 91, name: 'Lyon', league: 'Ligue 1' },
+            { id: 99, name: 'Fortuna Düsseldorf', league: 'Ligue 1' },
+            { id: 93, name: 'Monaco', league: 'Ligue 1' },
+            { id: 95, name: 'Nice', league: 'Ligue 1' },
+            { id: 81, name: 'Bordeaux', league: 'Ligue 1' },
+            { id: 82, name: 'Lille', league: 'Ligue 1' },
+            { id: 83, name: 'Lens', league: 'Ligue 1' },
+            { id: 84, name: 'Montpellier', league: 'Ligue 1' },
+            { id: 86, name: 'Reims', league: 'Ligue 1' },
+            { id: 87, name: 'Rennes', league: 'Ligue 1' },
+            { id: 88, name: 'Saint-Etienne', league: 'Ligue 1' },
+            { id: 89, name: 'Strasbourg', league: 'Ligue 1' },
+            { id: 90, name: 'Toulouse', league: 'Ligue 1' },
+            { id: 92, name: 'Troyes', league: 'Ligue 1' },
+            { id: 94, name: 'Angers', league: 'Ligue 1' },
+            { id: 96, name: 'Brest', league: 'Ligue 1' },
+            { id: 97, name: 'Clermont', league: 'Ligue 1' },
+            { id: 98, name: 'Lorient', league: 'Ligue 1' },
+            { id: 100, name: 'Nantes', league: 'Ligue 1' }
+        ];
+        
+        console.log(`🎯 Collecting players from ${majorTeams.length} major teams across 5 leagues...`);
+        
+        // 各チームから選手データを取得
+        for (const team of majorTeams) {
+            try {
+                console.log(`\n🏟️ Collecting players from ${team.name} (${team.league})...`);
+                
+                // チームのスカッドを取得（複数のAPIエンドポイントを試行）
+                let players = [];
+                
+                // 方法1: スカッドエンドポイント
+                try {
+                    const squadResponse = await fetch(`${playerManager.baseUrl}/players/squads?team=${team.id}`, {
+                        headers: playerManager.getHeaders()
+                    });
+                    
+                    if (squadResponse.ok) {
+                        const squadData = await squadResponse.json();
+                        players = squadData.response[0]?.players || [];
+                        console.log(`📊 Found ${players.length} players in ${team.name} via squads endpoint`);
+                    }
+                } catch (error) {
+                    console.log(`❌ Squad endpoint failed for ${team.name}:`, error.message);
+                }
+                
+                // 方法2: チーム別選手検索（スカッドが失敗した場合）
+                if (players.length === 0) {
+                    try {
+                        const teamResponse = await fetch(`${playerManager.baseUrl}/players?team=${team.id}&season=2025`, {
+                            headers: playerManager.getHeaders()
+                        });
+                        
+                        if (teamResponse.ok) {
+                            const teamData = await teamResponse.json();
+                            players = teamData.response || [];
+                            console.log(`📊 Found ${players.length} players in ${team.name} via team endpoint`);
+                        }
+                    } catch (error) {
+                        console.log(`❌ Team endpoint failed for ${team.name}:`, error.message);
+                    }
+                }
+                
+                // 方法3: リーグ別選手検索（最後の手段）
+                if (players.length === 0) {
+                    try {
+                        const leagueResponse = await fetch(`${playerManager.baseUrl}/players?league=${playerManager.getLeagueId(team.league)}&season=2025&page=1`, {
+                            headers: playerManager.getHeaders()
+                        });
+                        
+                        if (leagueResponse.ok) {
+                            const leagueData = await leagueResponse.json();
+                            players = leagueData.response || [];
+                            console.log(`📊 Found ${players.length} players in ${team.name} via league endpoint`);
+                        }
+                    } catch (error) {
+                        console.log(`❌ League endpoint failed for ${team.name}:`, error.message);
+                    }
+                }
+                
+                console.log(`📊 Final result: ${players.length} players in ${team.name}`);
+                
+                // 各選手の詳細情報を取得
+                for (const player of players.slice(0, 25)) { // 各チーム最大25名まで
+                        try {
+                            const playerStats = await playerManager.getPlayerStats(player.id, 2025);
+                            
+                            if (playerStats && playerStats.player) {
+                                const apiPlayer = playerStats.player;
+                                const stats = playerStats.statistics && playerStats.statistics.length > 0 ? playerStats.statistics[0] : null;
+                                
+                                // 日本語名のマッピング（主要選手のみ）
+                                const japaneseNameMap = {
+                                    'Takefusa Kubo': '久保建英',
+                                    'Kaoru Mitoma': '三苫薫',
+                                    'Takehiro Tomiyasu': '富安健洋',
+                                    'Wataru Endo': '遠藤航',
+                                    'Ritsu Doan': '堂安律',
+                                    'Hiroki Ito': '伊藤洋輝',
+                                    'Takuma Asano': '浅野拓磨',
+                                    'Takumi Minamino': '南野拓実',
+                                    'Ao Tanaka': '田中碧'
+                                };
+                                
+                                playerData.push({
+                                    name: japaneseNameMap[apiPlayer.name] || apiPlayer.name,
+                                    englishName: apiPlayer.name,
+                                    fullName: `${apiPlayer.firstname} ${apiPlayer.lastname}`,
+                                    currentTeam: stats?.team?.name || team.name,
+                                    position: stats?.games?.position || 'Unknown',
+                                    nationality: apiPlayer.nationality,
+                                    age: apiPlayer.age,
+                                    photo: apiPlayer.photo,
+                                    league: team.league,
+                                    playerId: apiPlayer.id
+                                });
+                            }
+                            
+                            // API制限を避けるため少し待機
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            
+                        } catch (error) {
+                            console.log(`Error fetching player ${player.id}:`, error.message);
+                            // エラーが続く場合はスキップ
+                            continue;
+                        }
+                    }
+                }
+                
+                // チーム間の待機（本番環境では長めに）
+                const waitTime = process.env.NODE_ENV === 'production' ? 500 : 200;
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+                
+            } catch (error) {
+                console.log(`💥 Error collecting from ${team.name}:`, error.message);
+            }
         }
         
-        // 開発環境ではAPI制限をチェック
-        const isApiLimited = await checkApiLimits();
-        
-        if (isApiLimited) {
-            console.log(`⚠️ API制限が検出されました。効率的なデータ収集戦略を使用します。`);
-            return await executeEfficientCollection();
+        console.log(`\n🎯 Total players collected from teams: ${playerData.length}`);
+
+        // チームベース収集の結果を確認
+        if (playerData.length < 50) {
+            console.log(`⚠️ Only ${playerData.length} players fetched from teams - executing comprehensive team collection...`);
+            
+            // 包括的なチームベース収集を実行
+            console.log(`🚀 Executing comprehensive team-based collection for 98 teams...`);
+            
+            // 各チームから選手データを取得（強制実行）
+            let teamCollectionCount = 0;
+            for (const team of majorTeams) {
+                try {
+                    console.log(`\n🏟️ Collecting players from ${team.name} (${team.league})...`);
+                    
+                    // チームのスカッドを取得（複数のAPIエンドポイントを試行）
+                    let players = [];
+                    
+                    // 方法1: スカッドエンドポイント
+                    try {
+                        const squadResponse = await fetch(`${playerManager.baseUrl}/players/squads?team=${team.id}`, {
+                            headers: playerManager.getHeaders()
+                        });
+                        
+                        if (squadResponse.ok) {
+                            const squadData = await squadResponse.json();
+                            players = squadData.response[0]?.players || [];
+                            console.log(`📊 Found ${players.length} players in ${team.name} via squads endpoint`);
+                        }
+                    } catch (error) {
+                        console.log(`❌ Squad endpoint failed for ${team.name}:`, error.message);
+                    }
+                    
+                    // 方法2: チーム別選手検索（スカッドが失敗した場合）
+                    if (players.length === 0) {
+                        try {
+                            const teamResponse = await fetch(`${playerManager.baseUrl}/players?team=${team.id}&season=2025`, {
+                                headers: playerManager.getHeaders()
+                            });
+                            
+                            if (teamResponse.ok) {
+                                const teamData = await teamResponse.json();
+                                players = teamData.response || [];
+                                console.log(`📊 Found ${players.length} players in ${team.name} via team endpoint`);
+                            }
+                        } catch (error) {
+                            console.log(`❌ Team endpoint failed for ${team.name}:`, error.message);
+                        }
+                    }
+                    
+                    // 方法3: リーグ別選手検索（最後の手段）
+                    if (players.length === 0) {
+                        try {
+                            const leagueResponse = await fetch(`${playerManager.baseUrl}/players?league=${playerManager.getLeagueId(team.league)}&season=2025&page=1`, {
+                                headers: playerManager.getHeaders()
+                            });
+                            
+                            if (leagueResponse.ok) {
+                                const leagueData = await leagueResponse.json();
+                                players = leagueData.response || [];
+                                console.log(`📊 Found ${players.length} players in ${team.name} via league endpoint`);
+                            }
+                        } catch (error) {
+                            console.log(`❌ League endpoint failed for ${team.name}:`, error.message);
+                        }
+                    }
+                    
+                    console.log(`📊 Final result: ${players.length} players in ${team.name}`);
+                    
+                    // 各選手の詳細情報を取得
+                    for (const player of players.slice(0, 25)) { // 各チーム最大25名まで
+                        try {
+                            const playerStats = await playerManager.getPlayerStats(player.id, 2025);
+                            
+                            if (playerStats && playerStats.player) {
+                                const apiPlayer = playerStats.player;
+                                const stats = playerStats.statistics && playerStats.statistics.length > 0 ? playerStats.statistics[0] : null;
+                                
+                                // 日本語名のマッピング（主要選手のみ）
+                                const japaneseNameMap = {
+                                    'Takefusa Kubo': '久保建英',
+                                    'Kaoru Mitoma': '三苫薫',
+                                    'Takehiro Tomiyasu': '富安健洋',
+                                    'Wataru Endo': '遠藤航',
+                                    'Ritsu Doan': '堂安律',
+                                    'Hiroki Ito': '伊藤洋輝',
+                                    'Takuma Asano': '浅野拓磨',
+                                    'Takumi Minamino': '南野拓実',
+                                    'Ao Tanaka': '田中碧'
+                                };
+                                
+                                playerData.push({
+                                    name: japaneseNameMap[apiPlayer.name] || apiPlayer.name,
+                                    englishName: apiPlayer.name,
+                                    fullName: `${apiPlayer.firstname} ${apiPlayer.lastname}`,
+                                    currentTeam: stats?.team?.name || team.name,
+                                    position: stats?.games?.position || 'Unknown',
+                                    nationality: apiPlayer.nationality,
+                                    age: apiPlayer.age,
+                                    photo: apiPlayer.photo,
+                                    league: team.league,
+                                    playerId: apiPlayer.id
+                                });
+                                
+                                teamCollectionCount++;
+                                if (teamCollectionCount % 10 === 0) {
+                                    console.log(`📊 Progress: ${teamCollectionCount} players collected so far...`);
+                                }
+                            }
+                            
+                            // API制限を避けるため少し待機
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            
+                        } catch (error) {
+                            console.log(`Error fetching player ${player.id}:`, error.message);
+                            continue;
+                        }
+                    }
+                } else {
+                        console.log(`❌ Failed to fetch squad for ${team.name}: ${squadResponse.status}`);
+                        if (squadResponse.status === 429) { // Rate limit
+                            console.log(`Rate limit hit, waiting 5 seconds...`);
+                            await new Promise(resolve => setTimeout(resolve, 5000));
+                        }
+                    }
+                    
+                    // チーム間の待機
+                    const waitTime = process.env.NODE_ENV === 'production' ? 500 : 200;
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                    
+                } catch (error) {
+                    console.log(`💥 Error collecting from ${team.name}:`, error.message);
+                }
+            }
+            
+            console.log(`\n🎯 Total players collected from comprehensive team collection: ${playerData.length}`);
+            
+            // 最小限のフォールバックデータのみ追加（緊急時のみ）
+            if (playerData.length < 10) {
+                const essentialJapanesePlayers = [
+                    { japaneseName: '久保建英', englishName: 'Takefusa Kubo' },
+                    { japaneseName: '三苫薫', englishName: 'Kaoru Mitoma' }
+                ];
+                
+                const missingPlayers = essentialJapanesePlayers.filter(p => 
+                    !playerData.find(pd => pd.englishName === p.englishName)
+                );
+                
+                if (missingPlayers.length > 0) {
+                    console.log(`📝 Adding ${missingPlayers.length} essential Japanese players with minimal fallback data`);
+                    for (const missingPlayer of missingPlayers) {
+                        playerData.push({
+                            name: missingPlayer.japaneseName,
+                            englishName: missingPlayer.englishName,
+                            currentTeam: 'Unknown',
+                            position: 'Unknown',
+                            nationality: 'Japan',
+                            age: 25,
+                            photo: 'https://media.api-sports.io/football/players/placeholder.png',
+                            league: 'Unknown'
+                        });
+                        console.log(`Added minimal fallback data for ${missingPlayer.japaneseName}`);
+                    }
+                }
+            }
+            
+            if (playerData.length < 50) {
+                console.log(`⚠️ Comprehensive team collection incomplete - ${playerData.length} players total`);
+            } else {
+                console.log(`✅ Successfully collected ${playerData.length} players from comprehensive team collection`);
+            }
         } else {
-            console.log(`✅ API制限なし。包括的なデータ収集を実行します。`);
-            return await executeComprehensiveCollection();
+            console.log(`✅ Successfully collected ${playerData.length} players from initial team collection`);
         }
+        
+        // 本番環境での追加ログ
+        if (process.env.NODE_ENV === 'production') {
+            console.log(`\n🚀 Production environment: ${playerData.length} players collected`);
+            console.log(`📊 API success rate: ${((playerData.length / (majorTeams.length * 25)) * 100).toFixed(1)}%`);
+        }
+
+        // 取得したデータをキャッシュに保存
+        for (const player of playerData) {
+            await cacheManager.savePlayerData(player);
+        }
+        
+        res.json({ 
+            players: playerData, 
+            source: 'api',
+            cacheStats: cacheManager.getCacheStats()
+        });
     } catch (error) {
         console.error('Japanese players API error:', error);
         res.status(500).json({ error: 'Failed to fetch Japanese players' });
     }
 });
-
-// API制限をチェックする関数
-async function checkApiLimits() {
-    try {
-        console.log('🔍 API制限をチェック中...');
-        
-        const testResponse = await fetch('https://v3.football.api-sports.io/teams?league=39&season=2024', {
-            headers: {
-                'x-rapidapi-key': process.env.API_FOOTBALL_KEY,
-                'x-rapidapi-host': 'v3.football.api-sports.io'
-            }
-        });
-        
-        if (testResponse.ok) {
-            const data = await testResponse.json();
-            const isLimited = data.errors && data.errors.requests && data.errors.requests.includes('request limit');
-            
-            if (isLimited) {
-                console.log('⚠️ API制限が検出されました');
-            } else {
-                console.log('✅ API制限なし - 包括的な収集が可能です');
-            }
-            
-            return isLimited;
-        }
-        return false;
-    } catch (error) {
-        console.log('API制限チェックエラー:', error.message);
-        return true; // エラーの場合は制限ありと仮定
-    }
-}
-
-// 効率的なデータ収集（API制限がある場合）
-async function executeEfficientCollection() {
-    console.log(`🚀 効率的なデータ収集を開始...`);
-    
-    // 主要な選手のみを効率的に収集
-    const priorityPlayers = [
-        // 日本人選手（優先度最高）
-        { name: '久保建英', englishName: 'Takefusa Kubo', team: 'Real Sociedad', league: 'La Liga', position: 'Forward', nationality: 'Japan', age: 25 },
-        { name: '三苫薫', englishName: 'Kaoru Mitoma', team: 'Brighton', league: 'Premier League', position: 'Midfielder', nationality: 'Japan', age: 25 },
-        { name: '富安健洋', englishName: 'Takehiro Tomiyasu', team: 'Arsenal', league: 'Premier League', position: 'Defender', nationality: 'Japan', age: 26 },
-        { name: '遠藤航', englishName: 'Wataru Endo', team: 'Liverpool', league: 'Premier League', position: 'Midfielder', nationality: 'Japan', age: 31 },
-        { name: '堂安律', englishName: 'Ritsu Doan', team: 'Eintracht Frankfurt', league: 'Bundesliga', position: 'Midfielder', nationality: 'Japan', age: 26 },
-        { name: '伊藤洋輝', englishName: 'Hiroki Ito', team: 'Stuttgart', league: 'Bundesliga', position: 'Defender', nationality: 'Japan', age: 25 },
-        { name: '浅野拓磨', englishName: 'Takuma Asano', team: 'Bochum', league: 'Bundesliga', position: 'Forward', nationality: 'Japan', age: 29 },
-        { name: '田中碧', englishName: 'Ao Tanaka', team: 'Fortuna Düsseldorf', league: 'Ligue 1', position: 'Midfielder', nationality: 'Japan', age: 25 },
-        { name: '南野拓実', englishName: 'Takumi Minamino', team: 'AS Monaco', league: 'Serie A', position: 'Forward', nationality: 'Japan', age: 29 },
-        
-        // 世界のスター選手
-        { name: 'Erling Haaland', englishName: 'Erling Haaland', team: 'Manchester City', league: 'Premier League', position: 'Forward', nationality: 'Norway', age: 24 },
-        { name: 'Kevin De Bruyne', englishName: 'Kevin De Bruyne', team: 'Manchester City', league: 'Premier League', position: 'Midfielder', nationality: 'Belgium', age: 33 },
-        { name: 'Mohamed Salah', englishName: 'Mohamed Salah', team: 'Liverpool', league: 'Premier League', position: 'Forward', nationality: 'Egypt', age: 32 },
-        { name: 'Jude Bellingham', englishName: 'Jude Bellingham', team: 'Real Madrid', league: 'La Liga', position: 'Midfielder', nationality: 'England', age: 21 },
-        { name: 'Vinícius Júnior', englishName: 'Vinícius Júnior', team: 'Real Madrid', league: 'La Liga', position: 'Forward', nationality: 'Brazil', age: 24 },
-        { name: 'Robert Lewandowski', englishName: 'Robert Lewandowski', team: 'Barcelona', league: 'La Liga', position: 'Forward', nationality: 'Poland', age: 36 },
-        { name: 'Harry Kane', englishName: 'Harry Kane', team: 'Bayern Munich', league: 'Bundesliga', position: 'Forward', nationality: 'England', age: 31 },
-        { name: 'Jamal Musiala', englishName: 'Jamal Musiala', team: 'Bayern Munich', league: 'Bundesliga', position: 'Midfielder', nationality: 'Germany', age: 21 },
-        { name: 'Lautaro Martínez', englishName: 'Lautaro Martínez', team: 'Inter Milan', league: 'Serie A', position: 'Forward', nationality: 'Argentina', age: 27 },
-        { name: 'Kylian Mbappé', englishName: 'Kylian Mbappé', team: 'PSG', league: 'Ligue 1', position: 'Forward', nationality: 'France', age: 26 },
-        { name: 'Ousmane Dembélé', englishName: 'Ousmane Dembélé', team: 'PSG', league: 'Ligue 1', position: 'Forward', nationality: 'France', age: 27 },
-        
-        // 追加の有名選手
-        { name: 'Lionel Messi', englishName: 'Lionel Messi', team: 'Inter Miami', league: 'MLS', position: 'Forward', nationality: 'Argentina', age: 37 },
-        { name: 'Cristiano Ronaldo', englishName: 'Cristiano Ronaldo', team: 'Al Nassr', league: 'Saudi Pro League', position: 'Forward', nationality: 'Portugal', age: 39 },
-        { name: 'Neymar Jr', englishName: 'Neymar Jr', team: 'Al Hilal', league: 'Saudi Pro League', position: 'Forward', nationality: 'Brazil', age: 32 },
-        { name: 'Sadio Mané', englishName: 'Sadio Mané', team: 'Al Nassr', league: 'Saudi Pro League', position: 'Forward', nationality: 'Senegal', age: 32 },
-        { name: 'Riyad Mahrez', englishName: 'Riyad Mahrez', team: 'Al Ahli', league: 'Saudi Pro League', position: 'Forward', nationality: 'Algeria', age: 33 }
-    ];
-    
-    let totalPlayers = 0;
-    
-    for (const player of priorityPlayers) {
-        try {
-            // 選手データを構築
-            const playerData = {
-                id: `efficient_${totalPlayers + 1}`,
-                name: player.name,
-                fullName: player.name,
-                currentTeam: player.team,
-                position: player.position,
-                nationality: player.nationality,
-                age: player.age,
-                photo: 'https://media.api-sports.io/football/players/placeholder.png',
-                league: player.league,
-                englishName: player.englishName,
-                stats: generateRealisticStats(player.name)
-            };
-            
-            // データベースに保存
-            await savePlayerData(playerData);
-            totalPlayers++;
-            
-            console.log(`✅ Saved efficient player: ${player.name} (${player.team})`);
-            
-            // API制限を避けるため少し待機
-            await new Promise(resolve => setTimeout(resolve, 50));
-            
-        } catch (error) {
-            console.log(`Error saving efficient player ${player.name}:`, error.message);
-        }
-    }
-    
-    console.log(`🎯 Efficient collection completed: ${totalPlayers} players`);
-    return totalPlayers;
-}
-
-// 包括的なデータ収集（API制限がない場合）
-async function executeComprehensiveCollection() {
-    console.log(`🚀 包括的なデータ収集を開始...`);
-    
-    // 選手データ管理インスタンスを作成
-    const playerManager = new PlayerDataManager(process.env.API_FOOTBALL_KEY);
-    
-    // 主要リーグのチームIDリスト（98チームに拡張）
-    const majorTeams = [
-        // Premier League (イングランド) - 20チーム
-        { id: 40, name: 'Liverpool', league: 'Premier League' },
-        { id: 42, name: 'Arsenal', league: 'Premier League' },
-        { id: 50, name: 'Manchester City', league: 'Premier League' },
-        { id: 33, name: 'Manchester United', league: 'Premier League' },
-        { id: 51, name: 'Brighton', league: 'Premier League' },
-        { id: 47, name: 'Tottenham', league: 'Premier League' },
-        { id: 49, name: 'Chelsea', league: 'Premier League' },
-        { id: 34, name: 'Newcastle', league: 'Premier League' },
-        { id: 45, name: 'Everton', league: 'Premier League' },
-        { id: 52, name: 'Crystal Palace', league: 'Premier League' },
-        { id: 39, name: 'Wolves', league: 'Premier League' },
-        { id: 48, name: 'West Ham', league: 'Premier League' },
-        { id: 66, name: 'Aston Villa', league: 'Premier League' },
-        { id: 55, name: 'Brentford', league: 'Premier League' },
-        { id: 71, name: 'Leeds', league: 'Premier League' },
-        { id: 46, name: 'Leicester', league: 'Premier League' },
-        { id: 44, name: 'Burnley', league: 'Premier League' },
-        { id: 36, name: 'Fulham', league: 'Premier League' },
-        { id: 38, name: 'Watford', league: 'Premier League' },
-        { id: 41, name: 'Southampton', league: 'Premier League' },
-        
-        // La Liga (スペイン) - 20チーム
-        { id: 541, name: 'Real Madrid', league: 'La Liga' },
-        { id: 529, name: 'Barcelona', league: 'La Liga' },
-        { id: 530, name: 'Atletico Madrid', league: 'La Liga' },
-        { id: 548, name: 'Real Sociedad', league: 'La Liga' },
-        { id: 536, name: 'Sevilla', league: 'La Liga' },
-        { id: 532, name: 'Valencia', league: 'La Liga' },
-        { id: 531, name: 'Athletic Bilbao', league: 'La Liga' },
-        { id: 727, name: 'Osasuna', league: 'La Liga' },
-        { id: 533, name: 'Villarreal', league: 'La Liga' },
-        { id: 538, name: 'Celta Vigo', league: 'La Liga' },
-        { id: 540, name: 'Real Betis', league: 'La Liga' },
-        { id: 546, name: 'Getafe', league: 'La Liga' },
-        { id: 539, name: 'Levante', league: 'La Liga' },
-        { id: 715, name: 'Granada', league: 'La Liga' },
-        { id: 542, name: 'Alaves', league: 'La Liga' },
-        { id: 720, name: 'Rayo Vallecano', league: 'La Liga' },
-        { id: 798, name: 'Mallorca', league: 'La Liga' },
-        { id: 547, name: 'Girona', league: 'La Liga' },
-        { id: 724, name: 'Cadiz', league: 'La Liga' },
-        { id: 797, name: 'Las Palmas', league: 'La Liga' },
-        
-        // Bundesliga (ドイツ) - 18チーム
-        { id: 157, name: 'Bayern Munich', league: 'Bundesliga' },
-        { id: 165, name: 'Borussia Dortmund', league: 'Bundesliga' },
-        { id: 172, name: 'Stuttgart', league: 'Bundesliga' },
-        { id: 169, name: 'Eintracht Frankfurt', league: 'Bundesliga' },
-        { id: 161, name: 'Bochum', league: 'Bundesliga' },
-        { id: 161, name: 'Bayer Leverkusen', league: 'Bundesliga' },
-        { id: 159, name: 'Hertha Berlin', league: 'Bundesliga' },
-        { id: 168, name: 'Hoffenheim', league: 'Bundesliga' },
-        { id: 164, name: 'Mainz', league: 'Bundesliga' },
-        { id: 173, name: 'Schalke', league: 'Bundesliga' },
-        { id: 162, name: 'Werder Bremen', league: 'Bundesliga' },
-        { id: 170, name: 'Augsburg', league: 'Bundesliga' },
-        { id: 160, name: 'Freiburg', league: 'Bundesliga' },
-        { id: 167, name: 'Hannover', league: 'Bundesliga' },
-        { id: 175, name: 'Nürnberg', league: 'Bundesliga' },
-        { id: 166, name: 'Hamburger SV', league: 'Bundesliga' },
-        { id: 167, name: 'Hannover 96', league: 'Bundesliga' },
-        { id: 174, name: 'Kaiserslautern', league: 'Bundesliga' },
-        { id: 176, name: 'Karlsruher SC', league: 'Bundesliga' },
-        
-        // Serie A (イタリア) - 20チーム
-        { id: 505, name: 'Inter Milan', league: 'Serie A' },
-        { id: 489, name: 'AC Milan', league: 'Serie A' },
-        { id: 496, name: 'Juventus', league: 'Serie A' },
-        { id: 548, name: 'AS Monaco', league: 'Serie A' },
-        { id: 492, name: 'Napoli', league: 'Serie A' },
-        { id: 497, name: 'Roma', league: 'Serie A' },
-        { id: 487, name: 'Lazio', league: 'Serie A' },
-        { id: 502, name: 'Fiorentina', league: 'Serie A' },
-        { id: 499, name: 'Atalanta', league: 'Serie A' },
-        { id: 500, name: 'Bologna', league: 'Serie A' },
-        { id: 490, name: 'Cagliari', league: 'Serie A' },
-        { id: 495, name: 'Empoli', league: 'Serie A' },
-        { id: 498, name: 'Genoa', league: 'Serie A' },
-        { id: 504, name: 'Lecce', league: 'Serie A' },
-        { id: 503, name: 'Monza', league: 'Serie A' },
-        { id: 501, name: 'Salernitana', league: 'Serie A' },
-        { id: 488, name: 'Sassuolo', league: 'Serie A' },
-        { id: 503, name: 'Torino', league: 'Serie A' },
-        { id: 494, name: 'Udinese', league: 'Serie A' },
-        { id: 499, name: 'Verona', league: 'Serie A' },
-        
-        // Ligue 1 (フランス) - 20チーム
-        { id: 80, name: 'PSG', league: 'Ligue 1' },
-        { id: 81, name: 'Marseille', league: 'Ligue 1' },
-        { id: 80, name: 'Lyon', league: 'Ligue 1' },
-        { id: 82, name: 'Fortuna Düsseldorf', league: 'Ligue 1' },
-        { id: 91, name: 'Monaco', league: 'Ligue 1' },
-        { id: 91, name: 'Nice', league: 'Ligue 1' },
-        { id: 95, name: 'Bordeaux', league: 'Ligue 1' },
-        { id: 93, name: 'Lille', league: 'Ligue 1' },
-        { id: 93, name: 'Lens', league: 'Ligue 1' },
-        { id: 82, name: 'Montpellier', league: 'Ligue 1' },
-        { id: 93, name: 'Reims', league: 'Ligue 1' },
-        { id: 91, name: 'Rennes', league: 'Ligue 1' },
-        { id: 82, name: 'Saint-Etienne', league: 'Ligue 1' },
-        { id: 95, name: 'Strasbourg', league: 'Ligue 1' },
-        { id: 95, name: 'Toulouse', league: 'Ligue 1' },
-        { id: 95, name: 'Troyes', league: 'Ligue 1' },
-        { id: 91, name: 'Angers', league: 'Ligue 1' },
-        { id: 95, name: 'Brest', league: 'Ligue 1' },
-        { id: 95, name: 'Clermont', league: 'Ligue 1' },
-        { id: 95, name: 'Lorient', league: 'Ligue 1' },
-        { id: 95, name: 'Nantes', league: 'Ligue 1' }
-    ];
-    
-    console.log(`🎯 Collecting players from ${majorTeams.length} major teams across 5 leagues...`);
-    
-    let totalPlayers = 0;
-    let teamCollectionCount = 0;
-    
-    for (const team of majorTeams) {
-        try {
-            console.log(`🏟️ Collecting players from ${team.name} (${team.league})...`);
-            
-            // チームのスカッドを取得（複数のAPIエンドポイントを試行）
-            let players = [];
-            
-            // 方法1: スカッドエンドポイント
-            try {
-                const squadResponse = await fetch(`${playerManager.baseUrl}/players/squads?team=${team.id}`, {
-                    headers: playerManager.getHeaders()
-                });
-                
-                if (squadResponse.ok) {
-                    const squadData = await squadResponse.json();
-                    players = squadData.response[0]?.players || [];
-                    console.log(`📊 Found ${players.length} players in ${team.name} via squads endpoint`);
-                }
-            } catch (error) {
-                console.log(`❌ Squad endpoint failed for ${team.name}:`, error.message);
-            }
-            
-            // 方法2: チーム別選手検索（スカッドが失敗した場合）
-            if (players.length === 0) {
-                try {
-                    const teamResponse = await fetch(`${playerManager.baseUrl}/players?team=${team.id}&season=2025`, {
-                        headers: playerManager.getHeaders()
-                    });
-                    
-                    if (teamResponse.ok) {
-                        const teamData = await teamResponse.json();
-                        players = teamData.response || [];
-                        console.log(`📊 Found ${players.length} players in ${team.name} via team endpoint`);
-                    }
-                } catch (error) {
-                    console.log(`❌ Team endpoint failed for ${team.name}:`, error.message);
-                }
-            }
-            
-            // 方法3: リーグ別選手検索（最後の手段）
-            if (players.length === 0) {
-                try {
-                    const leagueResponse = await fetch(`${playerManager.baseUrl}/players?league=${playerManager.getLeagueId(team.league)}&season=2025&page=1`, {
-                        headers: playerManager.getHeaders()
-                    });
-                    
-                    if (leagueResponse.ok) {
-                        const leagueData = await leagueResponse.json();
-                        players = leagueData.response || [];
-                        console.log(`📊 Found ${players.length} players in ${team.name} via league endpoint`);
-                    }
-                } catch (error) {
-                    console.log(`❌ League endpoint failed for ${team.name}:`, error.message);
-                }
-            }
-            
-            console.log(`📊 Final result: ${players.length} players in ${team.name}`);
-            
-            // 各選手の詳細情報を取得
-            for (const player of players.slice(0, 25)) { // 各チーム最大25名まで
-                try {
-                    const playerStats = await playerManager.getPlayerStats(player.id, 2025);
-                    
-                    if (playerStats && playerStats.response && playerStats.response.length > 0) {
-                        const stats = playerStats.response[0];
-                        
-                        // 選手データを構築
-                        const playerData = {
-                            id: player.id,
-                            name: player.name,
-                            fullName: player.name,
-                            currentTeam: team.name,
-                            position: player.position || 'Unknown',
-                            nationality: player.nationality || 'Unknown',
-                            age: player.age || 25,
-                            photo: player.photo || 'https://media.api-sports.io/football/players/placeholder.png',
-                            league: team.league,
-                            englishName: player.name,
-                            stats: {
-                                goals: stats.goals?.total || 0,
-                                assists: stats.goals?.assists || 0,
-                                appearances: stats.games?.appearences || 0,
-                                minutes: stats.games?.minutes || 0,
-                                rating: stats.games?.rating || 0,
-                                yellowCards: stats.cards?.yellow || 0,
-                                shotsTotal: stats.shots?.total || 0,
-                                shotsOnTarget: stats.shots?.on || 0,
-                                expectedGoals: stats.goals?.expected || 0,
-                                passAccuracy: stats.passes?.accuracy || '0%',
-                                tackles: stats.tackles?.total || 0,
-                                interceptions: stats.tackles?.interceptions || 0
-                            }
-                        };
-                        
-                        // データベースに保存
-                        await savePlayerData(playerData);
-                        totalPlayers++;
-                        
-                        console.log(`✅ Saved player: ${player.name} (${team.name})`);
-                    }
-                    
-                    // API制限を避けるため少し待機
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    
-                } catch (error) {
-                    console.log(`Error fetching player ${player.id}:`, error.message);
-                    // エラーが続く場合はスキップ
-                    continue;
-                }
-            }
-            
-            teamCollectionCount++;
-            console.log(`📈 Progress: ${teamCollectionCount}/${majorTeams.length} teams completed`);
-            
-            // API制限を避けるため少し待機
-            await new Promise(resolve => setTimeout(resolve, 200));
-            
-        } catch (error) {
-            console.log(`Error processing team ${team.name}:`, error.message);
-            continue;
-        }
-    }
-    
-    console.log(`🎯 Total players collected: ${totalPlayers}`);
-    
-    // 十分なデータが取得できたかチェック
-    if (totalPlayers < 100) {
-        console.log(`⚠️ Only ${totalPlayers} players collected - adding minimal fallback data`);
-        
-        // 最小限のフォールバックデータを追加
-        const fallbackPlayers = [
-            {
-                id: 'fallback_1',
-                name: '久保建英',
-                fullName: '久保建英',
-                currentTeam: 'レアル・ソシエダード',
-                position: 'Forward',
-                nationality: 'Japan',
-                age: 25,
-                photo: 'https://media.api-sports.io/football/players/placeholder.png',
-                league: 'La Liga',
-                englishName: 'Takefusa Kubo',
-                stats: { goals: 0, assists: 0, appearances: 0, minutes: 0, rating: 0, yellowCards: 0, shotsTotal: 0, shotsOnTarget: 0, expectedGoals: 0, passAccuracy: '0%', tackles: 0, interceptions: 0 }
-            },
-            {
-                id: 'fallback_2',
-                name: '三苫薫',
-                fullName: '三苫薫',
-                currentTeam: 'ブライトン',
-                position: 'Midfielder',
-                nationality: 'Japan',
-                age: 25,
-                photo: 'https://media.api-sports.io/football/players/placeholder.png',
-                league: 'Premier League',
-                englishName: 'Kaoru Mitoma',
-                stats: { goals: 0, assists: 0, appearances: 0, minutes: 0, rating: 0, yellowCards: 0, shotsTotal: 0, shotsOnTarget: 0, expectedGoals: 0, passAccuracy: '0%', tackles: 0, interceptions: 0 }
-            }
-        ];
-        
-        for (const player of fallbackPlayers) {
-            await savePlayerData(player);
-            console.log(`📝 Added fallback data for ${player.name}`);
-        }
-    }
-    
-    return totalPlayers;
-}
-
-// ヘルパー関数
-function getPositionByPlayer(name) {
-    const positionMap = {
-        '久保建英': 'Forward',
-        '三苫薫': 'Midfielder',
-        '富安健洋': 'Defender',
-        '遠藤航': 'Midfielder',
-        '堂安律': 'Midfielder',
-        '伊藤洋輝': 'Defender',
-        '浅野拓磨': 'Forward',
-        '田中碧': 'Midfielder',
-        '南野拓実': 'Forward',
-        'Erling Haaland': 'Forward',
-        'Kevin De Bruyne': 'Midfielder',
-        'Mohamed Salah': 'Forward',
-        'Jude Bellingham': 'Midfielder',
-        'Vinícius Júnior': 'Forward',
-        'Robert Lewandowski': 'Forward',
-        'Harry Kane': 'Forward',
-        'Jamal Musiala': 'Midfielder',
-        'Lautaro Martínez': 'Forward',
-        'Kylian Mbappé': 'Forward',
-        'Ousmane Dembélé': 'Forward'
-    };
-    return positionMap[name] || 'Unknown';
-}
-
-function getNationalityByPlayer(name) {
-    const nationalityMap = {
-        '久保建英': 'Japan',
-        '三苫薫': 'Japan',
-        '富安健洋': 'Japan',
-        '遠藤航': 'Japan',
-        '堂安律': 'Japan',
-        '伊藤洋輝': 'Japan',
-        '浅野拓磨': 'Japan',
-        '田中碧': 'Japan',
-        '南野拓実': 'Japan',
-        'Erling Haaland': 'Norway',
-        'Kevin De Bruyne': 'Belgium',
-        'Mohamed Salah': 'Egypt',
-        'Jude Bellingham': 'England',
-        'Vinícius Júnior': 'Brazil',
-        'Robert Lewandowski': 'Poland',
-        'Harry Kane': 'England',
-        'Jamal Musiala': 'Germany',
-        'Lautaro Martínez': 'Argentina',
-        'Kylian Mbappé': 'France',
-        'Ousmane Dembélé': 'France'
-    };
-    return nationalityMap[name] || 'Unknown';
-}
-
-function getAgeByPlayer(name) {
-    const ageMap = {
-        '久保建英': 25,
-        '三苫薫': 25,
-        '富安健洋': 26,
-        '遠藤航': 31,
-        '堂安律': 26,
-        '伊藤洋輝': 25,
-        '浅野拓磨': 29,
-        '田中碧': 25,
-        '南野拓実': 29,
-        'Erling Haaland': 24,
-        'Kevin De Bruyne': 33,
-        'Mohamed Salah': 32,
-        'Jude Bellingham': 21,
-        'Vinícius Júnior': 24,
-        'Robert Lewandowski': 36,
-        'Harry Kane': 31,
-        'Jamal Musiala': 21,
-        'Lautaro Martínez': 27,
-        'Kylian Mbappé': 26,
-        'Ousmane Dembélé': 27
-    };
-    return ageMap[name] || 25;
-}
-
-function generateRealisticStats(name) {
-    // 選手名に基づいて現実的な統計を生成
-    const statsMap = {
-        '久保建英': { goals: 8, assists: 6, appearances: 28, minutes: 2240, rating: 7.2, yellowCards: 2, shotsTotal: 45, shotsOnTarget: 18, expectedGoals: 7.5, passAccuracy: '85%', tackles: 12, interceptions: 8 },
-        '三苫薫': { goals: 7, assists: 9, appearances: 30, minutes: 2520, rating: 7.4, yellowCards: 3, shotsTotal: 52, shotsOnTarget: 22, expectedGoals: 8.1, passAccuracy: '82%', tackles: 18, interceptions: 12 },
-        'Erling Haaland': { goals: 25, assists: 8, appearances: 32, minutes: 2880, rating: 8.1, yellowCards: 4, shotsTotal: 89, shotsOnTarget: 45, expectedGoals: 24.8, passAccuracy: '78%', tackles: 5, interceptions: 3 },
-        'Kevin De Bruyne': { goals: 12, assists: 18, appearances: 28, minutes: 2520, rating: 8.3, yellowCards: 2, shotsTotal: 67, shotsOnTarget: 28, expectedGoals: 11.2, passAccuracy: '89%', tackles: 15, interceptions: 8 },
-        'Mohamed Salah': { goals: 22, assists: 12, appearances: 34, minutes: 3060, rating: 7.9, yellowCards: 3, shotsTotal: 95, shotsOnTarget: 42, expectedGoals: 21.5, passAccuracy: '81%', tackles: 8, interceptions: 5 }
-    };
-    
-    const defaultStats = { goals: 5, assists: 4, appearances: 25, minutes: 2000, rating: 7.0, yellowCards: 2, shotsTotal: 35, shotsOnTarget: 15, expectedGoals: 5.5, passAccuracy: '80%', tackles: 10, interceptions: 6 };
-    
-    return statsMap[name] || defaultStats;
-}
 
 // キャッシュ統計APIエンドポイント
 app.get('/api/cache-stats', (req, res) => {
@@ -3064,40 +3112,6 @@ app.post('/api/cache-clear', async (req, res) => {
     }
 });
 
-// キャッシュクリアエンドポイント
-app.get('/api/clear-cache', async (req, res) => {
-    try {
-        console.log('🗑️ Clearing cache...');
-        
-        // キャッシュをクリア
-        await cacheManager.clearCache();
-        
-        // 代替方法: キャッシュデータを直接クリア
-        if (typeof cacheManager.clearCache !== 'function') {
-            console.log('🔄 Using alternative cache clear method...');
-            // キャッシュデータをリセット
-            cacheManager.cachedPlayers = [];
-            cacheManager.lastUpdate = null;
-            console.log('✅ Cache cleared using alternative method');
-        }
-        
-        console.log('✅ Cache cleared successfully');
-        
-        res.json({ 
-            status: 'success', 
-            message: 'Cache cleared successfully',
-            timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-        console.error('Cache clear error:', error);
-        res.status(500).json({ 
-            status: 'error', 
-            message: 'Failed to clear cache',
-            error: error.message
-        });
-    }
-});
-
 // サーバーを起動
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
@@ -3106,539 +3120,5 @@ app.listen(PORT, () => {
 }).on('error', (error) => {
     console.error('Server error:', error);
     process.exit(1);
-});
-
-// 選手データをデータベースに保存する関数
-async function savePlayerData(playerData) {
-    try {
-        // キャッシュマネージャーを使用してデータを保存
-        const playerId = await cacheManager.savePlayerData(playerData);
-        return playerId;
-    } catch (error) {
-        console.error('Error saving player data:', error);
-        return null;
-    }
-}
-
-// 自動更新システムの初期化
-let autoUpdateInterval;
-let lastUpdateTime = new Date();
-
-// 自動更新システムを開始
-function startAutoUpdate() {
-    console.log('🔄 自動更新システムを開始します...');
-    
-    // 初回更新を即座に実行
-    performAutoUpdate();
-    
-    // 30分ごとに自動更新
-    autoUpdateInterval = setInterval(performAutoUpdate, 30 * 60 * 1000);
-    
-    console.log('✅ 自動更新システムが開始されました（30分間隔）');
-}
-
-// 自動更新の実行
-async function performAutoUpdate() {
-    try {
-        console.log('🔄 自動更新を実行中...');
-        const startTime = new Date();
-        
-        // 現在のデータベースの状態をチェック
-        const currentStats = await cacheManager.getCacheStats();
-        console.log(`📊 現在のデータベース状態: ${currentStats.totalPlayers}名の選手`);
-        
-        // データが少ない場合は効率的な収集を実行
-        if (currentStats.totalPlayers < 50) {
-            console.log('⚠️ データが不足しています。効率的な収集を実行します。');
-            await executeEfficientCollection();
-        } else {
-            console.log('✅ 十分なデータがあります。増分更新を実行します。');
-            await performIncrementalUpdate();
-        }
-        
-        const endTime = new Date();
-        const duration = endTime - startTime;
-        lastUpdateTime = endTime;
-        
-        console.log(`✅ 自動更新完了: ${duration}ms で完了`);
-        
-    } catch (error) {
-        console.error('❌ 自動更新エラー:', error);
-    }
-}
-
-// 増分更新の実行
-async function performIncrementalUpdate() {
-    try {
-        console.log('🔄 増分更新を実行中...');
-        
-        // 主要な選手の情報を更新
-        const priorityPlayers = [
-            '久保建英', '三苫薫', '富安健洋', '遠藤航', '堂安律',
-            'Erling Haaland', 'Kevin De Bruyne', 'Mohamed Salah'
-        ];
-        
-        for (const playerName of priorityPlayers) {
-            try {
-                // 選手の最新情報を取得・更新
-                await updatePlayerInfo(playerName);
-                await new Promise(resolve => setTimeout(resolve, 100)); // API制限を避ける
-            } catch (error) {
-                console.log(`⚠️ 選手 ${playerName} の更新に失敗:`, error.message);
-            }
-        }
-        
-        console.log('✅ 増分更新完了');
-        
-    } catch (error) {
-        console.error('❌ 増分更新エラー:', error);
-    }
-}
-
-// 選手情報の更新
-async function updatePlayerInfo(playerName) {
-    try {
-        // 既存の選手データを取得
-        const existingPlayer = await cacheManager.getPlayerByName(playerName);
-        
-        if (existingPlayer) {
-            // 統計データを更新（現実的な値に調整）
-            const updatedStats = generateRealisticStats(playerName);
-            
-            const updatedPlayer = {
-                ...existingPlayer,
-                stats: updatedStats,
-                lastUpdated: new Date().toISOString()
-            };
-            
-            // データベースを更新
-            await cacheManager.savePlayerData(updatedPlayer);
-            console.log(`✅ ${playerName} の情報を更新しました`);
-        }
-        
-    } catch (error) {
-        console.log(`⚠️ ${playerName} の更新エラー:`, error.message);
-    }
-}
-
-// データベースの健全性チェック
-async function performDatabaseHealthCheck() {
-    try {
-        console.log('🏥 データベースの健全性チェックを実行中...');
-        
-        const stats = await cacheManager.getCacheStats();
-        
-        // データの品質チェック
-        if (stats.totalPlayers < 20) {
-            console.log('⚠️ データが不足しています。緊急収集を実行します。');
-            await executeEfficientCollection();
-        }
-        
-        // 古いデータのクリーンアップ
-        await cacheManager.cleanupCache();
-        
-        console.log('✅ データベース健全性チェック完了');
-        
-    } catch (error) {
-        console.error('❌ 健全性チェックエラー:', error);
-    }
-}
-
-// サーバー起動時の初期化
-async function initializeSystem() {
-    try {
-        console.log('🚀 システム初期化を開始...');
-        
-        // データベースの健全性チェック
-        await performDatabaseHealthCheck();
-        
-        // 自動更新システムを開始
-        startAutoUpdate();
-        
-        // 1時間ごとに健全性チェック
-        setInterval(performDatabaseHealthCheck, 60 * 60 * 1000);
-        
-        console.log('✅ システム初期化完了');
-        
-    } catch (error) {
-        console.error('❌ システム初期化エラー:', error);
-    }
-}
-
-// サーバー起動時に初期化を実行
-initializeSystem();
-
-// リアルタイム通知システム
-class NotificationSystem {
-    constructor() {
-        this.subscribers = new Map();
-        this.notificationQueue = [];
-    }
-    
-    // 購読者を追加
-    subscribe(event, callback) {
-        if (!this.subscribers.has(event)) {
-            this.subscribers.set(event, []);
-        }
-        this.subscribers.get(event).push(callback);
-    }
-    
-    // 通知を送信
-    notify(event, data) {
-        if (this.subscribers.has(event)) {
-            this.subscribers.get(event).forEach(callback => {
-                try {
-                    callback(data);
-                } catch (error) {
-                    console.error('通知コールバックエラー:', error);
-                }
-            });
-        }
-        
-        // 通知をログに記録
-        this.logNotification(event, data);
-    }
-    
-    // 通知をログに記録
-    logNotification(event, data) {
-        const notification = {
-            timestamp: new Date().toISOString(),
-            event,
-            data: typeof data === 'object' ? JSON.stringify(data) : data
-        };
-        
-        this.notificationQueue.push(notification);
-        
-        // 古い通知を削除（最新100件を保持）
-        if (this.notificationQueue.length > 100) {
-            this.notificationQueue = this.notificationQueue.slice(-100);
-        }
-        
-        console.log(`📢 通知: ${event} - ${JSON.stringify(data)}`);
-    }
-    
-    // 通知履歴を取得
-    getNotificationHistory() {
-        return this.notificationQueue;
-    }
-}
-
-// データ品質管理システム
-class DataQualityManager {
-    constructor() {
-        this.qualityMetrics = {
-            totalPlayers: 0,
-            validPhotos: 0,
-            completeStats: 0,
-            lastQualityCheck: null
-        };
-    }
-    
-    // データ品質をチェック
-    async checkDataQuality() {
-        try {
-            console.log('🔍 データ品質チェックを実行中...');
-            
-            const stats = await cacheManager.getCacheStats();
-            this.qualityMetrics.totalPlayers = stats.totalPlayers;
-            
-            // データの完全性をチェック
-            const qualityScore = await this.calculateQualityScore();
-            
-            console.log(`📊 データ品質スコア: ${qualityScore}/100`);
-            
-            // 品質が低い場合は改善を実行
-            if (qualityScore < 70) {
-                console.log('⚠️ データ品質が低いです。改善を実行します。');
-                await this.improveDataQuality();
-            }
-            
-            this.qualityMetrics.lastQualityCheck = new Date().toISOString();
-            
-        } catch (error) {
-            console.error('❌ データ品質チェックエラー:', error);
-        }
-    }
-    
-    // 品質スコアを計算
-    async calculateQualityScore() {
-        let score = 0;
-        
-        // 選手数のスコア（最大40点）
-        if (this.qualityMetrics.totalPlayers >= 100) score += 40;
-        else if (this.qualityMetrics.totalPlayers >= 50) score += 30;
-        else if (this.qualityMetrics.totalPlayers >= 20) score += 20;
-        else score += 10;
-        
-        // 統計データの完全性（最大30点）
-        score += 25; // 基本的な統計は常に提供
-        
-        // データの鮮度（最大30点）
-        const lastUpdate = new Date(lastUpdateTime);
-        const hoursSinceUpdate = (new Date() - lastUpdate) / (1000 * 60 * 60);
-        
-        if (hoursSinceUpdate < 1) score += 30;
-        else if (hoursSinceUpdate < 6) score += 20;
-        else if (hoursSinceUpdate < 24) score += 10;
-        
-        return Math.min(score, 100);
-    }
-    
-    // データ品質を改善
-    async improveDataQuality() {
-        try {
-            console.log('🔧 データ品質改善を実行中...');
-            
-            // 不足しているデータを補完
-            if (this.qualityMetrics.totalPlayers < 50) {
-                await executeEfficientCollection();
-            }
-            
-            // 統計データを現実的な値に更新
-            await this.updateStatistics();
-            
-            console.log('✅ データ品質改善完了');
-            
-        } catch (error) {
-            console.error('❌ データ品質改善エラー:', error);
-        }
-    }
-    
-    // 統計データを更新
-    async updateStatistics() {
-        try {
-            const players = await cacheManager.getAllPlayers();
-            
-            for (const player of players) {
-                if (player.name) {
-                    const realisticStats = generateRealisticStats(player.name);
-                    const updatedPlayer = {
-                        ...player,
-                        stats: realisticStats,
-                        lastUpdated: new Date().toISOString()
-                    };
-                    
-                    await cacheManager.savePlayerData(updatedPlayer);
-                }
-            }
-            
-            console.log(`✅ ${players.length}名の選手の統計を更新しました`);
-            
-        } catch (error) {
-            console.error('❌ 統計更新エラー:', error);
-        }
-    }
-}
-
-// パフォーマンス最適化システム
-class PerformanceOptimizer {
-    constructor() {
-        this.performanceMetrics = {
-            responseTimes: [],
-            memoryUsage: [],
-            lastOptimization: null
-        };
-    }
-    
-    // パフォーマンスを監視
-    monitorPerformance() {
-        setInterval(() => {
-            const memoryUsage = process.memoryUsage();
-            this.performanceMetrics.memoryUsage.push({
-                timestamp: new Date().toISOString(),
-                heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024),
-                heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024)
-            });
-            
-            // 最新100件を保持
-            if (this.performanceMetrics.memoryUsage.length > 100) {
-                this.performanceMetrics.memoryUsage = this.performanceMetrics.memoryUsage.slice(-100);
-            }
-            
-            // メモリ使用量が高い場合は最適化
-            if (memoryUsage.heapUsed > 100 * 1024 * 1024) { // 100MB
-                this.optimizePerformance();
-            }
-        }, 60000); // 1分ごと
-    }
-    
-    // パフォーマンスを最適化
-    optimizePerformance() {
-        try {
-            console.log('⚡ パフォーマンス最適化を実行中...');
-            
-            // ガベージコレクションを強制実行
-            if (global.gc) {
-                global.gc();
-                console.log('🗑️ ガベージコレクションを実行しました');
-            }
-            
-            // 古いログデータをクリア
-            this.performanceMetrics.responseTimes = this.performanceMetrics.responseTimes.slice(-50);
-            this.performanceMetrics.memoryUsage = this.performanceMetrics.memoryUsage.slice(-50);
-            
-            this.performanceMetrics.lastOptimization = new Date().toISOString();
-            console.log('✅ パフォーマンス最適化完了');
-            
-        } catch (error) {
-            console.error('❌ パフォーマンス最適化エラー:', error);
-        }
-    }
-    
-    // パフォーマンスメトリクスを取得
-    getPerformanceMetrics() {
-        return {
-            ...this.performanceMetrics,
-            currentMemory: process.memoryUsage(),
-            uptime: process.uptime()
-        };
-    }
-}
-
-// システムインスタンスを作成
-const notificationSystem = new NotificationSystem();
-const dataQualityManager = new DataQualityManager();
-const performanceOptimizer = new PerformanceOptimizer();
-
-// パフォーマンス監視を開始
-performanceOptimizer.monitorPerformance();
-
-// システム状態監視APIエンドポイント
-app.get('/api/system-status', async (req, res) => {
-    try {
-        const cacheStats = await cacheManager.getCacheStats();
-        const qualityScore = await dataQualityManager.calculateQualityScore();
-        const performanceMetrics = performanceOptimizer.getPerformanceMetrics();
-        const notificationHistory = notificationSystem.getNotificationHistory();
-        
-        const systemStatus = {
-            status: 'operational',
-            timestamp: new Date().toISOString(),
-            uptime: process.uptime(),
-            environment: process.env.NODE_ENV || 'development',
-            
-            // データベース状態
-            database: {
-                totalPlayers: cacheStats.totalPlayers,
-                totalTeams: cacheStats.totalTeams,
-                totalStats: cacheStats.totalStats,
-                lastUpdate: cacheStats.lastUpdate,
-                nextUpdate: cacheStats.nextUpdate
-            },
-            
-            // データ品質
-            dataQuality: {
-                score: qualityScore,
-                metrics: dataQualityManager.qualityMetrics,
-                lastQualityCheck: dataQualityManager.qualityMetrics.lastQualityCheck
-            },
-            
-            // パフォーマンス
-            performance: {
-                memoryUsage: performanceMetrics.currentMemory,
-                lastOptimization: performanceMetrics.lastOptimization,
-                uptime: performanceMetrics.uptime
-            },
-            
-            // 自動更新システム
-            autoUpdate: {
-                lastUpdate: lastUpdateTime,
-                nextUpdate: new Date(lastUpdateTime.getTime() + 30 * 60 * 1000),
-                interval: '30 minutes'
-            },
-            
-            // 通知システム
-            notifications: {
-                totalNotifications: notificationHistory.length,
-                recentNotifications: notificationHistory.slice(-10)
-            },
-            
-            // API制限状態
-            apiLimits: {
-                isLimited: await checkApiLimits(),
-                lastCheck: new Date().toISOString()
-            }
-        };
-        
-        res.json(systemStatus);
-        
-    } catch (error) {
-        console.error('システム状態取得エラー:', error);
-        res.status(500).json({ 
-            status: 'error',
-            message: 'Failed to get system status',
-            error: error.message
-        });
-    }
-});
-
-// 手動データ更新APIエンドポイント
-app.post('/api/manual-update', async (req, res) => {
-    try {
-        console.log('🔄 手動データ更新を実行中...');
-        
-        const updateType = req.body.type || 'comprehensive';
-        let result;
-        
-        if (updateType === 'efficient') {
-            result = await executeEfficientCollection();
-        } else if (updateType === 'comprehensive') {
-            result = await executeComprehensiveCollection();
-        } else {
-            result = await performAutoUpdate();
-        }
-        
-        // 通知を送信
-        notificationSystem.notify('manual_update', {
-            type: updateType,
-            result: result,
-            timestamp: new Date().toISOString()
-        });
-        
-        res.json({
-            status: 'success',
-            message: 'Manual update completed successfully',
-            updateType: updateType,
-            result: result,
-            timestamp: new Date().toISOString()
-        });
-        
-    } catch (error) {
-        console.error('手動更新エラー:', error);
-        res.status(500).json({
-            status: 'error',
-            message: 'Failed to perform manual update',
-            error: error.message
-        });
-    }
-});
-
-// データ品質改善APIエンドポイント
-app.post('/api/improve-quality', async (req, res) => {
-    try {
-        console.log('🔧 データ品質改善を実行中...');
-        
-        await dataQualityManager.improveDataQuality();
-        
-        // 通知を送信
-        notificationSystem.notify('quality_improvement', {
-            timestamp: new Date().toISOString(),
-            message: 'Data quality improvement completed'
-        });
-        
-        res.json({
-            status: 'success',
-            message: 'Data quality improvement completed successfully',
-            timestamp: new Date().toISOString()
-        });
-        
-    } catch (error) {
-        console.error('品質改善エラー:', error);
-        res.status(500).json({
-            status: 'error',
-            message: 'Failed to improve data quality',
-            error: error.message
-        });
-    }
 });
 
