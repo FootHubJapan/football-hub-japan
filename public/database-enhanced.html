@@ -824,14 +824,16 @@
         async function checkAPIAndInitialize() {
             try {
                 console.log('Checking Japanese players API...');
-                const response = await fetch('/api/japanese-players?_t=' + Date.now());
+                // 本番環境とローカル環境を自動判定
+                const baseUrl = window.location.hostname === 'localhost' ? '' : 'https://football-hub-japan-ubzb.onrender.com';
+                const response = await fetch(baseUrl + '/api/japanese-players?_t=' + Date.now());
                 if (response.ok) {
                     console.log('Japanese players API available, loading from server');
-                    const players = await response.json();
-                    if (players && players.length > 0) {
-                        currentPlayers = players;
-                        displayPlayers(players);
-                        console.log('Loaded', players.length, 'Japanese players from API');
+                    const data = await response.json();
+                    if (data && data.players && data.players.length > 0) {
+                        currentPlayers = data.players;
+                        displayPlayers(data.players);
+                        console.log('Loaded', data.players.length, 'players from API');
                     } else {
                         console.log('No players returned from API, using fallback data');
                         loadFallbackData();
@@ -1166,13 +1168,15 @@
         async function loadSamplePlayers() {
             try {
                 console.log('Loading sample players from Japanese players API...');
-                const resp = await fetch(`/api/japanese-players?_t=${Date.now()}`);
+                // 本番環境とローカル環境を自動判定
+                const baseUrl = window.location.hostname === 'localhost' ? '' : 'https://football-hub-japan-ubzb.onrender.com';
+                const resp = await fetch(`${baseUrl}/api/japanese-players?_t=${Date.now()}`);
                 if (resp.ok) {
                     const data = await resp.json();
-                    if (Array.isArray(data) && data.length > 0) {
-                        currentPlayers = data;
-                        totalPages = 1; // 日本人選手は1ページ分
-                        console.log(`Loaded ${currentPlayers.length} Japanese players from API`);
+                    if (data && data.players && data.players.length > 0) {
+                        currentPlayers = data.players;
+                        totalPages = Math.ceil(data.players.length / playersPerPage);
+                        console.log(`Loaded ${currentPlayers.length} players from API`);
                         displayPlayers(currentPlayers);
                         return;
                     }
