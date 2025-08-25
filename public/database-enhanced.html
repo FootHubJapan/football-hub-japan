@@ -937,6 +937,7 @@
         let currentPage = 1;
         let totalPages = Infinity;
         let isLoading = false;
+        const playersPerPage = 50; // 1ページあたり50名表示
         let io;
         let currentPlayers = [];
 
@@ -954,8 +955,8 @@
             // 表示をクリア
             grid.innerHTML = '';
             
-            // 最大1000名まで表示（パフォーマンス向上のため）
-            const displayPlayers = players.slice(0, 1000);
+                    // 全選手を表示（パフォーマンス向上のため、ページネーションで制御）
+        const displayPlayers = players;
             
             console.log(`Displaying ${displayPlayers.length} players out of ${players.length} total`);
             
