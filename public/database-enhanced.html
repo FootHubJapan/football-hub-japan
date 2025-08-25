@@ -947,6 +947,27 @@
             return select && select.value ? [select.value] : [];
         }
 
+        // 画像URLを検証して有効なURLを返す関数
+        function getValidPhotoUrl(photoUrl) {
+            if (!photoUrl) return null;
+            
+            // placeholder.pngや不正なURLを除外
+            if (photoUrl.includes('placeholder.png') || 
+                photoUrl.includes('undefined') || 
+                photoUrl.includes('null') ||
+                photoUrl === 'placeholder.png') {
+                return null;
+            }
+            
+            // 有効な画像URLかチェック
+            if (photoUrl.startsWith('http') && 
+                (photoUrl.includes('.png') || photoUrl.includes('.jpg') || photoUrl.includes('.jpeg'))) {
+                return photoUrl;
+            }
+            
+            return null;
+        }
+
         // 選手表示関数（パフォーマンス最適化）
         function displayPlayers(players) {
             const grid = document.getElementById('playersGrid');
@@ -955,20 +976,20 @@
             // 表示をクリア
             grid.innerHTML = '';
             
-                    // 全選手を表示（パフォーマンス向上のため、ページネーションで制御）
-        const displayPlayers = players;
+            // 全選手を表示（パフォーマンス向上のため、ページネーションで制御）
+            const playersToDisplay = players;
             
-            console.log(`Displaying ${displayPlayers.length} players out of ${players.length} total`);
+            console.log(`Displaying ${playersToDisplay.length} players out of ${players.length} total`);
             
             // バッチ処理で表示（パフォーマンス向上）
             const batchSize = 50;
             let currentIndex = 0;
             
             function displayBatch() {
-                const endIndex = Math.min(currentIndex + batchSize, displayPlayers.length);
+                const endIndex = Math.min(currentIndex + batchSize, playersToDisplay.length);
                 
                 for (let i = currentIndex; i < endIndex; i++) {
-                    const player = displayPlayers[i];
+                    const player = playersToDisplay[i];
                     if (player && player.name) {
                         grid.appendChild(createPlayerCard(player));
                     }
@@ -982,10 +1003,10 @@
                 }
                 
                 // 次のバッチを表示
-                if (currentIndex < displayPlayers.length) {
+                if (currentIndex < playersToDisplay.length) {
                     requestAnimationFrame(displayBatch);
                 } else {
-                    console.log(`Displayed ${displayPlayers.length} players...`);
+                    console.log(`Displayed ${playersToDisplay.length} players...`);
                 }
             }
             
