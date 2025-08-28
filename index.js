@@ -2962,6 +2962,36 @@ async function executeEfficientCollection() {
     return totalPlayers;
 }
 
+// 包括的データ収集（チーム単位での一括取得）
+async function executeComprehensiveCollection() {
+    console.log('🚀 包括的データ収集を開始...');
+    
+    if (!apiService) {
+        console.log('⚠️ APIService not available, falling back to efficient collection');
+        return await executeEfficientCollection();
+    }
+    
+    try {
+        console.log('🌍 98チーム分の包括的選手データを取得中...');
+        
+        // APIServiceの包括的データ取得を使用
+        const result = await apiService.fetchAllComprehensivePlayers();
+        
+        if (result && result.players && result.players.length > 0) {
+            console.log(`✅ 包括的データ収集完了: ${result.players.length}名の選手を取得`);
+            return result.players.length;
+        } else {
+            console.log('⚠️ 包括的データ取得に失敗、フォールバックを実行');
+            return await executeEfficientCollection();
+        }
+        
+    } catch (error) {
+        console.error('❌ 包括的データ収集エラー:', error);
+        console.log('⚠️ フォールバック: 効率的な収集を実行');
+        return await executeEfficientCollection();
+    }
+}
+
 // ハイブリッドデータ収集（football-data.org + API-Football）
 async function executeHybridCollection() {
     console.log('🚀 ハイブリッドデータ収集を開始...');
@@ -3016,21 +3046,34 @@ async function executeHybridCollection() {
             }
         }
         
-        // Step 3: データベースに保存
-        console.log(`💾 ${allPlayers.length}名の選手データをデータベースに保存中...`);
-        let savedCount = 0;
-        
-        for (const player of allPlayers) {
+        // Step 3: データベースに一括保存
+        if (allPlayers.length > 0) {
+            console.log(`💾 ${allPlayers.length}名の選手データをデータベースに一括保存中...`);
+            
             try {
-                await savePlayerData(player);
-                savedCount++;
+                // 包括的データベースに一括保存
+                const savedPlayers = await apiService.dbManager.saveComprehensivePlayers(allPlayers);
+                console.log(`✅ 一括保存完了: ${savedPlayers.length}名の選手データを保存`);
+                return savedPlayers.length;
             } catch (error) {
-                console.error(`❌ 選手保存エラー (${player.name}):`, error.message);
+                console.error('❌ 一括保存エラー:', error);
+                // フォールバック: 個別保存
+                console.log('⚠️ 個別保存にフォールバック');
+                let savedCount = 0;
+                for (const player of allPlayers) {
+                    try {
+                        await savePlayerData(player);
+                        savedCount++;
+                    } catch (error) {
+                        console.error(`❌ 選手保存エラー (${player.name}):`, error.message);
+                    }
+                }
+                return savedCount;
             }
         }
         
-        console.log(`🎯 ハイブリッド収集完了: ${savedCount}名の選手を保存`);
-        return savedCount;
+        console.log(`🎯 ハイブリッド収集完了: ${allPlayers.length}名の選手を処理`);
+        return allPlayers.length;
         
     } catch (error) {
         console.error('❌ ハイブリッド収集エラー:', error);
@@ -3600,7 +3643,20 @@ async function performDatabaseHealthCheck() {
         
         // データの品質チェック
         if (stats.totalPlayers < 20) {
-            console.log('⚠️ データが不足しています。緊急収集を実行します。');
+            console.log('⚠️ データが不足しています。包括的データ収集を実行します。');
+            
+            // 優先順位1: 包括的データ収集
+            try {
+                const collectedPlayers = await executeComprehensiveCollection();
+                if (collectedPlayers > 0) {
+                    console.log(`✅ 包括的データ収集完了: ${collectedPlayers}名の選手を追加`);
+                    return; // 成功したら終了
+                }
+            } catch (error) {
+                console.log('⚠️ 包括的データ収集に失敗、効率的な収集にフォールバック');
+            }
+            
+            // 優先順位2: 効率的な収集
             await executeEfficientCollection();
         }
         
