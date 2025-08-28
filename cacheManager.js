@@ -16,10 +16,14 @@ class CacheManager {
         try {
             // 強制更新でない場合、キャッシュから取得
             if (!forceRefresh) {
-                const cachedPlayers = this.db.getAllPlayers(1000);
-                if (cachedPlayers.length > 0) {
-                    console.log(`📊 Retrieved ${cachedPlayers.length} players from cache`);
-                    return this.formatCachedPlayers(cachedPlayers);
+                try {
+                    const cachedPlayers = await this.db.loadComprehensivePlayers();
+                    if (cachedPlayers && cachedPlayers.length > 0) {
+                        console.log(`📊 Retrieved ${cachedPlayers.length} players from cache`);
+                        return this.formatCachedPlayers(cachedPlayers.slice(0, 1000));
+                    }
+                } catch (error) {
+                    console.log('包括的データベースからの読み込みに失敗:', error);
                 }
             }
 
@@ -48,14 +52,26 @@ class CacheManager {
 
             if (query) {
                 // 名前での検索
-                const player = this.db.getPlayerByName(query);
-                if (player) players.push(player);
+                try {
+                    const allPlayers = await this.db.loadComprehensivePlayers();
+                    const player = allPlayers.find(p => 
+                        p.name === query || p.fullName === query
+                    );
+                    if (player) players.push(player);
+                } catch (error) {
+                    console.log('選手名検索に失敗:', error);
+                }
             }
 
             if (league) {
                 // リーグでの検索
-                const leaguePlayers = this.db.getPlayersByLeague(league);
-                players = players.concat(leaguePlayers);
+                try {
+                    const allPlayers = await this.db.loadComprehensivePlayers();
+                    const leaguePlayers = allPlayers.filter(p => p.league === league);
+                    players = players.concat(leaguePlayers);
+                } catch (error) {
+                    console.log('リーグ別検索に失敗:', error);
+                }
             }
 
             if (position) {
@@ -79,14 +95,19 @@ class CacheManager {
     // 選手データの保存（APIから取得した場合）
     async savePlayerData(playerData) {
         try {
-            const playerId = this.db.savePlayerData(playerData);
+            // 単一の選手データを配列に変換して保存
+            const players = [playerData];
+            const result = await this.db.saveComprehensivePlayers(players);
             
-            if (playerId && playerData.stats) {
-                this.db.savePlayerStats(playerId, playerData.stats);
+            if (result && result.length > 0 && playerData.stats) {
+                const playerId = result[0].id || result[0].playerId;
+                if (playerId) {
+                    this.db.savePlayerStats(playerId, playerData.stats);
+                }
             }
 
             console.log(`💾 Saved player data for: ${playerData.name}`);
-            return playerId;
+            return result && result.length > 0 ? result[0].id || result[0].playerId : null;
         } catch (error) {
             console.error('Error saving player data:', error);
             return null;
@@ -116,9 +137,23 @@ class CacheManager {
     }
 
     // キャッシュの更新が必要かチェック
-    needsUpdate(dataType = 'players') {
+    async needsUpdate(dataType = 'players') {
         try {
-            const stats = this.db.getDatabaseStats ? this.db.getDatabaseStats() : { players: 0, teams: 0, stats: 0 };
+            let stats = { players: 0, teams: 0, stats: 0 };
+            
+            try {
+                if (this.db.getComprehensiveStatus) {
+                    const status = await this.db.getComprehensiveStatus();
+                    stats = {
+                        players: status.totalPlayers || 0,
+                        teams: status.totalTeams || 0,
+                        stats: status.totalStats || 0
+                    };
+                }
+            } catch (error) {
+                console.log('包括的データベース状態の取得に失敗:', error);
+            }
+            
             const lastUpdate = this.getLastUpdateTime(dataType);
             const now = Date.now();
             
@@ -141,7 +176,13 @@ class CacheManager {
     // 選手名で選手を取得
     async getPlayerByName(name) {
         try {
-            return this.db.getPlayerByName ? this.db.getPlayerByName(name) : null;
+            if (this.db.loadComprehensivePlayers) {
+                const allPlayers = await this.db.loadComprehensivePlayers();
+                return allPlayers.find(p => 
+                    p.name === name || p.fullName === name
+                ) || null;
+            }
+            return null;
         } catch (error) {
             console.error('Error getting player by name:', error);
             return null;
@@ -151,27 +192,41 @@ class CacheManager {
     // 最後の更新時刻を取得
     getLastUpdateTime(dataType) {
         try {
-            const stats = this.db.getDatabaseStats ? this.db.getDatabaseStats() : { players: 0, teams: 0, stats: 0 };
-            
-            if (dataType === 'players' && stats.players > 0) {
-                const result = this.db.db.prepare(`
-                    SELECT MAX(last_updated) as last_update FROM players
-                `).get();
-                
-                return result.last_update ? new Date(result.last_update).getTime() : 0;
+            // 包括的データベースの場合は、ファイルの更新時刻を使用
+            if (this.db.playersPath) {
+                const fs = require('fs');
+                try {
+                    const stats = fs.statSync(this.db.playersPath);
+                    return stats.mtime.getTime();
+                } catch (error) {
+                    console.log('ファイル更新時刻の取得に失敗:', error);
+                }
             }
-
-            return 0;
+            
+            return Date.now(); // デフォルトは現在時刻
         } catch (error) {
             console.error('Error getting last update time:', error);
-            return 0;
+            return Date.now();
         }
     }
 
     // キャッシュの統計情報
-    getCacheStats() {
+    async getCacheStats() {
         try {
-            const dbStats = this.db.getDatabaseStats ? this.db.getDatabaseStats() : { players: 0, teams: 0, stats: 0 };
+            let dbStats = { players: 0, teams: 0, stats: 0 };
+            
+            try {
+                if (this.db.getComprehensiveStatus) {
+                    const status = await this.db.getComprehensiveStatus();
+                    dbStats = {
+                        players: status.totalPlayers || 0,
+                        teams: status.totalTeams || 0,
+                        stats: status.totalStats || 0
+                    };
+                }
+            } catch (error) {
+                console.log('包括的データベース状態の取得に失敗:', error);
+            }
             const lastUpdate = this.getLastUpdateTime('players');
             const now = Date.now();
             
@@ -192,7 +247,16 @@ class CacheManager {
     // キャッシュのクリーンアップ
     async cleanupCache() {
         try {
-            const cleanedCount = this.db.cleanupOldData ? this.db.cleanupOldData() : 0;
+            let cleanedCount = 0;
+            
+            try {
+                if (this.db.cleanupOldData) {
+                    cleanedCount = await this.db.cleanupOldData();
+                }
+            } catch (error) {
+                console.log('包括的データベースのクリーンアップに失敗:', error);
+            }
+            
             console.log(`🧹 Cache cleanup completed: ${cleanedCount} old records removed`);
             return cleanedCount;
         } catch (error) {
