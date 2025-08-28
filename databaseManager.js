@@ -106,7 +106,15 @@ class DatabaseManager {
      */
     async saveComprehensivePlayers(players) {
         try {
-            // 選手データを正規化
+            // 既存の選手データを読み込み
+            let existingPlayers = [];
+            try {
+                existingPlayers = await this.loadComprehensivePlayers();
+            } catch (error) {
+                console.log('既存データの読み込みに失敗、新規作成します');
+            }
+
+            // 新しい選手データを正規化
             const normalizedPlayers = players.map(player => ({
                 id: player.id || `player_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 name: player.name,
@@ -137,19 +145,38 @@ class DatabaseManager {
                 source: player.source || 'api-football'
             }));
 
-            await fs.writeFile(this.playersPath, JSON.stringify(normalizedPlayers, null, 2));
+            // 既存データと新しいデータをマージ（重複を避ける）
+            const mergedPlayers = [...existingPlayers];
+            
+            for (const newPlayer of normalizedPlayers) {
+                // 名前とチームで重複チェック
+                const existingIndex = mergedPlayers.findIndex(p => 
+                    p.name === newPlayer.name && p.currentTeam === newPlayer.currentTeam
+                );
+                
+                if (existingIndex >= 0) {
+                    // 既存データを更新
+                    mergedPlayers[existingIndex] = { ...mergedPlayers[existingIndex], ...newPlayer };
+                } else {
+                    // 新しいデータを追加
+                    mergedPlayers.push(newPlayer);
+                }
+            }
+
+            // マージされたデータを保存
+            await fs.writeFile(this.playersPath, JSON.stringify(mergedPlayers, null, 2));
             
             // 統計を更新
             await this.updateStats({
-                totalPlayers: normalizedPlayers.length,
+                totalPlayers: mergedPlayers.length,
                 lastUpdate: new Date().toISOString(),
-                leagues: [...new Set(normalizedPlayers.map(p => p.league))],
-                teams: [...new Set(normalizedPlayers.map(p => p.currentTeam))],
-                positions: [...new Set(normalizedPlayers.map(p => p.position))]
+                leagues: [...new Set(mergedPlayers.map(p => p.league))],
+                teams: [...new Set(mergedPlayers.map(p => p.currentTeam))],
+                positions: [...new Set(mergedPlayers.map(p => p.position))]
             });
 
-            console.log(`💾 包括的選手データを保存: ${normalizedPlayers.length}名`);
-            return normalizedPlayers;
+            console.log(`💾 包括的選手データを保存: ${normalizedPlayers.length}名（合計: ${mergedPlayers.length}名）`);
+            return mergedPlayers;
             
         } catch (error) {
             console.error('包括的選手データ保存エラー:', error);
