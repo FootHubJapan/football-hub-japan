@@ -46,6 +46,53 @@ try {
     footballDataService = null;
 }
 
+// API連携サービスを追加
+let apiService;
+
+// APIServiceを同期的に初期化
+console.log('🚀 APIService初期化を開始...');
+
+try {
+    console.log('Loading APIService...');
+
+    // ファイルの存在確認
+    const fs = require('fs');
+    const apiServicePath = path.join(__dirname, 'apiService.js');
+    if (fs.existsSync(apiServicePath)) {
+        console.log('✅ apiService.js file exists');
+    } else {
+        console.log('❌ apiService.js file not found');
+        throw new Error('apiService.js file not found');
+    }
+
+    const APIService = require('./apiService');
+    console.log('APIService module loaded successfully');
+
+    apiService = new APIService();
+    console.log('APIService instance created successfully');
+
+    // 包括的API連携サービスを初期化
+    console.log('🔄 包括的API連携サービスを初期化中...');
+
+    // 初期化を即座に実行
+    apiService.init().then(() => {
+        console.log('✅ 包括的API連携サービスが初期化されました');
+        console.log('🔍 APIService状態確認:', !!apiService);
+    }).catch(error => {
+        console.error('❌ 包括的API連携サービス初期化エラー:', error);
+        console.error('詳細エラー:', error.stack);
+    });
+
+    console.log('APIService initialization completed');
+
+} catch (error) {
+    console.error('❌ Error loading APIService:', error);
+    console.error('詳細エラー:', error.stack);
+    apiService = null;
+}
+
+console.log('🚀 APIService初期化完了');
+
 // Load environment variables
 require('dotenv').config();
 
@@ -2101,6 +2148,151 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // サーバー起動は最後に統合
 
+// 包括的データ取得コマンド
+app.post('/api/players/fetch-comprehensive', async (req, res) => {
+    try {
+        console.log('🚀 98チーム分の包括的データ取得コマンドが実行されました');
+
+        if (!apiService) {
+            return res.status(500).json({ error: 'API service not available' });
+        }
+
+        // 包括的な選手データを取得・保存
+        const allPlayers = await apiService.fetchAllComprehensivePlayers();
+
+        res.json({
+            status: 'success',
+            message: '98チーム分の包括的選手データ取得完了',
+            totalPlayers: allPlayers.length,
+            leagues: Object.keys(apiService.majorLeagues),
+            lastUpdated: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('包括的データ取得エラー:', error);
+        res.status(500).json({
+            error: '包括的データ取得に失敗',
+            details: error.message
+        });
+    }
+});
+
+// 包括的データベース状態確認API
+app.get('/api/database/comprehensive-status', async (req, res) => {
+    try {
+        console.log('📊 包括的データベース状態確認APIが呼び出されました');
+        console.log('🔍 APIService状態:', !!apiService);
+
+        if (!apiService) {
+            console.log('❌ API service not available');
+            return res.status(500).json({
+                error: 'API service not available',
+                message: 'APIService is not initialized yet'
+            });
+        }
+
+        console.log('✅ APIService available、データベース状態を取得中...');
+        const comprehensiveStatus = await apiService.dbManager.getComprehensiveStatus();
+        console.log('📊 包括的データベース状態:', comprehensiveStatus);
+
+        res.json({
+            ...comprehensiveStatus,
+            cacheSize: apiService.cache ? apiService.cache.size : 0,
+            apiServiceAvailable: true,
+            majorLeagues: apiService.majorLeagues || {},
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('❌ 包括的データベース状態確認エラー:', error);
+        res.status(500).json({
+            error: 'Failed to get comprehensive database status',
+            details: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// 包括的データ取得の進捗確認API
+app.get('/api/players/fetch-progress', async (req, res) => {
+    try {
+        console.log('📊 進捗確認APIが呼び出されました');
+
+        if (!apiService) {
+            console.log('❌ API service not available');
+            return res.status(500).json({
+                error: 'API service not available',
+                message: 'APIService is not initialized yet'
+            });
+        }
+
+        console.log('✅ APIService available、進捗を取得中...');
+        const dbStatus = await apiService.dbManager.getComprehensiveStatus();
+
+        res.json({
+            status: 'success',
+            currentPlayers: dbStatus.totalPlayers,
+            targetLeagues: Object.keys(apiService.majorLeagues || {}),
+            estimatedTotal: Object.values(apiService.majorLeagues || {}).reduce((sum, league) => sum + league.teams * 25, 0),
+            lastUpdated: dbStatus.lastUpdate,
+            progress: Math.min((dbStatus.totalPlayers / (dbStatus.totalPlayers + 1)) * 100, 100),
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('❌ 進捗確認エラー:', error);
+        res.status(500).json({
+            error: 'Failed to get fetch progress',
+            details: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// テスト用の簡単なエンドポイント
+app.get('/api/test-simple', (req, res) => {
+    console.log('🧪 テスト用エンドポイントが呼び出されました');
+    console.log('🔍 APIService状態:', !!apiService);
+    console.log('🔍 APIService詳細:', {
+        hasApiService: !!apiService,
+        apiServiceType: apiService ? typeof apiService : 'undefined',
+        hasInit: apiService && typeof apiService.init === 'function'
+    });
+
+    res.json({
+        status: 'success',
+        message: 'Test endpoint is working',
+        timestamp: new Date().toISOString(),
+        apiServiceAvailable: !!apiService,
+        serverTime: new Date().toISOString(),
+        uptime: process.uptime(),
+        apiServiceDetails: {
+            hasApiService: !!apiService,
+            apiServiceType: apiService ? typeof apiService : 'undefined',
+            hasInit: apiService && typeof apiService.init === 'function'
+        }
+    });
+});
+
+// 基本的なヘルスチェックエンドポイント
+app.get('/api/health-check', (req, res) => {
+    console.log('🏥 ヘルスチェックエンドポイントが呼び出されました');
+
+    res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development',
+        services: {
+            dataService: !!dataService,
+            aiService: !!aiService,
+            fotMobDataService: !!fotMobDataService,
+            footballDataService: !!footballDataService,
+            apiService: !!apiService
+        }
+    });
+});
+
 // データベース用のFotMob APIエンドポイント
 app.get('/api/fotmob/init', async (req, res) => {
     try {
@@ -2119,6 +2311,27 @@ app.get('/api/fotmob/players', async (req, res) => {
     try {
         const { page = 1, limit = 20, league, position } = req.query;
         console.log('Players API called with:', { page, limit, league, position });
+        
+        // APIServiceが利用可能な場合は、そこからデータを取得
+        if (apiService && typeof apiService.getPlayers === 'function') {
+            try {
+                console.log('🔄 APIServiceから選手データを取得中...');
+                const apiServicePlayers = await apiService.getPlayers({ page, limit, league, position });
+                
+                if (apiServicePlayers && apiServicePlayers.length > 0) {
+                    console.log(`✅ APIServiceから${apiServicePlayers.length}名の選手を取得`);
+                    return res.json({
+                        players: apiServicePlayers,
+                        total: apiServicePlayers.length,
+                        totalPages: Math.ceil(apiServicePlayers.length / parseInt(limit)),
+                        currentPage: parseInt(page),
+                        source: 'apiService'
+                    });
+                }
+            } catch (apiError) {
+                console.log('⚠️ APIServiceからの取得に失敗、フォールバックを使用:', apiError.message);
+            }
+        }
         
         // API-Footballから選手データを取得
         if (process.env.API_FOOTBALL_KEY) {
@@ -2452,6 +2665,25 @@ const cacheManager = new CacheManager();
 app.get('/api/japanese-players', async (req, res) => {
     try {
         console.log('Japanese players API called');
+        
+        // APIServiceが利用可能な場合は、そこからデータを取得
+        if (apiService && typeof apiService.getPlayers === 'function') {
+            try {
+                console.log('🔄 APIServiceから選手データを取得中...');
+                const apiServicePlayers = await apiService.getPlayers();
+                
+                if (apiServicePlayers && apiServicePlayers.length > 0) {
+                    console.log(`✅ APIServiceから${apiServicePlayers.length}名の選手を取得`);
+                    return res.json({
+                        players: apiServicePlayers,
+                        source: 'apiService',
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            } catch (apiError) {
+                console.log('⚠️ APIServiceからの取得に失敗、フォールバックを使用:', apiError.message);
+            }
+        }
         
         // キャッシュからデータを取得
         const cachedPlayers = await cacheManager.getCachedPlayers();
@@ -3172,6 +3404,58 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`Health check: http://localhost:${PORT}/health`);
+    
+    // APIServiceの初期化状態を確認
+    console.log('🔄 APIService初期化状態を確認中...');
+    console.log('🔍 APIService状態:', !!apiService);
+    console.log('🔍 APIService詳細:', {
+        hasApiService: !!apiService,
+        apiServiceType: apiService ? typeof apiService : 'undefined',
+        hasInit: apiService && typeof apiService.init === 'function'
+    });
+    
+    if (apiService && typeof apiService.init === 'function') {
+        console.log('✅ APIService available、システム初期化を開始');
+        initializeSystem();
+    } else {
+        console.log('⚠️ APIService not available、強制再初期化を実行中...');
+        
+        // APIServiceが利用できない場合、強制的に再初期化を試行
+        console.log('🔄 APIService強制再初期化を試行中...');
+        
+        // 既存のapiServiceをクリア
+        apiService = null;
+        
+        try {
+            console.log('🔄 APIServiceモジュールを再読み込み中...');
+            const APIService = require('./apiService');
+            console.log('✅ APIServiceモジュール読み込み成功');
+            
+            apiService = new APIService();
+            console.log('✅ APIServiceインスタンス作成成功');
+            
+            // 初期化を実行して完了を待つ
+            console.log('🔄 APIService初期化を実行中...');
+            apiService.init().then(() => {
+                console.log('✅ APIService初期化完了');
+                // 初期化完了後にシステム初期化を実行
+                console.log('✅ APIService利用可能、システム初期化を開始');
+                initializeSystem();
+            }).catch(error => {
+                console.error('❌ APIService初期化エラー:', error);
+                console.log('⚠️ エラーが発生しましたが、システム初期化を続行します');
+                initializeSystem();
+            });
+            
+        } catch (error) {
+            console.error('❌ APIService強制再初期化失敗:', error);
+            console.error('詳細エラー:', error.stack);
+            
+            // エラーが発生してもシステム初期化は実行
+            console.log('⚠️ エラーが発生しましたが、システム初期化を続行します');
+            initializeSystem();
+        }
+    }
 }).on('error', (error) => {
     console.error('Server error:', error);
     process.exit(1);
@@ -3335,7 +3619,7 @@ async function initializeSystem() {
 }
 
 // サーバー起動時に初期化を実行
-initializeSystem();
+// initializeSystem(); // APIService初期化後に実行される
 
 // リアルタイム通知システム
 class NotificationSystem {
