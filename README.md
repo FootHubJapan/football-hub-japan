@@ -125,4 +125,4 @@ NODE_ENV=development
 
 ---
 
-**⚽ Football Hub Japan - サッカー分析の未来を創造**
+**⚽ Football Hub Japan - サッカー分析の未来を創造**# Force redeploy Fri Aug 29 08:29:35 JST 2025
