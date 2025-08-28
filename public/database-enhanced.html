@@ -1207,18 +1207,70 @@
             try {
                 console.log('🔄 初期選手データを読み込み中...');
                 
-                // APIから選手データを取得
-                const searchResult = await apiService.searchPlayers('', {});
-                
-                if (searchResult.players && searchResult.players.length > 0) {
-                    currentPlayers = searchResult.players;
-                    displayPlayers(searchResult.players);
-                    console.log(`✅ ${searchResult.players.length}名の選手データを読み込みました`);
-                } else {
-                    // APIデータがない場合、フォールバックデータを使用
-                    console.log('APIデータなし、フォールバックデータを使用');
-                    loadFallbackData();
+                // 優先順位1: 包括的データベースから直接選手データを取得
+                try {
+                    console.log('🔄 包括的データベースから直接選手データを取得中...');
+                    const playersResponse = await fetch('/api/fotmob/players?limit=100');
+                    if (playersResponse.ok) {
+                        const playersData = await playersResponse.json();
+                        if (playersData.players && playersData.players.length > 0) {
+                            currentPlayers = playersData.players;
+                            displayPlayers(playersData.players);
+                            console.log(`✅ 包括的データベースから${playersData.players.length}名の選手データを表示しました`);
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.log('包括的データベースからの直接取得に失敗:', error);
                 }
+                
+                // 優先順位2: 包括的データベースの状態確認
+                try {
+                    const response = await fetch('/api/database/comprehensive-status');
+                    if (response.ok) {
+                        const dbStatus = await response.json();
+                        if (dbStatus.totalPlayers > 0) {
+                            console.log(`✅ 包括的データベースに${dbStatus.totalPlayers}名の選手データが存在`);
+                            // 再度選手データの取得を試行
+                            try {
+                                const playersResponse = await fetch('/api/fotmob/players?limit=100');
+                                if (playersResponse.ok) {
+                                    const playersData = await playersResponse.json();
+                                    if (playersData.players && playersData.players.length > 0) {
+                                        currentPlayers = playersData.players;
+                                        displayPlayers(playersData.players);
+                                        console.log(`✅ 包括的データベースから${playersData.players.length}名の選手データを表示しました`);
+                                        return;
+                                    }
+                                }
+                            } catch (error) {
+                                console.log('包括的データベースからの選手データ取得に失敗:', error);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.log('包括的データベースの状態確認に失敗:', error);
+                }
+                
+                // 優先順位3: APIから選手データを取得（デフォルトクエリを使用）
+                try {
+                    console.log('🔄 APIから選手データを取得中...');
+                    const searchResult = await apiService.searchPlayers('久保建英', {});
+                    
+                    if (searchResult.players && searchResult.players.length > 0) {
+                        currentPlayers = searchResult.players;
+                        displayPlayers(searchResult.players);
+                        console.log(`✅ APIから${searchResult.players.length}名の選手データを読み込みました`);
+                        return;
+                    }
+                } catch (error) {
+                    console.log('APIからの取得に失敗:', error);
+                }
+                
+                // 最終手段: フォールバックデータを使用
+                console.log('🔄 フォールバックデータを使用');
+                loadFallbackData();
+                
             } catch (error) {
                 console.error('初期データ読み込みエラー:', error);
                 // エラー時はフォールバックデータを使用
@@ -1392,7 +1444,7 @@
                     if (filters.nationality) params.append('nationality', filters.nationality);
                     params.append('limit', '50');
 
-                    const response = await fetch(`${this.baseUrl}/api/players/search?${params}`);
+                    const response = await fetch(`${this.baseUrl}/api/search/players?${params}`);
                     if (!response.ok) throw new Error('Search failed');
 
                     const data = await response.json();
@@ -1464,7 +1516,7 @@
             // データベース状態確認
             async getDatabaseStatus() {
                 try {
-                    const response = await fetch(`${this.baseUrl}/api/database/status`);
+                    const response = await fetch(`${this.baseUrl}/api/database/comprehensive-status`);
                     if (!response.ok) throw new Error('Database status not available');
 
                     return await response.json();

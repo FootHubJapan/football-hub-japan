@@ -1,8 +1,8 @@
 const DatabaseManager = require('./databaseManager');
 
 class CacheManager {
-    constructor() {
-        this.db = new DatabaseManager();
+    constructor(dbInstance = null) {
+        this.db = dbInstance || new DatabaseManager();
         this.cacheExpiry = 60 * 60 * 1000; // 1時間
         this.updateIntervals = {
             players: 60 * 60 * 1000,      // 選手データ：1時間
@@ -79,7 +79,7 @@ class CacheManager {
     // 選手データの保存（APIから取得した場合）
     async savePlayerData(playerData) {
         try {
-            const playerId = this.db.savePlayer(playerData);
+            const playerId = this.db.savePlayerData(playerData);
             
             if (playerId && playerData.stats) {
                 this.db.savePlayerStats(playerId, playerData.stats);
@@ -118,7 +118,7 @@ class CacheManager {
     // キャッシュの更新が必要かチェック
     needsUpdate(dataType = 'players') {
         try {
-            const stats = this.db.getDatabaseStats();
+            const stats = this.db.getDatabaseStats ? this.db.getDatabaseStats() : { players: 0, teams: 0, stats: 0 };
             const lastUpdate = this.getLastUpdateTime(dataType);
             const now = Date.now();
             
@@ -141,7 +141,7 @@ class CacheManager {
     // 選手名で選手を取得
     async getPlayerByName(name) {
         try {
-            return this.db.getPlayerByName(name);
+            return this.db.getPlayerByName ? this.db.getPlayerByName(name) : null;
         } catch (error) {
             console.error('Error getting player by name:', error);
             return null;
@@ -151,7 +151,7 @@ class CacheManager {
     // 最後の更新時刻を取得
     getLastUpdateTime(dataType) {
         try {
-            const stats = this.db.getDatabaseStats();
+            const stats = this.db.getDatabaseStats ? this.db.getDatabaseStats() : { players: 0, teams: 0, stats: 0 };
             
             if (dataType === 'players' && stats.players > 0) {
                 const result = this.db.db.prepare(`
@@ -171,14 +171,14 @@ class CacheManager {
     // キャッシュの統計情報
     getCacheStats() {
         try {
-            const dbStats = this.db.getDatabaseStats();
+            const dbStats = this.db.getDatabaseStats ? this.db.getDatabaseStats() : { players: 0, teams: 0, stats: 0 };
             const lastUpdate = this.getLastUpdateTime('players');
             const now = Date.now();
             
             return {
-                totalPlayers: dbStats.players,
-                totalTeams: dbStats.teams,
-                totalStats: dbStats.stats,
+                totalPlayers: dbStats.players || 0,
+                totalTeams: dbStats.teams || 0,
+                totalStats: dbStats.stats || 0,
                 lastUpdate: lastUpdate ? new Date(lastUpdate).toISOString() : 'Never',
                 nextUpdate: lastUpdate ? new Date(lastUpdate + this.cacheExpiry).toISOString() : 'Unknown',
                 cacheAge: lastUpdate ? Math.floor((now - lastUpdate) / (1000 * 60 * 60)) : 0 // 時間単位
@@ -192,7 +192,7 @@ class CacheManager {
     // キャッシュのクリーンアップ
     async cleanupCache() {
         try {
-            const cleanedCount = this.db.cleanupOldData();
+            const cleanedCount = this.db.cleanupOldData ? this.db.cleanupOldData() : 0;
             console.log(`🧹 Cache cleanup completed: ${cleanedCount} old records removed`);
             return cleanedCount;
         } catch (error) {
