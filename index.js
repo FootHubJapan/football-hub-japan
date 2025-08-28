@@ -2329,24 +2329,40 @@ app.get('/api/fotmob/players', async (req, res) => {
         const { page = 1, limit = 20, league, position } = req.query;
         console.log('Players API called with:', { page, limit, league, position });
         
-        // APIServiceが利用可能な場合は、そこからデータを取得
-        if (apiService && typeof apiService.getPlayers === 'function') {
+        // APIServiceが利用可能な場合は、包括的データベースから直接データを取得
+        if (apiService && apiService.dbManager) {
             try {
-                console.log('🔄 APIServiceから選手データを取得中...');
-                const apiServicePlayers = await apiService.getPlayers({ page, limit, league, position });
+                console.log('🔄 包括的データベースから選手データを取得中...');
+                const comprehensivePlayers = await apiService.dbManager.loadComprehensivePlayers();
                 
-                if (apiServicePlayers && apiServicePlayers.length > 0) {
-                    console.log(`✅ APIServiceから${apiServicePlayers.length}名の選手を取得`);
+                if (comprehensivePlayers && comprehensivePlayers.length > 0) {
+                    // フィルタリングとページネーション
+                    let filteredPlayers = comprehensivePlayers;
+                    
+                    if (league) {
+                        filteredPlayers = filteredPlayers.filter(p => p.league === league);
+                    }
+                    
+                    if (position) {
+                        filteredPlayers = filteredPlayers.filter(p => p.position === position);
+                    }
+                    
+                    // ページネーション
+                    const startIndex = (parseInt(page) - 1) * parseInt(limit);
+                    const endIndex = startIndex + parseInt(limit);
+                    const paginatedPlayers = filteredPlayers.slice(startIndex, endIndex);
+                    
+                    console.log(`✅ 包括的データベースから${paginatedPlayers.length}名の選手を取得（総数: ${filteredPlayers.length}名）`);
                     return res.json({
-                        players: apiServicePlayers,
-                        total: apiServicePlayers.length,
-                        totalPages: Math.ceil(apiServicePlayers.length / parseInt(limit)),
+                        players: paginatedPlayers,
+                        total: filteredPlayers.length,
+                        totalPages: Math.ceil(filteredPlayers.length / parseInt(limit)),
                         currentPage: parseInt(page),
-                        source: 'apiService'
+                        source: 'comprehensiveDatabase'
                     });
                 }
             } catch (apiError) {
-                console.log('⚠️ APIServiceからの取得に失敗、フォールバックを使用:', apiError.message);
+                console.log('⚠️ 包括的データベースからの取得に失敗、フォールバックを使用:', apiError.message);
             }
         }
         

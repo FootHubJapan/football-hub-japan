@@ -1210,7 +1210,7 @@
                 // 優先順位1: 包括的データベースから直接選手データを取得
                 try {
                     console.log('🔄 包括的データベースから直接選手データを取得中...');
-                    const playersResponse = await fetch('/api/fotmob/players?limit=100');
+                    const playersResponse = await fetch('/api/fotmob/players?limit=3000');
                     if (playersResponse.ok) {
                         const playersData = await playersResponse.json();
                         if (playersData.players && playersData.players.length > 0) {
@@ -1233,7 +1233,7 @@
                             console.log(`✅ 包括的データベースに${dbStatus.totalPlayers}名の選手データが存在`);
                             // 再度選手データの取得を試行
                             try {
-                                const playersResponse = await fetch('/api/fotmob/players?limit=100');
+                                const playersResponse = await fetch('/api/fotmob/players?limit=3000');
                                 if (playersResponse.ok) {
                                     const playersData = await playersResponse.json();
                                     if (playersData.players && playersData.players.length > 0) {
