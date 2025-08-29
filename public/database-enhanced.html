@@ -637,6 +637,17 @@
             background: #00ff88;
             color: #000000;
         }
+
+        .search-help {
+            margin-top: 0.5rem;
+            color: #00ff88;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .search-help small {
+            opacity: 0.8;
+        }
         
 
 
@@ -1013,7 +1024,10 @@
             </div>
 
             <div class="search-controls">
-                <input type="text" id="searchInput" placeholder="選手名を入力..." onkeyup="handleSearch()">
+                <input type="text" id="searchInput" placeholder="選手名を入力（日本語・英語対応）..." onkeyup="handleSearch()">
+                <div class="search-help">
+                    <small>💡 日本語名でも検索可能: 久保建英、三苫薫、堂安律など</small>
+                </div>
                 <select id="leagueSelect">
                     <option value="">すべてのリーグ</option>
                     <option value="PL">プレミアリーグ</option>
@@ -2452,7 +2466,7 @@
             showPlayerDetails(player);
         }
 
-        // 検索処理（API連携対応）
+        // 検索処理（API連携対応・日本語対応強化）
         async function performSearch() {
             const searchInput = document.getElementById('searchInput');
             const leagueSelect = document.getElementById('leagueSelect');
@@ -2469,6 +2483,37 @@
 
             console.log('🔍 検索実行:', { query, league, detailedPosition });
 
+            // 日本語検索の強化
+            if (query) {
+                console.log(`🔍 検索クエリ: "${query}" (日本語対応)`);
+                
+                // 日本語の選手名を英語名に変換（主要選手）
+                const japanesePlayerMap = {
+                    '久保建英': 'Takefusa Kubo',
+                    '三苫薫': 'Kaoru Mitoma',
+                    '堂安律': 'Ritsu Doan',
+                    '田中碧': 'Ao Tanaka',
+                    '伊藤洋輝': 'Hiroki Ito',
+                    '遠藤航': 'Wataru Endo',
+                    '南野拓実': 'Takumi Minamino',
+                    '浅野拓磨': 'Takuma Asano',
+                    '富安健洋': 'Takehiro Tomiyasu',
+                    '南野拓実': 'Takumi Minamino',
+                    '久保建英': 'Takefusa Kubo',
+                    '三苫薫': 'Kaoru Mitoma',
+                    '堂安律': 'Ritsu Doan',
+                    '田中碧': 'Ao Tanaka',
+                    '伊藤洋輝': 'Hiroki Ito',
+                    '遠藤航': 'Wataru Endo',
+                    '浅野拓磨': 'Takuma Asano'
+                };
+                
+                // 日本語名が入力された場合、英語名も検索対象に追加
+                if (japanesePlayerMap[query]) {
+                    console.log(`🇯🇵 日本語選手名検出: ${query} → ${japanesePlayerMap[query]}`);
+                }
+            }
+
             try {
                 // ローディング表示
                 const grid = document.getElementById('playersGrid');
@@ -2476,12 +2521,29 @@
                     grid.innerHTML = '<div class="loading">検索中...</div>';
                 }
 
-                // API連携で検索
+                // API連携で検索（日本語対応強化）
                 const filters = {};
                 if (league) filters.league = league;
                 if (detailedPosition) filters.position = detailedPosition;
 
-                const searchResult = await apiService.searchPlayers(query, filters);
+                // 日本語名が入力された場合、複数の検索クエリを試行
+                let searchResult = null;
+                if (query && japanesePlayerMap[query]) {
+                    const englishName = japanesePlayerMap[query];
+                    console.log(`🔍 日本語名 "${query}" で検索中...`);
+                    
+                    // まず日本語名で検索
+                    searchResult = await apiService.searchPlayers(query, filters);
+                    
+                    // 日本語名で結果がない場合、英語名で検索
+                    if (!searchResult.players || searchResult.players.length === 0) {
+                        console.log(`🔍 英語名 "${englishName}" で検索中...`);
+                        searchResult = await apiService.searchPlayers(englishName, filters);
+                    }
+                } else {
+                    // 通常の検索
+                    searchResult = await apiService.searchPlayers(query, filters);
+                }
                 
                 if (searchResult.players && searchResult.players.length > 0) {
                     currentPlayers = searchResult.players;
@@ -2535,7 +2597,7 @@
             }
         }
 
-        // フォールバック検索処理
+        // フォールバック検索処理（日本語対応強化）
         function performFallbackSearch(query, league, position, detailedPositions) {
             console.log('Performing fallback search with:', { query, league, position, detailedPositions });
             
@@ -2546,14 +2608,39 @@
             
             let filteredPlayers = currentPlayers;
             
-            // クエリによるフィルタリング
+            // クエリによるフィルタリング（日本語対応）
             if (query) {
-                filteredPlayers = filteredPlayers.filter(player => 
-                    player.name.toLowerCase().includes(query.toLowerCase()) ||
-                    player.currentTeam.toLowerCase().includes(query.toLowerCase()) ||
-                    player.position.toLowerCase().includes(query.toLowerCase())
-                );
+                console.log(`🔍 フォールバック検索: "${query}" (日本語対応)`);
+                
+                // 日本語の選手名を英語名に変換（主要選手）
+                const japanesePlayerMap = {
+                    '久保建英': 'Takefusa Kubo',
+                    '三苫薫': 'Kaoru Mitoma',
+                    '堂安律': 'Ritsu Doan',
+                    '田中碧': 'Ao Tanaka',
+                    '伊藤洋輝': 'Hiroki Ito',
+                    '遠藤航': 'Wataru Endo',
+                    '南野拓実': 'Takumi Minamino',
+                    '浅野拓磨': 'Takuma Asano',
+                    '富安健洋': 'Takehiro Tomiyasu'
+                };
+                
+                // 日本語名と英語名の両方で検索
+                const searchTerms = [query];
+                if (japanesePlayerMap[query]) {
+                    searchTerms.push(japanesePlayerMap[query]);
+                    console.log(`🇯🇵 日本語選手名検出: ${query} → ${japanesePlayerMap[query]}`);
+                }
+                
+                filteredPlayers = currentPlayers.filter(player => {
+                    return searchTerms.some(term => 
+                        player.name.toLowerCase().includes(term.toLowerCase()) ||
+                        player.fullName.toLowerCase().includes(term.toLowerCase()) ||
+                        player.englishName.toLowerCase().includes(term.toLowerCase())
+                    );
+                });
             }
+            // クエリによるフィルタリングは上記で既に処理済み
             
             // リーグによるフィルタリング
             if (league) {
