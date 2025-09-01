@@ -432,6 +432,81 @@ app.get('/api/native-stats/stats/:playerId/:season', async (req, res) => {
     }
 });
 
+// 実際のAPIデータで選手詳細スタッツを取得
+app.get('/api/player-stats/:playerId', async (req, res) => {
+    try {
+        const playerId = req.params.playerId;
+        console.log(`🔍 選手スタッツ取得中: ${playerId}`);
+        
+        let playerStats = null;
+        
+        // 1. 包括的データベースから選手データを取得
+        if (apiService && apiService.dbManager) {
+            try {
+                const comprehensivePlayers = await apiService.dbManager.loadComprehensivePlayers();
+                const player = comprehensivePlayers.find(p => 
+                    p.id == playerId || p.playerId == playerId || p.player_id == playerId || p.name === playerId
+                );
+                
+                if (player && player.stats) {
+                    console.log(`✅ 包括的データベースから選手スタッツを取得: ${player.name}`);
+                    playerStats = {
+                        ...player,
+                        source: 'comprehensiveDatabase',
+                        stats: player.stats
+                    };
+                }
+            } catch (error) {
+                console.log('⚠️ 包括的データベースからの取得に失敗:', error.message);
+            }
+        }
+        
+        // 2. API-Footballから実際のスタッツを取得
+        if (!playerStats && dataService) {
+            try {
+                console.log(`🔄 API-Footballから選手スタッツを取得中: ${playerId}`);
+                const apiStats = await dataService.getPlayerStats(playerId);
+                if (apiStats) {
+                    playerStats = {
+                        ...apiStats,
+                        source: 'apiFootball'
+                    };
+                    console.log(`✅ API-Footballから選手スタッツを取得: ${apiStats.name || playerId}`);
+                }
+            } catch (error) {
+                console.log('⚠️ API-Footballからの取得に失敗:', error.message);
+            }
+        }
+        
+        // 3. Football-data.orgからスタッツを取得
+        if (!playerStats && footballDataService) {
+            try {
+                console.log(`🔄 Football-data.orgから選手スタッツを取得中: ${playerId}`);
+                const footballDataStats = await footballDataService.getPlayerStats(playerId);
+                if (footballDataStats) {
+                    playerStats = {
+                        ...footballDataStats,
+                        source: 'footballData'
+                    };
+                    console.log(`✅ Football-data.orgから選手スタッツを取得: ${footballDataStats.name || playerId}`);
+                }
+            } catch (error) {
+                console.log('⚠️ Football-data.orgからの取得に失敗:', error.message);
+            }
+        }
+        
+        if (playerStats) {
+            res.json(playerStats);
+        } else {
+            res.status(404).json({ error: 'Player stats not found' });
+        }
+        
+    } catch (error) {
+        console.error('選手スタッツ取得エラー:', error);
+        res.status(500).json({ error: 'Failed to fetch player stats' });
+    }
+});
+
 // Football Data API Proxy (existing)
 app.get('/api/football-data/competitions/:id/teams', async (req, res) => {
     try {

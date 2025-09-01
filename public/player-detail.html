@@ -464,7 +464,7 @@
             return urlParams.get('id');
         }
 
-        // 選手データを読み込み
+        // 選手データを読み込み（実際のAPIデータを優先）
         async function loadPlayerData() {
             const playerId = getPlayerIdFromUrl();
             if (!playerId) {
@@ -473,25 +473,41 @@
             }
 
             try {
-                // まず、クリックされた選手のデータを確認
+                console.log(`🔍 選手データ読み込み開始: ${playerId}`);
+                
+                // 1. まず実際のAPIデータを取得
+                try {
+                    console.log('🔄 実際のAPIデータを取得中...');
+                    const response = await fetch(`/api/player-stats/${encodeURIComponent(playerId)}`);
+                    
+                    if (response.ok) {
+                        const apiPlayerData = await response.json();
+                        console.log(`✅ 実際のAPIデータを取得: ${apiPlayerData.name || playerId} (${apiPlayerData.source})`);
+                        displayPlayerData(apiPlayerData);
+                        return;
+                    } else {
+                        console.log('⚠️ APIデータの取得に失敗、ローカルデータを使用');
+                    }
+                } catch (apiError) {
+                    console.log('⚠️ APIデータの取得中にエラー:', apiError.message);
+                }
+                
+                // 2. ローカルストレージから選手データを取得
                 const clickedPlayer = JSON.parse(localStorage.getItem('clickedPlayer') || 'null');
                 
                 if (clickedPlayer && (clickedPlayer.id == playerId || clickedPlayer.playerId == playerId)) {
                     console.log('Using clicked player data:', clickedPlayer);
                     displayPlayerData(clickedPlayer);
-                                return;
+                    return;
                 }
                 
-                // ローカルストレージから選手データを取得
                 const storedPlayers = JSON.parse(localStorage.getItem('currentPlayers') || '[]');
-                
-                // 複数のIDフィールドで検索（選手カードと一致させる）
                 const player = storedPlayers.find(p => 
                     p.id == playerId || 
                     p.playerId == playerId || 
                     p.player_id == playerId ||
-                    p.englishName === playerId || // 英語名でも検索
-                    p.name === playerId // 日本語名でも検索
+                    p.englishName === playerId ||
+                    p.name === playerId
                 );
                 
                 console.log('Searching for player ID:', playerId);
@@ -553,6 +569,20 @@
             
             if (player.photo) {
                 document.getElementById('playerPhoto').src = player.photo;
+            }
+            
+            // データソースの表示
+            const dataSource = player.source || 'localStorage';
+            console.log(`📊 データソース: ${dataSource}`);
+            
+            // データソースに応じて表示を調整
+            if (dataSource === 'comprehensiveDatabase' || dataSource === 'apiFootball' || dataSource === 'footballData') {
+                console.log('✅ 実際のAPIデータを使用');
+                // 実際のデータの場合は特別な表示
+                document.title = `${player.name} - 実際のデータ - Football Hub Japan`;
+            } else {
+                console.log('⚠️ フォールバックデータを使用');
+                document.title = `${player.name} - サンプルデータ - Football Hub Japan`;
             }
 
             // 今シーズンの統計

@@ -637,7 +637,7 @@
             background: #00ff88;
             color: #000000;
         }
-
+        
         .search-help {
             margin-top: 0.5rem;
             color: #00ff88;
@@ -1576,7 +1576,7 @@
             } catch (e) {
                 console.warn('Failed to persist currentPlayers to localStorage:', e);
             }
-
+            
             // 表示をクリア
             grid.innerHTML = '';
             
@@ -2577,11 +2577,11 @@
                     console.log('API検索で結果なし、フォールバック検索を実行');
                     const fallbackResults = performFallbackSearch(query, league, detailedPosition);
                     if (fallbackResults && fallbackResults.length > 0) {
-                        currentPlayers = fallbackResults;
-                        displayPlayers(fallbackResults);
+                    currentPlayers = fallbackResults;
+                    displayPlayers(fallbackResults);
                         console.log(`✅ フォールバック検索結果: ${fallbackResults.length}名の選手を発見`);
-                    } else {
-                        showError('選手が見つかりませんでした');
+                } else {
+                    showError('選手が見つかりませんでした');
                         const grid = document.getElementById('playersGrid');
                         if (grid) {
                             grid.innerHTML = '<div class="no-results">検索条件に一致する選手が見つかりませんでした</div>';
