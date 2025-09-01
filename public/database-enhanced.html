@@ -1570,6 +1570,13 @@
             const grid = document.getElementById('playersGrid');
             if (!grid) return;
             
+            // 検索・一覧データを永続化（詳細ページ遷移用）
+            try {
+                localStorage.setItem('currentPlayers', JSON.stringify(players || []));
+            } catch (e) {
+                console.warn('Failed to persist currentPlayers to localStorage:', e);
+            }
+
             // 表示をクリア
             grid.innerHTML = '';
             
@@ -1654,20 +1661,34 @@
             return card;
         }
 
-        // FotMobページに遷移する関数
+        // 内部の選手詳細ページに遷移（データを保持して遷移）
         function openPlayerDetailsPage(playerId) {
             try {
-                console.log('FotMobページに遷移中:', playerId);
-                
-                // 選手IDからFotMobのURLを生成
-                // 例: https://www.fotmob.com/es/players/818975/eberechi-eze
-                const fotmobUrl = `https://www.fotmob.com/players/${playerId}`;
-                
-                // 新しいタブでFotMobページを開く
-                window.open(fotmobUrl, '_blank');
-                
+                console.log('内部選手詳細ページに遷移中:', playerId);
+
+                // 現在の一覧から該当選手を取得し保存
+                let playersCache = [];
+                try {
+                    playersCache = Array.isArray(currentPlayers) ? currentPlayers : [];
+                } catch {}
+
+                const found = (playersCache || []).find(p => 
+                    (p && (p.id == playerId || p.playerId == playerId || p.player_id == playerId || p.name === playerId))
+                );
+
+                try {
+                    if (found) localStorage.setItem('clickedPlayer', JSON.stringify(found));
+                    // 念のため一覧も保存
+                    localStorage.setItem('currentPlayers', JSON.stringify(playersCache || []));
+                } catch (e) {
+                    console.warn('Failed to persist clicked/current players:', e);
+                }
+
+                // 内部ページに遷移
+                const detailUrl = `/player-detail.html?id=${encodeURIComponent(playerId)}`;
+                window.location.href = detailUrl;
             } catch (error) {
-                console.error('FotMobページ遷移エラー:', error);
+                console.error('内部ページ遷移エラー:', error);
                 showError('ページの遷移中にエラーが発生しました');
             }
         }
