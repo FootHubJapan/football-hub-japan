@@ -461,34 +461,36 @@ app.get('/api/player-stats/:playerId', async (req, res) => {
             }
         }
         
-        // 2. API-Footballから実際のスタッツを取得
+        // 2. API-Footballから実際のスタッツを取得（2025/2026シーズン）
         if (!playerStats && dataService) {
             try {
-                console.log(`🔄 API-Footballから選手スタッツを取得中: ${playerId}`);
-                const apiStats = await dataService.getPlayerStats(playerId);
+                console.log(`🔄 API-Footballから選手スタッツを取得中: ${playerId} (2025/2026シーズン)`);
+                const apiStats = await dataService.getPlayerStats(playerId, '2025');
                 if (apiStats) {
                     playerStats = {
                         ...apiStats,
-                        source: 'apiFootball'
+                        source: 'apiFootball',
+                        season: '2025/2026'
                     };
-                    console.log(`✅ API-Footballから選手スタッツを取得: ${apiStats.name || playerId}`);
+                    console.log(`✅ API-Footballから選手スタッツを取得: ${apiStats.name || playerId} (2025/2026シーズン)`);
                 }
             } catch (error) {
                 console.log('⚠️ API-Footballからの取得に失敗:', error.message);
             }
         }
         
-        // 3. Football-data.orgからスタッツを取得
+        // 3. Football-data.orgからスタッツを取得（2025/2026シーズン）
         if (!playerStats && footballDataService) {
             try {
-                console.log(`🔄 Football-data.orgから選手スタッツを取得中: ${playerId}`);
-                const footballDataStats = await footballDataService.getPlayerStats(playerId);
+                console.log(`🔄 Football-data.orgから選手スタッツを取得中: ${playerId} (2025/2026シーズン)`);
+                const footballDataStats = await footballDataService.getPlayerStats(playerId, '2025');
                 if (footballDataStats) {
                     playerStats = {
                         ...footballDataStats,
-                        source: 'footballData'
+                        source: 'footballData',
+                        season: '2025/2026'
                     };
-                    console.log(`✅ Football-data.orgから選手スタッツを取得: ${footballDataStats.name || playerId}`);
+                    console.log(`✅ Football-data.orgから選手スタッツを取得: ${footballDataStats.name || playerId} (2025/2026シーズン)`);
                 }
             } catch (error) {
                 console.log('⚠️ Football-data.orgからの取得に失敗:', error.message);

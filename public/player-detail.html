@@ -640,8 +640,8 @@
             const tbody = document.getElementById('careerTableBody');
             const currentYear = new Date().getFullYear();
             
-            // 現在のシーズン
-            const currentSeason = `${currentYear-1}/${currentYear}`;
+            // 現在のシーズン（2025/2026）
+            const currentSeason = '2025/2026';
             const currentRow = `
                 <tr>
                     <td>${currentSeason}</td>
@@ -656,8 +656,8 @@
             
             // 過去のシーズン（サンプル）
             const pastSeasons = [
-                { season: `${currentYear-2}/${currentYear-1}`, club: player.currentTeam, matches: Math.floor(Math.random() * 20) + 10, goals: Math.floor(Math.random() * 15), assists: Math.floor(Math.random() * 10), rating: (6.0 + Math.random() * 2.0).toFixed(1) },
-                { season: `${currentYear-3}/${currentYear-2}`, club: player.currentTeam, matches: Math.floor(Math.random() * 20) + 10, goals: Math.floor(Math.random() * 15), assists: Math.floor(Math.random() * 10), rating: (6.0 + Math.random() * 2.0).toFixed(1) }
+                { season: '2024/2025', club: player.currentTeam, matches: Math.floor(Math.random() * 20) + 10, goals: Math.floor(Math.random() * 15), assists: Math.floor(Math.random() * 10), rating: (6.0 + Math.random() * 2.0).toFixed(1) },
+                { season: '2023/2024', club: player.currentTeam, matches: Math.floor(Math.random() * 20) + 10, goals: Math.floor(Math.random() * 15), assists: Math.floor(Math.random() * 10), rating: (6.0 + Math.random() * 2.0).toFixed(1) }
             ];
             
             let html = currentRow;
