@@ -285,7 +285,7 @@
 
         <div class="stats-section">
             <div class="stats-card">
-                <h2 class="stats-title">今シーズンの統計</h2>
+                <h2 class="stats-title">2025/26シーズンの統計</h2>
                 <div class="stats-grid">
                     <div class="stat-item">
                         <div class="stat-value" id="seasonGoals">--</div>
@@ -437,7 +437,7 @@
         </div>
 
         <div class="career-section">
-            <h2 class="career-title">キャリア履歴</h2>
+            <h2 class="career-title">キャリアスタートからの個人スタッツ</h2>
             <table class="career-table">
                 <thead>
                     <tr>
@@ -451,7 +451,7 @@
                     </tr>
                 </thead>
                 <tbody id="careerTableBody">
-                    <!-- キャリア履歴がここに表示されます -->
+                    <!-- キャリアスタートからの個人スタッツがここに表示されます -->
                 </tbody>
             </table>
         </div>
@@ -635,13 +635,12 @@
             document.getElementById('foulsDrawn').textContent = player.stats?.foulsDrawn || 0;
         }
 
-        // キャリア履歴を生成
+        // キャリアスタートからの個人スタッツを生成
         function generateCareerHistory(player) {
             const tbody = document.getElementById('careerTableBody');
-            const currentYear = new Date().getFullYear();
             
-            // 現在のシーズン（2025/2026）
-            const currentSeason = '2025/2026';
+            // 2025/26シーズン
+            const currentSeason = '2025/26';
             const currentRow = `
                 <tr>
                     <td>${currentSeason}</td>
@@ -654,10 +653,10 @@
                 </tr>
             `;
             
-            // 過去のシーズン（サンプル）
+            // 過去のシーズン（キャリアスタートから）
             const pastSeasons = [
-                { season: '2024/2025', club: player.currentTeam, matches: Math.floor(Math.random() * 20) + 10, goals: Math.floor(Math.random() * 15), assists: Math.floor(Math.random() * 10), rating: (6.0 + Math.random() * 2.0).toFixed(1) },
-                { season: '2023/2024', club: player.currentTeam, matches: Math.floor(Math.random() * 20) + 10, goals: Math.floor(Math.random() * 15), assists: Math.floor(Math.random() * 10), rating: (6.0 + Math.random() * 2.0).toFixed(1) }
+                { season: '2024/25', club: player.currentTeam, matches: Math.floor(Math.random() * 20) + 10, goals: Math.floor(Math.random() * 15), assists: Math.floor(Math.random() * 10), rating: (6.0 + Math.random() * 2.0).toFixed(1) },
+                { season: '2023/24', club: player.currentTeam, matches: Math.floor(Math.random() * 20) + 10, goals: Math.floor(Math.random() * 15), assists: Math.floor(Math.random() * 10), rating: (6.0 + Math.random() * 2.0).toFixed(1) }
             ];
             
             let html = currentRow;
