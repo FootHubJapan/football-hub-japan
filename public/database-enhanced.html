@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -173,6 +174,97 @@
         .search-btn:hover {
             background: #00cc6a;
             transform: translateY(-2px);
+        }
+
+        /* API設定セクションのスタイル */
+        .api-config {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .api-key-input {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .api-key-input label {
+            min-width: 200px;
+            color: #cccccc;
+            font-weight: bold;
+        }
+
+        .api-key-input input {
+            flex: 1;
+            padding: 0.7rem;
+            border: 2px solid #333333;
+            border-radius: 8px;
+            background: #2a2a2a;
+            color: #ffffff;
+            font-size: 0.9rem;
+        }
+
+        .api-key-input input:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        .config-btn {
+            background: #00ff88;
+            color: #000000;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .config-btn:hover {
+            background: #00cc6a;
+        }
+
+        .test-btn {
+            background: #0088ff;
+            color: #ffffff;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s;
+            align-self: flex-start;
+        }
+
+        .test-btn:hover {
+            background: #0066cc;
+        }
+
+        .api-status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .api-status.success {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+        }
+
+        .api-status.error {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff0000;
+            color: #ff0000;
+        }
+
+        .api-status.warning {
+            background: rgba(255, 165, 0, 0.1);
+            border: 1px solid #ffa500;
+            color: #ffa500;
         }
 
         .players-grid {
@@ -1010,6 +1102,25 @@
         <h1 class="page-title">強化データベース</h1>
         <p class="page-subtitle">選手データとAI分析の統合プラットフォーム</p>
 
+        <!-- API設定セクション -->
+        <div class="search-section">
+            <h2 class="search-title">🔧 API設定</h2>
+            <div class="api-config">
+                <div class="api-key-input">
+                    <label for="apiFootballKey">API-Football キー:</label>
+                    <input type="password" id="apiFootballKey" placeholder="API-Football RapidAPIキーを入力">
+                    <button onclick="setAPIFootballKey()" class="config-btn">設定</button>
+                </div>
+                <div class="api-key-input">
+                    <label for="footballDataToken">Football-data.org トークン:</label>
+                    <input type="password" id="footballDataToken" placeholder="Football-data.org APIトークンを入力">
+                    <button onclick="setFootballDataToken()" class="config-btn">設定</button>
+                </div>
+                <button onclick="testAPIConnections()" class="test-btn">接続テスト</button>
+                <div id="apiStatus" class="api-status"></div>
+            </div>
+        </div>
+
         <!-- 検索セクション -->
         <div class="search-section">
             <h2 class="search-title">選手検索</h2>
@@ -1224,15 +1335,13 @@
                 // 優先順位1: 包括的データベースから直接選手データを取得
                 try {
                     console.log('🔄 包括的データベースから直接選手データを取得中...');
-                    const playersResponse = await fetch('/api/fotmob/players?limit=3000');
-                    if (playersResponse.ok) {
-                        const playersData = await playersResponse.json();
-                        if (playersData.players && playersData.players.length > 0) {
-                            currentPlayers = playersData.players;
-                            displayPlayers(playersData.players);
-                            console.log(`✅ 包括的データベースから${playersData.players.length}名の選手データを表示しました`);
-                            return;
-                        }
+                    // API-Footballから選手データを取得
+                    const playersData = await apiFootballService.getAllPlayers();
+                    if (playersData && playersData.length > 0) {
+                        currentPlayers = playersData;
+                        displayPlayers(playersData);
+                        console.log(`✅ API-Footballから${playersData.length}名の選手データを表示しました`);
+                        return;
                     }
                 } catch (error) {
                     console.log('包括的データベースからの直接取得に失敗:', error);
@@ -1247,15 +1356,13 @@
                             console.log(`✅ 包括的データベースに${dbStatus.totalPlayers}名の選手データが存在`);
                             // 再度選手データの取得を試行
                             try {
-                                const playersResponse = await fetch('/api/fotmob/players?limit=3000');
-                                if (playersResponse.ok) {
-                                    const playersData = await playersResponse.json();
-                                    if (playersData.players && playersData.players.length > 0) {
-                                        currentPlayers = playersData.players;
-                                        displayPlayers(playersData.players);
-                                        console.log(`✅ 包括的データベースから${playersData.players.length}名の選手データを表示しました`);
-                                        return;
-                                    }
+                                // API-Footballから選手データを取得
+                                const playersData = await apiFootballService.getAllPlayers();
+                                if (playersData && playersData.length > 0) {
+                                    currentPlayers = playersData;
+                                    displayPlayers(playersData);
+                                    console.log(`✅ API-Footballから${playersData.length}名の選手データを表示しました`);
+                                    return;
                                 }
                             } catch (error) {
                                 console.log('包括的データベースからの選手データ取得に失敗:', error);
@@ -1419,7 +1526,245 @@
             return select && select.value ? [select.value] : [];
         }
 
-        // API連携サービス
+        // API-Football サービスクラス（Proプラン対応）
+        class APIFootballService {
+            constructor() {
+                // 実際のAPIキーを設定してください
+                this.apiKey = localStorage.getItem('api_football_key') || 'YOUR_API_FOOTBALL_KEY';
+                this.baseUrl = 'https://v3.football.api-sports.io';
+                this.headers = {
+                    'X-RapidAPI-Key': this.apiKey,
+                    'X-RapidAPI-Host': 'v3.football.api-sports.io'
+                };
+            }
+
+            // APIキーを設定
+            setApiKey(key) {
+                this.apiKey = key;
+                this.headers['X-RapidAPI-Key'] = key;
+                localStorage.setItem('api_football_key', key);
+                console.log('✅ API-Football APIキーが設定されました');
+            }
+
+            // 選手検索
+            async searchPlayers(query, filters = {}) {
+                try {
+                    let url = `${this.baseUrl}/players?search=${encodeURIComponent(query)}`;
+                    
+                    if (filters.league) url += `&league=${filters.league}`;
+                    if (filters.season) url += `&season=${filters.season || 2024}`;
+                    if (filters.team) url += `&team=${filters.team}`;
+
+                    const response = await fetch(url, { headers: this.headers });
+                    const data = await response.json();
+                    
+                    return {
+                        players: data.response || [],
+                        total: data.results || 0
+                    };
+                } catch (error) {
+                    console.error('API-Football選手検索エラー:', error);
+                    return { players: [], total: 0 };
+                }
+            }
+
+            // チーム選手一覧取得
+            async getTeamSquad(teamId) {
+                try {
+                    const response = await fetch(`${this.baseUrl}/players/squads?team=${teamId}`, {
+                        headers: this.headers
+                    });
+                    const data = await response.json();
+                    
+                    return data.response[0]?.players || [];
+                } catch (error) {
+                    console.error('チーム選手取得エラー:', error);
+                    return [];
+                }
+            }
+
+            // 選手詳細統計取得
+            async getPlayerStats(playerId, season = 2024) {
+                try {
+                    const response = await fetch(`${this.baseUrl}/players?id=${playerId}&season=${season}`, {
+                        headers: this.headers
+                    });
+                    const data = await response.json();
+                    
+                    return data.response[0]?.statistics || [];
+                } catch (error) {
+                    console.error('選手統計取得エラー:', error);
+                    return [];
+                }
+            }
+
+            // 試合スケジュール取得
+            async getFixtures(league, timeRange) {
+                try {
+                    let url = `${this.baseUrl}/fixtures`;
+                    const params = new URLSearchParams();
+
+                    if (league && league !== 'all') {
+                        params.append('league', league);
+                        params.append('season', '2024');
+                    }
+
+                    // 時間範囲の設定
+                    const today = new Date();
+                    switch (timeRange) {
+                        case 'today':
+                            params.append('date', today.toISOString().split('T')[0]);
+                            break;
+                        case 'tomorrow':
+                            const tomorrow = new Date(today);
+                            tomorrow.setDate(today.getDate() + 1);
+                            params.append('date', tomorrow.toISOString().split('T')[0]);
+                            break;
+                        case 'week':
+                            const weekEnd = new Date(today);
+                            weekEnd.setDate(today.getDate() + 7);
+                            params.append('from', today.toISOString().split('T')[0]);
+                            params.append('to', weekEnd.toISOString().split('T')[0]);
+                            break;
+                        case 'month':
+                            const monthEnd = new Date(today);
+                            monthEnd.setMonth(today.getMonth() + 1);
+                            params.append('from', today.toISOString().split('T')[0]);
+                            params.append('to', monthEnd.toISOString().split('T')[0]);
+                            break;
+                    }
+
+                    if (params.toString()) {
+                        url += '?' + params.toString();
+                    }
+
+                    const response = await fetch(url, { headers: this.headers });
+                    const data = await response.json();
+                    
+                    return {
+                        matches: data.response || [],
+                        total: data.results || 0
+                    };
+                } catch (error) {
+                    console.error('試合データ取得エラー:', error);
+                    return { matches: [], total: 0 };
+                }
+            }
+
+            // 全選手データ取得（ページネーション対応）
+            async getAllPlayers(league = null, limit = 100) {
+                try {
+                    let url = `${this.baseUrl}/players`;
+                    const params = new URLSearchParams();
+                    
+                    if (league) {
+                        params.append('league', league);
+                        params.append('season', '2024');
+                    }
+                    params.append('page', '1');
+
+                    if (params.toString()) {
+                        url += '?' + params.toString();
+                    }
+
+                    const response = await fetch(url, { headers: this.headers });
+                    const data = await response.json();
+                    
+                    return data.response || [];
+                } catch (error) {
+                    console.error('全選手データ取得エラー:', error);
+                    return [];
+                }
+            }
+        }
+
+        // Football-data.org サービスクラス（Free + Deep data + Statistics addon対応）
+        class FootballDataService {
+            constructor() {
+                // 実際のAPIトークンを設定してください
+                this.apiToken = localStorage.getItem('football_data_token') || 'YOUR_FOOTBALL_DATA_TOKEN';
+                this.baseUrl = 'https://api.football-data.org/v4';
+                this.headers = {
+                    'X-Auth-Token': this.apiToken
+                };
+            }
+
+            // APIトークンを設定
+            setApiToken(token) {
+                this.apiToken = token;
+                this.headers['X-Auth-Token'] = token;
+                localStorage.setItem('football_data_token', token);
+                console.log('✅ Football-data.org APIトークンが設定されました');
+            }
+
+            // チーム選手一覧取得
+            async getTeamSquad(teamId) {
+                try {
+                    const response = await fetch(`${this.baseUrl}/teams/${teamId}`, {
+                        headers: this.headers
+                    });
+                    const data = await response.json();
+                    
+                    return data.squad || [];
+                } catch (error) {
+                    console.error('Football-data.org チーム選手取得エラー:', error);
+                    return [];
+                }
+            }
+
+            // 大会のトップスコアラー取得
+            async getTopScorers(competitionId) {
+                try {
+                    const response = await fetch(`${this.baseUrl}/competitions/${competitionId}/scorers`, {
+                        headers: this.headers
+                    });
+                    const data = await response.json();
+                    
+                    return data.scorers || [];
+                } catch (error) {
+                    console.error('トップスコアラー取得エラー:', error);
+                    return [];
+                }
+            }
+
+            // 試合データ取得
+            async getMatches(competitionId, timeRange) {
+                try {
+                    let url = `${this.baseUrl}/competitions/${competitionId}/matches`;
+                    
+                    // 時間範囲フィルター
+                    const params = new URLSearchParams();
+                    const today = new Date();
+                    
+                    switch (timeRange) {
+                        case 'today':
+                            params.append('dateFrom', today.toISOString().split('T')[0]);
+                            params.append('dateTo', today.toISOString().split('T')[0]);
+                            break;
+                        case 'week':
+                            const weekEnd = new Date(today);
+                            weekEnd.setDate(today.getDate() + 7);
+                            params.append('dateFrom', today.toISOString().split('T')[0]);
+                            params.append('dateTo', weekEnd.toISOString().split('T')[0]);
+                            break;
+                    }
+
+                    if (params.toString()) {
+                        url += '?' + params.toString();
+                    }
+
+                    const response = await fetch(url, { headers: this.headers });
+                    const data = await response.json();
+                    
+                    return data.matches || [];
+                } catch (error) {
+                    console.error('Football-data.org 試合データ取得エラー:', error);
+                    return [];
+                }
+            }
+        }
+
+        // API連携サービス（既存）
         class APIConnectionService {
             constructor() {
                 this.baseUrl = window.location.hostname === 'localhost' ? '' : 'https://football-hub-japan-ubzb.onrender.com';
@@ -1541,8 +1886,290 @@
             }
         }
 
-        // API連携サービスインスタンス
+        // リーグID・チームIDマッピング
+        const LEAGUE_IDS = {
+            // API-Football リーグID
+            'premier-league': 39,     // プレミアリーグ
+            'la-liga': 140,           // ラ・リーガ
+            'bundesliga': 78,         // ブンデスリーガ
+            'serie-a': 135,           // セリエA
+            'ligue-1': 61,            // リーグ・アン
+            'champions-league': 2,     // チャンピオンズリーグ
+            'europa-league': 3,        // ヨーロッパリーグ
+            'j-league': 98,           // Jリーグ
+            
+            // Football-data.org 競技ID
+            'fd-premier-league': 'PL',
+            'fd-la-liga': 'PD',
+            'fd-bundesliga': 'BL1',
+            'fd-serie-a': 'SA',
+            'fd-ligue-1': 'FL1',
+            'fd-champions-league': 'CL',
+            'fd-europa-league': 'EL'
+        };
+
+        const TEAM_IDS = {
+            // プレミアリーグ（API-Football）
+            'manchester-united': 33,
+            'manchester-city': 50,
+            'liverpool': 40,
+            'chelsea': 49,
+            'arsenal': 42,
+            'tottenham': 47,
+            'newcastle': 34,
+            'brighton': 51,
+            
+            // ラ・リーガ（API-Football）
+            'real-madrid': 541,
+            'barcelona': 529,
+            'atletico-madrid': 530,
+            'sevilla': 536,
+            'valencia': 532,
+            'villarreal': 533,
+            
+            // ブンデスリーガ（API-Football）
+            'bayern-munich': 157,
+            'borussia-dortmund': 165,
+            'rb-leipzig': 173,
+            'bayer-leverkusen': 168,
+            
+            // セリエA（API-Football）
+            'juventus': 496,
+            'ac-milan': 489,
+            'inter-milan': 505,
+            'napoli': 492,
+            'roma': 497,
+            'lazio': 487,
+            
+            // リーグ・アン（API-Football）
+            'psg': 85,
+            'marseille': 81,
+            'lyon': 80,
+            'monaco': 91,
+            
+            // Jリーグ（API-Football）
+            'kashima-antlers': 286,
+            'urawa-reds': 285,
+            'gamba-osaka': 287,
+            'fc-tokyo': 284
+        };
+
+        // サービスインスタンス作成
+        const apiFootballService = new APIFootballService();
+        const footballDataService = new FootballDataService();
+        
+        // API連携サービスインスタンス（既存のコードとの互換性のため）
         const apiService = new APIConnectionService();
+
+        // 両APIから選手データを検索する統合関数
+        async function searchPlayersFromBothAPIs(query, filters = {}) {
+            console.log('🔍 両APIから選手データを検索中...', { query, filters });
+            
+            let allPlayers = [];
+            let totalResults = 0;
+
+            // 1. API-Footballから検索
+            try {
+                console.log('📡 API-Football で検索中...');
+                const apiFootballResult = await apiFootballService.searchPlayers(query, {
+                    league: LEAGUE_IDS[filters.league] || filters.league,
+                    season: filters.season || 2024
+                });
+                
+                if (apiFootballResult.players && apiFootballResult.players.length > 0) {
+                    // API-Footballのデータを標準形式に変換
+                    const formattedPlayers = apiFootballResult.players.map(playerData => {
+                        const player = playerData.player;
+                        const stats = playerData.statistics?.[0] || {};
+                        
+                        return {
+                            id: `af_${player.id}`,
+                            name: player.name,
+                            age: player.age,
+                            nationality: player.nationality,
+                            position: stats.games?.position || 'Unknown',
+                            team: stats.team?.name || 'Unknown',
+                            league: stats.league?.name || 'Unknown',
+                            photo: player.photo,
+                            height: player.height,
+                            weight: player.weight,
+                            // 統計データ
+                            goals: stats.goals?.total || 0,
+                            assists: stats.goals?.assists || 0,
+                            appearances: stats.games?.appearences || 0,
+                            rating: stats.games?.rating || 'N/A',
+                            source: 'API-Football'
+                        };
+                    });
+                    
+                    allPlayers = allPlayers.concat(formattedPlayers);
+                    totalResults += apiFootballResult.total;
+                    console.log(`✅ API-Football: ${formattedPlayers.length}名の選手を取得`);
+                }
+            } catch (error) {
+                console.error('API-Football検索エラー:', error);
+            }
+
+            // 2. Football-data.org から検索（特定のチーム・リーグの場合）
+            if (filters.team || filters.league) {
+                try {
+                    console.log('📡 Football-data.org で検索中...');
+                    
+                    if (filters.team && TEAM_IDS[filters.team]) {
+                        // チーム指定の場合、そのチームの選手を取得
+                        const teamPlayers = await footballDataService.getTeamSquad(TEAM_IDS[filters.team]);
+                        
+                        if (teamPlayers && teamPlayers.length > 0) {
+                            const filteredPlayers = teamPlayers.filter(player => 
+                                !query || player.name.toLowerCase().includes(query.toLowerCase())
+                            );
+                            
+                            const formattedPlayers = filteredPlayers.map(player => ({
+                                id: `fd_${player.id}`,
+                                name: player.name,
+                                age: calculateAge(player.dateOfBirth),
+                                nationality: player.nationality,
+                                position: player.position,
+                                team: filters.team,
+                                league: filters.league,
+                                photo: null, // Football-data.org doesn't provide photos
+                                source: 'Football-data.org'
+                            }));
+                            
+                            allPlayers = allPlayers.concat(formattedPlayers);
+                            console.log(`✅ Football-data.org: ${formattedPlayers.length}名の選手を取得`);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Football-data.org検索エラー:', error);
+                }
+            }
+
+            // 重複除去（名前ベース）
+            const uniquePlayers = [];
+            const seenNames = new Set();
+            
+            for (const player of allPlayers) {
+                const normalizedName = player.name.toLowerCase().trim();
+                if (!seenNames.has(normalizedName)) {
+                    seenNames.add(normalizedName);
+                    uniquePlayers.push(player);
+                }
+            }
+
+            console.log(`🎯 統合検索結果: ${uniquePlayers.length}名の選手（重複除去後）`);
+            
+            return {
+                players: uniquePlayers,
+                total: uniquePlayers.length
+            };
+        }
+
+        // 年齢計算ヘルパー関数
+        function calculateAge(dateOfBirth) {
+            if (!dateOfBirth) return null;
+            const today = new Date();
+            const birthDate = new Date(dateOfBirth);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        // API設定関数
+        function setAPIFootballKey() {
+            const keyInput = document.getElementById('apiFootballKey');
+            const key = keyInput.value.trim();
+            
+            if (key) {
+                apiFootballService.setApiKey(key);
+                keyInput.value = '';
+                showAPIStatus('✅ API-Football キーが設定されました', 'success');
+            } else {
+                showAPIStatus('❌ APIキーを入力してください', 'error');
+            }
+        }
+
+        function setFootballDataToken() {
+            const tokenInput = document.getElementById('footballDataToken');
+            const token = tokenInput.value.trim();
+            
+            if (token) {
+                footballDataService.setApiToken(token);
+                tokenInput.value = '';
+                showAPIStatus('✅ Football-data.org トークンが設定されました', 'success');
+            } else {
+                showAPIStatus('❌ APIトークンを入力してください', 'error');
+            }
+        }
+
+        function showAPIStatus(message, type) {
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.textContent = message;
+            statusDiv.className = `api-status ${type}`;
+            
+            // 3秒後にメッセージを消去
+            setTimeout(() => {
+                statusDiv.textContent = '';
+                statusDiv.className = 'api-status';
+            }, 3000);
+        }
+
+        // API接続テスト関数
+        async function testAPIConnections() {
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.textContent = '🔄 API接続をテスト中...';
+            statusDiv.className = 'api-status warning';
+            
+            let results = [];
+            
+            // API-Football接続テスト
+            try {
+                console.log('🧪 API-Football接続テスト開始...');
+                const testResult = await apiFootballService.searchPlayers('Messi', { season: 2024 });
+                
+                if (testResult.players && testResult.players.length > 0) {
+                    results.push('✅ API-Football: 接続成功');
+                    console.log('✅ API-Football接続テスト成功:', testResult);
+                } else {
+                    results.push('⚠️ API-Football: データなし（APIキーを確認してください）');
+                }
+            } catch (error) {
+                results.push('❌ API-Football: 接続エラー');
+                console.error('API-Football接続テストエラー:', error);
+            }
+            
+            // Football-data.org接続テスト
+            try {
+                console.log('🧪 Football-data.org接続テスト開始...');
+                const testResult = await footballDataService.getTeamSquad(33); // Manchester United
+                
+                if (testResult && testResult.length > 0) {
+                    results.push('✅ Football-data.org: 接続成功');
+                    console.log('✅ Football-data.org接続テスト成功:', testResult);
+                } else {
+                    results.push('⚠️ Football-data.org: データなし（APIトークンを確認してください）');
+                }
+            } catch (error) {
+                results.push('❌ Football-data.org: 接続エラー');
+                console.error('Football-data.org接続テストエラー:', error);
+            }
+            
+            // 結果表示
+            const successCount = results.filter(r => r.includes('✅')).length;
+            const totalTests = results.length;
+            
+            let statusMessage = `接続テスト完了 (${successCount}/${totalTests})\n${results.join('\n')}`;
+            let statusType = successCount === totalTests ? 'success' : 
+                           successCount > 0 ? 'warning' : 'error';
+            
+            statusDiv.innerHTML = statusMessage.replace(/\n/g, '<br>');
+            statusDiv.className = `api-status ${statusType}`;
+            
+            console.log('🧪 API接続テスト完了:', { successCount, totalTests, results });
+        }
 
         // 画像URLを検証して有効なURLを返す関数
         function getValidPhotoUrl(photoUrl) {
@@ -2556,16 +3183,16 @@
                     console.log(`🔍 日本語名 "${query}" で検索中...`);
                     
                     // まず日本語名で検索
-                    searchResult = await apiService.searchPlayers(query, filters);
+                    searchResult = await searchPlayersFromBothAPIs(query, filters);
                     
                     // 日本語名で結果がない場合、英語名で検索
                     if (!searchResult.players || searchResult.players.length === 0) {
                         console.log(`🔍 英語名 "${englishName}" で検索中...`);
-                        searchResult = await apiService.searchPlayers(englishName, filters);
+                        searchResult = await searchPlayersFromBothAPIs(englishName, filters);
                     }
                 } else {
-                    // 通常の検索
-                    searchResult = await apiService.searchPlayers(query, filters);
+                                    // 通常の検索（両APIを試行）
+                searchResult = await searchPlayersFromBothAPIs(query, filters);
                 }
                 
                 if (searchResult.players && searchResult.players.length > 0) {
@@ -2888,9 +3515,8 @@
             try {
                 console.log('Loading schedule matches for:', { league, timeRange });
                 
-                // APIから試合データを取得
-                const response = await fetch(`/api/fotmob/matches?league=${league}&timeRange=${timeRange}&_t=${Date.now()}`);
-                const data = await response.json();
+                // API-Footballから試合データを取得
+                const data = await apiFootballService.getFixtures(league, timeRange);
                 
                 if (data.matches && data.matches.length > 0) {
                     displayScheduleMatches(data.matches);
