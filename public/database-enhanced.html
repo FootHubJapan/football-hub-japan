@@ -1683,7 +1683,7 @@
             constructor() {
                 // 実際のAPIトークンを設定してください
                 this.apiToken = localStorage.getItem('football_data_token') || 'YOUR_FOOTBALL_DATA_TOKEN';
-                this.baseUrl = 'https://api.football-data.org/v4';
+                this.baseUrl = '/api/football-data-proxy'; // Use proxy endpoint instead of direct API
                 this.headers = {
                     'X-Auth-Token': this.apiToken
                 };
@@ -2220,7 +2220,7 @@
                 const endIndex = Math.min(currentIndex + batchSize, playersToDisplay.length);
                 
                 for (let i = currentIndex; i < endIndex; i++) {
-                    const player = playersToDisplay[i];
+                    const player = validatePlayerData(playersToDisplay[i]);
                 if (player && player.name) {
                     grid.appendChild(createPlayerCard(player));
                 }
@@ -2677,7 +2677,7 @@
                 '久保建英', '三笘薫', '堂安律', '田中碧', '伊藤洋輝', '遠藤航', '南野拓実', '浅野拓磨', '上田綺世', '前田大然',
                 '孫興慜', '金玟哉', '李剛仁', '黄喜燦', '久保裕也', '原口元気', '柴崎岳', '酒井宏樹', '吉田麻也', '長友佑都'
             ];
-            const teams = ['レアル・ソシエダード', 'ブライトン', 'フライブルク', 'フォルタレーザ', 'シュトゥットガルト', 'リバプール', 'モナコ', 'ボーフム', 'フエンラブラド', 'セルティック'];
+            const teams = ['レアル・ソシエダード', 'ブライトン', 'フライブルク', 'フォルトゥナ・デュッセルドルフ', 'シュトゥットガルト', 'リバプール', 'モナコ', 'ボーフム', 'フエンラブラド', 'セルティック'];
             const positions = ['Forward', 'Midfielder', 'Defender', 'Goalkeeper'];
             const nationalities = ['Japan', 'South Korea', 'Germany', 'Brazil', 'England', 'France', 'Spain', 'Italy'];
             
@@ -2809,7 +2809,7 @@
                     id: '4',
                     name: '田中碧',
                     fullName: '田中碧',
-                    currentTeam: 'フライブルク',
+                    currentTeam: 'フォルトゥナ・デュッセルドルフ',
                     position: 'Midfielder',
                     nationality: 'Japan',
                     age: 25,
@@ -3111,6 +3111,42 @@
                 evt.currentTarget.classList.add('selected');
             }
             showPlayerDetails(player);
+        }
+
+        // 選手データの整合性を確保する関数
+        function validatePlayerData(player) {
+            const playerMappings = {
+                '田中碧': {
+                    correctTeam: 'フォルトゥナ・デュッセルドルフ',
+                    correctPosition: 'Midfielder',
+                    correctPhoto: 'https://media.api-sports.io/football/players/32863.png'
+                },
+                '久保建英': {
+                    correctTeam: 'レアル・ソシエダード',
+                    correctPosition: 'Forward',
+                    correctPhoto: 'https://media.api-sports.io/football/players/32862.png'
+                },
+                '三苫薫': {
+                    correctTeam: 'ブライトン',
+                    correctPosition: 'Midfielder',
+                    correctPhoto: 'https://media.api-sports.io/football/players/106835.png'
+                },
+                '堂安律': {
+                    correctTeam: 'フライブルク',
+                    correctPosition: 'Midfielder',
+                    correctPhoto: 'https://media.api-sports.io/football/players/2598.png'
+                }
+            };
+
+            if (playerMappings[player.name]) {
+                const mapping = playerMappings[player.name];
+                player.currentTeam = mapping.correctTeam;
+                player.position = mapping.correctPosition;
+                if (mapping.correctPhoto) {
+                    player.photo = mapping.correctPhoto;
+                }
+            }
+            return player;
         }
 
         // 日本語選手名マッピング（グローバルスコープ）

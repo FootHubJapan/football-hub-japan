@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const helmet = require('helmet');
+const cors = require('cors');
 
 // エラーハンドリング付きでデータサービスをインポート
 let dataService;
@@ -203,6 +204,19 @@ app.use(helmet({
             upgradeInsecureRequests: []
         }
     }
+}));
+
+// CORS middleware configuration
+app.use(cors({
+    origin: [
+        'http://localhost:10000',
+        'http://localhost:3000',
+        'https://football-hub-japan-ubzb.onrender.com',
+        'https://football-hub-japan.onrender.com'
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Auth-Token']
 }));
 
 // Middleware
@@ -717,6 +731,52 @@ app.get('/api/football-data/competitions', async (req, res) => {
     } catch (error) {
         console.error('Football data API error:', error);
         res.status(500).json({ error: 'Failed to fetch competitions' });
+    }
+});
+
+// Comprehensive Football-data.org API Proxy
+app.get('/api/football-data-proxy/*', async (req, res) => {
+    try {
+        const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+        
+        if (!apiKey) {
+            return res.status(500).json({ error: 'API key not configured' });
+        }
+
+        // Extract the path after /api/football-data-proxy/
+        const apiPath = req.params[0];
+        const fullUrl = `https://api.football-data.org/v4/${apiPath}`;
+        
+        // Forward query parameters
+        const url = new URL(fullUrl);
+        Object.keys(req.query).forEach(key => {
+            url.searchParams.append(key, req.query[key]);
+        });
+
+        console.log(`Proxying request to: ${url.toString()}`);
+
+        const response = await fetchWithRetry(url.toString(), {
+            headers: {
+                'X-Auth-Token': apiKey,
+                'Content-Type': 'application/json'
+            }
+        }, 'footballData');
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Football-data.org API error: ${response.status} - ${errorText}`);
+            return res.status(response.status).json({ 
+                error: 'API request failed', 
+                status: response.status,
+                message: errorText 
+            });
+        }
+
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Football-data.org proxy error:', error);
+        res.status(500).json({ error: 'Failed to fetch data from football-data.org' });
     }
 });
 
