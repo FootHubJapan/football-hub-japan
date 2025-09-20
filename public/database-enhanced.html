@@ -1531,19 +1531,38 @@
             constructor() {
                 // 実際のAPIキーを設定してください
                 this.apiKey = localStorage.getItem('api_football_key') || 'YOUR_API_FOOTBALL_KEY';
-                this.baseUrl = 'https://v3.football.api-sports.io';
+                this.baseUrl = '/api/api-football-proxy'; // Use proxy endpoint to avoid CORS
                 this.headers = {
-                    'X-RapidAPI-Key': this.apiKey,
-                    'X-RapidAPI-Host': 'v3.football.api-sports.io'
+                    'Content-Type': 'application/json'
                 };
             }
 
-            // APIキーを設定
-            setApiKey(key) {
-                this.apiKey = key;
-                this.headers['X-RapidAPI-Key'] = key;
-                localStorage.setItem('api_football_key', key);
-                console.log('✅ API-Football APIキーが設定されました');
+            // APIキーを設定（サーバーサイドで管理）
+            async setApiKey(key) {
+                try {
+                    const response = await fetch('/api/set-api-keys', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            rapidapi_key: key
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        this.apiKey = key;
+                        localStorage.setItem('api_football_key', key);
+                        console.log('✅ API-Football APIキーが設定されました');
+                        return true;
+                    } else {
+                        console.error('❌ APIキー設定に失敗しました');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('❌ APIキー設定エラー:', error);
+                    return false;
+                }
             }
 
             // 選手検索
@@ -1689,12 +1708,32 @@
                 };
             }
 
-            // APIトークンを設定
-            setApiToken(token) {
-                this.apiToken = token;
-                this.headers['X-Auth-Token'] = token;
-                localStorage.setItem('football_data_token', token);
-                console.log('✅ Football-data.org APIトークンが設定されました');
+            // APIトークンを設定（サーバーサイドで管理）
+            async setApiToken(token) {
+                try {
+                    const response = await fetch('/api/set-api-keys', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            football_data_key: token
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        this.apiToken = token;
+                        localStorage.setItem('football_data_token', token);
+                        console.log('✅ Football-data.org APIトークンが設定されました');
+                        return true;
+                    } else {
+                        console.error('❌ APIトークン設定に失敗しました');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('❌ APIトークン設定エラー:', error);
+                    return false;
+                }
             }
 
             // チーム選手一覧取得
@@ -2079,27 +2118,35 @@
         }
 
         // API設定関数
-        function setAPIFootballKey() {
+        async function setAPIFootballKey() {
             const keyInput = document.getElementById('apiFootballKey');
             const key = keyInput.value.trim();
             
             if (key) {
-                apiFootballService.setApiKey(key);
-                keyInput.value = '';
-                showAPIStatus('✅ API-Football キーが設定されました', 'success');
+                const success = await apiFootballService.setApiKey(key);
+                if (success) {
+                    keyInput.value = '';
+                    showAPIStatus('✅ API-Football キーが設定されました', 'success');
+                } else {
+                    showAPIStatus('❌ APIキー設定に失敗しました', 'error');
+                }
             } else {
                 showAPIStatus('❌ APIキーを入力してください', 'error');
             }
         }
 
-        function setFootballDataToken() {
+        async function setFootballDataToken() {
             const tokenInput = document.getElementById('footballDataToken');
             const token = tokenInput.value.trim();
             
             if (token) {
-                footballDataService.setApiToken(token);
-                tokenInput.value = '';
-                showAPIStatus('✅ Football-data.org トークンが設定されました', 'success');
+                const success = await footballDataService.setApiToken(token);
+                if (success) {
+                    tokenInput.value = '';
+                    showAPIStatus('✅ Football-data.org トークンが設定されました', 'success');
+                } else {
+                    showAPIStatus('❌ APIトークン設定に失敗しました', 'error');
+                }
             } else {
                 showAPIStatus('❌ APIトークンを入力してください', 'error');
             }
@@ -2128,13 +2175,27 @@
             // API-Football接続テスト
             try {
                 console.log('🧪 API-Football接続テスト開始...');
-                const testResult = await apiFootballService.searchPlayers('Messi', { season: 2024 });
                 
-                if (testResult.players && testResult.players.length > 0) {
-                    results.push('✅ API-Football: 接続成功');
-                    console.log('✅ API-Football接続テスト成功:', testResult);
+                // 簡単なテストリクエスト
+                const testResponse = await fetch('/api/api-football-proxy/status', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (testResponse.ok) {
+                    const testData = await testResponse.json();
+                    if (testData && testData.api) {
+                        results.push('✅ API-Football: 接続成功');
+                        console.log('✅ API-Football接続テスト成功:', testData);
+                    } else {
+                        results.push('⚠️ API-Football: データなし（APIキーを確認してください）');
+                    }
                 } else {
-                    results.push('⚠️ API-Football: データなし（APIキーを確認してください）');
+                    const errorData = await testResponse.json().catch(() => ({ error: 'Unknown error' }));
+                    results.push(`❌ API-Football: ${errorData.error || '接続エラー'}`);
+                    console.error('API-Football接続テストエラー:', errorData);
                 }
             } catch (error) {
                 results.push('❌ API-Football: 接続エラー');
@@ -2144,13 +2205,27 @@
             // Football-data.org接続テスト
             try {
                 console.log('🧪 Football-data.org接続テスト開始...');
-                const testResult = await footballDataService.getTeamSquad(33); // Manchester United
                 
-                if (testResult && testResult.length > 0) {
-                    results.push('✅ Football-data.org: 接続成功');
-                    console.log('✅ Football-data.org接続テスト成功:', testResult);
+                // 簡単なテストリクエスト
+                const testResponse = await fetch('/api/football-data-proxy/competitions', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (testResponse.ok) {
+                    const testData = await testResponse.json();
+                    if (testData && testData.length > 0) {
+                        results.push('✅ Football-data.org: 接続成功');
+                        console.log('✅ Football-data.org接続テスト成功:', testData);
+                    } else {
+                        results.push('⚠️ Football-data.org: データなし（APIトークンを確認してください）');
+                    }
                 } else {
-                    results.push('⚠️ Football-data.org: データなし（APIトークンを確認してください）');
+                    const errorData = await testResponse.json().catch(() => ({ error: 'Unknown error' }));
+                    results.push(`❌ Football-data.org: ${errorData.error || '接続エラー'}`);
+                    console.error('Football-data.org接続テストエラー:', errorData);
                 }
             } catch (error) {
                 results.push('❌ Football-data.org: 接続エラー');

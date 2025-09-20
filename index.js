@@ -780,6 +780,83 @@ app.get('/api/football-data-proxy/*', async (req, res) => {
     }
 });
 
+// API-Football Proxy Endpoint
+app.get('/api/api-football-proxy/*', async (req, res) => {
+    try {
+        const apiKey = process.env.RAPIDAPI_KEY;
+        
+        if (!apiKey) {
+            return res.status(500).json({ error: 'RapidAPI key not configured' });
+        }
+
+        // Extract the path after /api/api-football-proxy/
+        const apiPath = req.params[0];
+        const fullUrl = `https://v3.football.api-sports.io/${apiPath}`;
+        
+        // Forward query parameters
+        const url = new URL(fullUrl);
+        Object.keys(req.query).forEach(key => {
+            url.searchParams.append(key, req.query[key]);
+        });
+
+        console.log(`Proxying API-Football request to: ${url.toString()}`);
+
+        const response = await fetchWithRetry(url.toString(), {
+            headers: {
+                'x-rapidapi-key': apiKey,
+                'x-rapidapi-host': 'v3.football.api-sports.io',
+                'Content-Type': 'application/json'
+            }
+        }, 'apiFootball');
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`API-Football API error: ${response.status} - ${errorText}`);
+            return res.status(response.status).json({ 
+                error: 'API request failed', 
+                status: response.status,
+                message: errorText 
+            });
+        }
+
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('API-Football proxy error:', error);
+        res.status(500).json({ error: 'Failed to fetch data from API-Football' });
+    }
+});
+
+// API Keys Management Endpoint
+app.post('/api/set-api-keys', async (req, res) => {
+    try {
+        const { rapidapi_key, football_data_key } = req.body;
+        
+        // Update environment variables (in production, you might want to use a database or secure storage)
+        if (rapidapi_key) {
+            process.env.RAPIDAPI_KEY = rapidapi_key;
+            console.log('✅ RapidAPI key updated');
+        }
+        
+        if (football_data_key) {
+            process.env.FOOTBALL_DATA_API_KEY = football_data_key;
+            console.log('✅ Football-data.org key updated');
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'API keys updated successfully',
+            updated: {
+                rapidapi: !!rapidapi_key,
+                football_data: !!football_data_key
+            }
+        });
+    } catch (error) {
+        console.error('API keys update error:', error);
+        res.status(500).json({ error: 'Failed to update API keys' });
+    }
+});
+
 // Existing API endpoints
 app.get('/api/leagues', async (req, res) => {
     try {
