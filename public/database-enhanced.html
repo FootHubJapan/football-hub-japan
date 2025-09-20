@@ -1530,7 +1530,7 @@
         class APIFootballService {
             constructor() {
                 // 実際のAPIキーを設定してください
-                this.apiKey = localStorage.getItem('api_football_key') || 'YOUR_API_FOOTBALL_KEY';
+                this.apiKey = localStorage.getItem('api_football_key') || '';
                 this.baseUrl = '/api/api-football-proxy'; // Use proxy endpoint to avoid CORS
                 this.headers = {
                     'Content-Type': 'application/json'
@@ -1701,7 +1701,7 @@
         class FootballDataService {
             constructor() {
                 // 実際のAPIトークンを設定してください
-                this.apiToken = localStorage.getItem('football_data_token') || 'YOUR_FOOTBALL_DATA_TOKEN';
+                this.apiToken = localStorage.getItem('football_data_token') || '';
                 this.baseUrl = '/api/football-data-proxy'; // Use proxy endpoint instead of direct API
                 this.headers = {
                     'X-Auth-Token': this.apiToken
@@ -2176,26 +2176,33 @@
             try {
                 console.log('🧪 API-Football接続テスト開始...');
                 
-                // 簡単なテストリクエスト
-                const testResponse = await fetch('/api/api-football-proxy/status', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (testResponse.ok) {
-                    const testData = await testResponse.json();
-                    if (testData && testData.api) {
-                        results.push('✅ API-Football: 接続成功');
-                        console.log('✅ API-Football接続テスト成功:', testData);
-                    } else {
-                        results.push('⚠️ API-Football: データなし（APIキーを確認してください）');
-                    }
+                // まずAPIキーが設定されているかチェック
+                const apiKey = localStorage.getItem('api_football_key');
+                if (!apiKey || apiKey.trim() === '') {
+                    results.push('⚠️ API-Football: APIキーが設定されていません');
+                    console.log('API-Football APIキーが設定されていません');
                 } else {
-                    const errorData = await testResponse.json().catch(() => ({ error: 'Unknown error' }));
-                    results.push(`❌ API-Football: ${errorData.error || '接続エラー'}`);
-                    console.error('API-Football接続テストエラー:', errorData);
+                    // 簡単なテストリクエスト
+                    const testResponse = await fetch('/api/api-football-proxy/status', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (testResponse.ok) {
+                        const testData = await testResponse.json();
+                        if (testData && testData.api) {
+                            results.push('✅ API-Football: 接続成功');
+                            console.log('✅ API-Football接続テスト成功:', testData);
+                        } else {
+                            results.push('⚠️ API-Football: データなし（APIキーを確認してください）');
+                        }
+                    } else {
+                        const errorData = await testResponse.json().catch(() => ({ error: 'Unknown error' }));
+                        results.push(`❌ API-Football: ${errorData.error || '接続エラー'}`);
+                        console.error('API-Football接続テストエラー:', errorData);
+                    }
                 }
             } catch (error) {
                 results.push('❌ API-Football: 接続エラー');
@@ -2206,26 +2213,33 @@
             try {
                 console.log('🧪 Football-data.org接続テスト開始...');
                 
-                // 簡単なテストリクエスト
-                const testResponse = await fetch('/api/football-data-proxy/competitions', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (testResponse.ok) {
-                    const testData = await testResponse.json();
-                    if (testData && testData.length > 0) {
-                        results.push('✅ Football-data.org: 接続成功');
-                        console.log('✅ Football-data.org接続テスト成功:', testData);
-                    } else {
-                        results.push('⚠️ Football-data.org: データなし（APIトークンを確認してください）');
-                    }
+                // まずAPIトークンが設定されているかチェック
+                const apiToken = localStorage.getItem('football_data_token');
+                if (!apiToken || apiToken.trim() === '') {
+                    results.push('⚠️ Football-data.org: APIトークンが設定されていません');
+                    console.log('Football-data.org APIトークンが設定されていません');
                 } else {
-                    const errorData = await testResponse.json().catch(() => ({ error: 'Unknown error' }));
-                    results.push(`❌ Football-data.org: ${errorData.error || '接続エラー'}`);
-                    console.error('Football-data.org接続テストエラー:', errorData);
+                    // 簡単なテストリクエスト
+                    const testResponse = await fetch('/api/football-data-proxy/competitions', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (testResponse.ok) {
+                        const testData = await testResponse.json();
+                        if (testData && testData.length > 0) {
+                            results.push('✅ Football-data.org: 接続成功');
+                            console.log('✅ Football-data.org接続テスト成功:', testData);
+                        } else {
+                            results.push('⚠️ Football-data.org: データなし（APIトークンを確認してください）');
+                        }
+                    } else {
+                        const errorData = await testResponse.json().catch(() => ({ error: 'Unknown error' }));
+                        results.push(`❌ Football-data.org: ${errorData.error || '接続エラー'}`);
+                        console.error('Football-data.org接続テストエラー:', errorData);
+                    }
                 }
             } catch (error) {
                 results.push('❌ Football-data.org: 接続エラー');

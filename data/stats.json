@@ -1,0 +1,56 @@
+{
+  "lastUpdate": "2025-09-20T05:08:51.282Z",
+  "totalPlayers": 25,
+  "leagues": [
+    "La Liga",
+    "Premier League",
+    "Bundesliga",
+    "Ligue 1",
+    "Serie A",
+    "MLS",
+    "Saudi Pro League"
+  ],
+  "teams": [
+    "Real Sociedad",
+    "Brighton",
+    "Arsenal",
+    "Liverpool",
+    "Eintracht Frankfurt",
+    "Stuttgart",
+    "Bochum",
+    "Fortuna Düsseldorf",
+    "AS Monaco",
+    "Manchester City",
+    "Real Madrid",
+    "Barcelona",
+    "Bayern Munich",
+    "Inter Milan",
+    "PSG",
+    "Inter Miami",
+    "Al Nassr",
+    "Al Hilal",
+    "Al Ahli"
+  ],
+  "positions": [
+    "Forward",
+    "Midfielder",
+    "Defender"
+  ],
+  "playerStats": {
+    "efficient_1": {
+      "goals": 5,
+      "assists": 4,
+      "appearances": 25,
+      "minutes": 2000,
+      "rating": 7,
+      "yellowCards": 2,
+      "shotsTotal": 35,
+      "shotsOnTarget": 15,
+      "expectedGoals": 5.5,
+      "passAccuracy": "80%",
+      "tackles": 10,
+      "interceptions": 6,
+      "lastUpdated": "2025-09-20T05:08:51.283Z"
+    }
+  }
+}

@@ -739,8 +739,9 @@ app.get('/api/football-data-proxy/*', async (req, res) => {
     try {
         const apiKey = process.env.FOOTBALL_DATA_API_KEY;
         
-        if (!apiKey) {
-            return res.status(500).json({ error: 'API key not configured' });
+        if (!apiKey || apiKey === 'YOUR_FOOTBALL_DATA_TOKEN') {
+            console.log('Football-data.org API key not configured or using placeholder');
+            return res.status(500).json({ error: 'Football-data.org API key not configured. Please set your API token first.' });
         }
 
         // Extract the path after /api/football-data-proxy/
@@ -785,8 +786,9 @@ app.get('/api/api-football-proxy/*', async (req, res) => {
     try {
         const apiKey = process.env.RAPIDAPI_KEY;
         
-        if (!apiKey) {
-            return res.status(500).json({ error: 'RapidAPI key not configured' });
+        if (!apiKey || apiKey === 'YOUR_API_FOOTBALL_KEY') {
+            console.log('RapidAPI key not configured or using placeholder');
+            return res.status(500).json({ error: 'RapidAPI key not configured. Please set your API key first.' });
         }
 
         // Extract the path after /api/api-football-proxy/
