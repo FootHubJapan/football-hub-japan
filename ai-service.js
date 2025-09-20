@@ -3,6 +3,36 @@ const axios = require('axios');
 
 // Gemini APIの初期化（動的にAPIキーを設定）
 let genAI = null;
+let lastApiCall = 0;
+const MIN_API_INTERVAL = 3000; // 3秒間隔
+
+// レート制限対応のリトライ機能
+async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 2000) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            // 連続リクエストの間隔制御
+            const now = Date.now();
+            const timeSinceLastCall = now - lastApiCall;
+            if (timeSinceLastCall < MIN_API_INTERVAL) {
+                const waitTime = MIN_API_INTERVAL - timeSinceLastCall;
+                console.log(`⏳ API呼び出し間隔制御: ${waitTime}ms待機中...`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+            }
+            
+            const result = await fn();
+            lastApiCall = Date.now();
+            return result;
+        } catch (error) {
+            if (error.message && (error.message.includes('429') || error.message.includes('RATE_LIMIT_EXCEEDED')) && attempt < maxRetries) {
+                const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+                console.log(`⏳ レート制限により${delay}ms待機中... (試行 ${attempt}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+            }
+            throw error;
+        }
+    }
+}
 
 // API-Football設定
 const API_FOOTBALL_BASE_URL = 'https://v3.football.api-sports.io';
@@ -236,8 +266,11 @@ async function generateSoccerAnalysis(userMessage) {
         // プロンプトを構築
         const prompt = SOCCER_ANALYSIS_PROMPT.replace('{userMessage}', userMessage);
         
-        // AI応答を生成
-        const result = await model.generateContent(prompt);
+        // レート制限対応のリトライ機能でAI応答を生成
+        const result = await retryWithBackoff(async () => {
+            return await model.generateContent(prompt);
+        });
+        
         const response = await result.response;
         const text = response.text();
         
@@ -411,7 +444,9 @@ ${player2Data ? `データ: ${JSON.stringify(player2Data, null, 2)}` : ''}
 分析は日本語で行い、具体的で分かりやすく説明してください。データがある場合は数値も含めて分析してください。
 `;
 
-        const result = await model.generateContent(prompt);
+        const result = await retryWithBackoff(async () => {
+            return await model.generateContent(prompt);
+        });
         const response = await result.response;
         return response.text();
     } catch (error) {
