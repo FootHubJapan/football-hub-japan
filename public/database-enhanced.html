@@ -176,11 +176,68 @@
             transform: translateY(-2px);
         }
 
-        /* API設定セクションのスタイル */
+        /* API接続状態セクションのスタイル */
         .api-config {
             display: flex;
             flex-direction: column;
             gap: 1rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .status-label {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.checking {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid #ffc107;
+        }
+
+        .status-badge.connected {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            border: 1px solid #00ff88;
+        }
+
+        .status-badge.configured {
+            background: rgba(108, 117, 125, 0.2);
+            color: #6c757d;
+            border: 1px solid #6c757d;
+        }
+
+        .status-badge.error {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid #dc3545;
         }
 
         .api-key-input {
@@ -1102,22 +1159,22 @@
         <h1 class="page-title">強化データベース</h1>
         <p class="page-subtitle">選手データとAI分析の統合プラットフォーム</p>
 
-        <!-- API設定セクション -->
+        <!-- API接続状態セクション -->
         <div class="search-section">
-            <h2 class="search-title">🔧 API設定</h2>
+            <h2 class="search-title">📡 API接続状態</h2>
             <div class="api-config">
-                <div class="api-key-input">
-                    <label for="apiFootballKey">API-Football キー:</label>
-                    <input type="password" id="apiFootballKey" placeholder="API-Football RapidAPIキーを入力">
-                    <button onclick="setAPIFootballKey()" class="config-btn">設定</button>
+                <div class="status-indicator">
+                    <div class="status-item">
+                        <span class="status-label">API-Football:</span>
+                        <span id="apiFootballStatus" class="status-badge">確認中...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Football-data.org:</span>
+                        <span id="footballDataStatus" class="status-badge">確認中...</span>
+                    </div>
                 </div>
-                <div class="api-key-input">
-                    <label for="footballDataToken">Football-data.org トークン:</label>
-                    <input type="password" id="footballDataToken" placeholder="Football-data.org APIトークンを入力">
-                    <button onclick="setFootballDataToken()" class="config-btn">設定</button>
-                </div>
-                <button onclick="testAPIConnections()" class="test-btn">接続テスト</button>
-                <div id="apiStatus" class="api-status"></div>
+                <button onclick="checkAPIStatus()" class="test-btn">状態更新</button>
+                <div id="apiStatusDetails" class="api-status"></div>
             </div>
         </div>
 
@@ -2117,40 +2174,13 @@
             return age;
         }
 
-        // API設定関数
-        async function setAPIFootballKey() {
-            const keyInput = document.getElementById('apiFootballKey');
-            const key = keyInput.value.trim();
-            
-            if (key) {
-                const success = await apiFootballService.setApiKey(key);
-                if (success) {
-                    keyInput.value = '';
-                    showAPIStatus('✅ API-Football キーが設定されました', 'success');
-                } else {
-                    showAPIStatus('❌ APIキー設定に失敗しました', 'error');
-                }
-            } else {
-                showAPIStatus('❌ APIキーを入力してください', 'error');
-            }
-        }
-
-        async function setFootballDataToken() {
-            const tokenInput = document.getElementById('footballDataToken');
-            const token = tokenInput.value.trim();
-            
-            if (token) {
-                const success = await footballDataService.setApiToken(token);
-                if (success) {
-                    tokenInput.value = '';
-                    showAPIStatus('✅ Football-data.org トークンが設定されました', 'success');
-                } else {
-                    showAPIStatus('❌ APIトークン設定に失敗しました', 'error');
-                }
-            } else {
-                showAPIStatus('❌ APIトークンを入力してください', 'error');
-            }
-        }
+        // ページ読み込み時に自動的にAPI状態をチェック
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初期化完了後にAPI状態をチェック
+            setTimeout(() => {
+                checkAPIStatus();
+            }, 2000);
+        });
 
         function showAPIStatus(message, type) {
             const statusDiv = document.getElementById('apiStatus');
@@ -2164,11 +2194,19 @@
             }, 3000);
         }
 
-        // API接続テスト関数
-        async function testAPIConnections() {
-            const statusDiv = document.getElementById('apiStatus');
-            statusDiv.textContent = '🔄 API接続をテスト中...';
-            statusDiv.className = 'api-status warning';
+        // API接続状態チェック関数
+        async function checkAPIStatus() {
+            const apiFootballStatus = document.getElementById('apiFootballStatus');
+            const footballDataStatus = document.getElementById('footballDataStatus');
+            const statusDetails = document.getElementById('apiStatusDetails');
+            
+            // 初期状態
+            apiFootballStatus.textContent = '確認中...';
+            apiFootballStatus.className = 'status-badge checking';
+            footballDataStatus.textContent = '確認中...';
+            footballDataStatus.className = 'status-badge checking';
+            statusDetails.textContent = '🔄 API接続状態を確認中...';
+            statusDetails.className = 'api-status warning';
             
             let results = [];
             
@@ -2176,7 +2214,6 @@
             try {
                 console.log('🧪 API-Football接続テスト開始...');
                 
-                // 簡単なテストリクエスト（サーバーサイドで環境変数をチェック）
                 const testResponse = await fetch('/api/api-football-proxy/status', {
                     method: 'GET',
                     headers: {
@@ -2187,17 +2224,25 @@
                 if (testResponse.ok) {
                     const testData = await testResponse.json();
                     if (testData && testData.api) {
+                        apiFootballStatus.textContent = '接続済み';
+                        apiFootballStatus.className = 'status-badge connected';
                         results.push('✅ API-Football: 接続成功');
                         console.log('✅ API-Football接続テスト成功:', testData);
                     } else {
-                        results.push('⚠️ API-Football: データなし（APIキーを確認してください）');
+                        apiFootballStatus.textContent = '設定済み';
+                        apiFootballStatus.className = 'status-badge configured';
+                        results.push('⚠️ API-Football: 設定済み（データなし）');
                     }
                 } else {
                     const errorData = await testResponse.json().catch(() => ({ error: 'Unknown error' }));
+                    apiFootballStatus.textContent = 'エラー';
+                    apiFootballStatus.className = 'status-badge error';
                     results.push(`❌ API-Football: ${errorData.error || '接続エラー'}`);
                     console.error('API-Football接続テストエラー:', errorData);
                 }
             } catch (error) {
+                apiFootballStatus.textContent = 'エラー';
+                apiFootballStatus.className = 'status-badge error';
                 results.push('❌ API-Football: 接続エラー');
                 console.error('API-Football接続テストエラー:', error);
             }
@@ -2206,7 +2251,6 @@
             try {
                 console.log('🧪 Football-data.org接続テスト開始...');
                 
-                // 簡単なテストリクエスト（サーバーサイドで環境変数をチェック）
                 const testResponse = await fetch('/api/football-data-proxy/competitions', {
                     method: 'GET',
                     headers: {
@@ -2217,33 +2261,42 @@
                 if (testResponse.ok) {
                     const testData = await testResponse.json();
                     if (testData && testData.length > 0) {
+                        footballDataStatus.textContent = '接続済み';
+                        footballDataStatus.className = 'status-badge connected';
                         results.push('✅ Football-data.org: 接続成功');
                         console.log('✅ Football-data.org接続テスト成功:', testData);
                     } else {
-                        results.push('⚠️ Football-data.org: データなし（APIトークンを確認してください）');
+                        footballDataStatus.textContent = '設定済み';
+                        footballDataStatus.className = 'status-badge configured';
+                        results.push('⚠️ Football-data.org: 設定済み（データなし）');
                     }
                 } else {
                     const errorData = await testResponse.json().catch(() => ({ error: 'Unknown error' }));
+                    footballDataStatus.textContent = 'エラー';
+                    footballDataStatus.className = 'status-badge error';
                     results.push(`❌ Football-data.org: ${errorData.error || '接続エラー'}`);
                     console.error('Football-data.org接続テストエラー:', errorData);
                 }
             } catch (error) {
+                footballDataStatus.textContent = 'エラー';
+                footballDataStatus.className = 'status-badge error';
                 results.push('❌ Football-data.org: 接続エラー');
                 console.error('Football-data.org接続テストエラー:', error);
             }
             
-            // 結果表示
+            // 詳細結果表示
             const successCount = results.filter(r => r.includes('✅')).length;
+            const configuredCount = results.filter(r => r.includes('⚠️')).length;
             const totalTests = results.length;
             
-            let statusMessage = `接続テスト完了 (${successCount}/${totalTests})\n${results.join('\n')}`;
+            let statusMessage = `接続状態: 成功 ${successCount}件, 設定済み ${configuredCount}件, エラー ${totalTests - successCount - configuredCount}件\n${results.join('\n')}`;
             let statusType = successCount === totalTests ? 'success' : 
-                           successCount > 0 ? 'warning' : 'error';
+                           successCount > 0 || configuredCount > 0 ? 'warning' : 'error';
             
-            statusDiv.innerHTML = statusMessage.replace(/\n/g, '<br>');
-            statusDiv.className = `api-status ${statusType}`;
+            statusDetails.innerHTML = statusMessage.replace(/\n/g, '<br>');
+            statusDetails.className = `api-status ${statusType}`;
             
-            console.log('🧪 API接続テスト完了:', { successCount, totalTests, results });
+            console.log('🧪 API接続状態チェック完了:', { successCount, configuredCount, totalTests, results });
         }
 
         // 画像URLを検証して有効なURLを返す関数
