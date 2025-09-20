@@ -4,10 +4,10 @@ const axios = require('axios');
 // Gemini APIの初期化（動的にAPIキーを設定）
 let genAI = null;
 let lastApiCall = 0;
-const MIN_API_INTERVAL = 3000; // 3秒間隔
+const MIN_API_INTERVAL = 60000; // 60秒間隔（1分間隔）
 
 // レート制限対応のリトライ機能
-async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 2000) {
+async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 60000) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             // 連続リクエストの間隔制御
@@ -257,6 +257,14 @@ async function generateSoccerAnalysis(userMessage) {
             return generateFallbackResponse(userMessage);
         }
         
+        // レート制限回避のため、現在時刻をチェックしてAPI呼び出しを制限
+        const now = Date.now();
+        const timeSinceLastCall = now - lastApiCall;
+        if (timeSinceLastCall < MIN_API_INTERVAL) {
+            console.log(`⏳ レート制限回避: ${MIN_API_INTERVAL - timeSinceLastCall}ms待機後にフォールバック応答を使用`);
+            return generateFallbackResponse(userMessage);
+        }
+        
         // Gemini APIの初期化（動的にAPIキーを設定）
         genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         
@@ -428,14 +436,14 @@ AI分析機能は数分後に自動復旧いたします。`;
     // デフォルト応答
     return `「${userMessage}」について分析いたします。
 
-現在、AI分析サービスが一時的に高負荷のため、詳細な分析ができません。以下の情報をお探しの場合は、Football Data Platformのデータベース機能をご利用ください：
+現在、Gemini APIの無料プランでは1分間にリクエスト制限があるため、詳細な分析ができません。以下の情報をお探しの場合は、Football Data Platformのデータベース機能をご利用ください：
 
 • 選手データベース検索
 • 試合スケジュール確認
 • チーム統計情報
 • リーグ順位表
 
-AI分析機能は数分後に自動復旧いたします。`;
+AI分析機能は1分後に自動復旧いたします。より頻繁な利用をご希望の場合は、Gemini APIの有料プランをご検討ください。`;
 }
 
 // 選手比較分析
