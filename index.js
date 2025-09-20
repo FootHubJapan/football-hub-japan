@@ -867,6 +867,67 @@ app.post('/api/set-api-keys', async (req, res) => {
     }
 });
 
+// AI Service Endpoints
+app.post('/api/ai/chat', async (req, res) => {
+    try {
+        if (!aiService) {
+            return res.status(500).json({ error: 'AI service not available' });
+        }
+        
+        const { message, context } = req.body;
+        const response = await aiService.generateResponse(message, context);
+        res.json({ response });
+    } catch (error) {
+        console.error('AI chat error:', error);
+        res.status(500).json({ error: 'Failed to generate AI response' });
+    }
+});
+
+app.post('/api/ai/compare', async (req, res) => {
+    try {
+        if (!aiService) {
+            return res.status(500).json({ error: 'AI service not available' });
+        }
+        
+        const { players } = req.body;
+        const response = await aiService.comparePlayers(players);
+        res.json({ response });
+    } catch (error) {
+        console.error('AI compare error:', error);
+        res.status(500).json({ error: 'Failed to compare players' });
+    }
+});
+
+app.post('/api/ai/predict', async (req, res) => {
+    try {
+        if (!aiService) {
+            return res.status(500).json({ error: 'AI service not available' });
+        }
+        
+        const { matchData } = req.body;
+        const response = await aiService.predictMatch(matchData);
+        res.json({ response });
+    } catch (error) {
+        console.error('AI predict error:', error);
+        res.status(500).json({ error: 'Failed to predict match' });
+    }
+});
+
+app.post('/api/ai/tactics', async (req, res) => {
+    try {
+        if (!aiService) {
+            return res.status(500).json({ error: 'AI service not available' });
+        }
+        
+        const { teamData } = req.body;
+        const response = await aiService.suggestTactics(teamData);
+        res.json({ response });
+    } catch (error) {
+        console.error('AI tactics error:', error);
+        res.status(500).json({ error: 'Failed to suggest tactics' });
+    }
+});
+
 // Existing API endpoints
 app.get('/api/leagues', async (req, res) => {
     try {
