@@ -97,6 +97,12 @@ console.log('🚀 APIService初期化完了');
 // Load environment variables
 require('dotenv').config();
 
+// 環境変数の状態をログ出力
+console.log('🔍 環境変数チェック:');
+console.log('  API_FOOTBALL_KEY:', process.env.API_FOOTBALL_KEY ? `設定済み (${process.env.API_FOOTBALL_KEY.length}文字)` : '未設定');
+console.log('  RAPIDAPI_KEY:', process.env.RAPIDAPI_KEY ? `設定済み (${process.env.RAPIDAPI_KEY.length}文字)` : '未設定');
+console.log('  FOOTBALL_DATA_API_KEY:', process.env.FOOTBALL_DATA_API_KEY ? `設定済み (${process.env.FOOTBALL_DATA_API_KEY.length}文字)` : '未設定');
+
 const app = express();
 const PORT = process.env.PORT || 10000;
 
@@ -784,11 +790,12 @@ app.get('/api/football-data-proxy/*', async (req, res) => {
 // API-Football Proxy Endpoint
 app.get('/api/api-football-proxy/*', async (req, res) => {
     try {
-        const apiKey = process.env.RAPIDAPI_KEY;
+        // Renderの環境変数名に合わせて修正
+        const apiKey = process.env.API_FOOTBALL_KEY || process.env.RAPIDAPI_KEY;
         
         if (!apiKey || apiKey === 'YOUR_API_FOOTBALL_KEY') {
-            console.log('RapidAPI key not configured or using placeholder');
-            return res.status(500).json({ error: 'RapidAPI key not configured. Please set your API key first.' });
+            console.log('API-Football key not configured or using placeholder');
+            return res.status(500).json({ error: 'API-Football key not configured. Please set your API key first.' });
         }
 
         // Extract the path after /api/api-football-proxy/
@@ -836,8 +843,9 @@ app.post('/api/set-api-keys', async (req, res) => {
         
         // Update environment variables (in production, you might want to use a database or secure storage)
         if (rapidapi_key) {
-            process.env.RAPIDAPI_KEY = rapidapi_key;
-            console.log('✅ RapidAPI key updated');
+            process.env.API_FOOTBALL_KEY = rapidapi_key; // Renderの環境変数名に合わせる
+            process.env.RAPIDAPI_KEY = rapidapi_key; // 後方互換性のため
+            console.log('✅ API-Football key updated');
         }
         
         if (football_data_key) {
