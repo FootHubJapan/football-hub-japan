@@ -4,10 +4,10 @@ const axios = require('axios');
 // Gemini APIの初期化（動的にAPIキーを設定）
 let genAI = null;
 let lastApiCall = 0;
-const MIN_API_INTERVAL = 90000; // 90秒間隔（1.5分間隔）
+const MIN_API_INTERVAL = 5000; // 5秒間隔（短縮）
 
 // レート制限対応のリトライ機能
-async function retryWithBackoff(fn, maxRetries = 2, baseDelay = 90000) {
+async function retryWithBackoff(fn, maxRetries = 2, baseDelay = 10000) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             // 連続リクエストの間隔制御

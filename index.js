@@ -899,8 +899,8 @@ app.post('/api/ai/compare', async (req, res) => {
             return res.status(500).json({ error: 'AI service not available' });
         }
         
-        const { players } = req.body;
-        const response = await aiService.generatePlayerComparison(players);
+        const { player1, player2 } = req.body;
+        const response = await aiService.generatePlayerComparison(player1, player2);
         res.json({ response });
     } catch (error) {
         console.error('AI compare error:', error);
