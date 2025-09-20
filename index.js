@@ -104,6 +104,7 @@ console.log('🔍 環境変数チェック:');
 console.log('  API_FOOTBALL_KEY:', process.env.API_FOOTBALL_KEY ? `設定済み (${process.env.API_FOOTBALL_KEY.length}文字)` : '未設定');
 console.log('  RAPIDAPI_KEY:', process.env.RAPIDAPI_KEY ? `設定済み (${process.env.RAPIDAPI_KEY.length}文字)` : '未設定');
 console.log('  FOOTBALL_DATA_API_KEY:', process.env.FOOTBALL_DATA_API_KEY ? `設定済み (${process.env.FOOTBALL_DATA_API_KEY.length}文字)` : '未設定');
+console.log('  GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? `設定済み (${process.env.GEMINI_API_KEY.length}文字)` : '未設定');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -875,6 +876,13 @@ app.post('/api/ai/chat', async (req, res) => {
         if (!aiService) {
             return res.status(500).json({ error: 'AI service not available' });
         }
+        
+        // Gemini APIキーの状態をログ出力
+        console.log('🔍 AI Chat - Gemini API Key Status:', {
+            exists: !!process.env.GEMINI_API_KEY,
+            length: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0,
+            preview: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 10) + '...' : 'undefined'
+        });
         
         const { message, context } = req.body;
         const response = await aiService.generateSoccerAnalysis(message, context);
