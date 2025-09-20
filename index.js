@@ -20,7 +20,9 @@ try {
 
 try {
     console.log('Loading aiService...');
-    aiService = require('./ai-service');
+    const aiServiceModule = require('./ai-service');
+    // ai-serviceは関数の集合なので、直接使用可能
+    aiService = aiServiceModule;
     console.log('aiService loaded successfully');
 } catch (error) {
     console.error('Error loading aiService:', error);
@@ -875,7 +877,7 @@ app.post('/api/ai/chat', async (req, res) => {
         }
         
         const { message, context } = req.body;
-        const response = await aiService.generateResponse(message, context);
+        const response = await aiService.generateSoccerAnalysis(message, context);
         res.json({ response });
     } catch (error) {
         console.error('AI chat error:', error);
@@ -890,7 +892,7 @@ app.post('/api/ai/compare', async (req, res) => {
         }
         
         const { players } = req.body;
-        const response = await aiService.comparePlayers(players);
+        const response = await aiService.generatePlayerComparison(players);
         res.json({ response });
     } catch (error) {
         console.error('AI compare error:', error);
@@ -905,7 +907,7 @@ app.post('/api/ai/predict', async (req, res) => {
         }
         
         const { matchData } = req.body;
-        const response = await aiService.predictMatch(matchData);
+        const response = await aiService.generateMatchPrediction(matchData);
         res.json({ response });
     } catch (error) {
         console.error('AI predict error:', error);
@@ -920,7 +922,7 @@ app.post('/api/ai/tactics', async (req, res) => {
         }
         
         const { teamData } = req.body;
-        const response = await aiService.suggestTactics(teamData);
+        const response = await aiService.generateTacticalAnalysis(teamData);
         res.json({ response });
     } catch (error) {
         console.error('AI tactics error:', error);
