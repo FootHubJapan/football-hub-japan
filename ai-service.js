@@ -4,7 +4,7 @@ const axios = require('axios');
 // Gemini APIの初期化（動的にAPIキーを設定）
 let genAI = null;
 let lastApiCall = 0;
-const MIN_API_INTERVAL = 5000; // 5秒間隔（短縮）
+const MIN_API_INTERVAL = 2000; // 2秒間隔（さらに短縮）
 
 // レート制限対応のリトライ機能
 async function retryWithBackoff(fn, maxRetries = 2, baseDelay = 10000) {
@@ -261,8 +261,9 @@ async function generateSoccerAnalysis(userMessage) {
         const now = Date.now();
         const timeSinceLastCall = now - lastApiCall;
         if (timeSinceLastCall < MIN_API_INTERVAL) {
-            console.log(`⏳ レート制限回避: ${MIN_API_INTERVAL - timeSinceLastCall}ms待機後にフォールバック応答を使用`);
-            return generateFallbackResponse(userMessage);
+            console.log(`⏳ レート制限回避: ${MIN_API_INTERVAL - timeSinceLastCall}ms待機後にAPI呼び出しを実行`);
+            // フォールバックではなく、待機してからAPI呼び出しを実行
+            await new Promise(resolve => setTimeout(resolve, MIN_API_INTERVAL - timeSinceLastCall));
         }
         
         // Gemini APIの初期化（動的にAPIキーを設定）
@@ -374,7 +375,7 @@ function generateFallbackResponse(userMessage) {
 • チーム別選手一覧
 • ポジション別選手データ
 
-AI分析機能は数分後に自動復旧いたします。`;
+AI分析機能は数秒後に自動復旧いたします。`;
     }
     
     // 試合予測
@@ -388,7 +389,7 @@ AI分析機能は数分後に自動復旧いたします。`;
 • チーム統計情報
 • 選手データベース
 
-AI分析機能は数分後に自動復旧いたします。`;
+AI分析機能は数秒後に自動復旧いたします。`;
     }
     
     // 戦術分析
@@ -402,7 +403,7 @@ AI分析機能は数分後に自動復旧いたします。`;
 • 試合結果データ
 • リーグ順位表
 
-AI分析機能は数分後に自動復旧いたします。`;
+AI分析機能は数秒後に自動復旧いたします。`;
     }
     
     // 統計解説
@@ -416,7 +417,7 @@ AI分析機能は数分後に自動復旧いたします。`;
 • リーグ統計
 • 試合データ分析
 
-AI分析機能は数分後に自動復旧いたします。`;
+AI分析機能は数秒後に自動復旧いたします。`;
     }
     
     // ファンタジーリーグ
@@ -430,7 +431,7 @@ AI分析機能は数分後に自動復旧いたします。`;
 • 試合スケジュール
 • 選手データベース
 
-AI分析機能は数分後に自動復旧いたします。`;
+AI分析機能は数秒後に自動復旧いたします。`;
     }
     
     // デフォルト応答
@@ -443,7 +444,7 @@ AI分析機能は数分後に自動復旧いたします。`;
 • チーム統計情報
 • リーグ順位表
 
-AI分析機能は1分後に自動復旧いたします。より頻繁な利用をご希望の場合は、Gemini APIの有料プランをご検討ください。`;
+AI分析機能は数秒後に自動復旧いたします。より頻繁な利用をご希望の場合は、Gemini APIの有料プランをご検討ください。`;
 }
 
 // 選手比較分析
