@@ -324,7 +324,7 @@ app.get('/radar-enhanced', (req, res) => {
 });
 
 app.get('/native-stats', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'native-stats.html'));
+    res.sendFile(path.join(__dirname, 'public', 'database-enhanced.html'));
 });
 
 app.get('/test-firebase-fix', (req, res) => {
