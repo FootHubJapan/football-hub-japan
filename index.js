@@ -300,8 +300,10 @@ app.get('/ai-agent-enhanced', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'ai-agent-enhanced.html'));
 });
 
-// 強化データベースページ
-// database-enhanced は /database に統合済み
+// 強化データベースページ（リダイレクト）
+app.get('/database-enhanced', (req, res) => {
+    res.redirect('/database');
+});
 
 // 試合スケジュールページ
 app.get('/schedule', (req, res) => {
