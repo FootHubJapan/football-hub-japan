@@ -435,7 +435,7 @@
             if (feature === 'database') {
                 window.location.href = '/database-enhanced';
             } else if (feature === 'radar') {
-                window.location.href = '/radar';
+                window.location.href = '/radar-enhanced';
             } else if (feature === 'schedule') {
                 // 試合スケジュール専用ページに移動
                 window.location.href = '/schedule';
@@ -445,6 +445,9 @@
                 window.location.href = '/native-stats';
             } else if (feature === 'ranking') {
                 window.location.href = '/ranking';
+            } else if (feature === 'review') {
+                // 試合レビュー/プレビュー機能はAI分析エージェントに統合
+                window.location.href = '/ai-agent';
             } else {
                 alert(`${features[feature]}機能は準備中です。\n\nこの機能は現在開発中で、近日中にリリース予定です。`);
             }
