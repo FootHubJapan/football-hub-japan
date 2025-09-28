@@ -959,42 +959,81 @@ app.get('/api/ranking/players', async (req, res) => {
         // API-Footballから選手データを取得
         let players = [];
         
-        if (league && process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
+        // API-Footballから選手データを取得（リーグ指定なしでも取得）
+        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
             try {
-                const response = await axios.get(`https://v3.football.api-sports.io/players`, {
+                // リーグIDのマッピング
+                const leagueIds = {
+                    'PL': 39,      // Premier League
+                    'PD': 140,     // La Liga
+                    'SA': 135,     // Serie A
+                    'BL1': 78,     // Bundesliga
+                    'FL1': 61,     // Ligue 1
+                    'J1': 98       // J1 League
+                };
+                
+                const targetLeague = league ? leagueIds[league] : null;
+                
+                console.log('🔍 Fetching players from API-Football:', { league, targetLeague });
+                
+                const response = await axios.get(`https://v3.football.api-sports.io/players/topscorers`, {
                     headers: {
                         'x-rapidapi-key': process.env.RAPIDAPI_KEY,
                         'x-rapidapi-host': 'v3.football.api-sports.io'
                     },
                     params: {
-                        league: league,
+                        league: targetLeague || 39, // Default to Premier League
                         season: 2024
                     }
                 });
                 
+                console.log('📊 API-Football response:', response.data?.response?.length || 0, 'players');
+                
                 if (response.data && response.data.response) {
-                    players = response.data.response.map(player => ({
-                        id: player.player.id,
-                        name: player.player.name,
-                        team: player.statistics[0]?.team?.name || 'Unknown',
-                        position: player.statistics[0]?.games?.position || 'Unknown',
-                        goals: player.statistics[0]?.goals?.total || 0,
-                        assists: player.statistics[0]?.goals?.assists || 0,
-                        appearances: player.statistics[0]?.games?.appearences || 0,
-                        minutes: player.statistics[0]?.games?.minutes || 0,
-                        rating: player.statistics[0]?.games?.rating || 0,
-                        passes: player.statistics[0]?.passes?.total || 0,
-                        tackles: player.statistics[0]?.tackles?.total || 0,
-                        interceptions: player.statistics[0]?.tackles?.interceptions || 0,
-                        saves: player.statistics[0]?.goals?.saves || 0,
-                        cleanSheets: player.statistics[0]?.goals?.conceded === 0 ? 1 : 0,
-                        yellowCards: player.statistics[0]?.cards?.yellow || 0,
-                        redCards: player.statistics[0]?.cards?.red || 0
-                    }));
+                    players = response.data.response.map(player => {
+                        const stats = player.statistics[0];
+                        return {
+                            id: player.player.id,
+                            name: player.player.name,
+                            age: player.player.age,
+                            nationality: player.player.nationality,
+                            team: stats?.team?.name || 'Unknown',
+                            position: stats?.games?.position || 'Unknown',
+                            goals: stats?.goals?.total || 0,
+                            assists: stats?.goals?.assists || 0,
+                            appearances: stats?.games?.appearences || 0,
+                            minutes: stats?.games?.minutes || 0,
+                            rating: stats?.games?.rating || 0,
+                            passes: stats?.passes?.total || 0,
+                            passAccuracy: stats?.passes?.accuracy || 0,
+                            tackles: stats?.tackles?.total || 0,
+                            interceptions: stats?.tackles?.interceptions || 0,
+                            saves: stats?.goals?.saves || 0,
+                            cleanSheets: stats?.goals?.conceded === 0 ? 1 : 0,
+                            yellowCards: stats?.cards?.yellow || 0,
+                            redCards: stats?.cards?.red || 0,
+                            shots: stats?.shots?.total || 0,
+                            shotsOnTarget: stats?.shots?.on || 0,
+                            dribbles: stats?.dribbles?.success || 0,
+                            keyPasses: stats?.passes?.key || 0,
+                            longPasses: stats?.passes?.long?.total || 0,
+                            crosses: stats?.passes?.crosses?.total || 0,
+                            touches: stats?.passes?.total || 0,
+                            clearances: stats?.tackles?.total || 0,
+                            blocks: stats?.tackles?.blocks || 0,
+                            aerialDuels: stats?.duels?.total || 0,
+                            fouls: stats?.fouls?.drawn || 0
+                        };
+                    });
+                    
+                    console.log('✅ Successfully processed', players.length, 'players from API-Football');
                 }
             } catch (apiError) {
-                console.error('API-Football error:', apiError.message);
+                console.error('❌ API-Football error:', apiError.message);
+                console.log('📋 Using fallback data instead');
             }
+        } else {
+            console.log('⚠️ No API key available, using fallback data');
         }
         
         // フォールバックデータを使用
@@ -1035,22 +1074,39 @@ app.get('/api/ranking/teams', async (req, res) => {
         
         if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
             try {
+                // リーグIDのマッピング
+                const leagueIds = {
+                    'PL': 39,      // Premier League
+                    'PD': 140,     // La Liga
+                    'SA': 135,     // Serie A
+                    'BL1': 78,     // Bundesliga
+                    'FL1': 61,     // Ligue 1
+                    'J1': 98       // J1 League
+                };
+                
+                const targetLeague = leagueIds[league];
+                
+                console.log('🔍 Fetching team standings from API-Football:', { league, targetLeague });
+                
                 const response = await axios.get(`https://v3.football.api-sports.io/standings`, {
                     headers: {
                         'x-rapidapi-key': process.env.RAPIDAPI_KEY,
                         'x-rapidapi-host': 'v3.football.api-sports.io'
                     },
                     params: {
-                        league: league,
+                        league: targetLeague,
                         season: 2024
                     }
                 });
+                
+                console.log('📊 API-Football standings response:', response.data?.response?.length || 0, 'leagues');
                 
                 if (response.data && response.data.response && response.data.response[0]?.league?.standings) {
                     const standings = response.data.response[0].league.standings[0];
                     teams = standings.map(team => ({
                         id: team.team.id,
                         name: team.team.name,
+                        logo: team.team.logo,
                         league: league,
                         points: team.points,
                         wins: team.all.win,
@@ -1059,12 +1115,28 @@ app.get('/api/ranking/teams', async (req, res) => {
                         goalsFor: team.all.goals.for,
                         goalsAgainst: team.all.goals.against,
                         goalDifference: team.goalsDiff,
-                        form: team.form
+                        form: team.form,
+                        played: team.all.played,
+                        home: {
+                            wins: team.home.win,
+                            draws: team.home.draw,
+                            losses: team.home.lose
+                        },
+                        away: {
+                            wins: team.away.win,
+                            draws: team.away.draw,
+                            losses: team.away.lose
+                        }
                     }));
+                    
+                    console.log('✅ Successfully processed', teams.length, 'teams from API-Football');
                 }
             } catch (apiError) {
-                console.error('API-Football error:', apiError.message);
+                console.error('❌ API-Football error:', apiError.message);
+                console.log('📋 Using fallback data instead');
             }
+        } else {
+            console.log('⚠️ No API key available, using fallback data');
         }
         
         // フォールバックデータを使用
@@ -1293,7 +1365,8 @@ app.get('/api/match/:id', async (req, res) => {
                     };
                 }
             } catch (apiError) {
-                console.error('API-Football error:', apiError.message);
+                console.error('❌ API-Football error:', apiError.message);
+                console.log('📋 Using fallback data instead');
             }
         }
         
@@ -1919,7 +1992,8 @@ app.get('/api/fotmob/matches', async (req, res) => {
             matches = await getMatchesFromAPIFootball(league, timeRange);
             console.log('API-Football matches count:', matches.length);
         } catch (apiError) {
-            console.error('API-Football error:', apiError);
+            console.error('❌ API-Football error:', apiError.message);
+            console.log('📋 Using fallback data instead');
             // API-Footballが失敗した場合はフォールバックデータを使用
             matches = generateFallbackMatches(league, timeRange);
             console.log('Using fallback matches:', matches.length);
@@ -2494,22 +2568,22 @@ app.get('/api/match/:id/details', async (req, res) => {
         let matchDetails = null;
         
         // API-Footballから試合詳細を取得
-        if (process.env.API_FOOTBALL_KEY) {
+        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
             try {
-                const response = await fetch(`https://v3.football.api-sports.io/fixtures?id=${matchId}`, {
+                console.log('🔍 Fetching match details from API-Football:', { matchId });
+                
+                const response = await axios.get(`https://v3.football.api-sports.io/fixtures/${matchId}`, {
                     headers: {
-                        'x-rapidapi-host': 'v3.football.api-sports.io',
-                        'x-rapidapi-key': process.env.API_FOOTBALL_KEY
+                        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                        'x-rapidapi-host': 'v3.football.api-sports.io'
                     }
                 });
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('API-Football match details response:', data);
-                    
-                    if (data.response && data.response.length > 0) {
-                        const fixture = data.response[0];
-                        console.log('Processing fixture data:', fixture);
+                console.log('📊 API-Football match details response received');
+                
+                if (response.data && response.data.response && response.data.response.length > 0) {
+                    const fixture = response.data.response[0];
+                    console.log('✅ Processing fixture data from API-Football');
                         
                         // 統計データの処理
                         let stats = null;
@@ -2655,7 +2729,8 @@ app.get('/api/match/:id/details', async (req, res) => {
                     }
                 }
             } catch (apiError) {
-                console.error('API-Football match details error:', apiError);
+                console.error('❌ API-Football match details error:', apiError.message);
+                console.log('📋 Using fallback data instead');
             }
         }
         
@@ -2681,21 +2756,22 @@ app.get('/api/match/:id/events', async (req, res) => {
         console.log(`Fetching match events for ID: ${matchId}`);
         
         // API-Footballから試合イベントを取得
-        if (process.env.API_FOOTBALL_KEY) {
+        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
             try {
-                const response = await fetch(`https://v3.football.api-sports.io/fixtures/events?fixture=${matchId}`, {
+                console.log('🔍 Fetching match events from API-Football:', { matchId });
+                
+                const response = await axios.get(`https://v3.football.api-sports.io/fixtures/events`, {
                     headers: {
-                        'x-rapidapi-host': 'v3.football.api-sports.io',
-                        'x-rapidapi-key': process.env.API_FOOTBALL_KEY
-                    }
+                        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                        'x-rapidapi-host': 'v3.football.api-sports.io'
+                    },
+                    params: { fixture: matchId }
                 });
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('API-Football events response:', data);
-                    
-                    if (data.response && Array.isArray(data.response)) {
-                        const events = data.response.map(event => ({
+                console.log('📊 API-Football events response received');
+                
+                if (response.data && response.data.response && Array.isArray(response.data.response)) {
+                        const events = response.data.response.map(event => ({
                             time: event.time.elapsed,
                             type: event.type,
                             detail: event.detail,
@@ -2711,7 +2787,8 @@ app.get('/api/match/:id/events', async (req, res) => {
                     }
                 }
             } catch (apiError) {
-                console.error('API-Football events error:', apiError);
+                console.error('❌ API-Football events error:', apiError.message);
+                console.log('📋 Using fallback data instead');
             }
         }
         
@@ -2733,21 +2810,22 @@ app.get('/api/match/:id/stats', async (req, res) => {
         console.log(`Fetching match stats for ID: ${matchId}`);
         
         // API-Footballから試合統計を取得
-        if (process.env.API_FOOTBALL_KEY) {
+        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
             try {
-                const response = await fetch(`https://v3.football.api-sports.io/fixtures/statistics?fixture=${matchId}`, {
+                console.log('🔍 Fetching match statistics from API-Football:', { matchId });
+                
+                const response = await axios.get(`https://v3.football.api-sports.io/fixtures/statistics`, {
                     headers: {
-                        'x-rapidapi-host': 'v3.football.api-sports.io',
-                        'x-rapidapi-key': process.env.API_FOOTBALL_KEY
-                    }
+                        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                        'x-rapidapi-host': 'v3.football.api-sports.io'
+                    },
+                    params: { fixture: matchId }
                 });
                 
-                if (response.ok) {
-        const data = await response.json();
-                    console.log('API-Football stats response:', data);
-                    
-                    if (data.response && Array.isArray(data.response)) {
-                        const stats = data.response.map(teamStats => ({
+                console.log('📊 API-Football statistics response received');
+                
+                if (response.data && response.data.response && Array.isArray(response.data.response)) {
+                        const stats = response.data.response.map(teamStats => ({
                             team: teamStats.team.name,
                             statistics: teamStats.statistics.map(stat => ({
                                 type: stat.type,
@@ -2761,7 +2839,8 @@ app.get('/api/match/:id/stats', async (req, res) => {
                     }
                 }
             } catch (apiError) {
-                console.error('API-Football stats error:', apiError);
+                console.error('❌ API-Football stats error:', apiError.message);
+                console.log('📋 Using fallback data instead');
             }
         }
         
@@ -3272,7 +3351,8 @@ app.get('/api/fotmob/players', async (req, res) => {
                     return;
                 }
             } catch (apiError) {
-                console.error('API-Football error:', apiError);
+                console.error('❌ API-Football error:', apiError.message);
+                console.log('📋 Using fallback data instead');
             }
         }
         
@@ -3373,7 +3453,8 @@ app.get('/api/fotmob/search', async (req, res) => {
                     }
                 }
             } catch (apiError) {
-                console.error('API-Football search error:', apiError);
+                console.error('❌ API-Football search error:', apiError.message);
+                console.log('📋 Using fallback data instead');
             }
         }
         
