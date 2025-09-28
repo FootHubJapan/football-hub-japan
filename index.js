@@ -2727,7 +2727,6 @@ app.get('/api/match/:id/details', async (req, res) => {
                     
                     console.log('Processed match details:', matchDetails);
                 }
-            }
             } catch (apiError) {
                 console.error('❌ API-Football match details error:', apiError.message);
                 console.log('📋 Using fallback data instead');
