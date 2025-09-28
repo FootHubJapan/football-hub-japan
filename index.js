@@ -938,6 +938,528 @@ app.post('/api/ai/tactics', async (req, res) => {
     }
 });
 
+// ==================== ランキングシステム API ====================
+
+// 選手ランキング取得
+app.get('/api/ranking/players', async (req, res) => {
+    try {
+        const { league, position, stat } = req.query;
+        
+        console.log('🏆 Player Ranking Request:', { league, position, stat });
+        
+        // API-Footballから選手データを取得
+        let players = [];
+        
+        if (league && process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
+            try {
+                const response = await axios.get(`https://v3.football.api-sports.io/players`, {
+                    headers: {
+                        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                        'x-rapidapi-host': 'v3.football.api-sports.io'
+                    },
+                    params: {
+                        league: league,
+                        season: 2024
+                    }
+                });
+                
+                if (response.data && response.data.response) {
+                    players = response.data.response.map(player => ({
+                        id: player.player.id,
+                        name: player.player.name,
+                        team: player.statistics[0]?.team?.name || 'Unknown',
+                        position: player.statistics[0]?.games?.position || 'Unknown',
+                        goals: player.statistics[0]?.goals?.total || 0,
+                        assists: player.statistics[0]?.goals?.assists || 0,
+                        appearances: player.statistics[0]?.games?.appearences || 0,
+                        minutes: player.statistics[0]?.games?.minutes || 0,
+                        rating: player.statistics[0]?.games?.rating || 0,
+                        passes: player.statistics[0]?.passes?.total || 0,
+                        tackles: player.statistics[0]?.tackles?.total || 0,
+                        interceptions: player.statistics[0]?.tackles?.interceptions || 0,
+                        saves: player.statistics[0]?.goals?.saves || 0,
+                        cleanSheets: player.statistics[0]?.goals?.conceded === 0 ? 1 : 0,
+                        yellowCards: player.statistics[0]?.cards?.yellow || 0,
+                        redCards: player.statistics[0]?.cards?.red || 0
+                    }));
+                }
+            } catch (apiError) {
+                console.error('API-Football error:', apiError.message);
+            }
+        }
+        
+        // フォールバックデータを使用
+        if (players.length === 0) {
+            players = generateFallbackPlayerRanking(league, position, stat);
+        }
+        
+        // ポジションフィルタリング
+        if (position) {
+            players = players.filter(p => p.position === position);
+        }
+        
+        // 統計項目でソート
+        if (stat && players.length > 0) {
+            players.sort((a, b) => (b[stat] || 0) - (a[stat] || 0));
+        }
+        
+        res.json({ players: players.slice(0, 50) }); // トップ50を返す
+        
+    } catch (error) {
+        console.error('Player ranking error:', error);
+        res.status(500).json({ error: 'Failed to get player ranking' });
+    }
+});
+
+// チームランキング取得
+app.get('/api/ranking/teams', async (req, res) => {
+    try {
+        const { league } = req.query;
+        
+        console.log('🏆 Team Ranking Request:', { league });
+        
+        if (!league) {
+            return res.status(400).json({ error: 'League parameter is required' });
+        }
+        
+        let teams = [];
+        
+        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
+            try {
+                const response = await axios.get(`https://v3.football.api-sports.io/standings`, {
+                    headers: {
+                        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                        'x-rapidapi-host': 'v3.football.api-sports.io'
+                    },
+                    params: {
+                        league: league,
+                        season: 2024
+                    }
+                });
+                
+                if (response.data && response.data.response && response.data.response[0]?.league?.standings) {
+                    const standings = response.data.response[0].league.standings[0];
+                    teams = standings.map(team => ({
+                        id: team.team.id,
+                        name: team.team.name,
+                        league: league,
+                        points: team.points,
+                        wins: team.all.win,
+                        draws: team.all.draw,
+                        losses: team.all.lose,
+                        goalsFor: team.all.goals.for,
+                        goalsAgainst: team.all.goals.against,
+                        goalDifference: team.goalsDiff,
+                        form: team.form
+                    }));
+                }
+            } catch (apiError) {
+                console.error('API-Football error:', apiError.message);
+            }
+        }
+        
+        // フォールバックデータを使用
+        if (teams.length === 0) {
+            teams = generateFallbackTeamRanking(league);
+        }
+        
+        res.json({ teams });
+        
+    } catch (error) {
+        console.error('Team ranking error:', error);
+        res.status(500).json({ error: 'Failed to get team ranking' });
+    }
+});
+
+// リーグランキング取得
+app.get('/api/ranking/leagues', async (req, res) => {
+    try {
+        console.log('🏆 League Ranking Request');
+        
+        // 欧州5大リーグの比較データ
+        const leagues = [
+            {
+                id: 39,
+                name: 'Premier League',
+                country: 'England',
+                avgGoals: 2.8,
+                avgAttendance: 40000,
+                rating: 8.5,
+                topScorer: 'Erling Haaland',
+                totalGoals: 1034,
+                totalMatches: 380
+            },
+            {
+                id: 140,
+                name: 'La Liga',
+                country: 'Spain',
+                avgGoals: 2.6,
+                avgAttendance: 28000,
+                rating: 8.2,
+                topScorer: 'Robert Lewandowski',
+                totalGoals: 989,
+                totalMatches: 380
+            },
+            {
+                id: 135,
+                name: 'Serie A',
+                country: 'Italy',
+                avgGoals: 2.7,
+                avgAttendance: 25000,
+                rating: 8.0,
+                topScorer: 'Victor Osimhen',
+                totalGoals: 1026,
+                totalMatches: 380
+            },
+            {
+                id: 78,
+                name: 'Bundesliga',
+                country: 'Germany',
+                avgGoals: 3.1,
+                avgAttendance: 45000,
+                rating: 8.3,
+                topScorer: 'Harry Kane',
+                totalGoals: 1178,
+                totalMatches: 306
+            },
+            {
+                id: 61,
+                name: 'Ligue 1',
+                country: 'France',
+                avgGoals: 2.5,
+                avgAttendance: 22000,
+                rating: 7.8,
+                topScorer: 'Kylian Mbappe',
+                totalGoals: 950,
+                totalMatches: 380
+            }
+        ];
+        
+        res.json({ leagues });
+        
+    } catch (error) {
+        console.error('League ranking error:', error);
+        res.status(500).json({ error: 'Failed to get league ranking' });
+    }
+});
+
+// フォールバック選手ランキング生成
+function generateFallbackPlayerRanking(league, position, stat) {
+    const allPlayers = [
+        { name: '久保建英', team: 'レアル・ソシエダ', position: 'Midfielder', goals: 12, assists: 8, appearances: 28, rating: 7.8, passes: 1250, tackles: 45, interceptions: 32, saves: 0, cleanSheets: 0, yellowCards: 3, redCards: 0 },
+        { name: '三笘薫', team: 'ブライトン', position: 'Forward', goals: 8, assists: 6, appearances: 25, rating: 7.5, passes: 890, tackles: 28, interceptions: 15, saves: 0, cleanSheets: 0, yellowCards: 2, redCards: 0 },
+        { name: '堂安律', team: 'フライブルク', position: 'Midfielder', goals: 6, assists: 4, appearances: 22, rating: 7.2, passes: 1100, tackles: 38, interceptions: 28, saves: 0, cleanSheets: 0, yellowCards: 4, redCards: 0 },
+        { name: '田中碧', team: 'フォルトゥナ・デュッセルドルフ', position: 'Midfielder', goals: 5, assists: 7, appearances: 24, rating: 7.0, passes: 1350, tackles: 52, interceptions: 35, saves: 0, cleanSheets: 0, yellowCards: 5, redCards: 1 },
+        { name: '伊藤洋輝', team: 'シュトゥットガルト', position: 'Defender', goals: 2, assists: 3, appearances: 26, rating: 6.9, passes: 1450, tackles: 65, interceptions: 48, saves: 0, cleanSheets: 8, yellowCards: 6, redCards: 0 },
+        { name: '南野拓実', team: 'モナコ', position: 'Forward', goals: 10, assists: 5, appearances: 27, rating: 7.6, passes: 950, tackles: 25, interceptions: 18, saves: 0, cleanSheets: 0, yellowCards: 3, redCards: 0 },
+        { name: '浅野拓磨', team: 'ボーフム', position: 'Forward', goals: 7, assists: 4, appearances: 23, rating: 7.1, passes: 780, tackles: 22, interceptions: 12, saves: 0, cleanSheets: 0, yellowCards: 2, redCards: 0 },
+        { name: '遠藤航', team: 'リバプール', position: 'Midfielder', goals: 1, assists: 2, appearances: 20, rating: 6.8, passes: 1200, tackles: 58, interceptions: 42, saves: 0, cleanSheets: 0, yellowCards: 4, redCards: 0 },
+        { name: '上田綺世', team: 'フェイエノールト', position: 'Forward', goals: 15, assists: 3, appearances: 29, rating: 7.9, passes: 820, tackles: 18, interceptions: 10, saves: 0, cleanSheets: 0, yellowCards: 1, redCards: 0 },
+        { name: '前田大然', team: 'セルティック', position: 'Forward', goals: 11, assists: 6, appearances: 26, rating: 7.7, passes: 750, tackles: 20, interceptions: 14, saves: 0, cleanSheets: 0, yellowCards: 3, redCards: 0 }
+    ];
+    
+    // リーグフィルタリング
+    if (league) {
+        const leagueTeams = {
+            'PL': ['ブライトン', 'リバプール'],
+            'PD': ['レアル・ソシエダ'],
+            'SA': ['モナコ'],
+            'BL1': ['フライブルク', 'フォルトゥナ・デュッセルドルフ', 'シュトゥットガルト', 'ボーフム'],
+            'FL1': [],
+            'J1': []
+        };
+        return allPlayers.filter(p => leagueTeams[league]?.includes(p.team));
+    }
+    
+    // ポジションフィルタリング
+    if (position) {
+        return allPlayers.filter(p => p.position === position);
+    }
+    
+    return allPlayers;
+}
+
+// フォールバックチームランキング生成
+function generateFallbackTeamRanking(league) {
+    const teamData = {
+        'PL': [
+            { name: 'Arsenal', points: 84, wins: 26, draws: 6, losses: 6, goalsFor: 78, goalsAgainst: 32, goalDifference: 46, form: 'WWWWD' },
+            { name: 'Manchester City', points: 82, wins: 25, draws: 7, losses: 6, goalsFor: 85, goalsAgainst: 38, goalDifference: 47, form: 'WWWDL' },
+            { name: 'Liverpool', points: 78, wins: 24, draws: 6, losses: 8, goalsFor: 82, goalsAgainst: 45, goalDifference: 37, form: 'WDWWW' },
+            { name: 'Chelsea', points: 70, wins: 21, draws: 7, losses: 10, goalsFor: 65, goalsAgainst: 42, goalDifference: 23, form: 'WWDWL' },
+            { name: 'Tottenham', points: 68, wins: 20, draws: 8, losses: 10, goalsFor: 71, goalsAgainst: 48, goalDifference: 23, form: 'LWWWD' }
+        ],
+        'PD': [
+            { name: 'Real Madrid', points: 95, wins: 30, draws: 5, losses: 3, goalsFor: 87, goalsAgainst: 26, goalDifference: 61, form: 'WWWWW' },
+            { name: 'Barcelona', points: 88, wins: 28, draws: 4, losses: 6, goalsFor: 74, goalsAgainst: 35, goalDifference: 39, form: 'WWWDL' },
+            { name: 'Atletico Madrid', points: 76, wins: 24, draws: 4, losses: 10, goalsFor: 68, goalsAgainst: 42, goalDifference: 26, form: 'WDWWL' },
+            { name: 'Real Sociedad', points: 71, wins: 22, draws: 5, losses: 11, goalsFor: 61, goalsAgainst: 38, goalDifference: 23, form: 'WWDWW' },
+            { name: 'Villarreal', points: 68, wins: 21, draws: 5, losses: 12, goalsFor: 58, goalsAgainst: 45, goalDifference: 13, form: 'LWWDW' }
+        ],
+        'SA': [
+            { name: 'Inter Milan', points: 89, wins: 28, draws: 5, losses: 5, goalsFor: 79, goalsAgainst: 28, goalDifference: 51, form: 'WWWWW' },
+            { name: 'AC Milan', points: 82, wins: 25, draws: 7, losses: 6, goalsFor: 72, goalsAgainst: 35, goalDifference: 37, form: 'WDWWL' },
+            { name: 'Juventus', points: 76, wins: 23, draws: 7, losses: 8, goalsFor: 65, goalsAgainst: 38, goalDifference: 27, form: 'WWWDL' },
+            { name: 'Napoli', points: 71, wins: 22, draws: 5, losses: 11, goalsFor: 68, goalsAgainst: 42, goalDifference: 26, form: 'LWWDW' },
+            { name: 'Roma', points: 68, wins: 21, draws: 5, losses: 12, goalsFor: 62, goalsAgainst: 45, goalDifference: 17, form: 'WDWLW' }
+        ],
+        'BL1': [
+            { name: 'Bayern Munich', points: 71, wins: 22, draws: 5, losses: 7, goalsFor: 85, goalsAgainst: 38, goalDifference: 47, form: 'WWWDL' },
+            { name: 'Borussia Dortmund', points: 68, wins: 21, draws: 5, losses: 8, goalsFor: 78, goalsAgainst: 42, goalDifference: 36, form: 'WDWWW' },
+            { name: 'RB Leipzig', points: 65, wins: 20, draws: 5, losses: 9, goalsFor: 72, goalsAgainst: 45, goalDifference: 27, form: 'WWWLD' },
+            { name: 'Bayer Leverkusen', points: 62, wins: 19, draws: 5, losses: 10, goalsFor: 68, goalsAgainst: 48, goalDifference: 20, form: 'LWWWD' },
+            { name: 'Eintracht Frankfurt', points: 59, wins: 18, draws: 5, losses: 11, goalsFor: 65, goalsAgainst: 52, goalDifference: 13, form: 'WWDWL' }
+        ],
+        'FL1': [
+            { name: 'Paris Saint-Germain', points: 85, wins: 27, draws: 4, losses: 7, goalsFor: 89, goalsAgainst: 35, goalDifference: 54, form: 'WWWWW' },
+            { name: 'Lens', points: 78, wins: 24, draws: 6, losses: 8, goalsFor: 72, goalsAgainst: 38, goalDifference: 34, form: 'WDWWL' },
+            { name: 'Marseille', points: 75, wins: 23, draws: 6, losses: 9, goalsFor: 68, goalsAgainst: 42, goalDifference: 26, form: 'WWWDL' },
+            { name: 'Monaco', points: 72, wins: 22, draws: 6, losses: 10, goalsFor: 65, goalsAgainst: 45, goalDifference: 20, form: 'LWWDW' },
+            { name: 'Rennes', points: 69, wins: 21, draws: 6, losses: 11, goalsFor: 62, goalsAgainst: 48, goalDifference: 14, form: 'WDWLW' }
+        ],
+        'J1': [
+            { name: '横浜F・マリノス', points: 68, wins: 21, draws: 5, losses: 8, goalsFor: 65, goalsAgainst: 38, goalDifference: 27, form: 'WWWDL' },
+            { name: '川崎フロンターレ', points: 65, wins: 20, draws: 5, losses: 9, goalsFor: 62, goalsAgainst: 42, goalDifference: 20, form: 'WDWWW' },
+            { name: '浦和レッズ', points: 62, wins: 19, draws: 5, losses: 10, goalsFor: 58, goalsAgainst: 45, goalDifference: 13, form: 'WWWLD' },
+            { name: 'FC東京', points: 59, wins: 18, draws: 5, losses: 11, goalsFor: 55, goalsAgainst: 48, goalDifference: 7, form: 'LWWWD' },
+            { name: 'セレッソ大阪', points: 56, wins: 17, draws: 5, losses: 12, goalsFor: 52, goalsAgainst: 52, goalDifference: 0, form: 'WWDWL' }
+        ]
+    };
+
+    return (teamData[league] || []).map((team, index) => ({
+        id: index + 1,
+        ...team,
+        league: league,
+        rank: index + 1
+    }));
+}
+
+// ==================== 試合詳細 API ====================
+
+// 試合詳細取得
+app.get('/api/match/:id', async (req, res) => {
+    try {
+        const matchId = req.params.id;
+        
+        console.log('⚽ Match Detail Request:', { matchId });
+        
+        // API-Footballから試合詳細を取得
+        let matchData = null;
+        
+        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
+            try {
+                const response = await axios.get(`https://v3.football.api-sports.io/fixtures`, {
+                    headers: {
+                        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                        'x-rapidapi-host': 'v3.football.api-sports.io'
+                    },
+                    params: {
+                        id: matchId
+                    }
+                });
+                
+                if (response.data && response.data.response && response.data.response[0]) {
+                    const match = response.data.response[0];
+                    matchData = {
+                        id: match.fixture.id,
+                        homeTeam: {
+                            id: match.teams.home.id,
+                            name: match.teams.home.name,
+                            logo: match.teams.home.logo
+                        },
+                        awayTeam: {
+                            id: match.teams.away.id,
+                            name: match.teams.away.name,
+                            logo: match.teams.away.logo
+                        },
+                        score: {
+                            home: match.goals.home,
+                            away: match.goals.away
+                        },
+                        date: match.fixture.date,
+                        venue: match.fixture.venue?.name || 'Unknown',
+                        referee: match.fixture.referee || 'Unknown',
+                        status: match.fixture.status.short,
+                        events: []
+                    };
+                }
+            } catch (apiError) {
+                console.error('API-Football error:', apiError.message);
+            }
+        }
+        
+        // フォールバックデータを使用
+        if (!matchData) {
+            matchData = generateFallbackMatchDetail(matchId);
+        }
+        
+        res.json(matchData);
+        
+    } catch (error) {
+        console.error('Match detail error:', error);
+        res.status(500).json({ error: 'Failed to get match details' });
+    }
+});
+
+// フォールバック試合詳細データ生成
+function generateFallbackMatchDetail(matchId) {
+    const sampleMatches = {
+        '1': {
+            id: '1',
+            homeTeam: {
+                id: 33,
+                name: 'Manchester United',
+                logo: 'M'
+            },
+            awayTeam: {
+                id: 47,
+                name: 'Tottenham',
+                logo: 'T'
+            },
+            score: {
+                home: 2,
+                away: 1
+            },
+            date: '2024-12-15T15:00:00Z',
+            venue: 'Old Trafford',
+            referee: 'Michael Oliver',
+            status: 'FT',
+            events: [
+                { time: '15', type: 'goal', description: 'Marcus Rashford (アシスト: Bruno Fernandes)' },
+                { time: '23', type: 'card', description: 'Harry Maguire' },
+                { time: '45', type: 'substitution', description: 'Anthony Martial → Mason Greenwood' },
+                { time: '67', type: 'goal', description: 'Heung-min Son (アシスト: Harry Kane)' },
+                { time: '89', type: 'goal', description: 'Bruno Fernandes (ペナルティ)' }
+            ],
+            stats: {
+                home: {
+                    shots: 15,
+                    shotsOnTarget: 8,
+                    possession: 58,
+                    passes: 485,
+                    passAccuracy: 87,
+                    fouls: 12,
+                    yellowCards: 2,
+                    redCards: 0,
+                    offsides: 3,
+                    corners: 7
+                },
+                away: {
+                    shots: 12,
+                    shotsOnTarget: 5,
+                    possession: 42,
+                    passes: 352,
+                    passAccuracy: 84,
+                    fouls: 15,
+                    yellowCards: 3,
+                    redCards: 0,
+                    offsides: 2,
+                    corners: 5
+                }
+            },
+            lineup: {
+                home: {
+                    startingXI: [
+                        { number: 1, name: 'David de Gea', position: 'GK' },
+                        { number: 29, name: 'Aaron Wan-Bissaka', position: 'RB' },
+                        { number: 5, name: 'Harry Maguire', position: 'CB' },
+                        { number: 19, name: 'Raphael Varane', position: 'CB' },
+                        { number: 23, name: 'Luke Shaw', position: 'LB' },
+                        { number: 39, name: 'Scott McTominay', position: 'CDM' },
+                        { number: 18, name: 'Bruno Fernandes', position: 'CAM' },
+                        { number: 14, name: 'Christian Eriksen', position: 'CM' },
+                        { number: 10, name: 'Marcus Rashford', position: 'LW' },
+                        { number: 9, name: 'Anthony Martial', position: 'ST' },
+                        { number: 25, name: 'Jadon Sancho', position: 'RW' }
+                    ],
+                    substitutes: [
+                        { number: 22, name: 'Tom Heaton', position: 'GK' },
+                        { number: 2, name: 'Victor Lindelof', position: 'CB' },
+                        { number: 11, name: 'Mason Greenwood', position: 'FW' },
+                        { number: 17, name: 'Fred', position: 'CM' }
+                    ],
+                    coach: 'Erik ten Hag'
+                },
+                away: {
+                    startingXI: [
+                        { number: 1, name: 'Hugo Lloris', position: 'GK' },
+                        { number: 2, name: 'Matt Doherty', position: 'RB' },
+                        { number: 15, name: 'Eric Dier', position: 'CB' },
+                        { number: 33, name: 'Ben Davies', position: 'CB' },
+                        { number: 19, name: 'Ryan Sessegnon', position: 'LB' },
+                        { number: 5, name: 'Pierre-Emile Hojbjerg', position: 'CDM' },
+                        { number: 30, name: 'Rodrigo Bentancur', position: 'CM' },
+                        { number: 7, name: 'Heung-min Son', position: 'LW' },
+                        { number: 10, name: 'Harry Kane', position: 'ST' },
+                        { number: 21, name: 'Dejan Kulusevski', position: 'RW' }
+                    ],
+                    substitutes: [
+                        { number: 20, name: 'Fraser Forster', position: 'GK' },
+                        { number: 6, name: 'Davinson Sanchez', position: 'CB' },
+                        { number: 14, name: 'Ivan Perisic', position: 'LW' },
+                        { number: 38, name: 'Yves Bissouma', position: 'CM' }
+                    ],
+                    coach: 'Antonio Conte'
+                }
+            }
+        },
+        '2': {
+            id: '2',
+            homeTeam: {
+                id: 40,
+                name: 'Liverpool',
+                logo: 'L'
+            },
+            awayTeam: {
+                id: 49,
+                name: 'Chelsea',
+                logo: 'C'
+            },
+            score: {
+                home: 1,
+                away: 0
+            },
+            date: '2024-12-16T17:30:00Z',
+            venue: 'Anfield',
+            referee: 'Anthony Taylor',
+            status: 'FT',
+            events: [
+                { time: '34', type: 'goal', description: 'Mohamed Salah (アシスト: Sadio Mane)' },
+                { time: '56', type: 'card', description: 'N\'Golo Kante' },
+                { time: '78', type: 'substitution', description: 'Thiago → Jordan Henderson' }
+            ],
+            stats: {
+                home: {
+                    shots: 18,
+                    shotsOnTarget: 6,
+                    possession: 62,
+                    passes: 520,
+                    passAccuracy: 89,
+                    fouls: 8,
+                    yellowCards: 1,
+                    redCards: 0,
+                    offsides: 2,
+                    corners: 9
+                },
+                away: {
+                    shots: 8,
+                    shotsOnTarget: 3,
+                    possession: 38,
+                    passes: 320,
+                    passAccuracy: 82,
+                    fouls: 14,
+                    yellowCards: 2,
+                    redCards: 0,
+                    offsides: 1,
+                    corners: 4
+                }
+            }
+        }
+    };
+
+    return sampleMatches[matchId] || sampleMatches['1'];
+}
+
 // Existing API endpoints
 app.get('/api/leagues', async (req, res) => {
     try {

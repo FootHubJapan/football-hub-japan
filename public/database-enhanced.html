@@ -879,6 +879,73 @@
             transform: translateY(-2px);
         }
 
+        /* 選手詳細表示のスタイル */
+        .player-details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .detail-label {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+        }
+
+        .detail-value {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .stats-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-tab {
+            background: none;
+            border: none;
+            color: #a0a0a0;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .stats-tab.active {
+            color: #00ff88;
+            border-bottom-color: #00ff88;
+        }
+
+        .stats-tab:hover {
+            color: #fff;
+        }
+
+        .stats-content {
+            position: relative;
+        }
+
+        .stats-tab-content {
+            display: none;
+        }
+
+        .stats-tab-content.active {
+            display: block;
+        }
+
         /* 選手カードの改善 */
         .player-card {
             background: #1a1a1a;
@@ -2305,9 +2372,27 @@
                     </div>
                     <div class="player-basic-info">
                         <h2>${player.name || player.fullName || 'Unknown'}</h2>
-                        <p class="team-info">${player.currentTeam || 'Unknown Team'}</p>
+                        <p class="team-info">${player.currentTeam || player.team || 'Unknown Team'}</p>
                         <p class="position-info">${player.position || 'Unknown Position'}</p>
-                        <p class="nationality-info">${player.nationality || 'Unknown'} | 年齢: ${player.age || 'Unknown'}</p>
+                        <p class="nationality-info">${player.nationality || 'Unknown'}</p>
+                        <div class="player-details-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">年齢</span>
+                                <span class="detail-value">${player.age || calculateAge(player.dateOfBirth) || 'Unknown'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">身長</span>
+                                <span class="detail-value">${player.height || 'Unknown'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">体重</span>
+                                <span class="detail-value">${player.weight || 'Unknown'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">背番号</span>
+                                <span class="detail-value">${player.number || 'N/A'}</span>
+                            </div>
+                        </div>
                     </div>
                     <button class="close-btn" onclick="closePlayerDetails()">×</button>
                 </div>
@@ -2315,54 +2400,128 @@
                 <div class="panel-content">
                     <div class="stats-section">
                         <h3>シーズン統計 (2024)</h3>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <span class="stat-label">得点</span>
-                                <span class="stat-value">${stats.goals || 0}</span>
+                        <div class="stats-tabs">
+                            <button class="stats-tab active" onclick="switchStatsTab('attacking')">攻撃</button>
+                            <button class="stats-tab" onclick="switchStatsTab('passing')">パス・ポゼッション</button>
+                            <button class="stats-tab" onclick="switchStatsTab('defending')">守備・対戦</button>
+                            <button class="stats-tab" onclick="switchStatsTab('discipline')">規律・その他</button>
+                        </div>
+                        
+                        <div class="stats-content">
+                            <div id="attacking-stats" class="stats-tab-content active">
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <span class="stat-label">得点</span>
+                                        <span class="stat-value">${stats.goals || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">アシスト</span>
+                                        <span class="stat-value">${stats.assists || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">シュート</span>
+                                        <span class="stat-value">${stats.shots || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">枠内シュート</span>
+                                        <span class="stat-value">${stats.shotsOnTarget || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">ドリブル成功</span>
+                                        <span class="stat-value">${stats.dribbles || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">キーパス</span>
+                                        <span class="stat-value">${stats.keyPasses || 0}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label">アシスト</span>
-                                <span class="stat-value">${stats.assists || 0}</span>
+                            
+                            <div id="passing-stats" class="stats-tab-content">
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <span class="stat-label">パス成功数</span>
+                                        <span class="stat-value">${stats.passes || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">パス成功率</span>
+                                        <span class="stat-value">${stats.passAccuracy || 'N/A'}%</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">ロングパス</span>
+                                        <span class="stat-value">${stats.longPasses || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">クロス</span>
+                                        <span class="stat-value">${stats.crosses || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">ボール支配率</span>
+                                        <span class="stat-value">${stats.ballPossession || 'N/A'}%</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">タッチ数</span>
+                                        <span class="stat-value">${stats.touches || 0}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label">出場試合</span>
-                                <span class="stat-value">${stats.appearances || 0}</span>
+                            
+                            <div id="defending-stats" class="stats-tab-content">
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <span class="stat-label">タックル</span>
+                                        <span class="stat-value">${stats.tackles || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">インターセプト</span>
+                                        <span class="stat-value">${stats.interceptions || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">クリアランス</span>
+                                        <span class="stat-value">${stats.clearances || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">ブロック</span>
+                                        <span class="stat-value">${stats.blocks || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">空中戦</span>
+                                        <span class="stat-value">${stats.aerialDuels || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">セーブ数</span>
+                                        <span class="stat-value">${stats.saves || 0}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-label">出場時間</span>
-                                <span class="stat-value">${stats.minutes || 0}分</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">評価</span>
-                                <span class="stat-value">${stats.rating || 'N/A'}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">シュート</span>
-                                <span class="stat-value">${stats.shots || 0}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">枠内シュート</span>
-                                <span class="stat-value">${stats.shotsOnTarget || 0}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">パス成功率</span>
-                                <span class="stat-value">${stats.passAccuracy || 'N/A'}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">タックル</span>
-                                <span class="stat-value">${stats.tackles || 0}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">インターセプト</span>
-                                <span class="stat-value">${stats.interceptions || 0}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">イエローカード</span>
-                                <span class="stat-value">${stats.yellowCards || 0}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">レッドカード</span>
-                                <span class="stat-value">${stats.redCards || 0}</span>
+                            
+                            <div id="discipline-stats" class="stats-tab-content">
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <span class="stat-label">出場試合</span>
+                                        <span class="stat-value">${stats.appearances || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">出場時間</span>
+                                        <span class="stat-value">${stats.minutes || 0}分</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">イエローカード</span>
+                                        <span class="stat-value">${stats.yellowCards || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">レッドカード</span>
+                                        <span class="stat-value">${stats.redCards || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">ファウル</span>
+                                        <span class="stat-value">${stats.fouls || 0}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">平均評価</span>
+                                        <span class="stat-value">${stats.rating || 'N/A'}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -3660,6 +3819,28 @@
                 });
             } catch (error) {
                 return '日時不明';
+            }
+        }
+
+        // 統計タブ切り替え機能
+        function switchStatsTab(tabName) {
+            // すべてのタブボタンのアクティブ状態を解除
+            document.querySelectorAll('.stats-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // すべてのタブコンテンツを非表示
+            document.querySelectorAll('.stats-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // クリックされたタブボタンをアクティブにする
+            event.target.classList.add('active');
+            
+            // 対応するタブコンテンツを表示
+            const targetContent = document.getElementById(tabName + '-stats');
+            if (targetContent) {
+                targetContent.classList.add('active');
             }
         }
     </script>

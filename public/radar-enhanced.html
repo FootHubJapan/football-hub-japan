@@ -218,6 +218,33 @@
             border-radius: 3px;
         }
 
+        .comparison-type-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #333333;
+        }
+
+        .comparison-tab {
+            background: none;
+            border: none;
+            color: #cccccc;
+            padding: 1rem 2rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .comparison-tab.active {
+            color: #00ff88;
+            border-bottom-color: #00ff88;
+        }
+
+        .comparison-tab:hover {
+            color: #ffffff;
+        }
+
         .selection-controls {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -502,9 +529,9 @@
         <div class="controls-section">
             <h2 class="controls-title">比較設定</h2>
             
-            <div class="comparison-type">
-                <button class="type-btn active" onclick="switchType('players')">選手比較</button>
-                <button class="type-btn" onclick="switchType('teams')">チーム比較</button>
+            <div class="comparison-type-tabs">
+                <button class="comparison-tab active" onclick="switchComparisonType('players')">選手比較</button>
+                <button class="comparison-tab" onclick="switchComparisonType('teams')">チーム比較</button>
             </div>
 
             <!-- 統計項目選択セクション -->
@@ -628,6 +655,60 @@
             </div>
 
             <button class="compare-btn" onclick="startComparison()">📊 比較開始</button>
+        </div>
+
+        <!-- チーム比較セクション -->
+        <div id="teamComparisonSection" class="controls-section" style="display: none;">
+            <h2 class="controls-title">チーム比較設定</h2>
+            
+            <div class="selection-controls">
+                <div class="selection-group">
+                    <h3 class="selection-title">🏆 チーム A</h3>
+                    <div class="search-section">
+                        <input type="text" id="teamSearchA" class="search-input" placeholder="チーム名を入力して検索..." oninput="searchTeams('A')">
+                        <div id="teamSearchResultsA" class="search-results"></div>
+                    </div>
+                    <div id="selectedTeamA" class="selected-player" style="display: none;">
+                        <div class="player-avatar" id="teamAvatarA">?</div>
+                        <div class="player-info">
+                            <h4 id="teamNameA">チームA</h4>
+                            <p id="teamLeagueA">リーグ名</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="selection-group">
+                    <h3 class="selection-title">🏆 チーム B</h3>
+                    <div class="search-section">
+                        <input type="text" id="teamSearchB" class="search-input" placeholder="チーム名を入力して検索..." oninput="searchTeams('B')">
+                        <div id="teamSearchResultsB" class="search-results"></div>
+                    </div>
+                    <div id="selectedTeamB" class="selected-player" style="display: none;">
+                        <div class="player-avatar" id="teamAvatarB">?</div>
+                        <div class="player-info">
+                            <h4 id="teamNameB">チームB</h4>
+                            <p id="teamLeagueB">リーグ名</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="selection-group">
+                    <h3 class="selection-title">🏆 チーム C</h3>
+                    <div class="search-section">
+                        <input type="text" id="teamSearchC" class="search-input" placeholder="チーム名を入力して検索..." oninput="searchTeams('C')">
+                        <div id="teamSearchResultsC" class="search-results"></div>
+                    </div>
+                    <div id="selectedTeamC" class="selected-player" style="display: none;">
+                        <div class="player-avatar" id="teamAvatarC">?</div>
+                        <div class="player-info">
+                            <h4 id="teamNameC">チームC</h4>
+                            <p id="teamLeagueC">リーグ名</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="compare-btn" onclick="startTeamComparison()">📊 チーム比較開始</button>
         </div>
 
         <!-- チャートセクション -->
@@ -1111,6 +1192,232 @@
                 `;
             }, 2000);
         }
+
+        // 比較タイプ切り替え
+        function switchComparisonType(type) {
+            // タブのアクティブ状態を更新
+            document.querySelectorAll('.comparison-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // セクションの表示切り替え
+            const playerSection = document.querySelector('.controls-section:not(#teamComparisonSection)');
+            const teamSection = document.getElementById('teamComparisonSection');
+
+            if (type === 'players') {
+                playerSection.style.display = 'block';
+                teamSection.style.display = 'none';
+            } else {
+                playerSection.style.display = 'none';
+                teamSection.style.display = 'block';
+            }
+        }
+
+        // チーム検索機能
+        function searchTeams(target) {
+            const searchTerm = document.getElementById(`teamSearch${target}`).value.toLowerCase();
+            const resultsDiv = document.getElementById(`teamSearchResults${target}`);
+            
+            if (searchTerm.length < 2) {
+                resultsDiv.innerHTML = '';
+                return;
+            }
+
+            // サンプルチームデータ
+            const sampleTeams = [
+                { id: '1', name: 'Manchester City', league: 'Premier League', country: 'England' },
+                { id: '2', name: 'Real Madrid', league: 'La Liga', country: 'Spain' },
+                { id: '3', name: 'Bayern Munich', league: 'Bundesliga', country: 'Germany' },
+                { id: '4', name: 'Paris Saint-Germain', league: 'Ligue 1', country: 'France' },
+                { id: '5', name: 'Juventus', league: 'Serie A', country: 'Italy' },
+                { id: '6', name: 'Liverpool', league: 'Premier League', country: 'England' },
+                { id: '7', name: 'Barcelona', league: 'La Liga', country: 'Spain' },
+                { id: '8', name: 'Arsenal', league: 'Premier League', country: 'England' },
+                { id: '9', name: 'Chelsea', league: 'Premier League', country: 'England' },
+                { id: '10', name: 'AC Milan', league: 'Serie A', country: 'Italy' },
+                { id: '11', name: '横浜F・マリノス', league: 'J1リーグ', country: 'Japan' },
+                { id: '12', name: '川崎フロンターレ', league: 'J1リーグ', country: 'Japan' },
+                { id: '13', name: '浦和レッズ', league: 'J1リーグ', country: 'Japan' },
+                { id: '14', name: 'FC東京', league: 'J1リーグ', country: 'Japan' },
+                { id: '15', name: 'セレッソ大阪', league: 'J1リーグ', country: 'Japan' }
+            ];
+
+            const filteredTeams = sampleTeams.filter(team => 
+                team.name.toLowerCase().includes(searchTerm) ||
+                team.league.toLowerCase().includes(searchTerm)
+            );
+
+            resultsDiv.innerHTML = filteredTeams.slice(0, 5).map(team => `
+                <div class="search-result-item" onclick="selectTeam('${target}', ${JSON.stringify(team).replace(/"/g, '&quot;')})">
+                    <div>
+                        <strong>${team.name}</strong><br>
+                        <small>${team.league} (${team.country})</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // チーム選択
+        function selectTeam(target, team) {
+            currentTeams = currentTeams || {};
+            currentTeams[target] = team;
+            
+            const selectedTeamDiv = document.getElementById(`selectedTeam${target}`);
+            const avatar = document.getElementById(`teamAvatar${target}`);
+            const name = document.getElementById(`teamName${target}`);
+            const league = document.getElementById(`teamLeague${target}`);
+            
+            avatar.textContent = team.name.charAt(0);
+            name.textContent = team.name;
+            league.textContent = `${team.league} (${team.country})`;
+            
+            selectedTeamDiv.style.display = 'flex';
+            document.getElementById(`teamSearchResults${target}`).innerHTML = '';
+            document.getElementById(`teamSearch${target}`).value = '';
+        }
+
+        // チーム比較開始
+        function startTeamComparison() {
+            if (!currentTeams || Object.keys(currentTeams).length === 0) {
+                alert('比較するチームを選択してください');
+                return;
+            }
+
+            if (selectedStats.length < 6) {
+                alert('6項目を選択してください');
+                return;
+            }
+
+            updateTeamCharts();
+            updateTeamStatsComparison();
+        }
+
+        // チームチャート更新
+        function updateTeamCharts() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            
+            if (window.mainChart) {
+                window.mainChart.destroy();
+            }
+
+            const labels = selectedStats.map(stat => {
+                const statObj = availableStats.find(s => s.value === stat);
+                return statObj ? statObj.label : stat;
+            });
+
+            const datasets = [];
+            const colors = ['#00ff88', '#ff4444', '#4444ff'];
+
+            Object.keys(currentTeams).forEach((key, index) => {
+                const team = currentTeams[key];
+                datasets.push({
+                    label: team.name,
+                    data: generateTeamStats(team, selectedStats),
+                    borderColor: colors[index],
+                    backgroundColor: colors[index] + '20',
+                    borderWidth: 2
+                });
+            });
+
+            window.mainChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: '#333333'
+                            },
+                            grid: {
+                                color: '#333333'
+                            },
+                            pointLabels: {
+                                color: '#ffffff'
+                            },
+                            ticks: {
+                                color: '#ffffff',
+                                backdropColor: 'transparent'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // チーム統計生成
+        function generateTeamStats(team, stats) {
+            // チーム別のサンプル統計データ
+            const teamStatsData = {
+                'Manchester City': { goals: 85, assists: 65, appearances: 38, minutes: 3420, passes: 25000, tackles: 1200 },
+                'Real Madrid': { goals: 78, assists: 58, appearances: 38, minutes: 3420, passes: 23000, tackles: 1150 },
+                'Bayern Munich': { goals: 95, assists: 72, appearances: 34, minutes: 3060, passes: 24000, tackles: 1100 },
+                'Paris Saint-Germain': { goals: 89, assists: 68, appearances: 38, minutes: 3420, passes: 22000, tackles: 1050 },
+                'Juventus': { goals: 72, assists: 55, appearances: 38, minutes: 3420, passes: 21000, tackles: 1300 },
+                'Liverpool': { goals: 82, assists: 62, appearances: 38, minutes: 3420, passes: 23500, tackles: 1250 },
+                'Barcelona': { goals: 74, assists: 56, appearances: 38, minutes: 3420, passes: 24500, tackles: 1080 },
+                'Arsenal': { goals: 88, assists: 64, appearances: 38, minutes: 3420, passes: 23000, tackles: 1180 },
+                'Chelsea': { goals: 75, assists: 58, appearances: 38, minutes: 3420, passes: 22500, tackles: 1220 },
+                'AC Milan': { goals: 69, assists: 52, appearances: 38, minutes: 3420, passes: 21500, tackles: 1280 },
+                '横浜F・マリノス': { goals: 65, assists: 48, appearances: 34, minutes: 3060, passes: 18000, tackles: 950 },
+                '川崎フロンターレ': { goals: 62, assists: 45, appearances: 34, minutes: 3060, passes: 17500, tackles: 980 },
+                '浦和レッズ': { goals: 58, assists: 42, appearances: 34, minutes: 3060, passes: 17000, tackles: 920 },
+                'FC東京': { goals: 55, assists: 40, appearances: 34, minutes: 3060, passes: 16800, tackles: 900 },
+                'セレッソ大阪': { goals: 52, assists: 38, appearances: 34, minutes: 3060, passes: 16500, tackles: 880 }
+            };
+
+            const teamStats = teamStatsData[team.name] || {
+                goals: Math.floor(Math.random() * 100),
+                assists: Math.floor(Math.random() * 80),
+                appearances: Math.floor(Math.random() * 40),
+                minutes: Math.floor(Math.random() * 4000),
+                passes: Math.floor(Math.random() * 30000),
+                tackles: Math.floor(Math.random() * 1500)
+            };
+
+            return stats.map(stat => {
+                const value = teamStats[stat] || 0;
+                return Math.min(100, value); // 最大100に正規化
+            });
+        }
+
+        // チーム統計比較更新
+        function updateTeamStatsComparison() {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = '';
+
+            Object.keys(currentTeams).forEach(key => {
+                const team = currentTeams[key];
+                const statCard = document.createElement('div');
+                statCard.className = 'stat-card';
+                statCard.innerHTML = `
+                    <h4>${team.name}</h4>
+                    <div class="stat-item">
+                        <span>リーグ:</span>
+                        <span>${team.league}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>国:</span>
+                        <span>${team.country}</span>
+                    </div>
+                `;
+                statsGrid.appendChild(statCard);
+            });
+        }
+
+        // グローバル変数の初期化
+        let currentTeams = {};
     </script>
 </body>
 </html> 
