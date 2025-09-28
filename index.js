@@ -277,11 +277,7 @@ app.get('/dashboard', (req, res) => {
 
 app.get('/database', (req, res) => {
     // 強化されたデータベースページを直接提供
-    res.sendFile(path.join(__dirname, 'public', 'database-new.html'));
-});
-
-app.get('/database-new', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'database-new.html'));
+    res.sendFile(path.join(__dirname, 'public', 'database-enhanced.html'));
 });
 
 app.get('/database-fixed', (req, res) => {
@@ -305,9 +301,7 @@ app.get('/ai-agent-enhanced', (req, res) => {
 });
 
 // 強化データベースページ
-app.get('/database-enhanced', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'database-enhanced.html'));
-});
+// database-enhanced は /database に統合済み
 
 // 試合スケジュールページ
 app.get('/schedule', (req, res) => {
