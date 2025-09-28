@@ -243,6 +243,15 @@ app.use((req, res, next) => {
 
 app.use(express.static('public'));
 
+// 静的ファイルのルーティング
+app.get('/ranking', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'ranking.html'));
+});
+
+app.get('/match-detail', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'match-detail.html'));
+});
+
 // AIウィジェットファイルを提供
 app.get('/ai-widget.js', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'ai-widget.js'));
