@@ -2770,20 +2770,19 @@ app.get('/api/match/:id/events', async (req, res) => {
                 console.log('📊 API-Football events response received');
                 
                 if (response.data && response.data.response && Array.isArray(response.data.response)) {
-                        const events = response.data.response.map(event => ({
-                            time: event.time.elapsed,
-                            type: event.type,
-                            detail: event.detail,
-                            team: event.team.name,
-                            player: event.player.name,
-                            assist: event.assist?.name || null,
-                            comments: event.comments || null
-                        }));
-                        
-                        res.setHeader('Content-Type', 'application/json');
-                        res.json({ success: true, data: events });
-                        return;
-                    }
+                    const events = response.data.response.map(event => ({
+                        time: event.time.elapsed,
+                        type: event.type,
+                        detail: event.detail,
+                        team: event.team.name,
+                        player: event.player.name,
+                        assist: event.assist?.name || null,
+                        comments: event.comments || null
+                    }));
+                    
+                    res.setHeader('Content-Type', 'application/json');
+                    res.json({ success: true, data: events });
+                    return;
                 }
             } catch (apiError) {
                 console.error('❌ API-Football events error:', apiError.message);
@@ -2824,18 +2823,17 @@ app.get('/api/match/:id/stats', async (req, res) => {
                 console.log('📊 API-Football statistics response received');
                 
                 if (response.data && response.data.response && Array.isArray(response.data.response)) {
-                        const stats = response.data.response.map(teamStats => ({
-                            team: teamStats.team.name,
-                            statistics: teamStats.statistics.map(stat => ({
-                                type: stat.type,
-                                value: stat.value
-                            }))
-                        }));
-                        
-                        res.setHeader('Content-Type', 'application/json');
-                        res.json({ success: true, data: stats });
-                        return;
-                    }
+                    const stats = response.data.response.map(teamStats => ({
+                        team: teamStats.team.name,
+                        statistics: teamStats.statistics.map(stat => ({
+                            type: stat.type,
+                            value: stat.value
+                        }))
+                    }));
+                    
+                    res.setHeader('Content-Type', 'application/json');
+                    res.json({ success: true, data: stats });
+                    return;
                 }
             } catch (apiError) {
                 console.error('❌ API-Football stats error:', apiError.message);
