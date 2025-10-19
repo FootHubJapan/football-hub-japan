@@ -179,10 +179,53 @@ curl https://football-hub-japan-ubzb.onrender.com/api/database/comprehensive-sta
 ## コミット履歴
 
 ```
-aa0deb32 - Implement comprehensive data collection for ALL players
-- 46名から1000名以上への拡充
-- 包括的データ収集システムの実装
-- 自動更新システムの改善
-- ランキングUIの改善
+aa0deb32 - Implement comprehensive data collection for ALL players (初回実装)
+667cd165 - Fix player data display and search errors
+fbe333ca - Fix initial player data loading to use ranking API
+6ffbe35a - Fix compId undefined error in executeHybridCollection
+f1615e26 - Add detailed logging to player ranking API
+21ff8382 - Use DatabaseManager for dynamic player data and increase limit
+d4e2db75 - Update frontend to request and display more players (最新)
 ```
+
+### 最新の改善（d4e2db75）
+
+1. **動的データ取得**
+   - `apiService.dbManager.loadComprehensivePlayers()` を使用
+   - ファイルではなくデータベースから直接最新データを取得
+   - リアルタイムで包括的収集の進捗を反映
+
+2. **データ表示の大幅改善**
+   - 返す選手数の上限: 50名 → 1000名（configurable）
+   - 初期表示: 50名 → 100名
+   - `?limit=10000` パラメータで上限を調整可能
+
+3. **データソースの可視化**
+   - レスポンスに `source` フィールドを追加
+   - `database` または `fallback` を表示
+   - デバッグログで詳細情報を確認可能
+
+### トラブルシューティング更新
+
+#### データが少ない場合の確認手順
+
+1. **データベース状態を確認**
+   ```bash
+   curl https://football-hub-japan-ubzb.onrender.com/api/database/comprehensive-status
+   ```
+
+2. **包括的収集を手動実行**
+   ```bash
+   curl -X POST https://football-hub-japan-ubzb.onrender.com/api/execute-direct-api-collection
+   ```
+
+3. **データ数を確認**
+   ```bash
+   curl "https://football-hub-japan-ubzb.onrender.com/api/ranking/players?limit=1" | jq '.total'
+   ```
+
+4. **全選手データを取得**
+   ```bash
+   curl "https://football-hub-japan-ubzb.onrender.com/api/ranking/players?limit=10000" | jq '.players | length'
+   ```
 
