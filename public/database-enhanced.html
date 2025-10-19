@@ -1375,17 +1375,18 @@
             try {
                 console.log('🔄 初期選手データを読み込み中...');
                 
-                // 優先順位1: ランキングAPIから全選手データを取得
+                // 優先順位1: ランキングAPIから全選手データを取得（limitを増やす）
                 try {
                     console.log('🔄 ランキングAPIから全選手データを取得中...');
-                    const response = await fetch('/api/ranking/players');
+                    const response = await fetch('/api/ranking/players?limit=10000'); // 最大10000名まで取得
                     if (response.ok) {
                         const data = await response.json();
                         if (data.players && data.players.length > 0) {
                             currentPlayers = data.players;
-                            // 最初の50名を表示
-                            displayPlayers(data.players.slice(0, 50));
-                            console.log(`✅ ${data.players.length}名の選手データを取得、最初の50名を表示`);
+                            // 最初の100名を表示（無限スクロールで追加読み込み）
+                            displayPlayers(data.players.slice(0, 100));
+                            console.log(`✅ ${data.players.length}名の選手データを取得（${data.source}）、最初の100名を表示`);
+                            console.log(`📊 データソース: ${data.source}, フィルタ済み: ${data.filtered}, 合計: ${data.total}`);
                             return;
                         }
                     }
