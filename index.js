@@ -4395,7 +4395,7 @@ async function executeHybridCollection() {
                     
                     allMatches.push(...formattedMatches);
                 } catch (matchError) {
-                    console.error(`❌ リーグ${compId}の試合データ取得に失敗:`, matchError.message);
+                    console.error(`❌ リーグ${competition.name}の試合データ取得に失敗:`, matchError.message);
                 }
                 
                 // レート制限を考慮して待機
