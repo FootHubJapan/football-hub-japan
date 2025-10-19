@@ -1375,40 +1375,57 @@
             try {
                 console.log('🔄 初期選手データを読み込み中...');
                 
-                // 優先順位1: 包括的データベースから直接選手データを取得
+                // 優先順位1: ランキングAPIから全選手データを取得
+                try {
+                    console.log('🔄 ランキングAPIから全選手データを取得中...');
+                    const response = await fetch('/api/ranking/players');
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.players && data.players.length > 0) {
+                            currentPlayers = data.players;
+                            // 最初の50名を表示
+                            displayPlayers(data.players.slice(0, 50));
+                            console.log(`✅ ${data.players.length}名の選手データを取得、最初の50名を表示`);
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.log('ランキングAPIからの取得に失敗:', error);
+                }
+                
+                // 優先順位2: 包括的データベースから直接選手データを取得
                 try {
                     console.log('🔄 包括的データベースから直接選手データを取得中...');
                     // API-Footballから選手データを取得
                     const playersData = await apiFootballService.getAllPlayers();
                     if (playersData && playersData.length > 0) {
                         currentPlayers = playersData;
-                        displayPlayers(playersData);
-                        console.log(`✅ API-Footballから${playersData.length}名の選手データを表示しました`);
+                        displayPlayers(playersData.slice(0, 50));
+                        console.log(`✅ API-Footballから${playersData.length}名の選手データを取得、最初の50名を表示`);
                         return;
                     }
                 } catch (error) {
                     console.log('包括的データベースからの直接取得に失敗:', error);
                 }
                 
-                // 優先順位2: 包括的データベースの状態確認
+                // 優先順位3: 包括的データベースの状態確認
                 try {
                     const response = await fetch('/api/database/comprehensive-status');
                     if (response.ok) {
                         const dbStatus = await response.json();
                         if (dbStatus.totalPlayers > 0) {
                             console.log(`✅ 包括的データベースに${dbStatus.totalPlayers}名の選手データが存在`);
-                            // 再度選手データの取得を試行
-                            try {
-                                // API-Footballから選手データを取得
-                                const playersData = await apiFootballService.getAllPlayers();
-                                if (playersData && playersData.length > 0) {
-                                    currentPlayers = playersData;
-                                    displayPlayers(playersData);
-                                    console.log(`✅ API-Footballから${playersData.length}名の選手データを表示しました`);
+                            
+                            // ランキングAPIから再取得
+                            const playersResponse = await fetch('/api/ranking/players');
+                            if (playersResponse.ok) {
+                                const playersData = await playersResponse.json();
+                                if (playersData.players && playersData.players.length > 0) {
+                                    currentPlayers = playersData.players;
+                                    displayPlayers(playersData.players.slice(0, 50));
+                                    console.log(`✅ ${playersData.players.length}名の選手データを取得、最初の50名を表示`);
                                     return;
                                 }
-                            } catch (error) {
-                                console.log('包括的データベースからの選手データ取得に失敗:', error);
                             }
                         }
                     }
@@ -1416,7 +1433,7 @@
                     console.log('包括的データベースの状態確認に失敗:', error);
                 }
                 
-                // 優先順位3: APIから選手データを取得（デフォルトクエリを使用）
+                // 優先順位4: APIから選手データを取得（デフォルトクエリを使用）
                 try {
                     console.log('🔄 APIから選手データを取得中...');
                     const searchResult = await apiService.searchPlayers('久保建英', {});
