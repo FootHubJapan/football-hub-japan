@@ -1311,6 +1311,47 @@ function generateFallbackTeamRanking(league) {
     }));
 }
 
+// ==================== 包括的データ収集実行 API ====================
+
+// 手動で包括的データ収集を実行
+app.post('/api/data-collection/execute-comprehensive', async (req, res) => {
+    try {
+        console.log('🚀 手動包括的データ収集を開始...');
+        
+        // ハイブリッドデータ収集を実行
+        const result = await executeHybridCollection();
+        
+        res.json({
+            success: true,
+            message: '包括的データ収集が完了しました',
+            data: {
+                players: result.players?.length || 0,
+                teams: result.teams?.length || 0,
+                matches: result.matches?.length || 0
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ 包括的データ収集エラー:', error);
+        res.status(500).json({
+            success: false,
+            message: 'データ収集に失敗しました',
+            error: error.message
+        });
+    }
+});
+
+// データ収集状況を確認
+app.get('/api/data-collection/status', async (req, res) => {
+    try {
+        const status = await apiService.getCollectionStatus();
+        res.json(status);
+    } catch (error) {
+        console.error('❌ データ収集状況確認エラー:', error);
+        res.status(500).json({ error: '状況確認に失敗しました' });
+    }
+});
+
 // ==================== 試合詳細 API ====================
 
 // 試合詳細取得
@@ -3923,16 +3964,19 @@ async function executeHybridCollection() {
         const japanesePlayers = await footballDataService.getJapanesePlayers();
         console.log(`✅ football-data.orgから${japanesePlayers.length}名の日本人選手を取得`);
         
-        // Step 2: 主要リーグの選手データを取得
-        const competitions = [2021, 2014, 2002, 2019, 2015]; // 主要5リーグ
+        // Step 2: 全リーグの選手データを取得
+        const competitions = [2021, 2014, 2002, 2019, 2015, 2022, 2016, 2013, 2003, 2011]; // 拡張リーグリスト
         let allPlayers = [];
+        let allTeams = [];
+        let allMatches = [];
         
         for (const compId of competitions) {
             try {
                 const teams = await footballDataService.getLeaguePlayers(compId);
                 console.log(`🏟️ ${compId}リーグから${teams.length}チームを取得`);
                 
-                for (const team of teams.slice(0, 5)) { // 各リーグ上位5チームのみ
+                // 全チームのデータを取得（制限を緩和）
+                for (const team of teams) { // 全チームを取得
                     const squad = await footballDataService.getTeamSquad(team.id);
                     console.log(`👥 ${team.name}から${squad.length}名の選手を取得`);
                     
@@ -3952,6 +3996,41 @@ async function executeHybridCollection() {
                     }));
                     
                     allPlayers.push(...formattedPlayers);
+                    
+                    // チームデータを保存
+                    allTeams.push({
+                        id: team.id,
+                        name: team.name,
+                        shortName: team.shortName || team.name,
+                        tla: team.tla || team.name.substring(0, 3).toUpperCase(),
+                        crest: team.crest,
+                        league: getLeagueName(compId),
+                        founded: team.founded || null,
+                        venue: team.venue || null
+                    });
+                }
+                
+                // 試合データを取得
+                try {
+                    const matches = await footballDataService.getMatches(compId);
+                    console.log(`⚽ ${compId}リーグから${matches.length}試合を取得`);
+                    
+                    const formattedMatches = matches.map(match => ({
+                        id: match.id,
+                        homeTeam: match.homeTeam.name,
+                        awayTeam: match.awayTeam.name,
+                        homeScore: match.score?.fullTime?.home || 0,
+                        awayScore: match.score?.fullTime?.away || 0,
+                        date: match.utcDate,
+                        status: match.status,
+                        league: getLeagueName(compId),
+                        venue: match.venue || null,
+                        referee: match.referees?.[0]?.name || null
+                    }));
+                    
+                    allMatches.push(...formattedMatches);
+                } catch (matchError) {
+                    console.error(`❌ リーグ${compId}の試合データ取得に失敗:`, matchError.message);
                 }
                 
                 // レート制限を考慮して待機
@@ -3969,7 +4048,21 @@ async function executeHybridCollection() {
             try {
                 // 包括的データベースに一括保存
                 const savedPlayers = await apiService.dbManager.saveComprehensivePlayers(allPlayers);
-                console.log(`✅ 一括保存完了: ${savedPlayers.length}名の選手データを保存`);
+                console.log(`✅ 選手データ一括保存完了: ${savedPlayers.length}名の選手データを保存`);
+                
+                // チームデータ保存
+                if (allTeams.length > 0) {
+                    await apiService.dbManager.saveComprehensiveTeams(allTeams);
+                    console.log(`✅ チームデータ一括保存完了: ${allTeams.length}チームを保存`);
+                }
+                
+                // 試合データ保存
+                if (allMatches.length > 0) {
+                    await apiService.dbManager.saveComprehensiveMatches(allMatches);
+                    console.log(`✅ 試合データ一括保存完了: ${allMatches.length}試合を保存`);
+                }
+                
+                console.log(`🎉 包括的データ収集完了: 選手${allPlayers.length}名、チーム${allTeams.length}チーム、試合${allMatches.length}試合`);
                 return savedPlayers.length;
             } catch (error) {
                 console.error('❌ 一括保存エラー:', error);
