@@ -3388,61 +3388,74 @@
                 currentPlayers = generateFallbackPlayers(100);
             }
             
-            let filteredPlayers = currentPlayers;
+            let filteredPlayers = [...currentPlayers]; // 配列のコピーを作成
             
             // クエリによるフィルタリング（日本語対応）
-            if (query) {
+            if (query && query.trim()) {
                 console.log(`🔍 フォールバック検索: "${query}" (日本語対応)`);
                 
                 // 日本語名と英語名の両方で検索
-                const searchTerms = [query];
-                if (japanesePlayerMap[query]) {
+                const searchTerms = [query.trim()];
+                if (japanesePlayerMap && japanesePlayerMap[query]) {
                     searchTerms.push(japanesePlayerMap[query]);
                     console.log(`🇯🇵 日本語選手名検出: ${query} → ${japanesePlayerMap[query]}`);
                 }
                 
-                filteredPlayers = currentPlayers.filter(player => {
+                filteredPlayers = filteredPlayers.filter(player => {
                     if (!player || !player.name) return false;
                     
                     return searchTerms.some(term => {
-                        const playerName = player.name || '';
-                        const fullName = player.fullName || '';
-                        const englishName = player.englishName || '';
+                        const playerName = (player.name || '').toLowerCase();
+                        const fullName = (player.fullName || '').toLowerCase();
+                        const englishName = (player.englishName || '').toLowerCase();
+                        const searchTerm = term.toLowerCase();
                         
-                        return playerName.toLowerCase().includes(term.toLowerCase()) ||
-                               fullName.toLowerCase().includes(term.toLowerCase()) ||
-                               englishName.toLowerCase().includes(term.toLowerCase());
+                        return playerName.includes(searchTerm) ||
+                               fullName.includes(searchTerm) ||
+                               englishName.includes(searchTerm);
                     });
                 });
             }
-            // クエリによるフィルタリングは上記で既に処理済み
             
             // リーグによるフィルタリング
-            if (league) {
-                // リーグ情報がない場合は、チーム名で推測
-                filteredPlayers = filteredPlayers.filter(player => 
-                    player.currentTeam && player.currentTeam.toLowerCase().includes(league.toLowerCase())
-                );
+            if (league && league.trim()) {
+                filteredPlayers = filteredPlayers.filter(player => {
+                    if (!player) return false;
+                    const playerLeague = (player.league || '').toLowerCase();
+                    const playerTeam = (player.currentTeam || '').toLowerCase();
+                    const searchLeague = league.toLowerCase();
+                    
+                    return playerLeague.includes(searchLeague) || 
+                           playerTeam.includes(searchLeague);
+                });
             }
             
             // ポジションによるフィルタリング
-            if (position) {
-                filteredPlayers = filteredPlayers.filter(player => 
-                    player.position && player.position.toLowerCase().includes(position.toLowerCase())
-                );
+            if (position && position.trim()) {
+                filteredPlayers = filteredPlayers.filter(player => {
+                    if (!player) return false;
+                    const playerPosition = (player.position || '').toLowerCase();
+                    const searchPosition = position.toLowerCase();
+                    
+                    return playerPosition.includes(searchPosition);
+                });
             }
             
-            // 詳細ポジションによるフィルタリング
-            if (detailedPositions.length > 0) {
-                filteredPlayers = filteredPlayers.filter(player => 
-                    detailedPositions.some(dp => 
-                        player.position && player.position.toLowerCase().includes(dp.toLowerCase())
-                    )
-                );
+            // 詳細ポジションによるフィルタリング（配列チェックを追加）
+            if (detailedPositions && Array.isArray(detailedPositions) && detailedPositions.length > 0) {
+                filteredPlayers = filteredPlayers.filter(player => {
+                    if (!player || !player.position) return false;
+                    
+                    return detailedPositions.some(dp => {
+                        const playerPosition = player.position.toLowerCase();
+                        const searchPosition = (dp || '').toLowerCase();
+                        return playerPosition.includes(searchPosition);
+                    });
+                });
             }
             
-            console.log('Fallback search results:', filteredPlayers.length, 'players');
-            return filteredPlayers;
+            console.log('Fallback search results:', filteredPlayers ? filteredPlayers.length : 0, 'players');
+            return filteredPlayers || [];
         }
 
         // リアルタイム検索
