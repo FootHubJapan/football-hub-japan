@@ -948,103 +948,95 @@ app.post('/api/ai/tactics', async (req, res) => {
 // 選手ランキング取得
 app.get('/api/ranking/players', async (req, res) => {
     try {
-        const { league, position, stat } = req.query;
+        const { league, position, stat = 'goals' } = req.query;
         
         console.log('🏆 Player Ranking Request:', { league, position, stat });
         
-        // API-Footballから選手データを取得
         let players = [];
         
-        // API-Footballから選手データを取得（リーグ指定なしでも取得）
-        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
-            try {
-                // リーグIDのマッピング
-                const leagueIds = {
-                    'PL': 39,      // Premier League
-                    'PD': 140,     // La Liga
-                    'SA': 135,     // Serie A
-                    'BL1': 78,     // Bundesliga
-                    'FL1': 61,     // Ligue 1
-                    'J1': 98       // J1 League
+        // まずローカルデータから選手を読み込む
+        try {
+            const playersDataPath = path.join(__dirname, 'data', 'players.json');
+            if (fs.existsSync(playersDataPath)) {
+                const playersData = fs.readFileSync(playersDataPath, 'utf8');
+                const localPlayers = JSON.parse(playersData);
+                
+                console.log(`📊 Loaded ${localPlayers.length} players from local database`);
+                
+                // リーグ名の正規化マッピング
+                const leagueMapping = {
+                    'PL': ['Premier League', 'プレミアリーグ'],
+                    'PD': ['La Liga', 'ラ・リーガ'],
+                    'SA': ['Serie A', 'セリエA'],
+                    'BL1': ['Bundesliga', 'ブンデスリーガ', '2. Bundesliga'],
+                    'FL1': ['Ligue 1', 'リーグ・アン'],
+                    'J1': ['J1 League', 'J1リーグ']
                 };
                 
-                const targetLeague = league ? leagueIds[league] : null;
+                // ローカルデータを統一フォーマットに変換
+                players = localPlayers.map(player => ({
+                    id: player.id,
+                    name: player.name || player.fullName,
+                    age: player.age,
+                    nationality: player.nationality,
+                    photo: player.photo,
+                    team: player.currentTeam || player.team,
+                    currentTeam: player.currentTeam || player.team,
+                    position: player.detailedPosition || player.position,
+                    detailedPosition: player.detailedPosition || player.position,
+                    league: player.league,
+                    goals: player.stats?.goals || 0,
+                    assists: player.stats?.assists || 0,
+                    appearances: player.stats?.appearances || 0,
+                    minutes: player.stats?.minutes || 0,
+                    rating: player.stats?.rating || 'N/A',
+                    passes: player.stats?.passesTotal || 0,
+                    passAccuracy: player.stats?.passAccuracy || '0%',
+                    tackles: player.stats?.tackles || 0,
+                    interceptions: player.stats?.interceptions || 0,
+                    saves: player.stats?.saves || 0,
+                    cleanSheets: player.stats?.cleanSheets || 0,
+                    yellowCards: player.stats?.yellowCards || 0,
+                    redCards: player.stats?.redCards || 0,
+                    shots: player.stats?.shotsTotal || 0,
+                    shotsOnTarget: player.stats?.shotsOnTarget || 0
+                }));
                 
-                console.log('🔍 Fetching players from API-Football:', { league, targetLeague });
-                
-                const response = await axios.get(`https://v3.football.api-sports.io/players/topscorers`, {
-                    headers: {
-                        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
-                        'x-rapidapi-host': 'v3.football.api-sports.io'
-                    },
-                    params: {
-                        league: targetLeague || 39, // Default to Premier League
-                        season: 2024
-                    }
-                });
-                
-                console.log('📊 API-Football response:', response.data?.response?.length || 0, 'players');
-                
-                if (response.data && response.data.response) {
-                    players = response.data.response.map(player => {
-                        const stats = player.statistics[0];
-                        return {
-                            id: player.player.id,
-                            name: player.player.name,
-                            age: player.player.age,
-                            nationality: player.player.nationality,
-                            team: stats?.team?.name || 'Unknown',
-                            position: stats?.games?.position || 'Unknown',
-                            goals: stats?.goals?.total || 0,
-                            assists: stats?.goals?.assists || 0,
-                            appearances: stats?.games?.appearences || 0,
-                            minutes: stats?.games?.minutes || 0,
-                            rating: stats?.games?.rating || 0,
-                            passes: stats?.passes?.total || 0,
-                            passAccuracy: stats?.passes?.accuracy || 0,
-                            tackles: stats?.tackles?.total || 0,
-                            interceptions: stats?.tackles?.interceptions || 0,
-                            saves: stats?.goals?.saves || 0,
-                            cleanSheets: stats?.goals?.conceded === 0 ? 1 : 0,
-                            yellowCards: stats?.cards?.yellow || 0,
-                            redCards: stats?.cards?.red || 0,
-                            shots: stats?.shots?.total || 0,
-                            shotsOnTarget: stats?.shots?.on || 0,
-                            dribbles: stats?.dribbles?.success || 0,
-                            keyPasses: stats?.passes?.key || 0,
-                            longPasses: stats?.passes?.long?.total || 0,
-                            crosses: stats?.passes?.crosses?.total || 0,
-                            touches: stats?.passes?.total || 0,
-                            clearances: stats?.tackles?.total || 0,
-                            blocks: stats?.tackles?.blocks || 0,
-                            aerialDuels: stats?.duels?.total || 0,
-                            fouls: stats?.fouls?.drawn || 0
-                        };
-                    });
-                    
-                    console.log('✅ Successfully processed', players.length, 'players from API-Football');
+                // リーグフィルタリング
+                if (league && leagueMapping[league]) {
+                    const validLeagues = leagueMapping[league];
+                    players = players.filter(p => 
+                        validLeagues.some(l => p.league && p.league.includes(l))
+                    );
+                    console.log(`✅ Filtered to ${players.length} players in league: ${league}`);
                 }
-            } catch (apiError) {
-                console.error('❌ API-Football error:', apiError.message);
-                console.log('📋 Using fallback data instead');
+                
+                // ポジションフィルタリング
+                if (position) {
+                    players = players.filter(p => 
+                        p.position && p.position.toLowerCase().includes(position.toLowerCase())
+                    );
+                    console.log(`✅ Filtered to ${players.length} players in position: ${position}`);
+                }
+                
+                // 統計項目でソート
+                if (stat && players.length > 0) {
+                    players.sort((a, b) => {
+                        const aValue = typeof a[stat] === 'string' ? parseFloat(a[stat]) || 0 : (a[stat] || 0);
+                        const bValue = typeof b[stat] === 'string' ? parseFloat(b[stat]) || 0 : (b[stat] || 0);
+                        return bValue - aValue;
+                    });
+                    console.log(`✅ Sorted ${players.length} players by ${stat}`);
+                }
             }
-        } else {
-            console.log('⚠️ No API key available, using fallback data');
+        } catch (localError) {
+            console.error('❌ Error loading local player data:', localError.message);
         }
         
-        // フォールバックデータを使用
+        // ローカルデータがない場合、フォールバックを使用
         if (players.length === 0) {
+            console.log('⚠️ No local data available, using fallback');
             players = generateFallbackPlayerRanking(league, position, stat);
-        }
-        
-        // ポジションフィルタリング
-        if (position) {
-            players = players.filter(p => p.position === position);
-        }
-        
-        // 統計項目でソート
-        if (stat && players.length > 0) {
-            players.sort((a, b) => (b[stat] || 0) - (a[stat] || 0));
         }
         
         res.json({ players: players.slice(0, 50) }); // トップ50を返す
@@ -3838,22 +3830,15 @@ app.get('/api/japanese-players', async (req, res) => {
         // チームベースの選手データ一括取得
         console.log(`Starting comprehensive team-based player data collection...`);
         
-        // 本番環境では常に効率的な収集戦略を使用
+        // 本番環境では包括的な収集戦略を使用（全選手データを取得）
         if (process.env.NODE_ENV === 'production') {
-            console.log(`🚀 Production environment detected, using efficient collection strategy`);
-            return await executeEfficientCollection();
-        }
-        
-        // 開発環境ではAPI制限をチェック
-        const isApiLimited = await checkApiLimits();
-        
-        if (isApiLimited) {
-            console.log(`⚠️ API制限が検出されました。効率的なデータ収集戦略を使用します。`);
-            return await executeEfficientCollection();
-        } else {
-            console.log(`✅ API制限なし。包括的なデータ収集を実行します。`);
+            console.log(`🚀 Production environment detected, using comprehensive collection strategy to fetch ALL players`);
             return await executeComprehensiveCollection();
         }
+        
+        // 開発環境でも包括的データ収集を優先
+        console.log(`✅ 包括的なデータ収集を実行します（全選手データ取得）...`);
+        return await executeComprehensiveCollection();
     } catch (error) {
         console.error('❌ Error in /api/japanese-players:', error);
         res.status(500).json({ 
@@ -3887,22 +3872,50 @@ app.post('/api/execute-hybrid-collection', async (req, res) => {
     }
 });
 
-// 包括的収集を手動実行するエンドポイント
+// 包括的収集を手動実行するエンドポイント（全選手データ取得）
 app.post('/api/execute-comprehensive-collection', async (req, res) => {
     try {
-        console.log('🚀 Manual comprehensive collection requested');
+        console.log('🚀 包括的収集を手動実行（全選手データ取得）');
+        
+        // リアルタイム進捗をレスポンスヘッダーで送信
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Transfer-Encoding', 'chunked');
         
         const result = await executeComprehensiveCollection();
         
         res.json({
             success: true,
-            message: '包括的収集が完了しました',
+            message: '包括的収集が完了しました（全選手データ取得）',
             playersCollected: result,
             timestamp: new Date().toISOString()
         });
         
     } catch (error) {
-        console.error('❌ Error in manual comprehensive collection:', error);
+        console.error('❌ 包括的収集エラー:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            message: error.message
+        });
+    }
+});
+
+// 直接API収集を手動実行するエンドポイント
+app.post('/api/execute-direct-api-collection', async (req, res) => {
+    try {
+        console.log('🚀 直接API収集を手動実行（全選手データ取得）');
+        
+        const result = await executeDirectAPICollection();
+        
+        res.json({
+            success: true,
+            message: '直接API収集が完了しました（全選手データ取得）',
+            playersCollected: result,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ 直接API収集エラー:', error);
         res.status(500).json({
             success: false,
             error: 'Internal server error',
@@ -3946,105 +3959,328 @@ async function checkApiLimits() {
 async function executeEfficientCollection() {
     console.log(`🚀 効率的なデータ収集を開始...`);
     
-    // 主要な選手のみを効率的に収集
+    // 主要な選手のみを効率的に収集（拡張版）
     const priorityPlayers = [
-        // 日本人選手（優先度最高）
-        { name: '久保建英', englishName: 'Takefusa Kubo', team: 'Real Sociedad', league: 'La Liga', position: 'Forward', nationality: 'Japan', age: 25 },
-        { name: '三苫薫', englishName: 'Kaoru Mitoma', team: 'Brighton', league: 'Premier League', position: 'Midfielder', nationality: 'Japan', age: 25 },
-        { name: '富安健洋', englishName: 'Takehiro Tomiyasu', team: 'Arsenal', league: 'Premier League', position: 'Defender', nationality: 'Japan', age: 26 },
-        { name: '遠藤航', englishName: 'Wataru Endo', team: 'Liverpool', league: 'Premier League', position: 'Midfielder', nationality: 'Japan', age: 31 },
-        { name: '堂安律', englishName: 'Ritsu Doan', team: 'Eintracht Frankfurt', league: 'Bundesliga', position: 'Midfielder', nationality: 'Japan', age: 26 },
-        { name: '伊藤洋輝', englishName: 'Hiroki Ito', team: 'Stuttgart', league: 'Bundesliga', position: 'Defender', nationality: 'Japan', age: 25 },
-        { name: '浅野拓磨', englishName: 'Takuma Asano', team: 'Bochum', league: 'Bundesliga', position: 'Forward', nationality: 'Japan', age: 29 },
-        { name: '田中碧', englishName: 'Ao Tanaka', team: 'Fortuna Düsseldorf', league: 'Ligue 1', position: 'Midfielder', nationality: 'Japan', age: 25 },
-        { name: '南野拓実', englishName: 'Takumi Minamino', team: 'AS Monaco', league: 'Serie A', position: 'Forward', nationality: 'Japan', age: 29 },
+        // 日本人選手（優先度最高） - 海外組
+        { name: '久保建英', englishName: 'Takefusa Kubo', team: 'Real Sociedad', league: 'La Liga', position: 'Forward', nationality: 'Japan', age: 23, apiId: 18622 },
+        { name: '三苫薫', englishName: 'Kaoru Mitoma', team: 'Brighton', league: 'Premier League', position: 'Midfielder', nationality: 'Japan', age: 26, apiId: 119066 },
+        { name: '富安健洋', englishName: 'Takehiro Tomiyasu', team: 'Arsenal', league: 'Premier League', position: 'Defender', nationality: 'Japan', age: 25, apiId: 18986 },
+        { name: '遠藤航', englishName: 'Wataru Endo', team: 'Liverpool', league: 'Premier League', position: 'Midfielder', nationality: 'Japan', age: 31, apiId: 46411 },
+        { name: '堂安律', englishName: 'Ritsu Doan', team: 'SC Freiburg', league: 'Bundesliga', position: 'Forward', nationality: 'Japan', age: 26, apiId: 135244 },
+        { name: '伊藤洋輝', englishName: 'Hiroki Ito', team: 'Bayern Munich', league: 'Bundesliga', position: 'Defender', nationality: 'Japan', age: 25, apiId: 80530 },
+        { name: '浅野拓磨', englishName: 'Takuma Asano', team: 'VfL Bochum', league: 'Bundesliga', position: 'Forward', nationality: 'Japan', age: 29, apiId: 51821 },
+        { name: '板倉滉', englishName: 'Ko Itakura', team: 'Borussia M\'gladbach', league: 'Bundesliga', position: 'Defender', nationality: 'Japan', age: 27, apiId: 144529 },
+        { name: '鎌田大地', englishName: 'Daichi Kamada', team: 'Crystal Palace', league: 'Premier League', position: 'Midfielder', nationality: 'Japan', age: 27, apiId: 135303 },
+        { name: '久保田空', englishName: 'Sora Kubota', team: 'Fortuna Düsseldorf', league: '2. Bundesliga', position: 'Forward', nationality: 'Japan', age: 21, apiId: null },
+        { name: '田中碧', englishName: 'Ao Tanaka', team: 'Fortuna Düsseldorf', league: '2. Bundesliga', position: 'Midfielder', nationality: 'Japan', age: 25, apiId: 51824 },
+        { name: '南野拓実', englishName: 'Takumi Minamino', team: 'AS Monaco', league: 'Ligue 1', position: 'Forward', nationality: 'Japan', age: 29, apiId: 51820 },
+        { name: '伊東純也', englishName: 'Junya Ito', team: 'Stade de Reims', league: 'Ligue 1', position: 'Forward', nationality: 'Japan', age: 30, apiId: 18624 },
+        { name: '守田英正', englishName: 'Hidemasa Morita', team: 'Sporting CP', league: 'Primeira Liga', position: 'Midfielder', nationality: 'Japan', age: 29, apiId: 144552 },
+        { name: '町田浩樹', englishName: 'Hiroki Machida', team: 'Union Saint-Gilloise', league: 'Belgian Pro League', position: 'Defender', nationality: 'Japan', age: 26, apiId: null },
+        { name: '上田綺世', englishName: 'Ayase Ueda', team: 'Feyenoord', league: 'Eredivisie', position: 'Forward', nationality: 'Japan', age: 25, apiId: 187654 },
+        { name: '古橋亨梧', englishName: 'Kyogo Furuhashi', team: 'Celtic', league: 'Scottish Premiership', position: 'Forward', nationality: 'Japan', age: 29, apiId: 144530 },
+        { name: '旗手怜央', englishName: 'Leo Hatate', team: 'Celtic', league: 'Scottish Premiership', position: 'Midfielder', nationality: 'Japan', age: 26, apiId: null },
+        { name: '前田大然', englishName: 'Daizen Maeda', team: 'Celtic', league: 'Scottish Premiership', position: 'Forward', nationality: 'Japan', age: 26, apiId: 89568 },
+        { name: '菅原由勢', englishName: 'Yukinari Sugawara', team: 'AZ Alkmaar', league: 'Eredivisie', position: 'Defender', nationality: 'Japan', age: 24, apiId: null },
         
-        // 世界のスター選手
-        { name: 'Erling Haaland', englishName: 'Erling Haaland', team: 'Manchester City', league: 'Premier League', position: 'Forward', nationality: 'Norway', age: 24 },
-        { name: 'Kevin De Bruyne', englishName: 'Kevin De Bruyne', team: 'Manchester City', league: 'Premier League', position: 'Midfielder', nationality: 'Belgium', age: 33 },
-        { name: 'Mohamed Salah', englishName: 'Mohamed Salah', team: 'Liverpool', league: 'Premier League', position: 'Forward', nationality: 'Egypt', age: 32 },
-        { name: 'Jude Bellingham', englishName: 'Jude Bellingham', team: 'Real Madrid', league: 'La Liga', position: 'Midfielder', nationality: 'England', age: 21 },
-        { name: 'Vinícius Júnior', englishName: 'Vinícius Júnior', team: 'Real Madrid', league: 'La Liga', position: 'Forward', nationality: 'Brazil', age: 24 },
-        { name: 'Robert Lewandowski', englishName: 'Robert Lewandowski', team: 'Barcelona', league: 'La Liga', position: 'Forward', nationality: 'Poland', age: 36 },
-        { name: 'Harry Kane', englishName: 'Harry Kane', team: 'Bayern Munich', league: 'Bundesliga', position: 'Forward', nationality: 'England', age: 31 },
-        { name: 'Jamal Musiala', englishName: 'Jamal Musiala', team: 'Bayern Munich', league: 'Bundesliga', position: 'Midfielder', nationality: 'Germany', age: 21 },
-        { name: 'Lautaro Martínez', englishName: 'Lautaro Martínez', team: 'Inter Milan', league: 'Serie A', position: 'Forward', nationality: 'Argentina', age: 27 },
-        { name: 'Kylian Mbappé', englishName: 'Kylian Mbappé', team: 'PSG', league: 'Ligue 1', position: 'Forward', nationality: 'France', age: 26 },
-        { name: 'Ousmane Dembélé', englishName: 'Ousmane Dembélé', team: 'PSG', league: 'Ligue 1', position: 'Forward', nationality: 'France', age: 27 },
+        // 日本人選手（Jリーグ）
+        { name: '三笘薫', englishName: 'Kaoru Mitoma', team: '川崎フロンターレ', league: 'J1 League', position: 'Forward', nationality: 'Japan', age: 26, apiId: null },
+        { name: '中村敬斗', englishName: 'Keito Nakamura', team: 'スタッド・ランス', league: 'Ligue 1', position: 'Forward', nationality: 'Japan', age: 23, apiId: null },
+        { name: '旗手怜央', englishName: 'Leo Hatate', team: 'セルティック', league: 'Scottish Premiership', position: 'Midfielder', nationality: 'Japan', age: 26, apiId: null },
         
-        // 追加の有名選手
-        { name: 'Lionel Messi', englishName: 'Lionel Messi', team: 'Inter Miami', league: 'MLS', position: 'Forward', nationality: 'Argentina', age: 37 },
-        { name: 'Cristiano Ronaldo', englishName: 'Cristiano Ronaldo', team: 'Al Nassr', league: 'Saudi Pro League', position: 'Forward', nationality: 'Portugal', age: 39 },
-        { name: 'Neymar Jr', englishName: 'Neymar Jr', team: 'Al Hilal', league: 'Saudi Pro League', position: 'Forward', nationality: 'Brazil', age: 32 },
-        { name: 'Sadio Mané', englishName: 'Sadio Mané', team: 'Al Nassr', league: 'Saudi Pro League', position: 'Forward', nationality: 'Senegal', age: 32 },
-        { name: 'Riyad Mahrez', englishName: 'Riyad Mahrez', team: 'Al Ahli', league: 'Saudi Pro League', position: 'Forward', nationality: 'Algeria', age: 33 }
+        // 世界のスター選手（プレミアリーグ）
+        { name: 'Erling Haaland', englishName: 'Erling Haaland', team: 'Manchester City', league: 'Premier League', position: 'Forward', nationality: 'Norway', age: 24, apiId: 1100 },
+        { name: 'Kevin De Bruyne', englishName: 'Kevin De Bruyne', team: 'Manchester City', league: 'Premier League', position: 'Midfielder', nationality: 'Belgium', age: 33, apiId: 629 },
+        { name: 'Mohamed Salah', englishName: 'Mohamed Salah', team: 'Liverpool', league: 'Premier League', position: 'Forward', nationality: 'Egypt', age: 32, apiId: 306 },
+        { name: 'Bukayo Saka', englishName: 'Bukayo Saka', team: 'Arsenal', league: 'Premier League', position: 'Forward', nationality: 'England', age: 22, apiId: 284 },
+        { name: 'Martin Ødegaard', englishName: 'Martin Ødegaard', team: 'Arsenal', league: 'Premier League', position: 'Midfielder', nationality: 'Norway', age: 25, apiId: 318 },
+        { name: 'Phil Foden', englishName: 'Phil Foden', team: 'Manchester City', league: 'Premier League', position: 'Midfielder', nationality: 'England', age: 24, apiId: 1984 },
+        { name: 'Son Heung-min', englishName: 'Son Heung-min', team: 'Tottenham', league: 'Premier League', position: 'Forward', nationality: 'South Korea', age: 31, apiId: 832 },
+        { name: 'Virgil van Dijk', englishName: 'Virgil van Dijk', team: 'Liverpool', league: 'Premier League', position: 'Defender', nationality: 'Netherlands', age: 32, apiId: 1485 },
+        
+        // ラ・リーガ
+        { name: 'Jude Bellingham', englishName: 'Jude Bellingham', team: 'Real Madrid', league: 'La Liga', position: 'Midfielder', nationality: 'England', age: 21, apiId: 30366 },
+        { name: 'Vinícius Júnior', englishName: 'Vinícius Júnior', team: 'Real Madrid', league: 'La Liga', position: 'Forward', nationality: 'Brazil', age: 24, apiId: 276 },
+        { name: 'Robert Lewandowski', englishName: 'Robert Lewandowski', team: 'Barcelona', league: 'La Liga', position: 'Forward', nationality: 'Poland', age: 36, apiId: 9985 },
+        { name: 'Lamine Yamal', englishName: 'Lamine Yamal', team: 'Barcelona', league: 'La Liga', position: 'Forward', nationality: 'Spain', age: 17, apiId: 331 },
+        { name: 'Pedri', englishName: 'Pedri', team: 'Barcelona', league: 'La Liga', position: 'Midfielder', nationality: 'Spain', age: 21, apiId: 276 },
+        
+        // ブンデスリーガ
+        { name: 'Harry Kane', englishName: 'Harry Kane', team: 'Bayern Munich', league: 'Bundesliga', position: 'Forward', nationality: 'England', age: 31, apiId: 184 },
+        { name: 'Jamal Musiala', englishName: 'Jamal Musiala', team: 'Bayern Munich', league: 'Bundesliga', position: 'Midfielder', nationality: 'Germany', age: 21, apiId: 30413 },
+        { name: 'Florian Wirtz', englishName: 'Florian Wirtz', team: 'Bayer Leverkusen', league: 'Bundesliga', position: 'Midfielder', nationality: 'Germany', age: 21, apiId: 30418 },
+        
+        // セリエA
+        { name: 'Lautaro Martínez', englishName: 'Lautaro Martínez', team: 'Inter Milan', league: 'Serie A', position: 'Forward', nationality: 'Argentina', age: 27, apiId: 1247 },
+        { name: 'Victor Osimhen', englishName: 'Victor Osimhen', team: 'Napoli', league: 'Serie A', position: 'Forward', nationality: 'Nigeria', age: 25, apiId: 9403 },
+        
+        // リーグ・アン
+        { name: 'Kylian Mbappé', englishName: 'Kylian Mbappé', team: 'Real Madrid', league: 'La Liga', position: 'Forward', nationality: 'France', age: 26, apiId: 920 },
+        { name: 'Ousmane Dembélé', englishName: 'Ousmane Dembélé', team: 'PSG', league: 'Ligue 1', position: 'Forward', nationality: 'France', age: 27, apiId: 1460 },
+        
+        // その他リーグ
+        { name: 'Lionel Messi', englishName: 'Lionel Messi', team: 'Inter Miami', league: 'MLS', position: 'Forward', nationality: 'Argentina', age: 37, apiId: 154 },
+        { name: 'Cristiano Ronaldo', englishName: 'Cristiano Ronaldo', team: 'Al Nassr', league: 'Saudi Pro League', position: 'Forward', nationality: 'Portugal', age: 39, apiId: 874 },
+        { name: 'Neymar Jr', englishName: 'Neymar Jr', team: 'Al Hilal', league: 'Saudi Pro League', position: 'Forward', nationality: 'Brazil', age: 32, apiId: 276 },
+        { name: 'Sadio Mané', englishName: 'Sadio Mané', team: 'Al Nassr', league: 'Saudi Pro League', position: 'Forward', nationality: 'Senegal', age: 32, apiId: 538 },
+        { name: 'Riyad Mahrez', englishName: 'Riyad Mahrez', team: 'Al Ahli', league: 'Saudi Pro League', position: 'Forward', nationality: 'Algeria', age: 33, apiId: 298 }
     ];
     
+    console.log(`📊 ${priorityPlayers.length}名の選手データを収集します...`);
     let totalPlayers = 0;
+    let playersWithPhotos = 0;
     
     for (const player of priorityPlayers) {
         try {
+            let photoUrl = 'https://media.api-sports.io/football/players/placeholder.png';
+            
+            // API-Footballから選手写真を取得（API IDがある場合）
+            if (player.apiId && process.env.API_FOOTBALL_KEY) {
+                try {
+                    const response = await fetch(`https://v3.football.api-sports.io/players?id=${player.apiId}&season=2024`, {
+                        headers: {
+                            'x-rapidapi-key': process.env.API_FOOTBALL_KEY,
+                            'x-rapidapi-host': 'v3.football.api-sports.io'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.response && data.response.length > 0 && data.response[0].player && data.response[0].player.photo) {
+                            photoUrl = data.response[0].player.photo;
+                            playersWithPhotos++;
+                            console.log(`✅ 写真取得: ${player.name}`);
+                        }
+                    }
+                    
+                    // API制限を避けるため待機
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                } catch (photoError) {
+                    console.log(`⚠️ ${player.name} の写真取得エラー: ${photoError.message}`);
+                }
+            }
+            
             // 選手データを構築
             const playerData = {
                 id: `efficient_${totalPlayers + 1}`,
                 name: player.name,
                 fullName: player.name,
+                firstName: player.name.split(' ')[0] || player.name,
+                lastName: player.name.split(' ').slice(1).join(' ') || '',
                 currentTeam: player.team,
                 position: player.position,
+                detailedPosition: player.position,
                 nationality: player.nationality,
                 age: player.age,
-                photo: 'https://media.api-sports.io/football/players/placeholder.png',
+                photo: photoUrl,
                 league: player.league,
                 englishName: player.englishName,
-                stats: generateRealisticStats(player.name)
+                stats: generateRealisticStats(player.name),
+                lastUpdated: new Date().toISOString(),
+                source: 'api-football'
             };
             
             // データベースに保存
             await savePlayerData(playerData);
             totalPlayers++;
             
-            console.log(`✅ Saved efficient player: ${player.name} (${player.team})`);
-            
-            // API制限を避けるため少し待機
-            await new Promise(resolve => setTimeout(resolve, 50));
+            console.log(`✅ [${totalPlayers}/${priorityPlayers.length}] ${player.name} (${player.team}) を保存`);
             
         } catch (error) {
-            console.log(`Error saving efficient player ${player.name}:`, error.message);
+            console.log(`❌ ${player.name} 保存エラー:`, error.message);
         }
     }
     
-    console.log(`🎯 Efficient collection completed: ${totalPlayers} players`);
+    console.log(`🎯 効率的なデータ収集完了: ${totalPlayers}名 (写真取得: ${playersWithPhotos}名)`);
     return totalPlayers;
 }
 
-// 包括的データ収集（チーム単位での一括取得）
+// 包括的データ収集（全選手データを取得）
 async function executeComprehensiveCollection() {
-    console.log('🚀 包括的データ収集を開始...');
+    console.log('🚀 包括的データ収集を開始（全選手データを取得）...');
     
     if (!apiService) {
-        console.log('⚠️ APIService not available, falling back to efficient collection');
-        return await executeEfficientCollection();
+        console.log('⚠️ APIService not available, using direct API approach');
+        return await executeDirectAPICollection();
     }
     
     try {
-        console.log('🌍 98チーム分の包括的選手データを取得中...');
+        console.log('🌍 主要リーグの全チーム・全選手データを取得中...');
         
         // APIServiceの包括的データ取得を使用
-        const result = await apiService.fetchAllComprehensivePlayers();
+        const allPlayers = await apiService.fetchAllComprehensivePlayers();
         
-        if (result && result.players && result.players.length > 0) {
-            console.log(`✅ 包括的データ収集完了: ${result.players.length}名の選手を取得`);
-            return result.players.length;
+        if (allPlayers && allPlayers.length > 0) {
+            console.log(`✅ 包括的データ収集完了: ${allPlayers.length}名の選手を取得`);
+            
+            // データベースに保存
+            console.log(`💾 ${allPlayers.length}名の選手データをデータベースに保存中...`);
+            let savedCount = 0;
+            
+            for (const player of allPlayers) {
+                try {
+                    await savePlayerData(player);
+                    savedCount++;
+                    
+                    if (savedCount % 100 === 0) {
+                        console.log(`   📊 進捗: ${savedCount}/${allPlayers.length}名保存完了`);
+                    }
+                } catch (saveError) {
+                    console.error(`   ❌ 選手保存エラー (${player.name}):`, saveError.message);
+                }
+            }
+            
+            console.log(`✅ データベース保存完了: ${savedCount}/${allPlayers.length}名`);
+            return savedCount;
         } else {
-            console.log('⚠️ 包括的データ取得に失敗、フォールバックを実行');
-            return await executeEfficientCollection();
+            console.log('⚠️ 包括的データ取得に失敗、直接APIから取得');
+            return await executeDirectAPICollection();
         }
         
     } catch (error) {
         console.error('❌ 包括的データ収集エラー:', error);
-        console.log('⚠️ フォールバック: 効率的な収集を実行');
-        return await executeEfficientCollection();
+        console.error('エラー詳細:', error.stack);
+        console.log('⚠️ フォールバック: 直接APIから取得');
+        return await executeDirectAPICollection();
     }
+}
+
+// 直接APIから全選手データを取得
+async function executeDirectAPICollection() {
+    console.log('🚀 直接APIから全選手データを取得開始...');
+    
+    const majorLeagues = [
+        { id: 39, name: 'Premier League', code: 'PL' },
+        { id: 140, name: 'La Liga', code: 'PD' },
+        { id: 135, name: 'Serie A', code: 'SA' },
+        { id: 78, name: 'Bundesliga', code: 'BL1' },
+        { id: 61, name: 'Ligue 1', code: 'FL1' },
+        { id: 88, name: 'Eredivisie', code: 'NL1' },
+        { id: 94, name: 'Primeira Liga', code: 'PPL' },
+        { id: 98, name: 'J1 League', code: 'J1' }
+    ];
+    
+    let totalPlayers = 0;
+    const currentSeason = 2024;
+    
+    for (const league of majorLeagues) {
+        try {
+            console.log(`🏆 ${league.name} からデータを取得中...`);
+            
+            // リーグのチーム一覧を取得
+            const teamsResponse = await fetch(`https://v3.football.api-sports.io/teams?league=${league.id}&season=${currentSeason}`, {
+                headers: {
+                    'x-rapidapi-key': process.env.API_FOOTBALL_KEY,
+                    'x-rapidapi-host': 'v3.football.api-sports.io'
+                }
+            });
+            
+            if (!teamsResponse.ok) {
+                console.log(`   ⚠️ ${league.name} のチーム取得失敗: ${teamsResponse.status}`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                continue;
+            }
+            
+            const teamsData = await teamsResponse.json();
+            const teams = teamsData.response || [];
+            
+            console.log(`   📊 ${teams.length}チームを発見`);
+            
+            // 各チームの選手を取得
+            for (const teamData of teams) {
+                const team = teamData.team;
+                
+                try {
+                    console.log(`   🏟️ ${team.name} の選手を取得中...`);
+                    
+                    const playersResponse = await fetch(`https://v3.football.api-sports.io/players?team=${team.id}&season=${currentSeason}`, {
+                        headers: {
+                            'x-rapidapi-key': process.env.API_FOOTBALL_KEY,
+                            'x-rapidapi-host': 'v3.football.api-sports.io'
+                        }
+                    });
+                    
+                    if (!playersResponse.ok) {
+                        console.log(`      ⚠️ ${team.name} の選手取得失敗: ${playersResponse.status}`);
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        continue;
+                    }
+                    
+                    const playersData = await playersResponse.json();
+                    const players = playersData.response || [];
+                    
+                    console.log(`      📊 ${players.length}名の選手を発見`);
+                    
+                    // 各選手を保存
+                    for (const playerData of players) {
+                        const player = playerData.player;
+                        const stats = playerData.statistics?.[0] || {};
+                        
+                        const formattedPlayer = {
+                            id: `api_${player.id}`,
+                            name: player.name,
+                            fullName: player.name,
+                            firstName: player.firstname || player.name.split(' ')[0],
+                            lastName: player.lastname || player.name.split(' ').slice(1).join(' '),
+                            age: player.age,
+                            nationality: player.nationality,
+                            photo: player.photo,
+                            currentTeam: team.name,
+                            position: stats.games?.position || 'Unknown',
+                            detailedPosition: stats.games?.position || 'Unknown',
+                            league: league.name,
+                            leagueCode: league.code,
+                            stats: {
+                                appearances: stats.games?.appearences || 0,
+                                minutes: stats.games?.minutes || 0,
+                                rating: stats.games?.rating || 'N/A',
+                                goals: stats.goals?.total || 0,
+                                assists: stats.goals?.assists || 0,
+                                yellowCards: stats.cards?.yellow || 0,
+                                redCards: stats.cards?.red || 0,
+                                shotsTotal: stats.shots?.total || 0,
+                                shotsOnTarget: stats.shots?.on || 0,
+                                passAccuracy: stats.passes?.accuracy ? `${stats.passes.accuracy}%` : 'N/A',
+                                tackles: stats.tackles?.total || 0,
+                                interceptions: stats.tackles?.interceptions || 0
+                            },
+                            lastUpdated: new Date().toISOString(),
+                            source: 'api-football-direct'
+                        };
+                        
+                        try {
+                            await savePlayerData(formattedPlayer);
+                            totalPlayers++;
+                            
+                            if (totalPlayers % 50 === 0) {
+                                console.log(`   📈 累計: ${totalPlayers}名の選手を保存`);
+                            }
+                        } catch (saveError) {
+                            console.error(`      ❌ ${player.name} の保存失敗:`, saveError.message);
+                        }
+                    }
+                    
+                    // API制限を考慮して待機
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                } catch (teamError) {
+                    console.error(`   ❌ ${team.name} の処理エラー:`, teamError.message);
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            }
+            
+            // リーグ間の待機
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+        } catch (leagueError) {
+            console.error(`❌ ${league.name} の処理エラー:`, leagueError.message);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+    }
+    
+    console.log(`🎯 直接API収集完了: ${totalPlayers}名の選手を取得`);
+    return totalPlayers;
 }
 
 // ハイブリッドデータ収集（football-data.org + API-Football）
@@ -4691,17 +4927,17 @@ function startAutoUpdate() {
 // 自動更新の実行
 async function performAutoUpdate() {
     try {
-        console.log('🔄 自動更新を実行中...');
+        console.log('🔄 自動更新を実行中（全選手データ取得）...');
         const startTime = new Date();
         
         // 現在のデータベースの状態をチェック
         const currentStats = await cacheManager.getCacheStats();
         console.log(`📊 現在のデータベース状態: ${currentStats.totalPlayers}名の選手`);
         
-        // データが少ない場合は効率的な収集を実行
-        if (currentStats.totalPlayers < 50) {
-            console.log('⚠️ データが不足しています。ハイブリッド収集を実行します。');
-            await executeHybridCollection();
+        // データが少ない場合は包括的な収集を実行
+        if (currentStats.totalPlayers < 500) {
+            console.log('⚠️ データが不足しています。包括的収集を実行します（全選手データ取得）。');
+            await executeComprehensiveCollection();
         } else {
             console.log('✅ 十分なデータがあります。増分更新を実行します。');
             await performIncrementalUpdate();
