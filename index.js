@@ -489,36 +489,127 @@ app.get('/api/player-stats/:playerId', async (req, res) => {
             }
         }
         
-        // 2. API-Footballから実際のスタッツを取得（2025/2026シーズン）
+        // 2. ローカルファイルから選手データを取得
+        if (!playerStats) {
+            try {
+                const fs = require('fs');
+                const path = require('path');
+                const playersPath = path.join(__dirname, 'data', 'players.json');
+                
+                if (fs.existsSync(playersPath)) {
+                    const playersData = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+                    const player = playersData.find(p => 
+                        p.id == playerId || p.playerId == playerId || p.player_id == playerId || p.name === playerId
+                    );
+                    
+                    if (player && player.stats) {
+                        console.log(`✅ ローカルファイルから選手スタッツを取得: ${player.name}`);
+                        playerStats = {
+                            ...player,
+                            source: 'localFile',
+                            stats: player.stats
+                        };
+                    }
+                }
+            } catch (error) {
+                console.log('⚠️ ローカルファイルからの取得に失敗:', error.message);
+            }
+        }
+        
+        // 2.5. 直接API-Footballから選手データを取得（リアルタイム）
+        if (!playerStats && process.env.API_FOOTBALL_KEY) {
+            try {
+                console.log(`🔄 直接API-Footballから選手データを取得中: ${playerId}`);
+                
+                // 選手名で検索
+                const searchResponse = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(playerId)}&season=2024`, {
+                    headers: {
+                        'x-rapidapi-key': process.env.API_FOOTBALL_KEY,
+                        'x-rapidapi-host': 'v3.football.api-sports.io'
+                    }
+                });
+                
+                if (searchResponse.ok) {
+                    const searchData = await searchResponse.json();
+                    const players = searchData.response || [];
+                    
+                    if (players.length > 0) {
+                        const player = players[0];
+                        const stats = player.statistics?.[0] || {};
+                        
+                        playerStats = {
+                            id: `api_${player.player.id}`,
+                            name: player.player.name,
+                            fullName: player.player.name,
+                            age: player.player.age,
+                            nationality: player.player.nationality,
+                            photo: player.player.photo,
+                            currentTeam: stats.team?.name || 'Unknown',
+                            teamId: stats.team?.id,
+                            position: stats.games?.position || 'Unknown',
+                            league: stats.league?.name || 'Unknown',
+                            leagueId: stats.league?.id,
+                            stats: {
+                                appearances: stats.games?.appearences || 0,
+                                lineups: stats.games?.lineups || 0,
+                                minutes: stats.games?.minutes || 0,
+                                rating: stats.games?.rating || 'N/A',
+                                goals: stats.goals?.total || 0,
+                                assists: stats.goals?.assists || 0,
+                                yellowCards: stats.cards?.yellow || 0,
+                                redCards: stats.cards?.red || 0,
+                                shotsTotal: stats.shots?.total || 0,
+                                shotsOnTarget: stats.shots?.on || 0,
+                                passesTotal: stats.passes?.total || 0,
+                                passAccuracy: stats.passes?.accuracy || 0,
+                                tackles: stats.tackles?.total || 0,
+                                interceptions: stats.tackles?.interceptions || 0,
+                                duelsTotal: stats.duels?.total || 0,
+                                duelsWon: stats.duels?.won || 0
+                            },
+                            source: 'apiFootball-direct',
+                            season: '2024/2025',
+                            lastUpdated: new Date().toISOString()
+                        };
+                        
+                        console.log(`✅ 直接API-Footballから選手データを取得: ${player.player.name}`);
+                    }
+                }
+            } catch (error) {
+                console.log('⚠️ 直接API-Footballからの取得に失敗:', error.message);
+            }
+        }
+        
+        // 3. API-Footballから実際のスタッツを取得（2024シーズン）
         if (!playerStats && dataService) {
             try {
-                console.log(`🔄 API-Footballから選手スタッツを取得中: ${playerId} (2025/2026シーズン)`);
-                const apiStats = await dataService.getPlayerStats(playerId, '2025');
+                console.log(`🔄 API-Footballから選手スタッツを取得中: ${playerId} (2024シーズン)`);
+                const apiStats = await dataService.getPlayerStats(playerId, '2024');
                 if (apiStats) {
                     playerStats = {
                         ...apiStats,
                         source: 'apiFootball',
-                        season: '2025/2026'
+                        season: '2024/2025'
                     };
-                    console.log(`✅ API-Footballから選手スタッツを取得: ${apiStats.name || playerId} (2025/2026シーズン)`);
+                    console.log(`✅ API-Footballから選手スタッツを取得: ${apiStats.name || playerId} (2024シーズン)`);
                 }
             } catch (error) {
                 console.log('⚠️ API-Footballからの取得に失敗:', error.message);
             }
         }
         
-        // 3. Football-data.orgからスタッツを取得（2025/2026シーズン）
+        // 4. Football-data.orgからスタッツを取得（2024シーズン）
         if (!playerStats && footballDataService) {
             try {
-                console.log(`🔄 Football-data.orgから選手スタッツを取得中: ${playerId} (2025/2026シーズン)`);
-                const footballDataStats = await footballDataService.getPlayerStats(playerId, '2025');
+                console.log(`🔄 Football-data.orgから選手スタッツを取得中: ${playerId} (2024シーズン)`);
+                const footballDataStats = await footballDataService.getPlayerStats(playerId, '2024');
                 if (footballDataStats) {
                     playerStats = {
                         ...footballDataStats,
                         source: 'footballData',
-                        season: '2025/2026'
+                        season: '2024/2025'
                     };
-                    console.log(`✅ Football-data.orgから選手スタッツを取得: ${footballDataStats.name || playerId} (2025/2026シーズン)`);
+                    console.log(`✅ Football-data.orgから選手スタッツを取得: ${footballDataStats.name || playerId} (2024シーズン)`);
                 }
             } catch (error) {
                 console.log('⚠️ Football-data.orgからの取得に失敗:', error.message);
