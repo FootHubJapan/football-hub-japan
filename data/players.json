@@ -14,18 +14,15 @@
     "league": "La Liga",
     "englishName": "Takefusa Kubo",
     "stats": {
-      "goals": 11,
-      "assists": 12,
-      "appearances": 24,
-      "minutes": 2160,
-      "rating": "7.0",
-      "yellowCards": 2,
-      "shotsTotal": 61,
-      "shotsOnTarget": 27,
-      "expectedGoals": "10.7",
-      "passAccuracy": "76%",
-      "tackles": 3,
-      "interceptions": 11
+      "goals": 5,
+      "assists": 0,
+      "appearances": 37,
+      "rating": "7.2",
+      "minutes": 2800,
+      "yellowCards": 3,
+      "shotsTotal": 45,
+      "passAccuracy": "85%",
+      "tackles": 12
     },
     "lastUpdated": "2025-10-19T23:18:08.262Z",
     "source": "api-football"
