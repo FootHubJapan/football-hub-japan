@@ -467,27 +467,41 @@ app.get('/api/player-stats/:playerId', async (req, res) => {
         console.log(`🔍 選手スタッツ取得中: ${playerId}`);
         
         let playerStats = null;
+        let dbPlayers = [];
         
-        // 1. 包括的データベースから選手データを取得
+        // 1. DatabaseManagerから最新選手データを取得（/api/ranking/playersと同じロジック）
         if (apiService && apiService.dbManager) {
             try {
-                const comprehensivePlayers = await apiService.dbManager.loadComprehensivePlayers();
-                const player = comprehensivePlayers.find(p => 
-                    p.id == playerId || p.playerId == playerId || p.player_id == playerId || 
-                    p.name === playerId || p.name?.toLowerCase() === playerId.toLowerCase() ||
-                    p.fullName === playerId || p.fullName?.toLowerCase() === playerId.toLowerCase()
-                );
+                console.log('🔄 DatabaseManagerから最新選手データを取得中...');
+                dbPlayers = await apiService.dbManager.loadComprehensivePlayers();
+                console.log(`📊 DatabaseManagerから${dbPlayers.length}名の選手データを取得`);
                 
-                if (player && player.stats) {
-                    console.log(`✅ 包括的データベースから選手スタッツを取得: ${player.name}`);
-                    playerStats = {
-                        ...player,
-                        source: 'comprehensiveDatabase',
-                        stats: player.stats
-                    };
+                if (dbPlayers && dbPlayers.length > 0) {
+                    // 柔軟な検索: ID、名前、fullNameで検索
+                    const player = dbPlayers.find(p => 
+                        p.id == playerId || 
+                        p.playerId == playerId || 
+                        p.player_id == playerId || 
+                        p.name === playerId || 
+                        p.name?.toLowerCase() === playerId.toLowerCase() ||
+                        p.fullName === playerId || 
+                        p.fullName?.toLowerCase() === playerId.toLowerCase()
+                    );
+                    
+                    if (player) {
+                        console.log(`✅ DatabaseManagerから選手を発見: ${player.name} (${player.id})`);
+                        playerStats = {
+                            ...player,
+                            source: 'database',
+                            stats: player.stats || {}
+                        };
+                    } else {
+                        console.log(`⚠️ DatabaseManagerに選手が見つかりません: ${playerId}`);
+                        console.log(`📊 利用可能なIDの例: ${dbPlayers.slice(0, 3).map(p => p.id).join(', ')}`);
+                    }
                 }
             } catch (error) {
-                console.log('⚠️ 包括的データベースからの取得に失敗:', error.message);
+                console.log('⚠️ DatabaseManagerからの取得に失敗:', error.message);
             }
         }
         
