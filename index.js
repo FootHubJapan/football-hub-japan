@@ -464,13 +464,14 @@ app.get('/api/native-stats/stats/:playerId/:season', async (req, res) => {
 app.get('/api/player-stats/:playerId', async (req, res) => {
     try {
         const playerId = req.params.playerId;
+        const forceApi = (req.query.forceApi === '1' || req.query.forceApi === 'true');
         console.log(`🔍 選手スタッツ取得中: ${playerId}`);
         
         let playerStats = null;
         let dbPlayers = [];
         
         // 1. DatabaseManagerから最新選手データを取得（/api/ranking/playersと同じロジック）
-        if (apiService && apiService.dbManager) {
+        if (!forceApi && apiService && apiService.dbManager) {
             try {
                 console.log('🔄 DatabaseManagerから最新選手データを取得中...');
                 dbPlayers = await apiService.dbManager.loadComprehensivePlayers();
@@ -506,7 +507,7 @@ app.get('/api/player-stats/:playerId', async (req, res) => {
         }
         
         // 2. ローカルファイルから選手データを取得
-        if (!playerStats) {
+        if (!forceApi && !playerStats) {
             try {
                 const fs = require('fs');
                 const path = require('path');
@@ -533,62 +534,100 @@ app.get('/api/player-stats/:playerId', async (req, res) => {
         }
         
         // 2.5. 直接API-Footballから選手データを取得（リアルタイム）
-        if (!playerStats && process.env.API_FOOTBALL_KEY) {
+        if (process.env.API_FOOTBALL_KEY) {
             try {
-                console.log(`🔄 直接API-Footballから選手データを取得中: ${playerId}`);
+                // forceApiの場合、または既存データに統計がない場合にAPIから取得
+                const shouldFetchFromApi = forceApi || !playerStats || !playerStats.stats || 
+                    Object.values(playerStats.stats).every(v => v === null || v === 0 || v === 'N/A');
                 
-                // 選手名で検索
-                const searchResponse = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(playerId)}&season=2024`, {
-                    headers: {
-                        'x-rapidapi-key': process.env.API_FOOTBALL_KEY,
-                        'x-rapidapi-host': 'v3.football.api-sports.io'
-                    }
-                });
-                
-                if (searchResponse.ok) {
-                    const searchData = await searchResponse.json();
-                    const players = searchData.response || [];
+                if (shouldFetchFromApi) {
+                    console.log(`🔄 直接API-Footballから選手データを取得中: ${playerId}`);
                     
-                    if (players.length > 0) {
-                        const player = players[0];
-                        const stats = player.statistics?.[0] || {};
+                    // 選手名で検索
+                    const searchResponse = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(playerId)}&season=2024`, {
+                        headers: {
+                            'x-rapidapi-key': process.env.API_FOOTBALL_KEY,
+                            'x-rapidapi-host': 'v3.football.api-sports.io'
+                        }
+                    });
+                    
+                    if (searchResponse.ok) {
+                        const searchData = await searchResponse.json();
+                        const players = searchData.response || [];
                         
-                        playerStats = {
-                            id: `api_${player.player.id}`,
-                            name: player.player.name,
-                            fullName: player.player.name,
-                            age: player.player.age,
-                            nationality: player.player.nationality,
-                            photo: player.player.photo,
-                            currentTeam: stats.team?.name || 'Unknown',
-                            teamId: stats.team?.id,
-                            position: stats.games?.position || 'Unknown',
-                            league: stats.league?.name || 'Unknown',
-                            leagueId: stats.league?.id,
-                            stats: {
-                                appearances: stats.games?.appearences || 0,
-                                lineups: stats.games?.lineups || 0,
-                                minutes: stats.games?.minutes || 0,
-                                rating: stats.games?.rating || 'N/A',
-                                goals: stats.goals?.total || 0,
-                                assists: stats.goals?.assists || 0,
-                                yellowCards: stats.cards?.yellow || 0,
-                                redCards: stats.cards?.red || 0,
-                                shotsTotal: stats.shots?.total || 0,
-                                shotsOnTarget: stats.shots?.on || 0,
-                                passesTotal: stats.passes?.total || 0,
-                                passAccuracy: stats.passes?.accuracy || 0,
-                                tackles: stats.tackles?.total || 0,
-                                interceptions: stats.tackles?.interceptions || 0,
-                                duelsTotal: stats.duels?.total || 0,
-                                duelsWon: stats.duels?.won || 0
-                            },
-                            source: 'apiFootball-direct',
-                            season: '2024/2025',
-                            lastUpdated: new Date().toISOString()
-                        };
+                        console.log(`📊 API検索結果: ${players.length}名の選手が見つかりました`);
                         
-                        console.log(`✅ 直接API-Footballから選手データを取得: ${player.player.name}`);
+                        if (players.length > 0) {
+                            // 最も一致度が高い選手を選択
+                            let bestMatch = players[0];
+                            
+                            // 名前が完全一致する選手を優先
+                            const exactMatch = players.find(p => 
+                                p.player.name === playerId || 
+                                p.player.name.toLowerCase() === playerId.toLowerCase()
+                            );
+                            
+                            if (exactMatch) {
+                                bestMatch = exactMatch;
+                                console.log(`✅ 完全一致する選手を発見: ${exactMatch.player.name}`);
+                            } else {
+                                console.log(`⚠️ 部分一致の選手を使用: ${bestMatch.player.name}`);
+                            }
+                            
+                            const player = bestMatch;
+                            const stats = player.statistics?.[0] || {};
+                            
+                            playerStats = {
+                                id: `api_${player.player.id}`,
+                                name: player.player.name,
+                                fullName: player.player.name,
+                                age: player.player.age,
+                                nationality: player.player.nationality,
+                                photo: player.player.photo,
+                                currentTeam: stats.team?.name || 'Unknown',
+                                teamId: stats.team?.id,
+                                position: stats.games?.position || 'Unknown',
+                                league: stats.league?.name || 'Unknown',
+                                leagueId: stats.league?.id,
+                                stats: {
+                                    appearances: stats.games?.appearences || 0,
+                                    lineups: stats.games?.lineups || 0,
+                                    minutes: stats.games?.minutes || 0,
+                                    rating: stats.games?.rating || 'N/A',
+                                    goals: stats.goals?.total || 0,
+                                    assists: stats.goals?.assists || 0,
+                                    saves: stats.goals?.saves || 0,
+                                    conceded: stats.goals?.conceded || 0,
+                                    yellowCards: stats.cards?.yellow || 0,
+                                    redCards: stats.cards?.red || 0,
+                                    shotsTotal: stats.shots?.total || 0,
+                                    shotsOnTarget: stats.shots?.on || 0,
+                                    passesTotal: stats.passes?.total || 0,
+                                    passesKey: stats.passes?.key || 0,
+                                    passAccuracy: stats.passes?.accuracy ? `${stats.passes.accuracy}%` : '0%',
+                                    tackles: stats.tackles?.total || 0,
+                                    blocks: stats.tackles?.blocks || 0,
+                                    interceptions: stats.tackles?.interceptions || 0,
+                                    duelsTotal: stats.duels?.total || 0,
+                                    duelsWon: stats.duels?.won || 0,
+                                    dribblesAttempts: stats.dribbles?.attempts || 0,
+                                    dribblesSuccess: stats.dribbles?.success || 0,
+                                    foulsDraw: stats.fouls?.drawn || 0,
+                                    foulsCommitted: stats.fouls?.committed || 0,
+                                    penalty: stats.penalty || {}
+                                },
+                                source: 'apiFootball-direct',
+                                season: '2024/2025',
+                                lastUpdated: new Date().toISOString()
+                            };
+                            
+                            console.log(`✅ 直接API-Footballから選手データを取得: ${player.player.name}`);
+                            console.log(`📊 統計データ: ${playerStats.stats.goals}G, ${playerStats.stats.assists}A, ${playerStats.stats.appearances}試合`);
+                        } else {
+                            console.log(`⚠️ "${playerId}"に一致する選手が見つかりませんでした`);
+                        }
+                    } else {
+                        console.log(`⚠️ API検索失敗: ${searchResponse.status} ${searchResponse.statusText}`);
                     }
                 }
             } catch (error) {
