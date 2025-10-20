@@ -1042,8 +1042,8 @@ app.get('/api/ranking/players', async (req, res) => {
                         }));
                         
                         console.log(`✅ Converted ${players.length} players from local file`);
-                    }
-                } else {
+            }
+        } else {
                     console.log(`⚠️ Players data file not found at: ${playersDataPath}`);
                 }
             } catch (localError) {
@@ -3907,7 +3907,7 @@ app.get('/api/japanese-players', async (req, res) => {
         
         // 開発環境でも包括的データ収集を優先
         console.log(`✅ 包括的なデータ収集を実行します（全選手データ取得）...`);
-        return await executeComprehensiveCollection();
+            return await executeComprehensiveCollection();
     } catch (error) {
         console.error('❌ Error in /api/japanese-players:', error);
         res.status(500).json({ 
