@@ -543,16 +543,36 @@ app.get('/api/player-stats/:playerId', async (req, res) => {
                 if (shouldFetchFromApi) {
                     console.log(`🔄 直接API-Footballから選手データを取得中: ${playerId}`);
                     
-                    // 選手名で検索
-                    const searchResponse = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(playerId)}&season=2024`, {
-                        headers: {
-                            'x-rapidapi-key': process.env.API_FOOTBALL_KEY,
-                            'x-rapidapi-host': 'v3.football.api-sports.io'
-                        }
-                    });
+                    // 選手名で検索（主要リーグで検索）
+                    const majorLeagues = [39, 140, 135, 78, 61, 98, 88, 94]; // Premier League, La Liga, Serie A, Bundesliga, Ligue 1, J1 League, Eredivisie, Primeira Liga
+                    let searchResponse = null;
+                    let searchData = null;
                     
-                    if (searchResponse.ok) {
-                        const searchData = await searchResponse.json();
+                    // 各リーグで検索を試行
+                    for (const leagueId of majorLeagues) {
+                        try {
+                            searchResponse = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(playerId)}&league=${leagueId}&season=2024`, {
+                                headers: {
+                                    'x-apisports-key': process.env.API_FOOTBALL_KEY
+                                }
+                            });
+                            
+                            if (searchResponse.ok) {
+                                searchData = await searchResponse.json();
+                                if (searchData.results > 0) {
+                                    console.log(`   ✅ リーグ${leagueId}で選手を発見`);
+                                    break;
+                                }
+                            }
+                            
+                            // API制限対策
+                            await new Promise(resolve => setTimeout(resolve, 200));
+                        } catch (error) {
+                            console.log(`   ⚠️ リーグ${leagueId}での検索エラー: ${error.message}`);
+                        }
+                    }
+                    
+                    if (searchResponse && searchResponse.ok && searchData && searchData.results > 0) {
                         const players = searchData.response || [];
                         
                         console.log(`📊 API検索結果: ${players.length}名の選手が見つかりました`);
