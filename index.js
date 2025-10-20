@@ -3993,6 +3993,57 @@ app.post('/api/execute-direct-api-collection', async (req, res) => {
     }
 });
 
+// 全選手データを直接取得するエンドポイント（デバッグ用）
+app.get('/api/players/all', async (req, res) => {
+    try {
+        console.log('🔍 全選手データ取得リクエスト');
+        
+        let players = [];
+        
+        // DatabaseManagerから取得を試みる
+        if (apiService && apiService.dbManager) {
+            try {
+                players = await apiService.dbManager.loadComprehensivePlayers();
+                console.log(`✅ DatabaseManagerから${players.length}名を取得`);
+            } catch (dbError) {
+                console.log('⚠️ DatabaseManager取得失敗:', dbError.message);
+            }
+        }
+        
+        // フォールバック: ローカルファイルから取得
+        if (players.length === 0) {
+            try {
+                const playersDataPath = path.join(__dirname, 'data', 'players.json');
+                if (fs.existsSync(playersDataPath)) {
+                    const playersData = fs.readFileSync(playersDataPath, 'utf8');
+                    players = JSON.parse(playersData);
+                    console.log(`✅ ローカルファイルから${players.length}名を取得`);
+                }
+            } catch (fileError) {
+                console.log('⚠️ ファイル取得失敗:', fileError.message);
+            }
+        }
+        
+        const limit = parseInt(req.query.limit) || 1000;
+        const returnedPlayers = players.slice(0, limit);
+        
+        res.json({
+            players: returnedPlayers,
+            total: players.length,
+            limit: limit,
+            source: players.length > 100 ? 'database' : 'fallback',
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('全選手データ取得エラー:', error);
+        res.status(500).json({ 
+            error: 'Failed to get all players',
+            message: error.message
+        });
+    }
+});
+
 // API制限をチェックする関数
 async function checkApiLimits() {
     try {
