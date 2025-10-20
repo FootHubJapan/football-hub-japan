@@ -473,7 +473,9 @@ app.get('/api/player-stats/:playerId', async (req, res) => {
             try {
                 const comprehensivePlayers = await apiService.dbManager.loadComprehensivePlayers();
                 const player = comprehensivePlayers.find(p => 
-                    p.id == playerId || p.playerId == playerId || p.player_id == playerId || p.name === playerId
+                    p.id == playerId || p.playerId == playerId || p.player_id == playerId || 
+                    p.name === playerId || p.name?.toLowerCase() === playerId.toLowerCase() ||
+                    p.fullName === playerId || p.fullName?.toLowerCase() === playerId.toLowerCase()
                 );
                 
                 if (player && player.stats) {
