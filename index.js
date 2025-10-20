@@ -4266,23 +4266,26 @@ async function executeComprehensiveCollection() {
     }
 }
 
-// 直接APIから全選手データを取得
+// 直接APIから全選手データを取得（実際の統計データ含む）
 async function executeDirectAPICollection() {
-    console.log('🚀 直接APIから全選手データを取得開始...');
+    console.log('🚀 直接APIから全選手データを取得開始（実際の統計データ含む）...');
     
     const majorLeagues = [
-        { id: 39, name: 'Premier League', code: 'PL' },
-        { id: 140, name: 'La Liga', code: 'PD' },
-        { id: 135, name: 'Serie A', code: 'SA' },
-        { id: 78, name: 'Bundesliga', code: 'BL1' },
-        { id: 61, name: 'Ligue 1', code: 'FL1' },
-        { id: 88, name: 'Eredivisie', code: 'NL1' },
-        { id: 94, name: 'Primeira Liga', code: 'PPL' },
-        { id: 98, name: 'J1 League', code: 'J1' }
+        { id: 39, name: 'Premier League', code: 'PL', priority: 1 },
+        { id: 140, name: 'La Liga', code: 'PD', priority: 1 },
+        { id: 135, name: 'Serie A', code: 'SA', priority: 1 },
+        { id: 78, name: 'Bundesliga', code: 'BL1', priority: 1 },
+        { id: 61, name: 'Ligue 1', code: 'FL1', priority: 1 },
+        { id: 98, name: 'J1 League', code: 'J1', priority: 1 },
+        { id: 88, name: 'Eredivisie', code: 'NL1', priority: 2 },
+        { id: 94, name: 'Primeira Liga', code: 'PPL', priority: 2 }
     ];
     
     let totalPlayers = 0;
+    let totalTeamsProcessed = 0;
     const currentSeason = 2024;
+    
+    console.log(`📊 対象: ${majorLeagues.length}リーグから全選手データを取得`);
     
     for (const league of majorLeagues) {
         try {
@@ -4332,7 +4335,7 @@ async function executeDirectAPICollection() {
                     
                     console.log(`      📊 ${players.length}名の選手を発見`);
                     
-                    // 各選手を保存
+                    // 各選手を保存（実際のAPIデータを使用）
                     for (const playerData of players) {
                         const player = playerData.player;
                         const stats = playerData.statistics?.[0] || {};
@@ -4345,25 +4348,41 @@ async function executeDirectAPICollection() {
                             lastName: player.lastname || player.name.split(' ').slice(1).join(' '),
                             age: player.age,
                             nationality: player.nationality,
-                            photo: player.photo,
+                            photo: player.photo, // 実際の選手写真URL
                             currentTeam: team.name,
+                            teamId: team.id,
                             position: stats.games?.position || 'Unknown',
                             detailedPosition: stats.games?.position || 'Unknown',
                             league: league.name,
                             leagueCode: league.code,
+                            leagueId: league.id,
                             stats: {
+                                // ===== 実際のAPIデータを使用 =====
                                 appearances: stats.games?.appearences || 0,
+                                lineups: stats.games?.lineups || 0,
                                 minutes: stats.games?.minutes || 0,
                                 rating: stats.games?.rating || 'N/A',
                                 goals: stats.goals?.total || 0,
                                 assists: stats.goals?.assists || 0,
+                                saves: stats.goals?.saves || 0,
+                                conceded: stats.goals?.conceded || 0,
                                 yellowCards: stats.cards?.yellow || 0,
                                 redCards: stats.cards?.red || 0,
                                 shotsTotal: stats.shots?.total || 0,
                                 shotsOnTarget: stats.shots?.on || 0,
-                                passAccuracy: stats.passes?.accuracy ? `${stats.passes.accuracy}%` : 'N/A',
+                                passesTotal: stats.passes?.total || 0,
+                                passesKey: stats.passes?.key || 0,
+                                passAccuracy: stats.passes?.accuracy || 0,
                                 tackles: stats.tackles?.total || 0,
-                                interceptions: stats.tackles?.interceptions || 0
+                                blocks: stats.tackles?.blocks || 0,
+                                interceptions: stats.tackles?.interceptions || 0,
+                                duelsTotal: stats.duels?.total || 0,
+                                duelsWon: stats.duels?.won || 0,
+                                dribblesAttempts: stats.dribbles?.attempts || 0,
+                                dribblesSuccess: stats.dribbles?.success || 0,
+                                foulsDraw: stats.fouls?.drawn || 0,
+                                foulsCommitted: stats.fouls?.committed || 0,
+                                penalty: stats.penalty || {}
                             },
                             lastUpdated: new Date().toISOString(),
                             source: 'api-football-direct'
@@ -4374,15 +4393,18 @@ async function executeDirectAPICollection() {
                             totalPlayers++;
                             
                             if (totalPlayers % 50 === 0) {
-                                console.log(`   📈 累計: ${totalPlayers}名の選手を保存`);
+                                console.log(`   📈 累計: ${totalPlayers}名の選手を保存 (${team.name})`);
                             }
                         } catch (saveError) {
                             console.error(`      ❌ ${player.name} の保存失敗:`, saveError.message);
                         }
                     }
                     
+                    totalTeamsProcessed++;
+                    console.log(`      ✅ ${team.name} 完了 (${totalTeamsProcessed}チーム目)`);
+                    
                     // API制限を考慮して待機
-                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // 1秒に変更
                     
                 } catch (teamError) {
                     console.error(`   ❌ ${team.name} の処理エラー:`, teamError.message);
@@ -4390,16 +4412,24 @@ async function executeDirectAPICollection() {
                 }
             }
             
-            // リーグ間の待機
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            // リーグ間の待機（優先度によって調整）
+            const waitTime = league.priority === 1 ? 2000 : 3000;
+            console.log(`   ⏱️ 次のリーグまで${waitTime}ms待機...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
             
         } catch (leagueError) {
             console.error(`❌ ${league.name} の処理エラー:`, leagueError.message);
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            console.error(`エラー詳細:`, leagueError.stack);
+            await new Promise(resolve => setTimeout(resolve, 3000));
         }
     }
     
     console.log(`🎯 直接API収集完了: ${totalPlayers}名の選手を取得`);
+    console.log(`📊 最終統計:`);
+    console.log(`   - 処理したチーム: ${totalTeamsProcessed}チーム`);
+    console.log(`   - 取得した選手: ${totalPlayers}名`);
+    console.log(`   - 平均: ${(totalPlayers / totalTeamsProcessed).toFixed(1)}名/チーム`);
+    
     return totalPlayers;
 }
 
