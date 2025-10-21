@@ -478,15 +478,21 @@
                 // 1. まず実際のAPIデータを取得
                 try {
                     console.log('🔄 実際のAPIデータを取得中...');
-                    const response = await fetch(`/api/player-stats/${encodeURIComponent(playerId)}`);
+                    const response = await fetch(`/api/player-stats/${encodeURIComponent(playerId)}?forceApi=1`);
                     
                     if (response.ok) {
                         const apiPlayerData = await response.json();
-                        console.log(`✅ 実際のAPIデータを取得: ${apiPlayerData.name || playerId} (${apiPlayerData.source})`);
-                        displayPlayerData(apiPlayerData);
-                        return;
+                        const stats = apiPlayerData?.stats || {};
+                        const statsSum = ['goals','assists','appearances','minutes','shotsTotal','passesTotal']
+                            .map(k => Number(stats[k] || 0)).reduce((a,b)=>a+b,0);
+                        if (apiPlayerData && (apiPlayerData.name || apiPlayerData.fullName) && statsSum > 0) {
+                            console.log(`✅ 実際のAPIデータを取得: ${apiPlayerData.name || playerId} (${apiPlayerData.source})`);
+                            displayPlayerData(apiPlayerData);
+                            return;
+                        }
+                        console.log('⚠️ APIレスポンスはあるがスタッツが空。名前検索にフォールバック');
                     } else {
-                        console.log('⚠️ APIデータの取得に失敗、ローカルデータを使用');
+                        console.log('⚠️ APIデータの取得に失敗、名前検索にフォールバック');
                     }
                 } catch (apiError) {
                     console.log('⚠️ APIデータの取得中にエラー:', apiError.message);
@@ -515,6 +521,18 @@
                 console.log('Found player:', player);
                 
                 if (player) {
+                    // 名前でバックエンド再解決（efficient_* など内部ID→実名に変換して正しいスタッツ取得）
+                    try {
+                        const byName = player.name || player.fullName || player.englishName;
+                        if (byName) {
+                            const nameResp = await fetch(`/api/player-stats/${encodeURIComponent(byName)}?forceApi=1`);
+                            if (nameResp.ok) {
+                                const nameData = await nameResp.json();
+                                displayPlayerData(nameData);
+                                return;
+                            }
+                        }
+                    } catch {}
                     displayPlayerData(player);
                 } else {
                     // フォールバックデータを使用

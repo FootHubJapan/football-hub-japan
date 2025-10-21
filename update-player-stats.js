@@ -22,31 +22,67 @@ async function fetchPlayerStats(playerName) {
         let response = null;
         let data = null;
         
+        // 日本語名と英語名の両方で検索
+        const searchNames = [playerName];
+        
+        // 日本語選手名の英語名マッピング
+        const nameMapping = {
+            '久保建英': ['Kubo', 'Takefusa Kubo', 'T. Kubo'],
+            '三苫薫': ['Mitoma', 'Kaoru Mitoma', 'K. Mitoma'],
+            '富安健洋': ['Tomiyasu', 'Takehiro Tomiyasu', 'T. Tomiyasu'],
+            '遠藤航': ['Endo', 'Wataru Endo', 'W. Endo'],
+            '堂安律': ['Doan', 'Ritsu Doan', 'R. Doan'],
+            '伊藤洋輝': ['Ito', 'Hiroki Ito', 'H. Ito'],
+            '浅野拓磨': ['Asano', 'Takuma Asano', 'T. Asano'],
+            '板倉滉': ['Itakura', 'Ko Itakura', 'K. Itakura'],
+            '鎌田大地': ['Kamada', 'Daichi Kamada', 'D. Kamada'],
+            '久保田空': ['Kubota', 'Sora Kubota', 'S. Kubota'],
+            '田中碧': ['Tanaka', 'Ao Tanaka', 'A. Tanaka'],
+            '南野拓実': ['Minamino', 'Takumi Minamino', 'T. Minamino'],
+            '伊東純也': ['Ito', 'Junya Ito', 'J. Ito'],
+            '守田英正': ['Morita', 'Hidemasa Morita', 'H. Morita'],
+            '町田浩樹': ['Machida', 'Hiroki Machida', 'H. Machida'],
+            '上田綺世': ['Ueda', 'Ayase Ueda', 'A. Ueda'],
+            '古橋亨梧': ['Furuhashi', 'Kyogo Furuhashi', 'K. Furuhashi'],
+            '旗手怜央': ['Hatate', 'Reo Hatate', 'R. Hatate'],
+            '前田大然': ['Maeda', 'Daizen Maeda', 'D. Maeda'],
+            '菅原由勢': ['Sugawara', 'Yukinari Sugawara', 'Y. Sugawara'],
+            '中村敬斗': ['Nakamura', 'Keito Nakamura', 'K. Nakamura']
+        };
+        
+        if (nameMapping[playerName]) {
+            searchNames.push(...nameMapping[playerName]);
+        }
+        
         // 各リーグで検索を試行
         for (const leagueId of majorLeagues) {
-            try {
-                response = await fetch(
-                    `https://v3.football.api-sports.io/players?search=${encodeURIComponent(playerName)}&league=${leagueId}&season=2024`,
-                    {
-                        headers: {
-                            'x-apisports-key': API_KEY
+            for (const searchName of searchNames) {
+                try {
+                    response = await fetch(
+                        `https://v3.football.api-sports.io/players?search=${encodeURIComponent(searchName)}&league=${leagueId}&season=2024`,
+                        {
+                            headers: {
+                                'x-apisports-key': API_KEY
+                            }
+                        }
+                    );
+                    
+                    if (response.ok) {
+                        data = await response.json();
+                        if (data.results > 0) {
+                            console.log(`   ✅ リーグ${leagueId}で選手を発見: ${searchName}`);
+                            break;
                         }
                     }
-                );
-                
-                if (response.ok) {
-                    data = await response.json();
-                    if (data.results > 0) {
-                        console.log(`   ✅ リーグ${leagueId}で選手を発見`);
-                        break;
-                    }
+                    
+                    // API制限対策
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                } catch (error) {
+                    console.log(`   ⚠️ リーグ${leagueId}での検索エラー (${searchName}): ${error.message}`);
                 }
-                
-                // API制限対策
-                await new Promise(resolve => setTimeout(resolve, 200));
-            } catch (error) {
-                console.log(`   ⚠️ リーグ${leagueId}での検索エラー: ${error.message}`);
             }
+            
+            if (data && data.results > 0) break;
         }
 
         if (!response || !response.ok || !data || data.results === 0) {
