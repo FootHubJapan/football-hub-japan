@@ -49,6 +49,19 @@ try {
     footballDataService = null;
 }
 
+// Football-data.org API統合サービス
+let footballDataIntegration;
+
+try {
+    console.log('Loading Football-data.org Integration...');
+    const { FootballDataIntegration } = require('./football-data-integration');
+    footballDataIntegration = new FootballDataIntegration();
+    console.log('Football-data.org Integration loaded successfully');
+} catch (error) {
+    console.error('Error loading Football-data.org Integration:', error);
+    footballDataIntegration = null;
+}
+
 // API連携サービスを追加
 let apiService;
 
@@ -3498,6 +3511,64 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
     process.exit(1);
+});
+
+// Football-data.org API エンドポイント
+app.get('/api/football-data/leagues', async (req, res) => {
+    try {
+        if (!footballDataIntegration) {
+            return res.status(500).json({ error: 'Football-data.org API統合が利用できません' });
+        }
+
+        const leagues = await footballDataIntegration.testAPI();
+        res.json({ leagues });
+    } catch (error) {
+        console.error('Football-data.org leagues error:', error);
+        res.status(500).json({ 
+            error: 'リーグデータの取得に失敗しました',
+            message: error.message
+        });
+    }
+});
+
+app.get('/api/football-data/matches/:leagueId', async (req, res) => {
+    try {
+        const { leagueId } = req.params;
+        const { season = 2024 } = req.query;
+
+        if (!footballDataIntegration) {
+            return res.status(500).json({ error: 'Football-data.org API統合が利用できません' });
+        }
+
+        const matches = await footballDataIntegration.fetchMatchesForLeague(leagueId, season);
+        res.json({ matches });
+    } catch (error) {
+        console.error('Football-data.org matches error:', error);
+        res.status(500).json({ 
+            error: '試合データの取得に失敗しました',
+            message: error.message
+        });
+    }
+});
+
+app.get('/api/football-data/player/:playerId', async (req, res) => {
+    try {
+        const { playerId } = req.params;
+        const { season = 2024 } = req.query;
+
+        if (!footballDataIntegration) {
+            return res.status(500).json({ error: 'Football-data.org API統合が利用できません' });
+        }
+
+        const playerStats = await footballDataIntegration.fetchPlayerMatches(playerId, season);
+        res.json({ playerStats });
+    } catch (error) {
+        console.error('Football-data.org player error:', error);
+        res.status(500).json({ 
+            error: '選手データの取得に失敗しました',
+            message: error.message
+        });
+    }
 });
 
 // サーバー起動は最後に統合
