@@ -12,9 +12,9 @@ const path = require('path');
 // Football-data.org API設定
 const FOOTBALL_DATA_CONFIG = {
     baseUrl: 'https://api.football-data.org/v4',
-    apiKey: process.env.FOOTBALL_DATA_API_KEY || 'your-api-key-here',
+    apiKey: process.env.FOOTBALL_DATA_API_KEY,
     headers: {
-        'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY || 'your-api-key-here',
+        'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY,
         'Content-Type': 'application/json'
     },
     rateLimit: {
