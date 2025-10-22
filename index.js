@@ -3941,15 +3941,66 @@ app.get('/api/integrated/matches', async (req, res) => {
         
         console.log(`🔍 統合マッチデータ取得: league=${league}, season=${season}, status=${status}`);
         
-        // 統合された試合データを読み込み
-        const fs = require('fs');
-        const integratedMatchesPath = path.join(__dirname, 'data', 'integrated-matches.json');
-        
         let matches = [];
-        if (fs.existsSync(integratedMatchesPath)) {
-            const data = await fs.promises.readFile(integratedMatchesPath, 'utf8');
-            matches = JSON.parse(data);
-            console.log(`📊 統合マッチデータ読み込み: ${matches.length}件`);
+        let dataSource = 'fallback';
+        
+        try {
+            // リアルタイムAPI呼び出しを試行
+            console.log('🔄 リアルタイムAPI呼び出しを開始...');
+            
+            // API-Footballからマッチデータを取得
+            const apiFootballMatches = await dataService.getMatches({
+                league: league,
+                season: season,
+                status: status
+            });
+            
+            console.log(`📊 API-Footballから取得: ${apiFootballMatches?.length || 0}件`);
+            
+            if (apiFootballMatches && apiFootballMatches.length > 0) {
+                matches = apiFootballMatches;
+                dataSource = 'api-football';
+            } else {
+                // Football-data.orgからも試行
+                console.log('🔄 Football-data.orgからも取得を試行...');
+                const footballDataMatches = await footballDataService.getMatches({
+                    league: league,
+                    season: season
+                });
+                
+                if (footballDataMatches && footballDataMatches.length > 0) {
+                    matches = footballDataMatches;
+                    dataSource = 'football-data';
+                }
+            }
+            
+            // リアルタイムAPIが失敗した場合、フォールバックデータを使用
+            if (matches.length === 0) {
+                console.log('⚠️ リアルタイムAPI失敗、フォールバックデータを使用');
+                const fs = require('fs');
+                const integratedMatchesPath = path.join(__dirname, 'data', 'integrated-matches.json');
+                
+                if (fs.existsSync(integratedMatchesPath)) {
+                    const data = await fs.promises.readFile(integratedMatchesPath, 'utf8');
+                    matches = JSON.parse(data);
+                    dataSource = 'fallback';
+                    console.log(`📊 フォールバックデータ読み込み: ${matches.length}件`);
+                }
+            }
+            
+        } catch (apiError) {
+            console.log('⚠️ リアルタイムAPI呼び出しエラー:', apiError.message);
+            
+            // フォールバックデータを使用
+            const fs = require('fs');
+            const integratedMatchesPath = path.join(__dirname, 'data', 'integrated-matches.json');
+            
+            if (fs.existsSync(integratedMatchesPath)) {
+                const data = await fs.promises.readFile(integratedMatchesPath, 'utf8');
+                matches = JSON.parse(data);
+                dataSource = 'fallback';
+                console.log(`📊 フォールバックデータ読み込み: ${matches.length}件`);
+            }
         }
         
         // フィルタリング
@@ -4010,7 +4061,8 @@ app.get('/api/integrated/matches', async (req, res) => {
         res.set({
             'Content-Type': 'application/json',
             'Cache-Control': 'public, max-age=300', // 5分キャッシュ
-            'X-Response-Size': `${JSON.stringify(limitedMatches).length}`
+            'X-Response-Size': `${JSON.stringify(limitedMatches).length}`,
+            'X-Data-Source': dataSource
         });
         
         res.json({ 
@@ -4018,7 +4070,10 @@ app.get('/api/integrated/matches', async (req, res) => {
             total: matches.length,
             limited: limitedMatches.length < matches.length,
             filters: { league, season, status },
-            sources: ['API-Football', 'Football-data.org'],
+            sources: dataSource === 'api-football' ? ['API-Football'] : 
+                     dataSource === 'football-data' ? ['Football-data.org'] : 
+                     ['API-Football', 'Football-data.org'],
+            dataSource: dataSource,
             timestamp: new Date().toISOString()
         });
     } catch (error) {

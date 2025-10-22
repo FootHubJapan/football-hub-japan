@@ -2898,19 +2898,26 @@
                 }
                 
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
-                    console.log(`Found matches from ${dataSource}:`, data.matches.length);
-                    console.log('🔍 最初のマッチのデータ構造:', data.matches[0]);
-                    currentMatches = data.matches;
+                  console.log(`Found matches from ${dataSource}:`, data.matches.length);
+                  console.log('🔍 最初のマッチのデータ構造:', data.matches[0]);
+                  currentMatches = data.matches;
+                  
+                  // データソースを更新
+                  dataSource = data.dataSource || dataSource;
                     
                     // データソース情報を表示
                   const dataSourceInfo = document.createElement('div');
                   dataSourceInfo.className = 'data-source-info';
                   dataSourceInfo.innerHTML = `
                       <div class="source-badge">
-                          <span class="source-icon">${dataSource === 'integrated' ? '🔗' : '⚽'}</span>
+                          <span class="source-icon">${dataSource === 'integrated' ? '🔗' : dataSource === 'api-football' ? '⚽' : dataSource === 'football-data' ? '🌐' : '📁'}</span>
                           <span class="source-text">${dataSource === 'integrated' ? 
                               `統合データ (API-Football + Football-data.org) - ${data.matches.length}件表示${data.limited ? ` (全${data.total}件中)` : ''}` : 
-                              'API-Football'}</span>
+                              dataSource === 'api-football' ? 
+                              `API-Football (リアルタイム) - ${data.matches.length}件表示${data.limited ? ` (全${data.total}件中)` : ''}` :
+                              dataSource === 'football-data' ? 
+                              `Football-data.org (リアルタイム) - ${data.matches.length}件表示${data.limited ? ` (全${data.total}件中)` : ''}` :
+                              `フォールバックデータ - ${data.matches.length}件表示${data.limited ? ` (全${data.total}件中)` : ''}`}</span>
                       </div>
                   `;
                     
