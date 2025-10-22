@@ -3834,12 +3834,18 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
             players = JSON.parse(data);
         }
         
-        // 選手を検索
+        // 選手を検索（複数のID形式に対応）
         const player = players.find(p => 
             p.id === playerId || 
             p.apiFootballId === playerId || 
             p.footballDataId === playerId ||
-            p.name.toLowerCase().includes(playerId.toLowerCase())
+            p.playerId === playerId ||
+            p.player_id === playerId ||
+            p.name.toLowerCase().includes(playerId.toLowerCase()) ||
+            p.fullName?.toLowerCase().includes(playerId.toLowerCase()) ||
+            // api_278形式のIDに対応
+            (playerId.startsWith('api_') && p.apiFootballId === playerId.replace('api_', '')) ||
+            (playerId.startsWith('fd_') && p.footballDataId === playerId.replace('fd_', ''))
         );
         
         if (!player) {

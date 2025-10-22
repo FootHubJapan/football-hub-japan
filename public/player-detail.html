@@ -475,9 +475,40 @@
             try {
                 console.log(`🔍 選手データ読み込み開始: ${playerId}`);
                 
-                // 1. まず実際のAPIデータを取得
+                // 1. まず統合APIデータを取得
                 try {
-                    console.log('🔄 実際のAPIデータを取得中...');
+                    console.log('🔄 統合APIデータを取得中...');
+                    const response = await fetch(`/api/integrated/player/${encodeURIComponent(playerId)}`);
+                    
+                    if (response.ok) {
+                        const apiData = await response.json();
+                        const player = apiData?.player;
+                        
+                        if (player && (player.name || player.fullName)) {
+                            console.log(`✅ 統合APIデータを取得: ${player.name || playerId} (${apiData.sources?.join(', ') || 'integrated'})`);
+                            
+                            // 統合データを表示用に変換
+                            const displayData = {
+                                ...player,
+                                source: 'integrated',
+                                stats: player.stats || {},
+                                integration: apiData.integration
+                            };
+                            
+                            displayPlayerData(displayData);
+                            return;
+                        }
+                        console.log('⚠️ 統合APIレスポンスはあるが選手データが空。フォールバックに移行');
+                    } else {
+                        console.log('⚠️ 統合APIデータの取得に失敗、フォールバックに移行');
+                    }
+                } catch (integratedError) {
+                    console.log('⚠️ 統合APIデータの取得中にエラー:', integratedError.message);
+                }
+                
+                // 2. 従来のAPI-Footballエンドポイントを試す
+                try {
+                    console.log('🔄 従来のAPI-Footballデータを取得中...');
                     const response = await fetch(`/api/player-stats/${encodeURIComponent(playerId)}?forceApi=1`);
                     
                     if (response.ok) {
@@ -486,19 +517,19 @@
                         const statsSum = ['goals','assists','appearances','minutes','shotsTotal','passesTotal']
                             .map(k => Number(stats[k] || 0)).reduce((a,b)=>a+b,0);
                         if (apiPlayerData && (apiPlayerData.name || apiPlayerData.fullName) && statsSum > 0) {
-                            console.log(`✅ 実際のAPIデータを取得: ${apiPlayerData.name || playerId} (${apiPlayerData.source})`);
+                            console.log(`✅ 従来のAPIデータを取得: ${apiPlayerData.name || playerId} (${apiPlayerData.source})`);
                             displayPlayerData(apiPlayerData);
                             return;
                         }
-                        console.log('⚠️ APIレスポンスはあるがスタッツが空。名前検索にフォールバック');
+                        console.log('⚠️ 従来のAPIレスポンスはあるがスタッツが空。名前検索にフォールバック');
                     } else {
-                        console.log('⚠️ APIデータの取得に失敗、名前検索にフォールバック');
+                        console.log('⚠️ 従来のAPIデータの取得に失敗、名前検索にフォールバック');
                     }
                 } catch (apiError) {
-                    console.log('⚠️ APIデータの取得中にエラー:', apiError.message);
+                    console.log('⚠️ 従来のAPIデータの取得中にエラー:', apiError.message);
                 }
                 
-                // 2. ローカルストレージから選手データを取得
+                // 3. ローカルストレージから選手データを取得
                 const clickedPlayer = JSON.parse(localStorage.getItem('clickedPlayer') || 'null');
                 
                 if (clickedPlayer && (clickedPlayer.id == playerId || clickedPlayer.playerId == playerId)) {
