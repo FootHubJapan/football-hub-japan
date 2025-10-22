@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-10-22T08:15:33.838Z",
+  "apis": {
+    "football-data.org": {
+      "status": "connected",
+      "apiKey": "configured",
+      "leagues": 10,
+      "players": 9
+    },
+    "api-football": {
+      "status": "connected",
+      "apiKey": "configured"
+    }
+  },
+  "dataSources": {
+    "matches": "football-data.org",
+    "players": "football-data.org + api-football",
+    "teams": "football-data.org",
+    "leagues": "football-data.org"
+  },
+  "integration": {
+    "status": "active",
+    "features": [
+      "Real-time match data",
+      "Comprehensive player statistics",
+      "Multi-league support",
+      "Data persistence",
+      "Rate limiting",
+      "Error handling"
+    ]
+  }
+}

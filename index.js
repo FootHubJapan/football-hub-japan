@@ -3571,6 +3571,124 @@ app.get('/api/football-data/player/:playerId', async (req, res) => {
     }
 });
 
+// 包括的データ統合エンドポイント
+app.get('/api/comprehensive/matches', async (req, res) => {
+    try {
+        const { league, season = 2024 } = req.query;
+        
+        if (!footballDataIntegration) {
+            return res.status(500).json({ error: 'Football-data.org API統合が利用できません' });
+        }
+
+        let matches = [];
+        
+        if (league) {
+            // 特定リーグの試合データを取得
+            const leagueMapping = {
+                'Premier League': 2021,
+                'La Liga': 2014,
+                'Bundesliga': 2002,
+                'Serie A': 2019,
+                'Ligue 1': 2015,
+                'Champions League': 2001,
+                'Championship': 2016,
+                'Eredivisie': 2003,
+                'Primeira Liga': 2017,
+                'Serie A Brazil': 2013
+            };
+            
+            const leagueId = leagueMapping[league];
+            if (leagueId) {
+                matches = await footballDataIntegration.fetchMatchesForLeague(leagueId, season);
+            }
+        } else {
+            // 全リーグの試合データを取得
+            const fs = require('fs');
+            const comprehensiveMatchesPath = path.join(__dirname, 'data', 'comprehensive-matches.json');
+            
+            if (fs.existsSync(comprehensiveMatchesPath)) {
+                const data = await fs.promises.readFile(comprehensiveMatchesPath, 'utf8');
+                matches = JSON.parse(data);
+            }
+        }
+        
+        res.json({ 
+            matches,
+            total: matches.length,
+            source: 'football-data.org',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Comprehensive matches error:', error);
+        res.status(500).json({ 
+            error: '包括的試合データの取得に失敗しました',
+            message: error.message
+        });
+    }
+});
+
+app.get('/api/comprehensive/players', async (req, res) => {
+    try {
+        const fs = require('fs');
+        const comprehensivePlayersPath = path.join(__dirname, 'data', 'comprehensive-players.json');
+        
+        let players = [];
+        if (fs.existsSync(comprehensivePlayersPath)) {
+            const data = await fs.promises.readFile(comprehensivePlayersPath, 'utf8');
+            players = JSON.parse(data);
+        }
+        
+        res.json({ 
+            players,
+            total: players.length,
+            source: 'football-data.org',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Comprehensive players error:', error);
+        res.status(500).json({ 
+            error: '包括的選手データの取得に失敗しました',
+            message: error.message
+        });
+    }
+});
+
+app.get('/api/comprehensive/stats', async (req, res) => {
+    try {
+        const fs = require('fs');
+        const integrationReportPath = path.join(__dirname, 'data', 'integration-report.json');
+        
+        let stats = {};
+        if (fs.existsSync(integrationReportPath)) {
+            const data = await fs.promises.readFile(integrationReportPath, 'utf8');
+            stats = JSON.parse(data);
+        }
+        
+        // データファイルの統計を追加
+        const dataDir = path.join(__dirname, 'data');
+        const files = fs.readdirSync(dataDir);
+        
+        const fileStats = {
+            totalFiles: files.length,
+            matchFiles: files.filter(f => f.includes('matches')).length,
+            playerFiles: files.filter(f => f.includes('player')).length,
+            comprehensiveFiles: files.filter(f => f.includes('comprehensive')).length
+        };
+        
+        res.json({ 
+            integration: stats,
+            files: fileStats,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Comprehensive stats error:', error);
+        res.status(500).json({ 
+            error: '包括的統計データの取得に失敗しました',
+            message: error.message
+        });
+    }
+});
+
 // サーバー起動は最後に統合
 
 // 包括的データ取得コマンド

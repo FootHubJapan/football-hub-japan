@@ -1,0 +1,410 @@
+[
+  {
+    "playerId": 278,
+    "season": 2024,
+    "league": "",
+    "team": "",
+    "appearances": 0,
+    "lineups": 0,
+    "minutes": 0,
+    "matches": [],
+    "source": "football-data.org",
+    "playerName": "Kylian Mbappé",
+    "fdId": 278,
+    "afId": 154,
+    "lastUpdated": "2025-10-22T08:15:13.014Z"
+  },
+  {
+    "playerId": 301,
+    "season": 2024,
+    "league": "",
+    "team": "",
+    "appearances": 0,
+    "lineups": 0,
+    "minutes": 0,
+    "matches": [],
+    "source": "football-data.org",
+    "playerName": "Mohamed Salah",
+    "fdId": 301,
+    "afId": 874,
+    "lastUpdated": "2025-10-22T08:15:15.324Z"
+  },
+  {
+    "playerId": 874,
+    "season": 2024,
+    "league": "",
+    "team": "",
+    "appearances": 0,
+    "lineups": 0,
+    "minutes": 0,
+    "matches": [],
+    "source": "football-data.org",
+    "playerName": "E. Haaland",
+    "fdId": 874,
+    "afId": 874,
+    "lastUpdated": "2025-10-22T08:15:17.625Z"
+  },
+  {
+    "playerId": 154,
+    "season": 2024,
+    "league": "",
+    "team": "",
+    "appearances": 0,
+    "lineups": 0,
+    "minutes": 0,
+    "matches": [],
+    "source": "football-data.org",
+    "playerName": "L. Messi",
+    "fdId": 154,
+    "afId": 154,
+    "lastUpdated": "2025-10-22T08:15:19.964Z"
+  },
+  {
+    "playerId": 874,
+    "season": 2024,
+    "league": "",
+    "team": "",
+    "appearances": 0,
+    "lineups": 0,
+    "minutes": 0,
+    "matches": [],
+    "source": "football-data.org",
+    "playerName": "C. Ronaldo",
+    "fdId": 874,
+    "afId": 874,
+    "lastUpdated": "2025-10-22T08:15:22.293Z"
+  },
+  {
+    "playerId": 1234,
+    "season": 2024,
+    "league": "",
+    "team": "",
+    "appearances": 0,
+    "lineups": 0,
+    "minutes": 0,
+    "matches": [],
+    "source": "football-data.org",
+    "playerName": "久保建英",
+    "fdId": 1234,
+    "afId": 1234,
+    "lastUpdated": "2025-10-22T08:15:24.588Z"
+  },
+  {
+    "playerId": 1235,
+    "season": 2024,
+    "league": "",
+    "team": "",
+    "appearances": 5,
+    "lineups": 4,
+    "minutes": 345,
+    "matches": [
+      {
+        "id": 535172,
+        "homeTeam": {
+          "id": 1782,
+          "name": "EC Vitória"
+        },
+        "awayTeam": {
+          "id": 1765,
+          "name": "Fluminense FC"
+        },
+        "league": 2371,
+        "season": 2025,
+        "date": "2025-09-20T19:00:00Z",
+        "status": "FINISHED",
+        "matchday": 24,
+        "stage": "REGULAR_SEASON",
+        "score": {
+          "fullTime": {
+            "home": 0,
+            "away": 1
+          },
+          "halfTime": {
+            "home": 0,
+            "away": 1
+          }
+        },
+        "venue": "Barradão",
+        "referees": [],
+        "lineups": [],
+        "bookings": [],
+        "goalScorers": [],
+        "lastUpdated": "2025-10-22T05:21:10Z",
+        "source": "football-data.org"
+      },
+      {
+        "id": 535155,
+        "homeTeam": {
+          "id": 1765,
+          "name": "Fluminense FC"
+        },
+        "awayTeam": {
+          "id": 1779,
+          "name": "SC Corinthians Paulista"
+        },
+        "league": 2371,
+        "season": 2025,
+        "date": "2025-09-14T00:00:00Z",
+        "status": "FINISHED",
+        "matchday": 23,
+        "stage": "REGULAR_SEASON",
+        "score": {
+          "fullTime": {
+            "home": 0,
+            "away": 1
+          },
+          "halfTime": {
+            "home": 0,
+            "away": 0
+          }
+        },
+        "venue": "Maracanã",
+        "referees": [],
+        "lineups": [],
+        "bookings": [],
+        "goalScorers": [],
+        "lastUpdated": "2025-10-22T05:21:10Z",
+        "source": "football-data.org"
+      },
+      {
+        "id": 535139,
+        "homeTeam": {
+          "id": 4286,
+          "name": "RB Bragantino"
+        },
+        "awayTeam": {
+          "id": 1765,
+          "name": "Fluminense FC"
+        },
+        "league": 2371,
+        "season": 2025,
+        "date": "2025-08-23T19:00:00Z",
+        "status": "FINISHED",
+        "matchday": 21,
+        "stage": "REGULAR_SEASON",
+        "score": {
+          "fullTime": {
+            "home": 4,
+            "away": 2
+          },
+          "halfTime": {
+            "home": 2,
+            "away": 1
+          }
+        },
+        "venue": "Estádio Nabi Abi Chedid",
+        "referees": [],
+        "lineups": [],
+        "bookings": [],
+        "goalScorers": [],
+        "lastUpdated": "2025-10-22T05:21:10Z",
+        "source": "football-data.org"
+      },
+      {
+        "id": 535125,
+        "homeTeam": {
+          "id": 1765,
+          "name": "Fluminense FC"
+        },
+        "awayTeam": {
+          "id": 3984,
+          "name": "Fortaleza EC"
+        },
+        "league": 2371,
+        "season": 2025,
+        "date": "2025-08-16T19:00:00Z",
+        "status": "FINISHED",
+        "matchday": 20,
+        "stage": "REGULAR_SEASON",
+        "score": {
+          "fullTime": {
+            "home": 2,
+            "away": 1
+          },
+          "halfTime": {
+            "home": 1,
+            "away": 0
+          }
+        },
+        "venue": "Maracanã",
+        "referees": [],
+        "lineups": [],
+        "bookings": [],
+        "goalScorers": [],
+        "lastUpdated": "2025-10-22T05:21:10Z",
+        "source": "football-data.org"
+      },
+      {
+        "id": 535105,
+        "homeTeam": {
+          "id": 1765,
+          "name": "Fluminense FC"
+        },
+        "awayTeam": {
+          "id": 1767,
+          "name": "Grêmio FBPA"
+        },
+        "league": 2371,
+        "season": 2025,
+        "date": "2025-08-03T00:00:00Z",
+        "status": "FINISHED",
+        "matchday": 18,
+        "stage": "REGULAR_SEASON",
+        "score": {
+          "fullTime": {
+            "home": 1,
+            "away": 0
+          },
+          "halfTime": {
+            "home": 1,
+            "away": 0
+          }
+        },
+        "venue": "Maracanã",
+        "referees": [],
+        "lineups": [],
+        "bookings": [],
+        "goalScorers": [],
+        "lastUpdated": "2025-10-22T05:21:10Z",
+        "source": "football-data.org"
+      },
+      {
+        "id": 535098,
+        "homeTeam": {
+          "id": 1776,
+          "name": "São Paulo FC"
+        },
+        "awayTeam": {
+          "id": 1765,
+          "name": "Fluminense FC"
+        },
+        "league": 2371,
+        "season": 2025,
+        "date": "2025-07-27T19:00:00Z",
+        "status": "FINISHED",
+        "matchday": 17,
+        "stage": "REGULAR_SEASON",
+        "score": {
+          "fullTime": {
+            "home": 3,
+            "away": 1
+          },
+          "halfTime": {
+            "home": 1,
+            "away": 0
+          }
+        },
+        "venue": "Morumbí",
+        "referees": [],
+        "lineups": [],
+        "bookings": [],
+        "goalScorers": [],
+        "lastUpdated": "2025-10-22T05:21:10Z",
+        "source": "football-data.org"
+      },
+      {
+        "id": 535085,
+        "homeTeam": {
+          "id": 1765,
+          "name": "Fluminense FC"
+        },
+        "awayTeam": {
+          "id": 1769,
+          "name": "SE Palmeiras"
+        },
+        "league": 2371,
+        "season": 2025,
+        "date": "2025-07-23T22:00:00Z",
+        "status": "FINISHED",
+        "matchday": 16,
+        "stage": "REGULAR_SEASON",
+        "score": {
+          "fullTime": {
+            "home": 1,
+            "away": 2
+          },
+          "halfTime": {
+            "home": 1,
+            "away": 1
+          }
+        },
+        "venue": "Maracanã",
+        "referees": [],
+        "lineups": [],
+        "bookings": [],
+        "goalScorers": [],
+        "lastUpdated": "2025-10-22T05:21:10Z",
+        "source": "football-data.org"
+      },
+      {
+        "id": 535075,
+        "homeTeam": {
+          "id": 1783,
+          "name": "CR Flamengo"
+        },
+        "awayTeam": {
+          "id": 1765,
+          "name": "Fluminense FC"
+        },
+        "league": 2371,
+        "season": 2025,
+        "date": "2025-07-20T22:30:00Z",
+        "status": "FINISHED",
+        "matchday": 15,
+        "stage": "REGULAR_SEASON",
+        "score": {
+          "fullTime": {
+            "home": 1,
+            "away": 0
+          },
+          "halfTime": {
+            "home": 0,
+            "away": 0
+          }
+        },
+        "venue": "Maracanã",
+        "referees": [],
+        "lineups": [],
+        "bookings": [],
+        "goalScorers": [],
+        "lastUpdated": "2025-10-22T05:21:10Z",
+        "source": "football-data.org"
+      }
+    ],
+    "source": "football-data.org",
+    "playerName": "三笘薫",
+    "fdId": 1235,
+    "afId": 1235,
+    "lastUpdated": "2025-10-22T08:15:27.238Z"
+  },
+  {
+    "playerId": 1236,
+    "season": 2024,
+    "league": "",
+    "team": "",
+    "appearances": 0,
+    "lineups": 0,
+    "minutes": 0,
+    "matches": [],
+    "source": "football-data.org",
+    "playerName": "堂安律",
+    "fdId": 1236,
+    "afId": 1236,
+    "lastUpdated": "2025-10-22T08:15:29.533Z"
+  },
+  {
+    "playerId": 1237,
+    "season": 2024,
+    "league": "",
+    "team": "",
+    "appearances": 0,
+    "lineups": 0,
+    "minutes": 0,
+    "matches": [],
+    "source": "football-data.org",
+    "playerName": "遠藤航",
+    "fdId": 1237,
+    "afId": 1237,
+    "lastUpdated": "2025-10-22T08:15:31.836Z"
+  }
+]

@@ -1,0 +1,46 @@
+{
+  "integrationDate": "2025-10-22T08:18:20.362Z",
+  "summary": {
+    "totalPlayers": 5060,
+    "totalMatches": 3490,
+    "dataSources": [
+      "API-Football",
+      "Football-data.org"
+    ]
+  },
+  "playerStats": {
+    "withFootballDataStats": 9,
+    "apiFootballOnly": 5051,
+    "updatedPlayers": 9
+  },
+  "matchStats": {
+    "byLeague": {
+      "Premier League": 380,
+      "La Liga": 380,
+      "Bundesliga": 306,
+      "Serie A": 380,
+      "Ligue 1": 306,
+      "Champions League": 189,
+      "Championship": 557,
+      "Eredivisie": 306,
+      "Primeira Liga": 306,
+      "Serie A Brazil": 380
+    },
+    "byStatus": {
+      "FINISHED": 3488,
+      "AWARDED": 2
+    },
+    "totalVenues": 0
+  },
+  "integration": {
+    "status": "completed",
+    "features": [
+      "Dual API integration",
+      "Real-time data updates",
+      "Comprehensive match data",
+      "Enhanced player statistics",
+      "Data persistence",
+      "Backup system"
+    ]
+  }
+}
