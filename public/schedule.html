@@ -2813,31 +2813,58 @@
             contentDiv.innerHTML = '<div class="loading">試合データを読み込み中...</div>';
 
             try {
-                const response = await fetch(`/api/fotmob/matches?league=${league}&timeRange=${timeRange}`);
-                console.log('API Response status:', response.status);
-                console.log('API Response headers:', response.headers);
+                // 統合されたデータを優先的に使用
+                let response;
+                let dataSource = 'integrated';
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                // 生のレスポンステキストを確認
-                const responseText = await response.text();
-                console.log('Raw response text:', responseText);
-                
-                // JSONとしてパース
-                let data;
                 try {
+                    // まず統合データを試す
+                    const leagueParam = league ? `&league=${encodeURIComponent(league)}` : '';
+                    const statusParam = statusFilter ? `&status=${encodeURIComponent(statusFilter)}` : '';
+                    response = await fetch(`/api/integrated/matches?season=2024${leagueParam}${statusParam}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Integrated API error! status: ${response.status}`);
+                    }
+                    
+                    const responseText = await response.text();
+                    console.log('Integrated API response:', responseText);
+                    
                     data = JSON.parse(responseText);
-                    console.log('Parsed JSON data:', data);
-                } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
-                    throw new Error(`JSON parse error: ${parseError.message}`);
+                    console.log('Using integrated data:', data);
+                    
+                } catch (integratedError) {
+                    console.log('Integrated API failed, falling back to fotmob:', integratedError.message);
+                    
+                    // フォールバック: 既存のfotmob API
+                    response = await fetch(`/api/fotmob/matches?league=${league}&timeRange=${timeRange}`);
+                    dataSource = 'fotmob';
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const responseText = await response.text();
+                    console.log('Fotmob API response:', responseText);
+                    
+                    data = JSON.parse(responseText);
+                    console.log('Using fotmob data:', data);
                 }
                 
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
-                    console.log('Found matches:', data.matches.length);
+                    console.log(`Found matches from ${dataSource}:`, data.matches.length);
                     currentMatches = data.matches;
+                    
+                    // データソース情報を表示
+                    const dataSourceInfo = document.createElement('div');
+                    dataSourceInfo.className = 'data-source-info';
+                    dataSourceInfo.innerHTML = `
+                        <div class="source-badge">
+                            <span class="source-icon">${dataSource === 'integrated' ? '🔗' : '⚽'}</span>
+                            <span class="source-text">${dataSource === 'integrated' ? '統合データ (API-Football + Football-data.org)' : 'API-Football'}</span>
+                        </div>
+                    `;
+                    
                     // フィルタリングを適用
                     const filteredMatches = filterMatches(currentMatches, league, timeRange, searchTerm, statusFilter);
                     
@@ -2914,7 +2941,8 @@
                         return matchHtml;
                     }).join('');
 
-                    contentDiv.innerHTML = `<div class="schedule-grid">${matchesHtml}</div>`;
+                    // データソース情報と試合カードを表示
+                    contentDiv.innerHTML = dataSourceInfo.outerHTML + `<div class="schedule-grid">${matchesHtml}</div>`;
                 } else {
                     console.log('No matches found in response. Response structure:', data);
                     console.log('Data type:', typeof data);

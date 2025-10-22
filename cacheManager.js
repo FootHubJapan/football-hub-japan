@@ -22,6 +22,44 @@ class CacheManager {
         }
     }
 
+    // 汎用キャッシュデータの取得
+    getCachedData(key) {
+        try {
+            // メモリキャッシュから取得（簡易実装）
+            if (this.memoryCache && this.memoryCache[key]) {
+                const cached = this.memoryCache[key];
+                if (Date.now() - cached.timestamp < cached.expiry) {
+                    return cached.data;
+                }
+                // 期限切れの場合は削除
+                delete this.memoryCache[key];
+            }
+            return null;
+        } catch (error) {
+            console.error('Error getting cached data:', error);
+            return null;
+        }
+    }
+
+    // 汎用キャッシュデータの設定
+    setCachedData(key, data, expirySeconds = 3600) {
+        try {
+            if (!this.memoryCache) {
+                this.memoryCache = {};
+            }
+            
+            this.memoryCache[key] = {
+                data: data,
+                timestamp: Date.now(),
+                expiry: expirySeconds * 1000
+            };
+            
+            console.log(`✅ Cached data for key: ${key}`);
+        } catch (error) {
+            console.error('Error setting cached data:', error);
+        }
+    }
+
     // キャッシュされた選手データの取得
     async getCachedPlayers(forceRefresh = false) {
         try {
