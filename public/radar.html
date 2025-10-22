@@ -587,7 +587,9 @@
         // 初期化
         document.addEventListener('DOMContentLoaded', function() {
             initializeStatsDropdowns();
-            loadSamplePlayers();
+            // 主要選手を表示
+            displayFeaturedPlayers('A');
+            displayFeaturedPlayers('B');
         });
 
         // 統計ドロップダウンの初期化
@@ -673,24 +675,53 @@
             const searchInput = document.getElementById(`search${target}`);
             const query = searchInput.value.trim();
             
-            if (query.length < 2) {
-                document.getElementById(`searchResults${target}`).innerHTML = '';
-                    return;
-                }
+            if (query.length < 1) {
+                // 検索クエリが空の場合は主要選手を表示
+                displayFeaturedPlayers(target);
+                return;
+            }
 
             try {
-                const response = await fetch(`/api/search/players?query=${encodeURIComponent(query)}&limit=5`);
-                    const data = await response.json();
+                // 日本語検索対応のAPI呼び出し
+                const response = await fetch(`/api/search/players?query=${encodeURIComponent(query)}&limit=20&japanese=true`);
+                const data = await response.json();
                 
-                    if (data.results && data.results.length > 0) {
-                        displaySearchResults(data.results, target);
-                    } else {
+                if (data.results && data.results.length > 0) {
+                    displaySearchResults(data.results, target);
+                } else {
                     document.getElementById(`searchResults${target}`).innerHTML = '<div class="search-result-item">選手が見つかりませんでした</div>';
                 }
             } catch (error) {
                 console.error('Search error:', error);
                 document.getElementById(`searchResults${target}`).innerHTML = '<div class="search-result-item">検索エラーが発生しました</div>';
             }
+        }
+
+        // 主要選手を表示する関数
+        function displayFeaturedPlayers(target) {
+            const featuredPlayers = [
+                { name: '久保建英', team: 'レアル・ソシエダード', position: 'MF', id: 'kubo' },
+                { name: '三笘薫', team: 'ブライトン', position: 'FW', id: 'mitoma' },
+                { name: '堂安律', team: 'フライブルク', position: 'MF', id: 'doan' },
+                { name: '遠藤航', team: 'リバプール', position: 'MF', id: 'endo' },
+                { name: '南野拓実', team: 'モナコ', position: 'FW', id: 'minamino' },
+                { name: 'E. Haaland', team: 'マンチェスター・シティ', position: 'FW', id: 'haaland' },
+                { name: 'Mohamed Salah', team: 'リバプール', position: 'FW', id: 'salah' },
+                { name: 'L. Messi', team: 'インテル・マイアミ', position: 'FW', id: 'messi' },
+                { name: 'C. Ronaldo', team: 'アル・ナスル', position: 'FW', id: 'ronaldo' },
+                { name: 'K. Mbappé', team: 'レアル・マドリード', position: 'FW', id: 'mbappe' }
+            ];
+            
+            const resultsContainer = document.getElementById(`searchResults${target}`);
+            resultsContainer.innerHTML = featuredPlayers.map(player => `
+                <div class="search-result-item" onclick="selectPlayer('${player.id}', '${player.name}', '${player.team}', '${player.position}', '${target}')">
+                    <div class="player-avatar-small">${player.name.charAt(0)}</div>
+                    <div class="player-info-small">
+                        <div class="player-name-small">${player.name}</div>
+                        <div class="player-team-small">${player.team} | ${player.position}</div>
+                    </div>
+                </div>
+            `).join('');
         }
 
         // 検索結果表示

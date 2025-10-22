@@ -1944,7 +1944,7 @@ app.get('/api/players', async (req, res) => {
 // 統合選手検索API
 app.get('/api/search/players', async (req, res) => {
     try {
-        const { query, limit = 10 } = req.query;
+        const { query, limit = 20, japanese = false } = req.query;
         
         // クエリがない場合は、デフォルトで日本人選手を返す
         if (!query || query === '') {
@@ -1984,7 +1984,7 @@ app.get('/api/search/players', async (req, res) => {
         try {
             const apiFootballKey = process.env.API_FOOTBALL_KEY;
             if (apiFootballKey && apiFootballKey !== 'your-api-football-key-here') {
-                // 日本語名を英語名に変換
+                // 日本語名を英語名に変換（拡張版）
                 const playerMappings = {
                     '久保建英': 'Takefusa Kubo',
                     '三笘薫': 'Kaoru Mitoma',
@@ -1998,11 +1998,49 @@ app.get('/api/search/players', async (req, res) => {
                     '前田大然': 'Daizen Maeda',
                     'ハーランド': 'Erling Haaland',
                     'メッシ': 'Lionel Messi',
-                    'ロナウド': 'Cristiano Ronaldo'
+                    'ロナウド': 'Cristiano Ronaldo',
+                    'サラー': 'Mohamed Salah',
+                    'サカ': 'Bukayo Saka',
+                    'フォーデン': 'Phil Foden',
+                    'ケイン': 'Harry Kane',
+                    'ベリンガム': 'Jude Bellingham',
+                    'ヤマル': 'Lamine Yamal',
+                    'ペドリ': 'Pedri',
+                    'ムシアラ': 'Jamal Musiala',
+                    'マフレズ': 'Riyad Mahrez',
+                    'ネイマール': 'Neymar Jr',
+                    'ムバッペ': 'Kylian Mbappé',
+                    'レヴァンドフスキ': 'Robert Lewandowski'
                 };
 
                 // 検索クエリを決定（日本語名の場合は英語名に変換）
                 const searchQuery = playerMappings[query] || query;
+                
+                // 日本語検索の場合は、データベースから直接検索も実行
+                let databaseResults = [];
+                if (japanese === 'true' || /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(query)) {
+                    try {
+                        const players = await cacheManager.getCachedPlayers();
+                        databaseResults = players.filter(player => {
+                            const searchFields = [
+                                player.name,
+                                player.fullName,
+                                player.firstName,
+                                player.lastName,
+                                player.currentTeam,
+                                player.nationality
+                            ].filter(Boolean);
+                            
+                            return searchFields.some(field => 
+                                field.toLowerCase().includes(query.toLowerCase())
+                            );
+                        }).slice(0, parseInt(limit));
+                        
+                        console.log(`Database search found ${databaseResults.length} players`);
+                    } catch (dbError) {
+                        console.error('Database search error:', dbError);
+                    }
+                }
                 
                 // API-Footballの検索（複数シーズンから検索）
                 const seasons = [2023, 2024, 2025];
@@ -2198,6 +2236,16 @@ app.get('/api/search/players', async (req, res) => {
             return bScore - aScore;
         });
 
+        // データベース検索結果を統合
+        if (databaseResults.length > 0) {
+            databaseResults.forEach(player => {
+                if (!seenPlayers.has(player.id || player.name)) {
+                    results.push(player);
+                    seenPlayers.add(player.id || player.name);
+                }
+            });
+        }
+        
         const finalResults = results.slice(0, limit);
         
         // キャッシュに保存
@@ -2206,7 +2254,9 @@ app.get('/api/search/players', async (req, res) => {
         res.json({
             query: query,
             count: finalResults.length,
-            results: finalResults
+            results: finalResults,
+            databaseResults: databaseResults.length,
+            apiResults: results.length - databaseResults.length
         });
         
     } catch (error) {
