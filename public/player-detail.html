@@ -608,7 +608,7 @@
         }
 
         // 選手データを表示
-        function displayPlayerData(player) {
+        async function displayPlayerData(player) {
             document.getElementById('playerName').textContent = player.name;
             document.getElementById('playerClub').textContent = player.currentTeam;
             document.getElementById('playerAge').textContent = player.age + '歳';
@@ -654,7 +654,7 @@
             displayDetailedStats(player);
 
             // キャリア履歴を生成
-            generateCareerHistory(player);
+            await generateCareerHistory(player);
         }
 
         // 詳細統計を表示
@@ -684,11 +684,69 @@
             document.getElementById('foulsDrawn').textContent = player.stats?.foulsDrawn || 0;
         }
 
-        // キャリアスタートからの個人スタッツを生成
-        function generateCareerHistory(player) {
+        // キャリアスタートからの個人スタッツを生成（実際のAPIデータを使用）
+        async function generateCareerHistory(player) {
             const tbody = document.getElementById('careerTableBody');
             
-            // 2025/26シーズン
+            try {
+                console.log('🔄 キャリアスタッツを取得中...');
+                
+                // キャリアスタッツAPIを呼び出し
+                const response = await fetch(`/api/player/career-stats/${player.id || player.playerId}?seasons=2020,2021,2022,2023,2024,2025`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const careerStats = data.careerStats || [];
+                    
+                    console.log(`✅ キャリアスタッツ取得成功: ${careerStats.length}シーズン`);
+                    
+                    if (careerStats.length > 0) {
+                        let html = '';
+                        
+                        careerStats.forEach(stat => {
+                            const seasonDisplay = `${stat.season}/${parseInt(stat.season) + 1}`;
+                            html += `
+                                <tr>
+                                    <td>${seasonDisplay}</td>
+                                    <td>${stat.club}</td>
+                                    <td>${stat.league}</td>
+                                    <td>${stat.matches}</td>
+                                    <td>${stat.goals}</td>
+                                    <td>${stat.assists}</td>
+                                    <td>${stat.rating}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        tbody.innerHTML = html;
+                        
+                        // データソース表示を更新
+                        const dataSourceInfo = document.createElement('div');
+                        dataSourceInfo.className = 'data-source-info';
+                        dataSourceInfo.innerHTML = `
+                            <div class="source-badge">
+                                <span class="source-icon">🔗</span>
+                                <span class="source-text">実際のAPIデータ (${data.sources?.join(', ') || 'API-Football + Football-data.org'})</span>
+                            </div>
+                        `;
+                        
+                        // キャリアテーブルの前にデータソース情報を挿入
+                        const careerSection = document.querySelector('.career-section');
+                        if (careerSection && !careerSection.querySelector('.data-source-info')) {
+                            careerSection.insertBefore(dataSourceInfo, careerSection.querySelector('.career-title'));
+                        }
+                        
+                        return;
+                    }
+                }
+                
+                console.log('⚠️ キャリアスタッツAPI失敗、フォールバックデータを使用');
+                
+            } catch (error) {
+                console.log('⚠️ キャリアスタッツ取得エラー:', error.message);
+            }
+            
+            // フォールバック: 従来のランダムデータ生成
             const currentSeason = '2025/26';
             const currentRow = `
                 <tr>
@@ -702,7 +760,7 @@
                 </tr>
             `;
             
-            // 過去のシーズン（キャリアスタートから）
+            // 過去のシーズン（フォールバックデータ）
             const pastSeasons = [
                 { season: '2024/25', club: player.currentTeam, matches: Math.floor(Math.random() * 20) + 10, goals: Math.floor(Math.random() * 15), assists: Math.floor(Math.random() * 10), rating: (6.0 + Math.random() * 2.0).toFixed(1) },
                 { season: '2023/24', club: player.currentTeam, matches: Math.floor(Math.random() * 20) + 10, goals: Math.floor(Math.random() * 15), assists: Math.floor(Math.random() * 10), rating: (6.0 + Math.random() * 2.0).toFixed(1) }

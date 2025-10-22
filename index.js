@@ -3689,6 +3689,251 @@ app.get('/api/comprehensive/stats', async (req, res) => {
     }
 });
 
+// 選手のキャリアスタッツを取得（過去シーズン含む）
+app.get('/api/player/career-stats/:playerId', async (req, res) => {
+    try {
+        const { playerId } = req.params;
+        const { seasons = '2020,2021,2022,2023,2024,2025' } = req.query;
+        
+        console.log(`🔍 選手キャリアスタッツ取得中: ${playerId}`);
+        
+        // 統合された選手データを読み込み
+        const fs = require('fs');
+        const playersFile = path.join(__dirname, 'data', 'players.json');
+        
+        let players = [];
+        if (fs.existsSync(playersFile)) {
+            const data = await fs.promises.readFile(playersFile, 'utf8');
+            players = JSON.parse(data);
+        }
+        
+        // 選手を検索
+        const player = players.find(p => 
+            p.id === playerId || 
+            p.apiFootballId === playerId || 
+            p.footballDataId === playerId ||
+            p.playerId === playerId ||
+            p.player_id === playerId ||
+            p.name.toLowerCase().includes(playerId.toLowerCase()) ||
+            p.fullName?.toLowerCase().includes(playerId.toLowerCase()) ||
+            (playerId.startsWith('api_') && p.apiFootballId === playerId.replace('api_', '')) ||
+            (playerId.startsWith('fd_') && p.footballDataId === playerId.replace('fd_', ''))
+        );
+        
+        if (!player) {
+            return res.status(404).json({ 
+                error: '選手が見つかりませんでした',
+                playerId
+            });
+        }
+        
+        // キャリアスタッツを構築
+        const careerStats = [];
+        const seasonList = seasons.split(',');
+        
+        for (const season of seasonList) {
+            try {
+                // API-Footballからシーズン別スタッツを取得
+                let seasonStats = null;
+                
+                if (player.apiFootballId) {
+                    try {
+                        const apiFootballStats = await getPlayerSeasonStatsFromAPIFootball(player.apiFootballId, season);
+                        if (apiFootballStats) {
+                            seasonStats = {
+                                ...apiFootballStats,
+                                source: 'API-Football',
+                                season: season,
+                                league: apiFootballStats.league || 'Unknown'
+                            };
+                        }
+                    } catch (error) {
+                        console.log(`⚠️ API-Football ${season}シーズンデータ取得失敗:`, error.message);
+                    }
+                }
+                
+                // Football-data.orgからシーズン別スタッツを取得
+                if (!seasonStats && player.footballDataId) {
+                    try {
+                        const footballDataStats = await getPlayerSeasonStatsFromFootballData(player.footballDataId, season);
+                        if (footballDataStats) {
+                            seasonStats = {
+                                ...footballDataStats,
+                                source: 'Football-data.org',
+                                season: season,
+                                league: footballDataStats.league || 'Unknown'
+                            };
+                        }
+                    } catch (error) {
+                        console.log(`⚠️ Football-data.org ${season}シーズンデータ取得失敗:`, error.message);
+                    }
+                }
+                
+                // スタッツが取得できた場合のみ追加
+                if (seasonStats && (seasonStats.goals > 0 || seasonStats.assists > 0 || seasonStats.appearances > 0)) {
+                    careerStats.push(seasonStats);
+                }
+                
+            } catch (error) {
+                console.log(`⚠️ ${season}シーズンデータ取得エラー:`, error.message);
+            }
+        }
+        
+        // シーズン順でソート（新しい順）
+        careerStats.sort((a, b) => parseInt(b.season) - parseInt(a.season));
+        
+        res.json({ 
+            player: {
+                id: player.id,
+                name: player.name,
+                fullName: player.fullName,
+                currentTeam: player.currentTeam,
+                position: player.position,
+                nationality: player.nationality,
+                age: player.age,
+                photo: player.photo
+            },
+            careerStats,
+            totalSeasons: careerStats.length,
+            sources: ['API-Football', 'Football-data.org'],
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('Career stats error:', error);
+        res.status(500).json({ 
+            error: 'キャリアスタッツの取得に失敗しました',
+            message: error.message
+        });
+    }
+});
+
+// API-Footballからシーズン別スタッツを取得
+async function getPlayerSeasonStatsFromAPIFootball(playerId, season) {
+    try {
+        const apiKey = process.env.API_FOOTBALL_KEY;
+        const url = `https://v3.football.api-sports.io/players?id=${playerId}&season=${season}`;
+        
+        const response = await fetch(url, {
+            headers: {
+                'X-RapidAPI-Key': apiKey,
+                'X-RapidAPI-Host': 'v3.football.api-sports.io'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API-Football error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.response && data.response.length > 0) {
+            const playerData = data.response[0];
+            const stats = playerData.statistics?.[0];
+            
+            if (stats) {
+                return {
+                    season: season,
+                    club: stats.team?.name || 'Unknown',
+                    league: stats.league?.name || 'Unknown',
+                    matches: stats.games?.appearences || 0,
+                    goals: stats.goals?.total || 0,
+                    assists: stats.goals?.assists || 0,
+                    rating: stats.games?.rating ? parseFloat(stats.games.rating).toFixed(1) : 'N/A',
+                    minutes: stats.games?.minutes || 0,
+                    yellowCards: stats.cards?.yellow || 0,
+                    redCards: stats.cards?.red || 0,
+                    shots: stats.shots?.total || 0,
+                    passes: stats.passes?.total || 0,
+                    tackles: stats.tackles?.total || 0,
+                    interceptions: stats.tackles?.interceptions || 0,
+                    dribbles: stats.dribbles?.attempts || 0,
+                    dribblesSuccess: stats.dribbles?.success || 0,
+                    foulsWon: stats.fouls?.won || 0,
+                    chancesCreated: stats.passes?.key || 0
+                };
+            }
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('API-Football season stats error:', error);
+        return null;
+    }
+}
+
+// Football-data.orgからシーズン別スタッツを取得
+async function getPlayerSeasonStatsFromFootballData(playerId, season) {
+    try {
+        const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+        const url = `https://api.football-data.org/v4/persons/${playerId}/matches?season=${season}`;
+        
+        const response = await fetch(url, {
+            headers: {
+                'X-Auth-Token': apiKey
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Football-data.org error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.matches && data.matches.length > 0) {
+            // マッチデータからスタッツを計算
+            let goals = 0, assists = 0, appearances = 0, minutes = 0;
+            let yellowCards = 0, redCards = 0;
+            const clubs = new Set();
+            const leagues = new Set();
+            
+            data.matches.forEach(match => {
+                if (match.status === 'FINISHED') {
+                    appearances++;
+                    minutes += 90; // 簡易計算
+                    
+                    // ゴールとアシストを計算
+                    if (match.homeTeam.id === parseInt(playerId)) {
+                        goals += match.score.fullTime.home || 0;
+                        clubs.add(match.homeTeam.name);
+                        leagues.add(match.competition.name);
+                    } else if (match.awayTeam.id === parseInt(playerId)) {
+                        goals += match.score.fullTime.away || 0;
+                        clubs.add(match.awayTeam.name);
+                        leagues.add(match.competition.name);
+                    }
+                }
+            });
+            
+            return {
+                season: season,
+                club: Array.from(clubs)[0] || 'Unknown',
+                league: Array.from(leagues)[0] || 'Unknown',
+                matches: appearances,
+                goals: goals,
+                assists: assists,
+                rating: 'N/A',
+                minutes: minutes,
+                yellowCards: yellowCards,
+                redCards: redCards,
+                shots: 0,
+                passes: 0,
+                tackles: 0,
+                interceptions: 0,
+                dribbles: 0,
+                dribblesSuccess: 0,
+                foulsWon: 0,
+                chancesCreated: 0
+            };
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Football-data.org season stats error:', error);
+        return null;
+    }
+}
+
 // 統合データエンドポイント（API-Football + Football-data.org）
 app.get('/api/integrated/matches', async (req, res) => {
     try {
