@@ -342,9 +342,9 @@
 
         <!-- タブナビゲーション -->
         <div class="ranking-tabs">
-            <button class="tab-btn active" onclick="switchTab('players')">選手ランキング</button>
-            <button class="tab-btn" onclick="switchTab('teams')">チームランキング</button>
-            <button class="tab-btn" onclick="switchTab('leagues')">リーグランキング</button>
+            <button class="tab-btn active" onclick="switchTab('players', event)">選手ランキング</button>
+            <button class="tab-btn" onclick="switchTab('teams', event)">チームランキング</button>
+            <button class="tab-btn" onclick="switchTab('leagues', event)">リーグランキング</button>
         </div>
 
         <!-- フィルターセクション -->
@@ -469,14 +469,22 @@
         let leagueChart = null;
 
         // タブ切り替え
-        function switchTab(tab) {
+        function switchTab(tab, evt) {
             // タブボタンのアクティブ状態を更新
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            if (evt && evt.target) {
+                evt.target.classList.add('active');
+            }
 
             // コンテンツの表示切り替え
             document.querySelectorAll('.ranking-content').forEach(content => content.classList.remove('active'));
-            document.getElementById(tab + 'Ranking').classList.add('active');
+            
+            // タブ名を正しいID名に変換（players -> player, teams -> team, leagues -> league）
+            const tabId = tab === 'players' ? 'player' : tab === 'teams' ? 'team' : 'league';
+            const contentElement = document.getElementById(tabId + 'Ranking');
+            if (contentElement) {
+                contentElement.classList.add('active');
+            }
 
             currentTab = tab;
 
