@@ -2432,6 +2432,16 @@
                 </div>
 
                 <div class="control-group">
+                    <label class="control-label">ステータス</label>
+                    <select id="statusFilter" class="control-select">
+                        <option value="">すべてのステータス</option>
+                        <option value="予定">予定</option>
+                        <option value="試合中">試合中</option>
+                        <option value="終了">終了</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
                     <label class="control-label">検索</label>
                     <input type="text" id="searchInput" class="control-select" placeholder="チーム名や選手名で検索..." />
                 </div>
@@ -2723,6 +2733,22 @@
                 console.error('Modal title not found');
             }
             
+            // モーダルクローズ処理
+            const modal = document.getElementById('matchDetailsModal');
+            const closeBtn = modal.querySelector('.close');
+            if (closeBtn) {
+                closeBtn.onclick = function() {
+                    modal.style.display = 'none';
+                };
+            }
+            
+            // モーダル外クリックで閉じる
+            window.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+            
             // 初期データを読み込み
             loadMatches();
             
@@ -2738,6 +2764,12 @@
                 timeRangeSelect.addEventListener('change', loadMatches);
             }
             
+            // ステータスフィルターの変更を監視
+            const statusFilter = document.getElementById('statusFilter');
+            if (statusFilter) {
+                statusFilter.addEventListener('change', loadMatches);
+            }
+            
             // 検索入力の変更を監視
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {
@@ -2750,8 +2782,9 @@
             const league = document.getElementById('leagueSelect').value;
             const timeRange = document.getElementById('timeRangeSelect').value;
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
             
-            console.log('Loading matches with:', { league, timeRange, searchTerm });
+            console.log('Loading matches with:', { league, timeRange, searchTerm, statusFilter });
             
             const contentDiv = document.getElementById('scheduleContent');
             contentDiv.innerHTML = '<div class="loading">試合データを読み込み中...</div>';
@@ -2783,7 +2816,7 @@
                     console.log('Found matches:', data.matches.length);
                     currentMatches = data.matches;
                     // フィルタリングを適用
-                    const filteredMatches = filterMatches(currentMatches, league, timeRange, searchTerm);
+                    const filteredMatches = filterMatches(currentMatches, league, timeRange, searchTerm, statusFilter);
                     
                     if (filteredMatches.length === 0) {
                         contentDiv.innerHTML = '<div class="no-matches">条件に一致する試合が見つかりませんでした。</div>';
@@ -2807,21 +2840,16 @@
                         const awayScore = match.awayScore;
                         
                         // 試合の状態に応じた表示
-                        let statusDisplay = '';
+                        const matchStatus = getMatchStatus(match);
+                        let statusDisplay = matchStatus;
                         let scoreDisplay = '';
                         
-                        if (match.status === 'TIMED' || match.status === 'Scheduled') {
-                            statusDisplay = '予定';
-                            scoreDisplay = `<span class="text-gray-400">null</span>`;
-                        } else if (match.status === 'Finished' || match.status === 'FT') {
-                            statusDisplay = '終了';
+                        if (matchStatus === '終了') {
                             scoreDisplay = `<span class="text-white font-bold">${homeScore} - ${awayScore}</span>`;
-                        } else if (match.status === 'LIVE' || match.status === 'HT') {
-                            statusDisplay = '試合中';
+                        } else if (matchStatus === '試合中') {
                             scoreDisplay = `<span class="text-green-400 font-bold">${homeScore} - ${awayScore}</span>`;
                         } else {
-                            statusDisplay = match.status || '未定';
-                            scoreDisplay = `<span class="text-gray-400">null</span>`;
+                            scoreDisplay = `<span class="text-gray-400">-</span>`;
                         }
                         
                         const matchHtml = `
@@ -3042,13 +3070,44 @@
             return leagueNames[leagueCode] || leagueCode;
         }
 
+        // 試合ステータスを取得
+        function getMatchStatus(match) {
+            const now = new Date();
+            const matchDate = new Date(match.date);
+            const matchTime = matchDate.getTime();
+            const currentTime = now.getTime();
+            
+            // 試合開始時刻から90分後（試合終了想定時刻）
+            const matchEndTime = matchTime + (90 * 60 * 1000);
+            
+            if (match.status === 'finished' || match.status === 'FT') {
+                return '終了';
+            } else if (match.status === 'live' || match.status === 'inplay') {
+                return '試合中';
+            } else if (matchTime <= currentTime && currentTime <= matchEndTime) {
+                return '試合中';
+            } else if (matchTime > currentTime) {
+                return '予定';
+            } else {
+                return '終了';
+            }
+        }
+
         // 試合データをフィルタリング
-        function filterMatches(matches, league, timeRange, searchTerm) {
+        function filterMatches(matches, league, timeRange, searchTerm, statusFilter) {
             let filteredMatches = matches;
             
             // リーグでフィルタリング
             if (league && league !== '') {
                 filteredMatches = filteredMatches.filter(match => match.league === league);
+            }
+            
+            // ステータスでフィルタリング
+            if (statusFilter && statusFilter !== '') {
+                filteredMatches = filteredMatches.filter(match => {
+                    const matchStatus = getMatchStatus(match);
+                    return matchStatus === statusFilter;
+                });
             }
             
             // 検索語でフィルタリング
