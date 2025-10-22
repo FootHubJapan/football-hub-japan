@@ -2885,9 +2885,13 @@
                             day: 'numeric' 
                         });
 
-                        // スコアの表示を元のnull表示に戻す
-                        const homeScore = match.homeScore;
-                        const awayScore = match.awayScore;
+                        // スコアの表示（統合APIとAPI-Footballの両方に対応）
+                        const homeScore = match.score?.fullTime?.home ?? match.homeScore;
+                        const awayScore = match.score?.fullTime?.away ?? match.awayScore;
+                        
+                        // チーム名の取得（統合APIとAPI-Footballの両方に対応）
+                        const homeTeamName = typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name;
+                        const awayTeamName = typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name;
                         
                         // 試合の状態に応じた表示
                         const matchStatus = getMatchStatus(match);
@@ -2903,33 +2907,33 @@
                         }
                         
                         const matchHtml = `
-                                <div class="match-card" onclick="showDetailedMatchInfo('${match.id}', '${match.league}')">
+                                <div class="match-card" onclick="showDetailedMatchInfo('${match.id}', '${match.leagueName || match.league}')">
                                     <div class="match-header">
-                                        <span class="match-league">${getLeagueName(match.league)}</span>
+                                        <span class="match-league">${getLeagueName(match.leagueName || match.league)}</span>
                                         <span class="match-status ${getStatusClass(match.status)}">${getStatusText(match.status)}</span>
                                     </div>
                                     
                                     <div class="match-teams">
                                         <div class="team">
                                             <div class="team-logo">
-                                                                                    <img src="https://media.api-sports.io/football/teams/${getTeamId(match.homeTeam)}.png" alt="${match.homeTeam}" class="team-logo-img" onerror="console.log('Image load failed for team:', '${match.homeTeam}', 'ID:', '${getTeamId(match.homeTeam)}'); this.style.display='none'; this.nextElementSibling.style.display='flex'; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMzMzMzMzIi8+Cjx0ZXh0IHg9IjIwIiB5PSIyNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPj88L3RleHQ+Cjwvc3ZnPg==';">
-                                    <div class="team-logo-fallback">${match.homeTeam.charAt(0)}</div>
+                                                <img src="https://media.api-sports.io/football/teams/${getTeamId(homeTeamName)}.png" alt="${homeTeamName}" class="team-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="team-logo-fallback">${homeTeamName.charAt(0)}</div>
                                             </div>
-                                            <div class="team-name">${match.homeTeam}</div>
+                                            <div class="team-name">${homeTeamName}</div>
                                         </div>
                                         
                                         <div class="match-score">
-                                            <span>${match.homeScore !== undefined && match.homeScore !== null ? match.homeScore : ''}</span>
-                                            <span>${match.homeScore !== undefined && match.homeScore !== null && match.awayScore !== undefined && match.awayScore !== null ? '-' : ''}</span>
-                                            <span>${match.awayScore !== undefined && match.awayScore !== null ? match.awayScore : ''}</span>
+                                            <span>${homeScore !== undefined && homeScore !== null ? homeScore : ''}</span>
+                                            <span>${homeScore !== undefined && homeScore !== null && awayScore !== undefined && awayScore !== null ? '-' : ''}</span>
+                                            <span>${awayScore !== undefined && awayScore !== null ? awayScore : ''}</span>
                                         </div>
                                         
                                         <div class="team">
                                             <div class="team-logo">
-                                                                                    <img src="https://media.api-sports.io/football/teams/${getTeamId(match.awayTeam)}.png" alt="${match.awayTeam}" class="team-logo-img" onerror="console.log('Image load failed for team:', '${match.awayTeam}', 'ID:', '${getTeamId(match.awayTeam)}'); this.style.display='none'; this.nextElementSibling.style.display='flex'; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMzMzMzMzIi8+Cjx0ZXh0IHg9IjIwIiB5PSIyNSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPj88L3RleHQ+Cjwvc3ZnPg==';">
-                                    <div class="team-logo-fallback">${match.awayTeam.charAt(0)}</div>
+                                                <img src="https://media.api-sports.io/football/teams/${getTeamId(awayTeamName)}.png" alt="${awayTeamName}" class="team-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="team-logo-fallback">${awayTeamName.charAt(0)}</div>
                                             </div>
-                                            <div class="team-name">${match.awayTeam}</div>
+                                            <div class="team-name">${awayTeamName}</div>
                                         </div>
                                     </div>
                                     
