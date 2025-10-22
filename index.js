@@ -4001,10 +4001,17 @@ app.get('/api/integrated/matches', async (req, res) => {
         // 日付順でソート
         matches.sort((a, b) => new Date(a.date) - new Date(b.date));
         
-        // レスポンスサイズを制限（パフォーマンス向上）
-        const limitedMatches = matches.slice(0, 100); // 最大100件に制限
+              // レスポンスサイズを制限（パフォーマンス向上）
+              const limitedMatches = matches.slice(0, 50); // 最大50件に制限
         
         console.log(`✅ 統合マッチデータ返却: ${limitedMatches.length}件（制限後）`);
+        
+        // レスポンスヘッダーを設定してキャッシュとタイムアウトを制御
+        res.set({
+            'Content-Type': 'application/json',
+            'Cache-Control': 'public, max-age=300', // 5分キャッシュ
+            'X-Response-Size': `${JSON.stringify(limitedMatches).length}`
+        });
         
         res.json({ 
             matches: limitedMatches,
