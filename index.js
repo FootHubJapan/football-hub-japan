@@ -3950,7 +3950,18 @@ const leagueCodeMap = {
     94: "ELC",  // Championship
     71: "PPL",  // Primeira Liga
     2013: "BSA", // Brazil Serie A
-    88: "DED"   // Eredivisie
+    88: "DED",  // Eredivisie
+    // 文字列キーも追加
+    "CL": "CL",    // Champions League
+    "PL": "PL",    // Premier League
+    "PD": "PD",    // La Liga
+    "BL1": "BL1",  // Bundesliga
+    "SA": "SA",    // Serie A
+    "FL1": "FL1",  // Ligue 1
+    "ELC": "ELC",  // Championship
+    "PPL": "PPL",  // Primeira Liga
+    "BSA": "BSA",  // Brazil Serie A
+    "DED": "DED"   // Eredivisie
 };
 
 // Football-Data.org の呼び出し
@@ -4056,7 +4067,7 @@ app.get('/api/integrated/matches', async (req, res) => {
         
         try {
             // 1️⃣ Football-data.orgから取得（優先）
-            const fdMatches = await fetchFromFootballData(parseInt(league), parseInt(season));
+            const fdMatches = await fetchFromFootballData(league, parseInt(season));
             if (fdMatches.length > 0) {
                 matches = fdMatches;
                 dataSource = 'football-data.org';
