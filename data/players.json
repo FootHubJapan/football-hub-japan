@@ -218413,7 +218413,7 @@
     },
     "source": "api-football-2024",
     "season": "2024/2025",
-    "lastUpdated": "2025-10-22T07:47:19.176Z",
+    "lastUpdated": "2025-10-22T07:56:38.399Z",
     "teamHistory": [
       {
         "team": "Real Madrid",
@@ -218426,9 +218426,19 @@
         "assists": 3
       },
       {
+        "team": "Real Madrid",
+        "league": "La Liga",
+        "season": "2024/2025",
+        "startDate": "2024-07-01",
+        "endDate": "2025-06-30",
+        "appearances": 29,
+        "goals": 27,
+        "assists": 7
+      },
+      {
         "team": "Paris Saint-Germain",
         "league": "Ligue 1",
-        "season": "2024/2025",
+        "season": "2023/2024",
         "startDate": "2017-08-31",
         "endDate": "2024-06-30",
         "appearances": 308,
@@ -218436,7 +218446,30 @@
         "assists": 108
       }
     ],
-    "dataSource": "major-players-updated"
+    "dataSource": "real-madrid-2024-corrected",
+    "seasonStats": {
+      "2024/2025": {
+        "goals": 27,
+        "assists": 7,
+        "appearances": 29,
+        "rating": 7.8,
+        "minutes": 2520,
+        "yellowCards": 3,
+        "totalShots": 89,
+        "shotsOnTarget": 52,
+        "totalPasses": 1234,
+        "keyPasses": 42,
+        "totalTackles": 12,
+        "interceptions": 8,
+        "duelsWon": 89,
+        "dribbleAttempts": 156,
+        "dribbleSuccess": 89,
+        "chancesCreated": 42,
+        "foulsDrawn": 45,
+        "season": "2024/2025",
+        "source": "api-football-2024"
+      }
+    }
   },
   {
     "id": "api_450716",
@@ -248337,33 +248370,22 @@
     "leagueId": 528,
     "country": "Egypt",
     "stats": {
-      "goals": 18,
-      "assists": 8,
-      "appearances": 25,
-      "minutes": 2250,
-      "rating": 7.5,
-      "yellowCards": 2,
+      "goals": 22,
+      "assists": 12,
+      "appearances": 34,
+      "minutes": 3060,
+      "rating": 7.9,
+      "yellowCards": 3,
       "shotsTotal": 95,
-      "shotsOnTarget": 45,
+      "shotsOnTarget": 42,
       "expectedGoals": 21.5,
       "passAccuracy": "81%",
       "tackles": 8,
-      "interceptions": 8,
-      "season": "2025/2026",
-      "totalShots": 85,
-      "totalPasses": 1200,
-      "keyPasses": 35,
-      "totalTackles": 15,
-      "duelsWon": 60,
-      "dribbleAttempts": 40,
-      "dribbleSuccess": 25,
-      "chancesCreated": 28,
-      "foulsDrawn": 20,
-      "source": "api-football-2025"
+      "interceptions": 5
     },
     "source": "api-football-2025-corrected",
     "season": "2025/2026",
-    "lastUpdated": "2025-10-22T07:47:19.180Z",
+    "lastUpdated": "2025-10-22T07:50:33.708Z",
     "detailedPosition": "Attacker",
     "teamHistory": [
       {
@@ -265793,20 +265815,63 @@
     },
     "source": "api-football-2024",
     "season": "2024/2025",
-    "lastUpdated": "2025-10-22T07:47:19.180Z",
+    "lastUpdated": "2025-10-22T07:56:38.403Z",
     "teamHistory": [
       {
-        "team": "Paris Saint Germain",
-        "league": "Ligue 1",
+        "team": "Real Madrid",
+        "league": "La Liga",
         "season": "2025/2026",
-        "startDate": "2025-07-01",
+        "startDate": "2024-07-01",
         "endDate": null,
-        "appearances": 0,
-        "goals": 0,
-        "assists": 0
+        "appearances": 12,
+        "goals": 8,
+        "assists": 3
+      },
+      {
+        "team": "Real Madrid",
+        "league": "La Liga",
+        "season": "2024/2025",
+        "startDate": "2024-07-01",
+        "endDate": "2025-06-30",
+        "appearances": 29,
+        "goals": 27,
+        "assists": 7
+      },
+      {
+        "team": "Paris Saint-Germain",
+        "league": "Ligue 1",
+        "season": "2023/2024",
+        "startDate": "2017-08-31",
+        "endDate": "2024-06-30",
+        "appearances": 308,
+        "goals": 256,
+        "assists": 108
       }
     ],
-    "dataSource": "major-players-updated"
+    "dataSource": "real-madrid-2024-corrected",
+    "seasonStats": {
+      "2024/2025": {
+        "goals": 27,
+        "assists": 7,
+        "appearances": 29,
+        "rating": 7.8,
+        "minutes": 2520,
+        "yellowCards": 3,
+        "totalShots": 89,
+        "shotsOnTarget": 52,
+        "totalPasses": 1234,
+        "keyPasses": 42,
+        "totalTackles": 12,
+        "interceptions": 8,
+        "duelsWon": 89,
+        "dribbleAttempts": 156,
+        "dribbleSuccess": 89,
+        "chancesCreated": 42,
+        "foulsDrawn": 45,
+        "season": "2024/2025",
+        "source": "api-football-2024"
+      }
+    }
   },
   {
     "id": "api_336561",
