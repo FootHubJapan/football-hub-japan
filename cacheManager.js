@@ -11,6 +11,17 @@ class CacheManager {
         };
     }
 
+    // 試合データを保存
+    async saveMatchesData(matches) {
+        try {
+            await this.db.saveMatchesData(matches);
+            console.log(`✅ Saved ${matches.length} matches to persistent storage`);
+        } catch (error) {
+            console.error('❌ Failed to save matches data:', error);
+            throw error;
+        }
+    }
+
     // キャッシュされた選手データの取得
     async getCachedPlayers(forceRefresh = false) {
         try {

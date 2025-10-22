@@ -2349,37 +2349,61 @@ app.get('/api/fotmob/matches', async (req, res) => {
         
         let matches = [];
 
-        // API-Footballから実際の試合データを取得
-        try {
-            matches = await getMatchesFromAPIFootball(league, timeRange);
-            console.log('API-Football matches count:', matches.length);
-        } catch (apiError) {
-            console.error('❌ API-Football error:', apiError.message);
-            console.log('📋 Using fallback data instead');
-            // API-Footballが失敗した場合はフォールバックデータを使用
-            matches = generateFallbackMatches(league, timeRange);
-            console.log('Using fallback matches:', matches.length);
-        }
-
-        // API-Footballからデータが取得できない場合は、Football-data.orgを試す
-        if (matches.length === 0) {
+        // まずキャッシュからデータを確認
+        const cacheKey = `matches_${league}_${timeRange}`;
+        const cachedMatches = cacheManager.getCachedData(cacheKey);
+        
+        if (cachedMatches && cachedMatches.length > 0) {
+            console.log('Using cached matches:', cachedMatches.length);
+            matches = cachedMatches;
+        } else {
+            // API-Footballから実際の試合データを取得
             try {
-                console.log('Trying Football-data.org as backup...');
-                const footballDataMatches = await getMatchesFromFootballData(league, timeRange);
-                if (footballDataMatches.length > 0) {
-                    matches = footballDataMatches;
-                    console.log('Football-data.org matches count:', matches.length);
+                matches = await getMatchesFromAPIFootball(league, timeRange);
+                console.log('API-Football matches count:', matches.length);
+                
+                // 取得したデータをキャッシュに保存
+                if (matches.length > 0) {
+                    cacheManager.setCachedData(cacheKey, matches, 3600); // 1時間キャッシュ
+                    console.log('✅ Matches data cached successfully');
+                    
+                    // 永続化データとしても保存
+                    try {
+                        await cacheManager.saveMatchesData(matches);
+                        console.log('✅ Matches data saved to persistent storage');
+                    } catch (saveError) {
+                        console.error('❌ Failed to save matches to persistent storage:', saveError);
+                    }
                 }
-            } catch (footballDataError) {
-                console.error('Football-data.org error:', footballDataError);
+            } catch (apiError) {
+                console.error('❌ API-Football error:', apiError.message);
+                
+                // キャッシュにデータがない場合はエラーを返す
+                res.status(500).json({ 
+                    error: 'API制限によりデータを取得できませんでした',
+                    message: apiError.message,
+                    suggestion: 'しばらく時間をおいてから再度お試しください'
+                });
+                return;
             }
-        }
 
-        // どちらのAPIからもデータが取得できない場合は、フォールバックデータを使用
-        if (matches.length === 0) {
-            console.log('No data from APIs, using fallback data');
-            matches = generateFallbackMatches(league, timeRange);
-            console.log('Fallback matches count:', matches.length);
+            // API-Footballからデータが取得できない場合は、Football-data.orgを試す
+            if (matches.length === 0) {
+                try {
+                    console.log('Trying Football-data.org as backup...');
+                    const footballDataMatches = await getMatchesFromFootballData(league, timeRange);
+                    if (footballDataMatches.length > 0) {
+                        matches = footballDataMatches;
+                        console.log('Football-data.org matches count:', matches.length);
+                        
+                        // Football-data.orgのデータもキャッシュに保存
+                        cacheManager.setCachedData(cacheKey, matches, 3600);
+                        await cacheManager.saveMatchesData(matches);
+                    }
+                } catch (footballDataError) {
+                    console.error('Football-data.org error:', footballDataError);
+                }
+            }
         }
 
         console.log('Final matches count:', matches.length);
@@ -2389,11 +2413,10 @@ app.get('/api/fotmob/matches', async (req, res) => {
         res.json({ matches });
     } catch (error) {
         console.error('Error fetching matches:', error);
-        // Return fallback matches if service fails
-        const fallbackMatches = generateFallbackMatches(league, timeRange);
-        console.log('Returning fallback matches:', fallbackMatches.length);
-        res.setHeader('Content-Type', 'application/json');
-        res.json({ matches: fallbackMatches });
+        res.status(500).json({ 
+            error: '試合データの取得に失敗しました',
+            message: error.message
+        });
     }
 });
 

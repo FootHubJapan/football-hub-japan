@@ -2907,84 +2907,13 @@
                 }
             } catch (error) {
                 console.error('Error loading matches:', error);
-                
-                // API制限やエラーの場合はフォールバックデータを表示
-                console.log('Using fallback match data due to API error');
-                const fallbackMatches = generateFallbackMatchData();
-                currentMatches = fallbackMatches;
-                
-                // フィルタリングを適用
-                const filteredMatches = filterMatches(currentMatches, league, timeRange, searchTerm, statusFilter);
-                
-                if (filteredMatches.length === 0) {
-                    contentDiv.innerHTML = '<div class="no-matches">条件に一致する試合が見つかりませんでした。</div>';
-                    return;
-                }
-                
-                // 試合カードを生成
-                const matchesHtml = filteredMatches.map(match => {
-                    const matchDate = new Date(match.date);
-                    const timeString = matchDate.toLocaleTimeString('ja-JP', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                    });
-                    const dateString = matchDate.toLocaleDateString('ja-JP', { 
-                        month: 'short', 
-                        day: 'numeric' 
-                    });
-
-                    // スコアの表示
-                    const homeScore = match.homeScore;
-                    const awayScore = match.awayScore;
-                    
-                    // 試合の状態に応じた表示
-                    const matchStatus = getMatchStatus(match);
-                    let statusDisplay = matchStatus;
-                    let scoreDisplay = '';
-                    
-                    if (matchStatus === '終了') {
-                        scoreDisplay = `<span class="text-white font-bold">${homeScore} - ${awayScore}</span>`;
-                    } else if (matchStatus === '試合中') {
-                        scoreDisplay = `<span class="text-green-400 font-bold">${homeScore} - ${awayScore}</span>`;
-                    } else {
-                        scoreDisplay = `<span class="text-gray-400">-</span>`;
-                    }
-                    
-                    const matchHtml = `
-                        <div class="match-card" onclick="showDetailedMatchInfo('${match.id}', '${match.league}')">
-                            <div class="match-header">
-                                <span class="match-league">${getLeagueName(match.league)}</span>
-                                <span class="match-status ${getStatusClass(match.status)}">${getStatusText(match.status)}</span>
-                            </div>
-                            
-                            <div class="match-teams">
-                                <div class="team">
-                                    <div class="team-logo">🏟️</div>
-                                    <div class="team-name">${match.homeTeam}</div>
-                                </div>
-                                
-                                <div class="match-score">
-                                    <div class="score">${scoreDisplay}</div>
-                                    <div class="match-time">${timeString}</div>
-                                    <div class="match-date">${dateString}</div>
-                                </div>
-                                
-                                <div class="team">
-                                    <div class="team-logo">🏟️</div>
-                                    <div class="team-name">${match.awayTeam}</div>
-                                </div>
-                            </div>
-                            
-                            <div class="match-venue">
-                                <span class="venue-icon">📍</span>
-                                <span class="venue-name">${match.venue || '会場未定'}</span>
-                            </div>
-                        </div>
-                    `;
-                    return matchHtml;
-                }).join('');
-                
-                contentDiv.innerHTML = matchesHtml;
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        <p>試合データの読み込みに失敗しました。</p>
+                        <p>エラー: ${error.message}</p>
+                        <p>API制限の可能性があります。しばらく時間をおいてから再度お試しください。</p>
+                    </div>
+                `;
             }
         }
 
@@ -4476,71 +4405,6 @@
 
 
 
-        // フォールバック試合データを生成する関数
-        function generateFallbackMatchData() {
-            const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-            const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-            
-            return [
-                {
-                    id: 'fallback_1',
-                    league: 'J1',
-                    homeTeam: '川崎フロンターレ',
-                    awayTeam: 'FC東京',
-                    date: yesterday.toISOString(),
-                    venue: '等々力陸上競技場',
-                    homeScore: 2,
-                    awayScore: 1,
-                    status: 'finished'
-                },
-                {
-                    id: 'fallback_2',
-                    league: 'J1',
-                    homeTeam: '鹿島アントラーズ',
-                    awayTeam: '横浜F・マリノス',
-                    date: today.toISOString(),
-                    venue: 'カシマサッカースタジアム',
-                    homeScore: 1,
-                    awayScore: 0,
-                    status: 'live'
-                },
-                {
-                    id: 'fallback_3',
-                    league: 'J1',
-                    homeTeam: '浦和レッズ',
-                    awayTeam: 'セレッソ大阪',
-                    date: tomorrow.toISOString(),
-                    venue: '埼玉スタジアム2002',
-                    homeScore: null,
-                    awayScore: null,
-                    status: 'scheduled'
-                },
-                {
-                    id: 'fallback_4',
-                    league: 'J1',
-                    homeTeam: 'ガンバ大阪',
-                    awayTeam: 'サンフレッチェ広島',
-                    date: tomorrow.toISOString(),
-                    venue: 'パナソニックスタジアム吹田',
-                    homeScore: null,
-                    awayScore: null,
-                    status: 'scheduled'
-                },
-                {
-                    id: 'fallback_5',
-                    league: 'J1',
-                    homeTeam: '名古屋グランパス',
-                    awayTeam: 'ヴィッセル神戸',
-                    date: tomorrow.toISOString(),
-                    venue: '豊田スタジアム',
-                    homeScore: null,
-                    awayScore: null,
-                    status: 'scheduled'
-                }
-            ];
-        }
 
         // フォールバックのベンチデータを生成する関数
         function generateFallbackBenchData() {

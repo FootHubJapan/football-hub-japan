@@ -102,6 +102,51 @@ class DatabaseManager {
     }
 
     /**
+     * 試合データを保存
+     */
+    async saveMatchesData(matches) {
+        try {
+            await this.ensureDataDirectory();
+            
+            // 既存の試合データを読み込み
+            let existingMatches = [];
+            try {
+                const existingData = await fs.readFile(this.matchesPath, 'utf8');
+                existingMatches = JSON.parse(existingData);
+            } catch (error) {
+                // ファイルが存在しない場合は空の配列から開始
+                console.log('Creating new matches file');
+            }
+            
+            // 新しい試合データを追加（重複を避ける）
+            const mergedMatches = [...existingMatches];
+            
+            for (const newMatch of matches) {
+                // IDで重複チェック
+                const existingIndex = mergedMatches.findIndex(m => m.id === newMatch.id);
+                
+                if (existingIndex >= 0) {
+                    // 既存データを更新
+                    mergedMatches[existingIndex] = { ...mergedMatches[existingIndex], ...newMatch };
+                } else {
+                    // 新しいデータを追加
+                    mergedMatches.push(newMatch);
+                }
+            }
+            
+            // マージされたデータを保存
+            await fs.writeFile(this.matchesPath, JSON.stringify(mergedMatches, null, 2));
+            
+            console.log(`💾 試合データを保存: ${matches.length}件（合計: ${mergedMatches.length}件）`);
+            return mergedMatches;
+            
+        } catch (error) {
+            console.error('試合データ保存エラー:', error);
+            throw error;
+        }
+    }
+
+    /**
      * 包括的な選手データを保存
      */
     async saveComprehensivePlayers(players) {
