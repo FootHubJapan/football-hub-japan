@@ -209,6 +209,107 @@
             background: #2a2a2a;
         }
 
+        /* Transfermarktスタイルのコンペティション別スタッツテーブル */
+        .competition-stats-table {
+            margin-top: 1rem;
+            overflow-x: auto;
+            display: block;
+            width: 100%;
+        }
+
+        .competition-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 0.9rem;
+            display: table;
+            border: 2px solid #00ff88;
+        }
+
+        .competition-table th,
+        .competition-table td {
+            padding: 0.75rem 0.5rem;
+            text-align: center;
+            border-bottom: 1px solid #333333;
+            border-right: 1px solid #333333;
+        }
+
+        .competition-table th:last-child,
+        .competition-table td:last-child {
+            border-right: none;
+        }
+
+        .competition-header {
+            background: #00ff88;
+            color: #000000;
+            font-weight: bold;
+            text-align: left;
+            padding-left: 1rem;
+            min-width: 150px;
+        }
+
+        .stat-header {
+            background: #2a2a2a;
+            color: #ffffff;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            min-width: 80px;
+        }
+
+        .stat-icon {
+            font-size: 1.2rem;
+        }
+
+        .competition-table tbody tr {
+            transition: background-color 0.2s;
+        }
+
+        .competition-table tbody tr:hover {
+            background: #2a2a2a;
+        }
+
+        .competition-table tbody tr:nth-child(even) {
+            background: #1f1f1f;
+        }
+
+        .competition-table tbody tr:nth-child(even):hover {
+            background: #2a2a2a;
+        }
+
+        .competition-name {
+            text-align: left;
+            padding-left: 1rem;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .stat-value.total {
+            background: #00ff88;
+            color: #000000;
+            font-weight: bold;
+        }
+
+        .competition-name.total {
+            background: #00ff88;
+            color: #000000;
+            font-weight: bold;
+        }
+
+        .no-data {
+            color: #666666;
+            font-style: italic;
+        }
+
         .back-btn {
             background: #00ff88;
             color: #000000;
@@ -286,31 +387,41 @@
         <div class="stats-section">
             <div class="stats-card">
                 <h2 class="stats-title">2025/26シーズンの統計</h2>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="seasonGoals">--</div>
-                        <div class="stat-label">ゴール</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="seasonAssists">--</div>
-                        <div class="stat-label">アシスト</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="seasonAppearances">--</div>
-                        <div class="stat-label">出場試合</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="seasonRating">--</div>
-                        <div class="stat-label">評価</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="seasonMinutes">--</div>
-                        <div class="stat-label">出場時間(分)</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="seasonYellowCards">--</div>
-                        <div class="stat-label">イエローカード</div>
-                    </div>
+                <div class="competition-stats-table">
+                    <table class="competition-table">
+                        <thead>
+                            <tr>
+                                <th class="competition-header">大会</th>
+                                <th class="stat-header">
+                                    <div class="stat-icon">⚽</div>
+                                    <span>ゴール</span>
+                                </th>
+                                <th class="stat-header">
+                                    <div class="stat-icon">🎯</div>
+                                    <span>アシスト</span>
+                                </th>
+                                <th class="stat-header">
+                                    <div class="stat-icon">🟨</div>
+                                    <span>イエロー</span>
+                                </th>
+                                <th class="stat-header">
+                                    <div class="stat-icon">🟥</div>
+                                    <span>レッド</span>
+                                </th>
+                                <th class="stat-header">
+                                    <div class="stat-icon">⏱️</div>
+                                    <span>出場時間</span>
+                                </th>
+                                <th class="stat-header">
+                                    <div class="stat-icon">📊</div>
+                                    <span>評価</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="competitionStatsBody">
+                            <!-- コンペティション別スタッツがここに表示されます -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -634,13 +745,9 @@
                 document.title = `${player.name} - サンプルデータ - Football Hub Japan`;
             }
 
-            // 今シーズンの統計
-            document.getElementById('seasonGoals').textContent = player.stats?.goals || 0;
-            document.getElementById('seasonAssists').textContent = player.stats?.assists || 0;
-            document.getElementById('seasonAppearances').textContent = player.stats?.appearances || 0;
-            document.getElementById('seasonRating').textContent = player.stats?.rating || 'N/A';
-            document.getElementById('seasonMinutes').textContent = player.stats?.minutes || 0;
-            document.getElementById('seasonYellowCards').textContent = player.stats?.yellowCards || 0;
+            // コンペティション別スタッツを表示
+            console.log('🔄 Calling displayCompetitionStats for:', player.name);
+            displayCompetitionStats(player);
 
             // 詳細統計
             document.getElementById('totalGoals').textContent = player.stats?.goals || 0;
@@ -785,12 +892,145 @@
         }
 
         // エラー表示
+        // コンペティション別スタッツを表示
+        function displayCompetitionStats(player) {
+            console.log('🔄 displayCompetitionStats called for:', player.name);
+            const tbody = document.getElementById('competitionStatsBody');
+            console.log('📋 competitionStatsBody element:', tbody);
+            
+            if (!tbody) {
+                console.error('❌ competitionStatsBody element not found!');
+                return;
+            }
+
+            console.log('✅ Generating competition stats...');
+
+            // テスト用の固定データを生成
+            const competitions = [
+                {
+                    name: 'プレミアリーグ',
+                    goals: 8,
+                    assists: 3,
+                    yellowCards: 1,
+                    redCards: 0,
+                    minutes: 1080,
+                    rating: '7.8'
+                },
+                {
+                    name: 'UEFAチャンピオンズリーグ',
+                    goals: 4,
+                    assists: 2,
+                    yellowCards: 0,
+                    redCards: 0,
+                    minutes: 360,
+                    rating: '8.1'
+                },
+                {
+                    name: 'EFLカップ',
+                    goals: 1,
+                    assists: 0,
+                    yellowCards: 0,
+                    redCards: 0,
+                    minutes: 90,
+                    rating: '7.5'
+                }
+            ];
+
+            // 合計を計算
+            const totals = {
+                goals: competitions.reduce((sum, comp) => sum + comp.goals, 0),
+                assists: competitions.reduce((sum, comp) => sum + comp.assists, 0),
+                yellowCards: competitions.reduce((sum, comp) => sum + comp.yellowCards, 0),
+                redCards: competitions.reduce((sum, comp) => sum + comp.redCards, 0),
+                minutes: competitions.reduce((sum, comp) => sum + comp.minutes, 0),
+                rating: (competitions.reduce((sum, comp) => sum + parseFloat(comp.rating), 0) / competitions.length).toFixed(1)
+            };
+
+            let html = '';
+
+            // 各コンペティションの行を生成
+            competitions.forEach(comp => {
+                html += `
+                    <tr>
+                        <td class="competition-name">${comp.name}</td>
+                        <td class="stat-value">${comp.goals}</td>
+                        <td class="stat-value">${comp.assists}</td>
+                        <td class="stat-value">${comp.yellowCards || '-'}</td>
+                        <td class="stat-value">${comp.redCards || '-'}</td>
+                        <td class="stat-value">${comp.minutes}'</td>
+                        <td class="stat-value">${comp.rating}</td>
+                    </tr>
+                `;
+            });
+
+            // 合計行を追加
+            html += `
+                <tr>
+                    <td class="competition-name total">合計</td>
+                    <td class="stat-value total">${totals.goals}</td>
+                    <td class="stat-value total">${totals.assists}</td>
+                    <td class="stat-value total">${totals.yellowCards || '-'}</td>
+                    <td class="stat-value total">${totals.redCards || '-'}</td>
+                    <td class="stat-value total">${totals.minutes}'</td>
+                    <td class="stat-value total">${totals.rating}</td>
+                </tr>
+            `;
+
+            tbody.innerHTML = html;
+            console.log('✅ Competition stats HTML generated and inserted');
+        }
+
         function showError(message) {
             alert(message);
         }
 
         // ページ読み込み時に選手データを読み込み
-        document.addEventListener('DOMContentLoaded', loadPlayerData);
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DOM Content Loaded');
+            
+            // テスト用：強制的にコンペティション別スタッツを表示
+            setTimeout(() => {
+                console.log('🧪 Testing competition stats display...');
+                const tbody = document.getElementById('competitionStatsBody');
+                if (tbody) {
+                    console.log('✅ Found competitionStatsBody element');
+                    tbody.innerHTML = `
+                        <tr>
+                            <td class="competition-name">プレミアリーグ</td>
+                            <td class="stat-value">8</td>
+                            <td class="stat-value">3</td>
+                            <td class="stat-value">1</td>
+                            <td class="stat-value">-</td>
+                            <td class="stat-value">1080'</td>
+                            <td class="stat-value">7.8</td>
+                        </tr>
+                        <tr>
+                            <td class="competition-name">UEFAチャンピオンズリーグ</td>
+                            <td class="stat-value">4</td>
+                            <td class="stat-value">2</td>
+                            <td class="stat-value">-</td>
+                            <td class="stat-value">-</td>
+                            <td class="stat-value">360'</td>
+                            <td class="stat-value">8.1</td>
+                        </tr>
+                        <tr>
+                            <td class="competition-name total">合計</td>
+                            <td class="stat-value total">12</td>
+                            <td class="stat-value total">5</td>
+                            <td class="stat-value total">1</td>
+                            <td class="stat-value total">-</td>
+                            <td class="stat-value total">1440'</td>
+                            <td class="stat-value total">7.8</td>
+                        </tr>
+                    `;
+                    console.log('✅ Test data inserted into competition stats table');
+                } else {
+                    console.error('❌ competitionStatsBody element not found');
+                }
+            }, 1000);
+            
+            loadPlayerData();
+        });
     </script>
 </body>
 </html> 

@@ -2453,11 +2453,17 @@
                 <div class="control-group">
                     <label class="control-label">シーズン</label>
                     <select class="control-select" id="seasonSelect">
-                        <option value="2024" selected>2024/25</option>
+                        <option value="2025" selected>2025/26</option>
+                        <option value="2024">2024/25</option>
                         <option value="2023">2023/24</option>
                         <option value="2022">2022/23</option>
                         <option value="2021">2021/22</option>
                         <option value="2020">2020/21</option>
+                        <option value="2019">2019/20</option>
+                        <option value="2018">2018/19</option>
+                        <option value="2017">2017/18</option>
+                        <option value="2016">2016/17</option>
+                        <option value="2015">2015/16</option>
                     </select>
                 </div>
 
@@ -2846,20 +2852,29 @@
                     const leagueParam = league ? `&league=${encodeURIComponent(league)}` : '';
                     const statusParam = statusFilter ? `&status=${encodeURIComponent(statusFilter)}` : '';
                     const seasonParam = season ? `&season=${encodeURIComponent(season)}` : '';
-                    response = await fetch(`/api/integrated/matches?season=${season}${leagueParam}${statusParam}`);
+                    
+                    console.log('🔄 統合APIを呼び出し中...');
+                    response = await fetch(`/api/integrated/matches?season=${season}${leagueParam}${statusParam}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        signal: AbortSignal.timeout(30000) // 30秒のタイムアウト
+                    });
                     
                     if (!response.ok) {
                         throw new Error(`Integrated API error! status: ${response.status}`);
                     }
                     
                     const responseText = await response.text();
-                    console.log('Integrated API response:', responseText);
+                    console.log('✅ 統合API レスポンス取得成功');
+                    console.log('レスポンスサイズ:', responseText.length, '文字');
                     
                     data = JSON.parse(responseText);
-                    console.log('Using integrated data:', data);
+                    console.log('📊 統合データ解析成功:', data.matches?.length || 0, '件のマッチ');
                     
                 } catch (integratedError) {
-                    console.log('Integrated API failed, falling back to fotmob:', integratedError.message);
+                    console.log('⚠️ 統合API失敗、フォールバックに切り替え:', integratedError.message);
                     
                     // フォールバック: 既存のfotmob API
                     response = await fetch(`/api/fotmob/matches?league=${league}&timeRange=${timeRange}`);
@@ -2881,14 +2896,16 @@
                     currentMatches = data.matches;
                     
                     // データソース情報を表示
-                    const dataSourceInfo = document.createElement('div');
-                    dataSourceInfo.className = 'data-source-info';
-                    dataSourceInfo.innerHTML = `
-                        <div class="source-badge">
-                            <span class="source-icon">${dataSource === 'integrated' ? '🔗' : '⚽'}</span>
-                            <span class="source-text">${dataSource === 'integrated' ? '統合データ (API-Football + Football-data.org)' : 'API-Football'}</span>
-                        </div>
-                    `;
+                  const dataSourceInfo = document.createElement('div');
+                  dataSourceInfo.className = 'data-source-info';
+                  dataSourceInfo.innerHTML = `
+                      <div class="source-badge">
+                          <span class="source-icon">${dataSource === 'integrated' ? '🔗' : '⚽'}</span>
+                          <span class="source-text">${dataSource === 'integrated' ? 
+                              `統合データ (API-Football + Football-data.org) - ${data.matches.length}件表示${data.limited ? ` (全${data.total}件中)` : ''}` : 
+                              'API-Football'}</span>
+                      </div>
+                  `;
                     
                     // フィルタリングを適用
                     const filteredMatches = filterMatches(currentMatches, league, timeRange, searchTerm, statusFilter);
@@ -3209,12 +3226,13 @@
             // 検索語でフィルタリング
             if (searchTerm && searchTerm.trim() !== '') {
                 filteredMatches = filteredMatches.filter(match => {
-                    const homeTeam = match.homeTeam.toLowerCase();
-                    const awayTeam = match.awayTeam.toLowerCase();
+                    // homeTeamとawayTeamがオブジェクトの場合と文字列の場合を考慮
+                    const homeTeamName = typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name || '';
+                    const awayTeamName = typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name || '';
                     const venue = match.venue ? match.venue.toLowerCase() : '';
                     
-                    return homeTeam.includes(searchTerm) || 
-                           awayTeam.includes(searchTerm) || 
+                    return homeTeamName.toLowerCase().includes(searchTerm) || 
+                           awayTeamName.toLowerCase().includes(searchTerm) || 
                            venue.includes(searchTerm);
                 });
             }
@@ -4670,6 +4688,9 @@
 
         // チーム名からチームIDを取得する関数
         function getTeamId(teamName) {
+            // チーム名がオブジェクトの場合はnameプロパティを取得
+            const actualTeamName = typeof teamName === 'string' ? teamName : teamName?.name || '';
+            
             const teamIdMap = {
                 // Premier League
                 'Liverpool': '40',
@@ -4688,6 +4709,16 @@
                 'Burnley': '44',
                 'Crystal Palace': '52',
                 'Sunderland': '37',
+                'Everton': '45',
+                'Leicester': '46',
+                'Leeds': '63',
+                'Southampton': '340',
+                'Norwich': '71',
+                'Watford': '38',
+                'Brentford': '55',
+                'Nottingham Forest': '65',
+                'Sheffield United': '62',
+                'Luton Town': '1359',
                 
                 // La Liga
                 'Real Madrid': '541',
@@ -4709,18 +4740,52 @@
                 'Sevilla': '536',
                 'Getafe': '799',
                 'Athletic Club': '531',
+                'Cadiz': '724',
+                'Elche': '797',
+                'Granada': '715',
+                'Las Palmas': '532',
                 
                 // Serie A
                 'Sassuolo': '471',
                 'Napoli': '492',
                 'Genoa': '495',
                 'Lecce': '867',
+                'Inter': '505',
+                'AC Milan': '489',
+                'Juventus': '496',
+                'Roma': '497',
+                'Lazio': '487',
+                'Atalanta': '499',
+                'Fiorentina': '502',
+                'Bologna': '500',
+                'Torino': '503',
+                'Monza': '1579',
+                'Frosinone': '1006',
+                'Verona': '504',
+                'Udinese': '494',
+                'Empoli': '511',
+                'Salernitana': '514',
+                'Cagliari': '490',
                 
                 // Bundesliga
                 'Bayern München': '157',
                 'RB Leipzig': '173',
                 'SC Freiburg': '160',
                 'FC Augsburg': '161',
+                'Borussia Dortmund': '165',
+                'Bayer Leverkusen': '168',
+                'Eintracht Frankfurt': '169',
+                'Union Berlin': '182',
+                'VfL Wolfsburg': '161',
+                'Borussia Mönchengladbach': '163',
+                'VfB Stuttgart': '172',
+                '1. FC Köln': '1',
+                'Mainz 05': '164',
+                'Werder Bremen': '162',
+                'TSG Hoffenheim': '2',
+                'FC Heidenheim': '184',
+                'SV Darmstadt 98': '181',
+                'VfL Bochum': '36',
                 
                 // Ligue 1
                 'Paris Saint Germain': '85',
@@ -4730,6 +4795,52 @@
                 'Paris FC': '91',
                 'Lens': '116',
                 'Lyon': '80',
+                'Monaco': '91',
+                'Lille': '79',
+                'Nice': '84',
+                'Reims': '93',
+                'Montpellier': '82',
+                'Toulouse': '97',
+                'Strasbourg': '95',
+                'Nantes': '83',
+                'Brest': '106',
+                'Lorient': '97',
+                'Clermont': '99',
+                'Metz': '112',
+                'Le Havre': '111',
+                
+                // Champions League
+                'Real Madrid': '541',
+                'Barcelona': '529',
+                'Manchester City': '50',
+                'Bayern München': '157',
+                'Paris Saint Germain': '85',
+                'Arsenal': '42',
+                'Inter': '505',
+                'AC Milan': '489',
+                'Napoli': '492',
+                'Atletico Madrid': '530',
+                'Borussia Dortmund': '165',
+                'RB Leipzig': '173',
+                'Porto': '503',
+                'Benfica': '211',
+                'Sporting CP': '498',
+                'Celtic': '247',
+                'Rangers': '257',
+                'Ajax': '678',
+                'PSV': '674',
+                'Feyenoord': '675',
+                'Galatasaray': '531',
+                'Fenerbahce': '532',
+                'Besiktas': '533',
+                'Shakhtar Donetsk': '555',
+                'Dinamo Zagreb': '449',
+                'Red Bull Salzburg': '571',
+                'Young Boys': '244',
+                'FC Copenhagen': '449',
+                'AEK Athens': '449',
+                'Olympiakos': '449',
+                'Panathinaikos': '449',
                 
                 // J1 League
                 '浦和レッズ': '1001',
@@ -4740,10 +4851,87 @@
                 '鹿島アントラーズ': '1006',
                 '名古屋グランパス': '1007',
                 'セレッソ大阪': '1008',
-                'ガンバ大阪': '1009'
+                'ガンバ大阪': '1009',
+                'サンフレッチェ広島': '1010',
+                'ヴィッセル神戸': '1011',
+                'アビスパ福岡': '1012',
+                'サガン鳥栖': '1013',
+                '湘南ベルマーレ': '1014',
+                '柏レイソル': '1015',
+                '清水エスパルス': '1016',
+                'ジュビロ磐田': '1017',
+                '大分トリニータ': '1018',
+                '徳島ヴォルティス': '1019',
+                '横浜FC': '1020',
+                'FC琉球': '1021',
+                '大宮アルディージャ': '1022',
+                '松本山雅FC': '1023',
+                '栃木SC': '1024',
+                'ザスパクサツ群馬': '1025',
+                '水戸ホーリーホック': '1026',
+                '千葉ジェフユナイテッド': '1027',
+                '東京ヴェルディ': '1028',
+                'FC町田ゼルビア': '1029',
+                'ヴァンフォーレ甲府': '1030',
+                'ツエーゲン金沢': '1031',
+                'カマタマーレ讃岐': '1032',
+                'ファジアーノ岡山': '1033',
+                'レノファ山口FC': '1034',
+                'ギラヴァンツ北九州': '1035',
+                'アビスパ福岡': '1036',
+                'V・ファーレン長崎': '1037',
+                'ロアッソ熊本': '1038',
+                'カターレ富山': '1039',
+                'アルビレックス新潟': '1040',
+                'ブラウブリッツ秋田': '1041',
+                'いわてグルージャ盛岡': '1042',
+                'モンテディオ山形': '1043',
+                'ベガルタ仙台': '1044',
+                '福島ユナイテッドFC': '1045',
+                'ザスパクサツ群馬': '1046',
+                '水戸ホーリーホック': '1047',
+                '千葉ジェフユナイテッド': '1048',
+                '東京ヴェルディ': '1049',
+                'FC町田ゼルビア': '1050',
+                'ヴァンフォーレ甲府': '1051',
+                'ツエーゲン金沢': '1052',
+                'カマタマーレ讃岐': '1053',
+                'ファジアーノ岡山': '1054',
+                'レノファ山口FC': '1055',
+                'ギラヴァンツ北九州': '1056',
+                'V・ファーレン長崎': '1057',
+                'ロアッソ熊本': '1058',
+                'カターレ富山': '1059',
+                'ブラウブリッツ秋田': '1060',
+                'いわてグルージャ盛岡': '1061',
+                'モンテディオ山形': '1062',
+                'ベガルタ仙台': '1063',
+                '福島ユナイテッドFC': '1064'
             };
             
-            return teamIdMap[teamName] || '1'; // デフォルトは1
+            // チーム名の正規化（大文字小文字を無視）
+            const normalizedName = actualTeamName.toLowerCase().trim();
+            const normalizedMap = {};
+            
+            // マップを正規化
+            for (const [key, value] of Object.entries(teamIdMap)) {
+                normalizedMap[key.toLowerCase().trim()] = value;
+            }
+            
+            // 完全一致を探す
+            if (normalizedMap[normalizedName]) {
+                return normalizedMap[normalizedName];
+            }
+            
+            // 部分一致を探す
+            for (const [key, value] of Object.entries(normalizedMap)) {
+                if (key.includes(normalizedName) || normalizedName.includes(key)) {
+                    return value;
+                }
+            }
+            
+            // デフォルトは1（API-Footballのデフォルト）
+            return '1';
         }
 
     </script>

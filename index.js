@@ -3939,6 +3939,8 @@ app.get('/api/integrated/matches', async (req, res) => {
     try {
         const { league, season = 2024, status } = req.query;
         
+        console.log(`🔍 統合マッチデータ取得: league=${league}, season=${season}, status=${status}`);
+        
         // 統合された試合データを読み込み
         const fs = require('fs');
         const integratedMatchesPath = path.join(__dirname, 'data', 'integrated-matches.json');
@@ -3947,48 +3949,77 @@ app.get('/api/integrated/matches', async (req, res) => {
         if (fs.existsSync(integratedMatchesPath)) {
             const data = await fs.promises.readFile(integratedMatchesPath, 'utf8');
             matches = JSON.parse(data);
+            console.log(`📊 統合マッチデータ読み込み: ${matches.length}件`);
         }
         
         // フィルタリング
         if (league) {
-            matches = matches.filter(match => 
-                match.leagueName === league || 
-                match.league === league ||
-                match.leagueName?.toLowerCase().includes(league.toLowerCase()) ||
-                match.league?.toLowerCase().includes(league.toLowerCase())
-            );
+            const originalCount = matches.length;
+            matches = matches.filter(match => {
+                const matchLeague = match.leagueName || match.league || '';
+                const leagueLower = league.toLowerCase();
+                const matchLeagueLower = matchLeague.toLowerCase();
+                
+                // 完全一致
+                if (matchLeague === league || matchLeagueLower === leagueLower) {
+                    return true;
+                }
+                
+                // チャンピオンズリーグの特別処理
+                if (league === 'CL' || league === 'Champions League') {
+                    return matchLeagueLower.includes('champions') || 
+                           matchLeagueLower.includes('uefa') ||
+                           matchLeagueLower.includes('cl');
+                }
+                
+                // 部分一致
+                return matchLeagueLower.includes(leagueLower) || 
+                       leagueLower.includes(matchLeagueLower);
+            });
+            console.log(`🔍 リーグフィルタリング: ${originalCount} → ${matches.length}件`);
         }
         
         if (season) {
+            const originalCount = matches.length;
             matches = matches.filter(match => 
                 match.season == season ||
                 match.season === parseInt(season) ||
                 (match.date && match.date.includes(season))
             );
+            console.log(`🔍 シーズンフィルタリング: ${originalCount} → ${matches.length}件`);
         }
         
         if (status) {
+            const originalCount = matches.length;
             matches = matches.filter(match => 
                 match.status === status ||
                 match.status?.toLowerCase() === status.toLowerCase()
             );
+            console.log(`🔍 ステータスフィルタリング: ${originalCount} → ${matches.length}件`);
         }
         
         // 日付順でソート
         matches.sort((a, b) => new Date(a.date) - new Date(b.date));
         
+        // レスポンスサイズを制限（パフォーマンス向上）
+        const limitedMatches = matches.slice(0, 100); // 最大100件に制限
+        
+        console.log(`✅ 統合マッチデータ返却: ${limitedMatches.length}件（制限後）`);
+        
         res.json({ 
-            matches,
+            matches: limitedMatches,
             total: matches.length,
+            limited: limitedMatches.length < matches.length,
             filters: { league, season, status },
             sources: ['API-Football', 'Football-data.org'],
             timestamp: new Date().toISOString()
         });
     } catch (error) {
-        console.error('Integrated matches error:', error);
+        console.error('❌ 統合マッチデータエラー:', error);
         res.status(500).json({ 
             error: '統合試合データの取得に失敗しました',
-            message: error.message
+            message: error.message,
+            timestamp: new Date().toISOString()
         });
     }
 });
