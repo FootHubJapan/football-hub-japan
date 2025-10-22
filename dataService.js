@@ -2238,6 +2238,64 @@ class AdvancedDataService {
         this.cache = cache;
     }
 
+    // マッチデータ取得（API-Football v3）
+    async getMatches(options = {}) {
+        const { league, season = 2025, status, from, to } = options;
+        const cacheKey = `matches_${league || 'all'}_${season}_${status || 'all'}_${from || ''}_${to || ''}`;
+        const cached = this.cache.get(cacheKey);
+        if (cached) {
+            console.log(`✅ キャッシュからマッチデータを返却: ${cached.length}件`);
+            return cached;
+        }
+
+        try {
+            console.log(`🔄 API-Footballからマッチデータを取得中... league=${league}, season=${season}, status=${status}`);
+            
+            const params = { season };
+            if (league) params.league = league;
+            if (status) params.status = status;
+            if (from) params.from = from;
+            if (to) params.to = to;
+
+            const response = await this.apiFootballClient.get('/fixtures', { params });
+
+            if (!response.data || !response.data.response) {
+                console.log('⚠️ API-Footballから空のレスポンス');
+                return [];
+            }
+
+            const matches = response.data.response.map(match => ({
+                id: match.fixture.id,
+                homeTeam: match.teams.home.name,
+                awayTeam: match.teams.away.name,
+                homeScore: match.goals.home,
+                awayScore: match.goals.away,
+                status: match.fixture.status.short,
+                statusLong: match.fixture.status.long,
+                elapsed: match.fixture.status.elapsed,
+                venue: match.fixture.venue?.name || 'Unknown Venue',
+                leagueName: match.league.name,
+                league: match.league.name,
+                leagueId: match.league.id,
+                country: match.league.country,
+                round: match.league.round,
+                season: match.league.season,
+                date: match.fixture.date,
+                timestamp: match.fixture.timestamp,
+                events: match.events || [],
+                lineups: match.lineups || {},
+                statistics: match.statistics || {}
+            }));
+
+            console.log(`✅ API-Footballから${matches.length}件のマッチを取得`);
+            this.cache.set(cacheKey, matches, 300); // 5分キャッシュ
+            return matches;
+        } catch (error) {
+            console.error('❌ API-Football マッチデータ取得エラー:', error.message);
+            throw error;
+        }
+    }
+
     // ライブ試合データ取得（API-Football v3 Pro）
     async getLiveMatches(options = {}) {
         const cacheKey = `live_matches_${JSON.stringify(options)}`;

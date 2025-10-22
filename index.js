@@ -11,7 +11,8 @@ let footballDataService;
 
 try {
     console.log('Loading dataService...');
-    dataService = require('./dataService');
+    const dataServiceModule = require('./dataService');
+    dataService = dataServiceModule.advancedDataService;
     console.log('dataService loaded successfully');
 } catch (error) {
     console.error('Error loading dataService:', error);
@@ -529,16 +530,16 @@ app.get('/api/player-stats/:playerId', async (req, res) => {
                 if (fs.existsSync(playersPath)) {
                     const playersData = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
                     const player = playersData.find(p => 
-                        p.id == playerId || p.playerId == playerId || p.player_id == playerId || p.name === playerId
-                    );
-                    
-                    if (player && player.stats) {
+                    p.id == playerId || p.playerId == playerId || p.player_id == playerId || p.name === playerId
+                );
+                
+                if (player && player.stats) {
                         console.log(`✅ ローカルファイルから選手スタッツを取得: ${player.name}`);
-                        playerStats = {
-                            ...player,
+                    playerStats = {
+                        ...player,
                             source: 'localFile',
-                            stats: player.stats
-                        };
+                        stats: player.stats
+                    };
                     }
                 }
             } catch (error) {
@@ -2258,7 +2259,7 @@ app.get('/api/search/players', async (req, res) => {
                 }
             });
         }
-        
+
         const finalResults = results.slice(0, limit);
         
         // キャッシュに保存
@@ -2420,10 +2421,10 @@ app.get('/api/fotmob/matches', async (req, res) => {
             console.log('Using cached matches:', cachedMatches.length);
             matches = cachedMatches;
         } else {
-            // API-Footballから実際の試合データを取得
-            try {
-                matches = await getMatchesFromAPIFootball(league, timeRange);
-                console.log('API-Football matches count:', matches.length);
+        // API-Footballから実際の試合データを取得
+        try {
+            matches = await getMatchesFromAPIFootball(league, timeRange);
+            console.log('API-Football matches count:', matches.length);
                 
                 // 取得したデータをキャッシュに保存
                 if (matches.length > 0) {
@@ -2438,8 +2439,8 @@ app.get('/api/fotmob/matches', async (req, res) => {
                         console.error('❌ Failed to save matches to persistent storage:', saveError);
                     }
                 }
-            } catch (apiError) {
-                console.error('❌ API-Football error:', apiError.message);
+        } catch (apiError) {
+            console.error('❌ API-Football error:', apiError.message);
                 
                 // キャッシュにデータがない場合はエラーを返す
                 res.status(500).json({ 
@@ -2448,25 +2449,25 @@ app.get('/api/fotmob/matches', async (req, res) => {
                     suggestion: 'しばらく時間をおいてから再度お試しください'
                 });
                 return;
-            }
+        }
 
-            // API-Footballからデータが取得できない場合は、Football-data.orgを試す
-            if (matches.length === 0) {
-                try {
-                    console.log('Trying Football-data.org as backup...');
-                    const footballDataMatches = await getMatchesFromFootballData(league, timeRange);
-                    if (footballDataMatches.length > 0) {
-                        matches = footballDataMatches;
-                        console.log('Football-data.org matches count:', matches.length);
+        // API-Footballからデータが取得できない場合は、Football-data.orgを試す
+        if (matches.length === 0) {
+            try {
+                console.log('Trying Football-data.org as backup...');
+                const footballDataMatches = await getMatchesFromFootballData(league, timeRange);
+                if (footballDataMatches.length > 0) {
+                    matches = footballDataMatches;
+                    console.log('Football-data.org matches count:', matches.length);
                         
                         // Football-data.orgのデータもキャッシュに保存
                         cacheManager.setCachedData(cacheKey, matches, 3600);
                         await cacheManager.saveMatchesData(matches);
-                    }
-                } catch (footballDataError) {
-                    console.error('Football-data.org error:', footballDataError);
                 }
+            } catch (footballDataError) {
+                console.error('Football-data.org error:', footballDataError);
             }
+        }
         }
 
         console.log('Final matches count:', matches.length);
@@ -3944,63 +3945,27 @@ app.get('/api/integrated/matches', async (req, res) => {
         let matches = [];
         let dataSource = 'fallback';
         
-        try {
-            // リアルタイムAPI呼び出しを試行
-            console.log('🔄 リアルタイムAPI呼び出しを開始...');
-            
-            // API-Footballからマッチデータを取得
-            const apiFootballMatches = await dataService.getMatches({
-                league: league,
-                season: season,
-                status: status
+        // リアルタイムAPI呼び出し
+        console.log('🔄 リアルタイムAPI呼び出しを開始...');
+        
+        // API-Footballからマッチデータを取得
+        matches = await dataService.getMatches({
+            league: league,
+            season: season,
+            status: status
+        });
+        
+        console.log(`📊 API-Footballから取得: ${matches?.length || 0}件`);
+        dataSource = 'api-football';
+        
+        // マッチが見つからない場合はエラー
+        if (!matches || matches.length === 0) {
+            console.log('⚠️ マッチデータが見つかりませんでした');
+            return res.status(404).json({ 
+                error: 'マッチデータが見つかりませんでした',
+                filters: { league, season, status },
+                timestamp: new Date().toISOString()
             });
-            
-            console.log(`📊 API-Footballから取得: ${apiFootballMatches?.length || 0}件`);
-            
-            if (apiFootballMatches && apiFootballMatches.length > 0) {
-                matches = apiFootballMatches;
-                dataSource = 'api-football';
-            } else {
-                // Football-data.orgからも試行
-                console.log('🔄 Football-data.orgからも取得を試行...');
-                const footballDataMatches = await footballDataService.getMatches({
-                    league: league,
-                    season: season
-                });
-                
-                if (footballDataMatches && footballDataMatches.length > 0) {
-                    matches = footballDataMatches;
-                    dataSource = 'football-data';
-                }
-            }
-            
-            // リアルタイムAPIが失敗した場合、フォールバックデータを使用
-            if (matches.length === 0) {
-                console.log('⚠️ リアルタイムAPI失敗、フォールバックデータを使用');
-                const fs = require('fs');
-                const integratedMatchesPath = path.join(__dirname, 'data', 'integrated-matches.json');
-                
-                if (fs.existsSync(integratedMatchesPath)) {
-                    const data = await fs.promises.readFile(integratedMatchesPath, 'utf8');
-                    matches = JSON.parse(data);
-                    dataSource = 'fallback';
-                    console.log(`📊 フォールバックデータ読み込み: ${matches.length}件`);
-                }
-            }
-            
-        } catch (apiError) {
-            console.log('⚠️ リアルタイムAPI呼び出しエラー:', apiError.message);
-            
-            // フォールバックデータを使用
-            const fs = require('fs');
-            const integratedMatchesPath = path.join(__dirname, 'data', 'integrated-matches.json');
-            
-            if (fs.existsSync(integratedMatchesPath)) {
-                const data = await fs.promises.readFile(integratedMatchesPath, 'utf8');
-                matches = JSON.parse(data);
-                dataSource = 'fallback';
-                console.log(`📊 フォールバックデータ読み込み: ${matches.length}件`);
-            }
         }
         
         // フィルタリング
