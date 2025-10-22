@@ -2837,7 +2837,8 @@
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const statusFilter = document.getElementById('statusFilter').value;
             
-            console.log('Loading matches with:', { league, timeRange, season, searchTerm, statusFilter });
+            console.log('🚀 loadMatches called with:', { league, timeRange, season, searchTerm, statusFilter });
+            console.log('🔍 About to call integrated API...');
             
             const contentDiv = document.getElementById('scheduleContent');
             contentDiv.innerHTML = '<div class="loading">試合データを読み込み中...</div>';
@@ -2854,7 +2855,9 @@
                     const seasonParam = season ? `&season=${encodeURIComponent(season)}` : '';
                     
                     console.log('🔄 統合APIを呼び出し中...');
-                    response = await fetch(`/api/integrated/matches?season=${season}${leagueParam}${statusParam}`, {
+                    const integratedUrl = `/api/integrated/matches?season=${season}${leagueParam}${statusParam}`;
+                    console.log('📡 統合API URL:', integratedUrl);
+                    response = await fetch(integratedUrl, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -2875,9 +2878,12 @@
                     
                 } catch (integratedError) {
                     console.log('⚠️ 統合API失敗、フォールバックに切り替え:', integratedError.message);
+                    console.log('🔍 統合APIエラーの詳細:', integratedError);
                     
                     // フォールバック: 既存のfotmob API
-                    response = await fetch(`/api/fotmob/matches?league=${league}&timeRange=${timeRange}`);
+                    const fallbackUrl = `/api/fotmob/matches?league=${league}&timeRange=${timeRange}`;
+                    console.log('📡 フォールバックAPI URL:', fallbackUrl);
+                    response = await fetch(fallbackUrl);
                     dataSource = 'fotmob';
                     
                     if (!response.ok) {
