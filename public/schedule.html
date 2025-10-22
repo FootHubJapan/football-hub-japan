@@ -2441,6 +2441,23 @@
                         <option value="BL1">ブンデスリーガ</option>
                         <option value="FL1">リーグ・アン</option>
                         <option value="J1">J1リーグ</option>
+                        <option value="CL">チャンピオンズリーグ</option>
+                        <option value="EL">ヨーロッパリーグ</option>
+                        <option value="ECL">ヨーロッパカンファレンスリーグ</option>
+                        <option value="Serie A Brazil">ブラジル・セリエA</option>
+                        <option value="MLS">メジャーリーグサッカー</option>
+                        <option value="Liga MX">リーガMX</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">シーズン</label>
+                    <select class="control-select" id="seasonSelect">
+                        <option value="2024" selected>2024/25</option>
+                        <option value="2023">2023/24</option>
+                        <option value="2022">2022/23</option>
+                        <option value="2021">2021/22</option>
+                        <option value="2020">2020/21</option>
                     </select>
                 </div>
 
@@ -2781,6 +2798,12 @@
                 leagueSelect.addEventListener('change', loadMatches);
             }
             
+            // シーズン選択の変更を監視
+            const seasonSelect = document.getElementById('seasonSelect');
+            if (seasonSelect) {
+                seasonSelect.addEventListener('change', loadMatches);
+            }
+            
             // 期間選択の変更を監視
             const timeRangeSelect = document.getElementById('timeRangeSelect');
             if (timeRangeSelect) {
@@ -2804,10 +2827,11 @@
         async function loadMatches() {
             const league = document.getElementById('leagueSelect').value;
             const timeRange = document.getElementById('timeRangeSelect').value;
+            const season = document.getElementById('seasonSelect').value;
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const statusFilter = document.getElementById('statusFilter').value;
             
-            console.log('Loading matches with:', { league, timeRange, searchTerm, statusFilter });
+            console.log('Loading matches with:', { league, timeRange, season, searchTerm, statusFilter });
             
             const contentDiv = document.getElementById('scheduleContent');
             contentDiv.innerHTML = '<div class="loading">試合データを読み込み中...</div>';
@@ -2821,7 +2845,8 @@
                     // まず統合データを試す
                     const leagueParam = league ? `&league=${encodeURIComponent(league)}` : '';
                     const statusParam = statusFilter ? `&status=${encodeURIComponent(statusFilter)}` : '';
-                    response = await fetch(`/api/integrated/matches?season=2024${leagueParam}${statusParam}`);
+                    const seasonParam = season ? `&season=${encodeURIComponent(season)}` : '';
+                    response = await fetch(`/api/integrated/matches?season=${season}${leagueParam}${statusParam}`);
                     
                     if (!response.ok) {
                         throw new Error(`Integrated API error! status: ${response.status}`);
@@ -3121,7 +3146,22 @@
                 'SA': 'セリエA',
                 'BL1': 'ブンデスリーガ',
                 'FL1': 'リーグ・アン',
-                'J1': 'J1リーグ'
+                'J1': 'J1リーグ',
+                'CL': 'チャンピオンズリーグ',
+                'EL': 'ヨーロッパリーグ',
+                'ECL': 'ヨーロッパカンファレンスリーグ',
+                'Serie A Brazil': 'ブラジル・セリエA',
+                'MLS': 'メジャーリーグサッカー',
+                'Liga MX': 'リーガMX',
+                'Premier League': 'プレミアリーグ',
+                'La Liga': 'ラ・リーガ',
+                'Serie A': 'セリエA',
+                'Bundesliga': 'ブンデスリーガ',
+                'Ligue 1': 'リーグ・アン',
+                'J1 League': 'J1リーグ',
+                'UEFA Champions League': 'チャンピオンズリーグ',
+                'UEFA Europa League': 'ヨーロッパリーグ',
+                'UEFA Europa Conference League': 'ヨーロッパカンファレンスリーグ'
             };
             return leagueNames[leagueCode] || leagueCode;
         }

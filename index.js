@@ -3708,12 +3708,25 @@ app.get('/api/integrated/matches', async (req, res) => {
         if (league) {
             matches = matches.filter(match => 
                 match.leagueName === league || 
-                match.league === league
+                match.league === league ||
+                match.leagueName?.toLowerCase().includes(league.toLowerCase()) ||
+                match.league?.toLowerCase().includes(league.toLowerCase())
+            );
+        }
+        
+        if (season) {
+            matches = matches.filter(match => 
+                match.season == season ||
+                match.season === parseInt(season) ||
+                (match.date && match.date.includes(season))
             );
         }
         
         if (status) {
-            matches = matches.filter(match => match.status === status);
+            matches = matches.filter(match => 
+                match.status === status ||
+                match.status?.toLowerCase() === status.toLowerCase()
+            );
         }
         
         // 日付順でソート
