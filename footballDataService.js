@@ -109,6 +109,83 @@ class FootballDataService {
         }
     }
 
+    // マッチデータ取得（Football-data.org）
+    async getMatches(options = {}) {
+        const { league, season = 2024, status } = options;
+        
+        try {
+            console.log(`🔄 Football-data.orgからマッチデータを取得中... league=${league}, season=${season}, status=${status}`);
+            
+            // API-FootballのリーグIDからFootball-data.orgのコードにマッピング
+            const leagueMapping = {
+                // API-Football ID -> Football-data.org Code
+                '2': 'CL',     // Champions League
+                '39': 'PL',    // Premier League
+                '140': 'PD',   // La Liga
+                '78': 'BL1',   // Bundesliga
+                '135': 'SA',   // Serie A
+                '61': 'FL1',   // Ligue 1
+                '98': null,    // J1 League (未対応)
+                
+                // 文字コードもサポート
+                'CL': 'CL',
+                'PL': 'PL',
+                'PD': 'PD',
+                'BL1': 'BL1',
+                'SA': 'SA',
+                'FL1': 'FL1'
+            };
+            
+            const competitionCode = leagueMapping[league];
+            
+            if (!competitionCode) {
+                console.log(`⚠️ リーグID ${league} は Football-data.org で未対応`);
+                return [];
+            }
+            
+            // Football-data.orgの正しいエンドポイント形式
+            const url = `${this.baseUrl}/competitions/${competitionCode}/matches?season=${season}`;
+            console.log(`📡 Football-data.org URL: ${url}`);
+            
+            const response = await this.makeRequest(url);
+            const data = await response.json();
+            
+            if (!data.matches) {
+                console.log('⚠️ Football-data.orgから空のレスポンス');
+                return [];
+            }
+            
+            const matches = data.matches.map(match => ({
+                id: match.id,
+                homeTeam: match.homeTeam.name,
+                awayTeam: match.awayTeam.name,
+                homeScore: match.score?.fullTime?.home,
+                awayScore: match.score?.fullTime?.away,
+                status: match.status,
+                statusLong: match.status,
+                elapsed: match.minute,
+                venue: match.venue || 'Unknown Venue',
+                leagueName: data.competition?.name || 'Unknown League',
+                league: data.competition?.name || 'Unknown League',
+                leagueId: data.competition?.id,
+                country: data.competition?.area?.name,
+                round: match.matchday,
+                season: season,
+                date: match.utcDate,
+                timestamp: new Date(match.utcDate).getTime(),
+                events: [],
+                lineups: {},
+                statistics: {}
+            }));
+            
+            console.log(`✅ Football-data.orgから${matches.length}件のマッチを取得`);
+            return matches;
+        } catch (error) {
+            console.error('❌ Football-data.org マッチデータ取得エラー:', error.message);
+            return [];
+        }
+    }
+
     // リーグの試合スケジュールを取得
     async getLeagueFixtures(competitionId, season = 2024) {
         try {

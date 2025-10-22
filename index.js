@@ -3935,6 +3935,111 @@ async function getPlayerSeasonStatsFromFootballData(playerId, season) {
     }
 }
 
+// ===============================
+// 🧠 自動フェイルオーバー機能
+// ===============================
+
+// Football-Data 対応リーグコード
+const leagueCodeMap = {
+    2: "CL",    // Champions League
+    39: "PL",   // Premier League
+    140: "PD",  // La Liga
+    78: "BL1",  // Bundesliga
+    135: "SA",  // Serie A
+    61: "FL1",  // Ligue 1
+    94: "ELC",  // Championship
+    71: "PPL",  // Primeira Liga
+    2013: "BSA", // Brazil Serie A
+    88: "DED"   // Eredivisie
+};
+
+// Football-Data.org の呼び出し
+async function fetchFromFootballData(leagueId, season) {
+    const code = leagueCodeMap[leagueId];
+    if (!code) {
+        console.warn(`⚠️ Football-data.org未対応リーグ: ${leagueId}`);
+        return [];
+    }
+
+    const url = `https://api.football-data.org/v4/competitions/${code}/matches?season=${season}`;
+    try {
+        const axios = require('axios');
+        const res = await axios.get(url, {
+            headers: { "X-Auth-Token": process.env.FOOTBALLDATA_KEY },
+            timeout: 8000
+        });
+        console.log(`✅ Football-data.org: ${code} (${res.data.matches.length}件)`);
+        return res.data.matches.map((m) => ({
+            source: "football-data.org",
+            match_id: m.id,
+            utcDate: m.utcDate,
+            status: m.status,
+            home: m.homeTeam.name,
+            away: m.awayTeam.name,
+            home_score: m.score.fullTime.home,
+            away_score: m.score.fullTime.away,
+            competition: m.competition?.name
+        }));
+    } catch (err) {
+        console.error("❌ Football-data.org error:", err.response?.status || err.message);
+        return [];
+    }
+}
+
+// API-Football の呼び出し
+async function fetchFromApiFootball(leagueId, season) {
+    const url = `https://v3.football.api-sports.io/fixtures?league=${leagueId}&season=${season}`;
+    try {
+        const axios = require('axios');
+        const res = await axios.get(url, {
+            headers: { "x-apisports-key": process.env.API_FOOTBALL_KEY },
+            timeout: 8000
+        });
+        console.log(`✅ API-Football: ${leagueId} (${res.data.response.length}件)`);
+        return res.data.response.map((m) => ({
+            source: "api-football",
+            match_id: m.fixture.id,
+            utcDate: m.fixture.date,
+            status: m.fixture.status.short,
+            home: m.teams.home.name,
+            away: m.teams.away.name,
+            home_score: m.goals.home,
+            away_score: m.goals.away,
+            competition: m.league.name
+        }));
+    } catch (err) {
+        console.error("❌ API-Football error:", err.response?.status || err.message);
+        return [];
+    }
+}
+
+// 統合データ形式変換
+function normalizeMatchData(matches) {
+    return matches.map(match => ({
+        id: match.match_id,
+        homeTeam: match.home,
+        awayTeam: match.away,
+        homeScore: match.home_score,
+        awayScore: match.away_score,
+        status: match.status,
+        statusLong: match.status,
+        elapsed: null,
+        venue: 'Unknown Venue',
+        leagueName: match.competition,
+        league: match.competition,
+        leagueId: null,
+        country: null,
+        round: null,
+        season: new Date(match.utcDate).getFullYear(),
+        date: match.utcDate,
+        timestamp: new Date(match.utcDate).getTime(),
+        events: [],
+        lineups: {},
+        statistics: {},
+        source: match.source
+    }));
+}
+
 // 統合データエンドポイント（API-Football + Football-data.org）
 app.get('/api/integrated/matches', async (req, res) => {
     try {
@@ -3944,29 +4049,59 @@ app.get('/api/integrated/matches', async (req, res) => {
         
         let matches = [];
         let dataSource = 'fallback';
+        let sources = [];
         
-        // リアルタイムAPI呼び出し
-        console.log('🔄 リアルタイムAPI呼び出しを開始...');
+        // 自動フェイルオーバー統合モジュールを使用
+        console.log('🔄 自動フェイルオーバー統合モジュールを開始...');
         
-        // API-Footballからマッチデータを取得
-        matches = await dataService.getMatches({
-            league: league,
-            season: season,
-            status: status
-        });
-        
-        console.log(`📊 API-Footballから取得: ${matches?.length || 0}件`);
-        dataSource = 'api-football';
-        
-        // マッチが見つからない場合はエラー
-        if (!matches || matches.length === 0) {
-            console.log('⚠️ マッチデータが見つかりませんでした');
-            return res.status(404).json({ 
-                error: 'マッチデータが見つかりませんでした',
-                filters: { league, season, status },
-                timestamp: new Date().toISOString()
-            });
+        try {
+            // 1️⃣ Football-data.orgから取得（優先）
+            const fdMatches = await fetchFromFootballData(parseInt(league), parseInt(season));
+            if (fdMatches.length > 0) {
+                matches = fdMatches;
+                dataSource = 'football-data.org';
+                sources = ['Football-data.org'];
+                console.log(`✅ Football-data.orgから取得: ${matches.length}件`);
+            } else {
+                // 2️⃣ API-Footballからフェイルオーバー
+                const apiMatches = await fetchFromApiFootball(parseInt(league), parseInt(season));
+                if (apiMatches.length > 0) {
+                    matches = apiMatches;
+                    dataSource = 'api-football';
+                    sources = ['API-Football'];
+                    console.log(`✅ API-Footballから取得: ${matches.length}件`);
+                } else {
+                    console.log('⚠️ 両方のAPIからマッチデータが取得できませんでした');
+                }
+            }
+        } catch (error) {
+            console.error('❌ 自動フェイルオーバーエラー:', error.message);
         }
+        
+        // マッチが見つからない場合はフォールバックデータを使用
+        if (!matches || matches.length === 0) {
+            console.log('📊 フォールバックデータを使用...');
+            const fs = require('fs');
+            const integratedMatchesPath = path.join(__dirname, 'data', 'integrated-matches.json');
+            
+            if (fs.existsSync(integratedMatchesPath)) {
+                const data = await fs.promises.readFile(integratedMatchesPath, 'utf8');
+                matches = JSON.parse(data);
+                dataSource = 'fallback';
+                sources = ['API-Football', 'Football-data.org'];
+                console.log(`📊 フォールバックデータ読み込み: ${matches.length}件`);
+            } else {
+                console.log('⚠️ フォールバックデータも見つかりませんでした');
+                return res.status(404).json({ 
+                    error: 'マッチデータが見つかりませんでした',
+                    filters: { league, season, status },
+                    timestamp: new Date().toISOString()
+                });
+            }
+        }
+        
+        // データ形式を正規化
+        matches = normalizeMatchData(matches);
         
         // フィルタリング
         if (league) {
@@ -4035,9 +4170,7 @@ app.get('/api/integrated/matches', async (req, res) => {
             total: matches.length,
             limited: limitedMatches.length < matches.length,
             filters: { league, season, status },
-            sources: dataSource === 'api-football' ? ['API-Football'] : 
-                     dataSource === 'football-data' ? ['Football-data.org'] : 
-                     ['API-Football', 'Football-data.org'],
+            sources: sources,
             dataSource: dataSource,
             timestamp: new Date().toISOString()
         });
