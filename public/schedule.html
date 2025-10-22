@@ -2899,6 +2899,7 @@
                 
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
                     console.log(`Found matches from ${dataSource}:`, data.matches.length);
+                    console.log('🔍 最初のマッチのデータ構造:', data.matches[0]);
                     currentMatches = data.matches;
                     
                     // データソース情報を表示
@@ -2915,6 +2916,9 @@
                     
                     // フィルタリングを適用
                     const filteredMatches = filterMatches(currentMatches, league, timeRange, searchTerm, statusFilter);
+                    
+                    console.log(`🔍 フィルタリング結果: ${currentMatches.length} → ${filteredMatches.length}件`);
+                    console.log('🔍 フィルタリング条件:', { league, timeRange, searchTerm, statusFilter });
                     
                     if (filteredMatches.length === 0) {
                         contentDiv.innerHTML = '<div class="no-matches">条件に一致する試合が見つかりませんでした。</div>';
@@ -3215,10 +3219,33 @@
         // 試合データをフィルタリング
         function filterMatches(matches, league, timeRange, searchTerm, statusFilter) {
             let filteredMatches = matches;
+            console.log(`🔍 フィルタリング開始: ${matches.length}件のマッチ`);
             
             // リーグでフィルタリング
             if (league && league !== '') {
-                filteredMatches = filteredMatches.filter(match => match.league === league);
+                const beforeCount = filteredMatches.length;
+                filteredMatches = filteredMatches.filter(match => {
+                    const matchLeague = match.leagueName || match.league || '';
+                    const leagueLower = league.toLowerCase();
+                    const matchLeagueLower = matchLeague.toLowerCase();
+                    
+                    // 完全一致
+                    if (matchLeague === league || matchLeagueLower === leagueLower) {
+                        return true;
+                    }
+                    
+                    // チャンピオンズリーグの特別処理
+                    if (league === 'CL' || league === 'Champions League') {
+                        return matchLeagueLower.includes('champions') || 
+                               matchLeagueLower.includes('uefa') ||
+                               matchLeagueLower.includes('cl');
+                    }
+                    
+                    // 部分一致
+                    return matchLeagueLower.includes(leagueLower) || 
+                           leagueLower.includes(matchLeagueLower);
+                });
+                console.log(`🔍 リーグフィルタリング: ${beforeCount} → ${filteredMatches.length}件 (リーグ: ${league})`);
             }
             
             // ステータスでフィルタリング
