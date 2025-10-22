@@ -3689,6 +3689,237 @@ app.get('/api/comprehensive/stats', async (req, res) => {
     }
 });
 
+// 統合データエンドポイント（API-Football + Football-data.org）
+app.get('/api/integrated/matches', async (req, res) => {
+    try {
+        const { league, season = 2024, status } = req.query;
+        
+        // 統合された試合データを読み込み
+        const fs = require('fs');
+        const integratedMatchesPath = path.join(__dirname, 'data', 'integrated-matches.json');
+        
+        let matches = [];
+        if (fs.existsSync(integratedMatchesPath)) {
+            const data = await fs.promises.readFile(integratedMatchesPath, 'utf8');
+            matches = JSON.parse(data);
+        }
+        
+        // フィルタリング
+        if (league) {
+            matches = matches.filter(match => 
+                match.leagueName === league || 
+                match.league === league
+            );
+        }
+        
+        if (status) {
+            matches = matches.filter(match => match.status === status);
+        }
+        
+        // 日付順でソート
+        matches.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        res.json({ 
+            matches,
+            total: matches.length,
+            filters: { league, season, status },
+            sources: ['API-Football', 'Football-data.org'],
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Integrated matches error:', error);
+        res.status(500).json({ 
+            error: '統合試合データの取得に失敗しました',
+            message: error.message
+        });
+    }
+});
+
+app.get('/api/integrated/players', async (req, res) => {
+    try {
+        const { query, limit = 20, japanese = false } = req.query;
+        
+        // 統合された選手データを読み込み
+        const fs = require('fs');
+        const playersFile = path.join(__dirname, 'data', 'players.json');
+        
+        let players = [];
+        if (fs.existsSync(playersFile)) {
+            const data = await fs.promises.readFile(playersFile, 'utf8');
+            players = JSON.parse(data);
+        }
+        
+        // 検索処理
+        if (query) {
+            const searchQuery = query.toLowerCase();
+            players = players.filter(player => {
+                const searchFields = [
+                    player.name, player.currentTeam, player.league, player.position
+                ].filter(Boolean);
+                return searchFields.some(field => 
+                    field.toLowerCase().includes(searchQuery)
+                );
+            });
+        }
+        
+        // 日本語検索
+        if (japanese === 'true' || /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(query)) {
+            const japaneseMappings = {
+                '久保建英': 'Takefusa Kubo',
+                '三笘薫': 'Kaoru Mitoma',
+                '堂安律': 'Ritsu Doan',
+                '遠藤航': 'Wataru Endo',
+                'ムバッペ': 'Mbappé',
+                'サラー': 'Salah',
+                'ハーランド': 'Haaland',
+                'メッシ': 'Messi',
+                'ロナウド': 'Ronaldo'
+            };
+            
+            const mappedQuery = japaneseMappings[query] || query;
+            players = players.filter(player => {
+                const searchFields = [
+                    player.name, player.currentTeam, player.league
+                ].filter(Boolean);
+                return searchFields.some(field => 
+                    field.toLowerCase().includes(mappedQuery.toLowerCase())
+                );
+            });
+        }
+        
+        // 制限適用
+        players = players.slice(0, parseInt(limit));
+        
+        // 統合情報を追加
+        const enhancedPlayers = players.map(player => ({
+            ...player,
+            integration: {
+                hasApiFootball: !!player.apiFootballId,
+                hasFootballData: !!player.footballDataId,
+                hasPhoto: !!player.photo,
+                sources: [
+                    player.apiFootballId ? 'API-Football' : null,
+                    player.footballDataId ? 'Football-data.org' : null
+                ].filter(Boolean)
+            }
+        }));
+        
+        res.json({ 
+            players: enhancedPlayers,
+            total: enhancedPlayers.length,
+            query,
+            sources: ['API-Football', 'Football-data.org'],
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Integrated players error:', error);
+        res.status(500).json({ 
+            error: '統合選手データの取得に失敗しました',
+            message: error.message
+        });
+    }
+});
+
+app.get('/api/integrated/player/:playerId', async (req, res) => {
+    try {
+        const { playerId } = req.params;
+        
+        // 統合された選手データを読み込み
+        const fs = require('fs');
+        const playersFile = path.join(__dirname, 'data', 'players.json');
+        
+        let players = [];
+        if (fs.existsSync(playersFile)) {
+            const data = await fs.promises.readFile(playersFile, 'utf8');
+            players = JSON.parse(data);
+        }
+        
+        // 選手を検索
+        const player = players.find(p => 
+            p.id === playerId || 
+            p.apiFootballId === playerId || 
+            p.footballDataId === playerId ||
+            p.name.toLowerCase().includes(playerId.toLowerCase())
+        );
+        
+        if (!player) {
+            return res.status(404).json({ 
+                error: '選手が見つかりませんでした',
+                playerId
+            });
+        }
+        
+        // 統合情報を追加
+        const enhancedPlayer = {
+            ...player,
+            integration: {
+                hasApiFootball: !!player.apiFootballId,
+                hasFootballData: !!player.footballDataId,
+                hasPhoto: !!player.photo,
+                sources: [
+                    player.apiFootballId ? 'API-Football' : null,
+                    player.footballDataId ? 'Football-data.org' : null
+                ].filter(Boolean),
+                lastUpdated: player.lastUpdated || new Date().toISOString()
+            }
+        };
+        
+        res.json({ 
+            player: enhancedPlayer,
+            sources: ['API-Football', 'Football-data.org'],
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Integrated player error:', error);
+        res.status(500).json({ 
+            error: '統合選手データの取得に失敗しました',
+            message: error.message
+        });
+    }
+});
+
+app.get('/api/integrated/stats', async (req, res) => {
+    try {
+        const fs = require('fs');
+        
+        // 統合レポートを読み込み
+        const mappingReportPath = path.join(__dirname, 'data', 'api-mapping-report.json');
+        let mappingStats = {};
+        if (fs.existsSync(mappingReportPath)) {
+            const data = await fs.promises.readFile(mappingReportPath, 'utf8');
+            mappingStats = JSON.parse(data);
+        }
+        
+        // データファイルの統計
+        const dataDir = path.join(__dirname, 'data');
+        const files = fs.readdirSync(dataDir);
+        
+        const fileStats = {
+            totalFiles: files.length,
+            matchFiles: files.filter(f => f.includes('matches')).length,
+            playerFiles: files.filter(f => f.includes('player')).length,
+            mappingFiles: files.filter(f => f.includes('mapping')).length,
+            comprehensiveFiles: files.filter(f => f.includes('comprehensive')).length
+        };
+        
+        res.json({ 
+            integration: mappingStats,
+            files: fileStats,
+            apiStatus: {
+                'API-Football': 'active',
+                'Football-data.org': 'active'
+            },
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Integrated stats error:', error);
+        res.status(500).json({ 
+            error: '統合統計データの取得に失敗しました',
+            message: error.message
+        });
+    }
+});
+
 // サーバー起動は最後に統合
 
 // 包括的データ取得コマンド

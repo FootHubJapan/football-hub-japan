@@ -1,6 +1,6 @@
 {
-  "lastUpdate": "2025-10-22T07:50:33.740Z",
-  "totalPlayers": 5055,
+  "lastUpdate": "2025-10-22T09:41:33.946Z",
+  "totalPlayers": 5060,
   "leagues": [
     "Saudi Pro League",
     "King's Cup",
@@ -39,7 +39,8 @@
     "Paranaense - 1",
     "Championship",
     "Campionato",
-    "Segunda División"
+    "Segunda División",
+    "Unknown"
   ],
   "teams": [
     "NEOM",
@@ -261,7 +262,9 @@
     "Plymouth",
     "Tre Fiori",
     "Cadiz",
-    "Atletico-MG"
+    "Atletico-MG",
+    "Unknown",
+    "EC Vitória"
   ],
   "positions": [
     "DF",
@@ -299,7 +302,7 @@
       "passAccuracy": "81%",
       "tackles": 8,
       "interceptions": 5,
-      "lastUpdated": "2025-10-22T07:50:33.742Z"
+      "lastUpdated": "2025-10-22T09:41:33.947Z"
     }
   }
 }
