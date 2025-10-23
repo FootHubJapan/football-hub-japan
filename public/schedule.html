@@ -2960,7 +2960,9 @@
                               `API-Football (リアルタイム) - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}` :
                               actualSource === 'football-data' ? 
                               `Football-data.org (リアルタイム) - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}` :
-                              `フォールバックデータ - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}`}</span>
+                              actualSource === 'fallback' ?
+                              `フォールバックデータ - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}` :
+                              `データ - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}`}</span>
                       </div>
                   `;
                     

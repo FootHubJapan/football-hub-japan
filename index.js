@@ -2557,23 +2557,53 @@ app.get('/api/schedule', async (req, res) => {
     try {
         const { league, season, status } = req.query;
         
-        // デフォルト値の設定
-        const leagueKey = league ?? 'premierLeague';
+        // リーグマッピング（安全化）
+        const leagueMap = {
+            'PL': 'premierLeague',
+            'PD': 'laLiga', 
+            'SA': 'serieA',
+            'BL1': 'bundesliga',
+            'FL1': 'ligue1',
+            'CL': 'championsLeague',
+            'EL': 'europaLeague',
+            'ECL': 'conferenceLeague',
+            'premierLeague': 'premierLeague',
+            'laLiga': 'laLiga',
+            'serieA': 'serieA',
+            'bundesliga': 'bundesliga',
+            'ligue1': 'ligue1',
+            'championsLeague': 'championsLeague',
+            'europaLeague': 'europaLeague',
+            'conferenceLeague': 'conferenceLeague'
+        };
+        
+        // リーグの安全マッピング（空文字や未定義でもエラーにしない）
+        const leagueKey = league && league.trim() !== '' ? 
+            (leagueMap[league] || league) : 'all';
+        
+        // シーズンの安全設定
         const seasonYear = season ? Number(season) : 2025;
         
-        // リーグバリデーション
-        const allowedLeagues = new Set(Object.keys(unifiedMatchService?.leagueMapping || {}).concat(['all']));
-        if (!allowedLeagues.has(leagueKey)) {
-            return res.status(400).json({ 
-                error: `Unsupported league: ${leagueKey}`,
-                allowedLeagues: Array.from(allowedLeagues)
-            });
-        }
+        // ステータスマッピング（日本語→内部コード）
+        const statusMap = {
+            'すべてのステータス': null,
+            '未開始': 'SCHEDULED',
+            '試合中': 'IN_PLAY', 
+            '終了': 'FINISHED',
+            'scheduled': 'SCHEDULED',
+            'in_play': 'IN_PLAY',
+            'finished': 'FINISHED',
+            'SCHEDULED': 'SCHEDULED',
+            'IN_PLAY': 'IN_PLAY',
+            'FINISHED': 'FINISHED'
+        };
         
-        console.log(`📅 Schedule API called: league=${leagueKey}, season=${seasonYear}, status=${status}`);
+        const statusCode = status ? (statusMap[status] || status) : null;
+        
+        console.log(`📅 Schedule API called: league=${leagueKey}, season=${seasonYear}, status=${statusCode}`);
         
         // キャッシュキーの生成
-        const cacheKey = `schedule:${leagueKey}:${seasonYear}:${status ?? 'any'}`;
+        const cacheKey = `schedule:${leagueKey}:${seasonYear}:${statusCode ?? 'any'}`;
         
         // キャッシュからデータを確認
         const cachedData = getCache(cacheKey);
@@ -2583,7 +2613,7 @@ app.get('/api/schedule', async (req, res) => {
                 source: 'cache',
                 items: cachedData,
                 total: cachedData.length,
-                filters: { league: leagueKey, season: seasonYear, status },
+                filters: { league: leagueKey, season: seasonYear, status: statusCode },
                 timestamp: new Date().toISOString()
             });
         }
@@ -2646,13 +2676,13 @@ app.get('/api/schedule', async (req, res) => {
         }
         
         // ステータスフィルタリング
-        if (status) {
+        if (statusCode) {
             const originalCount = matches.length;
             matches = matches.filter(match => 
-                match.status === status || 
-                match.status?.toLowerCase() === status.toLowerCase()
+                match.status === statusCode || 
+                match.status?.toLowerCase() === statusCode.toLowerCase()
             );
-            console.log(`🔍 Status filtering: ${originalCount} → ${matches.length} matches`);
+            console.log(`🔍 Status filtering: ${originalCount} → ${matches.length} matches (status: ${statusCode})`);
         }
         
         // データ正規化（Invalid Date対策）
@@ -2680,7 +2710,7 @@ app.get('/api/schedule', async (req, res) => {
             source: dataSource,
             items: matches,
             total: matches.length,
-            filters: { league: leagueKey, season: seasonYear, status },
+            filters: { league: leagueKey, season: seasonYear, status: statusCode },
             timestamp: new Date().toISOString()
         };
         
