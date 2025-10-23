@@ -120,9 +120,7 @@
         }
 
         .stats-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
+            display: block;
             margin-bottom: 3rem;
         }
 
@@ -212,9 +210,8 @@
         /* Transfermarktスタイルのコンペティション別スタッツテーブル */
         .competition-stats-table {
             margin-top: 1rem;
-            overflow-x: auto;
-            display: block;
             width: 100%;
+            overflow-x: auto;
         }
 
         .competition-table {
@@ -224,13 +221,13 @@
             border-radius: 8px;
             overflow: hidden;
             font-size: 0.9rem;
-            display: table;
             border: 2px solid #00ff88;
+            table-layout: fixed;
         }
 
         .competition-table th,
         .competition-table td {
-            padding: 0.75rem 0.5rem;
+            padding: 1rem 0.75rem;
             text-align: center;
             border-bottom: 1px solid #333333;
             border-right: 1px solid #333333;
@@ -247,7 +244,7 @@
             font-weight: bold;
             text-align: left;
             padding-left: 1rem;
-            min-width: 150px;
+            width: 20%;
         }
 
         .stat-header {
@@ -258,7 +255,7 @@
             flex-direction: column;
             align-items: center;
             gap: 0.25rem;
-            min-width: 80px;
+            width: 13.33%;
         }
 
         .stat-icon {
@@ -291,6 +288,7 @@
         .stat-value {
             font-weight: bold;
             color: #00ff88;
+            font-size: 1rem;
         }
 
         .stat-value.total {
@@ -425,35 +423,6 @@
                 </div>
             </div>
 
-            <div class="stats-card">
-                <h2 class="stats-title">詳細統計</h2>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="totalGoals">--</div>
-                        <div class="stat-label">総ゴール</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="totalAssists">--</div>
-                        <div class="stat-label">総アシスト</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="totalAppearances">--</div>
-                        <div class="stat-label">総出場</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="passAccuracy">--</div>
-                        <div class="stat-label">パス成功率</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="tackles">--</div>
-                        <div class="stat-label">タックル</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="shots">--</div>
-                        <div class="stat-label">シュート</div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- 個人スタッツ詳細セクション -->
