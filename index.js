@@ -4217,9 +4217,15 @@ app.get('/api/integrated/matches', async (req, res) => {
                     return true;
                 }
                 
+                // 統合サービスからのデータの場合、シーズンフィルタリングをスキップ
+                if (dataSource === 'unified') {
+                    console.log(`🔍 統合データのためシーズンフィルタリングをスキップ: ${matchSeason} → 許可`);
+                    return true;
+                }
+                
                 return false;
             });
-            console.log(`🔍 シーズンフィルタリング: ${originalCount} → ${matches.length}件 (リクエスト: ${requestedSeason})`);
+            console.log(`🔍 シーズンフィルタリング: ${originalCount} → ${matches.length}件 (リクエスト: ${requestedSeason}, データソース: ${dataSource})`);
         }
         
         if (status) {
