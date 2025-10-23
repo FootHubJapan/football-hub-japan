@@ -2937,10 +2937,17 @@
                   const dataSourceInfo = document.createElement('div');
                   dataSourceInfo.className = 'data-source-info';
                   
-                  // 新しいAPIのsourceプロパティを使用
-                  const actualSource = data.source || dataSource;
+                  // サーバーのsourceプロパティを優先使用（フォールバック判定の修正）
+                  const actualSource = data.source || 'fallback';
                   const totalCount = data.total || data.matches.length;
                   const limitedCount = data.limited;
+                  
+                  console.log('🔍 データソース判定:', { 
+                      serverSource: data.source, 
+                      actualSource, 
+                      matchesCount: data.matches.length,
+                      totalCount 
+                  });
                   
                   dataSourceInfo.innerHTML = `
                       <div class="source-badge">
@@ -2970,15 +2977,22 @@
                     
                     // 試合カードを生成
                     const matchesHtml = filteredMatches.map(match => {
-                        const matchDate = new Date(match.date);
-                        const timeString = matchDate.toLocaleTimeString('ja-JP', { 
+                        // 日付の正規化と表示（Invalid Date対策）
+                        const parseUtcDate = (dateStr) => {
+                            if (!dateStr) return null;
+                            const date = new Date(dateStr);
+                            return isNaN(date.getTime()) ? null : date;
+                        };
+                        
+                        const matchDate = parseUtcDate(match.date || match.utcDate);
+                        const timeString = matchDate ? matchDate.toLocaleTimeString('ja-JP', { 
                             hour: '2-digit', 
                             minute: '2-digit' 
-                        });
-                        const dateString = matchDate.toLocaleDateString('ja-JP', { 
+                        }) : '時間未定';
+                        const dateString = matchDate ? matchDate.toLocaleDateString('ja-JP', { 
                             month: 'short', 
                             day: 'numeric' 
-                        });
+                        }) : '日付未定';
 
                         // スコアの表示（統合APIとAPI-Footballの両方に対応）
                         const homeScore = match.score?.fullTime?.home ?? match.homeScore;
@@ -2987,6 +3001,9 @@
                         // チーム名の取得（統合APIとAPI-Footballの両方に対応）
                         const homeTeamName = typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name;
                         const awayTeamName = typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name;
+                        
+                        // 会場の正規化
+                        const venueName = match.venue?.name || match.venue || '会場未定';
                         
                         // 試合の状態に応じた表示
                         const matchStatus = getMatchStatus(match);
@@ -3032,7 +3049,7 @@
                                         </div>
                                     </div>
                                     
-                                    <div class="match-venue">${match.venue}</div>
+                                    <div class="match-venue">${venueName}</div>
                                     <div class="match-time">${dateString} ${timeString}</div>
                                 </div>
                             `;

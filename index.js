@@ -2655,6 +2655,26 @@ app.get('/api/schedule', async (req, res) => {
             console.log(`🔍 Status filtering: ${originalCount} → ${matches.length} matches`);
         }
         
+        // データ正規化（Invalid Date対策）
+        matches = matches.map(match => ({
+            ...match,
+            // 日付の正規化
+            date: match.date || match.utcDate || null,
+            utcDate: match.utcDate || match.date || null,
+            // 会場の正規化
+            venue: match.venue?.name || match.venue || '会場未定',
+            // チーム名の正規化
+            homeTeam: typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name || 'Unknown',
+            awayTeam: typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name || 'Unknown',
+            // スコアの正規化
+            homeScore: match.score?.fullTime?.home ?? match.homeScore ?? null,
+            awayScore: match.score?.fullTime?.away ?? match.awayScore ?? null,
+            // リーグ名の正規化
+            leagueName: match.leagueName || match.league || match.competition || 'Unknown League'
+        }));
+        
+        console.log(`🔧 Data normalization completed: ${matches.length} matches`);
+        
         // レスポンス
         const response = { 
             source: dataSource,
