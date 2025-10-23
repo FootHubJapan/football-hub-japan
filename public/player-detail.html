@@ -367,6 +367,7 @@
             <div class="player-info">
                 <h1 id="playerName" class="player-name">選手名</h1>
                 <p id="playerClub" class="player-club">所属チーム</p>
+                <div id="dataSourceInfo" style="color:#4ade80;font-size:12px;margin-top:4px;font-weight:600;"></div>
                 <div class="player-basics">
                     <div class="basic-item">
                         <div class="basic-value" id="playerAge">--</div>
@@ -694,13 +695,33 @@
             console.log(`📊 データソース: ${dataSource}`);
             
             // データソースに応じて表示を調整
-            if (dataSource === 'comprehensiveDatabase' || dataSource === 'apiFootball' || dataSource === 'footballData') {
+            const sourceMap = {
+                'integrated': '🔗 統合API (API-Football + Football-data.org)',
+                'comprehensiveDatabase': '📊 包括的データベース',
+                'apiFootball': '⚽ API-Football',
+                'footballData': '🌐 Football-data.org',
+                'fotmob': '📱 FotMob',
+                'localStorage': '📁 ローカルストレージ',
+                'fallback': '📁 フォールバックデータ'
+            };
+            
+            const sourceDisplay = sourceMap[dataSource] || '📁 ローカルデータ';
+            console.log(`📊 データソース表示: ${sourceDisplay}`);
+            
+            // ページタイトルを更新
+            if (dataSource === 'integrated' || dataSource === 'comprehensiveDatabase' || dataSource === 'apiFootball' || dataSource === 'footballData') {
                 console.log('✅ 実際のAPIデータを使用');
-                // 実際のデータの場合は特別な表示
                 document.title = `${player.name} - 実際のデータ - Football Hub Japan`;
             } else {
                 console.log('⚠️ フォールバックデータを使用');
                 document.title = `${player.name} - サンプルデータ - Football Hub Japan`;
+            }
+            
+            // データソース表示をページに追加
+            const dataSourceElement = document.getElementById('dataSourceInfo');
+            if (dataSourceElement) {
+                dataSourceElement.textContent = sourceDisplay;
+                dataSourceElement.style.color = dataSource === 'localStorage' || dataSource === 'fallback' ? '#888' : '#4ade80';
             }
 
             // コンペティション別スタッツを表示

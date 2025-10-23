@@ -3382,6 +3382,7 @@
                     <button id="detailsClose" style="background:#222;color:#aaa;border:1px solid #333;border-radius:8px;padding:4px 8px;cursor:pointer;">閉じる</button>
                 </div>
                 <div id="detailsMeta" style="color:#bdbdbd;font-size:12px;margin-bottom:8px;"></div>
+                <div id="detailsDataSource" style="color:#4ade80;font-size:11px;margin-bottom:8px;font-weight:600;"></div>
                 <div id="detailsStats" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;"></div>
                 <div style="margin-top:12px;display:flex;gap:8px;">
                     <a id="openRadar" href="/radar" style="flex:1;text-align:center;background:#14cf93;color:#000;padding:8px;border-radius:8px;text-decoration:none;font-weight:700;">レーダーチャートで表示</a>
@@ -3399,20 +3400,84 @@
             const position = player.position || 'Unknown Position';
             const nationality = player.nationality || 'Unknown';
             let stats = player.stats || {};
+            let dataSource = 'local';
 
-            // サーバから詳細を追加取得
+            // 複数のAPIから詳細データを取得
             try {
-                if (player.id) {
-                    const r = await fetch(`/api/fotmob/players/${encodeURIComponent(player.id)}?_t=${Date.now()}`);
-                    if (r.ok) {
-                        const full = await r.json();
-                        if (full && full.stats) { stats = { ...stats, ...full.stats }; }
+                console.log(`🔄 ${name}の詳細データを取得中...`);
+                
+                // 1. 統合APIからデータを取得
+                if (player.id || player.playerId) {
+                    try {
+                        const integratedResponse = await fetch(`/api/integrated/player/${encodeURIComponent(player.id || player.playerId)}?_t=${Date.now()}`);
+                        if (integratedResponse.ok) {
+                            const integratedData = await integratedResponse.json();
+                            if (integratedData && integratedData.stats) {
+                                stats = { ...stats, ...integratedData.stats };
+                                dataSource = 'integrated';
+                                console.log(`✅ 統合APIデータ取得成功: ${name}`);
+                            }
+                        }
+                    } catch (integratedError) {
+                        console.log(`⚠️ 統合API取得失敗: ${integratedError.message}`);
                     }
                 }
-            } catch {}
+
+                // 2. API-Footballからデータを取得
+                if (player.id || player.playerId) {
+                    try {
+                        const apiFootballResponse = await fetch(`/api/player-stats/${encodeURIComponent(player.id || player.playerId)}?forceApi=1&_t=${Date.now()}`);
+                        if (apiFootballResponse.ok) {
+                            const apiFootballData = await apiFootballResponse.json();
+                            if (apiFootballData && apiFootballData.stats) {
+                                stats = { ...stats, ...apiFootballData.stats };
+                                dataSource = 'api-football';
+                                console.log(`✅ API-Footballデータ取得成功: ${name}`);
+                            }
+                        }
+                    } catch (apiFootballError) {
+                        console.log(`⚠️ API-Football取得失敗: ${apiFootballError.message}`);
+                    }
+                }
+
+                // 3. FotMobからデータを取得（フォールバック）
+                if (player.id || player.playerId) {
+                    try {
+                        const fotmobResponse = await fetch(`/api/fotmob/players/${encodeURIComponent(player.id || player.playerId)}?_t=${Date.now()}`);
+                        if (fotmobResponse.ok) {
+                            const fotmobData = await fotmobResponse.json();
+                            if (fotmobData && fotmobData.stats) {
+                                stats = { ...stats, ...fotmobData.stats };
+                                if (dataSource === 'local') dataSource = 'fotmob';
+                                console.log(`✅ FotMobデータ取得成功: ${name}`);
+                            }
+                        }
+                    } catch (fotmobError) {
+                        console.log(`⚠️ FotMob取得失敗: ${fotmobError.message}`);
+                    }
+                }
+
+                console.log(`📊 最終データソース: ${dataSource}`);
+            } catch (error) {
+                console.error(`❌ データ取得エラー: ${error.message}`);
+            }
 
             document.getElementById('detailsName').textContent = name;
             document.getElementById('detailsMeta').textContent = `${team} | ${position} | ${nationality}`;
+            
+            // データソース表示を追加
+            const dataSourceEl = document.getElementById('detailsDataSource');
+            if (dataSourceEl) {
+                const sourceMap = {
+                    'integrated': '🔗 統合API (API-Football + Football-data.org)',
+                    'api-football': '⚽ API-Football',
+                    'fotmob': '📱 FotMob',
+                    'local': '📁 ローカルデータ'
+                };
+                dataSourceEl.textContent = sourceMap[dataSource] || '📁 ローカルデータ';
+                dataSourceEl.style.color = dataSource === 'local' ? '#888' : '#4ade80';
+            }
+            
             const statsEl = document.getElementById('detailsStats');
             statsEl.innerHTML = '';
             const items = [
