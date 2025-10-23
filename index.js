@@ -2633,20 +2633,47 @@ app.get('/api/schedule', async (req, res) => {
         if (items.length > 0) {
             console.log('🔍 Raw API data structure:', JSON.stringify(items[0], null, 2));
         } else {
-            console.log('⚠️ No data from unified API, using fallback data');
-            // フォールバックデータを使用
+            console.log('⚠️ No data from unified API, trying to get live data...');
+            // フォールバックデータを無効化して、実際のAPIデータを取得
             try {
-                const fs = require('fs');
-                const path = require('path');
-                const fallbackPath = path.join(__dirname, 'data', 'integrated-matches.json');
+                // 直接API-Footballからデータを取得
+                const axios = require('axios');
+                const apiFootballKey = process.env.API_FOOTBALL_KEY;
                 
-                if (fs.existsSync(fallbackPath)) {
-                    const fallbackData = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
-                    items = Array.isArray(fallbackData) ? fallbackData : [];
-                    console.log(`📊 Using fallback data: ${items.length} matches`);
+                if (apiFootballKey) {
+                    console.log('🔍 Trying direct API-Football call...');
+                    const response = await axios.get('https://api-football-v1.p.rapidapi.com/v3/fixtures', {
+                        headers: {
+                            'X-RapidAPI-Key': apiFootballKey,
+                            'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com'
+                        },
+                        params: {
+                            season: season || '2025',
+                            league: league === 'premierLeague' ? 39 : 
+                                   league === 'laLiga' ? 140 :
+                                   league === 'serieA' ? 135 :
+                                   league === 'bundesliga' ? 78 :
+                                   league === 'ligue1' ? 61 : null
+                        }
+                    });
+                    
+                    if (response.data && response.data.response) {
+                        items = response.data.response.map(fixture => ({
+                            id: fixture.fixture.id,
+                            homeTeam: fixture.teams.home.name,
+                            awayTeam: fixture.teams.away.name,
+                            date: fixture.fixture.date,
+                            venue: fixture.fixture.venue.name,
+                            homeScore: fixture.goals.home,
+                            awayScore: fixture.goals.away,
+                            status: fixture.fixture.status.short,
+                            leagueName: fixture.league.name
+                        }));
+                        console.log(`📊 Direct API-Football data: ${items.length} matches`);
+                    }
                 }
             } catch (err) {
-                console.warn('⚠️ Fallback data not available:', err.message);
+                console.warn('⚠️ Direct API call failed:', err.message);
             }
         }
         
@@ -2685,6 +2712,8 @@ app.get('/api/schedule', async (req, res) => {
                 homeTeamName = match.homeTeam.team.name;
             } else if (match.teams?.home?.name) {
                 homeTeamName = match.teams.home.name;
+            } else if (match.home) {
+                homeTeamName = match.home;
             }
             
             let awayTeamName = 'Unknown';
@@ -2696,6 +2725,18 @@ app.get('/api/schedule', async (req, res) => {
                 awayTeamName = match.awayTeam.team.name;
             } else if (match.teams?.away?.name) {
                 awayTeamName = match.teams.away.name;
+            } else if (match.away) {
+                awayTeamName = match.away;
+            }
+            
+            // デバッグ: チーム名の正規化をログ出力
+            if (index === 0) {
+                console.log('🔍 Team normalization debug:', {
+                    originalHomeTeam: match.homeTeam,
+                    normalizedHomeTeam: homeTeamName,
+                    originalAwayTeam: match.awayTeam,
+                    normalizedAwayTeam: awayTeamName
+                });
             }
             
             // 会場の正規化
@@ -2706,6 +2747,8 @@ app.get('/api/schedule', async (req, res) => {
                 venueName = match.venue;
             } else if (match.fixture?.venue?.name) {
                 venueName = match.fixture.venue.name;
+            } else if (match.stadium) {
+                venueName = match.stadium;
             }
             
             return {
@@ -2721,8 +2764,8 @@ app.get('/api/schedule', async (req, res) => {
                 // 会場の正規化
                 venue: venueName,
                 // スコアの正規化
-                homeScore: match.score?.fullTime?.home ?? match.homeScore ?? match.goals?.home ?? null,
-                awayScore: match.score?.fullTime?.away ?? match.awayScore ?? match.goals?.away ?? null,
+                homeScore: match.score?.fullTime?.home ?? match.homeScore ?? match.goals?.home ?? match.home_score ?? null,
+                awayScore: match.score?.fullTime?.away ?? match.awayScore ?? match.goals?.away ?? match.away_score ?? null,
                 // リーグ名の正規化
                 leagueName: match.leagueName || match.league || match.competition || match.league?.name || 'Unknown League',
                 // シーズン情報の追加
