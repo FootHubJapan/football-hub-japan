@@ -125,14 +125,29 @@ async function getUnifiedMatches(leagueKey, season = 2024) {
 
     let matches = [];
 
-    // 1️⃣ Football-data.org（優先）
-    if (league.footballData) {
-        matches = await fetchFromFootballData(league.footballData, season);
-    }
-
-    // 2️⃣ データ0件ならAPI-Footballへフォールバック
-    if (!matches || matches.length === 0) {
+    // ヨーロッパリーグはAPI-Football優先（403エラー対策）
+    const preferApiFootball = ['europaLeague', 'conferenceLeague'].includes(leagueKey);
+    
+    if (preferApiFootball) {
+        // 1️⃣ API-Football（優先）
         matches = await fetchFromApiFootball(league.apiFootball, season);
+        
+        // 2️⃣ データ0件ならFootball-data.orgへフォールバック
+        if (!matches || matches.length === 0) {
+            if (league.footballData) {
+                matches = await fetchFromFootballData(league.footballData, season);
+            }
+        }
+    } else {
+        // 1️⃣ Football-data.org（優先）
+        if (league.footballData) {
+            matches = await fetchFromFootballData(league.footballData, season);
+        }
+
+        // 2️⃣ データ0件ならAPI-Footballへフォールバック
+        if (!matches || matches.length === 0) {
+            matches = await fetchFromApiFootball(league.apiFootball, season);
+        }
     }
 
     // 3️⃣ 両方0件ならローカルフォールバックを返す

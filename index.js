@@ -126,10 +126,53 @@ require('dotenv').config();
 
 // 環境変数の状態をログ出力
 console.log('🔍 環境変数チェック:');
-console.log('  API_FOOTBALL_KEY:', process.env.API_FOOTBALL_KEY ? `設定済み (${process.env.API_FOOTBALL_KEY.length}文字)` : '未設定');
-console.log('  RAPIDAPI_KEY:', process.env.RAPIDAPI_KEY ? `設定済み (${process.env.RAPIDAPI_KEY.length}文字)` : '未設定');
-console.log('  FOOTBALL_DATA_API_KEY:', process.env.FOOTBALL_DATA_API_KEY ? `設定済み (${process.env.FOOTBALL_DATA_API_KEY.length}文字)` : '未設定');
-console.log('  GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? `設定済み (${process.env.GEMINI_API_KEY.length}文字)` : '未設定');
+console.log('  API_FOOTBALL_KEY:', maskApiKey(process.env.API_FOOTBALL_KEY));
+console.log('  RAPIDAPI_KEY:', maskApiKey(process.env.RAPIDAPI_KEY));
+console.log('  FOOTBALL_DATA_API_KEY:', maskApiKey(process.env.FOOTBALL_DATA_API_KEY));
+console.log('  GEMINI_API_KEY:', maskApiKey(process.env.GEMINI_API_KEY));
+
+// ===============================
+// 🔐 ユーティリティ関数
+// ===============================
+
+// APIキーのマスキング関数
+function maskApiKey(key) {
+    if (!key) return 'unset';
+    if (key.length <= 8) return '***';
+    return `${key.slice(0, 4)}…${key.slice(-4)}`;
+}
+
+// ===============================
+// 🗄️ 簡易キャッシュシステム
+// ===============================
+const simpleCache = new Map();
+
+function getCache(key) {
+    const cached = simpleCache.get(key);
+    if (cached && cached.expires > Date.now()) {
+        return cached.data;
+    }
+    return null;
+}
+
+function setCache(key, data, ttlMs = 15 * 60 * 1000) { // デフォルト15分
+    simpleCache.set(key, {
+        expires: Date.now() + ttlMs,
+        data: data
+    });
+}
+
+function clearExpiredCache() {
+    const now = Date.now();
+    for (const [key, value] of simpleCache.entries()) {
+        if (value.expires <= now) {
+            simpleCache.delete(key);
+        }
+    }
+}
+
+// 5分ごとにキャッシュをクリーンアップ
+setInterval(clearExpiredCache, 5 * 60 * 1000);
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -2509,6 +2552,136 @@ app.get('/api/fotmob/matches', async (req, res) => {
     }
 });
 
+// 試合スケジュールAPI（統合API優先版）
+app.get('/api/schedule', async (req, res) => {
+    try {
+        const { league, season, status } = req.query;
+        
+        // デフォルト値の設定
+        const leagueKey = league ?? 'premierLeague';
+        const seasonYear = season ? Number(season) : 2025;
+        
+        // リーグバリデーション
+        const allowedLeagues = new Set(Object.keys(unifiedMatchService?.leagueMapping || {}).concat(['all']));
+        if (!allowedLeagues.has(leagueKey)) {
+            return res.status(400).json({ 
+                error: `Unsupported league: ${leagueKey}`,
+                allowedLeagues: Array.from(allowedLeagues)
+            });
+        }
+        
+        console.log(`📅 Schedule API called: league=${leagueKey}, season=${seasonYear}, status=${status}`);
+        
+        // キャッシュキーの生成
+        const cacheKey = `schedule:${leagueKey}:${seasonYear}:${status ?? 'any'}`;
+        
+        // キャッシュからデータを確認
+        const cachedData = getCache(cacheKey);
+        if (cachedData) {
+            console.log(`📦 Cache hit for ${cacheKey}`);
+            return res.json({ 
+                source: 'cache',
+                items: cachedData,
+                total: cachedData.length,
+                filters: { league: leagueKey, season: seasonYear, status },
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        let matches = [];
+        let dataSource = 'fallback';
+        
+        // 1️⃣ 統合APIを優先（Football-data.org + API-Football）
+        if (unifiedMatchService) {
+            try {
+                if (leagueKey === 'all') {
+                    // 全リーグのデータを取得
+                    const leagueKeys = ['premierLeague', 'laLiga', 'serieA', 'bundesliga', 'ligue1', 'championsLeague', 'europaLeague'];
+                    const allMatches = await Promise.all(
+                        leagueKeys.map(k => unifiedMatchService.getUnifiedMatches(k, seasonYear))
+                    );
+                    matches = allMatches.flat();
+                    dataSource = 'live';
+                    console.log(`✅ All leagues unified data: ${matches.length} matches`);
+                } else {
+                    // 特定リーグのデータを取得
+                    matches = await unifiedMatchService.getUnifiedMatches(leagueKey, seasonYear);
+                    dataSource = matches.length > 0 ? 'live' : 'fallback';
+                    console.log(`✅ ${leagueKey} unified data: ${matches.length} matches`);
+                }
+            } catch (unifiedError) {
+                console.error('❌ Unified service error:', unifiedError.message);
+                matches = [];
+            }
+        }
+        
+        // 2️⃣ 統合APIが0件の場合のみフォールバック
+        if (!matches || matches.length === 0) {
+            console.log('📊 Using fallback data...');
+            try {
+                // フォールバックデータの取得（既存のロジック）
+                const fs = require('fs');
+                const path = require('path');
+                const fallbackPath = path.join(__dirname, 'data', 'schedules.json');
+                
+                if (fs.existsSync(fallbackPath)) {
+                    const fallbackData = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
+                    matches = fallbackData || [];
+                    dataSource = 'fallback';
+                    console.log(`📊 Fallback data loaded: ${matches.length} matches`);
+                } else {
+                    console.log('⚠️ No fallback data available');
+                    return res.status(404).json({ 
+                        error: 'No schedule data available',
+                        source: 'none'
+                    });
+                }
+            } catch (fallbackError) {
+                console.error('❌ Fallback error:', fallbackError.message);
+                return res.status(500).json({ 
+                    error: 'Failed to load schedule data',
+                    source: 'error'
+                });
+            }
+        }
+        
+        // ステータスフィルタリング
+        if (status) {
+            const originalCount = matches.length;
+            matches = matches.filter(match => 
+                match.status === status || 
+                match.status?.toLowerCase() === status.toLowerCase()
+            );
+            console.log(`🔍 Status filtering: ${originalCount} → ${matches.length} matches`);
+        }
+        
+        // レスポンス
+        const response = { 
+            source: dataSource,
+            items: matches,
+            total: matches.length,
+            filters: { league: leagueKey, season: seasonYear, status },
+            timestamp: new Date().toISOString()
+        };
+        
+        // キャッシュに保存（15分間）
+        if (matches.length > 0) {
+            setCache(cacheKey, matches, 15 * 60 * 1000);
+            console.log(`💾 Cached ${matches.length} matches for ${cacheKey}`);
+        }
+        
+        res.json(response);
+        
+    } catch (error) {
+        console.error('❌ Schedule API error:', error);
+        res.status(500).json({ 
+            error: 'Schedule API failed',
+            message: error.message,
+            source: 'error'
+        });
+    }
+});
+
 // API-Footballから試合データを取得
 async function getMatchesFromAPIFootball(league, timeRange) {
     const matches = [];
@@ -4192,6 +4365,7 @@ app.get('/api/integrated/matches', async (req, res) => {
         if (season) {
             const originalCount = matches.length;
             const requestedSeason = parseInt(season);
+            let skippedCount = 0;
             
             matches = matches.filter(match => {
                 // シーズンフィルタリングを緩和
@@ -4219,13 +4393,17 @@ app.get('/api/integrated/matches', async (req, res) => {
                 
                 // 統合サービスからのデータの場合、シーズンフィルタリングをスキップ
                 if (dataSource === 'unified') {
-                    console.log(`🔍 統合データのためシーズンフィルタリングをスキップ: ${matchSeason} → 許可`);
+                    skippedCount++;
                     return true;
                 }
                 
                 return false;
             });
-            console.log(`🔍 シーズンフィルタリング: ${originalCount} → ${matches.length}件 (リクエスト: ${requestedSeason}, データソース: ${dataSource})`);
+            
+            // ログスパムを抑制（本番環境では詳細ログを出さない）
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`🔍 シーズンフィルタリング: ${originalCount} → ${matches.length}件 (スキップ: ${skippedCount}件, リクエスト: ${requestedSeason}, データソース: ${dataSource})`);
+            }
         }
         
         if (status) {
