@@ -2665,10 +2665,10 @@ app.get('/api/schedule', async (req, res) => {
     } catch (err) {
         console.error('❌ Unified service error:', err.message);
         
-        // 500は返さず、構造化された"失敗（フォールバック推奨）"を返す
+        // APIデータが取得できない場合は空のレスポンスを返す（フォールバックデータは表示しない）
         return res.json({
             meta: {
-                source: 'fallback',
+                source: 'error',
                 error: 'integrated_api_failed',
                 message: err?.message ?? 'unknown error',
                 appliedFilters: { season, league, status },

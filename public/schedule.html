@@ -2905,24 +2905,12 @@
                     }
                     
                 } catch (integratedError) {
-                    console.log('⚠️ 統合API失敗、フォールバックに切り替え:', integratedError.message);
+                    console.log('⚠️ 統合API失敗:', integratedError.message);
                     console.log('🔍 統合APIエラーの詳細:', integratedError);
                     
-                    // フォールバック: 既存のfotmob API
-                    const fallbackUrl = `/api/fotmob/matches?league=${league}&timeRange=${timeRange}`;
-                    console.log('📡 フォールバックAPI URL:', fallbackUrl);
-                    response = await fetch(fallbackUrl);
-                    dataSource = 'fotmob';
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
-                    const responseText = await response.text();
-                    console.log('Fotmob API response:', responseText);
-                    
-                    data = JSON.parse(responseText);
-                    console.log('Using fotmob data:', data);
+                    // フォールバックデータは使用しない
+                    console.log('❌ APIデータが取得できませんでした。データを表示しません。');
+                    throw new Error('APIデータの取得に失敗しました');
                 }
                 
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
@@ -2960,8 +2948,8 @@
                               `API-Football (リアルタイム) - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}` :
                               actualSource === 'football-data' ? 
                               `Football-data.org (リアルタイム) - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}` :
-                              actualSource === 'fallback' ?
-                              `フォールバックデータ - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}` :
+                              actualSource === 'error' ?
+                              `❌ APIデータ取得エラー - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}` :
                               `データ - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}`}</span>
                       </div>
                   `;
