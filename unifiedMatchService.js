@@ -77,10 +77,14 @@ async function fetchFromFootballData(leagueCode, season) {
             competition: m.competition.name,
             venue: m.venue,
             referees: m.referees,
-            lineups: m.lineups,
-            goalScorers: m.goalScorers,
-            bookings: m.bookings,
-            substitutions: m.substitutions
+            // Football-data.orgの正しいフィールド名を使用
+            lineups: {
+                home: m.homeTeam.lineup || [],
+                away: m.awayTeam.lineup || []
+            },
+            goalScorers: m.goals || [],
+            bookings: m.bookings || [],
+            substitutions: m.substitutions || []
         }));
     } catch (err) {
         console.error(`⚠️ Football-data.orgエラー (${leagueCode}):`, err.response?.status || err.message);

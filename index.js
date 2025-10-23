@@ -2552,6 +2552,68 @@ app.get('/api/fotmob/matches', async (req, res) => {
     }
 });
 
+// 個別マッチの詳細情報を取得（Football-data.org）
+app.get('/api/match-details/:matchId', async (req, res) => {
+    try {
+        const { matchId } = req.params;
+        const FOOTBALLDATA_KEY = process.env.FOOTBALL_DATA_API_KEY || process.env.FOOTBALLDATA_KEY;
+        
+        if (!FOOTBALLDATA_KEY) {
+            return res.status(500).json({
+                error: 'Football-data.org API key not configured',
+                message: 'FOOTBALL_DATA_API_KEY environment variable is required'
+            });
+        }
+
+        // Football-data.orgから個別マッチの詳細を取得
+        const axios = require('axios');
+        const response = await axios.get(`https://api.football-data.org/v4/matches/${matchId}`, {
+            headers: { "X-Auth-Token": FOOTBALLDATA_KEY },
+            timeout: 10000,
+        });
+
+        const match = response.data;
+        
+        // データを正規化
+        const normalizedMatch = {
+            id: match.id,
+            homeTeam: match.homeTeam.name,
+            awayTeam: match.awayTeam.name,
+            homeScore: match.score.fullTime.home,
+            awayScore: match.score.fullTime.away,
+            venue: match.venue,
+            referees: match.referees,
+            lineups: {
+                home: match.homeTeam.lineup || [],
+                away: match.awayTeam.lineup || []
+            },
+            goalScorers: match.goals || [],
+            bookings: match.bookings || [],
+            substitutions: match.substitutions || [],
+            status: match.status,
+            date: match.utcDate,
+            leagueName: match.competition.name,
+            season: match.season.startDate.split('-')[0]
+        };
+
+        res.json({
+            meta: {
+                source: 'football-data.org',
+                matchId: matchId,
+                generatedAt: new Date().toISOString()
+            },
+            match: normalizedMatch
+        });
+
+    } catch (error) {
+        console.error('個別マッチ詳細取得エラー:', error.message);
+        res.status(500).json({
+            error: 'Failed to fetch match details',
+            message: error.message
+        });
+    }
+});
+
 // 試合スケジュールAPI（安全化版）
 app.get('/api/schedule', async (req, res) => {
     const { season } = req.query;
