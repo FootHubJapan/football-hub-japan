@@ -2974,7 +2974,8 @@
                             return isNaN(date.getTime()) ? null : date;
                         };
                         
-                        const matchDate = parseUtcDate(match.date || match.utcDate);
+                        // 複数の日付フィールドをチェック
+                        const matchDate = parseUtcDate(match.date || match.utcDate || match.matchDate || match.fixture?.date);
                         const timeString = matchDate ? matchDate.toLocaleTimeString('ja-JP', { 
                             hour: '2-digit', 
                             minute: '2-digit' 
@@ -2988,12 +2989,23 @@
                         const homeScore = match.score?.fullTime?.home ?? match.homeScore;
                         const awayScore = match.score?.fullTime?.away ?? match.awayScore;
                         
-                        // チーム名の取得（統合APIとAPI-Footballの両方に対応）
-                        const homeTeamName = typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name;
-                        const awayTeamName = typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name;
+                        // チーム名の取得（複数のフィールドをチェック）
+                        const homeTeamName = typeof match.homeTeam === 'string' ? match.homeTeam : 
+                                            match.homeTeam?.name || 
+                                            match.homeTeam?.team?.name || 
+                                            match.teams?.home?.name || 
+                                            'Unknown';
+                        const awayTeamName = typeof match.awayTeam === 'string' ? match.awayTeam : 
+                                            match.awayTeam?.name || 
+                                            match.awayTeam?.team?.name || 
+                                            match.teams?.away?.name || 
+                                            'Unknown';
                         
-                        // 会場の正規化
-                        const venueName = match.venue?.name || match.venue || '会場未定';
+                        // 会場の正規化（複数のフィールドをチェック）
+                        const venueName = match.venue?.name || 
+                                         match.venue || 
+                                         match.fixture?.venue?.name || 
+                                         '会場未定';
                         
                         // 試合の状態に応じた表示
                         const matchStatus = getMatchStatus(match);
@@ -3011,7 +3023,7 @@
                         const matchHtml = `
                                 <div class="match-card" onclick="showDetailedMatchInfo('${match.id || match.matchId || 'unknown'}', '${match.leagueName || match.league}')">
                                     <div class="match-header">
-                                        <span class="match-league">${getLeagueName(match.leagueName || match.league)}</span>
+                                        <span class="match-league">${getLeagueName(match.leagueName || match.league)} ${match.season ? `(${match.season})` : ''}</span>
                                         <span class="match-status ${getStatusClass(match.status)}">${getStatusText(match.status)}</span>
                                     </div>
                                     

@@ -2632,24 +2632,73 @@ app.get('/api/schedule', async (req, res) => {
         }
 
         // データ正規化（Invalid Date対策）
-        const normalizedItems = filteredItems.map((match, index) => ({
-            ...match,
-            // IDの確実な設定（フロントエンドでundefinedエラーを防ぐ）
-            id: match.id || match.matchId || `match_${Date.now()}_${index}`,
-            // 日付の正規化
-            date: match.date || match.utcDate || null,
-            utcDate: match.utcDate || match.date || null,
+        const normalizedItems = filteredItems.map((match, index) => {
+            // 日付の正規化（複数のフィールドをチェック）
+            let normalizedDate = null;
+            if (match.date) {
+                normalizedDate = new Date(match.date);
+            } else if (match.utcDate) {
+                normalizedDate = new Date(match.utcDate);
+            } else if (match.matchDate) {
+                normalizedDate = new Date(match.matchDate);
+            } else if (match.fixture?.date) {
+                normalizedDate = new Date(match.fixture.date);
+            }
+            
+            // チーム名の正規化（複数のフィールドをチェック）
+            let homeTeamName = 'Unknown';
+            if (typeof match.homeTeam === 'string') {
+                homeTeamName = match.homeTeam;
+            } else if (match.homeTeam?.name) {
+                homeTeamName = match.homeTeam.name;
+            } else if (match.homeTeam?.team?.name) {
+                homeTeamName = match.homeTeam.team.name;
+            } else if (match.teams?.home?.name) {
+                homeTeamName = match.teams.home.name;
+            }
+            
+            let awayTeamName = 'Unknown';
+            if (typeof match.awayTeam === 'string') {
+                awayTeamName = match.awayTeam;
+            } else if (match.awayTeam?.name) {
+                awayTeamName = match.awayTeam.name;
+            } else if (match.awayTeam?.team?.name) {
+                awayTeamName = match.awayTeam.team.name;
+            } else if (match.teams?.away?.name) {
+                awayTeamName = match.teams.away.name;
+            }
+            
             // 会場の正規化
-            venue: match.venue?.name || match.venue || null,
-            // チーム名の正規化
-            homeTeam: typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name || 'Unknown',
-            awayTeam: typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name || 'Unknown',
-            // スコアの正規化
-            homeScore: match.score?.fullTime?.home ?? match.homeScore ?? null,
-            awayScore: match.score?.fullTime?.away ?? match.awayScore ?? null,
-            // リーグ名の正規化
-            leagueName: match.leagueName || match.league || match.competition || 'Unknown League'
-        }));
+            let venueName = null;
+            if (match.venue?.name) {
+                venueName = match.venue.name;
+            } else if (typeof match.venue === 'string') {
+                venueName = match.venue;
+            } else if (match.fixture?.venue?.name) {
+                venueName = match.fixture.venue.name;
+            }
+            
+            return {
+                ...match,
+                // IDの確実な設定
+                id: match.id || match.matchId || `match_${Date.now()}_${index}`,
+                // 日付の正規化
+                date: normalizedDate ? normalizedDate.toISOString() : null,
+                utcDate: normalizedDate ? normalizedDate.toISOString() : null,
+                // チーム名の正規化
+                homeTeam: homeTeamName,
+                awayTeam: awayTeamName,
+                // 会場の正規化
+                venue: venueName,
+                // スコアの正規化
+                homeScore: match.score?.fullTime?.home ?? match.homeScore ?? match.goals?.home ?? null,
+                awayScore: match.score?.fullTime?.away ?? match.awayScore ?? match.goals?.away ?? null,
+                // リーグ名の正規化
+                leagueName: match.leagueName || match.league || match.competition || match.league?.name || 'Unknown League',
+                // シーズン情報の追加
+                season: match.season || season || '2025'
+            };
+        });
 
         console.log(`✅ Unified API success: ${normalizedItems.length} matches`);
 
