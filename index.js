@@ -50,6 +50,17 @@ try {
     footballDataService = null;
 }
 
+// 統合マッチサービスをインポート
+let unifiedMatchService;
+try {
+    console.log('Loading unifiedMatchService...');
+    unifiedMatchService = require('./unifiedMatchService');
+    console.log('unifiedMatchService loaded successfully');
+} catch (error) {
+    console.error('Error loading unifiedMatchService:', error);
+    unifiedMatchService = null;
+}
+
 // Football-data.org API統合サービス
 let footballDataIntegration;
 
@@ -255,7 +266,21 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.static('public'));
+app.use(express.static('public', {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        } else if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        } else if (filePath.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        } else if (filePath.endsWith('.json')) {
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        } else if (filePath.endsWith('.svg')) {
+            res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+        }
+    }
+}));
 
 // 静的ファイルのルーティング
 app.get('/ranking', (req, res) => {
@@ -4051,7 +4076,7 @@ function normalizeMatchData(matches) {
     }));
 }
 
-// 統合データエンドポイント（API-Football + Football-data.org）
+// 統合データエンドポイント（新しい統合マッチサービス使用）
 app.get('/api/integrated/matches', async (req, res) => {
     try {
         const { league, season = 2024, status } = req.query;
@@ -4062,55 +4087,26 @@ app.get('/api/integrated/matches', async (req, res) => {
         let dataSource = 'fallback';
         let sources = [];
         
-        // 自動フェイルオーバー統合モジュールを使用
-        console.log('🔄 自動フェイルオーバー統合モジュールを開始...');
-        
-        try {
-            // 1️⃣ Football-data.orgから取得（優先）
-            // リーグが指定されていない場合は主要リーグを試行
-            const leaguesToTry = league ? [league] : ['PL', 'PD', 'SA', 'BL1', 'FL1', 'CL'];
-            let fdMatches = [];
-            
-            for (const leagueCode of leaguesToTry) {
-                const matches = await fetchFromFootballData(leagueCode, parseInt(season));
-                if (matches.length > 0) {
-                    fdMatches = matches;
-                    console.log(`✅ Football-data.orgから取得: ${leagueCode} (${matches.length}件)`);
-                    break;
-                }
-            }
-            
-            if (fdMatches.length > 0) {
-                matches = fdMatches;
-                dataSource = 'football-data.org';
-                sources = ['Football-data.org'];
-                console.log(`✅ Football-data.orgから取得: ${matches.length}件`);
-            } else {
-                // 2️⃣ API-Footballからフェイルオーバー
-                // リーグが指定されていない場合は主要リーグを試行
-                const apiLeaguesToTry = league ? [parseInt(league)] : [39, 140, 135, 78, 61, 2]; // PL, PD, SA, BL1, FL1, CL
-                let apiMatches = [];
-                
-                for (const leagueId of apiLeaguesToTry) {
-                    const matches = await fetchFromApiFootball(leagueId, parseInt(season));
-                    if (matches.length > 0) {
-                        apiMatches = matches;
-                        console.log(`✅ API-Footballから取得: ${leagueId} (${matches.length}件)`);
-                        break;
-                    }
-                }
-                
-                if (apiMatches.length > 0) {
-                    matches = apiMatches;
-                    dataSource = 'api-football';
-                    sources = ['API-Football'];
-                    console.log(`✅ API-Footballから取得: ${matches.length}件`);
+        // 新しい統合マッチサービスを使用
+        if (unifiedMatchService) {
+            try {
+                if (league) {
+                    // 特定リーグのデータを取得
+                    matches = await unifiedMatchService.getMatchesByLeagueCode(league, parseInt(season));
+                    dataSource = matches.length > 0 ? 'unified' : 'fallback';
+                    sources = matches.length > 0 ? ['API-Football', 'Football-data.org'] : ['fallback'];
                 } else {
-                    console.log('⚠️ 両方のAPIからマッチデータが取得できませんでした');
+                    // 全リーグのデータを取得
+                    matches = await unifiedMatchService.getAllMatches(parseInt(season));
+                    dataSource = matches.length > 0 ? 'unified' : 'fallback';
+                    sources = matches.length > 0 ? ['API-Football', 'Football-data.org'] : ['fallback'];
                 }
+                
+                console.log(`✅ 統合サービスから取得: ${matches.length}件`);
+            } catch (error) {
+                console.error('❌ 統合サービスエラー:', error.message);
+                matches = [];
             }
-        } catch (error) {
-            console.error('❌ 自動フェイルオーバーエラー:', error.message);
         }
         
         // マッチが見つからない場合はフォールバックデータを使用
@@ -4238,14 +4234,14 @@ app.get('/api/integrated/matches', async (req, res) => {
         // 日付順でソート
         matches.sort((a, b) => new Date(a.date) - new Date(b.date));
         
-              // レスポンスサイズを制限（パフォーマンス向上）
-              const limitedMatches = matches.slice(0, 50); // 最大50件に制限
+        // レスポンスサイズを制限（パフォーマンス向上）
+        const limitedMatches = matches.slice(0, 50); // 最大50件に制限
         
         console.log(`✅ 統合マッチデータ返却: ${limitedMatches.length}件（制限後）`);
         
         // レスポンスヘッダーを設定してキャッシュとタイムアウトを制御
         res.set({
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
             'Cache-Control': 'public, max-age=300', // 5分キャッシュ
             'X-Response-Size': `${JSON.stringify(limitedMatches).length}`,
             'X-Data-Source': dataSource
