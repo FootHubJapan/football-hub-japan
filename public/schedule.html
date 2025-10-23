@@ -2863,6 +2863,7 @@
                     console.log('🔄 統合APIを呼び出し中...');
                     const integratedUrl = `/api/integrated/matches?season=${season}${leagueParam}${statusParam}`;
                     console.log('📡 統合API URL:', integratedUrl);
+                    console.log('📡 パラメータ詳細:', { season, leagueParam, statusParam });
                     response = await fetch(integratedUrl, {
                         method: 'GET',
                         headers: {

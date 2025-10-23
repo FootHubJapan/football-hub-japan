@@ -827,6 +827,19 @@
             margin-bottom: 2rem;
         }
 
+        .stats-grid.horizontal-layout {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: space-between;
+        }
+
+        .stats-grid.horizontal-layout .stat-item {
+            flex: 1;
+            min-width: 120px;
+            max-width: 200px;
+        }
+
         .stat-item {
             background: #333;
             border: 1px solid #555;
@@ -2427,7 +2440,7 @@
                         
                         <div class="stats-content">
                             <div id="attacking-stats" class="stats-tab-content active">
-                                <div class="stats-grid">
+                                <div class="stats-grid horizontal-layout">
                                     <div class="stat-item">
                                         <span class="stat-label">得点</span>
                                         <span class="stat-value">${stats.goals || 0}</span>
@@ -2456,7 +2469,7 @@
                             </div>
                             
                             <div id="passing-stats" class="stats-tab-content">
-                                <div class="stats-grid">
+                                <div class="stats-grid horizontal-layout">
                                     <div class="stat-item">
                                         <span class="stat-label">パス成功数</span>
                                         <span class="stat-value">${stats.passes || 0}</span>
@@ -2485,7 +2498,7 @@
                             </div>
                             
                             <div id="defending-stats" class="stats-tab-content">
-                                <div class="stats-grid">
+                                <div class="stats-grid horizontal-layout">
                                     <div class="stat-item">
                                         <span class="stat-label">タックル</span>
                                         <span class="stat-value">${stats.tackles || 0}</span>
@@ -2514,7 +2527,7 @@
                             </div>
                             
                             <div id="discipline-stats" class="stats-tab-content">
-                                <div class="stats-grid">
+                                <div class="stats-grid horizontal-layout">
                                     <div class="stat-item">
                                         <span class="stat-label">出場試合</span>
                                         <span class="stat-value">${stats.appearances || 0}</span>
