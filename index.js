@@ -3976,7 +3976,7 @@ async function fetchFromFootballData(leagueId, season) {
     try {
         const axios = require('axios');
         const res = await axios.get(url, {
-            headers: { "X-Auth-Token": process.env.FOOTBALLDATA_KEY },
+            headers: { "X-Auth-Token": process.env.FOOTBALLDATA_KEY || process.env.FOOTBALL_DATA_API_KEY },
             timeout: 8000
         });
         console.log(`✅ Football-data.org: ${code} (${res.data.matches.length}件)`);
@@ -4143,11 +4143,28 @@ app.get('/api/integrated/matches', async (req, res) => {
         
         if (season) {
             const originalCount = matches.length;
-            matches = matches.filter(match => 
-                match.season == season ||
-                match.season === parseInt(season) ||
-                (match.date && match.date.includes(season))
-            );
+            matches = matches.filter(match => {
+                // シーズンフィルタリングを緩和
+                const matchSeason = match.season || (match.date ? new Date(match.date).getFullYear() : null);
+                const requestedSeason = parseInt(season);
+                
+                // 完全一致
+                if (matchSeason == requestedSeason) {
+                    return true;
+                }
+                
+                // 2025シーズンの場合は2024データも含める（フォールバック対応）
+                if (requestedSeason === 2025 && matchSeason === 2024) {
+                    return true;
+                }
+                
+                // 日付にシーズンが含まれている場合
+                if (match.date && match.date.includes(season)) {
+                    return true;
+                }
+                
+                return false;
+            });
             console.log(`🔍 シーズンフィルタリング: ${originalCount} → ${matches.length}件`);
         }
         
