@@ -4067,7 +4067,19 @@ app.get('/api/integrated/matches', async (req, res) => {
         
         try {
             // 1️⃣ Football-data.orgから取得（優先）
-            const fdMatches = await fetchFromFootballData(league, parseInt(season));
+            // リーグが指定されていない場合は主要リーグを試行
+            const leaguesToTry = league ? [league] : ['PL', 'PD', 'SA', 'BL1', 'FL1', 'CL'];
+            let fdMatches = [];
+            
+            for (const leagueCode of leaguesToTry) {
+                const matches = await fetchFromFootballData(leagueCode, parseInt(season));
+                if (matches.length > 0) {
+                    fdMatches = matches;
+                    console.log(`✅ Football-data.orgから取得: ${leagueCode} (${matches.length}件)`);
+                    break;
+                }
+            }
+            
             if (fdMatches.length > 0) {
                 matches = fdMatches;
                 dataSource = 'football-data.org';
@@ -4075,7 +4087,19 @@ app.get('/api/integrated/matches', async (req, res) => {
                 console.log(`✅ Football-data.orgから取得: ${matches.length}件`);
             } else {
                 // 2️⃣ API-Footballからフェイルオーバー
-                const apiMatches = await fetchFromApiFootball(parseInt(league), parseInt(season));
+                // リーグが指定されていない場合は主要リーグを試行
+                const apiLeaguesToTry = league ? [parseInt(league)] : [39, 140, 135, 78, 61, 2]; // PL, PD, SA, BL1, FL1, CL
+                let apiMatches = [];
+                
+                for (const leagueId of apiLeaguesToTry) {
+                    const matches = await fetchFromApiFootball(leagueId, parseInt(season));
+                    if (matches.length > 0) {
+                        apiMatches = matches;
+                        console.log(`✅ API-Footballから取得: ${leagueId} (${matches.length}件)`);
+                        break;
+                    }
+                }
+                
                 if (apiMatches.length > 0) {
                     matches = apiMatches;
                     dataSource = 'api-football';
@@ -4097,7 +4121,33 @@ app.get('/api/integrated/matches', async (req, res) => {
             
             if (fs.existsSync(integratedMatchesPath)) {
                 const data = await fs.promises.readFile(integratedMatchesPath, 'utf8');
-                matches = JSON.parse(data);
+                const fallbackMatches = JSON.parse(data);
+                
+                // フォールバックデータを正規化
+                matches = fallbackMatches.map(match => ({
+                    id: match.id || match.match_id,
+                    homeTeam: typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name || match.home,
+                    awayTeam: typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name || match.away,
+                    homeScore: match.score?.fullTime?.home || match.homeScore || match.home_score,
+                    awayScore: match.score?.fullTime?.away || match.awayScore || match.away_score,
+                    status: match.status,
+                    statusLong: match.status,
+                    elapsed: null,
+                    venue: match.venue || 'Unknown Venue',
+                    leagueName: match.leagueName || match.league || match.competition,
+                    league: match.leagueName || match.league || match.competition,
+                    leagueId: match.leagueId || match.league,
+                    country: match.country,
+                    round: match.round,
+                    season: match.season || (match.date ? new Date(match.date).getFullYear() : 2024),
+                    date: match.date || match.utcDate,
+                    timestamp: match.timestamp || new Date(match.date || match.utcDate).getTime(),
+                    events: match.events || [],
+                    lineups: match.lineups || {},
+                    statistics: match.statistics || {},
+                    source: 'fallback'
+                }));
+                
                 dataSource = 'fallback';
                 sources = ['API-Football', 'Football-data.org'];
                 console.log(`📊 フォールバックデータ読み込み: ${matches.length}件`);
@@ -4111,8 +4161,10 @@ app.get('/api/integrated/matches', async (req, res) => {
             }
         }
         
-        // データ形式を正規化
-        matches = normalizeMatchData(matches);
+        // リアルタイムAPIデータの場合は正規化
+        if (dataSource !== 'fallback') {
+            matches = normalizeMatchData(matches);
+        }
         
         // フィルタリング
         if (league) {
@@ -4143,10 +4195,11 @@ app.get('/api/integrated/matches', async (req, res) => {
         
         if (season) {
             const originalCount = matches.length;
+            const requestedSeason = parseInt(season);
+            
             matches = matches.filter(match => {
                 // シーズンフィルタリングを緩和
                 const matchSeason = match.season || (match.date ? new Date(match.date).getFullYear() : null);
-                const requestedSeason = parseInt(season);
                 
                 // 完全一致
                 if (matchSeason == requestedSeason) {
@@ -4158,6 +4211,11 @@ app.get('/api/integrated/matches', async (req, res) => {
                     return true;
                 }
                 
+                // 2024シーズンの場合は2023データも含める（フォールバック対応）
+                if (requestedSeason === 2024 && matchSeason === 2023) {
+                    return true;
+                }
+                
                 // 日付にシーズンが含まれている場合
                 if (match.date && match.date.includes(season)) {
                     return true;
@@ -4165,7 +4223,7 @@ app.get('/api/integrated/matches', async (req, res) => {
                 
                 return false;
             });
-            console.log(`🔍 シーズンフィルタリング: ${originalCount} → ${matches.length}件`);
+            console.log(`🔍 シーズンフィルタリング: ${originalCount} → ${matches.length}件 (リクエスト: ${requestedSeason})`);
         }
         
         if (status) {
