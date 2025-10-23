@@ -2552,147 +2552,93 @@ app.get('/api/fotmob/matches', async (req, res) => {
     }
 });
 
-// 試合スケジュールAPI（統合API優先版）
+// 試合スケジュールAPI（安全化版）
 app.get('/api/schedule', async (req, res) => {
+    const { season } = req.query;
+    const qLeague = (req.query.league ?? '').trim();
+    const qStatus = (req.query.status ?? '').trim();
+
+    // リーグ安全マッピング（空＝全リーグ）
+    const leagueMap = {
+        // UI短縮コード
+        PL: 'premierLeague',
+        PD: 'laLiga',
+        SA: 'serieA',
+        BL1: 'bundesliga',
+        FL1: 'ligue1',
+        CL: 'championsLeague',
+        EL: 'europaLeague',
+        ECL: 'conferenceLeague',
+        // 直接名指定も許容
+        premierLeague: 'premierLeague',
+        laLiga: 'laLiga',
+        serieA: 'serieA',
+        bundesliga: 'bundesliga',
+        ligue1: 'ligue1',
+        championsLeague: 'championsLeague',
+        europaLeague: 'europaLeague',
+        conferenceLeague: 'conferenceLeague',
+    };
+    const league = qLeague ? (leagueMap[qLeague] || leagueMap[qLeague.toString()]) : null;
+
+    // ステータス安全マッピング（日本語→内部コード／未指定はnull）
+    const statusMap = {
+        '': null,
+        'すべてのステータス': null,
+        '未開始': 'SCHEDULED',
+        '試合中': 'IN_PLAY',
+        '終了': 'FINISHED',
+        // 英語名・コードも受ける
+        scheduled: 'SCHEDULED',
+        in_play: 'IN_PLAY',
+        inplay: 'IN_PLAY',
+        finished: 'FINISHED',
+        SCHEDULED: 'SCHEDULED',
+        IN_PLAY: 'IN_PLAY',
+        FINISHED: 'FINISHED',
+    };
+    const normStatusKey = qStatus.toString();
+    const status = statusMap.hasOwnProperty(normStatusKey) ? statusMap[normStatusKey] : null;
+
+    console.log(`📅 Schedule API called: league=${league || 'all'}, season=${season || '2025'}, status=${status || 'all'}`);
+
     try {
-        const { league, season, status } = req.query;
+        let result;
         
-        // リーグマッピング（安全化）
-        const leagueMap = {
-            'PL': 'premierLeague',
-            'PD': 'laLiga', 
-            'SA': 'serieA',
-            'BL1': 'bundesliga',
-            'FL1': 'ligue1',
-            'CL': 'championsLeague',
-            'EL': 'europaLeague',
-            'ECL': 'conferenceLeague',
-            'premierLeague': 'premierLeague',
-            'laLiga': 'laLiga',
-            'serieA': 'serieA',
-            'bundesliga': 'bundesliga',
-            'ligue1': 'ligue1',
-            'championsLeague': 'championsLeague',
-            'europaLeague': 'europaLeague',
-            'conferenceLeague': 'conferenceLeague'
-        };
-        
-        // リーグの安全マッピング（空文字や未定義でもエラーにしない）
-        const leagueKey = league && league.trim() !== '' ? 
-            (leagueMap[league] || league) : 'all';
-        
-        // シーズンの安全設定
-        const seasonYear = season ? Number(season) : 2025;
-        
-        // ステータスマッピング（日本語→内部コード）
-        const statusMap = {
-            'すべてのステータス': null,
-            '未開始': 'SCHEDULED',
-            '試合中': 'IN_PLAY', 
-            '終了': 'FINISHED',
-            'scheduled': 'SCHEDULED',
-            'in_play': 'IN_PLAY',
-            'finished': 'FINISHED',
-            'SCHEDULED': 'SCHEDULED',
-            'IN_PLAY': 'IN_PLAY',
-            'FINISHED': 'FINISHED'
-        };
-        
-        const statusCode = status ? (statusMap[status] || status) : null;
-        
-        console.log(`📅 Schedule API called: league=${leagueKey}, season=${seasonYear}, status=${statusCode}`);
-        
-        // キャッシュキーの生成
-        const cacheKey = `schedule:${leagueKey}:${seasonYear}:${statusCode ?? 'any'}`;
-        
-        // キャッシュからデータを確認
-        const cachedData = getCache(cacheKey);
-        if (cachedData) {
-            console.log(`📦 Cache hit for ${cacheKey}`);
-            return res.json({ 
-                source: 'cache',
-                items: cachedData,
-                total: cachedData.length,
-                filters: { league: leagueKey, season: seasonYear, status: statusCode },
-                timestamp: new Date().toISOString()
-            });
+        if (league === null) {
+            // 全リーグのデータを取得
+            const leagueKeys = ['premierLeague', 'laLiga', 'serieA', 'bundesliga', 'ligue1', 'championsLeague', 'europaLeague'];
+            const allMatches = await Promise.all(
+                leagueKeys.map(k => unifiedMatchService.getUnifiedMatches(k, season || '2025'))
+            );
+            result = { items: allMatches.flat() };
+        } else {
+            // 特定リーグのデータを取得
+            const matches = await unifiedMatchService.getUnifiedMatches(league, season || '2025');
+            result = { items: matches || [] };
         }
-        
-        let matches = [];
-        let dataSource = 'fallback';
-        
-        // 1️⃣ 統合APIを優先（Football-data.org + API-Football）
-        if (unifiedMatchService) {
-            try {
-                if (leagueKey === 'all') {
-                    // 全リーグのデータを取得
-                    const leagueKeys = ['premierLeague', 'laLiga', 'serieA', 'bundesliga', 'ligue1', 'championsLeague', 'europaLeague'];
-                    const allMatches = await Promise.all(
-                        leagueKeys.map(k => unifiedMatchService.getUnifiedMatches(k, seasonYear))
-                    );
-                    matches = allMatches.flat();
-                    dataSource = 'live';
-                    console.log(`✅ All leagues unified data: ${matches.length} matches`);
-                } else {
-                    // 特定リーグのデータを取得
-                    matches = await unifiedMatchService.getUnifiedMatches(leagueKey, seasonYear);
-                    dataSource = matches.length > 0 ? 'live' : 'fallback';
-                    console.log(`✅ ${leagueKey} unified data: ${matches.length} matches`);
-                }
-            } catch (unifiedError) {
-                console.error('❌ Unified service error:', unifiedError.message);
-                matches = [];
-            }
-        }
-        
-        // 2️⃣ 統合APIが0件の場合のみフォールバック
-        if (!matches || matches.length === 0) {
-            console.log('📊 Using fallback data...');
-            try {
-                // フォールバックデータの取得（既存のロジック）
-                const fs = require('fs');
-                const path = require('path');
-                const fallbackPath = path.join(__dirname, 'data', 'schedules.json');
-                
-                if (fs.existsSync(fallbackPath)) {
-                    const fallbackData = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
-                    matches = fallbackData || [];
-                    dataSource = 'fallback';
-                    console.log(`📊 Fallback data loaded: ${matches.length} matches`);
-                } else {
-                    console.log('⚠️ No fallback data available');
-                    return res.status(404).json({ 
-                        error: 'No schedule data available',
-                        source: 'none'
-                    });
-                }
-            } catch (fallbackError) {
-                console.error('❌ Fallback error:', fallbackError.message);
-                return res.status(500).json({ 
-                    error: 'Failed to load schedule data',
-                    source: 'error'
-                });
-            }
-        }
+
+        const items = Array.isArray(result) ? result : (result?.items ?? []);
         
         // ステータスフィルタリング
-        if (statusCode) {
-            const originalCount = matches.length;
-            matches = matches.filter(match => 
-                match.status === statusCode || 
-                match.status?.toLowerCase() === statusCode.toLowerCase()
+        let filteredItems = items;
+        if (status) {
+            const originalCount = items.length;
+            filteredItems = items.filter(match => 
+                match.status === status || 
+                match.status?.toLowerCase() === status.toLowerCase()
             );
-            console.log(`🔍 Status filtering: ${originalCount} → ${matches.length} matches (status: ${statusCode})`);
+            console.log(`🔍 Status filtering: ${originalCount} → ${filteredItems.length} matches (status: ${status})`);
         }
-        
+
         // データ正規化（Invalid Date対策）
-        matches = matches.map(match => ({
+        const normalizedItems = filteredItems.map(match => ({
             ...match,
             // 日付の正規化
             date: match.date || match.utcDate || null,
             utcDate: match.utcDate || match.date || null,
             // 会場の正規化
-            venue: match.venue?.name || match.venue || '会場未定',
+            venue: match.venue?.name || match.venue || null,
             // チーム名の正規化
             homeTeam: typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name || 'Unknown',
             awayTeam: typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name || 'Unknown',
@@ -2702,32 +2648,30 @@ app.get('/api/schedule', async (req, res) => {
             // リーグ名の正規化
             leagueName: match.leagueName || match.league || match.competition || 'Unknown League'
         }));
+
+        console.log(`✅ Unified API success: ${normalizedItems.length} matches`);
+
+        return res.json({
+            meta: {
+                source: 'live',
+                total: normalizedItems.length,
+                generatedAt: new Date().toISOString(),
+                appliedFilters: { season, league, status },
+            },
+            items: normalizedItems,
+        });
+    } catch (err) {
+        console.error('❌ Unified service error:', err.message);
         
-        console.log(`🔧 Data normalization completed: ${matches.length} matches`);
-        
-        // レスポンス
-        const response = { 
-            source: dataSource,
-            items: matches,
-            total: matches.length,
-            filters: { league: leagueKey, season: seasonYear, status: statusCode },
-            timestamp: new Date().toISOString()
-        };
-        
-        // キャッシュに保存（15分間）
-        if (matches.length > 0) {
-            setCache(cacheKey, matches, 15 * 60 * 1000);
-            console.log(`💾 Cached ${matches.length} matches for ${cacheKey}`);
-        }
-        
-        res.json(response);
-        
-    } catch (error) {
-        console.error('❌ Schedule API error:', error);
-        res.status(500).json({ 
-            error: 'Schedule API failed',
-            message: error.message,
-            source: 'error'
+        // 500は返さず、構造化された"失敗（フォールバック推奨）"を返す
+        return res.json({
+            meta: {
+                source: 'fallback',
+                error: 'integrated_api_failed',
+                message: err?.message ?? 'unknown error',
+                appliedFilters: { season, league, status },
+            },
+            items: [],
         });
     }
 });
