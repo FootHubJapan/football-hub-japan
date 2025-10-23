@@ -636,19 +636,46 @@
                     } catch {}
                     displayPlayerData(player);
                 } else {
-                    // フォールバックデータを使用
-                    console.log('Player not found, using fallback data');
-                    const fallbackPlayer = generateFallbackPlayer(playerId);
-                    displayPlayerData(fallbackPlayer);
+                    // 選手が見つからない場合はエラー表示
+                    console.log('Player not found, showing error message');
+                    showError('選手データが見つかりませんでした。');
+                    return;
                 }
             } catch (error) {
                 console.error('選手データの読み込みエラー:', error);
-                const fallbackPlayer = generateFallbackPlayer(playerId);
-                displayPlayerData(fallbackPlayer);
+                showError('選手データの読み込みに失敗しました。');
+                return;
             }
         }
 
-        // フォールバック選手データを生成
+        // エラー表示関数
+        function showError(message) {
+            document.getElementById('playerName').textContent = 'エラー';
+            document.getElementById('playerClub').textContent = message;
+            document.getElementById('playerAge').textContent = '--';
+            document.getElementById('playerHeight').textContent = '--';
+            document.getElementById('playerPosition').textContent = '--';
+            document.getElementById('playerNationality').textContent = '--';
+            
+            // データソース表示を更新
+            const dataSourceElement = document.getElementById('dataSourceInfo');
+            if (dataSourceElement) {
+                dataSourceElement.textContent = '❌ データ取得エラー';
+                dataSourceElement.style.color = '#ef4444';
+            }
+            
+            // 統計をクリア
+            const totalGoalsEl = document.getElementById('totalGoals');
+            if (totalGoalsEl) totalGoalsEl.textContent = '--';
+            
+            const totalAssistsEl = document.getElementById('totalAssists');
+            if (totalAssistsEl) totalAssistsEl.textContent = '--';
+            
+            const totalAppearancesEl = document.getElementById('totalAppearances');
+            if (totalAppearancesEl) totalAppearancesEl.textContent = '--';
+        }
+
+        // フォールバック選手データを生成（無効化）
         function generateFallbackPlayer(id) {
             const names = ['久保建英', '三苫薫', '堂安律', '田中碧', '伊藤洋輝', '遠藤航'];
             const teams = ['レアル・ソシエダード', 'ブライトン', 'フライブルク', 'フォルタレーザ'];
@@ -728,13 +755,24 @@
             console.log('🔄 Calling displayCompetitionStats for:', player.name);
             displayCompetitionStats(player);
 
-            // 詳細統計
-            document.getElementById('totalGoals').textContent = player.stats?.goals || 0;
-            document.getElementById('totalAssists').textContent = player.stats?.assists || 0;
-            document.getElementById('totalAppearances').textContent = player.stats?.appearances || 0;
-            document.getElementById('passAccuracy').textContent = player.stats?.passAccuracy || 'N/A';
-            document.getElementById('tackles').textContent = player.stats?.tackles || 0;
-            document.getElementById('shots').textContent = player.stats?.shots || 0;
+            // 詳細統計（安全な要素チェック）
+            const totalGoalsEl = document.getElementById('totalGoals');
+            if (totalGoalsEl) totalGoalsEl.textContent = player.stats?.goals || 0;
+            
+            const totalAssistsEl = document.getElementById('totalAssists');
+            if (totalAssistsEl) totalAssistsEl.textContent = player.stats?.assists || 0;
+            
+            const totalAppearancesEl = document.getElementById('totalAppearances');
+            if (totalAppearancesEl) totalAppearancesEl.textContent = player.stats?.appearances || 0;
+            
+            const passAccuracyEl = document.getElementById('passAccuracy');
+            if (passAccuracyEl) passAccuracyEl.textContent = player.stats?.passAccuracy || 'N/A';
+            
+            const tacklesEl = document.getElementById('tackles');
+            if (tacklesEl) tacklesEl.textContent = player.stats?.tackles || 0;
+            
+            const shotsEl = document.getElementById('shots');
+            if (shotsEl) shotsEl.textContent = player.stats?.shots || 0;
 
             // 詳細統計（個人スタッツ）
             displayDetailedStats(player);

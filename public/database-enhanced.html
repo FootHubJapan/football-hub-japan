@@ -3458,8 +3458,17 @@
                 }
 
                 console.log(`📊 最終データソース: ${dataSource}`);
+                
+                // APIデータが取得できない場合は何も表示しない
+                if (dataSource === 'local') {
+                    console.log('⚠️ APIデータが取得できませんでした。詳細パネルを閉じます。');
+                    panel.style.display = 'none';
+                    return;
+                }
             } catch (error) {
                 console.error(`❌ データ取得エラー: ${error.message}`);
+                panel.style.display = 'none';
+                return;
             }
 
             document.getElementById('detailsName').textContent = name;
