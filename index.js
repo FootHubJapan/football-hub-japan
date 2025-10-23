@@ -2632,8 +2632,10 @@ app.get('/api/schedule', async (req, res) => {
         }
 
         // データ正規化（Invalid Date対策）
-        const normalizedItems = filteredItems.map(match => ({
+        const normalizedItems = filteredItems.map((match, index) => ({
             ...match,
+            // IDの確実な設定（フロントエンドでundefinedエラーを防ぐ）
+            id: match.id || match.matchId || `match_${Date.now()}_${index}`,
             // 日付の正規化
             date: match.date || match.utcDate || null,
             utcDate: match.utcDate || match.date || null,
