@@ -3976,7 +3976,7 @@ async function fetchFromFootballData(leagueId, season) {
     try {
         const axios = require('axios');
         const res = await axios.get(url, {
-            headers: { "X-Auth-Token": process.env.FOOTBALLDATA_KEY || process.env.FOOTBALL_DATA_API_KEY },
+            headers: { "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY || process.env.FOOTBALLDATA_KEY },
             timeout: 8000
         });
         console.log(`✅ Football-data.org: ${code} (${res.data.matches.length}件)`);
