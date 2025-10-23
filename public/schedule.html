@@ -2856,12 +2856,27 @@
                 
                 try {
                     // まず統合データを試す
-                    const leagueParam = league ? `&league=${encodeURIComponent(league)}` : '';
+                    // リーグコードを新しいAPI形式にマッピング
+                    const leagueMapping = {
+                        'PL': 'premierLeague',
+                        'PD': 'laLiga',
+                        'SA': 'serieA',
+                        'BL1': 'bundesliga',
+                        'FL1': 'ligue1',
+                        'J1': 'j1',
+                        'CL': 'championsLeague',
+                        'EL': 'europaLeague',
+                        'ECL': 'conferenceLeague'
+                    };
+                    
+                    const mappedLeague = leagueMapping[league] || league;
+                    const leagueParam = mappedLeague ? `&league=${encodeURIComponent(mappedLeague)}` : '';
                     const statusParam = statusFilter ? `&status=${encodeURIComponent(statusFilter)}` : '';
                     const seasonParam = season ? `&season=${encodeURIComponent(season)}` : '';
                     
                     console.log('🔄 統合APIを呼び出し中...');
-                    const integratedUrl = `/api/integrated/matches?season=${season}${leagueParam}${statusParam}`;
+                    console.log('🔍 リーグマッピング:', league, '→', mappedLeague);
+                    const integratedUrl = `/api/schedule?season=${season}${leagueParam}${statusParam}`;
                     console.log('📡 統合API URL:', integratedUrl);
                     console.log('📡 パラメータ詳細:', { season, leagueParam, statusParam });
                     response = await fetch(integratedUrl, {
@@ -2881,7 +2896,13 @@
                     console.log('レスポンスサイズ:', responseText.length, '文字');
                     
                     data = JSON.parse(responseText);
-                    console.log('📊 統合データ解析成功:', data.matches?.length || 0, '件のマッチ');
+                    console.log('📊 統合データ解析成功:', data.items?.length || 0, '件のマッチ');
+                    console.log('📊 データソース:', data.source);
+                    
+                    // 新しいAPI形式に合わせてデータを変換
+                    if (data.items) {
+                        data.matches = data.items;
+                    }
                     
                 } catch (integratedError) {
                     console.log('⚠️ 統合API失敗、フォールバックに切り替え:', integratedError.message);
@@ -2912,19 +2933,27 @@
                   // データソースを更新
                   dataSource = data.dataSource || dataSource;
                     
-                    // データソース情報を表示
+                    // データソース情報を表示（新しいAPI形式に対応）
                   const dataSourceInfo = document.createElement('div');
                   dataSourceInfo.className = 'data-source-info';
+                  
+                  // 新しいAPIのsourceプロパティを使用
+                  const actualSource = data.source || dataSource;
+                  const totalCount = data.total || data.matches.length;
+                  const limitedCount = data.limited;
+                  
                   dataSourceInfo.innerHTML = `
                       <div class="source-badge">
-                          <span class="source-icon">${dataSource === 'integrated' ? '🔗' : dataSource === 'api-football' ? '⚽' : dataSource === 'football-data' ? '🌐' : '📁'}</span>
-                          <span class="source-text">${dataSource === 'integrated' ? 
-                              `統合データ (API-Football + Football-data.org) - ${data.matches.length}件表示${data.limited ? ` (全${data.total}件中)` : ''}` : 
-                              dataSource === 'api-football' ? 
-                              `API-Football (リアルタイム) - ${data.matches.length}件表示${data.limited ? ` (全${data.total}件中)` : ''}` :
-                              dataSource === 'football-data' ? 
-                              `Football-data.org (リアルタイム) - ${data.matches.length}件表示${data.limited ? ` (全${data.total}件中)` : ''}` :
-                              `フォールバックデータ - ${data.matches.length}件表示${data.limited ? ` (全${data.total}件中)` : ''}`}</span>
+                          <span class="source-icon">${actualSource === 'live' ? '🔗' : actualSource === 'cache' ? '💾' : actualSource === 'api-football' ? '⚽' : actualSource === 'football-data' ? '🌐' : '📁'}</span>
+                          <span class="source-text">${actualSource === 'live' ? 
+                              `統合データ (API-Football + Football-data.org) - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}` : 
+                              actualSource === 'cache' ?
+                              `キャッシュデータ - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}` :
+                              actualSource === 'api-football' ? 
+                              `API-Football (リアルタイム) - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}` :
+                              actualSource === 'football-data' ? 
+                              `Football-data.org (リアルタイム) - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}` :
+                              `フォールバックデータ - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}`}</span>
                       </div>
                   `;
                     
