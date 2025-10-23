@@ -402,6 +402,7 @@
                                 <th class="stat-header">🟥 レッドカード</th>
                                 <th class="stat-header">⏱️ 出場時間</th>
                                 <th class="stat-header">📊 評価</th>
+                                <th class="stat-header">🏟️ 試合数</th>
                             </tr>
                         </thead>
                         <tbody id="competitionStatsBody">
@@ -871,7 +872,8 @@
                     yellowCards: 1,
                     redCards: 0,
                     minutes: 1080,
-                    rating: '7.8'
+                    rating: '7.8',
+                    matches: 12
                 },
                 {
                     name: 'UEFAチャンピオンズリーグ',
@@ -880,7 +882,8 @@
                     yellowCards: 0,
                     redCards: 0,
                     minutes: 360,
-                    rating: '8.1'
+                    rating: '8.1',
+                    matches: 6
                 },
                 {
                     name: 'EFLカップ',
@@ -889,7 +892,8 @@
                     yellowCards: 0,
                     redCards: 0,
                     minutes: 90,
-                    rating: '7.5'
+                    rating: '7.5',
+                    matches: 2
                 }
             ];
 
@@ -900,7 +904,8 @@
                 yellowCards: competitions.reduce((sum, comp) => sum + comp.yellowCards, 0),
                 redCards: competitions.reduce((sum, comp) => sum + comp.redCards, 0),
                 minutes: competitions.reduce((sum, comp) => sum + comp.minutes, 0),
-                rating: (competitions.reduce((sum, comp) => sum + parseFloat(comp.rating), 0) / competitions.length).toFixed(1)
+                rating: (competitions.reduce((sum, comp) => sum + parseFloat(comp.rating), 0) / competitions.length).toFixed(1),
+                matches: competitions.reduce((sum, comp) => sum + comp.matches, 0)
             };
 
             let html = '';
@@ -916,6 +921,7 @@
                         <td class="stat-value">${comp.redCards || '-'}</td>
                         <td class="stat-value">${comp.minutes}'</td>
                         <td class="stat-value">${comp.rating}</td>
+                        <td class="stat-value">${comp.matches}</td>
                     </tr>
                 `;
             });
@@ -930,6 +936,7 @@
                     <td class="stat-value total">${totals.redCards || '-'}</td>
                     <td class="stat-value total">${totals.minutes}'</td>
                     <td class="stat-value total">${totals.rating}</td>
+                    <td class="stat-value total">${totals.matches}</td>
                 </tr>
             `;
 
