@@ -75,6 +75,12 @@ async function fetchFromFootballData(leagueCode, season) {
             home_score: m.score.fullTime.home,
             away_score: m.score.fullTime.away,
             competition: m.competition.name,
+            venue: m.venue,
+            referees: m.referees,
+            lineups: m.lineups,
+            goalScorers: m.goalScorers,
+            bookings: m.bookings,
+            substitutions: m.substitutions
         }));
     } catch (err) {
         console.error(`⚠️ Football-data.orgエラー (${leagueCode}):`, err.response?.status || err.message);

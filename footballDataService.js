@@ -237,6 +237,32 @@ class FootballDataService {
         }
     }
 
+    // 試合の詳細情報を取得（ラインナップ、審判、ゴールスコアラーなど）
+    async getMatchDetails(matchId) {
+        try {
+            const response = await this.makeRequest(`${this.baseUrl}/matches/${matchId}`);
+            const data = await response.json();
+            
+            return {
+                id: data.id,
+                homeTeam: data.homeTeam,
+                awayTeam: data.awayTeam,
+                score: data.score,
+                venue: data.venue,
+                referees: data.referees,
+                lineups: data.lineups,
+                goalScorers: data.goalScorers,
+                bookings: data.bookings,
+                substitutions: data.substitutions,
+                status: data.status,
+                date: data.utcDate
+            };
+        } catch (error) {
+            console.error('試合詳細取得エラー:', error);
+            return null;
+        }
+    }
+
     // 日本人選手を取得
     async getJapanesePlayers() {
         try {

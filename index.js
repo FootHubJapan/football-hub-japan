@@ -2751,6 +2751,13 @@ app.get('/api/schedule', async (req, res) => {
                 venueName = match.stadium;
             }
             
+            // 詳細情報の正規化
+            const referees = match.referees || null;
+            const lineups = match.lineups || null;
+            const goalScorers = match.goalScorers || null;
+            const bookings = match.bookings || null;
+            const substitutions = match.substitutions || null;
+            
             return {
                 ...match,
                 // IDの確実な設定
@@ -2769,7 +2776,13 @@ app.get('/api/schedule', async (req, res) => {
                 // リーグ名の正規化
                 leagueName: match.leagueName || match.league || match.competition || match.league?.name || 'Unknown League',
                 // シーズン情報の追加
-                season: match.season || season || '2025'
+                season: match.season || season || '2025',
+                // 詳細情報の追加
+                referees: referees,
+                lineups: lineups,
+                goalScorers: goalScorers,
+                bookings: bookings,
+                substitutions: substitutions
             };
         });
 
