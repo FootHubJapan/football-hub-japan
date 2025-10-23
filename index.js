@@ -2608,17 +2608,47 @@ app.get('/api/schedule', async (req, res) => {
         if (league === null) {
             // 全リーグのデータを取得
             const leagueKeys = ['premierLeague', 'laLiga', 'serieA', 'bundesliga', 'ligue1', 'championsLeague', 'europaLeague'];
+            console.log(`🔍 Fetching data for leagues: ${leagueKeys.join(', ')}`);
+            
             const allMatches = await Promise.all(
-                leagueKeys.map(k => unifiedMatchService.getUnifiedMatches(k, season || '2025'))
+                leagueKeys.map(async k => {
+                    const matches = await unifiedMatchService.getUnifiedMatches(k, season || '2025');
+                    console.log(`📊 ${k}: ${matches?.length || 0} matches`);
+                    return matches;
+                })
             );
             result = { items: allMatches.flat() };
+            console.log(`📊 Total matches from all leagues: ${result.items.length}`);
         } else {
             // 特定リーグのデータを取得
+            console.log(`🔍 Fetching data for league: ${league}`);
             const matches = await unifiedMatchService.getUnifiedMatches(league, season || '2025');
+            console.log(`📊 ${league}: ${matches?.length || 0} matches`);
             result = { items: matches || [] };
         }
 
-        const items = Array.isArray(result) ? result : (result?.items ?? []);
+        let items = Array.isArray(result) ? result : (result?.items ?? []);
+        
+        // デバッグ: 統合APIから取得した生データをログ出力
+        if (items.length > 0) {
+            console.log('🔍 Raw API data structure:', JSON.stringify(items[0], null, 2));
+        } else {
+            console.log('⚠️ No data from unified API, using fallback data');
+            // フォールバックデータを使用
+            try {
+                const fs = require('fs');
+                const path = require('path');
+                const fallbackPath = path.join(__dirname, 'data', 'integrated-matches.json');
+                
+                if (fs.existsSync(fallbackPath)) {
+                    const fallbackData = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
+                    items = Array.isArray(fallbackData) ? fallbackData : [];
+                    console.log(`📊 Using fallback data: ${items.length} matches`);
+                }
+            } catch (err) {
+                console.warn('⚠️ Fallback data not available:', err.message);
+            }
+        }
         
         // ステータスフィルタリング
         let filteredItems = items;
@@ -2701,6 +2731,11 @@ app.get('/api/schedule', async (req, res) => {
         });
 
         console.log(`✅ Unified API success: ${normalizedItems.length} matches`);
+        
+        // デバッグ: 最初のマッチのデータ構造をログ出力
+        if (normalizedItems.length > 0) {
+            console.log('🔍 First match data structure:', JSON.stringify(normalizedItems[0], null, 2));
+        }
 
         return res.json({
             meta: {
