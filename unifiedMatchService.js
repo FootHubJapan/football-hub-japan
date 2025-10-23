@@ -24,10 +24,11 @@ const leagueMapping = {
     ligue1: { apiFootball: 61, footballData: 2015 },
     championship: { apiFootball: 40, footballData: 2016 },
     eredivisie: { apiFootball: 88, footballData: 2003 },
+    primeiraLiga: { apiFootball: 94, footballData: 2017 },
     brasileirao: { apiFootball: 71, footballData: 2013 },
     j1: { apiFootball: 98, footballData: null }, // J1はFootball-data.org非対応
     championsLeague: { apiFootball: 2, footballData: 2001 },
-    europaLeague: { apiFootball: 3, footballData: 2018 },
+    europaLeague: { apiFootball: 3, footballData: 2146 },
     conferenceLeague: { apiFootball: 848, footballData: 2017 }
 };
 
@@ -41,6 +42,7 @@ function getLeagueKey(leagueCode) {
         'FL1': 'ligue1',
         'ELC': 'championship',
         'DED': 'eredivisie',
+        'PPL': 'primeiraLiga',
         'BSA': 'brasileirao',
         'J1': 'j1',
         'CL': 'championsLeague',
@@ -176,7 +178,7 @@ async function getAllMatches(season = 2024) {
     let allMatches = [];
     
     // 主要リーグを順次取得
-    const majorLeagues = ['premierLeague', 'laLiga', 'serieA', 'bundesliga', 'ligue1'];
+    const majorLeagues = ['premierLeague', 'laLiga', 'serieA', 'bundesliga', 'ligue1', 'championsLeague', 'europaLeague'];
     
     for (const leagueKey of majorLeagues) {
         try {
