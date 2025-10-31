@@ -397,13 +397,13 @@
                         <thead>
                             <tr>
                                 <th class="competition-header">大会</th>
+                                <th class="stat-header">🏟️ 試合数</th>
                                 <th class="stat-header">⚽ ゴール</th>
                                 <th class="stat-header">🎯 アシスト</th>
                                 <th class="stat-header">🟨 イエローカード</th>
                                 <th class="stat-header">🟥 レッドカード</th>
                                 <th class="stat-header">⏱️ 出場時間</th>
                                 <th class="stat-header">📊 評価</th>
-                                <th class="stat-header">🏟️ 試合数</th>
                             </tr>
                         </thead>
                         <tbody id="competitionStatsBody">
@@ -1052,13 +1052,13 @@
                 html += `
                     <tr>
                         <td class="competition-name">${comp.name}</td>
+                        <td class="stat-value">${comp.matches}</td>
                         <td class="stat-value">${comp.goals}</td>
                         <td class="stat-value">${comp.assists}</td>
                         <td class="stat-value">${comp.yellowCards || '-'}</td>
                         <td class="stat-value">${comp.redCards || '-'}</td>
                         <td class="stat-value">${comp.minutes}'</td>
                         <td class="stat-value">${comp.rating}</td>
-                        <td class="stat-value">${comp.matches}</td>
                     </tr>
                 `;
             });
@@ -1067,13 +1067,13 @@
             html += `
                 <tr>
                     <td class="competition-name total">合計</td>
+                    <td class="stat-value total">${totals.matches}</td>
                     <td class="stat-value total">${totals.goals}</td>
                     <td class="stat-value total">${totals.assists}</td>
                     <td class="stat-value total">${totals.yellowCards || '-'}</td>
                     <td class="stat-value total">${totals.redCards || '-'}</td>
                     <td class="stat-value total">${totals.minutes}'</td>
                     <td class="stat-value total">${totals.rating}</td>
-                    <td class="stat-value total">${totals.matches}</td>
                 </tr>
             `;
 
