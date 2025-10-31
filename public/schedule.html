@@ -2873,12 +2873,13 @@
                     const leagueParam = mappedLeague ? `&league=${encodeURIComponent(mappedLeague)}` : '';
                     const statusParam = statusFilter ? `&status=${encodeURIComponent(statusFilter)}` : '';
                     const seasonParam = season ? `&season=${encodeURIComponent(season)}` : '';
+                    const timeRangeParam = timeRange ? `&timeRange=${encodeURIComponent(timeRange)}` : '';
                     
                     console.log('🔄 統合APIを呼び出し中...');
                     console.log('🔍 リーグマッピング:', league, '→', mappedLeague);
-                    const integratedUrl = `/api/schedule?season=${season}${leagueParam}${statusParam}`;
+                    const integratedUrl = `/api/schedule?season=${season}${leagueParam}${statusParam}${timeRangeParam}`;
                     console.log('📡 統合API URL:', integratedUrl);
-                    console.log('📡 パラメータ詳細:', { season, leagueParam, statusParam });
+                    console.log('📡 パラメータ詳細:', { season, leagueParam, statusParam, timeRangeParam });
                     response = await fetch(integratedUrl, {
                         method: 'GET',
                         headers: {
@@ -3308,6 +3309,67 @@
                            leagueLower.includes(matchLeagueLower);
                 });
                 console.log(`🔍 リーグフィルタリング: ${beforeCount} → ${filteredMatches.length}件 (リーグ: ${league})`);
+            }
+            
+            // 期間でフィルタリング
+            if (timeRange && timeRange !== '') {
+                const beforeCount = filteredMatches.length;
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+                
+                let startDate, endDate;
+                
+                switch (timeRange) {
+                    case 'today':
+                        startDate = new Date(now);
+                        endDate = new Date(now);
+                        endDate.setHours(23, 59, 59, 999);
+                        break;
+                    case 'tomorrow':
+                        startDate = new Date(now);
+                        startDate.setDate(startDate.getDate() + 1);
+                        endDate = new Date(startDate);
+                        endDate.setHours(23, 59, 59, 999);
+                        break;
+                    case 'week':
+                        startDate = new Date(now);
+                        endDate = new Date(now);
+                        endDate.setDate(endDate.getDate() + 7);
+                        endDate.setHours(23, 59, 59, 999);
+                        break;
+                    case 'lastweek':
+                        startDate = new Date(now);
+                        startDate.setDate(startDate.getDate() - 7);
+                        endDate = new Date(now);
+                        endDate.setHours(23, 59, 59, 999);
+                        break;
+                    case 'month':
+                        startDate = new Date(now);
+                        endDate = new Date(now);
+                        endDate.setMonth(endDate.getMonth() + 1);
+                        endDate.setHours(23, 59, 59, 999);
+                        break;
+                    default:
+                        // 期間指定がない場合はフィルタリングしない
+                        startDate = null;
+                        endDate = null;
+                }
+                
+                if (startDate && endDate) {
+                    filteredMatches = filteredMatches.filter(match => {
+                        const parseUtcDate = (dateStr) => {
+                            if (!dateStr) return null;
+                            const date = new Date(dateStr);
+                            return isNaN(date.getTime()) ? null : date;
+                        };
+                        
+                        const matchDate = parseUtcDate(match.date || match.utcDate || match.matchDate || match.fixture?.date);
+                        if (!matchDate) return false;
+                        
+                        return matchDate >= startDate && matchDate <= endDate;
+                    });
+                    console.log(`🔍 期間フィルタリング: ${beforeCount} → ${filteredMatches.length}件 (期間: ${timeRange})`);
+                }
             }
             
             // ステータスでフィルタリング
