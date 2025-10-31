@@ -551,26 +551,38 @@
                     const response = await fetch(`/api/integrated/player/${encodeURIComponent(playerId)}`);
                     
                     if (response.ok) {
-                        const apiData = await response.json();
-                        const player = apiData?.player;
+                        const player = await response.json();
                         
-                        if (player && (player.name || player.fullName)) {
-                            console.log(`✅ 統合APIデータを取得: ${player.name || playerId} (${apiData.sources?.join(', ') || 'integrated'})`);
+                        // エラーレスポンスのチェック
+                        if (player.error) {
+                            console.log(`⚠️ 統合APIエラー: ${player.error}`);
+                        } else if (player && (player.name || player.fullName)) {
+                            console.log(`✅ 統合APIデータを取得: ${player.name || playerId}`);
+                            console.log('📊 Stats形式:', Array.isArray(player.stats) ? '配列形式' : typeof player.stats);
+                            if (Array.isArray(player.stats)) {
+                                console.log(`📊 コンペティション数: ${player.stats.length}`);
+                                player.stats.forEach((stat, idx) => {
+                                    console.log(`  ${idx + 1}. ${stat.leagueName}: ${stat.appearances}試合, ${stat.goals}ゴール`);
+                                });
+                            }
                             
                             // 統合データを表示用に変換
+                            // statsは配列形式またはオブジェクト形式のまま使用（フロントエンドが両方に対応）
                             const displayData = {
                                 ...player,
                                 source: 'integrated',
-                                stats: player.stats || {},
-                                integration: apiData.integration
+                                stats: player.stats || [],
+                                integration: player.integration
                             };
                             
                             displayPlayerData(displayData);
                             return;
+                        } else {
+                            console.log('⚠️ 統合APIレスポンスはあるが選手データが空。フォールバックに移行');
+                            console.log('🔍 APIレスポンス:', player);
                         }
-                        console.log('⚠️ 統合APIレスポンスはあるが選手データが空。フォールバックに移行');
                     } else {
-                        console.log('⚠️ 統合APIデータの取得に失敗、フォールバックに移行');
+                        console.log(`⚠️ 統合APIデータの取得に失敗 (${response.status})、フォールバックに移行`);
                     }
                 } catch (integratedError) {
                     console.log('⚠️ 統合APIデータの取得中にエラー:', integratedError.message);
