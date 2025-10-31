@@ -823,7 +823,56 @@
         // キャリアスタートからの個人スタッツを生成（実際のAPIデータを使用）
         async function generateCareerHistory(player) {
             const tbody = document.getElementById('careerTableBody');
+            let html = '';
             
+            // 優先順位1: player.careerStats（スクリプトで保存されたデータ）
+            if (player.careerStats && Array.isArray(player.careerStats) && player.careerStats.length > 0) {
+                console.log(`✅ キャリアスタッツをデータベースから取得: ${player.careerStats.length}レコード`);
+                
+                // シーズンでソート（新しい順）
+                const sortedStats = [...player.careerStats].sort((a, b) => {
+                    const seasonA = parseInt(a.season?.split('/')[0]) || 0;
+                    const seasonB = parseInt(b.season?.split('/')[0]) || 0;
+                    return seasonB - seasonA;
+                });
+                
+                sortedStats.forEach(stat => {
+                    const seasonDisplay = stat.season || 'Unknown';
+                    html += `
+                        <tr>
+                            <td>${seasonDisplay}</td>
+                            <td>${stat.teamName || stat.team || 'Unknown'}</td>
+                            <td>${stat.leagueName || stat.league || 'Unknown'}</td>
+                            <td>${stat.matches || stat.appearances || 0}</td>
+                            <td>${stat.goals || 0}</td>
+                            <td>${stat.assists || 0}</td>
+                            <td>${stat.rating ? parseFloat(stat.rating).toFixed(1) : 'N/A'}</td>
+                        </tr>
+                    `;
+                });
+                
+                tbody.innerHTML = html;
+                
+                // データソース表示を更新
+                const dataSourceInfo = document.createElement('div');
+                dataSourceInfo.className = 'data-source-info';
+                dataSourceInfo.innerHTML = `
+                    <div class="source-badge">
+                        <span class="source-icon">🔗</span>
+                        <span class="source-text">実際のAPIデータ (API-Football)</span>
+                    </div>
+                `;
+                
+                // キャリアテーブルの前にデータソース情報を挿入
+                const careerSection = document.querySelector('.career-section');
+                if (careerSection && !careerSection.querySelector('.data-source-info')) {
+                    careerSection.insertBefore(dataSourceInfo, careerSection.querySelector('.career-title'));
+                }
+                
+                return;
+            }
+            
+            // 優先順位2: APIエンドポイントから取得
             try {
                 console.log('🔄 キャリアスタッツを取得中...');
                 
@@ -837,7 +886,7 @@
                     console.log(`✅ キャリアスタッツ取得成功: ${careerStats.length}シーズン`);
                     
                     if (careerStats.length > 0) {
-                        let html = '';
+                        html = '';
                         
                         careerStats.forEach(stat => {
                             const seasonDisplay = `${stat.season}/${parseInt(stat.season) + 1}`;
@@ -883,7 +932,7 @@
             }
             
             // フォールバック: データベースから直接データを取得して表示
-            let html = '';
+            html = '';
             
             // 配列形式のstatsがある場合、各シーズンを表示
             if (player.stats && Array.isArray(player.stats)) {
