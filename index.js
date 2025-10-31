@@ -3501,8 +3501,10 @@ app.get('/api/match/:id/details', async (req, res) => {
                     
                     // ラインアップデータの処理
                     let lineups = null;
-                    if (fixture.lineups && Array.isArray(fixture.lineups)) {
-                        console.log('Processing lineups:', fixture.lineups);
+                    
+                    // まず/fixtures/{id}からライナップを取得を試みる
+                    if (fixture.lineups && Array.isArray(fixture.lineups) && fixture.lineups.length > 0) {
+                        console.log('Processing lineups from fixture data:', fixture.lineups);
                         lineups = {
                             home: null,
                             away: null
@@ -3520,14 +3522,6 @@ app.get('/api/match/:id/details', async (req, res) => {
                                         const playerName = player.player?.name || player.name || 'Unknown';
                                         const playerPosition = player.player?.pos || player.pos || 'Unknown';
                                         const playerNumber = player.player?.number || player.number || 0;
-                                        
-                                        console.log(`  Processing player:`, {
-                                            playerObject: player,
-                                            playerKeys: Object.keys(player),
-                                            playerName: playerName,
-                                            playerPosition: playerPosition,
-                                            playerNumber: playerNumber
-                                        });
                                         
                                         return {
                                             name: playerName,
@@ -3551,6 +3545,67 @@ app.get('/api/match/:id/details', async (req, res) => {
                                 };
                             }
                         });
+                    }
+                    
+                    // /fixtures/{id}にライナップがない場合、/fixtures/lineupsエンドポイントを呼び出す
+                    if (!lineups || !lineups.home || !lineups.away) {
+                        try {
+                            console.log('Fetching lineups from separate endpoint for fixture:', fixture.fixture.id);
+                            const apiKey = process.env.API_FOOTBALL_KEY || process.env.RAPIDAPI_KEY;
+                            if (apiKey && apiKey !== 'YOUR_API_FOOTBALL_KEY') {
+                                const lineupResponse = await axios.get(`https://v3.football.api-sports.io/fixtures/lineups`, {
+                                    headers: {
+                                        'x-apisports-key': apiKey,
+                                    },
+                                    params: { fixture: fixture.fixture.id }
+                                });
+                                
+                                if (lineupResponse.data && lineupResponse.data.response && lineupResponse.data.response.length > 0) {
+                                    console.log('Processing lineups from lineups endpoint:', lineupResponse.data.response.length, 'teams');
+                                    lineups = {
+                                        home: null,
+                                        away: null
+                                    };
+                                    
+                                    lineupResponse.data.response.forEach(lineup => {
+                                        if (lineup.team && lineup.startXI) {
+                                            const isHome = lineup.team.id === fixture.teams.home.id;
+                                            const teamKey = isHome ? 'home' : 'away';
+                                            
+                                            lineups[teamKey] = {
+                                                formation: lineup.formation || 'Unknown',
+                                                startXI: lineup.startXI.map(player => {
+                                                    const playerName = player.player?.name || player.name || 'Unknown';
+                                                    const playerPosition = player.player?.pos || player.pos || 'Unknown';
+                                                    const playerNumber = player.player?.number || player.number || 0;
+                                                    
+                                                    return {
+                                                        name: playerName,
+                                                        number: playerNumber,
+                                                        position: playerPosition
+                                                    };
+                                                }),
+                                                substitutes: lineup.substitutes ? lineup.substitutes.map(player => {
+                                                    const playerName = player.player?.name || player.name || 'Unknown';
+                                                    const playerPosition = player.player?.pos || player.pos || 'Unknown';
+                                                    const playerNumber = player.player?.number || player.number || 0;
+                                                    
+                                                    return {
+                                                        name: playerName,
+                                                        number: playerNumber,
+                                                        position: playerPosition
+                                                    };
+                                                }) : [],
+                                                coach: lineup.coach?.name || 'Unknown'
+                                            };
+                                        }
+                                    });
+                                    console.log('✅ Successfully fetched lineups from separate endpoint');
+                                }
+                            }
+                        } catch (lineupError) {
+                            console.error('❌ Failed to fetch lineups from separate endpoint:', lineupError.message);
+                        }
                     }
                     
                     matchDetails = {
@@ -4741,25 +4796,43 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
         const fs = require('fs');
         const playersFile = path.join(__dirname, 'data', 'players.json');
         
-        let players = [];
+        let playersData = [];
         if (fs.existsSync(playersFile)) {
             const data = await fs.promises.readFile(playersFile, 'utf8');
-            players = JSON.parse(data);
+            const parsed = JSON.parse(data);
+            // 配列形式またはオブジェクト形式に対応
+            playersData = Array.isArray(parsed) ? parsed : (parsed.players || []);
         }
         
         // 選手を検索（複数のID形式に対応）
-        const player = players.find(p => 
-            p.id === playerId || 
-            p.apiFootballId === playerId || 
-            p.footballDataId === playerId ||
-            p.playerId === playerId ||
-            p.player_id === playerId ||
-            p.name.toLowerCase().includes(playerId.toLowerCase()) ||
-            p.fullName?.toLowerCase().includes(playerId.toLowerCase()) ||
-            // api_278形式のIDに対応
-            (playerId.startsWith('api_') && p.apiFootballId === playerId.replace('api_', '')) ||
-            (playerId.startsWith('fd_') && p.footballDataId === playerId.replace('fd_', ''))
-        );
+        const player = playersData.find(p => {
+            // 通常のIDマッチング
+            if (p.id === playerId || 
+                p.apiFootballId === playerId || 
+                p.footballDataId === playerId ||
+                p.playerId === playerId ||
+                p.player_id === playerId ||
+                String(p.playerId) === String(playerId)) {
+                return true;
+            }
+            
+            // api_1100形式のIDに対応（playerIdが1100の場合）
+            if (playerId.startsWith('api_')) {
+                const numericId = playerId.replace('api_', '');
+                return String(p.playerId) === numericId || String(p.id) === playerId;
+            }
+            
+            // fd_形式のIDに対応
+            if (playerId.startsWith('fd_')) {
+                const numericId = playerId.replace('fd_', '');
+                return String(p.footballDataId) === numericId;
+            }
+            
+            // 名前での検索（部分一致）
+            const nameMatch = p.name?.toLowerCase().includes(playerId.toLowerCase()) ||
+                             p.fullName?.toLowerCase().includes(playerId.toLowerCase());
+            return nameMatch;
+        });
         
         if (!player) {
             return res.status(404).json({ 
@@ -4768,26 +4841,39 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
             });
         }
         
+        // 2025年の統計データを優先的に選択
+        let statsToUse = player.stats;
+        if (Array.isArray(player.stats)) {
+            // 配列形式の場合、2025/2026シーズンを優先
+            const stats2025 = player.stats.find(s => s.season === '2025/2026');
+            if (stats2025) {
+                statsToUse = stats2025;
+            } else if (player.stats.length > 0) {
+                statsToUse = player.stats[0];
+            }
+        } else if (player.stats && typeof player.stats === 'object') {
+            // オブジェクト形式の場合、そのまま使用
+            statsToUse = player.stats;
+        }
+        
         // 統合情報を追加
         const enhancedPlayer = {
             ...player,
+            stats: statsToUse, // 2025年データを優先的に使用
             integration: {
-                hasApiFootball: !!player.apiFootballId,
+                hasApiFootball: !!player.playerId || !!player.apiFootballId,
                 hasFootballData: !!player.footballDataId,
                 hasPhoto: !!player.photo,
                 sources: [
-                    player.apiFootballId ? 'API-Football' : null,
+                    (player.playerId || player.apiFootballId) ? 'API-Football' : null,
                     player.footballDataId ? 'Football-data.org' : null
                 ].filter(Boolean),
                 lastUpdated: player.lastUpdated || new Date().toISOString()
             }
         };
         
-        res.json({ 
-            player: enhancedPlayer,
-            sources: ['API-Football', 'Football-data.org'],
-            timestamp: new Date().toISOString()
-        });
+        // フロントエンドが期待する形式で返す（playerオブジェクトを直接返す）
+        res.json(enhancedPlayer);
     } catch (error) {
         console.error('Integrated player error:', error);
         res.status(500).json({ 

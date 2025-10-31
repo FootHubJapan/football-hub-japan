@@ -922,39 +922,73 @@
 
             console.log('✅ Generating competition stats...');
 
-            // テスト用の固定データを生成
-            const competitions = [
-                {
-                    name: 'プレミアリーグ',
-                    goals: 8,
-                    assists: 3,
-                    yellowCards: 1,
-                    redCards: 0,
-                    minutes: 1080,
-                    rating: '7.8',
-                    matches: 12
-                },
-                {
-                    name: 'UEFAチャンピオンズリーグ',
-                    goals: 4,
-                    assists: 2,
-                    yellowCards: 0,
-                    redCards: 0,
-                    minutes: 360,
-                    rating: '8.1',
-                    matches: 6
-                },
-                {
-                    name: 'EFLカップ',
-                    goals: 1,
-                    assists: 0,
-                    yellowCards: 0,
-                    redCards: 0,
-                    minutes: 90,
-                    rating: '7.5',
-                    matches: 2
-                }
-            ];
+            // 実際の選手データを使用
+            let competitions = [];
+            
+            // 2025年データがある場合
+            if (player.stats && typeof player.stats === 'object' && player.stats.season === '2025/2026') {
+                console.log('📊 Using 2025/2026 season data');
+                competitions = [
+                    {
+                        name: 'プレミアリーグ',
+                        goals: player.stats.goals || 0,
+                        assists: player.stats.assists || 0,
+                        yellowCards: player.stats.yellowCards || 0,
+                        redCards: player.stats.redCards || 0,
+                        minutes: player.stats.minutes || 0,
+                        rating: player.stats.rating || 'N/A',
+                        matches: player.stats.appearances || 0
+                    }
+                ];
+            } else if (player.stats && Array.isArray(player.stats)) {
+                // 配列形式のstatsがある場合
+                console.log('📊 Using array format stats');
+                competitions = player.stats.map(stat => ({
+                    name: stat.leagueName || 'リーグ',
+                    goals: stat.goals || 0,
+                    assists: stat.assists || 0,
+                    yellowCards: stat.yellowCards || 0,
+                    redCards: stat.redCards || 0,
+                    minutes: stat.minutes || 0,
+                    rating: stat.rating || 'N/A',
+                    matches: stat.appearances || 0
+                }));
+            } else {
+                // フォールバック用のテストデータ
+                console.log('⚠️ Using fallback test data');
+                competitions = [
+                    {
+                        name: 'プレミアリーグ',
+                        goals: 8,
+                        assists: 3,
+                        yellowCards: 1,
+                        redCards: 0,
+                        minutes: 1080,
+                        rating: '7.8',
+                        matches: 12
+                    },
+                    {
+                        name: 'UEFAチャンピオンズリーグ',
+                        goals: 4,
+                        assists: 2,
+                        yellowCards: 0,
+                        redCards: 0,
+                        minutes: 360,
+                        rating: '8.1',
+                        matches: 6
+                    },
+                    {
+                        name: 'EFLカップ',
+                        goals: 1,
+                        assists: 0,
+                        yellowCards: 0,
+                        redCards: 0,
+                        minutes: 90,
+                        rating: '7.5',
+                        matches: 2
+                    }
+                ];
+            }
 
             // 合計を計算
             const totals = {
