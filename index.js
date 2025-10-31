@@ -4841,25 +4841,15 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
             });
         }
         
-        // 2025年の統計データを優先的に選択
-        let statsToUse = player.stats;
-        if (Array.isArray(player.stats)) {
-            // 配列形式の場合、2025/2026シーズンを優先
-            const stats2025 = player.stats.find(s => s.season === '2025/2026');
-            if (stats2025) {
-                statsToUse = stats2025;
-            } else if (player.stats.length > 0) {
-                statsToUse = player.stats[0];
-            }
-        } else if (player.stats && typeof player.stats === 'object') {
-            // オブジェクト形式の場合、そのまま使用
-            statsToUse = player.stats;
-        }
+        // statsデータをそのまま使用（配列形式の場合は配列のまま、オブジェクト形式の場合はオブジェクトのまま）
+        // フロントエンドが配列形式とオブジェクト形式の両方に対応しているため、そのまま返す
+        // 配列形式のstatsがあれば、すべてのコンペティション別統計を表示するために配列のまま返す
         
         // 統合情報を追加
         const enhancedPlayer = {
             ...player,
-            stats: statsToUse, // 2025年データを優先的に使用
+            // player.statsをそのまま使用（配列形式なら配列、オブジェクト形式ならオブジェクト）
+            stats: player.stats,
             integration: {
                 hasApiFootball: !!player.playerId || !!player.apiFootballId,
                 hasFootballData: !!player.footballDataId,
