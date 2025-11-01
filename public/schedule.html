@@ -3593,8 +3593,21 @@
                     console.warn('Modal title element not found, continuing without title update');
                 }
                 
-                // 試合詳細データを取得
-                const response = await fetch(`/api/match/${matchId}/details?league=${encodeURIComponent(league || '')}`);
+                // 試合詳細データを取得（クリックした試合の情報も送信）
+                const requestUrl = `/api/match/${matchId}/details?league=${encodeURIComponent(league || '')}`;
+                const requestBody = {
+                    clickedMatchData: matchData
+                };
+                
+                console.log('📡 Fetching match details:', { url: requestUrl, matchData });
+                
+                const response = await fetch(requestUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
                 const result = await response.json();
                 
                 if (result.success && result.data) {
@@ -3613,11 +3626,20 @@
                     if (clickedHomeTeam && clickedAwayTeam && 
                         (apiHomeTeam !== clickedHomeTeam || apiAwayTeam !== clickedAwayTeam)) {
                         console.warn('⚠️ Team names do not match! Using clicked match data instead.');
+                        console.warn('API returned:', { apiHomeTeam, apiAwayTeam });
+                        console.warn('Clicked match:', { clickedHomeTeam, clickedAwayTeam });
                         // クリックした試合のデータを優先的に使用
                         result.data.homeTeam = clickedHomeTeam;
                         result.data.awayTeam = clickedAwayTeam;
                         result.data.id = matchId; // IDも確実に設定
+                    } else if (clickedHomeTeam && clickedAwayTeam) {
+                        // チーム名が一致する場合でも、クリックした試合の情報を確実に設定
+                        result.data.homeTeam = clickedHomeTeam;
+                        result.data.awayTeam = clickedAwayTeam;
                     }
+                    
+                    // クリックした試合の情報も保存（フォールバックデータとして使用しないように）
+                    result.data.clickedMatchData = matchData;
                     
                     // モーダルタイトルを試合情報で更新
                     if (modalTitle) {
@@ -3708,10 +3730,10 @@
                 }
                 
                 // チーム名の取得を改善
-                if (goal.team === 'home' || goal.team === 'Liverpool') {
-                    team = matchData.homeTeam;
-                } else if (goal.team === 'away' || goal.team === 'Bournemouth') {
-                    team = matchData.awayTeam;
+                if (goal.team === 'home' || goal.team?.name === matchData.homeTeam || goal.team === matchData.homeTeam) {
+                    team = matchData.homeTeam || matchData.home;
+                } else if (goal.team === 'away' || goal.team?.name === matchData.awayTeam || goal.team === matchData.awayTeam) {
+                    team = matchData.awayTeam || matchData.away;
                 } else if (goal.team && typeof goal.team === 'object') {
                     team = goal.team.name || goal.team.shortName || '不明';
                 } else {
@@ -3801,10 +3823,10 @@
                 }
                 
                 // チーム名の取得を改善
-                if (assist.team === 'home' || assist.team === 'Liverpool') {
-                    team = matchData.homeTeam;
-                } else if (assist.team === 'away' || assist.team === 'Bournemouth') {
-                    team = matchData.awayTeam;
+                if (assist.team === 'home' || assist.team?.name === matchData.homeTeam || assist.team === matchData.homeTeam) {
+                    team = matchData.homeTeam || matchData.home;
+                } else if (assist.team === 'away' || assist.team?.name === matchData.awayTeam || assist.team === matchData.awayTeam) {
+                    team = matchData.awayTeam || matchData.away;
                 } else if (assist.team && typeof assist.team === 'object') {
                     team = assist.team.name || assist.team.shortName || '不明';
                 } else {
@@ -4205,22 +4227,30 @@
                     homeFormation = matchData.lineups.home.formation || '4-2-3-1';
                     awayFormation = matchData.lineups.away.formation || '4-1-4-1';
                 } else {
-                    // フォールバックデータを使用（試合が終了している場合のみ）
-                    if (matchStatus === 'FINISHED' || matchStatus === '終了' || matchStatus === 'FT') {
-                    const fallbackData = generateFallbackLineupData();
-                    homeLineup = fallbackData.home.startXI;
-                    awayLineup = fallbackData.away.startXI;
-                    homeFormation = fallbackData.home.formation;
-                    awayFormation = fallbackData.away.formation;
-                    console.log('Using fallback lineup data');
-                    } else {
+                    // データがない場合は、クリックした試合の情報を使ってメッセージを表示
+                    const homeTeam = matchData.homeTeam || matchData.home || 'ホームチーム';
+                    const awayTeam = matchData.awayTeam || matchData.away || 'アウェイチーム';
+                    
+                    if (isScheduled) {
                         // 予定の試合でデータがない場合はメッセージを表示
                         lineupContainer.innerHTML = `
                             <div class="lineup-container">
                                 <h3>ラインアップ</h3>
                                 <div style="text-align: center; padding: 40px 20px; color: #cccccc; font-size: 16px;">
                                     <p style="margin-bottom: 20px;">📋 スタメンは試合前に発表されます</p>
-                                    <p style="color: #888; font-size: 14px;">スタメン情報が利用可能になり次第、こちらに表示されます。</p>
+                                    <p style="color: #888; font-size: 14px;">${homeTeam} vs ${awayTeam}のスタメン情報が利用可能になり次第、こちらに表示されます。</p>
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    } else {
+                        // 試合が終了しているがデータがない場合
+                        lineupContainer.innerHTML = `
+                            <div class="lineup-container">
+                                <h3>ラインアップ</h3>
+                                <div style="text-align: center; padding: 40px 20px; color: #cccccc; font-size: 16px;">
+                                    <p style="margin-bottom: 20px;">📋 ラインアップ情報が利用できません</p>
+                                    <p style="color: #888; font-size: 14px;">${homeTeam} vs ${awayTeam}のラインアップデータが見つかりませんでした。</p>
                                 </div>
                             </div>
                         `;
@@ -4312,19 +4342,15 @@
                 let homeBench = [];
                 if (matchData.lineups?.home?.substitutes) {
                     homeBench = matchData.lineups.home.substitutes;
-                } else {
-                    // フォールバックデータ
-                    homeBench = generateFallbackBenchData().home;
                 }
+                // フォールバックデータは使用しない（データがない場合は空配列）
 
                 // アウェイチームのベンチメンバー
                 let awayBench = [];
                 if (matchData.lineups?.away?.substitutes) {
                     awayBench = matchData.lineups.away.substitutes;
-                } else {
-                    // フォールバックデータ
-                    awayBench = generateFallbackBenchData().away;
                 }
+                // フォールバックデータは使用しない（データがない場合は空配列）
 
                 // ホームチームのベンチメンバーを表示
                 homeBenchContainer.innerHTML = homeBench.map(player => `

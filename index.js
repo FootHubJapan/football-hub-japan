@@ -3406,13 +3406,28 @@ app.get('/api/japanese-players/search-v2', async (req, res) => {
     }
 });
 
-// 試合詳細データを取得するエンドポイント
+// 試合詳細データを取得するエンドポイント（GETとPOST両方に対応）
 app.get('/api/match/:id/details', async (req, res) => {
+    return handleMatchDetailsRequest(req, res);
+});
+
+app.post('/api/match/:id/details', async (req, res) => {
+    return handleMatchDetailsRequest(req, res);
+});
+
+async function handleMatchDetailsRequest(req, res) {
     try {
         const matchId = req.params.id;
         const { league } = req.query;
+        const clickedMatchData = req.body?.clickedMatchData || null; // POSTリクエストから取得
         
         console.log(`Fetching match details for ID: ${matchId}, League: ${league}`);
+        if (clickedMatchData) {
+            console.log('📋 Clicked match data received:', {
+                homeTeam: clickedMatchData.homeTeam || clickedMatchData.home,
+                awayTeam: clickedMatchData.awayTeam || clickedMatchData.away
+            });
+        }
         
         let matchDetails = null;
         
@@ -3639,10 +3654,61 @@ app.get('/api/match/:id/details', async (req, res) => {
             }
         }
         
-        // データが見つからない場合はフォールバックデータを生成
+        // データが見つからない場合は、クリックした試合データから基本情報を作成
         if (!matchDetails) {
-            console.log('Generating fallback match details');
-            matchDetails = generateFallbackMatchDetails(matchId, league);
+            console.log('⚠️ No match details found from API, creating from clicked match data');
+            if (clickedMatchData) {
+                // クリックした試合データから基本情報を作成
+                const homeTeam = clickedMatchData.homeTeam || clickedMatchData.home || clickedMatchData.teams?.home?.name || 'Unknown';
+                const awayTeam = clickedMatchData.awayTeam || clickedMatchData.away || clickedMatchData.teams?.away?.name || 'Unknown';
+                
+                matchDetails = {
+                    id: matchId,
+                    league: league || clickedMatchData.leagueName || clickedMatchData.league || 'Unknown',
+                    homeTeam: homeTeam,
+                    awayTeam: awayTeam,
+                    homeScore: clickedMatchData.homeScore || clickedMatchData.home_score || clickedMatchData.goals?.home || null,
+                    awayScore: clickedMatchData.awayScore || clickedMatchData.away_score || clickedMatchData.goals?.away || null,
+                    date: clickedMatchData.date || clickedMatchData.utcDate || new Date().toISOString(),
+                    venue: clickedMatchData.venue || 'Unknown',
+                    status: clickedMatchData.status || 'SCHEDULED',
+                    statusLong: clickedMatchData.statusLong || clickedMatchData.status || 'Scheduled',
+                    referee: clickedMatchData.referee || 'Unknown',
+                    stats: null, // 統計データはない
+                    events: null, // イベントデータはない
+                    lineups: null // ラインアップデータはない
+                };
+                console.log('✅ Created match details from clicked match data:', { homeTeam, awayTeam });
+            } else {
+                // クリックした試合データもない場合はエラーを返す
+                console.error('❌ No match data available from API or clicked match');
+                return res.status(404).json({ 
+                    success: false, 
+                    error: '試合詳細が見つかりませんでした',
+                    matchId 
+                });
+            }
+        } else if (clickedMatchData) {
+            // APIからデータを取得できた場合でも、クリックした試合のチーム名で上書き（確実性のため）
+            const clickedHomeTeam = clickedMatchData.homeTeam || clickedMatchData.home || clickedMatchData.teams?.home?.name;
+            const clickedAwayTeam = clickedMatchData.awayTeam || clickedMatchData.away || clickedMatchData.teams?.away?.name;
+            
+            if (clickedHomeTeam && clickedAwayTeam) {
+                const apiHomeTeam = matchDetails.homeTeam || matchDetails.home;
+                const apiAwayTeam = matchDetails.awayTeam || matchDetails.away;
+                
+                // チーム名が一致しない場合は警告
+                if (apiHomeTeam !== clickedHomeTeam || apiAwayTeam !== clickedAwayTeam) {
+                    console.warn('⚠️ Team name mismatch detected:', {
+                        api: { apiHomeTeam, apiAwayTeam },
+                        clicked: { clickedHomeTeam, clickedAwayTeam }
+                    });
+                }
+                
+                // 確実にクリックした試合のチーム名を使用
+                matchDetails.homeTeam = clickedHomeTeam;
+                matchDetails.awayTeam = clickedAwayTeam;
+            }
         }
         
         res.setHeader('Content-Type', 'application/json');
@@ -3652,7 +3718,7 @@ app.get('/api/match/:id/details', async (req, res) => {
         console.error('Error fetching match details:', error);
         res.status(500).json({ success: false, error: '試合詳細の取得に失敗しました' });
     }
-});
+}
 
 // 試合イベントを取得するエンドポイント
 app.get('/api/match/:id/events', async (req, res) => {
