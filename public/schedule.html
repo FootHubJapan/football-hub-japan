@@ -3038,8 +3038,12 @@
                             scoreDisplay = `<span class="text-gray-400">-</span>`;
                         }
                         
+                        // 試合データをJSONエンコードしてdata属性に保存
+                        const matchDataJson = JSON.stringify(match).replace(/'/g, "&#39;").replace(/"/g, '&quot;');
+                        const matchId = match.id || match.match_id || match.matchId || 'unknown';
+                        const matchLeague = match.leagueName || match.league || '';
                         const matchHtml = `
-                                <div class="match-card" onclick="showDetailedMatchInfo('${match.id || match.matchId || 'unknown'}', '${match.leagueName || match.league}')">
+                                <div class="match-card" data-match-id="${matchId}" data-match-league="${matchLeague}" data-match-data='${matchDataJson}' onclick="showDetailedMatchInfoFromCard(this)">
                                     <div class="match-header">
                                         <span class="match-league">${getLeagueName(match.leagueName || match.league)} ${match.season ? `(${match.season})` : ''}</span>
                                         <span class="match-status ${getStatusClass(match.status)}">${getStatusText(match.status)}</span>
@@ -3524,14 +3528,44 @@
             return filteredMatches;
         }
 
-        // 詳細な試合情報を表示する関数
-        async function showDetailedMatchInfo(matchId, league) {
+        // カード要素から試合詳細を表示する関数（新しい実装）
+        async function showDetailedMatchInfoFromCard(cardElement) {
             try {
+                const matchId = cardElement.dataset.matchId;
+                const league = cardElement.dataset.matchLeague;
+                let matchData = null;
+                
+                if (cardElement.dataset.matchData) {
+                    try {
+                        matchData = JSON.parse(cardElement.dataset.matchData);
+                        console.log('✅ Match data retrieved from data attribute:', matchData);
+                    } catch (e) {
+                        console.error('Failed to parse match data from data attribute:', e);
+                    }
+                }
+                
+                await showDetailedMatchInfo(matchId, league, matchData);
+            } catch (error) {
+                console.error('Error in showDetailedMatchInfoFromCard:', error);
+            }
+        }
+
+        // 詳細な試合情報を表示する関数
+        async function showDetailedMatchInfo(matchId, league, matchData = null) {
+            try {
+                console.log('🔍 showDetailedMatchInfo called:', { matchId, league, matchData });
+                
                 // IDの安全チェック
                 if (!matchId || matchId === 'unknown' || matchId === 'undefined') {
-                    console.warn('Invalid match ID:', matchId);
-                    alert('試合IDが無効です。');
-                    return;
+                    // matchDataからIDを取得してみる
+                    if (matchData && (matchData.id || matchData.match_id)) {
+                        matchId = matchData.id || matchData.match_id;
+                        console.log('✅ Match ID retrieved from matchData:', matchId);
+                    } else {
+                        console.warn('Invalid match ID:', matchId);
+                        alert('試合IDが無効です。');
+                        return;
+                    }
                 }
                 
                 console.log('Loading detailed match info for ID:', matchId, 'League:', league);
@@ -3547,16 +3581,44 @@
                 // モーダルタイトルを更新
                 const modalTitle = document.getElementById('modalTitle');
                 if (modalTitle) {
+                    // まずmatchDataからチーム名を取得して表示
+                    if (matchData && (matchData.homeTeam || matchData.home) && (matchData.awayTeam || matchData.away)) {
+                        const homeTeam = matchData.homeTeam || matchData.home || matchData.teams?.home?.name;
+                        const awayTeam = matchData.awayTeam || matchData.away || matchData.teams?.away?.name;
+                        modalTitle.textContent = `${homeTeam} vs ${awayTeam}`;
+                    } else {
                     modalTitle.textContent = 'データを読み込み中...';
+                    }
                 } else {
                     console.warn('Modal title element not found, continuing without title update');
                 }
                 
                 // 試合詳細データを取得
-                const response = await fetch(`/api/match/${matchId}/details?league=${league}`);
+                const response = await fetch(`/api/match/${matchId}/details?league=${encodeURIComponent(league || '')}`);
                 const result = await response.json();
                 
                 if (result.success && result.data) {
+                    // 取得したデータのチーム名を確認（クリックした試合と一致しているか）
+                    const apiHomeTeam = result.data.homeTeam || result.data.home;
+                    const apiAwayTeam = result.data.awayTeam || result.data.away;
+                    const clickedHomeTeam = matchData?.homeTeam || matchData?.home || matchData?.teams?.home?.name;
+                    const clickedAwayTeam = matchData?.awayTeam || matchData?.away || matchData?.teams?.away?.name;
+                    
+                    console.log('🔍 Team name verification:', {
+                        api: { apiHomeTeam, apiAwayTeam },
+                        clicked: { clickedHomeTeam, clickedAwayTeam }
+                    });
+                    
+                    // チーム名が一致しない場合は警告を出して、クリックした試合のデータを使用
+                    if (clickedHomeTeam && clickedAwayTeam && 
+                        (apiHomeTeam !== clickedHomeTeam || apiAwayTeam !== clickedAwayTeam)) {
+                        console.warn('⚠️ Team names do not match! Using clicked match data instead.');
+                        // クリックした試合のデータを優先的に使用
+                        result.data.homeTeam = clickedHomeTeam;
+                        result.data.awayTeam = clickedAwayTeam;
+                        result.data.id = matchId; // IDも確実に設定
+                    }
+                    
                     // モーダルタイトルを試合情報で更新
                     if (modalTitle) {
                         modalTitle.textContent = `${result.data.homeTeam} vs ${result.data.awayTeam}`;

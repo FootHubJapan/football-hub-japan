@@ -3417,15 +3417,17 @@ app.get('/api/match/:id/details', async (req, res) => {
         let matchDetails = null;
         
         // API-Footballから試合詳細を取得
-        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
+        const apiKey = process.env.API_FOOTBALL_KEY || process.env.RAPIDAPI_KEY;
+        if (apiKey && apiKey !== 'YOUR_API_FOOTBALL_KEY') {
             try {
-                console.log('🔍 Fetching match details from API-Football:', { matchId });
+                console.log('🔍 Fetching match details from API-Football:', { matchId, league });
                 
-                const response = await axios.get(`https://v3.football.api-sports.io/fixtures/${matchId}`, {
+                const response = await axios.get(`https://v3.football.api-sports.io/fixtures?id=${matchId}`, {
                     headers: {
-                        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                        'x-apisports-key': apiKey,
                         'x-rapidapi-host': 'v3.football.api-sports.io'
-                    }
+                    },
+                    timeout: 15000
                 });
                 
                 console.log('📊 API-Football match details response received');
