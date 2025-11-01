@@ -4,10 +4,26 @@ const axios = require('axios');
 require('dotenv').config();
 
 const PLAYERS_FILE = path.join(__dirname, 'data', 'players.json');
-const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
+// APIキーを読み込み（環境変数または.envファイルから）
+let API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
 
-if (!API_FOOTBALL_KEY) {
+// .envファイルから直接読み込む（dotenvが正しく動作しない場合のフォールバック）
+if (!API_FOOTBALL_KEY || API_FOOTBALL_KEY.length < 30) {
+    try {
+        const envContent = fs.readFileSync(path.join(__dirname, '.env'), 'utf8');
+        const match = envContent.match(/API_FOOTBALL_KEY=(.+)/);
+        if (match && match[1]) {
+            API_FOOTBALL_KEY = match[1].trim();
+            console.log('✅ .envファイルからAPIキーを読み込みました');
+        }
+    } catch (e) {
+        console.log('⚠️ .envファイルの読み込みに失敗:', e.message);
+    }
+}
+
+if (!API_FOOTBALL_KEY || API_FOOTBALL_KEY.length < 30) {
     console.error('❌ API_FOOTBALL_KEY環境変数が設定されていません');
+    console.error('   現在のキー長さ:', API_FOOTBALL_KEY ? API_FOOTBALL_KEY.length : 0);
     console.error('   環境変数を設定するか、.envファイルにAPI_FOOTBALL_KEYを追加してください');
     process.exit(1);
 }
@@ -21,13 +37,20 @@ const MAX_PLAYERS = process.argv[2] ? parseInt(process.argv[2]) : 10; // コマ�
 async function fetchWithDelay(url, options = {}) {
     await new Promise(resolve => setTimeout(resolve, REQUEST_DELAY));
     
+    if (!API_FOOTBALL_KEY || API_FOOTBALL_KEY.length < 10) {
+        console.error('❌ APIキーが正しく読み込まれていません。長さ:', API_FOOTBALL_KEY ? API_FOOTBALL_KEY.length : 0);
+        return null;
+    }
+    
     try {
+        const headers = {
+            'x-apisports-key': API_FOOTBALL_KEY,
+            ...(options.headers || {})
+        };
+        
         const response = await axios.get(url, {
             ...options,
-            headers: {
-                'x-apisports-key': API_FOOTBALL_KEY,
-                ...options.headers
-            }
+            headers: headers
         });
         
         if (response.data.errors && Object.keys(response.data.errors).length > 0) {
@@ -115,14 +138,22 @@ async function updateAllPlayersWithCareer() {
     let careerUpdatedCount = 0;
     let errorCount = 0;
     
-    // playerIdを持つ選手をフィルタリング
+    // playerIdを持つ選手をフィルタリング（未更新の選手のみ）
     const playersWithId = players.filter(p => p.playerId);
     
+    // 既に更新された選手をスキップ（careerStatsが存在する場合は既に更新済みとみなす）
+    const playersToUpdateAll = playersWithId.filter(p => {
+        // careerStatsが存在しない、または空の場合は未更新
+        return !p.careerStats || !Array.isArray(p.careerStats) || p.careerStats.length === 0;
+    });
+    
     console.log(`📊 playerIdを持つ選手: ${playersWithId.length}名`);
+    console.log(`✅ 既に更新済み: ${playersWithId.length - playersToUpdateAll.length}名`);
+    console.log(`📊 未更新の選手: ${playersToUpdateAll.length}名`);
     console.log(`📊 最初の${MAX_PLAYERS}名を更新します\n`);
     
     // 指定数の選手を更新
-    const playersToUpdate = playersWithId.slice(0, MAX_PLAYERS);
+    const playersToUpdate = playersToUpdateAll.slice(0, MAX_PLAYERS);
     
     for (let i = 0; i < playersToUpdate.length; i++) {
         const player = playersToUpdate[i];
