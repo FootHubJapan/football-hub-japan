@@ -1237,6 +1237,33 @@
         }
 
         @media (max-width: 768px) {
+            /* ヘッダーのサイズを小さく */
+            .header {
+                padding: 0.5rem 1rem;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+            }
+
+            .nav-buttons {
+                gap: 0.5rem;
+            }
+
+            .nav-btn {
+                font-size: 0.75rem;
+                padding: 0.3rem 0.6rem;
+            }
+
+            /* ページタイトルを小さく */
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .page-subtitle {
+                font-size: 0.9rem;
+            }
+
             .content-grid {
                 grid-template-columns: 1fr;
             }
@@ -1247,6 +1274,48 @@
             
             .main-container {
                 padding: 1rem;
+            }
+
+            /* 選手カードグリッドを8-10列に */
+            .player-grid,
+            .players-grid {
+                grid-template-columns: repeat(8, 1fr) !important;
+                gap: 0.5rem;
+            }
+
+            /* 選手カードを小さく */
+            .player-card {
+                padding: 6px;
+                font-size: 0.7rem;
+                min-width: auto;
+            }
+
+            .player-card .player-name,
+            .player-name {
+                font-size: 0.7rem !important;
+                margin: 4px 0;
+            }
+
+            .player-card .player-position,
+            .player-position {
+                font-size: 0.65rem !important;
+            }
+
+            .player-card .player-team,
+            .player-team {
+                font-size: 0.6rem !important;
+            }
+
+            .player-card .player-photo,
+            .player-card .player-avatar img,
+            .player-avatar img {
+                width: 40px !important;
+                height: 40px !important;
+                margin-bottom: 4px;
+            }
+
+            .player-avatar {
+                margin-bottom: 4px;
             }
 
             .player-details-panel {
@@ -1271,6 +1340,76 @@
 
             .actions-section {
                 flex-direction: column;
+            }
+
+            /* 検索セクション */
+            .search-section {
+                padding: 1rem;
+            }
+
+            .search-title {
+                font-size: 1rem;
+            }
+
+            .search-controls {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+
+            .search-select,
+            .search-input {
+                font-size: 0.85rem;
+                padding: 0.5rem;
+            }
+        }
+
+        /* 非常に小さい画面（480px以下）の調整 */
+        @media (max-width: 480px) {
+            .player-grid,
+            .players-grid {
+                grid-template-columns: repeat(10, 1fr) !important;
+                gap: 0.3rem;
+            }
+
+            .player-card {
+                padding: 4px;
+                font-size: 0.65rem;
+            }
+
+            .player-card .player-name,
+            .player-name {
+                font-size: 0.65rem !important;
+            }
+
+            .player-card .player-position,
+            .player-position {
+                font-size: 0.6rem !important;
+            }
+
+            .player-card .player-team,
+            .player-team {
+                font-size: 0.55rem !important;
+            }
+
+            .player-card .player-photo,
+            .player-card .player-avatar img,
+            .player-avatar img {
+                width: 30px !important;
+                height: 30px !important;
+            }
+
+            .logo {
+                font-size: 1rem;
+            }
+
+            .nav-buttons {
+                flex-wrap: wrap;
+                gap: 0.3rem;
+            }
+
+            .nav-btn {
+                font-size: 0.65rem;
+                padding: 0.2rem 0.4rem;
             }
         }
     </style>
