@@ -3245,32 +3245,79 @@
             }
         }
 
-        // リーグ名を取得
+        // リーグ名を取得（各種表記に対応）
         function getLeagueName(leagueCode) {
-            const leagueNames = {
-                'PL': 'プレミアリーグ',
-                'PD': 'ラ・リーガ',
-                'SA': 'セリエA',
-                'BL1': 'ブンデスリーガ',
-                'FL1': 'リーグ・アン',
-                'J1': 'J1リーグ',
-                'CL': 'チャンピオンズリーグ',
-                'EL': 'ヨーロッパリーグ',
-                'ECL': 'ヨーロッパカンファレンスリーグ',
-                'Serie A Brazil': 'ブラジル・セリエA',
-                'MLS': 'メジャーリーグサッカー',
-                'Liga MX': 'リーガMX',
-                'Premier League': 'プレミアリーグ',
-                'La Liga': 'ラ・リーガ',
-                'Serie A': 'セリエA',
-                'Bundesliga': 'ブンデスリーガ',
-                'Ligue 1': 'リーグ・アン',
-                'J1 League': 'J1リーグ',
-                'UEFA Champions League': 'チャンピオンズリーグ',
-                'UEFA Europa League': 'ヨーロッパリーグ',
-                'UEFA Europa Conference League': 'ヨーロッパカンファレンスリーグ'
+            if (!leagueCode) return '不明';
+            
+            // 正規化関数（大文字小文字・アクセント記号・スペースを無視）
+            const normalize = (name) => {
+                if (!name) return '';
+                return name.toLowerCase()
+                    .replace(/[áàâãä]/g, 'a')
+                    .replace(/[éèêë]/g, 'e')
+                    .replace(/[íìîï]/g, 'i')
+                    .replace(/[óòôõö]/g, 'o')
+                    .replace(/[úùûü]/g, 'u')
+                    .replace(/[ñ]/g, 'n')
+                    .replace(/[ç]/g, 'c')
+                    .replace(/\s+/g, '')
+                    .trim();
             };
-            return leagueNames[leagueCode] || leagueCode;
+            
+            const normalizedCode = normalize(leagueCode);
+            
+            // リーグコードまたは正規化された名前でのマッピング
+            const leagueNames = {
+                // コード
+                'pl': 'プレミアリーグ',
+                'pd': 'ラ・リーガ',
+                'sa': 'セリエA',
+                'bl1': 'ブンデスリーガ',
+                'fl1': 'リーグ・アン',
+                'j1': 'J1リーグ',
+                'cl': 'チャンピオンズリーグ',
+                'el': 'ヨーロッパリーグ',
+                'ecl': 'ヨーロッパカンファレンスリーグ',
+                // 英語名（正規化後）
+                'premierleague': 'プレミアリーグ',
+                'premier': 'プレミアリーグ',
+                'laliga': 'ラ・リーガ',
+                'ligasantander': 'ラ・リーガ',
+                'primeradivision': 'ラ・リーガ',
+                'primera': 'ラ・リーガ',
+                'seriea': 'セリエA',
+                'serie': 'セリエA',
+                'bundesliga': 'ブンデスリーガ',
+                'bundes': 'ブンデスリーガ',
+                'ligue1': 'リーグ・アン',
+                'ligue': 'リーグ・アン',
+                'j1league': 'J1リーグ',
+                'jleague': 'J1リーグ',
+                'championsleague': 'チャンピオンズリーグ',
+                'uefachampions': 'チャンピオンズリーグ',
+                'ucl': 'チャンピオンズリーグ',
+                'europaleague': 'ヨーロッパリーグ',
+                'uefaeuropa': 'ヨーロッパリーグ',
+                'uel': 'ヨーロッパリーグ',
+                'conferenceleague': 'ヨーロッパカンファレンスリーグ',
+                'uefaconference': 'ヨーロッパカンファレンスリーグ',
+                'uecl': 'ヨーロッパカンファレンスリーグ'
+            };
+            
+            // まず直接マッチを試す
+            if (leagueNames[normalizedCode]) {
+                return leagueNames[normalizedCode];
+            }
+            
+            // 部分マッチを試す
+            for (const [key, value] of Object.entries(leagueNames)) {
+                if (normalizedCode.includes(key) || key.includes(normalizedCode)) {
+                    return value;
+                }
+            }
+            
+            // マッチしない場合は元の値を返す
+            return leagueCode;
         }
 
         // 試合ステータスを取得
@@ -3305,27 +3352,51 @@
             if (league && league !== '') {
                 const beforeCount = filteredMatches.length;
                 
-                // リーグコードと日本語名のマッピング
+                // リーグコードと日本語名のマッピング（大文字小文字・スペース・アクセント記号を考慮）
                 const leagueNameMap = {
-                    'PL': ['premier league', 'プレミアリーグ', 'premier'],
-                    'PD': ['la liga', 'ラ・リーガ', 'ラリーガ', 'primera división'],
-                    'SA': ['serie a', 'セリエA', 'seriea'],
-                    'BL1': ['bundesliga', 'ブンデスリーガ'],
-                    'FL1': ['ligue 1', 'リーグ・アン', 'ligue1'],
-                    'J1': ['j1', 'j1リーグ', 'j.league'],
-                    'CL': ['champions league', 'チャンピオンズリーグ', 'uefa champions', 'ucl'],
-                    'EL': ['europa league', 'ヨーロッパリーグ', 'uefa europa', 'uel'],
-                    'ECL': ['conference league', 'ヨーロッパカンファレンスリーグ', 'uefa conference', 'uecl']
+                    'PL': ['premier league', 'プレミアリーグ', 'premier', 'premierleague'],
+                    'PD': [
+                        'la liga', 'ラ・リーガ', 'ラリーガ', 
+                        'primera división', 'primera division', 'primera',
+                        'primeradivision', 'primera división', 'primera divisi'
+                    ],
+                    'SA': ['serie a', 'セリエA', 'seriea', 'serie'],
+                    'BL1': ['bundesliga', 'ブンデスリーガ', 'bundes'],
+                    'FL1': ['ligue 1', 'リーグ・アン', 'ligue1', 'ligue'],
+                    'J1': ['j1', 'j1リーグ', 'j.league', 'jleague'],
+                    'CL': ['champions league', 'チャンピオンズリーグ', 'uefa champions', 'ucl', 'champions'],
+                    'EL': ['europa league', 'ヨーロッパリーグ', 'uefa europa', 'uel', 'europa'],
+                    'ECL': ['conference league', 'ヨーロッパカンファレンスリーグ', 'uefa conference', 'uecl', 'conference']
                 };
                 
                 const searchTerms = leagueNameMap[league] || [league.toLowerCase()];
                 
                 filteredMatches = filteredMatches.filter(match => {
-                    const matchLeague = (match.leagueName || match.league || '').toLowerCase();
+                    // リーグ名を正規化（小文字化、アクセント記号除去、スペース除去）
+                    const normalizeLeagueName = (name) => {
+                        if (!name) return '';
+                        return name.toLowerCase()
+                            .replace(/[áàâãä]/g, 'a')
+                            .replace(/[éèêë]/g, 'e')
+                            .replace(/[íìîï]/g, 'i')
+                            .replace(/[óòôõö]/g, 'o')
+                            .replace(/[úùûü]/g, 'u')
+                            .replace(/[ñ]/g, 'n')
+                            .replace(/[ç]/g, 'c')
+                            .replace(/\s+/g, ' ')  // 複数のスペースを1つに
+                            .trim();
+                    };
+                    
+                    const matchLeague = normalizeLeagueName(match.leagueName || match.league || '');
                     
                     // マッピングされた検索語でマッチング
                     for (const term of searchTerms) {
-                        if (matchLeague.includes(term.toLowerCase()) || term.toLowerCase().includes(matchLeague)) {
+                        const normalizedTerm = normalizeLeagueName(term);
+                        // 部分マッチング（スペースを考慮しない比較も追加）
+                        if (matchLeague.includes(normalizedTerm) || 
+                            normalizedTerm.includes(matchLeague) ||
+                            matchLeague.replace(/\s+/g, '').includes(normalizedTerm.replace(/\s+/g, '')) ||
+                            normalizedTerm.replace(/\s+/g, '').includes(matchLeague.replace(/\s+/g, ''))) {
                             return true;
                         }
                     }
