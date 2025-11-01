@@ -3520,7 +3520,7 @@ async function handleMatchDetailsRequest(req, res) {
                     // /fixtures?idに統計データがない場合、/fixtures/statisticsエンドポイントを呼び出す
                     if (!stats || (stats.possession.home === 0 && stats.possession.away === 0 && stats.shots.home === 0 && stats.shots.away === 0)) {
                         try {
-                            console.log('Fetching statistics from separate endpoint for fixture:', fixture.fixture.id);
+                            console.log('📊 Fetching statistics from separate endpoint for fixture:', fixture.fixture.id);
                             const statsResponse = await axios.get(`https://v3.football.api-sports.io/fixtures/statistics`, {
                                 headers: {
                                     'x-apisports-key': apiKey,
@@ -3529,6 +3529,9 @@ async function handleMatchDetailsRequest(req, res) {
                                 params: { fixture: fixture.fixture.id },
                                 timeout: 15000
                             });
+                            
+                            console.log('📊 Statistics API response status:', statsResponse.status);
+                            console.log('📊 Statistics API response data:', JSON.stringify(statsResponse.data, null, 2).substring(0, 500));
                             
                             if (statsResponse.data && statsResponse.data.response && statsResponse.data.response.length > 0) {
                                 console.log('✅ Processing statistics from separate endpoint:', statsResponse.data.response.length, 'teams');
@@ -3590,10 +3593,21 @@ async function handleMatchDetailsRequest(req, res) {
                                         });
                                     }
                                 });
+                                
+                                console.log('✅ Statistics processed successfully:', {
+                                    possession: stats.possession,
+                                    shots: stats.shots,
+                                    corners: stats.corners
+                                });
+                            } else {
+                                console.warn('⚠️ Statistics API returned empty response or no data');
                             }
                         } catch (statsError) {
                             console.error('❌ Failed to fetch statistics from separate endpoint:', statsError.message);
+                            console.error('❌ Stats error details:', statsError.response?.data || statsError.response?.status || 'No response data');
                         }
+                    } else {
+                        console.log('✅ Statistics already available from fixture data');
                     }
                     
                     // イベントデータの処理
@@ -3661,7 +3675,7 @@ async function handleMatchDetailsRequest(req, res) {
                     // /fixtures/{id}にライナップがない場合、/fixtures/lineupsエンドポイントを呼び出す
                     if (!lineups || !lineups.home || !lineups.away) {
                         try {
-                            console.log('Fetching lineups from separate endpoint for fixture:', fixture.fixture.id);
+                            console.log('📋 Fetching lineups from separate endpoint for fixture:', fixture.fixture.id);
                             const lineupResponse = await axios.get(`https://v3.football.api-sports.io/fixtures/lineups`, {
                                 headers: {
                                     'x-apisports-key': apiKey,
@@ -3670,6 +3684,9 @@ async function handleMatchDetailsRequest(req, res) {
                                 params: { fixture: fixture.fixture.id },
                                 timeout: 15000
                             });
+                            
+                            console.log('📋 Lineups API response status:', lineupResponse.status);
+                            console.log('📋 Lineups API response data:', JSON.stringify(lineupResponse.data, null, 2).substring(0, 500));
                             
                             if (lineupResponse.data && lineupResponse.data.response && lineupResponse.data.response.length > 0) {
                                 console.log('✅ Processing lineups from lineups endpoint:', lineupResponse.data.response.length, 'teams');
@@ -3715,11 +3732,20 @@ async function handleMatchDetailsRequest(req, res) {
                                         };
                                     }
                                 });
-                                console.log('✅ Successfully fetched lineups from separate endpoint');
+                                
+                                console.log('✅ Lineups processed successfully:', {
+                                    home: lineups.home ? `${lineups.home.startXI?.length || 0} players` : 'null',
+                                    away: lineups.away ? `${lineups.away.startXI?.length || 0} players` : 'null'
+                                });
+                            } else {
+                                console.warn('⚠️ Lineups API returned empty response or no data');
                             }
                         } catch (lineupError) {
                             console.error('❌ Failed to fetch lineups from separate endpoint:', lineupError.message);
+                            console.error('❌ Lineups error details:', lineupError.response?.data || lineupError.response?.status || 'No response data');
                         }
+                    } else {
+                        console.log('✅ Lineups already available from fixture data');
                     }
                     
                     matchDetails = {
@@ -3739,7 +3765,13 @@ async function handleMatchDetailsRequest(req, res) {
                         lineups: lineups
                     };
                     
-                    console.log('Processed match details:', matchDetails);
+                    console.log('✅ Processed match details:', {
+                        id: matchDetails.id,
+                        teams: `${matchDetails.homeTeam} vs ${matchDetails.awayTeam}`,
+                        hasStats: !!matchDetails.stats,
+                        hasEvents: !!matchDetails.events && matchDetails.events.length > 0,
+                        hasLineups: !!(matchDetails.lineups?.home && matchDetails.lineups?.away)
+                    });
                 }
             } catch (apiError) {
                 console.error('❌ API-Football match details error:', apiError.message);
