@@ -147,10 +147,12 @@
             border: 2px solid #4CAF50;
             border-radius: 15px;
             padding: 20px;
-            margin: 15px;
+            margin: 0;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             transition: all 0.3s ease;
             cursor: pointer;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .match-card:hover {
@@ -761,12 +763,14 @@
                 gap: 0.5rem;
             }
 
-            /* 試合カードを小さく */
+            /* 試合カードを小さく（横幅を統一） */
             .match-card {
                 padding: 8px;
-                margin: 5px;
+                margin: 0;
                 border-radius: 8px;
                 font-size: 0.7rem;
+                width: 100%;
+                box-sizing: border-box;
             }
 
             .match-header {
@@ -840,11 +844,16 @@
             }
         }
 
-        /* 非常に小さい画面（320px以下）の調整 */
+        /* 非常に小さい画面（480px以下）の調整 */
         @media (max-width: 480px) {
             .schedule-grid {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 0.4rem;
+            }
+
+            .match-card {
+                width: 100%;
+                margin: 0;
             }
 
             .logo {
