@@ -3451,31 +3451,22 @@ async function handleMatchDetailsRequest(req, res) {
                     const fixture = response.data.response[0];
                     console.log('✅ Processing fixture data from API-Football');
                     
-                    // 統計データの処理
+                    // 統計データの処理（最初に/fixtures?idから試行、なければ/fixtures/statisticsエンドポイントを呼び出す）
                     let stats = null;
-                    if (fixture.statistics && Array.isArray(fixture.statistics)) {
-                        console.log('Processing statistics:', fixture.statistics);
+                    
+                    // まず/fixtures?idレスポンスの統計データを確認
+                    if (fixture.statistics && Array.isArray(fixture.statistics) && fixture.statistics.length > 0) {
+                        console.log('Processing statistics from fixture data:', fixture.statistics.length, 'teams');
                         stats = {
-                            possession: {
-                                home: 0,
-                                away: 0
-                            },
-                            shots: {
-                                home: 0,
-                                away: 0
-                            },
-                            shotsOnTarget: {
-                                home: 0,
-                                away: 0
-                            },
-                            corners: {
-                                home: 0,
-                                away: 0
-                            },
-                            fouls: {
-                                home: 0,
-                                away: 0
-                            }
+                            possession: { home: 0, away: 0 },
+                            shots: { home: 0, away: 0 },
+                            shotsOnTarget: { home: 0, away: 0 },
+                            corners: { home: 0, away: 0 },
+                            fouls: { home: 0, away: 0 },
+                            yellowCards: { home: 0, away: 0 },
+                            redCards: { home: 0, away: 0 },
+                            offsides: { home: 0, away: 0 },
+                            saves: { home: 0, away: 0 }
                         };
                         
                         fixture.statistics.forEach(teamStats => {
@@ -3484,26 +3475,125 @@ async function handleMatchDetailsRequest(req, res) {
                                 const teamKey = isHome ? 'home' : 'away';
                                 
                                 teamStats.statistics.forEach(stat => {
+                                    const value = parseInt(stat.value?.replace('%', '')) || 0;
                                     switch (stat.type) {
                                         case 'Ball Possession':
-                                            stats.possession[teamKey] = parseInt(stat.value) || 0;
+                                        case 'Possession':
+                                            stats.possession[teamKey] = value;
                                             break;
                                         case 'Total Shots':
-                                            stats.shots[teamKey] = parseInt(stat.value) || 0;
+                                        case 'Shots':
+                                            stats.shots[teamKey] = value;
                                             break;
                                         case 'Shots on Goal':
-                                            stats.shotsOnTarget[teamKey] = parseInt(stat.value) || 0;
+                                        case 'Shots on Target':
+                                            stats.shotsOnTarget[teamKey] = value;
                                             break;
                                         case 'Corner Kicks':
-                                            stats.corners[teamKey] = parseInt(stat.value) || 0;
+                                        case 'Corner kicks':
+                                            stats.corners[teamKey] = value;
                                             break;
                                         case 'Fouls':
-                                            stats.fouls[teamKey] = parseInt(stat.value) || 0;
+                                            stats.fouls[teamKey] = value;
+                                            break;
+                                        case 'Yellow Cards':
+                                        case 'Yellow cards':
+                                            stats.yellowCards[teamKey] = value;
+                                            break;
+                                        case 'Red Cards':
+                                        case 'Red cards':
+                                            stats.redCards[teamKey] = value;
+                                            break;
+                                        case 'Offsides':
+                                            stats.offsides[teamKey] = value;
+                                            break;
+                                        case 'Goalkeeper Saves':
+                                        case 'Saves':
+                                            stats.saves[teamKey] = value;
                                             break;
                                     }
                                 });
                             }
                         });
+                    }
+                    
+                    // /fixtures?idに統計データがない場合、/fixtures/statisticsエンドポイントを呼び出す
+                    if (!stats || (stats.possession.home === 0 && stats.possession.away === 0 && stats.shots.home === 0 && stats.shots.away === 0)) {
+                        try {
+                            console.log('Fetching statistics from separate endpoint for fixture:', fixture.fixture.id);
+                            const statsResponse = await axios.get(`https://v3.football.api-sports.io/fixtures/statistics`, {
+                                headers: {
+                                    'x-apisports-key': apiKey,
+                                    'x-rapidapi-host': 'v3.football.api-sports.io'
+                                },
+                                params: { fixture: fixture.fixture.id },
+                                timeout: 15000
+                            });
+                            
+                            if (statsResponse.data && statsResponse.data.response && statsResponse.data.response.length > 0) {
+                                console.log('✅ Processing statistics from separate endpoint:', statsResponse.data.response.length, 'teams');
+                                stats = {
+                                    possession: { home: 0, away: 0 },
+                                    shots: { home: 0, away: 0 },
+                                    shotsOnTarget: { home: 0, away: 0 },
+                                    corners: { home: 0, away: 0 },
+                                    fouls: { home: 0, away: 0 },
+                                    yellowCards: { home: 0, away: 0 },
+                                    redCards: { home: 0, away: 0 },
+                                    offsides: { home: 0, away: 0 },
+                                    saves: { home: 0, away: 0 }
+                                };
+                                
+                                statsResponse.data.response.forEach(teamStats => {
+                                    if (teamStats.team && teamStats.statistics) {
+                                        const isHome = teamStats.team.id === fixture.teams.home.id;
+                                        const teamKey = isHome ? 'home' : 'away';
+                                        
+                                        teamStats.statistics.forEach(stat => {
+                                            const value = parseInt(stat.value?.replace('%', '')) || 0;
+                                            switch (stat.type) {
+                                                case 'Ball Possession':
+                                                case 'Possession':
+                                                    stats.possession[teamKey] = value;
+                                                    break;
+                                                case 'Total Shots':
+                                                case 'Shots':
+                                                    stats.shots[teamKey] = value;
+                                                    break;
+                                                case 'Shots on Goal':
+                                                case 'Shots on Target':
+                                                    stats.shotsOnTarget[teamKey] = value;
+                                                    break;
+                                                case 'Corner Kicks':
+                                                case 'Corner kicks':
+                                                    stats.corners[teamKey] = value;
+                                                    break;
+                                                case 'Fouls':
+                                                    stats.fouls[teamKey] = value;
+                                                    break;
+                                                case 'Yellow Cards':
+                                                case 'Yellow cards':
+                                                    stats.yellowCards[teamKey] = value;
+                                                    break;
+                                                case 'Red Cards':
+                                                case 'Red cards':
+                                                    stats.redCards[teamKey] = value;
+                                                    break;
+                                                case 'Offsides':
+                                                    stats.offsides[teamKey] = value;
+                                                    break;
+                                                case 'Goalkeeper Saves':
+                                                case 'Saves':
+                                                    stats.saves[teamKey] = value;
+                                                    break;
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        } catch (statsError) {
+                            console.error('❌ Failed to fetch statistics from separate endpoint:', statsError.message);
+                        }
                     }
                     
                     // イベントデータの処理
@@ -3572,57 +3662,60 @@ async function handleMatchDetailsRequest(req, res) {
                     if (!lineups || !lineups.home || !lineups.away) {
                         try {
                             console.log('Fetching lineups from separate endpoint for fixture:', fixture.fixture.id);
-                            const apiKey = process.env.API_FOOTBALL_KEY || process.env.RAPIDAPI_KEY;
-                            if (apiKey && apiKey !== 'YOUR_API_FOOTBALL_KEY') {
-                                const lineupResponse = await axios.get(`https://v3.football.api-sports.io/fixtures/lineups`, {
-                                    headers: {
-                                        'x-apisports-key': apiKey,
-                                    },
-                                    params: { fixture: fixture.fixture.id }
-                                });
-                                
-                                if (lineupResponse.data && lineupResponse.data.response && lineupResponse.data.response.length > 0) {
-                                    console.log('Processing lineups from lineups endpoint:', lineupResponse.data.response.length, 'teams');
+                            const lineupResponse = await axios.get(`https://v3.football.api-sports.io/fixtures/lineups`, {
+                                headers: {
+                                    'x-apisports-key': apiKey,
+                                    'x-rapidapi-host': 'v3.football.api-sports.io'
+                                },
+                                params: { fixture: fixture.fixture.id },
+                                timeout: 15000
+                            });
+                            
+                            if (lineupResponse.data && lineupResponse.data.response && lineupResponse.data.response.length > 0) {
+                                console.log('✅ Processing lineups from lineups endpoint:', lineupResponse.data.response.length, 'teams');
+                                if (!lineups) {
                                     lineups = {
                                         home: null,
                                         away: null
                                     };
-                                    
-                                    lineupResponse.data.response.forEach(lineup => {
-                                        if (lineup.team && lineup.startXI) {
-                                            const isHome = lineup.team.id === fixture.teams.home.id;
-                                            const teamKey = isHome ? 'home' : 'away';
-                                            
-                                            lineups[teamKey] = {
-                                                formation: lineup.formation || 'Unknown',
-                                                startXI: lineup.startXI.map(player => {
-                                                    const playerName = player.player?.name || player.name || 'Unknown';
-                                                    const playerPosition = player.player?.pos || player.pos || 'Unknown';
-                                                    const playerNumber = player.player?.number || player.number || 0;
-                                        
-                                        return {
-                                            name: playerName,
-                                            number: playerNumber,
-                                            position: playerPosition
-                                        };
-                                    }),
-                                    substitutes: lineup.substitutes ? lineup.substitutes.map(player => {
-                                        const playerName = player.player?.name || player.name || 'Unknown';
-                                        const playerPosition = player.player?.pos || player.pos || 'Unknown';
-                                        const playerNumber = player.player?.number || player.number || 0;
-                                        
-                                        return {
-                                            name: playerName,
-                                            number: playerNumber,
-                                            position: playerPosition
-                                        };
-                                    }) : [],
-                                    coach: lineup.coach?.name || 'Unknown'
-                                };
-                            }
-                        });
-                                    console.log('✅ Successfully fetched lineups from separate endpoint');
                                 }
+                                
+                                lineupResponse.data.response.forEach(lineup => {
+                                    if (lineup.team && lineup.startXI) {
+                                        const isHome = lineup.team.id === fixture.teams.home.id;
+                                        const teamKey = isHome ? 'home' : 'away';
+                                        
+                                        lineups[teamKey] = {
+                                            formation: lineup.formation || 'Unknown',
+                                            startXI: lineup.startXI.map(player => {
+                                                const playerName = player.player?.name || player.name || 'Unknown';
+                                                const playerPosition = player.player?.pos || player.pos || 'Unknown';
+                                                const playerNumber = player.player?.number || player.number || 0;
+                                                
+                                                return {
+                                                    name: playerName,
+                                                    number: playerNumber,
+                                                    position: playerPosition,
+                                                    player: player.player || player
+                                                };
+                                            }),
+                                            substitutes: lineup.substitutes ? lineup.substitutes.map(player => {
+                                                const playerName = player.player?.name || player.name || 'Unknown';
+                                                const playerPosition = player.player?.pos || player.pos || 'Unknown';
+                                                const playerNumber = player.player?.number || player.number || 0;
+                                                
+                                                return {
+                                                    name: playerName,
+                                                    number: playerNumber,
+                                                    position: playerPosition,
+                                                    player: player.player || player
+                                                };
+                                            }) : [],
+                                            coach: lineup.coach?.name || 'Unknown'
+                                        };
+                                    }
+                                });
+                                console.log('✅ Successfully fetched lineups from separate endpoint');
                             }
                         } catch (lineupError) {
                             console.error('❌ Failed to fetch lineups from separate endpoint:', lineupError.message);

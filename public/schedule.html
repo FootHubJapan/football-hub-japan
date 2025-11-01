@@ -3993,9 +3993,12 @@
         }
 
         // 統計タブを更新
-        function updateStatsTab(statsData) {
+        function updateStatsTab(statsData, matchData = null) {
             const statsContainer = document.getElementById('stats');
-            if (!statsContainer) return;
+            if (!statsContainer) {
+                console.warn('Stats container not found');
+                return;
+            }
 
             console.log('Updating stats tab with data:', statsData);
             
@@ -4074,19 +4077,23 @@
                     `;
                     console.log('Stats HTML updated:', statsHTML);
                 } else {
+                    const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
+                    const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
                     statsContainer.innerHTML = `
                         <div class="stats-container">
                             <h3>試合統計</h3>
-                            <div class="no-data">統計データが利用できません</div>
+                            <div class="no-data">${homeTeam} vs ${awayTeam}の統計データが利用できません</div>
                         </div>
                     `;
                 }
             } else {
-                // データがない場合のフォールバック表示
+                // データがない場合の表示
+                const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
+                const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
                 statsContainer.innerHTML = `
                     <div class="stats-container">
                         <h3>試合統計</h3>
-                        <div class="no-data">統計データが利用できません</div>
+                        <div class="no-data">${homeTeam} vs ${awayTeam}の統計データが利用できません</div>
                     </div>
                 `;
             }
@@ -4565,20 +4572,14 @@
                 // 基本情報タブを更新
                 updateBasicInfo(matchData);
                 
-                // 統計タブを更新
-                if (matchData.stats) {
-                    updateStatsTab(matchData.stats);
-                }
+                // 統計タブを更新（データがない場合も空のコンテナをクリア）
+                updateStatsTab(matchData.stats || null, matchData);
                 
-                // イベントタブを更新
-                if (matchData.events && Array.isArray(matchData.events)) {
-                    updateEventsTab(matchData.events);
-                }
+                // イベントタブを更新（データがない場合も更新）
+                updateEventsTab(matchData.events || []);
                 
-                // ラインアップタブを更新
-                if (matchData.lineups) {
+                // ラインアップタブを更新（データがない場合も更新）
                     updateLineupTab(matchData);
-                }
                 
                 // 最初のタブをアクティブにして表示
                 const firstTab = document.querySelector('.tab-button');
