@@ -97,27 +97,70 @@ async function fetchFromFootballData(leagueCode, season) {
 // ===============================
 async function fetchFromApiFootball(leagueId, season) {
     try {
+        if (!API_FOOTBALL_KEY) {
+            console.error('❌ API_FOOTBALL_KEYが設定されていません');
+            return [];
+        }
+
         const url = `https://v3.football.api-sports.io/fixtures?league=${leagueId}&season=${season}`;
+        console.log(`🔄 API-Football呼び出し: league=${leagueId}, season=${season}`);
+        
         const res = await axios.get(url, {
-            headers: { "x-apisports-key": API_FOOTBALL_KEY },
-            timeout: 10000,
+            headers: { 
+                "x-apisports-key": API_FOOTBALL_KEY,
+                "x-rapidapi-host": "v3.football.api-sports.io"
+            },
+            timeout: 15000,
         });
 
-        console.log(`✅ API-Football ${leagueId}: ${res.data.response.length}件`);
+        if (!res.data || !res.data.response || res.data.response.length === 0) {
+            console.log(`⚠️ API-Football ${leagueId}: データが0件です`);
+            return [];
+        }
+
+        console.log(`✅ API-Football ${leagueId}: ${res.data.response.length}件のデータを取得`);
 
         return res.data.response.map((m) => ({
             source: "api-football",
+            id: m.fixture.id,
             match_id: m.fixture.id,
             date: m.fixture.date,
-            status: m.fixture.status.short,
+            utcDate: m.fixture.date,
+            status: m.fixture.status.short || m.fixture.status.long,
             home: m.teams.home.name,
             away: m.teams.away.name,
+            homeTeam: m.teams.home.name,
+            awayTeam: m.teams.away.name,
             home_score: m.goals.home,
             away_score: m.goals.away,
+            homeScore: m.goals.home,
+            awayScore: m.goals.away,
             competition: m.league.name,
+            leagueName: m.league.name,
+            league: m.league.name,
+            venue: m.fixture.venue?.name || null,
+            referee: m.fixture.referee || null,
+            season: season,
+            // スタメン情報も含める（後で取得可能）
+            fixture: {
+                id: m.fixture.id,
+                date: m.fixture.date,
+                status: m.fixture.status,
+                venue: m.fixture.venue
+            },
+            teams: {
+                home: m.teams.home,
+                away: m.teams.away
+            },
+            goals: m.goals,
+            league: m.league
         }));
     } catch (err) {
-        console.error(`⚠️ API-Footballエラー (${leagueId}):`, err.response?.status || err.message);
+        console.error(`❌ API-Footballエラー (${leagueId}, season=${season}):`, {
+            status: err.response?.status,
+            message: err.message,
+            data: err.response?.data
+        });
         return [];
     }
 }
@@ -160,8 +203,15 @@ async function getUnifiedMatches(leagueKey, season = 2024) {
         }
     }
 
-    // 3️⃣ 両方0件ならローカルフォールバックを返す
+    // 3️⃣ 両方0件ならローカルフォールバックを返す（デバッグ用）
     if (!matches || matches.length === 0) {
+        console.warn(`⚠️ 両方のAPIからデータが取得できませんでした（${leagueKey}, season=${season}）`);
+        console.warn(`   API_FOOTBALL_KEY: ${API_FOOTBALL_KEY ? '設定済み' : '未設定'}`);
+        console.warn(`   FOOTBALLDATA_KEY: ${FOOTBALLDATA_KEY ? '設定済み' : '未設定'}`);
+        
+        // フォールバックデータは使用しない（実際のAPIデータのみを使用）
+        // デバッグ目的でローカルデータを使用する場合は、以下のコメントを解除
+        /*
         try {
             const fs = require('fs');
             const path = require('path');
@@ -170,15 +220,17 @@ async function getUnifiedMatches(leagueKey, season = 2024) {
             if (fs.existsSync(localDataPath)) {
                 const data = fs.readFileSync(localDataPath, 'utf8');
                 const localData = JSON.parse(data);
-                console.log("📊 ローカルフォールバック使用");
+                console.log("⚠️ ローカルフォールバック使用（デバッグ用）");
                 matches = localData || [];
             }
         } catch (err) {
             console.warn("⚠️ ローカルフォールバックファイルが見つかりません:", err.message);
         }
+        */
+    } else {
+        console.log(`✅ 統合結果: ${matches.length}件（${leagueKey}, season=${season}）- ソース: ${matches[0]?.source || 'unknown'}`);
     }
 
-    console.log(`✅ 統合結果: ${matches.length}件（${leagueKey}, season=${season}）`);
     return matches;
 }
 
