@@ -2481,6 +2481,9 @@
                         <option value="week" selected>今週</option>
                         <option value="lastweek">先週</option>
                         <option value="month">今月</option>
+                        <option value="lastmonth">先月</option>
+                        <option value="last3months">過去3ヶ月</option>
+                        <option value="last6months">過去6ヶ月</option>
                     </select>
                 </div>
 
@@ -2489,8 +2492,11 @@
                     <select id="statusFilter" class="control-select">
                         <option value="">すべてのステータス</option>
                         <option value="予定">予定</option>
+                        <option value="SCHEDULED">予定</option>
                         <option value="試合中">試合中</option>
+                        <option value="IN_PLAY">試合中</option>
                         <option value="終了">終了</option>
+                        <option value="FINISHED">終了</option>
                     </select>
                 </div>
 
@@ -2856,7 +2862,7 @@
                 
                 try {
                     // まず統合データを試す
-                    // リーグコードを新しいAPI形式にマッピング
+                    // リーグコードを新しいAPI形式にマッピング（日本語名も対応）
                     const leagueMapping = {
                         'PL': 'premierLeague',
                         'PD': 'laLiga',
@@ -2866,7 +2872,18 @@
                         'J1': 'j1',
                         'CL': 'championsLeague',
                         'EL': 'europaLeague',
-                        'ECL': 'conferenceLeague'
+                        'ECL': 'conferenceLeague',
+                        // 日本語名のマッピング
+                        'ラ・リーガ': 'laLiga',
+                        'ラリーガ': 'laLiga',
+                        'プレミアリーグ': 'premierLeague',
+                        'セリエA': 'serieA',
+                        'ブンデスリーガ': 'bundesliga',
+                        'リーグ・アン': 'ligue1',
+                        'J1リーグ': 'j1',
+                        'チャンピオンズリーグ': 'championsLeague',
+                        'ヨーロッパリーグ': 'europaLeague',
+                        'ヨーロッパカンファレンスリーグ': 'conferenceLeague'
                     };
                     
                     const mappedLeague = leagueMapping[league] || league;
@@ -2887,15 +2904,15 @@
                         },
                         signal: AbortSignal.timeout(30000) // 30秒のタイムアウト
                     });
-                    
-                    if (!response.ok) {
+                
+                if (!response.ok) {
                         throw new Error(`Integrated API error! status: ${response.status}`);
-                    }
-                    
-                    const responseText = await response.text();
+                }
+                
+                const responseText = await response.text();
                     console.log('✅ 統合API レスポンス取得成功');
                     console.log('レスポンスサイズ:', responseText.length, '文字');
-                    
+                
                     data = JSON.parse(responseText);
                     console.log('📊 統合データ解析成功:', data.items?.length || 0, '件のマッチ');
                     console.log('📊 データソース:', data.source);
@@ -2917,7 +2934,7 @@
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
                   console.log(`Found matches from ${dataSource}:`, data.matches.length);
                   console.log('🔍 最初のマッチのデータ構造:', data.matches[0]);
-                  currentMatches = data.matches;
+                    currentMatches = data.matches;
                   
                   // データソースを更新
                   dataSource = data.dataSource || dataSource;
@@ -3287,26 +3304,43 @@
             // リーグでフィルタリング
             if (league && league !== '') {
                 const beforeCount = filteredMatches.length;
+                
+                // リーグコードと日本語名のマッピング
+                const leagueNameMap = {
+                    'PL': ['premier league', 'プレミアリーグ', 'premier'],
+                    'PD': ['la liga', 'ラ・リーガ', 'ラリーガ', 'primera división'],
+                    'SA': ['serie a', 'セリエA', 'seriea'],
+                    'BL1': ['bundesliga', 'ブンデスリーガ'],
+                    'FL1': ['ligue 1', 'リーグ・アン', 'ligue1'],
+                    'J1': ['j1', 'j1リーグ', 'j.league'],
+                    'CL': ['champions league', 'チャンピオンズリーグ', 'uefa champions', 'ucl'],
+                    'EL': ['europa league', 'ヨーロッパリーグ', 'uefa europa', 'uel'],
+                    'ECL': ['conference league', 'ヨーロッパカンファレンスリーグ', 'uefa conference', 'uecl']
+                };
+                
+                const searchTerms = leagueNameMap[league] || [league.toLowerCase()];
+                
                 filteredMatches = filteredMatches.filter(match => {
-                    const matchLeague = match.leagueName || match.league || '';
-                    const leagueLower = league.toLowerCase();
-                    const matchLeagueLower = matchLeague.toLowerCase();
+                    const matchLeague = (match.leagueName || match.league || '').toLowerCase();
                     
-                    // 完全一致
-                    if (matchLeague === league || matchLeagueLower === leagueLower) {
+                    // マッピングされた検索語でマッチング
+                    for (const term of searchTerms) {
+                        if (matchLeague.includes(term.toLowerCase()) || term.toLowerCase().includes(matchLeague)) {
+                            return true;
+                        }
+                    }
+                    
+                    // リーグコード直接マッチ（PD, PL など）
+                    if (matchLeague === league.toLowerCase()) {
                         return true;
                     }
                     
-                    // チャンピオンズリーグの特別処理
-                    if (league === 'CL' || league === 'Champions League') {
-                        return matchLeagueLower.includes('champions') || 
-                               matchLeagueLower.includes('uefa') ||
-                               matchLeagueLower.includes('cl');
+                    // 部分一致
+                    if (matchLeague.includes(league.toLowerCase()) || league.toLowerCase().includes(matchLeague)) {
+                        return true;
                     }
                     
-                    // 部分一致
-                    return matchLeagueLower.includes(leagueLower) || 
-                           leagueLower.includes(matchLeagueLower);
+                    return false;
                 });
                 console.log(`🔍 リーグフィルタリング: ${beforeCount} → ${filteredMatches.length}件 (リーグ: ${league})`);
             }
@@ -3347,6 +3381,28 @@
                         startDate = new Date(now);
                         endDate = new Date(now);
                         endDate.setMonth(endDate.getMonth() + 1);
+                        endDate.setHours(23, 59, 59, 999);
+                        break;
+                    case 'lastmonth':
+                        startDate = new Date(now);
+                        startDate.setMonth(startDate.getMonth() - 1);
+                        startDate.setDate(1); // 先月の1日から
+                        endDate = new Date(now);
+                        endDate.setDate(0); // 先月の最後の日まで
+                        endDate.setHours(23, 59, 59, 999);
+                        break;
+                    case 'last3months':
+                        startDate = new Date(now);
+                        startDate.setMonth(startDate.getMonth() - 3);
+                        startDate.setDate(1); // 3ヶ月前の1日から
+                        endDate = new Date(now);
+                        endDate.setHours(23, 59, 59, 999);
+                        break;
+                    case 'last6months':
+                        startDate = new Date(now);
+                        startDate.setMonth(startDate.getMonth() - 6);
+                        startDate.setDate(1); // 6ヶ月前の1日から
+                        endDate = new Date(now);
                         endDate.setHours(23, 59, 59, 999);
                         break;
                     default:
@@ -3983,6 +4039,29 @@
                     return;
                 }
 
+                // 試合ステータスを確認
+                const matchStatus = matchData.status || matchData.fixture?.status?.short || '';
+                const isScheduled = matchStatus === 'SCHEDULED' || 
+                                   matchStatus === 'TIMED' || 
+                                   matchStatus === '予定' ||
+                                   matchStatus === 'NS' ||
+                                   (matchData.status && matchData.status.includes('予定'));
+                
+                // 予定の試合でスタメンデータがない場合
+                if (isScheduled && (!matchData.lineups?.home?.startXI || !matchData.lineups?.away?.startXI)) {
+                    lineupContainer.innerHTML = `
+                        <div class="lineup-container">
+                            <h3>ラインアップ</h3>
+                            <div style="text-align: center; padding: 40px 20px; color: #cccccc; font-size: 16px;">
+                                <p style="margin-bottom: 20px;">📋 スタメンは試合前に発表されます</p>
+                                <p style="color: #888; font-size: 14px;">スタメン情報が利用可能になり次第、こちらに表示されます。</p>
+                            </div>
+                        </div>
+                    `;
+                    console.log('Match is scheduled, showing message instead of lineup');
+                    return;
+                }
+
                 // フォールバックデータを使用
                 let homeLineup, awayLineup, homeFormation, awayFormation;
                 
@@ -3993,13 +4072,27 @@
                     homeFormation = matchData.lineups.home.formation || '4-2-3-1';
                     awayFormation = matchData.lineups.away.formation || '4-1-4-1';
                 } else {
-                    // フォールバックデータを使用
+                    // フォールバックデータを使用（試合が終了している場合のみ）
+                    if (matchStatus === 'FINISHED' || matchStatus === '終了' || matchStatus === 'FT') {
                     const fallbackData = generateFallbackLineupData();
                     homeLineup = fallbackData.home.startXI;
                     awayLineup = fallbackData.away.startXI;
                     homeFormation = fallbackData.home.formation;
                     awayFormation = fallbackData.away.formation;
                     console.log('Using fallback lineup data');
+                    } else {
+                        // 予定の試合でデータがない場合はメッセージを表示
+                        lineupContainer.innerHTML = `
+                            <div class="lineup-container">
+                                <h3>ラインアップ</h3>
+                                <div style="text-align: center; padding: 40px 20px; color: #cccccc; font-size: 16px;">
+                                    <p style="margin-bottom: 20px;">📋 スタメンは試合前に発表されます</p>
+                                    <p style="color: #888; font-size: 14px;">スタメン情報が利用可能になり次第、こちらに表示されます。</p>
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
                 }
 
                 console.log('Home lineup:', homeLineup);

@@ -2648,6 +2648,7 @@ app.get('/api/schedule', async (req, res) => {
         '': null,
         'すべてのステータス': null,
         '未開始': 'SCHEDULED',
+        '予定': 'SCHEDULED',
         '試合中': 'IN_PLAY',
         '終了': 'FINISHED',
         // 英語名・コードも受ける
@@ -2658,6 +2659,9 @@ app.get('/api/schedule', async (req, res) => {
         SCHEDULED: 'SCHEDULED',
         IN_PLAY: 'IN_PLAY',
         FINISHED: 'FINISHED',
+        TIMED: 'SCHEDULED',
+        NS: 'SCHEDULED',
+        FT: 'FINISHED',
     };
     const normStatusKey = qStatus.toString();
     const status = statusMap.hasOwnProperty(normStatusKey) ? statusMap[normStatusKey] : null;
@@ -3578,28 +3582,28 @@ app.get('/api/match/:id/details', async (req, res) => {
                                                     const playerName = player.player?.name || player.name || 'Unknown';
                                                     const playerPosition = player.player?.pos || player.pos || 'Unknown';
                                                     const playerNumber = player.player?.number || player.number || 0;
-                                                    
-                                                    return {
-                                                        name: playerName,
-                                                        number: playerNumber,
-                                                        position: playerPosition
-                                                    };
-                                                }),
-                                                substitutes: lineup.substitutes ? lineup.substitutes.map(player => {
-                                                    const playerName = player.player?.name || player.name || 'Unknown';
-                                                    const playerPosition = player.player?.pos || player.pos || 'Unknown';
-                                                    const playerNumber = player.player?.number || player.number || 0;
-                                                    
-                                                    return {
-                                                        name: playerName,
-                                                        number: playerNumber,
-                                                        position: playerPosition
-                                                    };
-                                                }) : [],
-                                                coach: lineup.coach?.name || 'Unknown'
-                                            };
-                                        }
-                                    });
+                                        
+                                        return {
+                                            name: playerName,
+                                            number: playerNumber,
+                                            position: playerPosition
+                                        };
+                                    }),
+                                    substitutes: lineup.substitutes ? lineup.substitutes.map(player => {
+                                        const playerName = player.player?.name || player.name || 'Unknown';
+                                        const playerPosition = player.player?.pos || player.pos || 'Unknown';
+                                        const playerNumber = player.player?.number || player.number || 0;
+                                        
+                                        return {
+                                            name: playerName,
+                                            number: playerNumber,
+                                            position: playerPosition
+                                        };
+                                    }) : [],
+                                    coach: lineup.coach?.name || 'Unknown'
+                                };
+                            }
+                        });
                                     console.log('✅ Successfully fetched lineups from separate endpoint');
                                 }
                             }
