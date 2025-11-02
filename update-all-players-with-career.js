@@ -4,6 +4,14 @@ const axios = require('axios');
 require('dotenv').config();
 
 const PLAYERS_FILE = path.join(__dirname, 'data', 'players.json');
+const ERROR_LOG_FILE = path.join(__dirname, 'data', 'update-errors.json');
+
+// コマンドライン引数の解析
+const args = process.argv.slice(2);
+const RETRY_ERRORS = args.includes('--retry-errors');
+const ERROR_FILE_ARG = args.find(arg => arg.startsWith('--error-file='));
+const ERROR_FILE_PATH = ERROR_FILE_ARG ? ERROR_FILE_ARG.split('=')[1] : null;
+
 // APIキーを読み込み（環境変数または.envファイルから）
 let API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
 
@@ -31,7 +39,13 @@ if (!API_FOOTBALL_KEY || API_FOOTBALL_KEY.length < 30) {
 // 更新するシーズンリスト（キャリアスタッツ用）
 const SEASONS = [2020, 2021, 2022, 2023, 2024, 2025];
 const REQUEST_DELAY = 1200; // 1.2秒（API制限対策）
-const MAX_PLAYERS = process.argv[2] ? parseInt(process.argv[2]) : 10; // コマンドライン引数で指定可能
+
+// MAX_PLAYERSの取得（--retry-errorsや--error-fileが指定されていない場合のみ）
+let MAX_PLAYERS = 10;
+if (!RETRY_ERRORS && !ERROR_FILE_PATH) {
+    const maxPlayersArg = args.find(arg => !arg.startsWith('--'));
+    MAX_PLAYERS = maxPlayersArg ? parseInt(maxPlayersArg) : 10;
+}
 
 // 遅延付きリクエスト
 async function fetchWithDelay(url, options = {}) {
@@ -137,23 +151,63 @@ async function updateAllPlayersWithCareer() {
     let updatedCount = 0;
     let careerUpdatedCount = 0;
     let errorCount = 0;
+    const failedPlayerIds = []; // エラーが出た選手のIDを記録
     
-    // playerIdを持つ選手をフィルタリング（未更新の選手のみ）
-    const playersWithId = players.filter(p => p.playerId);
-    
-    // 既に更新された選手をスキップ（careerStatsが存在する場合は既に更新済みとみなす）
-    const playersToUpdateAll = playersWithId.filter(p => {
-        // careerStatsが存在しない、または空の場合は未更新
-        return !p.careerStats || !Array.isArray(p.careerStats) || p.careerStats.length === 0;
-    });
-    
-    console.log(`📊 playerIdを持つ選手: ${playersWithId.length}名`);
-    console.log(`✅ 既に更新済み: ${playersWithId.length - playersToUpdateAll.length}名`);
-    console.log(`📊 未更新の選手: ${playersToUpdateAll.length}名`);
-    console.log(`📊 最初の${MAX_PLAYERS}名を更新します\n`);
-    
-    // 指定数の選手を更新
-    const playersToUpdate = playersToUpdateAll.slice(0, MAX_PLAYERS);
+    // エラー再試行モードの場合
+    let playersToUpdate = [];
+    if (RETRY_ERRORS || ERROR_FILE_PATH) {
+        const errorFilePath = ERROR_FILE_PATH || ERROR_LOG_FILE;
+        console.log(`\n🔄 エラー再試行モード: ${errorFilePath}からエラー選手を読み込み中...\n`);
+        
+        if (!fs.existsSync(errorFilePath)) {
+            console.error(`❌ エラーログファイルが見つかりません: ${errorFilePath}`);
+            console.error(`   まず通常の更新を実行してエラーログファイルを作成してください。`);
+            return;
+        }
+        
+        try {
+            const errorLogData = JSON.parse(fs.readFileSync(errorFilePath, 'utf8'));
+            const errorPlayerIds = errorLogData.players ? errorLogData.players.map(p => p.playerId) : [];
+            
+            if (errorPlayerIds.length === 0) {
+                console.log('✅ エラーが出た選手は見つかりませんでした。');
+                return;
+            }
+            
+            console.log(`📊 エラーが出た選手: ${errorPlayerIds.length}名`);
+            
+            // エラー選手IDに一致する選手を取得
+            const errorPlayers = players.filter(p => p.playerId && errorPlayerIds.includes(p.playerId));
+            
+            if (errorPlayers.length === 0) {
+                console.log('⚠️ エラーログに記録された選手IDが現在のデータに見つかりませんでした。');
+                return;
+            }
+            
+            playersToUpdate = errorPlayers;
+            console.log(`📊 再試行対象: ${playersToUpdate.length}名\n`);
+        } catch (error) {
+            console.error(`❌ エラーログファイルの読み込みエラー:`, error.message);
+            return;
+        }
+    } else {
+        // 通常モード: 未更新の選手を取得
+        const playersWithId = players.filter(p => p.playerId);
+        
+        // 既に更新された選手をスキップ（careerStatsが存在する場合は既に更新済みとみなす）
+        const playersToUpdateAll = playersWithId.filter(p => {
+            // careerStatsが存在しない、または空の場合は未更新
+            return !p.careerStats || !Array.isArray(p.careerStats) || p.careerStats.length === 0;
+        });
+        
+        console.log(`📊 playerIdを持つ選手: ${playersWithId.length}名`);
+        console.log(`✅ 既に更新済み: ${playersWithId.length - playersToUpdateAll.length}名`);
+        console.log(`📊 未更新の選手: ${playersToUpdateAll.length}名`);
+        console.log(`📊 最初の${MAX_PLAYERS}名を更新します\n`);
+        
+        // 指定数の選手を更新
+        playersToUpdate = playersToUpdateAll.slice(0, MAX_PLAYERS);
+    }
     
     for (let i = 0; i < playersToUpdate.length; i++) {
         const player = playersToUpdate[i];
@@ -268,8 +322,16 @@ async function updateAllPlayersWithCareer() {
             player.lastUpdated = new Date().toISOString();
             
         } catch (error) {
-            console.error(`❌ ${player.name || 'Unknown'}: エラー - ${error.message}`);
+            console.error(`❌ ${player.name || 'Unknown'} (ID: ${player.playerId || 'N/A'}): エラー - ${error.message}`);
             errorCount++;
+            if (player.playerId) {
+                failedPlayerIds.push({
+                    playerId: player.playerId,
+                    name: player.name || 'Unknown',
+                    error: error.message,
+                    timestamp: new Date().toISOString()
+                });
+            }
         }
     }
     
@@ -278,6 +340,18 @@ async function updateAllPlayersWithCareer() {
     const outputData = Array.isArray(playersData) ? players : { players: players };
     fs.writeFileSync(PLAYERS_FILE, JSON.stringify(outputData, null, 2));
     
+    // エラーが出た選手のIDをファイルに保存
+    if (failedPlayerIds.length > 0) {
+        console.log(`\n⚠️ エラーが出た選手を記録中: ${failedPlayerIds.length}名`);
+        const errorLog = {
+            timestamp: new Date().toISOString(),
+            totalErrors: failedPlayerIds.length,
+            players: failedPlayerIds
+        };
+        fs.writeFileSync(ERROR_LOG_FILE, JSON.stringify(errorLog, null, 2));
+        console.log(`📁 エラーログ保存先: ${ERROR_LOG_FILE}`);
+    }
+    
     console.log('\n============================================================');
     console.log('✅ 更新完了');
     console.log(`📊 2025年統計更新: ${updatedCount}名`);
@@ -285,8 +359,16 @@ async function updateAllPlayersWithCareer() {
     console.log(`❌ エラー: ${errorCount}名`);
     console.log(`📁 保存先: ${PLAYERS_FILE}`);
     console.log('============================================================');
-    console.log(`\n💡 ヒント: 全選手を更新するには、コマンドライン引数で数を指定してください`);
-    console.log(`   例: node update-all-players-with-career.js 100\n`);
+    
+    if (failedPlayerIds.length > 0) {
+        console.log(`\n💡 エラーが出た選手だけを再試行するには、以下のコマンドを実行してください:`);
+        console.log(`   node update-all-players-with-career.js --retry-errors`);
+        console.log(`\n   または、特定のエラーログファイルから再試行するには:`);
+        console.log(`   node update-all-players-with-career.js --error-file=${ERROR_LOG_FILE}\n`);
+    } else {
+        console.log(`\n💡 全選手を更新するには、コマンドライン引数で数を指定してください`);
+        console.log(`   例: node update-all-players-with-career.js 100\n`);
+    }
 }
 
 updateAllPlayersWithCareer();
