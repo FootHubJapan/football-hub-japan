@@ -69,11 +69,27 @@ async function fetchWithDelay(url, options = {}) {
         
         if (response.data.errors && Object.keys(response.data.errors).length > 0) {
             console.warn(`⚠️ APIエラー:`, response.data.errors);
+            
+            // リクエスト制限エラーをチェック
+            const errorMessages = Object.values(response.data.errors).join(' ').toLowerCase();
+            if (errorMessages.includes('request limit') || errorMessages.includes('reached the request limit')) {
+                // リクエスト制限エラーをスローして、呼び出し元で処理を停止できるようにする
+                const limitError = new Error('API_REQUEST_LIMIT_REACHED');
+                limitError.isRequestLimit = true;
+                limitError.errorData = response.data.errors;
+                throw limitError;
+            }
+            
             return null;
         }
         
         return response.data;
     } catch (error) {
+        // リクエスト制限エラーの場合は再スロー
+        if (error.isRequestLimit) {
+            throw error;
+        }
+        
         if (error.response?.status === 429) {
             console.warn('⏳ レート制限に達しました。60秒待機...');
             await new Promise(resolve => setTimeout(resolve, 60000));
@@ -91,7 +107,18 @@ async function getPlayerCareerStats(playerId) {
     for (const season of SEASONS) {
         try {
             const url = `https://v3.football.api-sports.io/players?season=${season}&id=${playerId}`;
-            const data = await fetchWithDelay(url);
+            let data;
+            
+            try {
+                data = await fetchWithDelay(url);
+            } catch (error) {
+                // リクエスト制限エラーの場合は再スロー
+                if (error.isRequestLimit) {
+                    throw error;
+                }
+                // その他のエラーはnullを返して続行
+                continue;
+            }
             
             if (!data || !data.response || data.response.length === 0) {
                 continue;
@@ -217,7 +244,60 @@ async function updateAllPlayersWithCareer() {
             
             // キャリアスタッツを取得
             console.log(`  🔄 キャリアスタッツを取得中...`);
-            const careerStats = await getPlayerCareerStats(player.playerId);
+            let careerStats = [];
+            
+            try {
+                careerStats = await getPlayerCareerStats(player.playerId);
+            } catch (error) {
+                if (error.isRequestLimit) {
+                    console.error(`\n❌ APIリクエスト制限に達しました！`);
+                    console.error(`📊 処理済み: ${i}/${playersToUpdate.length}名`);
+                    console.error(`📊 残り: ${playersToUpdate.length - i}名`);
+                    
+                    // 現在の選手と残りの選手をエラーログに記録
+                    failedPlayerIds.push({
+                        playerId: player.playerId,
+                        name: player.name || 'Unknown',
+                        error: 'API_REQUEST_LIMIT_REACHED',
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    // 残りの未処理選手もエラーログに追加
+                    for (let j = i; j < playersToUpdate.length; j++) {
+                        const remainingPlayer = playersToUpdate[j];
+                        if (remainingPlayer.playerId) {
+                            failedPlayerIds.push({
+                                playerId: remainingPlayer.playerId,
+                                name: remainingPlayer.name || 'Unknown',
+                                error: 'API_REQUEST_LIMIT_REACHED (未処理)',
+                                timestamp: new Date().toISOString()
+                            });
+                        }
+                    }
+                    
+                    // データを保存してから終了
+                    const outputData = Array.isArray(playersData) ? players : { players: players };
+                    fs.writeFileSync(PLAYERS_FILE, JSON.stringify(outputData, null, 2));
+                    
+                    // エラーログを保存
+                    const errorLog = {
+                        timestamp: new Date().toISOString(),
+                        totalErrors: failedPlayerIds.length,
+                        errorType: 'API_REQUEST_LIMIT_REACHED',
+                        processedCount: i,
+                        remainingCount: playersToUpdate.length - i,
+                        players: failedPlayerIds
+                    };
+                    fs.writeFileSync(ERROR_LOG_FILE, JSON.stringify(errorLog, null, 2));
+                    
+                    console.log(`\n💾 エラーログを保存しました: ${ERROR_LOG_FILE}`);
+                    console.log(`\n💡 明日以降、以下のコマンドで再試行できます:`);
+                    console.log(`   node update-all-players-with-career.js --retry-errors\n`);
+                    
+                    return;
+                }
+                throw error; // その他のエラーは再スロー
+            }
             
             if (careerStats.length > 0) {
                 // キャリアスタッツを保存
@@ -240,7 +320,60 @@ async function updateAllPlayersWithCareer() {
             console.log(`  🔄 2025年統計を取得中...`);
             try {
                 const url = `https://v3.football.api-sports.io/players?season=2025&id=${player.playerId}`;
-                const data = await fetchWithDelay(url);
+                let data;
+                
+                try {
+                    data = await fetchWithDelay(url);
+                } catch (error) {
+                    if (error.isRequestLimit) {
+                        console.error(`\n❌ APIリクエスト制限に達しました！`);
+                        console.error(`📊 処理済み: ${i}/${playersToUpdate.length}名`);
+                        console.error(`📊 残り: ${playersToUpdate.length - i}名`);
+                        
+                        // 現在の選手と残りの選手をエラーログに記録
+                        failedPlayerIds.push({
+                            playerId: player.playerId,
+                            name: player.name || 'Unknown',
+                            error: 'API_REQUEST_LIMIT_REACHED',
+                            timestamp: new Date().toISOString()
+                        });
+                        
+                        // 残りの未処理選手もエラーログに追加
+                        for (let j = i; j < playersToUpdate.length; j++) {
+                            const remainingPlayer = playersToUpdate[j];
+                            if (remainingPlayer.playerId) {
+                                failedPlayerIds.push({
+                                    playerId: remainingPlayer.playerId,
+                                    name: remainingPlayer.name || 'Unknown',
+                                    error: 'API_REQUEST_LIMIT_REACHED (未処理)',
+                                    timestamp: new Date().toISOString()
+                                });
+                            }
+                        }
+                        
+                        // データを保存してから終了
+                        const outputData = Array.isArray(playersData) ? players : { players: players };
+                        fs.writeFileSync(PLAYERS_FILE, JSON.stringify(outputData, null, 2));
+                        
+                        // エラーログを保存
+                        const errorLog = {
+                            timestamp: new Date().toISOString(),
+                            totalErrors: failedPlayerIds.length,
+                            errorType: 'API_REQUEST_LIMIT_REACHED',
+                            processedCount: i,
+                            remainingCount: playersToUpdate.length - i,
+                            players: failedPlayerIds
+                        };
+                        fs.writeFileSync(ERROR_LOG_FILE, JSON.stringify(errorLog, null, 2));
+                        
+                        console.log(`\n💾 エラーログを保存しました: ${ERROR_LOG_FILE}`);
+                        console.log(`\n💡 明日以降、以下のコマンドで再試行できます:`);
+                        console.log(`   node update-all-players-with-career.js --retry-errors\n`);
+                        
+                        return;
+                    }
+                    throw error; // その他のエラーは再スロー
+                }
                 
                 if (data && data.response && data.response.length > 0) {
                     const apiPlayer = data.response[0];
