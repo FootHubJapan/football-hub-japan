@@ -6914,6 +6914,12 @@ let lastUpdateTime = new Date();
 
 // 自動更新システムを開始
 function startAutoUpdate() {
+    // 本番環境では自動更新を無効化（GitHubからデプロイされたデータをそのまま使用）
+    if (process.env.NODE_ENV === 'production') {
+        console.log('📊 本番環境: 自動更新システムを無効化（GitHubからデプロイされたデータを使用）');
+        return;
+    }
+    
     console.log('🔄 自動更新システムを開始します...');
     
     // 初回更新を即座に実行
@@ -6928,6 +6934,15 @@ function startAutoUpdate() {
 // 自動更新の実行
 async function performAutoUpdate() {
     try {
+        // 本番環境では自動更新を無効化（GitHubからデプロイされたデータをそのまま使用）
+        if (process.env.NODE_ENV === 'production') {
+            console.log('📊 本番環境: 自動更新をスキップ（GitHubからデプロイされたデータを使用）');
+            const currentStats = await cacheManager.getCacheStats();
+            console.log(`📊 現在のデータベース状態: ${currentStats.totalPlayers}名の選手`);
+            console.log('✅ GitHubからデプロイされたデータを使用します');
+            return;
+        }
+        
         console.log('🔄 自動更新を実行中（全選手データ取得）...');
         const startTime = new Date();
         
@@ -6940,8 +6955,9 @@ async function performAutoUpdate() {
             console.log('⚠️ データが不足しています。包括的収集を実行します（全選手データ取得）。');
             await executeComprehensiveCollection();
         } else {
-            console.log('✅ 十分なデータがあります。増分更新を実行します。');
-            await performIncrementalUpdate();
+            console.log('✅ 十分なデータがあります。増分更新をスキップします（GitHubからデプロイされたデータを使用）。');
+            // 増分更新をスキップ（GitHubからデプロイされたデータをそのまま使用）
+            // await performIncrementalUpdate();
         }
         
         const endTime = new Date();
