@@ -124,6 +124,14 @@ async function updatePlayerStats(playerId, playerName) {
             playerIndex = players.findIndex(p => p.id === `api_${playerId}`);
         }
 
+        // 選手が見つかったが、名前が一致しない場合は上書き（間違ったデータの可能性）
+        if (playerIndex !== -1) {
+            const existingPlayer = players[playerIndex];
+            if (existingPlayer.name && !existingPlayer.name.toLowerCase().includes('bellingham')) {
+                console.log(`⚠️ playerId ${playerId} の既存データが別の選手です (${existingPlayer.name})。上書きします。`);
+            }
+        }
+
         // 選手が見つからない場合は新規追加
         if (playerIndex === -1) {
             console.log(`📝 ${playerName} を新規追加します`);
