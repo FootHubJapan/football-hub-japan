@@ -1000,10 +1000,11 @@
             
             // 2025年データがある場合（オブジェクト形式）
             if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
-                // seasonプロパティで判定
-                if (player.stats.season === '2025/2026' || player.league) {
+                // seasonプロパティで厳密に判定（2025/26シーズンのみ）
+                const statsSeason = player.stats.season;
+                if (statsSeason === '2025/2026' || statsSeason === '2025/26' || statsSeason === '2025') {
                     console.log('📊 Using 2025/2026 season data (object format)');
-                    const leagueName = player.league || player.stats.leagueName || 'リーグ';
+                    const leagueName = player.stats.leagueName || player.league || 'リーグ';
                     competitions = [
                         {
                             name: leagueName,
@@ -1013,35 +1014,21 @@
                             redCards: player.stats.redCards || 0,
                             minutes: player.stats.minutes || 0,
                             rating: player.stats.rating || 'N/A',
-                            matches: player.stats.appearances || 0
+                            matches: player.stats.appearances || player.stats.lineups || 0
                         }
                     ];
-                } else if (player.stats.goals !== undefined || player.stats.appearances !== undefined) {
-                    // seasonプロパティがなくても統計データがあれば使用
-                    console.log('📊 Using stats data (object format, no season specified)');
-                    const leagueName = player.league || player.stats.leagueName || 'リーグ';
-                    competitions = [
-                        {
-                            name: leagueName,
-                            goals: player.stats.goals || 0,
-                            assists: player.stats.assists || 0,
-                            yellowCards: player.stats.yellowCards || 0,
-                            redCards: player.stats.redCards || 0,
-                            minutes: player.stats.minutes || 0,
-                            rating: player.stats.rating || 'N/A',
-                            matches: player.stats.appearances || 0
-                        }
-                    ];
+                } else {
+                    console.log('⚠️ オブジェクト形式のstatsが2025/26シーズンではありません:', statsSeason);
+                    competitions = [];
                 }
             } else if (player.stats && Array.isArray(player.stats)) {
-                // 配列形式のstatsがある場合、2025/2026シーズンのデータのみをフィルタリング
+                // 配列形式のstatsがある場合、2025/2026シーズンのデータのみを厳密にフィルタリング
                 console.log('📊 Using array format stats');
-                const stats2025 = player.stats.filter(stat => 
-                    stat.season === '2025/2026' || 
-                    stat.season === '2025/26' ||
-                    stat.season === '2025' ||
-                    !stat.season // シーズン情報がない場合は含める
-                );
+                const stats2025 = player.stats.filter(stat => {
+                    const season = stat.season;
+                    // 2025/26シーズンのみを含める（シーズン情報がない場合は除外）
+                    return season === '2025/2026' || season === '2025/26' || season === '2025';
+                });
                 
                 console.log(`📊 2025/26シーズンのコンペティション数: ${stats2025.length}`);
                 stats2025.forEach((stat, idx) => {
