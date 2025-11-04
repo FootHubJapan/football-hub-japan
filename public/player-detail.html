@@ -1034,18 +1034,36 @@
                     ];
                 }
             } else if (player.stats && Array.isArray(player.stats)) {
-                // 配列形式のstatsがある場合
+                // 配列形式のstatsがある場合、2025/2026シーズンのデータのみをフィルタリング
                 console.log('📊 Using array format stats');
-                competitions = player.stats.map(stat => ({
-                    name: stat.leagueName || 'リーグ',
-                    goals: stat.goals || 0,
-                    assists: stat.assists || 0,
-                    yellowCards: stat.yellowCards || 0,
-                    redCards: stat.redCards || 0,
-                    minutes: stat.minutes || 0,
-                    rating: stat.rating || 'N/A',
-                    matches: stat.appearances || 0
-                }));
+                const stats2025 = player.stats.filter(stat => 
+                    stat.season === '2025/2026' || 
+                    stat.season === '2025/26' ||
+                    stat.season === '2025' ||
+                    !stat.season // シーズン情報がない場合は含める
+                );
+                
+                console.log(`📊 2025/26シーズンのコンペティション数: ${stats2025.length}`);
+                stats2025.forEach((stat, idx) => {
+                    console.log(`  ${idx + 1}. ${stat.leagueName}: ${stat.appearances}試合, ${stat.goals}ゴール`);
+                });
+                
+                if (stats2025.length > 0) {
+                    competitions = stats2025.map(stat => ({
+                        name: stat.leagueName || 'リーグ',
+                        goals: stat.goals || 0,
+                        assists: stat.assists || 0,
+                        yellowCards: stat.yellowCards || 0,
+                        redCards: stat.redCards || 0,
+                        minutes: stat.minutes || 0,
+                        rating: stat.rating || 'N/A',
+                        matches: stat.appearances || stat.lineups || 0
+                    }));
+                } else {
+                    console.log('⚠️ 2025/26シーズンのデータが見つかりませんでした');
+                    // 空の配列を返す（フォールバックデータは使用しない）
+                    competitions = [];
+                }
             } else {
                 // フォールバック用のテストデータ
                 console.log('⚠️ Using fallback test data');
