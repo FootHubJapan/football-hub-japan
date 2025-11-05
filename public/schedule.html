@@ -3463,23 +3463,53 @@
 
         // 試合ステータスを取得
         function getMatchStatus(match) {
+            // ステータスを正規化（大文字小文字を区別しない）
+            const normalizeStatus = (status) => {
+                if (!status) return '';
+                return String(status).toLowerCase().trim();
+            };
+            
+            const status = normalizeStatus(match.status || match.fixture?.status?.short || match.fixture?.status?.long);
+            
+            // 終了ステータスのチェック（複数のパターンに対応）
+            if (status === 'finished' || status === 'ft' || status === 'full-time' || status === 'complete') {
+                return '終了';
+            }
+            
+            // 試合中ステータスのチェック
+            if (status === 'live' || status === 'inplay' || status === 'in_play' || status === 'in-play' || 
+                status === 'playing' || status === 'first_half' || status === 'second_half' || 
+                status === 'half_time' || status === 'ht') {
+                return '試合中';
+            }
+            
+            // 予定ステータスのチェック
+            if (status === 'scheduled' || status === 'timed' || status === 'ns' || status === 'not_started' || 
+                status === 'not-started' || status === 'upcoming' || status === 'future') {
+                return '予定';
+            }
+            
+            // ステータスが不明な場合、日時で判定
             const now = new Date();
-            const matchDate = new Date(match.date);
+            const matchDate = match.date ? new Date(match.date) : null;
+            
+            if (!matchDate || isNaN(matchDate.getTime())) {
+                // 日時が無効な場合はデフォルトで予定として扱う
+                return '予定';
+            }
+            
             const matchTime = matchDate.getTime();
             const currentTime = now.getTime();
             
             // 試合開始時刻から90分後（試合終了想定時刻）
             const matchEndTime = matchTime + (90 * 60 * 1000);
             
-            if (match.status === 'finished' || match.status === 'FT') {
-                return '終了';
-            } else if (match.status === 'live' || match.status === 'inplay') {
-                return '試合中';
-            } else if (matchTime <= currentTime && currentTime <= matchEndTime) {
+            if (matchTime <= currentTime && currentTime <= matchEndTime) {
                 return '試合中';
             } else if (matchTime > currentTime) {
                 return '予定';
             } else {
+                // 試合終了時刻を過ぎている場合は終了と判定
                 return '終了';
             }
         }
