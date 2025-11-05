@@ -4804,7 +4804,9 @@
                 }
                 
                 // プレイヤー写真の取得（API-Footballのphotoフィールド）
-                if (player.player && player.player.photo && player.player.photo !== 'UNKNOWN' && player.player.photo !== 'Unknown' && player.player.photo !== 'null' && player.player.photo !== null) {
+                if (player.photo && player.photo !== 'UNKNOWN' && player.photo !== 'Unknown' && player.photo !== 'null' && player.photo !== null) {
+                    playerPhoto = player.photo;
+                } else if (player.player && player.player.photo && player.player.photo !== 'UNKNOWN' && player.player.photo !== 'Unknown' && player.player.photo !== 'null' && player.player.photo !== null) {
                     playerPhoto = player.player.photo;
                 } else if (player.photo && player.photo !== 'UNKNOWN' && player.photo !== 'Unknown' && player.photo !== 'null' && player.photo !== null) {
                     playerPhoto = player.photo;
@@ -4821,7 +4823,8 @@
                     position: playerPosition,
                     number: playerNumber,
                     photo: playerPhoto,
-                    hasPhoto: !!playerPhoto
+                    hasPhoto: !!playerPhoto,
+                    rawPlayer: player
                 });
                 
                 // パフォーマンス評価をランダムに生成（実際のAPIデータがある場合はそれを使用）
@@ -4836,7 +4839,8 @@
                     rating: performanceRating,
                     ratingClass: ratingClass,
                     teamType: teamType,
-                    index: index
+                    index: index,
+                    player: player.player || player // playerオブジェクト全体を保持
                 };
             });
         }
