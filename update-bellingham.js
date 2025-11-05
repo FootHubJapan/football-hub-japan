@@ -208,10 +208,16 @@ async function updatePlayerStats(playerId, playerName) {
 
 // メイン処理
 async function main() {
-    console.log('🚀 ジュード・ベリンガムを更新開始...\n');
+    console.log('🚀 主要選手を更新開始...\n');
 
-    // ジュード・ベリンガムのplayerId: 19242
-    await updatePlayerStats(19242, 'Jude Bellingham');
+    // ジュード・ベリンガムのplayerId: 129718 (Real Madrid)
+    await updatePlayerStats(129718, 'Jude Bellingham');
+    
+    // ModricのplayerId: 276 (通常のID)
+    await updatePlayerStats(276, 'Luka Modric');
+    
+    // Vinicius JúniorのplayerId: 762 (既に追加済みだが確認)
+    await updatePlayerStats(762, 'Vinicius Júnior');
 
     console.log('\n✅ 更新完了');
 }
