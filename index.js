@@ -4524,84 +4524,91 @@ async function getPlayerSeasonStatsFromAPIFootball(playerId, season) {
             }
             
             // 主要リーグのリスト（ユーザー指定のリーグを優先）
+            // API-Footballのリーグ名とマッチング可能な形式も含める
             const mainLeagues = [
                 // 日本
-                'J1', 'J2', 'J3', 'JFL', 'WEリーグ', 'なでしこリーグ',
+                'J1', 'J2', 'J3', 'JFL', 'WEリーグ', 'なでしこリーグ', 'J1 League', 'J2 League',
                 // ヨーロッパ
-                'Premier League', 'イングランド2部', '女子スーパーリーグ',
-                'La Liga', 'ラ・リーガ', 'ラ・リーガ2部',
-                'Bundesliga', 'ブンデスリーガ', 'ブンデスリーガ2部', '女子ブンデスリーガ',
-                'Serie A', 'セリエA', 'イタリア2部', 'セリエA(女子)',
-                'Ligue 1', 'フランス・リーグアン', '女子フランスリーグ',
-                'ロシア・プレミアリーグ',
-                'ポルトガル・リーグ',
-                'ウクライナ・リーグ',
-                'ベルギー・リーグ',
-                'トルコ・スーパーリーグ',
-                'オーストリア・ブンデスリーガ', 'オーストリア2部',
-                'スイス・スーパーリーグ',
-                'チェコ・リーグ',
-                'オランダ・エールディビジ',
-                'ギリシャ・スーパーリーグ',
-                'クロアチア・リーグ',
-                'デンマーク・リーグ',
-                'ルーマニア・リーグ',
-                'ポーランド・リーグ',
-                'セルビア・リーグ',
-                'スコットランド・プレミアリーグ',
-                'ノルウェー・リーグ',
-                'ハンガリー・リーグ',
-                'フィンランドリーグ',
-                'アゼルバイジャン・プレミアリーグ',
+                'Premier League', 'イングランド2部', '女子スーパーリーグ', 'English Premier League',
+                'La Liga', 'ラ・リーガ', 'ラ・リーガ2部', 'Primera Division', 'Segunda Division',
+                'Bundesliga', 'ブンデスリーガ', 'ブンデスリーガ2部', '女子ブンデスリーガ', '2. Bundesliga',
+                'Serie A', 'セリエA', 'イタリア2部', 'セリエA(女子)', 'Serie B',
+                'Ligue 1', 'フランス・リーグアン', '女子フランスリーグ', 'French Ligue 1',
+                'ロシア・プレミアリーグ', 'Russian Premier League',
+                'ポルトガル・リーグ', 'Portuguese Primeira Liga',
+                'ウクライナ・リーグ', 'Ukrainian Premier League',
+                'ベルギー・リーグ', 'Belgian Pro League',
+                'トルコ・スーパーリーグ', 'Turkish Super Lig',
+                'オーストリア・ブンデスリーガ', 'オーストリア2部', 'Austrian Bundesliga', 'Austrian 2. Liga',
+                'スイス・スーパーリーグ', 'Swiss Super League',
+                'チェコ・リーグ', 'Czech First League',
+                'オランダ・エールディビジ', 'Eredivisie',
+                'ギリシャ・スーパーリーグ', 'Greek Super League',
+                'クロアチア・リーグ', 'Croatian First League',
+                'デンマーク・リーグ', 'Danish Superliga',
+                'ルーマニア・リーグ', 'Romanian Liga I',
+                'ポーランド・リーグ', 'Polish Ekstraklasa',
+                'セルビア・リーグ', 'Serbian Super Liga',
+                'スコットランド・プレミアリーグ', 'Scottish Premiership',
+                'ノルウェー・リーグ', 'Norwegian Eliteserien',
+                'ハンガリー・リーグ', 'Hungarian NB I',
+                'フィンランドリーグ', 'Finnish Veikkausliiga',
+                'アゼルバイジャン・プレミアリーグ', 'Azerbaijani Premier League',
                 // アジア・オセアニア
-                '韓国・Kリーグ', '韓国2部',
-                'オーストラリア・Aリーグ',
-                '中国・CSL',
-                'タイ・プレミアリーグ', 'タイ2部',
-                'ウズベキスタン・リーグ',
-                'サウジアラビア・リーグ',
-                'カタール・スターズリーグ',
-                'UAE・リーグ',
+                '韓国・Kリーグ', '韓国2部', 'K League 1', 'K League 2',
+                'オーストラリア・Aリーグ', 'Australian A-League',
+                '中国・CSL', 'Chinese Super League',
+                'タイ・プレミアリーグ', 'タイ2部', 'Thai League', 'Thai League 2',
+                'ウズベキスタン・リーグ', 'Uzbekistan Super League',
+                'サウジアラビア・リーグ', 'Saudi Professional League',
+                'カタール・スターズリーグ', 'Qatar Stars League',
+                'UAE・リーグ', 'UAE Pro League',
                 // 南米
-                'ブラジル・リーグ', 'ブラジル2部',
-                'アルゼンチン・リーグ',
-                'ウルグアイ・リーグ',
-                'パラグアイ・リーグ',
+                'ブラジル・リーグ', 'ブラジル2部', 'Brazilian Serie A', 'Brazilian Serie B',
+                'アルゼンチン・リーグ', 'Argentine Primera Division',
+                'ウルグアイ・リーグ', 'Uruguayan Primera Division',
+                'パラグアイ・リーグ', 'Paraguayan Primera Division',
                 // 北中米カリブ海
-                'アメリカ・MLS',
-                'メキシコ・リーグ',
+                'アメリカ・MLS', 'Major League Soccer', 'MLS',
+                'メキシコ・リーグ', 'Liga MX',
                 // アフリカ
-                'エジプト・リーグ'
+                'エジプト・リーグ', 'Egyptian Premier League'
             ];
             
             // メインリーグを選択するロジック
             let mainStats = null;
             let maxAppearances = 0;
-            let mainLeagueFound = false;
+            let mainLeagueStats = [];
             
             // まず、主要リーグを優先的に検索
             for (const stat of statistics) {
                 const leagueName = stat.league?.name || '';
                 const appearances = stat.games?.appearences || stat.games?.lineups || 0;
                 
-                // 主要リーグに含まれるかチェック
-                const isMainLeague = mainLeagues.some(league => 
-                    leagueName.toLowerCase().includes(league.toLowerCase()) ||
-                    league.toLowerCase().includes(leagueName.toLowerCase())
-                );
+                // 主要リーグに含まれるかチェック（大文字小文字を無視、部分一致）
+                const normalizedLeagueName = leagueName.toLowerCase();
+                const isMainLeague = mainLeagues.some(league => {
+                    const normalizedLeague = league.toLowerCase();
+                    return normalizedLeagueName.includes(normalizedLeague) ||
+                           normalizedLeague.includes(normalizedLeagueName) ||
+                           normalizedLeagueName === normalizedLeague;
+                });
                 
-                if (isMainLeague && !mainLeagueFound) {
-                    // 主要リーグが見つかった場合、最初に見つかったものを使用（または試合数が多いものを優先）
-                    if (!mainStats || appearances > maxAppearances) {
-                        mainStats = stat;
-                        maxAppearances = appearances;
-                        mainLeagueFound = true;
-                    }
-                } else if (!mainLeagueFound && appearances > maxAppearances) {
-                    // 主要リーグが見つかっていない場合、試合数が多いものを保持
-                    mainStats = stat;
+                if (isMainLeague) {
+                    mainLeagueStats.push({ stat, appearances });
+                } else if (appearances > maxAppearances) {
+                    // 主要リーグでない場合、試合数が多いものを保持（フォールバック）
                     maxAppearances = appearances;
+                    if (!mainStats || appearances > (mainStats.games?.appearences || mainStats.games?.lineups || 0)) {
+                        mainStats = stat;
+                    }
                 }
+            }
+            
+            // 主要リーグが見つかった場合、試合数が最も多いものを選択
+            if (mainLeagueStats.length > 0) {
+                mainLeagueStats.sort((a, b) => b.appearances - a.appearances);
+                mainStats = mainLeagueStats[0].stat;
             }
             
             // 主要リーグが見つからなかった場合、試合数が最も多いものを使用
