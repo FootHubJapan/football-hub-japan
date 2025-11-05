@@ -3521,6 +3521,8 @@ async function handleMatchDetailsRequest(req, res) {
                         });
                         
                         if (searchResponse.data && searchResponse.data.response && searchResponse.data.response.length > 0) {
+                            console.log(`📊 Found ${searchResponse.data.response.length} fixtures in date range`);
+                            
                             // チーム名でマッチする試合を検索（より厳密なマッチング）
                             const normalizeTeamName = (name) => {
                                 return name.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -3529,7 +3531,8 @@ async function handleMatchDetailsRequest(req, res) {
                             const normalizedClickedHome = normalizeTeamName(clickedHomeTeam);
                             const normalizedClickedAway = normalizeTeamName(clickedAwayTeam);
                             
-                            const matchingFixture = searchResponse.data.response.find(f => {
+                            // まず完全一致を試す
+                            let matchingFixture = searchResponse.data.response.find(f => {
                                 const homeName = normalizeTeamName(f.teams.home.name);
                                 const awayName = normalizeTeamName(f.teams.away.name);
                                 
@@ -3543,12 +3546,101 @@ async function handleMatchDetailsRequest(req, res) {
                                 return homeMatch && awayMatch;
                             });
                             
+                            // 完全一致が見つからない場合、部分マッチを試す
+                            if (!matchingFixture) {
+                                console.log('⚠️ Exact match not found, trying partial match...');
+                                
+                                // チーム名の主要部分を抽出（例: "Liverpool FC" -> "liverpool"）
+                                const getTeamKeyWords = (name) => {
+                                    const normalized = normalizeTeamName(name);
+                                    // "FC", "CF", "United", "City"などの接尾辞を除去
+                                    return normalized
+                                        .replace(/\s+(fc|cf|united|city|club|ac|sc)$/gi, '')
+                                        .split(' ')
+                                        .filter(word => word.length > 2);
+                                };
+                                
+                                const homeKeywords = getTeamKeyWords(clickedHomeTeam);
+                                const awayKeywords = getTeamKeyWords(clickedAwayTeam);
+                                
+                                matchingFixture = searchResponse.data.response.find(f => {
+                                    const homeName = normalizeTeamName(f.teams.home.name);
+                                    const awayName = normalizeTeamName(f.teams.away.name);
+                                    
+                                    const homeMatch = homeKeywords.some(keyword => 
+                                        homeName.includes(keyword) || keyword.includes(homeName)
+                                    );
+                                    const awayMatch = awayKeywords.some(keyword => 
+                                        awayName.includes(keyword) || keyword.includes(awayName)
+                                    );
+                                    
+                                    return homeMatch && awayMatch;
+                                });
+                            }
+                            
                             if (matchingFixture) {
                                 console.log('✅ Found matching fixture by team names:', matchingFixture.fixture.id);
+                                console.log('   Matched teams:', `${matchingFixture.teams.home.name} vs ${matchingFixture.teams.away.name}`);
                                 fixture = matchingFixture;
                             } else {
-                                console.warn('⚠️ No matching fixture found by team names, trying fixture ID');
+                                console.warn('⚠️ No matching fixture found by team names');
+                                console.warn('   Searched for:', { clickedHomeTeam, clickedAwayTeam });
+                                console.warn('   Available fixtures in date range:');
+                                searchResponse.data.response.slice(0, 10).forEach(f => {
+                                    console.warn(`     - ${f.teams.home.name} vs ${f.teams.away.name} (ID: ${f.fixture.id})`);
+                                });
+                                
+                                // リーグIDなしで再検索を試す
+                                if (leagueId) {
+                                    console.log('🔍 Retrying search without league filter...');
+                                    try {
+                                        const retryParams = {
+                                            from: fromDate,
+                                            to: toDate
+                                        };
+                                        
+                                        const retryResponse = await axios.get(`https://v3.football.api-sports.io/fixtures`, {
+                                            headers: {
+                                                'x-apisports-key': apiKey,
+                                                'x-rapidapi-host': 'v3.football.api-sports.io'
+                                            },
+                                            params: retryParams,
+                                            timeout: 15000
+                                        });
+                                        
+                                        if (retryResponse.data && retryResponse.data.response && retryResponse.data.response.length > 0) {
+                                            console.log(`📊 Found ${retryResponse.data.response.length} fixtures without league filter`);
+                                            
+                                            const normalizedClickedHome = normalizeTeamName(clickedHomeTeam);
+                                            const normalizedClickedAway = normalizeTeamName(clickedAwayTeam);
+                                            
+                                            const retryMatchingFixture = retryResponse.data.response.find(f => {
+                                                const homeName = normalizeTeamName(f.teams.home.name);
+                                                const awayName = normalizeTeamName(f.teams.away.name);
+                                                
+                                                const homeMatch = homeName === normalizedClickedHome || 
+                                                                 homeName.includes(normalizedClickedHome) ||
+                                                                 normalizedClickedHome.includes(homeName);
+                                                const awayMatch = awayName === normalizedClickedAway || 
+                                                                awayName.includes(normalizedClickedAway) ||
+                                                                normalizedClickedAway.includes(awayName);
+                                                
+                                                return homeMatch && awayMatch;
+                                            });
+                                            
+                                            if (retryMatchingFixture) {
+                                                console.log('✅ Found matching fixture without league filter:', retryMatchingFixture.fixture.id);
+                                                fixture = retryMatchingFixture;
+                                            }
+                                        }
+                                    } catch (retryError) {
+                                        console.error('❌ Error in retry search:', retryError.message);
+                                    }
+                                }
                             }
+                        } else {
+                            console.warn('⚠️ No fixtures found in date range');
+                            console.warn('   Search params:', searchParams);
                         }
                     } catch (searchError) {
                         console.error('❌ Error searching fixtures by team names:', searchError.message);
