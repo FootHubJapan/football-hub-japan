@@ -4142,61 +4142,58 @@
             if (statsData && Object.keys(statsData).length > 0) {
                 let statsHTML = '';
                 
+                // 統計項目の定義（表示順序とラベル）
+                const statsOrder = [
+                    { key: 'possession', label: 'ボール支配率', suffix: '%', isPercentage: true },
+                    { key: 'shots', label: 'シュート数' },
+                    { key: 'shotsOnTarget', label: '枠内シュート' },
+                    { key: 'shotsOffTarget', label: '枠外シュート' },
+                    { key: 'shotsInsideBox', label: 'ペナルティエリア内シュート' },
+                    { key: 'shotsOutsideBox', label: 'ペナルティエリア外シュート' },
+                    { key: 'corners', label: 'コーナーキック' },
+                    { key: 'fouls', label: 'ファウル' },
+                    { key: 'yellowCards', label: 'イエローカード' },
+                    { key: 'redCards', label: 'レッドカード' },
+                    { key: 'offsides', label: 'オフサイド' },
+                    { key: 'saves', label: 'セーブ' },
+                    { key: 'goalkeepersSaves', label: 'GKセーブ' },
+                    { key: 'passes', label: 'パス数' },
+                    { key: 'passesAccuracy', label: 'パス成功率', suffix: '%', isPercentage: true },
+                    { key: 'attacks', label: '攻撃回数' },
+                    { key: 'dangerousAttacks', label: '危険な攻撃回数' },
+                    { key: 'ballSafe', label: 'ボールセーフ' },
+                    { key: 'throwIns', label: 'スローイン' },
+                    { key: 'freeKicks', label: 'フリーキック' },
+                    { key: 'goalKicks', label: 'ゴールキック' },
+                    { key: 'substitutions', label: '交代回数' },
+                    { key: 'tackles', label: 'タックル' },
+                    { key: 'blockedShots', label: 'ブロックされたシュート' },
+                    { key: 'hitWoodwork', label: 'ポスト・クロスバー' },
+                    { key: 'bigChances', label: 'ビッグチャンス' }
+                ];
+                
                 // 各統計項目を処理
-                Object.entries(statsData).forEach(([key, value]) => {
-                    if (value && typeof value === 'object') {
+                statsOrder.forEach(({ key, label, suffix = '', isPercentage = false }) => {
+                    const value = statsData[key];
+                    if (value && typeof value === 'object' && (value.home !== undefined || value.away !== undefined)) {
                         const homeValue = value.home || 0;
                         const awayValue = value.away || 0;
                         
-                        let statLabel = '';
-                        let statValue = '';
+                        // 両方とも0の場合は表示しない（重要度の低い統計を除外）
+                        if (homeValue === 0 && awayValue === 0 && key !== 'possession' && key !== 'shots' && key !== 'shotsOnTarget') {
+                            return;
+                        }
                         
-                        // 統計項目に応じたラベルと値の設定
-                        switch(key) {
-                            case 'possession':
-                                statLabel = 'ボール支配率';
-                                statValue = `${homeValue}% - ${awayValue}%`;
-                                break;
-                            case 'shots':
-                                statLabel = 'シュート数';
-                                statValue = `${homeValue} - ${awayValue}`;
-                                break;
-                            case 'shotsOnTarget':
-                                statLabel = '枠内シュート';
-                                statValue = `${homeValue} - ${awayValue}`;
-                                break;
-                            case 'corners':
-                                statLabel = 'コーナーキック';
-                                statValue = `${homeValue} - ${awayValue}`;
-                                break;
-                            case 'fouls':
-                                statLabel = 'ファウル';
-                                statValue = `${homeValue} - ${awayValue}`;
-                                break;
-                            case 'yellowCards':
-                                statLabel = 'イエローカード';
-                                statValue = `${homeValue} - ${awayValue}`;
-                                break;
-                            case 'redCards':
-                                statLabel = 'レッドカード';
-                                statValue = `${homeValue} - ${awayValue}`;
-                                break;
-                            case 'offsides':
-                                statLabel = 'オフサイド';
-                                statValue = `${homeValue} - ${awayValue}`;
-                                break;
-                            case 'saves':
-                                statLabel = 'セーブ';
-                                statValue = `${homeValue} - ${awayValue}`;
-                                break;
-                            default:
-                                statLabel = key.charAt(0).toUpperCase() + key.slice(1);
-                                statValue = `${homeValue} - ${awayValue}`;
+                        let statValue = '';
+                        if (isPercentage) {
+                            statValue = `${homeValue}% - ${awayValue}%`;
+                        } else {
+                            statValue = `${homeValue} - ${awayValue}${suffix}`;
                         }
                         
                         statsHTML += `
                             <div class="stat-item">
-                                <div class="stat-label">${statLabel}</div>
+                                <div class="stat-label">${label}</div>
                                 <div class="stat-value">${statValue}</div>
                             </div>
                         `;

@@ -3484,12 +3484,29 @@ async function handleMatchDetailsRequest(req, res) {
                             possession: { home: 0, away: 0 },
                             shots: { home: 0, away: 0 },
                             shotsOnTarget: { home: 0, away: 0 },
+                            shotsOffTarget: { home: 0, away: 0 },
+                            shotsInsideBox: { home: 0, away: 0 },
+                            shotsOutsideBox: { home: 0, away: 0 },
                             corners: { home: 0, away: 0 },
                             fouls: { home: 0, away: 0 },
                             yellowCards: { home: 0, away: 0 },
                             redCards: { home: 0, away: 0 },
                             offsides: { home: 0, away: 0 },
-                            saves: { home: 0, away: 0 }
+                            saves: { home: 0, away: 0 },
+                            passes: { home: 0, away: 0 },
+                            passesAccuracy: { home: 0, away: 0 },
+                            attacks: { home: 0, away: 0 },
+                            dangerousAttacks: { home: 0, away: 0 },
+                            ballSafe: { home: 0, away: 0 },
+                            goalkeepersSaves: { home: 0, away: 0 },
+                            throwIns: { home: 0, away: 0 },
+                            freeKicks: { home: 0, away: 0 },
+                            goalKicks: { home: 0, away: 0 },
+                            substitutions: { home: 0, away: 0 },
+                            tackles: { home: 0, away: 0 },
+                            blockedShots: { home: 0, away: 0 },
+                            hitWoodwork: { home: 0, away: 0 },
+                            bigChances: { home: 0, away: 0 }
                         };
                         
                         fixture.statistics.forEach(teamStats => {
@@ -3498,7 +3515,16 @@ async function handleMatchDetailsRequest(req, res) {
                                 const teamKey = isHome ? 'home' : 'away';
                                 
                                 teamStats.statistics.forEach(stat => {
-                                    const value = parseInt(stat.value?.replace('%', '')) || 0;
+                                    let value = stat.value;
+                                    // パーセンテージ値の処理
+                                    if (typeof value === 'string' && value.includes('%')) {
+                                        value = parseInt(value.replace('%', '')) || 0;
+                                    } else if (typeof value === 'string' && value === 'null') {
+                                        value = 0;
+                                    } else {
+                                        value = parseInt(value) || 0;
+                                    }
+                                    
                                     switch (stat.type) {
                                         case 'Ball Possession':
                                         case 'Possession':
@@ -3511,6 +3537,18 @@ async function handleMatchDetailsRequest(req, res) {
                                         case 'Shots on Goal':
                                         case 'Shots on Target':
                                             stats.shotsOnTarget[teamKey] = value;
+                                            break;
+                                        case 'Shots off Goal':
+                                        case 'Shots off Target':
+                                            stats.shotsOffTarget[teamKey] = value;
+                                            break;
+                                        case 'Shots insidebox':
+                                        case 'Shots inside box':
+                                            stats.shotsInsideBox[teamKey] = value;
+                                            break;
+                                        case 'Shots outsidebox':
+                                        case 'Shots outside box':
+                                            stats.shotsOutsideBox[teamKey] = value;
                                             break;
                                         case 'Corner Kicks':
                                         case 'Corner kicks':
@@ -3533,6 +3571,55 @@ async function handleMatchDetailsRequest(req, res) {
                                         case 'Goalkeeper Saves':
                                         case 'Saves':
                                             stats.saves[teamKey] = value;
+                                            stats.goalkeepersSaves[teamKey] = value;
+                                            break;
+                                        case 'Total passes':
+                                        case 'Passes':
+                                            stats.passes[teamKey] = value;
+                                            break;
+                                        case 'Passes %':
+                                        case 'Passes accurate':
+                                            stats.passesAccuracy[teamKey] = value;
+                                            break;
+                                        case 'Attacks':
+                                            stats.attacks[teamKey] = value;
+                                            break;
+                                        case 'Dangerous Attacks':
+                                        case 'Dangerous attacks':
+                                            stats.dangerousAttacks[teamKey] = value;
+                                            break;
+                                        case 'Ball Safe':
+                                            stats.ballSafe[teamKey] = value;
+                                            break;
+                                        case 'Throw-ins':
+                                        case 'Throw ins':
+                                            stats.throwIns[teamKey] = value;
+                                            break;
+                                        case 'Free Kicks':
+                                        case 'Free kicks':
+                                            stats.freeKicks[teamKey] = value;
+                                            break;
+                                        case 'Goal Kicks':
+                                        case 'Goal kicks':
+                                            stats.goalKicks[teamKey] = value;
+                                            break;
+                                        case 'Substitutions':
+                                            stats.substitutions[teamKey] = value;
+                                            break;
+                                        case 'Tackles':
+                                            stats.tackles[teamKey] = value;
+                                            break;
+                                        case 'Blocked Shots':
+                                        case 'Blocked shots':
+                                            stats.blockedShots[teamKey] = value;
+                                            break;
+                                        case 'Hit Woodwork':
+                                        case 'Hit woodwork':
+                                            stats.hitWoodwork[teamKey] = value;
+                                            break;
+                                        case 'Big Chances':
+                                        case 'Big chances':
+                                            stats.bigChances[teamKey] = value;
                                             break;
                                     }
                                 });
@@ -3562,12 +3649,29 @@ async function handleMatchDetailsRequest(req, res) {
                                     possession: { home: 0, away: 0 },
                                     shots: { home: 0, away: 0 },
                                     shotsOnTarget: { home: 0, away: 0 },
+                                    shotsOffTarget: { home: 0, away: 0 },
+                                    shotsInsideBox: { home: 0, away: 0 },
+                                    shotsOutsideBox: { home: 0, away: 0 },
                                     corners: { home: 0, away: 0 },
                                     fouls: { home: 0, away: 0 },
                                     yellowCards: { home: 0, away: 0 },
                                     redCards: { home: 0, away: 0 },
                                     offsides: { home: 0, away: 0 },
-                                    saves: { home: 0, away: 0 }
+                                    saves: { home: 0, away: 0 },
+                                    passes: { home: 0, away: 0 },
+                                    passesAccuracy: { home: 0, away: 0 },
+                                    attacks: { home: 0, away: 0 },
+                                    dangerousAttacks: { home: 0, away: 0 },
+                                    ballSafe: { home: 0, away: 0 },
+                                    goalkeepersSaves: { home: 0, away: 0 },
+                                    throwIns: { home: 0, away: 0 },
+                                    freeKicks: { home: 0, away: 0 },
+                                    goalKicks: { home: 0, away: 0 },
+                                    substitutions: { home: 0, away: 0 },
+                                    tackles: { home: 0, away: 0 },
+                                    blockedShots: { home: 0, away: 0 },
+                                    hitWoodwork: { home: 0, away: 0 },
+                                    bigChances: { home: 0, away: 0 }
                                 };
                                 
                                 statsResponse.data.response.forEach(teamStats => {
@@ -3576,7 +3680,16 @@ async function handleMatchDetailsRequest(req, res) {
                                         const teamKey = isHome ? 'home' : 'away';
                                         
                                         teamStats.statistics.forEach(stat => {
-                                            const value = parseInt(stat.value?.replace('%', '')) || 0;
+                                            let value = stat.value;
+                                            // パーセンテージ値の処理
+                                            if (typeof value === 'string' && value.includes('%')) {
+                                                value = parseInt(value.replace('%', '')) || 0;
+                                            } else if (typeof value === 'string' && value === 'null') {
+                                                value = 0;
+                                            } else {
+                                                value = parseInt(value) || 0;
+                                            }
+                                            
                                             switch (stat.type) {
                                                 case 'Ball Possession':
                                                 case 'Possession':
@@ -3589,6 +3702,18 @@ async function handleMatchDetailsRequest(req, res) {
                                                 case 'Shots on Goal':
                                                 case 'Shots on Target':
                                                     stats.shotsOnTarget[teamKey] = value;
+                                                    break;
+                                                case 'Shots off Goal':
+                                                case 'Shots off Target':
+                                                    stats.shotsOffTarget[teamKey] = value;
+                                                    break;
+                                                case 'Shots insidebox':
+                                                case 'Shots inside box':
+                                                    stats.shotsInsideBox[teamKey] = value;
+                                                    break;
+                                                case 'Shots outsidebox':
+                                                case 'Shots outside box':
+                                                    stats.shotsOutsideBox[teamKey] = value;
                                                     break;
                                                 case 'Corner Kicks':
                                                 case 'Corner kicks':
@@ -3611,6 +3736,55 @@ async function handleMatchDetailsRequest(req, res) {
                                                 case 'Goalkeeper Saves':
                                                 case 'Saves':
                                                     stats.saves[teamKey] = value;
+                                                    stats.goalkeepersSaves[teamKey] = value;
+                                                    break;
+                                                case 'Total passes':
+                                                case 'Passes':
+                                                    stats.passes[teamKey] = value;
+                                                    break;
+                                                case 'Passes %':
+                                                case 'Passes accurate':
+                                                    stats.passesAccuracy[teamKey] = value;
+                                                    break;
+                                                case 'Attacks':
+                                                    stats.attacks[teamKey] = value;
+                                                    break;
+                                                case 'Dangerous Attacks':
+                                                case 'Dangerous attacks':
+                                                    stats.dangerousAttacks[teamKey] = value;
+                                                    break;
+                                                case 'Ball Safe':
+                                                    stats.ballSafe[teamKey] = value;
+                                                    break;
+                                                case 'Throw-ins':
+                                                case 'Throw ins':
+                                                    stats.throwIns[teamKey] = value;
+                                                    break;
+                                                case 'Free Kicks':
+                                                case 'Free kicks':
+                                                    stats.freeKicks[teamKey] = value;
+                                                    break;
+                                                case 'Goal Kicks':
+                                                case 'Goal kicks':
+                                                    stats.goalKicks[teamKey] = value;
+                                                    break;
+                                                case 'Substitutions':
+                                                    stats.substitutions[teamKey] = value;
+                                                    break;
+                                                case 'Tackles':
+                                                    stats.tackles[teamKey] = value;
+                                                    break;
+                                                case 'Blocked Shots':
+                                                case 'Blocked shots':
+                                                    stats.blockedShots[teamKey] = value;
+                                                    break;
+                                                case 'Hit Woodwork':
+                                                case 'Hit woodwork':
+                                                    stats.hitWoodwork[teamKey] = value;
+                                                    break;
+                                                case 'Big Chances':
+                                                case 'Big chances':
+                                                    stats.bigChances[teamKey] = value;
                                                     break;
                                             }
                                         });
@@ -3620,7 +3794,8 @@ async function handleMatchDetailsRequest(req, res) {
                                 console.log('✅ Statistics processed successfully:', {
                                     possession: stats.possession,
                                     shots: stats.shots,
-                                    corners: stats.corners
+                                    corners: stats.corners,
+                                    passes: stats.passes
                                 });
                             } else {
                                 console.warn('⚠️ Statistics API returned empty response or no data');
@@ -3875,16 +4050,18 @@ app.get('/api/match/:id/events', async (req, res) => {
         console.log(`Fetching match events for ID: ${matchId}`);
         
         // API-Footballから試合イベントを取得
-        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
+        const apiKey = process.env.API_FOOTBALL_KEY || process.env.RAPIDAPI_KEY;
+        if (apiKey && apiKey !== 'YOUR_API_FOOTBALL_KEY') {
             try {
                 console.log('🔍 Fetching match events from API-Football:', { matchId });
                 
                 const response = await axios.get(`https://v3.football.api-sports.io/fixtures/events`, {
                     headers: {
-                        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                        'x-apisports-key': apiKey,
                         'x-rapidapi-host': 'v3.football.api-sports.io'
                     },
-                    params: { fixture: matchId }
+                    params: { fixture: matchId },
+                    timeout: 15000
                 });
                 
                 console.log('📊 API-Football events response received');
@@ -3928,28 +4105,169 @@ app.get('/api/match/:id/stats', async (req, res) => {
         console.log(`Fetching match stats for ID: ${matchId}`);
         
         // API-Footballから試合統計を取得
-        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
+        const apiKey = process.env.API_FOOTBALL_KEY || process.env.RAPIDAPI_KEY;
+        if (apiKey && apiKey !== 'YOUR_API_FOOTBALL_KEY') {
             try {
                 console.log('🔍 Fetching match statistics from API-Football:', { matchId });
                 
                 const response = await axios.get(`https://v3.football.api-sports.io/fixtures/statistics`, {
                     headers: {
-                        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                        'x-apisports-key': apiKey,
                         'x-rapidapi-host': 'v3.football.api-sports.io'
                     },
-                    params: { fixture: matchId }
+                    params: { fixture: matchId },
+                    timeout: 15000
                 });
                 
                 console.log('📊 API-Football statistics response received');
                 
                 if (response.data && response.data.response && Array.isArray(response.data.response)) {
-                    const stats = response.data.response.map(teamStats => ({
-                        team: teamStats.team.name,
-                        statistics: teamStats.statistics.map(stat => ({
-                            type: stat.type,
-                            value: stat.value
-                        }))
-                    }));
+                    // 統計データを構造化して返す
+                    const stats = {
+                        possession: { home: 0, away: 0 },
+                        shots: { home: 0, away: 0 },
+                        shotsOnTarget: { home: 0, away: 0 },
+                        shotsOffTarget: { home: 0, away: 0 },
+                        shotsInsideBox: { home: 0, away: 0 },
+                        shotsOutsideBox: { home: 0, away: 0 },
+                        corners: { home: 0, away: 0 },
+                        fouls: { home: 0, away: 0 },
+                        yellowCards: { home: 0, away: 0 },
+                        redCards: { home: 0, away: 0 },
+                        offsides: { home: 0, away: 0 },
+                        saves: { home: 0, away: 0 },
+                        passes: { home: 0, away: 0 },
+                        passesAccuracy: { home: 0, away: 0 },
+                        attacks: { home: 0, away: 0 },
+                        dangerousAttacks: { home: 0, away: 0 },
+                        ballSafe: { home: 0, away: 0 },
+                        goalkeepersSaves: { home: 0, away: 0 },
+                        throwIns: { home: 0, away: 0 },
+                        freeKicks: { home: 0, away: 0 },
+                        goalKicks: { home: 0, away: 0 },
+                        substitutions: { home: 0, away: 0 },
+                        tackles: { home: 0, away: 0 },
+                        blockedShots: { home: 0, away: 0 },
+                        hitWoodwork: { home: 0, away: 0 },
+                        bigChances: { home: 0, away: 0 }
+                    };
+                    
+                    response.data.response.forEach((teamStats, index) => {
+                        if (teamStats.team && teamStats.statistics) {
+                            const teamKey = index === 0 ? 'home' : 'away';
+                            
+                            teamStats.statistics.forEach(stat => {
+                                let value = stat.value;
+                                // パーセンテージ値の処理
+                                if (typeof value === 'string' && value.includes('%')) {
+                                    value = parseInt(value.replace('%', '')) || 0;
+                                } else if (typeof value === 'string' && value === 'null') {
+                                    value = 0;
+                                } else {
+                                    value = parseInt(value) || 0;
+                                }
+                                
+                                switch (stat.type) {
+                                    case 'Ball Possession':
+                                    case 'Possession':
+                                        stats.possession[teamKey] = value;
+                                        break;
+                                    case 'Total Shots':
+                                    case 'Shots':
+                                        stats.shots[teamKey] = value;
+                                        break;
+                                    case 'Shots on Goal':
+                                    case 'Shots on Target':
+                                        stats.shotsOnTarget[teamKey] = value;
+                                        break;
+                                    case 'Shots off Goal':
+                                    case 'Shots off Target':
+                                        stats.shotsOffTarget[teamKey] = value;
+                                        break;
+                                    case 'Shots insidebox':
+                                    case 'Shots inside box':
+                                        stats.shotsInsideBox[teamKey] = value;
+                                        break;
+                                    case 'Shots outsidebox':
+                                    case 'Shots outside box':
+                                        stats.shotsOutsideBox[teamKey] = value;
+                                        break;
+                                    case 'Corner Kicks':
+                                    case 'Corner kicks':
+                                    case 'Corner kicks':
+                                        stats.corners[teamKey] = value;
+                                        break;
+                                    case 'Fouls':
+                                        stats.fouls[teamKey] = value;
+                                        break;
+                                    case 'Yellow Cards':
+                                    case 'Yellow cards':
+                                        stats.yellowCards[teamKey] = value;
+                                        break;
+                                    case 'Red Cards':
+                                    case 'Red cards':
+                                        stats.redCards[teamKey] = value;
+                                        break;
+                                    case 'Offsides':
+                                        stats.offsides[teamKey] = value;
+                                        break;
+                                    case 'Goalkeeper Saves':
+                                    case 'Saves':
+                                        stats.saves[teamKey] = value;
+                                        stats.goalkeepersSaves[teamKey] = value;
+                                        break;
+                                    case 'Total passes':
+                                    case 'Passes':
+                                        stats.passes[teamKey] = value;
+                                        break;
+                                    case 'Passes %':
+                                    case 'Passes accurate':
+                                        stats.passesAccuracy[teamKey] = value;
+                                        break;
+                                    case 'Attacks':
+                                        stats.attacks[teamKey] = value;
+                                        break;
+                                    case 'Dangerous Attacks':
+                                    case 'Dangerous attacks':
+                                        stats.dangerousAttacks[teamKey] = value;
+                                        break;
+                                    case 'Ball Safe':
+                                        stats.ballSafe[teamKey] = value;
+                                        break;
+                                    case 'Throw-ins':
+                                    case 'Throw ins':
+                                        stats.throwIns[teamKey] = value;
+                                        break;
+                                    case 'Free Kicks':
+                                    case 'Free kicks':
+                                        stats.freeKicks[teamKey] = value;
+                                        break;
+                                    case 'Goal Kicks':
+                                    case 'Goal kicks':
+                                        stats.goalKicks[teamKey] = value;
+                                        break;
+                                    case 'Substitutions':
+                                        stats.substitutions[teamKey] = value;
+                                        break;
+                                    case 'Tackles':
+                                        stats.tackles[teamKey] = value;
+                                        break;
+                                    case 'Blocked Shots':
+                                    case 'Blocked shots':
+                                        stats.blockedShots[teamKey] = value;
+                                        break;
+                                    case 'Hit Woodwork':
+                                    case 'Hit woodwork':
+                                        stats.hitWoodwork[teamKey] = value;
+                                        break;
+                                    case 'Big Chances':
+                                    case 'Big chances':
+                                        stats.bigChances[teamKey] = value;
+                                        break;
+                                }
+                            });
+                        }
+                    });
                     
                     res.setHeader('Content-Type', 'application/json');
                     res.json({ success: true, data: stats });
