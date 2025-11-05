@@ -4385,16 +4385,30 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
             p.apiFootballId === playerId || 
             p.footballDataId === playerId ||
             p.playerId === playerId ||
+            p.playerId === parseInt(playerId) ||
+            p.playerId === String(playerId) ||
             p.player_id === playerId ||
+            (p.id && p.id === `api_${playerId}`) ||
+            (p.id && p.id === playerId) ||
             p.name.toLowerCase().includes(playerId.toLowerCase()) ||
             p.fullName?.toLowerCase().includes(playerId.toLowerCase()) ||
-            (playerId.startsWith('api_') && p.apiFootballId === playerId.replace('api_', '')) ||
+            (playerId.startsWith('api_') && (p.apiFootballId === playerId.replace('api_', '') || p.playerId === parseInt(playerId.replace('api_', '')))) ||
             (playerId.startsWith('fd_') && p.footballDataId === playerId.replace('fd_', ''))
         );
         
         if (!player) {
             return res.status(404).json({ 
                 error: '選手が見つかりませんでした',
+                playerId
+            });
+        }
+        
+        // playerIdを取得（apiFootballIdまたはplayerIdを使用）
+        const apiFootballPlayerId = player.apiFootballId || player.playerId || player.id?.replace('api_', '');
+        
+        if (!apiFootballPlayerId) {
+            return res.status(404).json({ 
+                error: '選手IDが見つかりませんでした',
                 playerId
             });
         }
@@ -4408,23 +4422,21 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
                 // API-Footballからシーズン別スタッツを取得
                 let seasonStats = null;
                 
-                if (player.apiFootballId) {
-                    try {
-                        const apiFootballStats = await getPlayerSeasonStatsFromAPIFootball(player.apiFootballId, season);
-                        if (apiFootballStats) {
-                            seasonStats = {
-                                ...apiFootballStats,
-                                source: 'API-Football',
-                                season: season,
-                                league: apiFootballStats.league || 'Unknown'
-                            };
-                        }
-                    } catch (error) {
-                        console.log(`⚠️ API-Football ${season}シーズンデータ取得失敗:`, error.message);
+                try {
+                    const apiFootballStats = await getPlayerSeasonStatsFromAPIFootball(apiFootballPlayerId, season);
+                    if (apiFootballStats) {
+                        seasonStats = {
+                            ...apiFootballStats,
+                            source: 'API-Football',
+                            season: season,
+                            league: apiFootballStats.league || 'Unknown'
+                        };
                     }
+                } catch (error) {
+                    console.log(`⚠️ API-Football ${season}シーズンデータ取得失敗:`, error.message);
                 }
                 
-                // Football-data.orgからシーズン別スタッツを取得
+                // Football-data.orgからシーズン別スタッツを取得（フォールバック）
                 if (!seasonStats && player.footballDataId) {
                     try {
                         const footballDataStats = await getPlayerSeasonStatsFromFootballData(player.footballDataId, season);
@@ -4442,7 +4454,7 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
                 }
                 
                 // スタッツが取得できた場合のみ追加
-                if (seasonStats && (seasonStats.goals > 0 || seasonStats.assists > 0 || seasonStats.appearances > 0)) {
+                if (seasonStats && (seasonStats.goals > 0 || seasonStats.assists > 0 || seasonStats.appearances > 0 || seasonStats.matches > 0)) {
                     careerStats.push(seasonStats);
                 }
                 
@@ -4508,7 +4520,7 @@ async function getPlayerSeasonStatsFromAPIFootball(playerId, season) {
                     season: season,
                     club: stats.team?.name || 'Unknown',
                     league: stats.league?.name || 'Unknown',
-                    matches: stats.games?.appearences || 0,
+                    matches: stats.games?.appearences || stats.games?.lineups || 0,
                     goals: stats.goals?.total || 0,
                     assists: stats.goals?.assists || 0,
                     rating: stats.games?.rating ? parseFloat(stats.games.rating).toFixed(1) : 'N/A',

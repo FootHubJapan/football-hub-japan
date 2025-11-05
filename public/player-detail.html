@@ -876,8 +876,14 @@
             try {
                 console.log('🔄 キャリアスタッツを取得中...');
                 
+                // playerIdを正しく取得（api_プレフィックスを除去）
+                let playerIdForApi = player.playerId || player.id;
+                if (typeof playerIdForApi === 'string' && playerIdForApi.startsWith('api_')) {
+                    playerIdForApi = playerIdForApi.replace('api_', '');
+                }
+                
                 // キャリアスタッツAPIを呼び出し
-                const response = await fetch(`/api/player/career-stats/${player.id || player.playerId}?seasons=2020,2021,2022,2023,2024,2025`);
+                const response = await fetch(`/api/player/career-stats/${playerIdForApi}?seasons=2020,2021,2022,2023,2024,2025`);
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -888,17 +894,24 @@
                     if (careerStats.length > 0) {
                         html = '';
                         
-                        careerStats.forEach(stat => {
+                        // シーズンでソート（新しい順）
+                        const sortedStats = [...careerStats].sort((a, b) => {
+                            const seasonA = parseInt(a.season) || 0;
+                            const seasonB = parseInt(b.season) || 0;
+                            return seasonB - seasonA;
+                        });
+                        
+                        sortedStats.forEach(stat => {
                             const seasonDisplay = `${stat.season}/${parseInt(stat.season) + 1}`;
                             html += `
                                 <tr>
                                     <td>${seasonDisplay}</td>
-                                    <td>${stat.club}</td>
-                                    <td>${stat.league}</td>
-                                    <td>${stat.matches}</td>
-                                    <td>${stat.goals}</td>
-                                    <td>${stat.assists}</td>
-                                    <td>${stat.rating}</td>
+                                    <td>${stat.club || stat.teamName || 'Unknown'}</td>
+                                    <td>${stat.league || stat.leagueName || 'Unknown'}</td>
+                                    <td>${stat.matches || stat.appearances || 0}</td>
+                                    <td>${stat.goals || 0}</td>
+                                    <td>${stat.assists || 0}</td>
+                                    <td>${stat.rating ? parseFloat(stat.rating).toFixed(1) : 'N/A'}</td>
                                 </tr>
                             `;
                         });
@@ -923,60 +936,24 @@
                         
                         return;
                     }
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.log('⚠️ キャリアスタッツAPI失敗:', response.status, errorData);
                 }
-                
-                console.log('⚠️ キャリアスタッツAPI失敗、フォールバックデータを使用');
                 
             } catch (error) {
                 console.log('⚠️ キャリアスタッツ取得エラー:', error.message);
             }
             
-            // フォールバック: データベースから直接データを取得して表示
-            html = '';
-            
-            // 配列形式のstatsがある場合、各シーズンを表示
-            if (player.stats && Array.isArray(player.stats)) {
-                player.stats.forEach(stat => {
-                    const seasonDisplay = stat.season || '2025/26';
-                    html += `
-                        <tr>
-                            <td>${seasonDisplay}</td>
-                            <td>${player.currentTeam || stat.team || 'Manchester City'}</td>
-                            <td>${stat.leagueName || player.league || 'リーグ'}</td>
-                            <td>${stat.appearances || 0}</td>
-                            <td>${stat.goals || 0}</td>
-                            <td>${stat.assists || 0}</td>
-                            <td>${stat.rating || 'N/A'}</td>
-                        </tr>
-                    `;
-                });
-            } else if (player.stats && typeof player.stats === 'object') {
-                // オブジェクト形式のstatsがある場合
-                const stats = player.stats;
-                const seasonDisplay = stats.season || '2025/26';
-                html += `
-                    <tr>
-                        <td>${seasonDisplay}</td>
-                        <td>${player.currentTeam || 'Manchester City'}</td>
-                        <td>${player.league || stats.leagueName || 'リーグ'}</td>
-                        <td>${stats.appearances || 0}</td>
-                        <td>${stats.goals || 0}</td>
-                        <td>${stats.assists || 0}</td>
-                        <td>${stats.rating || 'N/A'}</td>
-                    </tr>
-                `;
-            }
-            
-            // データがない場合はメッセージを表示
-            if (!html) {
-                html = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; color: #888;">
-                            データがありません
-                        </td>
-                    </tr>
-                `;
-            }
+            // フォールバック: player.statsは現在のシーズンのみなので、キャリアスタッツとしては使用しない
+            // 代わりに、データがないことを表示
+            html = `
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #888;">
+                        過去のシーズンデータがありません。APIから取得中...
+                    </td>
+                </tr>
+            `;
             
             tbody.innerHTML = html;
         }
