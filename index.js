@@ -1255,40 +1255,63 @@ app.get('/api/ranking/players', async (req, res) => {
                 
                 if (fs.existsSync(playersDataPath)) {
                     const playersData = fs.readFileSync(playersDataPath, 'utf8');
-                    const localPlayers = JSON.parse(playersData);
+                    const parsedData = JSON.parse(playersData);
+                    
+                    // 配列形式またはオブジェクト形式に対応
+                    const localPlayers = Array.isArray(parsedData) ? parsedData : (parsedData.players || []);
                     
                     console.log(`📊 Loaded ${localPlayers.length} players from local database file`);
                     
                     if (localPlayers.length > 0) {
                         // ローカルデータを統一フォーマットに変換
-                        players = localPlayers.map(player => ({
-                            id: player.id,
-                            name: player.name || player.fullName,
-                            age: player.age,
-                            nationality: player.nationality,
-                            photo: player.photo,
-                            team: player.currentTeam || player.team,
-                            currentTeam: player.currentTeam || player.team,
-                            position: player.detailedPosition || player.position,
-                            detailedPosition: player.detailedPosition || player.position,
-                            league: player.league,
-                            goals: player.stats?.goals || 0,
-                            assists: player.stats?.assists || 0,
-                            appearances: player.stats?.appearances || 0,
-                            minutes: player.stats?.minutes || 0,
-                            rating: player.stats?.rating || 'N/A',
-                            passes: player.stats?.passesTotal || 0,
-                            passAccuracy: player.stats?.passAccuracy || '0%',
-                            tackles: player.stats?.tackles || 0,
-                            interceptions: player.stats?.interceptions || 0,
-                            saves: player.stats?.saves || 0,
-                            cleanSheets: player.stats?.cleanSheets || 0,
-                            yellowCards: player.stats?.yellowCards || 0,
-                            redCards: player.stats?.redCards || 0,
-                            shots: player.stats?.shotsTotal || 0,
-                            shotsOnTarget: player.stats?.shotsOnTarget || 0
-                        }));
-                        
+                        players = localPlayers.map(player => {
+                            // statsが配列の場合、2025/26シーズンのデータを取得
+                            let playerStats = null;
+                            if (Array.isArray(player.stats) && player.stats.length > 0) {
+                                // 2025/26シーズンの統計を優先的に取得
+                                const stats2025 = player.stats.filter(s => 
+                                    s.season === '2025/2026' || s.season === '2025/26' || s.season === '2025'
+                                );
+                                // 最新の統計（appearancesが最も多いもの）を選択
+                                if (stats2025.length > 0) {
+                                    playerStats = stats2025.sort((a, b) => (b.appearances || 0) - (a.appearances || 0))[0];
+                                } else {
+                                    // 2025/26シーズンのデータがない場合は最初の統計を使用
+                                    playerStats = player.stats[0];
+                                }
+                            } else if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
+                                playerStats = player.stats;
+                            }
+                            
+                        return {
+                                id: player.id,
+                                name: player.name || player.fullName,
+                                age: player.age,
+                                nationality: player.nationality,
+                                photo: player.photo,
+                                team: player.currentTeam || player.team,
+                                currentTeam: player.currentTeam || player.team,
+                                position: player.detailedPosition || player.position,
+                                detailedPosition: player.detailedPosition || player.position,
+                                league: player.league,
+                                goals: playerStats?.goals || 0,
+                                assists: playerStats?.assists || 0,
+                                appearances: playerStats?.appearances || playerStats?.lineups || 0,
+                                minutes: playerStats?.minutes || 0,
+                                rating: playerStats?.rating || 'N/A',
+                                passes: playerStats?.passesTotal || 0,
+                                passAccuracy: playerStats?.passAccuracy || '0%',
+                                tackles: playerStats?.tackles || 0,
+                                interceptions: playerStats?.interceptions || 0,
+                                saves: playerStats?.saves || 0,
+                                cleanSheets: playerStats?.cleanSheets || 0,
+                                yellowCards: playerStats?.yellowCards || 0,
+                                redCards: playerStats?.redCards || 0,
+                                shots: playerStats?.shotsTotal || 0,
+                                shotsOnTarget: playerStats?.shotsOnTarget || 0
+                        };
+                    });
+                    
                         console.log(`✅ Converted ${players.length} players from local file`);
             }
         } else {
@@ -5149,12 +5172,46 @@ app.get('/api/database/comprehensive-status', async (req, res) => {
         console.log('📊 包括的データベース状態確認APIが呼び出されました');
         console.log('🔍 APIService状態:', !!apiService);
 
-        if (!apiService) {
-            console.log('❌ API service not available');
+        // 本番環境ではplayers.jsonから直接読み込む
+        if (process.env.NODE_ENV === 'production' || !apiService || !apiService.dbManager) {
+            console.log('📁 本番環境: players.jsonから直接読み込み');
+            try {
+                const playersDataPath = path.join(__dirname, 'data', 'players.json');
+                if (fs.existsSync(playersDataPath)) {
+                    const playersData = fs.readFileSync(playersDataPath, 'utf8');
+                    const parsedData = JSON.parse(playersData);
+                    const localPlayers = Array.isArray(parsedData) ? parsedData : (parsedData.players || []);
+                    const fileStats = fs.statSync(playersDataPath);
+                    
+                    console.log(`✅ players.jsonから${localPlayers.length}名の選手データを取得`);
+                    
+                    return res.json({
+                        totalPlayers: localPlayers.length,
+                        lastUpdate: fileStats.mtime.toISOString(),
+                        cacheSize: 0,
+                        apiServiceAvailable: false,
+                        source: 'local-file',
+                        timestamp: new Date().toISOString()
+                    });
+                } else {
+                    console.log('⚠️ players.jsonが見つかりません');
+                    return res.json({
+                        totalPlayers: 0,
+                        lastUpdate: null,
+                        cacheSize: 0,
+                        apiServiceAvailable: false,
+                        source: 'none',
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            } catch (fileError) {
+                console.error('❌ players.json読み込みエラー:', fileError.message);
             return res.status(500).json({
-                error: 'API service not available',
-                message: 'APIService is not initialized yet'
+                    error: 'Failed to read players.json',
+                    details: fileError.message,
+                    timestamp: new Date().toISOString()
             });
+            }
         }
 
         console.log('✅ APIService available、データベース状態を取得中...');
