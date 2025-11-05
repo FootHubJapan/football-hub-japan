@@ -3722,20 +3722,42 @@
             try {
                 console.log('🔍 showDetailedMatchInfo called:', { matchId, league, matchData });
                 
-                // IDの安全チェック
-                if (!matchId || matchId === 'unknown' || matchId === 'undefined') {
-                    // matchDataからIDを取得してみる
-                    if (matchData && (matchData.id || matchData.match_id)) {
-                        matchId = matchData.id || matchData.match_id;
-                        console.log('✅ Match ID retrieved from matchData:', matchId);
+                // IDの安全チェックと実際のfixture IDの抽出
+                let actualMatchId = matchId;
+                
+                // 生成されたID（match_xxx形式）の場合は、matchDataから実際のfixture IDを取得
+                if (matchId && matchId.startsWith('match_')) {
+                    console.log('⚠️ Generated match ID detected, trying to extract actual fixture ID from matchData');
+                    
+                    if (matchData) {
+                        // matchDataから実際のfixture IDを取得
+                        actualMatchId = matchData.fixture?.id || 
+                                       matchData.match_id || 
+                                       matchData.id || 
+                                       matchData.matchId ||
+                                       matchId;
+                        
+                        console.log('✅ Extracted actual fixture ID:', actualMatchId);
                     } else {
-                        console.warn('Invalid match ID:', matchId);
+                        console.warn('⚠️ No matchData available, using generated ID');
+                        actualMatchId = matchId;
+                    }
+                }
+                
+                // IDの安全チェック
+                if (!actualMatchId || actualMatchId === 'unknown' || actualMatchId === 'undefined') {
+                    // matchDataからIDを取得してみる
+                    if (matchData && (matchData.id || matchData.match_id || matchData.fixture?.id)) {
+                        actualMatchId = matchData.fixture?.id || matchData.match_id || matchData.id;
+                        console.log('✅ Match ID retrieved from matchData:', actualMatchId);
+                    } else {
+                        console.warn('Invalid match ID:', actualMatchId);
                         alert('試合IDが無効です。');
                         return;
                     }
                 }
                 
-                console.log('Loading detailed match info for ID:', matchId, 'League:', league);
+                console.log('Loading detailed match info for ID:', actualMatchId, 'League:', league);
                 
                 const detailedModal = document.getElementById('matchDetailsModal');
                 if (!detailedModal) {
@@ -3761,12 +3783,12 @@
                 }
                 
                 // 試合詳細データを取得（クリックした試合の情報も送信）
-                const requestUrl = `/api/match/${matchId}/details?league=${encodeURIComponent(league || '')}`;
+                const requestUrl = `/api/match/${actualMatchId}/details?league=${encodeURIComponent(league || '')}`;
                 const requestBody = {
                     clickedMatchData: matchData
                 };
                 
-                console.log('📡 Fetching match details:', { url: requestUrl, matchData });
+                console.log('📡 Fetching match details:', { url: requestUrl, actualMatchId, matchData });
                 
                 const response = await fetch(requestUrl, {
                     method: 'POST',

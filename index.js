@@ -2850,8 +2850,12 @@ app.get('/api/schedule', async (req, res) => {
             
             return {
                 ...match,
-                // IDの確実な設定
-                id: match.id || match.matchId || `match_${Date.now()}_${index}`,
+                // IDの確実な設定（実際のfixture IDを優先）
+                id: match.fixture?.id || match.id || match.match_id || match.matchId || `match_${Date.now()}_${index}`,
+                match_id: match.fixture?.id || match.match_id || match.id || match.matchId || `match_${Date.now()}_${index}`,
+                matchId: match.fixture?.id || match.matchId || match.id || match.match_id || `match_${Date.now()}_${index}`,
+                // fixture情報も保持
+                fixture: match.fixture || { id: match.id || match.match_id || match.matchId || null },
                 // 日付の正規化
                 date: normalizedDate ? normalizedDate.toISOString() : null,
                 utcDate: normalizedDate ? normalizedDate.toISOString() : null,
