@@ -4492,16 +4492,20 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
     }
 });
 
-// API-Footballからシーズン別スタッツを取得
+// API-Footballからシーズン別スタッツを取得（メインリーグのみ）
 async function getPlayerSeasonStatsFromAPIFootball(playerId, season) {
     try {
         const apiKey = process.env.API_FOOTBALL_KEY;
+        if (!apiKey) {
+            throw new Error('API_FOOTBALL_KEY not found');
+        }
+        
         const url = `https://v3.football.api-sports.io/players?id=${playerId}&season=${season}`;
         
         const response = await fetch(url, {
             headers: {
-                'X-RapidAPI-Key': apiKey,
-                'X-RapidAPI-Host': 'v3.football.api-sports.io'
+                'x-apisports-key': apiKey,
+                'x-rapidapi-host': 'v3.football.api-sports.io'
             }
         });
         
@@ -4513,35 +4517,129 @@ async function getPlayerSeasonStatsFromAPIFootball(playerId, season) {
         
         if (data.response && data.response.length > 0) {
             const playerData = data.response[0];
-            const stats = playerData.statistics?.[0];
+            const statistics = playerData.statistics || [];
             
-            if (stats) {
+            if (statistics.length === 0) {
+                return null;
+            }
+            
+            // 主要リーグのリスト（ユーザー指定のリーグを優先）
+            const mainLeagues = [
+                // 日本
+                'J1', 'J2', 'J3', 'JFL', 'WEリーグ', 'なでしこリーグ',
+                // ヨーロッパ
+                'Premier League', 'イングランド2部', '女子スーパーリーグ',
+                'La Liga', 'ラ・リーガ', 'ラ・リーガ2部',
+                'Bundesliga', 'ブンデスリーガ', 'ブンデスリーガ2部', '女子ブンデスリーガ',
+                'Serie A', 'セリエA', 'イタリア2部', 'セリエA(女子)',
+                'Ligue 1', 'フランス・リーグアン', '女子フランスリーグ',
+                'ロシア・プレミアリーグ',
+                'ポルトガル・リーグ',
+                'ウクライナ・リーグ',
+                'ベルギー・リーグ',
+                'トルコ・スーパーリーグ',
+                'オーストリア・ブンデスリーガ', 'オーストリア2部',
+                'スイス・スーパーリーグ',
+                'チェコ・リーグ',
+                'オランダ・エールディビジ',
+                'ギリシャ・スーパーリーグ',
+                'クロアチア・リーグ',
+                'デンマーク・リーグ',
+                'ルーマニア・リーグ',
+                'ポーランド・リーグ',
+                'セルビア・リーグ',
+                'スコットランド・プレミアリーグ',
+                'ノルウェー・リーグ',
+                'ハンガリー・リーグ',
+                'フィンランドリーグ',
+                'アゼルバイジャン・プレミアリーグ',
+                // アジア・オセアニア
+                '韓国・Kリーグ', '韓国2部',
+                'オーストラリア・Aリーグ',
+                '中国・CSL',
+                'タイ・プレミアリーグ', 'タイ2部',
+                'ウズベキスタン・リーグ',
+                'サウジアラビア・リーグ',
+                'カタール・スターズリーグ',
+                'UAE・リーグ',
+                // 南米
+                'ブラジル・リーグ', 'ブラジル2部',
+                'アルゼンチン・リーグ',
+                'ウルグアイ・リーグ',
+                'パラグアイ・リーグ',
+                // 北中米カリブ海
+                'アメリカ・MLS',
+                'メキシコ・リーグ',
+                // アフリカ
+                'エジプト・リーグ'
+            ];
+            
+            // メインリーグを選択するロジック
+            let mainStats = null;
+            let maxAppearances = 0;
+            let mainLeagueFound = false;
+            
+            // まず、主要リーグを優先的に検索
+            for (const stat of statistics) {
+                const leagueName = stat.league?.name || '';
+                const appearances = stat.games?.appearences || stat.games?.lineups || 0;
+                
+                // 主要リーグに含まれるかチェック
+                const isMainLeague = mainLeagues.some(league => 
+                    leagueName.toLowerCase().includes(league.toLowerCase()) ||
+                    league.toLowerCase().includes(leagueName.toLowerCase())
+                );
+                
+                if (isMainLeague && !mainLeagueFound) {
+                    // 主要リーグが見つかった場合、最初に見つかったものを使用（または試合数が多いものを優先）
+                    if (!mainStats || appearances > maxAppearances) {
+                        mainStats = stat;
+                        maxAppearances = appearances;
+                        mainLeagueFound = true;
+                    }
+                } else if (!mainLeagueFound && appearances > maxAppearances) {
+                    // 主要リーグが見つかっていない場合、試合数が多いものを保持
+                    mainStats = stat;
+                    maxAppearances = appearances;
+                }
+            }
+            
+            // 主要リーグが見つからなかった場合、試合数が最も多いものを使用
+            if (!mainStats && statistics.length > 0) {
+                mainStats = statistics.reduce((prev, current) => {
+                    const prevAppearances = prev.games?.appearences || prev.games?.lineups || 0;
+                    const currentAppearances = current.games?.appearences || current.games?.lineups || 0;
+                    return currentAppearances > prevAppearances ? current : prev;
+                });
+            }
+            
+            if (mainStats) {
                 return {
                     season: season,
-                    club: stats.team?.name || 'Unknown',
-                    league: stats.league?.name || 'Unknown',
-                    matches: stats.games?.appearences || stats.games?.lineups || 0,
-                    goals: stats.goals?.total || 0,
-                    assists: stats.goals?.assists || 0,
-                    rating: stats.games?.rating ? parseFloat(stats.games.rating).toFixed(1) : 'N/A',
-                    minutes: stats.games?.minutes || 0,
-                    yellowCards: stats.cards?.yellow || 0,
-                    redCards: stats.cards?.red || 0,
-                    shots: stats.shots?.total || 0,
-                    passes: stats.passes?.total || 0,
-                    tackles: stats.tackles?.total || 0,
-                    interceptions: stats.tackles?.interceptions || 0,
-                    dribbles: stats.dribbles?.attempts || 0,
-                    dribblesSuccess: stats.dribbles?.success || 0,
-                    foulsWon: stats.fouls?.won || 0,
-                    chancesCreated: stats.passes?.key || 0
+                    club: mainStats.team?.name || 'Unknown',
+                    league: mainStats.league?.name || 'Unknown',
+                    matches: mainStats.games?.appearences || mainStats.games?.lineups || 0,
+                    goals: mainStats.goals?.total || 0,
+                    assists: mainStats.goals?.assists || 0,
+                    rating: mainStats.games?.rating ? parseFloat(mainStats.games.rating).toFixed(1) : 'N/A',
+                    minutes: mainStats.games?.minutes || 0,
+                    yellowCards: mainStats.cards?.yellow || 0,
+                    redCards: mainStats.cards?.red || 0,
+                    shots: mainStats.shots?.total || 0,
+                    passes: mainStats.passes?.total || 0,
+                    tackles: mainStats.tackles?.total || 0,
+                    interceptions: mainStats.tackles?.interceptions || 0,
+                    dribbles: mainStats.dribbles?.attempts || 0,
+                    dribblesSuccess: mainStats.dribbles?.success || 0,
+                    foulsWon: mainStats.fouls?.won || 0,
+                    chancesCreated: mainStats.passes?.key || 0
                 };
             }
         }
         
         return null;
     } catch (error) {
-        console.error('API-Football season stats error:', error);
+        console.error(`API-Football player stats error for ${playerId} season ${season}:`, error.message);
         return null;
     }
 }
