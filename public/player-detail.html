@@ -825,18 +825,136 @@
             const tbody = document.getElementById('careerTableBody');
             let html = '';
             
+            // 主要リーグのリスト（メインリーグ判定用）
+            const mainLeagues = [
+                // 日本
+                'J1', 'J2', 'J3', 'JFL', 'WEリーグ', 'なでしこリーグ', 'J1 League', 'J2 League',
+                // ヨーロッパ
+                'Premier League', 'イングランド2部', '女子スーパーリーグ', 'English Premier League',
+                'La Liga', 'ラ・リーガ', 'ラ・リーガ2部', 'Primera Division', 'Segunda Division',
+                'Bundesliga', 'ブンデスリーガ', 'ブンデスリーガ2部', '女子ブンデスリーガ', '2. Bundesliga',
+                'Serie A', 'セリエA', 'イタリア2部', 'セリエA(女子)', 'Serie B',
+                'Ligue 1', 'フランス・リーグアン', '女子フランスリーグ', 'French Ligue 1',
+                'ロシア・プレミアリーグ', 'Russian Premier League',
+                'ポルトガル・リーグ', 'Portuguese Primeira Liga',
+                'ウクライナ・リーグ', 'Ukrainian Premier League',
+                'ベルギー・リーグ', 'Belgian Pro League',
+                'トルコ・スーパーリーグ', 'Turkish Super Lig',
+                'オーストリア・ブンデスリーガ', 'オーストリア2部', 'Austrian Bundesliga',
+                'スイス・スーパーリーグ', 'Swiss Super League',
+                'チェコ・リーグ', 'Czech First League',
+                'オランダ・エールディビジ', 'Eredivisie',
+                'ギリシャ・スーパーリーグ', 'Greek Super League',
+                'クロアチア・リーグ', 'Croatian First League',
+                'デンマーク・リーグ', 'Danish Superliga',
+                'ルーマニア・リーグ', 'Romanian Liga I',
+                'ポーランド・リーグ', 'Polish Ekstraklasa',
+                'セルビア・リーグ', 'Serbian Super Liga',
+                'スコットランド・プレミアリーグ', 'Scottish Premiership',
+                'ノルウェー・リーグ', 'Norwegian Eliteserien',
+                'ハンガリー・リーグ', 'Hungarian NB I',
+                'フィンランドリーグ', 'Finnish Veikkausliiga',
+                'アゼルバイジャン・プレミアリーグ', 'Azerbaijani Premier League',
+                // アジア・オセアニア
+                '韓国・Kリーグ', '韓国2部', 'K League 1', 'K League 2',
+                'オーストラリア・Aリーグ', 'Australian A-League',
+                '中国・CSL', 'Chinese Super League',
+                'タイ・プレミアリーグ', 'タイ2部', 'Thai League', 'Thai League 2',
+                'ウズベキスタン・リーグ', 'Uzbekistan Super League',
+                'サウジアラビア・リーグ', 'Saudi Professional League',
+                'カタール・スターズリーグ', 'Qatar Stars League',
+                'UAE・リーグ', 'UAE Pro League',
+                // 南米
+                'ブラジル・リーグ', 'ブラジル2部', 'Brazilian Serie A', 'Brazilian Serie B',
+                'アルゼンチン・リーグ', 'Argentine Primera Division',
+                'ウルグアイ・リーグ', 'Uruguayan Primera Division',
+                'パラグアイ・リーグ', 'Paraguayan Primera Division',
+                // 北中米カリブ海
+                'アメリカ・MLS', 'Major League Soccer', 'MLS',
+                'メキシコ・リーグ', 'Liga MX',
+                // アフリカ
+                'エジプト・リーグ', 'Egyptian Premier League'
+            ];
+            
+            // シーズンごとにメインリーグを選択する関数
+            function selectMainLeagueForSeason(stats) {
+                if (stats.length === 0) return null;
+                if (stats.length === 1) return stats[0];
+                
+                // 主要リーグを優先的に検索
+                const mainLeagueStats = [];
+                let fallbackStat = null;
+                let maxAppearances = 0;
+                
+                for (const stat of stats) {
+                    const leagueName = (stat.leagueName || stat.league || '').toLowerCase();
+                    const appearances = stat.matches || stat.appearances || 0;
+                    
+                    const isMainLeague = mainLeagues.some(league => {
+                        const normalizedLeague = league.toLowerCase();
+                        return leagueName.includes(normalizedLeague) ||
+                               normalizedLeague.includes(leagueName) ||
+                               leagueName === normalizedLeague;
+                    });
+                    
+                    if (isMainLeague) {
+                        mainLeagueStats.push({ stat, appearances });
+                    } else if (appearances > maxAppearances) {
+                        maxAppearances = appearances;
+                        fallbackStat = stat;
+                    }
+                }
+                
+                // 主要リーグが見つかった場合、試合数が最も多いものを選択
+                if (mainLeagueStats.length > 0) {
+                    mainLeagueStats.sort((a, b) => b.appearances - a.appearances);
+                    return mainLeagueStats[0].stat;
+                }
+                
+                // 主要リーグが見つからない場合、試合数が最も多いものを選択
+                if (fallbackStat) {
+                    return fallbackStat;
+                }
+                
+                // フォールバック：最初の統計を返す
+                return stats.reduce((prev, current) => {
+                    const prevAppearances = prev.matches || prev.appearances || 0;
+                    const currentAppearances = current.matches || current.appearances || 0;
+                    return currentAppearances > prevAppearances ? current : prev;
+                });
+            }
+            
             // 優先順位1: player.careerStats（スクリプトで保存されたデータ）
             if (player.careerStats && Array.isArray(player.careerStats) && player.careerStats.length > 0) {
                 console.log(`✅ キャリアスタッツをデータベースから取得: ${player.careerStats.length}レコード`);
                 
+                // シーズンごとにグループ化
+                const statsBySeason = {};
+                player.careerStats.forEach(stat => {
+                    const season = stat.season || 'Unknown';
+                    if (!statsBySeason[season]) {
+                        statsBySeason[season] = [];
+                    }
+                    statsBySeason[season].push(stat);
+                });
+                
+                // 各シーズンごとにメインリーグを選択
+                const seasonStats = [];
+                for (const [season, stats] of Object.entries(statsBySeason)) {
+                    const mainStat = selectMainLeagueForSeason(stats);
+                    if (mainStat) {
+                        seasonStats.push({ ...mainStat, season });
+                    }
+                }
+                
                 // シーズンでソート（新しい順）
-                const sortedStats = [...player.careerStats].sort((a, b) => {
+                seasonStats.sort((a, b) => {
                     const seasonA = parseInt(a.season?.split('/')[0]) || 0;
                     const seasonB = parseInt(b.season?.split('/')[0]) || 0;
                     return seasonB - seasonA;
                 });
                 
-                sortedStats.forEach(stat => {
+                seasonStats.forEach(stat => {
                     const seasonDisplay = stat.season || 'Unknown';
                     html += `
                         <tr>
