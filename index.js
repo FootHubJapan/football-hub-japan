@@ -3465,97 +3465,132 @@ async function handleMatchDetailsRequest(req, res) {
             try {
                 console.log('🔍 Fetching match details from API-Football:', { matchId, league });
                 
-                const response = await axios.get(`https://v3.football.api-sports.io/fixtures?id=${matchId}`, {
-                    headers: {
-                        'x-apisports-key': apiKey,
-                        'x-rapidapi-host': 'v3.football.api-sports.io'
-                    },
-                    timeout: 15000
-                });
+                let fixture = null;
                 
-                console.log('📊 API-Football match details response received');
+                // クリックした試合データからチーム名と日付を取得
+                const clickedHomeTeam = clickedMatchData?.homeTeam || clickedMatchData?.home || clickedMatchData?.teams?.home?.name;
+                const clickedAwayTeam = clickedMatchData?.awayTeam || clickedMatchData?.away || clickedMatchData?.teams?.away?.name;
+                const matchDate = clickedMatchData?.date || clickedMatchData?.utcDate;
                 
-                if (response.data && response.data.response && response.data.response.length > 0) {
-                    let fixture = response.data.response[0];
-                    console.log('✅ Processing fixture data from API-Football');
+                // チーム名と日付が利用可能な場合は、それらで検索を試みる
+                if (clickedHomeTeam && clickedAwayTeam && matchDate) {
+                    console.log('🔍 Searching by team names and date:', { clickedHomeTeam, clickedAwayTeam, matchDate });
                     
-                    // チーム名の検証
-                    const apiHomeTeam = fixture.teams.home.name;
-                    const apiAwayTeam = fixture.teams.away.name;
-                    const clickedHomeTeam = clickedMatchData?.homeTeam || clickedMatchData?.home || clickedMatchData?.teams?.home?.name;
-                    const clickedAwayTeam = clickedMatchData?.awayTeam || clickedMatchData?.away || clickedMatchData?.teams?.away?.name;
-                    
-                    // チーム名が一致しない場合は、チーム名と日付で再検索
-                    if (clickedHomeTeam && clickedAwayTeam && 
-                        (apiHomeTeam !== clickedHomeTeam || apiAwayTeam !== clickedAwayTeam)) {
-                        console.warn('⚠️ Team name mismatch detected, searching by team names and date');
-                        console.warn('API returned:', { apiHomeTeam, apiAwayTeam });
-                        console.warn('Clicked match:', { clickedHomeTeam, clickedAwayTeam });
+                    try {
+                        const fromDate = new Date(matchDate).toISOString().split('T')[0];
+                        const toDate = new Date(new Date(matchDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
                         
-                        // チーム名と日付で再検索
-                        try {
-                            const matchDate = clickedMatchData?.date || clickedMatchData?.utcDate;
-                            const fromDate = matchDate ? new Date(matchDate).toISOString().split('T')[0] : null;
-                            const toDate = matchDate ? new Date(new Date(matchDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null;
-                            
-                            // リーグIDを取得
-                            let leagueId = null;
-                            if (league) {
-                                const leagueMap = {
-                                    'championsLeague': 2,
-                                    'europaLeague': 3,
-                                    'premierLeague': 39,
-                                    'laLiga': 140,
-                                    'serieA': 135,
-                                    'bundesliga': 78,
-                                    'ligue1': 61
-                                };
-                                leagueId = leagueMap[league] || null;
-                            }
-                            
-                            // チーム名で検索
-                            const searchParams = {
-                                ...(fromDate && toDate ? { from: fromDate, to: toDate } : {}),
-                                ...(leagueId ? { league: leagueId } : {})
+                        // リーグIDを取得
+                        let leagueId = null;
+                        if (league) {
+                            const leagueMap = {
+                                'championsLeague': 2,
+                                'europaLeague': 3,
+                                'premierLeague': 39,
+                                'laLiga': 140,
+                                'serieA': 135,
+                                'bundesliga': 78,
+                                'ligue1': 61,
+                                'UEFA Champions League': 2,
+                                'UEFA Europa League': 3,
+                                'Premier League': 39,
+                                'La Liga': 140,
+                                'Serie A': 135,
+                                'Bundesliga': 78,
+                                'Ligue 1': 61
+                            };
+                            leagueId = leagueMap[league] || null;
+                        }
+                        
+                        // チーム名で検索
+                        const searchParams = {
+                            from: fromDate,
+                            to: toDate,
+                            ...(leagueId ? { league: leagueId } : {})
+                        };
+                        
+                        console.log('🔍 Searching fixtures with params:', searchParams);
+                        
+                        const searchResponse = await axios.get(`https://v3.football.api-sports.io/fixtures`, {
+                            headers: {
+                                'x-apisports-key': apiKey,
+                                'x-rapidapi-host': 'v3.football.api-sports.io'
+                            },
+                            params: searchParams,
+                            timeout: 15000
+                        });
+                        
+                        if (searchResponse.data && searchResponse.data.response && searchResponse.data.response.length > 0) {
+                            // チーム名でマッチする試合を検索（より厳密なマッチング）
+                            const normalizeTeamName = (name) => {
+                                return name.toLowerCase().replace(/\s+/g, ' ').trim();
                             };
                             
-                            console.log('🔍 Searching fixtures with params:', searchParams);
+                            const normalizedClickedHome = normalizeTeamName(clickedHomeTeam);
+                            const normalizedClickedAway = normalizeTeamName(clickedAwayTeam);
                             
-                            const searchResponse = await axios.get(`https://v3.football.api-sports.io/fixtures`, {
-                                headers: {
-                                    'x-apisports-key': apiKey,
-                                    'x-rapidapi-host': 'v3.football.api-sports.io'
-                                },
-                                params: searchParams,
-                                timeout: 15000
+                            const matchingFixture = searchResponse.data.response.find(f => {
+                                const homeName = normalizeTeamName(f.teams.home.name);
+                                const awayName = normalizeTeamName(f.teams.away.name);
+                                
+                                const homeMatch = homeName === normalizedClickedHome || 
+                                                 homeName.includes(normalizedClickedHome) ||
+                                                 normalizedClickedHome.includes(homeName);
+                                const awayMatch = awayName === normalizedClickedAway || 
+                                                awayName.includes(normalizedClickedAway) ||
+                                                normalizedClickedAway.includes(awayName);
+                                
+                                return homeMatch && awayMatch;
                             });
                             
-                            if (searchResponse.data && searchResponse.data.response && searchResponse.data.response.length > 0) {
-                                // チーム名でマッチする試合を検索
-                                const matchingFixture = searchResponse.data.response.find(f => {
-                                    const homeMatch = f.teams.home.name === clickedHomeTeam || 
-                                                     f.teams.home.name.includes(clickedHomeTeam) ||
-                                                     clickedHomeTeam.includes(f.teams.home.name);
-                                    const awayMatch = f.teams.away.name === clickedAwayTeam || 
-                                                    f.teams.away.name.includes(clickedAwayTeam) ||
-                                                    clickedAwayTeam.includes(f.teams.away.name);
-                                    return homeMatch && awayMatch;
-                                });
-                                
-                                if (matchingFixture) {
-                                    console.log('✅ Found matching fixture by team names:', matchingFixture.fixture.id);
-                                    // 正しいfixtureを使用
-                                    fixture = matchingFixture;
-                                    console.log('✅ Using correct fixture:', fixture.fixture.id);
-                                } else {
-                                    console.warn('⚠️ No matching fixture found by team names, using original fixture');
-                                }
+                            if (matchingFixture) {
+                                console.log('✅ Found matching fixture by team names:', matchingFixture.fixture.id);
+                                fixture = matchingFixture;
+                            } else {
+                                console.warn('⚠️ No matching fixture found by team names, trying fixture ID');
                             }
-                        } catch (searchError) {
-                            console.error('❌ Error searching fixtures by team names:', searchError.message);
-                            console.log('📋 Using original fixture');
+                        }
+                    } catch (searchError) {
+                        console.error('❌ Error searching fixtures by team names:', searchError.message);
+                    }
+                }
+                
+                // チーム名検索で見つからない場合、またはチーム名が利用できない場合は、fixture IDで検索
+                if (!fixture) {
+                    console.log('🔍 Searching by fixture ID:', matchId);
+                    const response = await axios.get(`https://v3.football.api-sports.io/fixtures?id=${matchId}`, {
+                        headers: {
+                            'x-apisports-key': apiKey,
+                            'x-rapidapi-host': 'v3.football.api-sports.io'
+                        },
+                        timeout: 15000
+                    });
+                    
+                    console.log('📊 API-Football match details response received');
+                    
+                    if (response.data && response.data.response && response.data.response.length > 0) {
+                        fixture = response.data.response[0];
+                        
+                        // チーム名の検証
+                        const apiHomeTeam = fixture.teams.home.name;
+                        const apiAwayTeam = fixture.teams.away.name;
+                        
+                        // チーム名が一致しない場合は警告
+                        if (clickedHomeTeam && clickedAwayTeam && 
+                            (apiHomeTeam !== clickedHomeTeam || apiAwayTeam !== clickedAwayTeam)) {
+                            console.warn('⚠️ Team name mismatch detected:', {
+                                api: { apiHomeTeam, apiAwayTeam },
+                                clicked: { clickedHomeTeam, clickedAwayTeam }
+                            });
+                            console.warn('⚠️ Fixture ID may be incorrect, but proceeding with available data');
                         }
                     }
+                }
+                
+                if (fixture) {
+                    console.log('✅ Processing fixture data from API-Football');
+                    console.log('✅ Fixture ID:', fixture.fixture.id);
+                    console.log('✅ Teams:', `${fixture.teams.home.name} vs ${fixture.teams.away.name}`);
                     
                     // 統計データの処理（最初に/fixtures?idから試行、なければ/fixtures/statisticsエンドポイントを呼び出す）
                     let stats = null;
