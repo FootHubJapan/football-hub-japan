@@ -2630,11 +2630,8 @@
                     <select id="statusFilter" class="control-select">
                         <option value="">すべてのステータス</option>
                         <option value="予定">予定</option>
-                        <option value="SCHEDULED">予定</option>
                         <option value="試合中">試合中</option>
-                        <option value="IN_PLAY">試合中</option>
                         <option value="終了">終了</option>
-                        <option value="FINISHED">終了</option>
                     </select>
                 </div>
 
@@ -3680,15 +3677,26 @@
                         endDate.setHours(23, 59, 59, 999);
                         break;
                     case 'week':
+                        // 今週の月曜日〜日曜日を取得
+                        const currentDay = now.getDay(); // 0=日曜日, 1=月曜日, ..., 6=土曜日
+                        const daysToMonday = currentDay === 0 ? -6 : 1 - currentDay; // 月曜日までの日数
                         startDate = new Date(now);
-                        endDate = new Date(now);
-                        endDate.setDate(endDate.getDate() + 7);
+                        startDate.setDate(now.getDate() + daysToMonday);
+                        startDate.setHours(0, 0, 0, 0);
+                        endDate = new Date(startDate);
+                        endDate.setDate(startDate.getDate() + 6); // 日曜日まで
                         endDate.setHours(23, 59, 59, 999);
                         break;
                     case 'lastweek':
-                        startDate = new Date(now);
-                        startDate.setDate(startDate.getDate() - 7);
-                        endDate = new Date(now);
+                        // 先週の月曜日〜日曜日を取得
+                        const currentDayLastWeek = now.getDay();
+                        const daysToMondayLastWeek = currentDayLastWeek === 0 ? -6 : 1 - currentDayLastWeek;
+                        const lastWeekMonday = new Date(now);
+                        lastWeekMonday.setDate(now.getDate() + daysToMondayLastWeek - 7); // 先週の月曜日
+                        startDate = new Date(lastWeekMonday);
+                        startDate.setHours(0, 0, 0, 0);
+                        endDate = new Date(lastWeekMonday);
+                        endDate.setDate(lastWeekMonday.getDate() + 6); // 先週の日曜日まで
                         endDate.setHours(23, 59, 59, 999);
                         break;
                     case 'month':
