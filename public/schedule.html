@@ -3188,8 +3188,25 @@
                         // match.fixture?.idが存在する場合はそれを使用（API-Football由来）
                         // それ以外で、match.idが数値でAPI-FootballのID形式の場合はそれを使用
                         let apiFootballId = match.fixture?.id || null;
+                        
+                        // デバッグ: fixture.idの取得状況を確認
+                        if (index === 0) {
+                            console.log('🔍 Fixture ID extraction debug:', {
+                                'match.fixture?.id': match.fixture?.id,
+                                'match.id': match.id,
+                                'match.id type': typeof match.id,
+                                'match.source': match.source,
+                                'extracted apiFootballId': apiFootballId
+                            });
+                        }
+                        
                         if (!apiFootballId && match.id && typeof match.id === 'number' && match.id > 100000) {
                             // API-FootballのIDは通常6桁以上の数値
+                            apiFootballId = match.id;
+                        }
+                        
+                        // 文字列の数値の場合も変換
+                        if (!apiFootballId && match.id && typeof match.id === 'string' && /^\d{6,}$/.test(match.id)) {
                             apiFootballId = match.id;
                         }
                         

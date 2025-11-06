@@ -3460,13 +3460,15 @@ app.get('/api/match/details', async (req, res) => {
     
     console.log('🔍 Match details request:', { fixtureId, source, fotmobId, leagueKey, kickoffUtc, home, away });
     
-    // fixtureIdが必須
-    if (!fixtureId || fixtureId === 'undefined' || fixtureId === 'null' || fixtureId === '') {
+    // fixtureIdが必須（letで再代入可能にする）
+    let resolvedFixtureId = fixtureId;
+    
+    if (!resolvedFixtureId || resolvedFixtureId === 'undefined' || resolvedFixtureId === 'null' || resolvedFixtureId === '') {
         // FotMob IDから解決を試みる
         if (source === 'fotmob' && fotmobId && fotmobId !== 'undefined' && fotmobId !== 'null' && fotmobId !== '') {
             console.log('🔍 Resolving fixture ID from FotMob ID:', fotmobId);
             const { resolveApiFootballFixtureId } = require('./resolver');
-            const resolvedFixtureId = await resolveApiFootballFixtureId({
+            resolvedFixtureId = await resolveApiFootballFixtureId({
                 fotmobId,
                 kickoffUtc,
                 homeName: home,
@@ -3474,9 +3476,7 @@ app.get('/api/match/details', async (req, res) => {
                 leagueKey
             });
             
-            if (resolvedFixtureId) {
-                fixtureId = resolvedFixtureId;
-            } else {
+            if (!resolvedFixtureId) {
                 console.warn('⚠️ Could not resolve fixture ID from FotMob ID');
                 return res.status(404).json({
                     ok: false,
@@ -3496,9 +3496,10 @@ app.get('/api/match/details', async (req, res) => {
         }
     }
     
-    console.log('✅ Using fixture ID:', fixtureId);
+    // 解決済みfixtureIdを使用
+    fixtureId = resolvedFixtureId;
     
-    console.log('✅ Using resolved fixture ID:', fixtureId);
+    console.log('✅ Using fixture ID:', fixtureId);
     
     // ここから初めてAPI-Footballの詳細系を叩く
     const apiKey = process.env.API_FOOTBALL_KEY || process.env.RAPIDAPI_KEY;
