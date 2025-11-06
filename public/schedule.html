@@ -3772,10 +3772,21 @@
                 // 新しいdata属性から情報を取得
                 const source = cardElement.dataset.source || 'fotmob';
                 const apiFootballId = cardElement.dataset.apiFootballId || '';
+                const fotmobId = cardElement.dataset.fotmobId || '';
                 const leagueKey = cardElement.dataset.leagueKey || '';
                 const kickoffUtc = cardElement.dataset.kickoffUtc || '';
                 const home = cardElement.dataset.home || '';
                 const away = cardElement.dataset.away || '';
+                
+                console.log('🔍 showDetailedMatchInfoFromCard called:', {
+                    source,
+                    apiFootballId,
+                    fotmobId,
+                    leagueKey,
+                    kickoffUtc,
+                    home,
+                    away
+                });
                 
                 // API-Football IDが存在する場合はそれを使用（優先）
                 if (apiFootballId && apiFootballId !== 'undefined' && apiFootballId !== 'null' && apiFootballId !== '') {
@@ -3828,7 +3839,11 @@
                 // 新しいAPIエンドポイントを使用（fixtureIdを優先）
                 const params = new URLSearchParams({
                     ...(fixtureId ? { fixtureId } : {}),
-                    ...(fotmobId && !fixtureId ? { fotmobId, source: 'fotmob', leagueKey, kickoffUtc, home, away } : {})
+                    ...(fotmobId && !fixtureId ? { fotmobId, source: 'fotmob', leagueKey, kickoffUtc } : {}),
+                    ...(home ? { home } : {}),
+                    ...(away ? { away } : {}),
+                    ...(leagueKey ? { leagueKey } : {}),
+                    ...(kickoffUtc ? { kickoffUtc } : {})
                 });
                 
                 console.log('📡 Fetching match details from new endpoint:', params.toString());
