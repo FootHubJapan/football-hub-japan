@@ -3826,7 +3826,25 @@
                     }
                 });
                 
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { message: errorText };
+                    }
+                    console.error('❌ Failed to fetch match details:', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        error: errorData
+                    });
+                    alert(`試合詳細の取得に失敗しました: ${errorData.reason || errorData.message || `HTTP ${response.status}`}`);
+                    return;
+                }
+                
                 const result = await response.json();
+                console.log('📊 API response:', result);
                 
                 if (result.ok && result.fixtureId) {
                     console.log('✅ Match details fetched successfully:', result);

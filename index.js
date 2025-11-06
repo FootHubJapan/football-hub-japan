@@ -3456,12 +3456,17 @@ app.post('/api/match/:id/details', async (req, res) => {
 app.get('/api/match/details', async (req, res) => {
     const { source, fotmobId, apiFixtureId, leagueKey, kickoffUtc, home, away } = req.query;
     
+    console.log('🔍 Match details request:', { source, fotmobId, apiFixtureId, leagueKey, kickoffUtc, home, away });
+    
     const { resolveApiFootballFixtureId } = require('./resolver');
     
     let fixtureId = apiFixtureId || null;
     
-    // FotMob IDからAPI-Football fixtureIdを解決
-    if (!fixtureId && source === 'fotmob' && fotmobId) {
+    // API-Football IDが既にある場合はそれを使用
+    if (fixtureId && fixtureId !== 'undefined' && fixtureId !== 'null' && fixtureId !== '') {
+        console.log('✅ Using provided API-Football fixture ID:', fixtureId);
+    } else if (source === 'fotmob' && fotmobId && fotmobId !== 'undefined' && fotmobId !== 'null' && fotmobId !== '') {
+        // FotMob IDからAPI-Football fixtureIdを解決
         console.log('🔍 Resolving fixture ID from FotMob ID:', fotmobId);
         fixtureId = await resolveApiFootballFixtureId({
             fotmobId,
@@ -3472,11 +3477,13 @@ app.get('/api/match/details', async (req, res) => {
         });
     }
     
-    if (!fixtureId) {
+    if (!fixtureId || fixtureId === 'undefined' || fixtureId === 'null' || fixtureId === '') {
+        console.warn('⚠️ Could not resolve fixture ID');
         return res.status(404).json({
             ok: false,
             reason: 'fixtureId_not_resolved',
-            message: 'Could not resolve fixture ID from provided parameters'
+            message: 'Could not resolve fixture ID from provided parameters',
+            provided: { source, fotmobId, apiFixtureId, leagueKey, kickoffUtc, home, away }
         });
     }
     
@@ -3546,14 +3553,135 @@ app.get('/api/match/details', async (req, res) => {
         
         // 統計、ラインアップ、イベントを並列取得
         const [statsRes, lineupsRes, eventsRes] = await Promise.all([
-            axios.get(`https://v3.football.api-sports.io/fixtures/statistics?fixture=${fixtureId}`, { headers, timeout: 15000 }),
-            axios.get(`https://v3.football.api-sports.io/fixtures/lineups?fixture=${fixtureId}`, { headers, timeout: 15000 }),
-            axios.get(`https://v3.football.api-sports.io/fixtures/events?fixture=${fixtureId}`, { headers, timeout: 15000 })
+            axios.get(`https://v3.football.api-sports.io/fixtures/statistics?fixture=${fixtureId}`, { headers, timeout: 15000 }).catch(err => {
+                console.error('❌ Error fetching statistics:', err.message);
+                return { data: { response: [], results: 0 } };
+            }),
+            axios.get(`https://v3.football.api-sports.io/fixtures/lineups?fixture=${fixtureId}`, { headers, timeout: 15000 }).catch(err => {
+                console.error('❌ Error fetching lineups:', err.message);
+                return { data: { response: [], results: 0 } };
+            }),
+            axios.get(`https://v3.football.api-sports.io/fixtures/events?fixture=${fixtureId}`, { headers, timeout: 15000 }).catch(err => {
+                console.error('❌ Error fetching events:', err.message);
+                return { data: { response: [], results: 0 } };
+            })
         ]);
         
         const stats = statsRes.data?.response ?? [];
         const lineups = lineupsRes.data?.response ?? [];
         const events = eventsRes.data?.response ?? [];
+        
+        console.log('📊 Fetched data:', {
+            stats: stats.length,
+            lineups: lineups.length,
+            events: events.length
+        });
+        
+        // ラインアップデータを正規化
+        let normalizedLineups = null;
+        if (lineups && lineups.length > 0) {
+            normalizedLineups = {};
+            lineups.forEach(lineupData => {
+                const teamId = lineupData.team?.id;
+                const isHome = teamId === fixtureResponse.data?.response?.[0]?.teams?.home?.id;
+                const teamKey = isHome ? 'home' : 'away';
+                
+                normalizedLineups[teamKey] = {
+                    formation: lineupData.formation || 'Unknown',
+                    startXI: (lineupData.startXI || []).map(player => ({
+                        name: player.player?.name || player.name || 'Unknown',
+                        number: player.player?.number || player.number || 0,
+                        position: player.player?.pos || player.pos || 'Unknown',
+                        player: player.player || player,
+                        photo: player.player?.photo || player.photo || null
+                    })),
+                    substitutes: (lineupData.substitutes || []).map(player => ({
+                        name: player.player?.name || player.name || 'Unknown',
+                        number: player.player?.number || player.number || 0,
+                        position: player.player?.pos || player.pos || 'Unknown',
+                        player: player.player || player,
+                        photo: player.player?.photo || player.photo || null
+                    })),
+                    coach: lineupData.coach?.name || 'Unknown'
+                };
+            });
+        }
+        
+        // 統計データを正規化
+        let normalizedStats = null;
+        if (stats && stats.length > 0) {
+            normalizedStats = {
+                possession: { home: 0, away: 0 },
+                shots: { home: 0, away: 0 },
+                shotsOnTarget: { home: 0, away: 0 },
+                shotsOffTarget: { home: 0, away: 0 },
+                corners: { home: 0, away: 0 },
+                fouls: { home: 0, away: 0 },
+                yellowCards: { home: 0, away: 0 },
+                redCards: { home: 0, away: 0 },
+                passes: { home: 0, away: 0 },
+                passesAccuracy: { home: 0, away: 0 }
+            };
+            
+            stats.forEach(teamStats => {
+                const teamId = teamStats.team?.id;
+                const isHome = teamId === fixtureResponse.data?.response?.[0]?.teams?.home?.id;
+                const teamKey = isHome ? 'home' : 'away';
+                
+                (teamStats.statistics || []).forEach(stat => {
+                    let value = stat.value;
+                    if (typeof value === 'string' && value.includes('%')) {
+                        value = parseInt(value.replace('%', '')) || 0;
+                    } else if (typeof value === 'string' && value === 'null') {
+                        value = 0;
+                    } else {
+                        value = parseInt(value) || 0;
+                    }
+                    
+                    switch (stat.type) {
+                        case 'Ball Possession':
+                        case 'Possession':
+                            normalizedStats.possession[teamKey] = value;
+                            break;
+                        case 'Total Shots':
+                        case 'Shots':
+                            normalizedStats.shots[teamKey] = value;
+                            break;
+                        case 'Shots on Goal':
+                        case 'Shots on Target':
+                            normalizedStats.shotsOnTarget[teamKey] = value;
+                            break;
+                        case 'Shots off Goal':
+                        case 'Shots off Target':
+                            normalizedStats.shotsOffTarget[teamKey] = value;
+                            break;
+                        case 'Corner Kicks':
+                        case 'Corner kicks':
+                            normalizedStats.corners[teamKey] = value;
+                            break;
+                        case 'Fouls':
+                            normalizedStats.fouls[teamKey] = value;
+                            break;
+                        case 'Yellow Cards':
+                        case 'Yellow cards':
+                            normalizedStats.yellowCards[teamKey] = value;
+                            break;
+                        case 'Red Cards':
+                        case 'Red cards':
+                            normalizedStats.redCards[teamKey] = value;
+                            break;
+                        case 'Total passes':
+                        case 'Passes':
+                            normalizedStats.passes[teamKey] = value;
+                            break;
+                        case 'Passes %':
+                        case 'Passes accurate':
+                            normalizedStats.passesAccuracy[teamKey] = value;
+                            break;
+                    }
+                });
+            });
+        }
         
         return res.json({
             ok: true,
@@ -3561,9 +3689,17 @@ app.get('/api/match/details', async (req, res) => {
             hasStats: (statsRes.data?.results ?? 0) > 0,
             hasLineups: (lineupsRes.data?.results ?? 0) > 0,
             hasEvents: (eventsRes.data?.results ?? 0) > 0,
-            stats,
-            lineups,
-            events,
+            stats: normalizedStats,
+            lineups: normalizedLineups,
+            events: events.map(event => ({
+                time: event.time?.elapsed || 0,
+                type: event.type,
+                detail: event.detail,
+                team: event.team?.name || 'Unknown',
+                player: event.player?.name || null,
+                assist: event.assist?.name || null,
+                comments: event.comments || null
+            })),
             fixture: fixtureResponse.data?.response?.[0] || null
         });
     } catch (error) {
