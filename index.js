@@ -3455,20 +3455,18 @@ app.post('/api/match/:id/details', async (req, res) => {
 // 新しい試合詳細取得エンドポイント（ID解決レイヤー使用）
 app.get('/api/match/details', async (req, res) => {
     // クエリ名の互換性を持たせる（fixtureId, apiFixtureId, fotmobFixtureId）
-    const fixtureId = req.query.fixtureId || req.query.apiFixtureId || req.query.fotmobFixtureId || null;
+    let fixtureId = req.query.fixtureId || req.query.apiFixtureId || req.query.fotmobFixtureId || null;
     const { source, fotmobId, leagueKey, kickoffUtc, home, away } = req.query;
     
     console.log('🔍 Match details request:', { fixtureId, source, fotmobId, leagueKey, kickoffUtc, home, away });
     
-    // fixtureIdが必須（letで再代入可能にする）
-    let resolvedFixtureId = fixtureId;
-    
-    if (!resolvedFixtureId || resolvedFixtureId === 'undefined' || resolvedFixtureId === 'null' || resolvedFixtureId === '') {
+    // fixtureIdが必須
+    if (!fixtureId || fixtureId === 'undefined' || fixtureId === 'null' || fixtureId === '') {
         // FotMob IDから解決を試みる
         if (source === 'fotmob' && fotmobId && fotmobId !== 'undefined' && fotmobId !== 'null' && fotmobId !== '') {
             console.log('🔍 Resolving fixture ID from FotMob ID:', fotmobId);
             const { resolveApiFootballFixtureId } = require('./resolver');
-            resolvedFixtureId = await resolveApiFootballFixtureId({
+            fixtureId = await resolveApiFootballFixtureId({
                 fotmobId,
                 kickoffUtc,
                 homeName: home,
@@ -3476,7 +3474,7 @@ app.get('/api/match/details', async (req, res) => {
                 leagueKey
             });
             
-            if (!resolvedFixtureId) {
+            if (!fixtureId) {
                 console.warn('⚠️ Could not resolve fixture ID from FotMob ID');
                 return res.status(404).json({
                     ok: false,
@@ -3495,9 +3493,6 @@ app.get('/api/match/details', async (req, res) => {
             });
         }
     }
-    
-    // 解決済みfixtureIdを使用
-    fixtureId = resolvedFixtureId;
     
     console.log('✅ Using fixture ID:', fixtureId);
     
