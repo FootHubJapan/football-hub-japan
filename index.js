@@ -2848,6 +2848,12 @@ app.get('/api/schedule', async (req, res) => {
             const bookings = match.bookings || null;
             const substitutions = match.substitutions || null;
             
+            // データソースの判定
+            const source = match.source || (match.fixture?.id ? 'api_football' : 'fotmob');
+            
+            // FotMob IDの抽出（sourceがfotmobの場合）
+            const fotmobId = match.fotmobId || (source === 'fotmob' ? (match.id || match.match_id || match.matchId) : null);
+            
             return {
                 ...match,
                 // IDの確実な設定（実際のfixture IDを優先）
@@ -2871,6 +2877,9 @@ app.get('/api/schedule', async (req, res) => {
                 leagueName: match.leagueName || match.league || match.competition || match.league?.name || 'Unknown League',
                 // シーズン情報の追加
                 season: match.season || season || '2025',
+                // データソース情報の追加
+                source: source,
+                fotmobId: fotmobId,
                 // 詳細情報の追加
                 referees: referees,
                 lineups: lineups,
