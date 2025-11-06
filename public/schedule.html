@@ -179,9 +179,9 @@
             padding: 0;
             border: 1px solid #4CAF50;
             border-radius: 12px;
-            width: 90%;
-            max-width: none;
-            min-width: 800px;
+            width: 95%;
+            max-width: 1400px;
+            min-width: 900px;
             max-height: 90vh;
             overflow: hidden;
             position: relative;
@@ -644,11 +644,12 @@
         .lineup-container {
             max-height: 60vh;
             overflow-y: auto;
-            overflow-x: hidden;
-            padding: 20px;
+            overflow-x: auto;
+            padding: 15px;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
             border: 1px solid rgba(76, 175, 80, 0.3);
+            width: 100%;
         }
 
         .lineup-item {
@@ -1134,12 +1135,13 @@
 
         .pitch-field {
             width: 100%;
-            height: 400px;
+            height: 500px;
             background: linear-gradient(135deg, #2c3e50, #34495e);
             border-radius: 8px;
             position: relative;
             overflow: hidden;
             border: 2px solid #4CAF50;
+            min-width: 800px;
         }
 
         .center-line {
@@ -2313,9 +2315,11 @@
         .unified-pitch {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
-            padding: 20px;
+            padding: 15px;
             margin: 20px 0;
             border: 1px solid rgba(76, 175, 80, 0.3);
+            width: 100%;
+            max-width: 100%;
         }
 
         .pitch-header {
@@ -5229,7 +5233,24 @@
 
         // 統合ピッチでのプレイヤー位置を生成する関数（中央線分離版）
         function generateUnifiedPlayerPositions(players, teamType, formation, homeTeam, awayTeam) {
-            const positions = getFormationPositions(formation);
+            // フォーメーションに応じて適切な位置を取得
+            // ホームチーム用のフォーメーション（4-2-3-1, 4-4-2, 3-5-2など）は左側用
+            // アウェイチーム用のフォーメーション（4-1-4-1など）は右側用
+            let positions;
+            if (teamType === 'home') {
+                // ホームチームは左側用のフォーメーション位置を使用
+                positions = getFormationPositions(formation);
+            } else {
+                // アウェイチームは右側用のフォーメーション位置を使用
+                // 4-1-4-1は既に右側用に設定されているが、他のフォーメーションの場合は右側用に変換
+                if (formation === '4-1-4-1') {
+                    positions = getFormationPositions(formation);
+                } else {
+                    // その他のフォーメーションは左側用の位置を右側用に変換
+                    const leftPositions = getFormationPositions(formation);
+                    positions = leftPositions.map(pos => ({ left: 100 - pos.left, top: pos.top }));
+                }
+            }
             
             // 選手名の重なりを防ぐための位置調整
             const adjustedPositions = adjustPlayerPositions(positions, teamType);
@@ -5240,8 +5261,8 @@
                     let left, top;
                     
                     if (teamType === 'home') {
-                        // ホームチーム（左側、左のゴール）- 左右を反転
-                        left = 100 - pos.left;
+                        // ホームチーム（左側、左のゴール）- そのまま使用（既に左側用の位置）
+                        left = pos.left;
                         top = pos.top;
                         
                         // 中央安全ゾーン（48%-52%）に入らないように制限
@@ -5250,25 +5271,12 @@
                         }
                     } else {
                         // アウェイチーム（右側、右のゴール）
-                        // アウェイチームは右側のハーフコートに配置
-                        if (formation === '4-1-4-1') {
-                            // 4-1-4-1フォーメーションは既に右側用に設定済み
-                            left = pos.left;
-                            top = pos.top;
-                            
-                            // 中央安全ゾーン（48%-52%）に入らないように制限
-                            if (left >= 48 && left <= 55) {
-                                left = 54; // 右側に移動
-                            }
-                        } else {
-                            // その他のフォーメーションは右側に反転
-                            left = 100 - pos.left;
-                            top = pos.top;
-                            
-                            // 中央安全ゾーン（48%-52%）に入らないように制限
-                            if (left >= 48 && left <= 52) {
-                                left = 54; // 右側に移動
-                            }
+                        left = pos.left;
+                        top = pos.top;
+                        
+                        // 中央安全ゾーン（48%-52%）に入らないように制限
+                        if (left >= 48 && left <= 52) {
+                            left = 54; // 右側に移動
                         }
                     }
                     
