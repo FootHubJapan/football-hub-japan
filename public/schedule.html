@@ -3121,7 +3121,7 @@
                     }
                     
                     // 試合カードを生成
-                    const matchesHtml = filteredMatches.map(match => {
+                    const matchesHtml = filteredMatches.map((match, index) => {
                         // 日付の正規化と表示（Invalid Date対策）
                         const parseUtcDate = (dateStr) => {
                             if (!dateStr) return null;
