@@ -3137,26 +3137,53 @@ app.get('/api/schedule', async (req, res) => {
     try {
         let result;
         
+        // シーズンの正規化（2024/25形式を2024に変換）
+        let normalizedSeason = season || '2025';
+        if (typeof normalizedSeason === 'string' && normalizedSeason.includes('/')) {
+            // 2024/25形式の場合は最初の年を取得
+            normalizedSeason = normalizedSeason.split('/')[0];
+        }
+        normalizedSeason = parseInt(normalizedSeason) || 2025;
+        
+        // 現在のシーズンを判定（8月以降は新しいシーズン）
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1; // 0-indexed
+        const currentSeason = currentMonth >= 8 ? currentYear : currentYear - 1;
+        const isPastSeason = normalizedSeason < currentSeason;
+        
+        console.log(`📅 Season info: requested=${normalizedSeason}, current=${currentSeason}, isPast=${isPastSeason}`);
+        
         if (league === null) {
             // 全リーグのデータを取得
             const leagueKeys = ['premierLeague', 'laLiga', 'serieA', 'bundesliga', 'ligue1', 'championsLeague', 'europaLeague'];
-            console.log(`🔍 Fetching data for leagues: ${leagueKeys.join(', ')}`);
+            console.log(`🔍 Fetching data for leagues: ${leagueKeys.join(', ')}, season=${normalizedSeason}`);
             
             const allMatches = await Promise.all(
                 leagueKeys.map(async k => {
-                    const matches = await unifiedMatchService.getUnifiedMatches(k, season || '2025');
-                    console.log(`📊 ${k}: ${matches?.length || 0} matches`);
-                    return matches;
+                    try {
+                        const matches = await unifiedMatchService.getUnifiedMatches(k, normalizedSeason);
+                        console.log(`📊 ${k}: ${matches?.length || 0} matches`);
+                        return matches || [];
+                    } catch (error) {
+                        console.error(`❌ Error fetching ${k} for season ${normalizedSeason}:`, error.message);
+                        return [];
+                    }
                 })
             );
             result = { items: allMatches.flat() };
             console.log(`📊 Total matches from all leagues: ${result.items.length}`);
         } else {
             // 特定リーグのデータを取得
-            console.log(`🔍 Fetching data for league: ${league}`);
-            const matches = await unifiedMatchService.getUnifiedMatches(league, season || '2025');
-            console.log(`📊 ${league}: ${matches?.length || 0} matches`);
-            result = { items: matches || [] };
+            console.log(`🔍 Fetching data for league: ${league}, season=${normalizedSeason}`);
+            try {
+                const matches = await unifiedMatchService.getUnifiedMatches(league, normalizedSeason);
+                console.log(`📊 ${league}: ${matches?.length || 0} matches`);
+                result = { items: matches || [] };
+            } catch (error) {
+                console.error(`❌ Error fetching ${league} for season ${normalizedSeason}:`, error.message);
+                result = { items: [] };
+            }
         }
 
         let items = Array.isArray(result) ? result : (result?.items ?? []);
