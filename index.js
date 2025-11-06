@@ -1981,6 +1981,10 @@ app.get('/api/match/details', async (req, res) => {
                                         fixtureData = correctFixture;
                                         
                                         console.log('🔄 Retrying with correct fixture ID:', fixtureId);
+                                        
+                                        // 正しいfixture IDで統計・ラインアップ・イベントを再取得する必要があるため、
+                                        // この時点でループを抜けて再取得処理に進む
+                                        // （後続の統計・ラインアップ・イベント取得で正しいfixture IDが使用される）
                                     } else {
                                         console.warn('⚠️ Could not find correct fixture - using provided ID');
                                     }
