@@ -1846,64 +1846,99 @@ app.get('/api/match/details', async (req, res) => {
     
     try {
         // まずfixtureの基本情報を取得してチーム名を確認（ガード）
-        const fixtureResponse = await axios.get(`https://v3.football.api-sports.io/fixtures?id=${fixtureId}`, {
-            headers,
-            timeout: 15000
-        });
-        
-        if (fixtureResponse.data?.response && fixtureResponse.data.response.length > 0) {
-            const fixture = fixtureResponse.data.response[0];
-            const apiHomeTeam = fixture.teams.home.name;
-            const apiAwayTeam = fixture.teams.away.name;
+        let fixtureData = null;
+        try {
+            const fixtureResponse = await axios.get(`https://v3.football.api-sports.io/fixtures?id=${fixtureId}`, {
+                headers,
+                timeout: 15000
+            });
             
-            // チーム名の正規化比較
-            const norm = (s) => {
-                if (!s) return '';
-                return s.toLowerCase()
-                    .normalize('NFKD')
-                    .replace(/[\u0300-\u036f]/g, '')
-                    .replace(/\./g, '')
-                    .replace(/\s+/g, ' ')
-                    .trim();
-            };
+            console.log('📊 Fixture API response:', {
+                status: fixtureResponse.status,
+                results: fixtureResponse.data?.results || 0,
+                responseLength: fixtureResponse.data?.response?.length || 0,
+                errors: fixtureResponse.data?.errors || null
+            });
             
-            const apiHomeNorm = norm(apiHomeTeam);
-            const apiAwayNorm = norm(apiAwayTeam);
-            const clickedHomeNorm = norm(home);
-            const clickedAwayNorm = norm(away);
-            
-            const homeMatch = apiHomeNorm.includes(clickedHomeNorm) || clickedHomeNorm.includes(apiHomeNorm) ||
-                            apiHomeNorm.includes(clickedAwayNorm) || clickedAwayNorm.includes(apiHomeNorm);
-            const awayMatch = apiAwayNorm.includes(clickedAwayNorm) || clickedAwayNorm.includes(apiAwayNorm) ||
-                            apiAwayNorm.includes(clickedHomeNorm) || clickedHomeNorm.includes(apiAwayNorm);
-            
-            // 両方のチームが一致するか、順序が逆でも一致するか確認
-            if (home && away && !((homeMatch && awayMatch) || (apiHomeNorm === clickedAwayNorm && apiAwayNorm === clickedHomeNorm))) {
-                console.warn('⚠️ Team name mismatch detected - different match');
-                console.warn('   API returned:', { apiHomeTeam, apiAwayTeam });
-                console.warn('   Clicked match:', { home, away });
-                return res.status(404).json({
-                    ok: false,
-                    reason: 'team_name_mismatch',
-                    error: 'Fixture ID resolved to a different match',
-                    apiTeams: { home: apiHomeTeam, away: apiAwayTeam },
-                    clickedTeams: { home, away }
-                });
+            if (fixtureResponse.data?.errors) {
+                console.error('❌ API-Football errors:', JSON.stringify(fixtureResponse.data.errors, null, 2));
             }
+            
+            if (fixtureResponse.data?.response && fixtureResponse.data.response.length > 0) {
+                fixtureData = fixtureResponse.data.response[0];
+                const apiHomeTeam = fixtureData.teams.home.name;
+                const apiAwayTeam = fixtureData.teams.away.name;
+                
+                // チーム名の正規化比較
+                const norm = (s) => {
+                    if (!s) return '';
+                    return s.toLowerCase()
+                        .normalize('NFKD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .replace(/\./g, '')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+                };
+                
+                const apiHomeNorm = norm(apiHomeTeam);
+                const apiAwayNorm = norm(apiAwayTeam);
+                const clickedHomeNorm = norm(home);
+                const clickedAwayNorm = norm(away);
+                
+                const homeMatch = apiHomeNorm.includes(clickedHomeNorm) || clickedHomeNorm.includes(apiHomeNorm) ||
+                                apiHomeNorm.includes(clickedAwayNorm) || clickedAwayNorm.includes(apiHomeNorm);
+                const awayMatch = apiAwayNorm.includes(clickedAwayNorm) || clickedAwayNorm.includes(apiAwayNorm) ||
+                                apiAwayNorm.includes(clickedHomeNorm) || clickedHomeNorm.includes(apiAwayNorm);
+                
+                // 両方のチームが一致するか、順序が逆でも一致するか確認
+                if (home && away && !((homeMatch && awayMatch) || (apiHomeNorm === clickedAwayNorm && apiAwayNorm === clickedHomeNorm))) {
+                    console.warn('⚠️ Team name mismatch detected - different match');
+                    console.warn('   API returned:', { apiHomeTeam, apiAwayTeam });
+                    console.warn('   Clicked match:', { home, away });
+                    return res.status(404).json({
+                        ok: false,
+                        reason: 'team_name_mismatch',
+                        error: 'Fixture ID resolved to a different match',
+                        apiTeams: { home: apiHomeTeam, away: apiAwayTeam },
+                        clickedTeams: { home, away }
+                    });
+                }
+            } else {
+                console.warn('⚠️ No fixture data found for ID:', fixtureId);
+            }
+        } catch (fixtureError) {
+            console.error('❌ Error fetching fixture:', fixtureError.message);
+            if (fixtureError.response) {
+                console.error('   Response status:', fixtureError.response.status);
+                console.error('   Response data:', JSON.stringify(fixtureError.response.data, null, 2));
+            }
+            // エラーが発生しても続行（統計やラインアップは取得できる可能性がある）
         }
         
         // 統計、ラインアップ、イベントを並列取得
         const [statsRes, lineupsRes, eventsRes] = await Promise.all([
             axios.get(`https://v3.football.api-sports.io/fixtures/statistics?fixture=${fixtureId}`, { headers, timeout: 15000 }).catch(err => {
                 console.error('❌ Error fetching statistics:', err.message);
+                if (err.response) {
+                    console.error('   Response status:', err.response.status);
+                    console.error('   Response data:', JSON.stringify(err.response.data, null, 2));
+                }
                 return { data: { response: [], results: 0 } };
             }),
             axios.get(`https://v3.football.api-sports.io/fixtures/lineups?fixture=${fixtureId}`, { headers, timeout: 15000 }).catch(err => {
                 console.error('❌ Error fetching lineups:', err.message);
+                if (err.response) {
+                    console.error('   Response status:', err.response.status);
+                    console.error('   Response data:', JSON.stringify(err.response.data, null, 2));
+                }
                 return { data: { response: [], results: 0 } };
             }),
             axios.get(`https://v3.football.api-sports.io/fixtures/events?fixture=${fixtureId}`, { headers, timeout: 15000 }).catch(err => {
                 console.error('❌ Error fetching events:', err.message);
+                if (err.response) {
+                    console.error('   Response status:', err.response.status);
+                    console.error('   Response data:', JSON.stringify(err.response.data, null, 2));
+                }
                 return { data: { response: [], results: 0 } };
             })
         ]);
@@ -1915,7 +1950,13 @@ app.get('/api/match/details', async (req, res) => {
         console.log('📊 Fetched data:', {
             stats: stats.length,
             lineups: lineups.length,
-            events: events.length
+            events: events.length,
+            statsResults: statsRes.data?.results || 0,
+            lineupsResults: lineupsRes.data?.results || 0,
+            eventsResults: eventsRes.data?.results || 0,
+            statsErrors: statsRes.data?.errors || null,
+            lineupsErrors: lineupsRes.data?.errors || null,
+            eventsErrors: eventsRes.data?.errors || null
         });
         
         // ラインアップデータを正規化
@@ -1924,7 +1965,7 @@ app.get('/api/match/details', async (req, res) => {
             normalizedLineups = {};
             lineups.forEach(lineupData => {
                 const teamId = lineupData.team?.id;
-                const isHome = teamId === fixtureResponse.data?.response?.[0]?.teams?.home?.id;
+                const isHome = teamId === (fixtureData?.teams?.home?.id || null);
                 const teamKey = isHome ? 'home' : 'away';
                 
                 normalizedLineups[teamKey] = {
@@ -1966,7 +2007,7 @@ app.get('/api/match/details', async (req, res) => {
             
             stats.forEach(teamStats => {
                 const teamId = teamStats.team?.id;
-                const isHome = teamId === fixtureResponse.data?.response?.[0]?.teams?.home?.id;
+                const isHome = teamId === (fixtureData?.teams?.home?.id || null);
                 const teamKey = isHome ? 'home' : 'away';
                 
                 (teamStats.statistics || []).forEach(stat => {
@@ -2041,7 +2082,7 @@ app.get('/api/match/details', async (req, res) => {
                 assist: event.assist?.name || null,
                 comments: event.comments || null
             })),
-            fixture: fixtureResponse.data?.response?.[0] || null
+            fixture: fixtureData || null
         });
     } catch (error) {
         console.error('❌ Error fetching match details:', error.message);
