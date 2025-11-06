@@ -3184,11 +3184,17 @@
                         const dataSource = match.source === 'fotmob' || match.source === 'FotMob' ? 'fotmob' : 
                                           (match.fixture?.id ? 'api_football' : 'fotmob');
                         
-                        // FotMob IDの抽出
-                        const fotmobId = match.fotmobId || match.id || (match.source === 'fotmob' ? matchId : '');
+                        // API-Football fixture.idの抽出（優先）
+                        // match.fixture?.idが存在する場合はそれを使用（API-Football由来）
+                        // それ以外で、match.idが数値でAPI-FootballのID形式の場合はそれを使用
+                        let apiFootballId = match.fixture?.id || null;
+                        if (!apiFootballId && match.id && typeof match.id === 'number' && match.id > 100000) {
+                            // API-FootballのIDは通常6桁以上の数値
+                            apiFootballId = match.id;
+                        }
                         
-                        // API-Football IDの抽出
-                        const apiFootballId = match.fixture?.id || (match.source === 'api_football' ? matchId : '');
+                        // FotMob IDの抽出（API-Football IDがない場合のみ）
+                        const fotmobId = apiFootballId ? null : (match.fotmobId || match.id || (match.source === 'fotmob' ? matchId : null));
                         
                         // リーグキーの抽出（CL, PL, PD, SA, BL1, FL1など）
                         const leagueKey = getLeagueKey(match.leagueName || match.league || '');
@@ -3748,49 +3754,45 @@
             try {
                 // 新しいdata属性から情報を取得
                 const source = cardElement.dataset.source || 'fotmob';
-                const fotmobId = cardElement.dataset.fotmobId || '';
                 const apiFootballId = cardElement.dataset.apiFootballId || '';
                 const leagueKey = cardElement.dataset.leagueKey || '';
                 const kickoffUtc = cardElement.dataset.kickoffUtc || '';
                 const home = cardElement.dataset.home || '';
                 const away = cardElement.dataset.away || '';
                 
-                // 後方互換性のため、既存の属性も確認
-                const matchId = cardElement.dataset.matchId;
-                const league = cardElement.dataset.matchLeague;
-                let matchData = null;
-                
-                if (cardElement.dataset.matchData) {
-                    try {
-                        matchData = JSON.parse(cardElement.dataset.matchData);
-                        console.log('✅ Match data retrieved from data attribute:', matchData);
-                    } catch (e) {
-                        console.error('Failed to parse match data from data attribute:', e);
-                    }
+                // API-Football IDが存在する場合はそれを使用（優先）
+                if (apiFootballId && apiFootballId !== 'undefined' && apiFootballId !== 'null' && apiFootballId !== '') {
+                    console.log('✅ Using API-Football fixture ID:', apiFootballId);
+                    await showDetailedMatchInfoV2({
+                        source: 'api_football',
+                        fixtureId: apiFootballId,
+                        leagueKey,
+                        kickoffUtc,
+                        home,
+                        away
+                    });
+                } else {
+                    // API-Football IDがない場合は、FotMob IDから解決を試みる
+                    const fotmobId = cardElement.dataset.fotmobId || '';
+                    console.log('⚠️ No API-Football ID found, resolving from FotMob ID:', fotmobId);
+                    await showDetailedMatchInfoV2({
+                        source: 'fotmob',
+                        fotmobId,
+                        leagueKey,
+                        kickoffUtc,
+                        home,
+                        away
+                    });
                 }
-                
-                // 新しいAPIエンドポイントを使用
-                await showDetailedMatchInfoV2({
-                    source,
-                    fotmobId,
-                    apiFootballId,
-                    leagueKey,
-                    kickoffUtc,
-                    home,
-                    away,
-                    matchId,
-                    league,
-                    matchData
-                });
             } catch (error) {
                 console.error('Error in showDetailedMatchInfoFromCard:', error);
             }
         }
 
         // 新しい詳細な試合情報を表示する関数（ID解決レイヤー使用）
-        async function showDetailedMatchInfoV2({ source, fotmobId, apiFootballId, leagueKey, kickoffUtc, home, away, matchId, league, matchData }) {
+        async function showDetailedMatchInfoV2({ source, fixtureId, fotmobId, leagueKey, kickoffUtc, home, away }) {
             try {
-                console.log('🔍 showDetailedMatchInfoV2 called:', { source, fotmobId, apiFootballId, leagueKey, kickoffUtc, home, away });
+                console.log('🔍 showDetailedMatchInfoV2 called:', { source, fixtureId, fotmobId, leagueKey, kickoffUtc, home, away });
                 
                 const detailedModal = document.getElementById('matchDetailsModal');
                 if (!detailedModal) {
@@ -3806,15 +3808,10 @@
                     modalTitle.textContent = `${home} vs ${away}`;
                 }
                 
-                // 新しいAPIエンドポイントを使用
+                // 新しいAPIエンドポイントを使用（fixtureIdを優先）
                 const params = new URLSearchParams({
-                    source: source || 'fotmob',
-                    ...(fotmobId ? { fotmobId } : {}),
-                    ...(apiFootballId ? { apiFixtureId: apiFootballId } : {}),
-                    ...(leagueKey ? { leagueKey } : {}),
-                    ...(kickoffUtc ? { kickoffUtc } : {}),
-                    home: home || '',
-                    away: away || ''
+                    ...(fixtureId ? { fixtureId } : {}),
+                    ...(fotmobId && !fixtureId ? { fotmobId, source: 'fotmob', leagueKey, kickoffUtc, home, away } : {})
                 });
                 
                 console.log('📡 Fetching match details from new endpoint:', params.toString());
@@ -3839,7 +3836,7 @@
                         statusText: response.statusText,
                         error: errorData
                     });
-                    alert(`試合詳細の取得に失敗しました: ${errorData.reason || errorData.message || `HTTP ${response.status}`}`);
+                    alert(`試合詳細の取得に失敗しました: ${errorData.reason || errorData.message || errorData.error || `HTTP ${response.status}`}`);
                     return;
                 }
                 
@@ -3867,11 +3864,11 @@
                     displayDetailedMatchInfo(matchDetails);
                 } else {
                     console.error('❌ Failed to fetch match details:', result);
-                    alert(`試合詳細の取得に失敗しました: ${result.reason || result.message || 'Unknown error'}`);
+                    alert(`試合詳細の取得に失敗しました: ${result.reason || result.message || result.error || 'Unknown error'}`);
                 }
             } catch (error) {
                 console.error('Error in showDetailedMatchInfoV2:', error);
-                alert('試合詳細の取得中にエラーが発生しました');
+                alert(`試合詳細の取得中にエラーが発生しました: ${error.message}`);
             }
         }
 

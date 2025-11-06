@@ -3454,38 +3454,49 @@ app.post('/api/match/:id/details', async (req, res) => {
 
 // 新しい試合詳細取得エンドポイント（ID解決レイヤー使用）
 app.get('/api/match/details', async (req, res) => {
-    const { source, fotmobId, apiFixtureId, leagueKey, kickoffUtc, home, away } = req.query;
+    // クエリ名の互換性を持たせる（fixtureId, apiFixtureId, fotmobFixtureId）
+    const fixtureId = req.query.fixtureId || req.query.apiFixtureId || req.query.fotmobFixtureId || null;
+    const { source, fotmobId, leagueKey, kickoffUtc, home, away } = req.query;
     
-    console.log('🔍 Match details request:', { source, fotmobId, apiFixtureId, leagueKey, kickoffUtc, home, away });
+    console.log('🔍 Match details request:', { fixtureId, source, fotmobId, leagueKey, kickoffUtc, home, away });
     
-    const { resolveApiFootballFixtureId } = require('./resolver');
-    
-    let fixtureId = apiFixtureId || null;
-    
-    // API-Football IDが既にある場合はそれを使用
-    if (fixtureId && fixtureId !== 'undefined' && fixtureId !== 'null' && fixtureId !== '') {
-        console.log('✅ Using provided API-Football fixture ID:', fixtureId);
-    } else if (source === 'fotmob' && fotmobId && fotmobId !== 'undefined' && fotmobId !== 'null' && fotmobId !== '') {
-        // FotMob IDからAPI-Football fixtureIdを解決
-        console.log('🔍 Resolving fixture ID from FotMob ID:', fotmobId);
-        fixtureId = await resolveApiFootballFixtureId({
-            fotmobId,
-            kickoffUtc,
-            homeName: home,
-            awayName: away,
-            leagueKey
-        });
-    }
-    
+    // fixtureIdが必須
     if (!fixtureId || fixtureId === 'undefined' || fixtureId === 'null' || fixtureId === '') {
-        console.warn('⚠️ Could not resolve fixture ID');
-        return res.status(404).json({
-            ok: false,
-            reason: 'fixtureId_not_resolved',
-            message: 'Could not resolve fixture ID from provided parameters',
-            provided: { source, fotmobId, apiFixtureId, leagueKey, kickoffUtc, home, away }
-        });
+        // FotMob IDから解決を試みる
+        if (source === 'fotmob' && fotmobId && fotmobId !== 'undefined' && fotmobId !== 'null' && fotmobId !== '') {
+            console.log('🔍 Resolving fixture ID from FotMob ID:', fotmobId);
+            const { resolveApiFootballFixtureId } = require('./resolver');
+            const resolvedFixtureId = await resolveApiFootballFixtureId({
+                fotmobId,
+                kickoffUtc,
+                homeName: home,
+                awayName: away,
+                leagueKey
+            });
+            
+            if (resolvedFixtureId) {
+                fixtureId = resolvedFixtureId;
+            } else {
+                console.warn('⚠️ Could not resolve fixture ID from FotMob ID');
+                return res.status(404).json({
+                    ok: false,
+                    reason: 'fixtureId_not_resolved',
+                    error: 'Could not resolve fixture ID from provided parameters',
+                    provided: { source, fotmobId, leagueKey, kickoffUtc, home, away }
+                });
+            }
+        } else {
+            console.warn('⚠️ fixtureId is required');
+            return res.status(400).json({
+                ok: false,
+                reason: 'fixtureId_required',
+                error: 'fixtureId is required',
+                provided: { source, fotmobId, leagueKey, kickoffUtc, home, away }
+            });
+        }
     }
+    
+    console.log('✅ Using fixture ID:', fixtureId);
     
     console.log('✅ Using resolved fixture ID:', fixtureId);
     
