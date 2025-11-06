@@ -1076,8 +1076,9 @@
             text-align: center;
             white-space: nowrap;
             margin-top: 10px; /* 8pxから10pxに増加 */
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-            z-index: 20;
+            z-index: 25; /* 重なりを防ぐためにz-indexを追加 */
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8); /* 読みやすさを向上 */
+            pointer-events: none; /* クリックイベントを無効化 */
             max-width: 70px; /* 80pxから70pxに縮小 */
             overflow: hidden;
             text-overflow: ellipsis;
@@ -4723,46 +4724,104 @@
                 if (matchData.lineups?.home?.substitutes) {
                     homeBench = matchData.lineups.home.substitutes;
                 }
-                // フォールバックデータは使用しない（データがない場合は空配列）
 
                 // アウェイチームのベンチメンバー
                 let awayBench = [];
                 if (matchData.lineups?.away?.substitutes) {
                     awayBench = matchData.lineups.away.substitutes;
                 }
-                // フォールバックデータは使用しない（データがない場合は空配列）
 
                 // ホームチームのベンチメンバーを表示
-                homeBenchContainer.innerHTML = homeBench.map(player => `
-                    <div class="bench-player" onclick="showPlayerDetails('${player.player?.name || player.name}', '${matchData.homeTeam}')">
-                        <div class="player-avatar-small">
-                            ${player.player?.photo || player.photo ? 
-                                `<img src="${player.player?.photo || player.photo}" alt="${player.player?.name || player.name}" class="player-photo-small">` : 
-                                `<span class="player-initial-small">${(player.player?.name || player.name).charAt(0)}</span>`
-                            }
+                homeBenchContainer.innerHTML = homeBench.map(player => {
+                    // プレイヤーIDを取得
+                    let playerId = null;
+                    if (player.player && player.player.id) {
+                        playerId = player.player.id;
+                    } else if (player.id) {
+                        playerId = player.id;
+                    }
+                    
+                    // プレイヤー写真の取得
+                    let playerPhoto = null;
+                    if (player.player && player.player.photo && player.player.photo !== 'UNKNOWN' && player.player.photo !== 'Unknown' && player.player.photo !== 'null' && player.player.photo !== null && player.player.photo !== '') {
+                        playerPhoto = player.player.photo;
+                    } else if (player.photo && player.photo !== 'UNKNOWN' && player.photo !== 'Unknown' && player.photo !== 'null' && player.photo !== null && player.photo !== '') {
+                        playerPhoto = player.photo;
+                    }
+                    
+                    // フォールバック: プレイヤーIDがある場合はそれを使用して写真URLを生成
+                    if (!playerPhoto && playerId) {
+                        playerPhoto = `https://media.api-sports.io/football/players/${playerId}.png`;
+                    }
+                    
+                    // 最終フォールバック: 写真がない場合はnullを設定（頭文字を表示）
+                    if (!playerPhoto || playerPhoto === 'null' || playerPhoto === 'UNKNOWN' || playerPhoto === 'Unknown') {
+                        playerPhoto = null;
+                    }
+                    
+                    const playerName = player.player?.name || player.name || 'Unknown';
+                    
+                    return `
+                        <div class="bench-player" onclick="showPlayerDetails('${playerName}', '${matchData.homeTeam}')">
+                            <div class="player-avatar-small">
+                                ${playerPhoto ? 
+                                    `<img src="${playerPhoto}" alt="${playerName}" class="player-photo-small" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span class="player-initial-small" style="display:none;">${playerName.charAt(0)}</span>` : 
+                                    `<span class="player-initial-small">${playerName.charAt(0)}</span>`
+                                }
+                            </div>
+                            <div class="player-info-small">
+                                <div class="player-name-small">${playerName}</div>
+                                <div class="player-position-small">${getPositionLabel(player.player?.pos || player.pos)}</div>
+                            </div>
                         </div>
-                        <div class="player-info-small">
-                            <div class="player-name-small">${player.player?.name || player.name}</div>
-                            <div class="player-position-small">${getPositionLabel(player.player?.pos || player.pos)}</div>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 // アウェイチームのベンチメンバーを表示
-                awayBenchContainer.innerHTML = awayBench.map(player => `
-                    <div class="bench-player" onclick="showPlayerDetails('${player.player?.name || player.name}', '${matchData.awayTeam}')">
-                        <div class="player-avatar-small">
-                            ${player.player?.photo || player.photo ? 
-                                `<img src="${player.player?.photo || player.photo}" alt="${player.player?.name || player.name}" class="player-photo-small">` : 
-                                `<span class="player-initial-small">${(player.player?.name || player.name).charAt(0)}</span>`
-                            }
+                awayBenchContainer.innerHTML = awayBench.map(player => {
+                    // プレイヤーIDを取得
+                    let playerId = null;
+                    if (player.player && player.player.id) {
+                        playerId = player.player.id;
+                    } else if (player.id) {
+                        playerId = player.id;
+                    }
+                    
+                    // プレイヤー写真の取得
+                    let playerPhoto = null;
+                    if (player.player && player.player.photo && player.player.photo !== 'UNKNOWN' && player.player.photo !== 'Unknown' && player.player.photo !== 'null' && player.player.photo !== null && player.player.photo !== '') {
+                        playerPhoto = player.player.photo;
+                    } else if (player.photo && player.photo !== 'UNKNOWN' && player.photo !== 'Unknown' && player.photo !== 'null' && player.photo !== null && player.photo !== '') {
+                        playerPhoto = player.photo;
+                    }
+                    
+                    // フォールバック: プレイヤーIDがある場合はそれを使用して写真URLを生成
+                    if (!playerPhoto && playerId) {
+                        playerPhoto = `https://media.api-sports.io/football/players/${playerId}.png`;
+                    }
+                    
+                    // 最終フォールバック: 写真がない場合はnullを設定（頭文字を表示）
+                    if (!playerPhoto || playerPhoto === 'null' || playerPhoto === 'UNKNOWN' || playerPhoto === 'Unknown') {
+                        playerPhoto = null;
+                    }
+                    
+                    const playerName = player.player?.name || player.name || 'Unknown';
+                    
+                    return `
+                        <div class="bench-player" onclick="showPlayerDetails('${playerName}', '${matchData.awayTeam}')">
+                            <div class="player-avatar-small">
+                                ${playerPhoto ? 
+                                    `<img src="${playerPhoto}" alt="${playerName}" class="player-photo-small" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><span class="player-initial-small" style="display:none;">${playerName.charAt(0)}</span>` : 
+                                    `<span class="player-initial-small">${playerName.charAt(0)}</span>`
+                                }
+                            </div>
+                            <div class="player-info-small">
+                                <div class="player-name-small">${playerName}</div>
+                                <div class="player-position-small">${getPositionLabel(player.player?.pos || player.pos)}</div>
+                            </div>
                         </div>
-                        <div class="player-info-small">
-                            <div class="player-name-small">${player.player?.name || player.name}</div>
-                            <div class="player-position-small">${getPositionLabel(player.player?.pos || player.pos)}</div>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 console.log('Bench players displayed successfully');
                 
@@ -5164,14 +5223,17 @@
         function generateUnifiedPlayerPositions(players, teamType, formation, homeTeam, awayTeam) {
             const positions = getFormationPositions(formation);
             
+            // 選手名の重なりを防ぐための位置調整
+            const adjustedPositions = adjustPlayerPositions(positions, teamType);
+            
             return players.map((player, index) => {
-                if (index < positions.length) {
-                    const pos = positions[index];
+                if (index < adjustedPositions.length) {
+                    const pos = adjustedPositions[index];
                     let left, top;
                     
                     if (teamType === 'home') {
-                        // ホームチーム（左側、左のゴール）
-                        left = pos.left;
+                        // ホームチーム（左側、左のゴール）- 左右を反転
+                        left = 100 - pos.left;
                         top = pos.top;
                         
                         // 中央安全ゾーン（48%-52%）に入らないように制限
@@ -5202,6 +5264,10 @@
                         }
                     }
                     
+                    // 名前の表示位置を調整（重なりを防ぐ）
+                    const nameOffset = calculateNameOffset(index, adjustedPositions, teamType);
+                    const nameTransform = nameOffset.x !== 0 ? `translateX(calc(-50% + ${nameOffset.x}px))` : 'translateX(-50%)';
+                    
                     return `
                         <div class="player-marker ${teamType}-player" style="left: ${left}%; top: ${top}%;" onclick="showPlayerDetails('${player.name}', '${teamType === 'home' ? homeTeam : awayTeam}')">
                             <div class="player-avatar">
@@ -5212,12 +5278,78 @@
                             </div>
                             <div class="player-rating ${player.ratingClass}">${player.rating}</div>
                             <div class="player-number">${player.number}</div>
-                            <div class="player-name">${player.name.replace(/^[^ ]+ /, '')}</div>
+                            <div class="player-name" style="transform: ${nameTransform};">${player.name.replace(/^[^ ]+ /, '')}</div>
                         </div>
                     `;
                 }
                 return '';
             }).join('');
+        }
+        
+        // 選手位置を調整して重なりを防ぐ関数
+        function adjustPlayerPositions(positions, teamType) {
+            const adjusted = [...positions];
+            const minDistance = 8; // 最小距離（%）
+            
+            for (let i = 0; i < adjusted.length; i++) {
+                for (let j = i + 1; j < adjusted.length; j++) {
+                    const dx = Math.abs(adjusted[i].left - adjusted[j].left);
+                    const dy = Math.abs(adjusted[i].top - adjusted[j].top);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < minDistance) {
+                        // 重なっている場合、位置を調整
+                        const angle = Math.atan2(adjusted[j].top - adjusted[i].top, adjusted[j].left - adjusted[i].left);
+                        const offset = minDistance - distance;
+                        
+                        adjusted[j].left += Math.cos(angle) * offset;
+                        adjusted[j].top += Math.sin(angle) * offset;
+                        
+                        // 境界チェック
+                        adjusted[j].left = Math.max(5, Math.min(95, adjusted[j].left));
+                        adjusted[j].top = Math.max(5, Math.min(95, adjusted[j].top));
+                    }
+                }
+            }
+            
+            return adjusted;
+        }
+        
+        // 名前の表示位置を計算する関数（重なりを防ぐ）
+        function calculateNameOffset(index, positions, teamType) {
+            const currentPos = positions[index];
+            let offsetX = 0; // デフォルトは中央（transform: translateX(-50%)で中央揃え）
+            let offsetY = 0; // デフォルトは下（top: 100%）
+            
+            // 近くの選手をチェック
+            for (let i = 0; i < positions.length; i++) {
+                if (i === index) continue;
+                
+                const otherPos = positions[i];
+                const dx = Math.abs(currentPos.left - otherPos.left);
+                const dy = Math.abs(currentPos.top - otherPos.top);
+                
+                // 同じライン（topが近い）で左右に近い場合
+                if (dy < 5 && dx < 15) {
+                    // 左側の選手は名前を左に、右側の選手は名前を右に
+                    if (currentPos.left < otherPos.left) {
+                        offsetX = -20; // 左にずらす（px単位）
+                    } else {
+                        offsetX = 20; // 右にずらす（px単位）
+                    }
+                }
+                
+                // 上下に近い場合、名前を横にずらす
+                if (dx < 5 && dy < 15) {
+                    if (currentPos.top < otherPos.top) {
+                        offsetX = -20; // 上側の選手は左に
+                    } else {
+                        offsetX = 20; // 下側の選手は右に
+                    }
+                }
+            }
+            
+            return { x: offsetX, y: offsetY };
         }
 
         // フォーメーションに基づくプレイヤー位置を取得する関数（陣地分離版）
