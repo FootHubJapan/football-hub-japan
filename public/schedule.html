@@ -5398,18 +5398,18 @@
                 case '4-1-4-1':
                     // GK (右のゴール、より後ろに)
                     positions.push({ left: 92, top: 50 });
-                    // Defenders (右から2番目のライン、より後ろに、CB間隔を大幅に広げる)
-                    positions.push({ left: 82, top: 20 });
-                    positions.push({ left: 82, top: 35 });
-                    positions.push({ left: 82, top: 65 });
-                    positions.push({ left: 82, top: 80 });
+                    // Defenders (右から2番目のライン、より後ろに、LSBとRSBを外側に配置)
+                    positions.push({ left: 82, top: 15 }); // LSB (Carreras) - 外側に
+                    positions.push({ left: 82, top: 35 }); // LCB
+                    positions.push({ left: 82, top: 65 }); // RCB
+                    positions.push({ left: 82, top: 85 }); // RSB (Valverde) - 外側に
                     // Defensive Midfielder (右から3番目のライン)
                     positions.push({ left: 72, top: 50 });
-                    // Midfielders (右から4番目のライン、ハーフライン手前、間隔を広げる)
-                    positions.push({ left: 62, top: 15 });
-                    positions.push({ left: 62, top: 30 });
-                    positions.push({ left: 62, top: 70 });
-                    positions.push({ left: 62, top: 85 });
+                    // Midfielders (右から4番目のライン、ハーフライン手前、GulerとBellinghamの距離を狭める)
+                    positions.push({ left: 62, top: 15 }); // LM
+                    positions.push({ left: 62, top: 40 }); // LCM (Guler) - 中央寄りに
+                    positions.push({ left: 62, top: 60 }); // RCM (Bellingham) - 中央寄りに
+                    positions.push({ left: 62, top: 85 }); // RM
                     // Striker (右から5番目のライン、ハーフライン手前)
                     positions.push({ left: 55, top: 50 });
                     break;
