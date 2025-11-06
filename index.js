@@ -1907,20 +1907,27 @@ app.get('/api/match/details', async (req, res) => {
                         console.warn('   Normalized clicked:', { clickedHomeNorm, clickedAwayNorm });
                         console.warn('   Match results:', { homeMatch, awayMatch });
                         
-                        // 警告を出すが、データは返す（統計やラインアップは取得できる可能性がある）
-                        // ただし、明らかに異なる試合の場合は404を返す
-                        const bothTeamsMismatch = !homeMatch && !awayMatch;
-                        if (bothTeamsMismatch) {
-                            console.error('❌ Both teams mismatch - likely different match');
-                            return res.status(404).json({
-                                ok: false,
-                                reason: 'team_name_mismatch',
-                                error: 'Fixture ID resolved to a different match',
-                                apiTeams: { home: apiHomeTeam, away: apiAwayTeam },
-                                clickedTeams: { home, away }
-                            });
+                        // fixture IDが直接指定されている場合、チーム名の不一致は警告のみとする
+                        // （fixture IDが正しければ、それは正しい試合である可能性が高い）
+                        if (fixtureId && fixtureId !== 'undefined' && fixtureId !== 'null' && fixtureId !== '') {
+                            console.warn('⚠️ Fixture ID provided directly - continuing despite team name mismatch');
+                            console.warn('   This may be due to team name variations between data sources');
                         } else {
-                            console.warn('⚠️ Partial match - continuing with data retrieval');
+                            // 警告を出すが、データは返す（統計やラインアップは取得できる可能性がある）
+                            // ただし、明らかに異なる試合の場合は404を返す
+                            const bothTeamsMismatch = !homeMatch && !awayMatch;
+                            if (bothTeamsMismatch) {
+                                console.error('❌ Both teams mismatch - likely different match');
+                                return res.status(404).json({
+                                    ok: false,
+                                    reason: 'team_name_mismatch',
+                                    error: 'Fixture ID resolved to a different match',
+                                    apiTeams: { home: apiHomeTeam, away: apiAwayTeam },
+                                    clickedTeams: { home, away }
+                                });
+                            } else {
+                                console.warn('⚠️ Partial match - continuing with data retrieval');
+                            }
                         }
                     }
                 }
