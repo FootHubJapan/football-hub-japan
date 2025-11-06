@@ -5042,18 +5042,29 @@
                     playerNumber = player.number;
                 }
                 
+                // プレイヤーIDの取得（写真URL生成に必要）
+                let playerId = null;
+                if (player.player && player.player.id) {
+                    playerId = player.player.id;
+                } else if (player.id) {
+                    playerId = player.id;
+                }
+                
                 // プレイヤー写真の取得（API-Footballのphotoフィールド）
-                if (player.photo && player.photo !== 'UNKNOWN' && player.photo !== 'Unknown' && player.photo !== 'null' && player.photo !== null) {
-                    playerPhoto = player.photo;
-                } else if (player.player && player.player.photo && player.player.photo !== 'UNKNOWN' && player.player.photo !== 'Unknown' && player.player.photo !== 'null' && player.player.photo !== null) {
+                if (player.player && player.player.photo && player.player.photo !== 'UNKNOWN' && player.player.photo !== 'Unknown' && player.player.photo !== 'null' && player.player.photo !== null && player.player.photo !== '') {
                     playerPhoto = player.player.photo;
-                } else if (player.photo && player.photo !== 'UNKNOWN' && player.photo !== 'Unknown' && player.photo !== 'null' && player.photo !== null) {
+                } else if (player.photo && player.photo !== 'UNKNOWN' && player.photo !== 'Unknown' && player.photo !== 'null' && player.photo !== null && player.photo !== '') {
                     playerPhoto = player.photo;
                 }
                 
-                // フォールバック: 顔写真がない場合は、プレイヤー名の頭文字を使用
-                if (!playerPhoto) {
-                    playerPhoto = `https://media.api-sports.io/football/players/${playerNumber}.png`;
+                // フォールバック: プレイヤーIDがある場合はそれを使用して写真URLを生成
+                if (!playerPhoto && playerId) {
+                    playerPhoto = `https://media.api-sports.io/football/players/${playerId}.png`;
+                }
+                
+                // 最終フォールバック: 写真がない場合はnullを設定（頭文字を表示）
+                if (!playerPhoto || playerPhoto === 'null' || playerPhoto === 'UNKNOWN' || playerPhoto === 'Unknown') {
+                    playerPhoto = null;
                 }
                 
                 // デバッグ情報をコンソールに出力
