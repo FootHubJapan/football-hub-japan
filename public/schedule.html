@@ -5239,7 +5239,9 @@
             let positions;
             if (teamType === 'home') {
                 // ホームチームは左側用のフォーメーション位置を使用
-                positions = getFormationPositions(formation);
+                // キーパーの視点から見て、右側の選手（RSB、RWG）はtopの値を反転させる必要がある
+                const basePositions = getFormationPositions(formation);
+                positions = basePositions.map(pos => ({ left: pos.left, top: 100 - pos.top }));
             } else {
                 // アウェイチームは右側用のフォーメーション位置を使用
                 // 4-1-4-1は既に右側用に設定されているが、他のフォーメーションの場合は右側用に変換
