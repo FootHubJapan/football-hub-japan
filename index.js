@@ -3443,6 +3443,130 @@ app.post('/api/match/:id/details', async (req, res) => {
     return handleMatchDetailsRequest(req, res);
 });
 
+// 新しい試合詳細取得エンドポイント（ID解決レイヤー使用）
+app.get('/api/match/details', async (req, res) => {
+    const { source, fotmobId, apiFixtureId, leagueKey, kickoffUtc, home, away } = req.query;
+    
+    const { resolveApiFootballFixtureId } = require('./resolver');
+    
+    let fixtureId = apiFixtureId || null;
+    
+    // FotMob IDからAPI-Football fixtureIdを解決
+    if (!fixtureId && source === 'fotmob' && fotmobId) {
+        console.log('🔍 Resolving fixture ID from FotMob ID:', fotmobId);
+        fixtureId = await resolveApiFootballFixtureId({
+            fotmobId,
+            kickoffUtc,
+            homeName: home,
+            awayName: away,
+            leagueKey
+        });
+    }
+    
+    if (!fixtureId) {
+        return res.status(404).json({
+            ok: false,
+            reason: 'fixtureId_not_resolved',
+            message: 'Could not resolve fixture ID from provided parameters'
+        });
+    }
+    
+    console.log('✅ Using resolved fixture ID:', fixtureId);
+    
+    // ここから初めてAPI-Footballの詳細系を叩く
+    const apiKey = process.env.API_FOOTBALL_KEY || process.env.RAPIDAPI_KEY;
+    if (!apiKey || apiKey === 'YOUR_API_FOOTBALL_KEY') {
+        return res.status(500).json({
+            ok: false,
+            reason: 'api_key_not_configured'
+        });
+    }
+    
+    const headers = {
+        'x-apisports-key': apiKey,
+        'x-rapidapi-host': 'v3.football.api-sports.io'
+    };
+    
+    try {
+        // まずfixtureの基本情報を取得してチーム名を確認（ガード）
+        const fixtureResponse = await axios.get(`https://v3.football.api-sports.io/fixtures?id=${fixtureId}`, {
+            headers,
+            timeout: 15000
+        });
+        
+        if (fixtureResponse.data?.response && fixtureResponse.data.response.length > 0) {
+            const fixture = fixtureResponse.data.response[0];
+            const apiHomeTeam = fixture.teams.home.name;
+            const apiAwayTeam = fixture.teams.away.name;
+            
+            // チーム名の正規化比較
+            const norm = (s) => {
+                if (!s) return '';
+                return s.toLowerCase()
+                    .normalize('NFKD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/\./g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            };
+            
+            const apiHomeNorm = norm(apiHomeTeam);
+            const apiAwayNorm = norm(apiAwayTeam);
+            const clickedHomeNorm = norm(home);
+            const clickedAwayNorm = norm(away);
+            
+            const homeMatch = apiHomeNorm.includes(clickedHomeNorm) || clickedHomeNorm.includes(apiHomeNorm) ||
+                            apiHomeNorm.includes(clickedAwayNorm) || clickedAwayNorm.includes(apiHomeNorm);
+            const awayMatch = apiAwayNorm.includes(clickedAwayNorm) || clickedAwayNorm.includes(apiAwayNorm) ||
+                            apiAwayNorm.includes(clickedHomeNorm) || clickedHomeNorm.includes(apiAwayNorm);
+            
+            // 両方のチームが一致するか、順序が逆でも一致するか確認
+            if (!((homeMatch && awayMatch) || (apiHomeNorm === clickedAwayNorm && apiAwayNorm === clickedHomeNorm))) {
+                console.warn('⚠️ Team name mismatch detected - different match');
+                console.warn('   API returned:', { apiHomeTeam, apiAwayTeam });
+                console.warn('   Clicked match:', { home, away });
+                return res.status(404).json({
+                    ok: false,
+                    reason: 'team_name_mismatch',
+                    message: 'Fixture ID resolved to a different match',
+                    apiTeams: { home: apiHomeTeam, away: apiAwayTeam },
+                    clickedTeams: { home, away }
+                });
+            }
+        }
+        
+        // 統計、ラインアップ、イベントを並列取得
+        const [statsRes, lineupsRes, eventsRes] = await Promise.all([
+            axios.get(`https://v3.football.api-sports.io/fixtures/statistics?fixture=${fixtureId}`, { headers, timeout: 15000 }),
+            axios.get(`https://v3.football.api-sports.io/fixtures/lineups?fixture=${fixtureId}`, { headers, timeout: 15000 }),
+            axios.get(`https://v3.football.api-sports.io/fixtures/events?fixture=${fixtureId}`, { headers, timeout: 15000 })
+        ]);
+        
+        const stats = statsRes.data?.response ?? [];
+        const lineups = lineupsRes.data?.response ?? [];
+        const events = eventsRes.data?.response ?? [];
+        
+        return res.json({
+            ok: true,
+            fixtureId,
+            hasStats: (statsRes.data?.results ?? 0) > 0,
+            hasLineups: (lineupsRes.data?.results ?? 0) > 0,
+            hasEvents: (eventsRes.data?.results ?? 0) > 0,
+            stats,
+            lineups,
+            events,
+            fixture: fixtureResponse.data?.response?.[0] || null
+        });
+    } catch (error) {
+        console.error('❌ Error fetching match details:', error.message);
+        return res.status(500).json({
+            ok: false,
+            reason: 'api_error',
+            message: error.message
+        });
+    }
+});
+
 async function handleMatchDetailsRequest(req, res) {
     try {
         const matchId = req.params.id;
