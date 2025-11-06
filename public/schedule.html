@@ -5283,10 +5283,7 @@
                         }
                     }
                     
-                    // 名前の表示位置を調整（重なりを防ぐ）
-                    const nameOffset = calculateNameOffset(index, adjustedPositions, teamType);
-                    const nameTransform = nameOffset.x !== 0 ? `translateX(calc(-50% + ${nameOffset.x}px))` : 'translateX(-50%)';
-                    
+                    // 名前は常に選手写真の真下に配置（中央揃え）
                     return `
                         <div class="player-marker ${teamType}-player" style="left: ${left}%; top: ${top}%;" onclick="showPlayerDetails('${player.name}', '${teamType === 'home' ? homeTeam : awayTeam}')">
                             <div class="player-avatar">
@@ -5297,7 +5294,7 @@
                             </div>
                             <div class="player-rating ${player.ratingClass}">${player.rating}</div>
                             <div class="player-number">${player.number}</div>
-                            <div class="player-name" style="transform: ${nameTransform};">${player.name.replace(/^[^ ]+ /, '')}</div>
+                            <div class="player-name">${player.name.replace(/^[^ ]+ /, '')}</div>
                         </div>
                     `;
                 }
