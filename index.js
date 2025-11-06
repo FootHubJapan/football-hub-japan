@@ -1885,23 +1885,44 @@ app.get('/api/match/details', async (req, res) => {
                 const clickedHomeNorm = norm(home);
                 const clickedAwayNorm = norm(away);
                 
+                // より柔軟なマッチング: チーム名の部分一致や順序の逆転を考慮
                 const homeMatch = apiHomeNorm.includes(clickedHomeNorm) || clickedHomeNorm.includes(apiHomeNorm) ||
                                 apiHomeNorm.includes(clickedAwayNorm) || clickedAwayNorm.includes(apiHomeNorm);
                 const awayMatch = apiAwayNorm.includes(clickedAwayNorm) || clickedAwayNorm.includes(apiAwayNorm) ||
                                 apiAwayNorm.includes(clickedHomeNorm) || clickedHomeNorm.includes(apiAwayNorm);
                 
                 // 両方のチームが一致するか、順序が逆でも一致するか確認
-                if (home && away && !((homeMatch && awayMatch) || (apiHomeNorm === clickedAwayNorm && apiAwayNorm === clickedHomeNorm))) {
-                    console.warn('⚠️ Team name mismatch detected - different match');
-                    console.warn('   API returned:', { apiHomeTeam, apiAwayTeam });
-                    console.warn('   Clicked match:', { home, away });
-                    return res.status(404).json({
-                        ok: false,
-                        reason: 'team_name_mismatch',
-                        error: 'Fixture ID resolved to a different match',
-                        apiTeams: { home: apiHomeTeam, away: apiAwayTeam },
-                        clickedTeams: { home, away }
-                    });
+                // ただし、home/awayが提供されていない場合はスキップ
+                if (home && away) {
+                    const isMatch = (homeMatch && awayMatch) || 
+                                   (apiHomeNorm === clickedAwayNorm && apiAwayNorm === clickedHomeNorm) ||
+                                   (apiHomeNorm === clickedHomeNorm && apiAwayNorm === clickedAwayNorm);
+                    
+                    if (!isMatch) {
+                        // より詳細なログを出力
+                        console.warn('⚠️ Team name mismatch detected');
+                        console.warn('   API returned:', { apiHomeTeam, apiAwayTeam });
+                        console.warn('   Clicked match:', { home, away });
+                        console.warn('   Normalized API:', { apiHomeNorm, apiAwayNorm });
+                        console.warn('   Normalized clicked:', { clickedHomeNorm, clickedAwayNorm });
+                        console.warn('   Match results:', { homeMatch, awayMatch });
+                        
+                        // 警告を出すが、データは返す（統計やラインアップは取得できる可能性がある）
+                        // ただし、明らかに異なる試合の場合は404を返す
+                        const bothTeamsMismatch = !homeMatch && !awayMatch;
+                        if (bothTeamsMismatch) {
+                            console.error('❌ Both teams mismatch - likely different match');
+                            return res.status(404).json({
+                                ok: false,
+                                reason: 'team_name_mismatch',
+                                error: 'Fixture ID resolved to a different match',
+                                apiTeams: { home: apiHomeTeam, away: apiAwayTeam },
+                                clickedTeams: { home, away }
+                            });
+                        } else {
+                            console.warn('⚠️ Partial match - continuing with data retrieval');
+                        }
+                    }
                 }
             } else {
                 console.warn('⚠️ No fixture data found for ID:', fixtureId);
