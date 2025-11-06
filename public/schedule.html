@@ -5206,7 +5206,7 @@
                         <div class="player-marker ${teamType}-player" style="left: ${left}%; top: ${top}%;" onclick="showPlayerDetails('${player.name}', '${teamType === 'home' ? homeTeam : awayTeam}')">
                             <div class="player-avatar">
                                 ${player.photo ? 
-                                    `<img src="${player.photo}" alt="${player.name}" class="player-photo">` : 
+                                    `<img src="${player.photo}" alt="${player.name}" class="player-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="player-initial" style="display:none;">${player.name.charAt(0)}</div>` : 
                                     `<div class="player-initial">${player.name.charAt(0)}</div>`
                                 }
                             </div>

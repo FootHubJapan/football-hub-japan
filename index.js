@@ -2083,20 +2083,40 @@ app.get('/api/match/details', async (req, res) => {
                 
                 normalizedLineups[teamKey] = {
                     formation: lineupData.formation || 'Unknown',
-                    startXI: (lineupData.startXI || []).map(player => ({
-                        name: player.player?.name || player.name || 'Unknown',
-                        number: player.player?.number || player.number || 0,
-                        position: player.player?.pos || player.pos || 'Unknown',
-                        player: player.player || player,
-                        photo: player.player?.photo || player.photo || null
-                    })),
-                    substitutes: (lineupData.substitutes || []).map(player => ({
-                        name: player.player?.name || player.name || 'Unknown',
-                        number: player.player?.number || player.number || 0,
-                        position: player.player?.pos || player.pos || 'Unknown',
-                        player: player.player || player,
-                        photo: player.player?.photo || player.photo || null
-                    })),
+                    startXI: (lineupData.startXI || []).map(player => {
+                        const playerObj = player.player || player;
+                        return {
+                            name: playerObj?.name || player.name || 'Unknown',
+                            number: playerObj?.number || player.number || 0,
+                            position: playerObj?.pos || player.pos || 'Unknown',
+                            player: {
+                                ...playerObj,
+                                id: playerObj?.id || player.id || null,
+                                name: playerObj?.name || player.name || 'Unknown',
+                                number: playerObj?.number || player.number || 0,
+                                pos: playerObj?.pos || player.pos || 'Unknown',
+                                photo: playerObj?.photo || player.photo || null
+                            },
+                            photo: playerObj?.photo || player.photo || null
+                        };
+                    }),
+                    substitutes: (lineupData.substitutes || []).map(player => {
+                        const playerObj = player.player || player;
+                        return {
+                            name: playerObj?.name || player.name || 'Unknown',
+                            number: playerObj?.number || player.number || 0,
+                            position: playerObj?.pos || player.pos || 'Unknown',
+                            player: {
+                                ...playerObj,
+                                id: playerObj?.id || player.id || null,
+                                name: playerObj?.name || player.name || 'Unknown',
+                                number: playerObj?.number || player.number || 0,
+                                pos: playerObj?.pos || player.pos || 'Unknown',
+                                photo: playerObj?.photo || player.photo || null
+                            },
+                            photo: playerObj?.photo || player.photo || null
+                        };
+                    }),
                     coach: lineupData.coach?.name || 'Unknown'
                 };
             });
