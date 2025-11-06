@@ -5261,7 +5261,8 @@
                     let left, top;
                     
                     if (teamType === 'home') {
-                        // ホームチーム（左側、左のゴール）- そのまま使用（既に左側用の位置）
+                        // ホームチーム（左側、左のゴール）
+                        // 既にpositionsでtopを反転済みなので、そのまま使用
                         left = pos.left;
                         top = pos.top;
                         
