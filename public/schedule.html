@@ -5168,15 +5168,24 @@
 
         // 統合ピッチ表示のHTMLを生成する関数
         function generateUnifiedPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation, homeTeam, awayTeam) {
+            // チーム名を取得（オブジェクトの場合はnameプロパティを使用）
+            const homeTeamName = typeof homeTeam === 'string' ? homeTeam : homeTeam?.name || 'ホームチーム';
+            const awayTeamName = typeof awayTeam === 'string' ? awayTeam : awayTeam?.name || 'アウェイチーム';
+            
+            // チームIDを取得
+            const homeTeamId = getTeamId(homeTeamName);
+            const awayTeamId = getTeamId(awayTeamName);
+            
             return `
                 <div class="unified-pitch">
                     <div class="pitch-header">
                         <div class="team-info home-team">
                             <div class="team-logo">
-                                <img src="https://media.api-sports.io/football/teams/40.png" alt="Liverpool" class="team-logo-img">
+                                <img src="https://media.api-sports.io/football/teams/${homeTeamId}.png" alt="${homeTeamName}" class="team-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="team-logo-fallback">${homeTeamName.charAt(0)}</div>
                             </div>
                             <div class="team-details">
-                                <div class="team-name">Liverpool</div>
+                                <div class="team-name">${homeTeamName}</div>
                                 <div class="team-formation">Formation: ${homeFormation}</div>
                                 <div class="team-rating">Rating: 7.2</div>
                             </div>
@@ -5186,10 +5195,11 @@
                         
                         <div class="team-info away-team">
                             <div class="team-logo">
-                                <img src="https://media.api-sports.io/football/teams/35.png" alt="Bournemouth" class="team-logo-img">
+                                <img src="https://media.api-sports.io/football/teams/${awayTeamId}.png" alt="${awayTeamName}" class="team-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="team-logo-fallback">${awayTeamName.charAt(0)}</div>
                             </div>
                             <div class="team-details">
-                                <div class="team-name">Bournemouth</div>
+                                <div class="team-name">${awayTeamName}</div>
                                 <div class="team-formation">Formation: ${awayFormation}</div>
                                 <div class="team-rating">Rating: 6.8</div>
                             </div>
