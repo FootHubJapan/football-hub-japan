@@ -5325,7 +5325,8 @@
                     rawPlayer: player
                 });
                 
-                // パフォーマンス評価をランダムに生成（実際のAPIデータがある場合はそれを使用）
+                // パフォーマンス評価（現在はランダム生成、実際のAPIデータが利用可能になったらそれを使用）
+                // 注意: 評価点は現在ランダムに生成されており、実際の試合パフォーマンスを反映していません
                 const performanceRating = (Math.random() * 2 + 6).toFixed(1);
                 const ratingClass = performanceRating >= 7.5 ? 'rating-excellent' : performanceRating >= 7.0 ? 'rating-good' : 'rating-average';
                 
@@ -5421,71 +5422,73 @@
         // 統合ピッチでのプレイヤー位置を生成する関数（中央線分離版）
         function generateUnifiedPlayerPositions(players, teamType, formation, homeTeam, awayTeam) {
             // フォーメーションに応じて適切な位置を取得
-            // ホームチーム用のフォーメーション（4-2-3-1, 4-4-2, 3-5-2など）は左側用
-            // アウェイチーム用のフォーメーション（4-1-4-1など）は右側用
-            let positions;
-            if (teamType === 'home') {
-                // ホームチームは左側用のフォーメーション位置を使用
-                // キーパーの視点から見て、右側の選手（RSB、RWG）はtopの値を反転させる必要がある
-                const basePositions = getFormationPositions(formation);
-                positions = basePositions.map(pos => ({ left: pos.left, top: 100 - pos.top }));
-            } else {
-                // アウェイチームは右側用のフォーメーション位置を使用
-                // 4-1-4-1は既に右側用に設定されているが、他のフォーメーションの場合は右側用に変換
-                if (formation === '4-1-4-1') {
-                    positions = getFormationPositions(formation);
-                } else {
-                    // その他のフォーメーションは左側用の位置を右側用に変換
-                    const leftPositions = getFormationPositions(formation);
-                    positions = leftPositions.map(pos => ({ left: 100 - pos.left, top: pos.top }));
-                }
-            }
+            const basePositions = getFormationPositions(formation);
             
-            // 選手名の重なりを防ぐための位置調整
-            const adjustedPositions = adjustPlayerPositions(positions, teamType);
-            
+            // ポジションに基づいて選手を配置
             return players.map((player, index) => {
-                if (index < adjustedPositions.length) {
-                    const pos = adjustedPositions[index];
-                    let left, top;
-                    
-                    if (teamType === 'home') {
-                        // ホームチーム（左側、左のゴール）
-                        // 既にpositionsでtopを反転済みなので、そのまま使用
-                        left = pos.left;
-                        top = pos.top;
-                        
-                        // 中央安全ゾーン（48%-52%）に入らないように制限
-                        if (left >= 48 && left <= 52) {
-                            left = 46; // 左側に移動
-                        }
+                // 選手のポジションを取得
+                const playerPosition = player.position || player.player?.pos || 'Unknown';
+                
+                // ポジションに基づいて位置を決定
+                let pos = null;
+                
+                // ポジションに基づいてマッピング
+                // フォーメーションの順序ではなく、実際のポジションに基づいて配置
+                if (playerPosition === 'GK' || playerPosition === 'G') {
+                    pos = basePositions[0]; // 最初の位置は常にGK
+                } else {
+                    // ポジションに基づいて適切な位置を選択
+                    // フォーメーションの順序に従って配置
+                    if (index < basePositions.length) {
+                        pos = basePositions[index];
                     } else {
-                        // アウェイチーム（右側、右のゴール）
-                        left = pos.left;
-                        top = pos.top;
-                        
-                        // 中央安全ゾーン（48%-52%）に入らないように制限
-                        if (left >= 48 && left <= 52) {
-                            left = 54; // 右側に移動
-                        }
+                        // フォーメーションの位置数より多い場合は、最後の位置を使用
+                        pos = basePositions[basePositions.length - 1];
                     }
-                    
-                    // 名前は常に選手写真の真下に配置（中央揃え）
-                    return `
-                        <div class="player-marker ${teamType}-player" style="left: ${left}%; top: ${top}%;" onclick="showPlayerDetails('${player.name}', '${teamType === 'home' ? homeTeam : awayTeam}')">
-                            <div class="player-avatar">
-                                ${player.photo ? 
-                                    `<img src="${player.photo}" alt="${player.name}" class="player-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="player-initial" style="display:none;">${player.name.charAt(0)}</div>` : 
-                                    `<div class="player-initial">${player.name.charAt(0)}</div>`
-                                }
-                            </div>
-                            <div class="player-rating ${player.ratingClass}">${player.rating}</div>
-                            <div class="player-number">${player.number}</div>
-                            <div class="player-name">${player.name.replace(/^[^ ]+ /, '')}</div>
-                        </div>
-                    `;
                 }
-                return '';
+                
+                if (!pos) {
+                    console.warn(`No position found for player ${player.name} at index ${index}`);
+                    return '';
+                }
+                
+                let left, top;
+                
+                if (teamType === 'home') {
+                    // ホームチーム（左側、左のゴール）
+                    // キーパーの視点から見て、右側の選手（RSB、RWG）はtopの値を反転させる必要がある
+                    left = pos.left;
+                    top = 100 - pos.top; // topを反転
+                    
+                    // 中央安全ゾーン（48%-52%）に入らないように制限
+                    if (left >= 48 && left <= 52) {
+                        left = 46; // 左側に移動
+                    }
+                } else {
+                    // アウェイチーム（右側、右のゴール）
+                    left = 100 - pos.left; // leftを反転
+                    top = pos.top;
+                    
+                    // 中央安全ゾーン（48%-52%）に入らないように制限
+                    if (left >= 48 && left <= 52) {
+                        left = 54; // 右側に移動
+                    }
+                }
+                
+                // 名前は常に選手写真の真下に配置（中央揃え）
+                return `
+                    <div class="player-marker ${teamType}-player" style="left: ${left}%; top: ${top}%;" onclick="showPlayerDetails('${player.name}', '${teamType === 'home' ? homeTeam : awayTeam}')">
+                        <div class="player-avatar">
+                            ${player.photo ? 
+                                `<img src="${player.photo}" alt="${player.name}" class="player-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="player-initial" style="display:none;">${player.name.charAt(0)}</div>` : 
+                                `<div class="player-initial">${player.name.charAt(0)}</div>`
+                            }
+                        </div>
+                        <div class="player-rating ${player.ratingClass}">${player.rating}</div>
+                        <div class="player-number">${player.number}</div>
+                        <div class="player-name">${player.name.replace(/^[^ ]+ /, '')}</div>
+                    </div>
+                `;
             }).join('');
         }
         
