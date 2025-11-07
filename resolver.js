@@ -64,9 +64,18 @@ async function resolveApiFootballFixtureId({ fotmobId, kickoffUtc, homeName, awa
             params.league = String(league);
         }
         
-        // CLなどは season=2025 を付けると精度↑（大会次第で必須）
-        const season = d.getFullYear();
-        if (league === 2 || league === 3) { // CL or EL
+        // シーズンの判定（8月以降は新しいシーズン）
+        let season = d.getFullYear();
+        if (d.getMonth() >= 7) { // 0-indexed, 7 = August
+            // 8月以降の試合はその年のシーズン
+            season = d.getFullYear();
+        } else {
+            // 1-7月の試合は前年のシーズン
+            season = d.getFullYear() - 1;
+        }
+        
+        // CLやELなどは season を付けると精度↑（大会次第で必須）
+        if (league === 2 || league === 3 || league === 848) { // CL, EL, or ECL
             params.season = String(season);
         }
 
