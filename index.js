@@ -1928,7 +1928,16 @@ app.get('/api/match/details', async (req, res) => {
                                 const leagueId = leagueMap[leagueKey] || null;
                                 
                                 // シーズンの抽出（kickoffUtcから）
-                                const season = matchDate.getFullYear();
+                                // 過去シーズンの試合の場合、kickoffUtcから正しいシーズンを判定
+                                let season = matchDate.getFullYear();
+                                // 8月以降は新しいシーズンが始まる
+                                if (matchDate.getMonth() >= 7) { // 0-indexed, 7 = August
+                                    // 8月以降の試合はその年のシーズン
+                                    season = matchDate.getFullYear();
+                                } else {
+                                    // 1-7月の試合は前年のシーズン
+                                    season = matchDate.getFullYear() - 1;
+                                }
                                 
                                 // API-Footballで検索
                                 const searchParams = new URLSearchParams({
