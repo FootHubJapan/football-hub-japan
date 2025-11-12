@@ -1946,9 +1946,10 @@ app.get('/api/match/details', async (req, res) => {
                         
                         // fixture IDが直接指定されている場合でも、両方のチームが不一致の場合は
                         // チーム名と日付で正しいfixture IDを検索する
-                        if (bothTeamsMismatch && home && away && kickoffUtc && leagueKey) {
+                        // leagueKeyがなくても、kickoffUtcとチーム名があれば再検索を実行
+                        if (bothTeamsMismatch && home && away && kickoffUtc) {
                             console.warn('⚠️ Both teams mismatch - searching for correct fixture ID');
-                            console.warn('   Searching with:', { home, away, kickoffUtc, leagueKey });
+                            console.warn('   Searching with:', { home, away, kickoffUtc, leagueKey: leagueKey || 'auto-detect' });
                             
                             try {
                                 // 日付範囲を計算（±1日）
@@ -1959,134 +1960,184 @@ app.get('/api/match/details', async (req, res) => {
                                 // リーグIDのマッピング
                                 const leagueMap = {
                                     'PL': 39, 'PD': 140, 'SA': 135, 'BL1': 78, 'FL1': 61,
-                                    'CL': 2, 'EL': 3, 'ECL': 848
+                                    'CL': 2, 'EL': 3, 'ECL': 848,
+                                    'laLiga': 140, 'premierLeague': 39, 'serieA': 135, 
+                                    'bundesliga': 78, 'ligue1': 61, 'championsLeague': 2
                                 };
-                                const leagueId = leagueMap[leagueKey] || null;
+                                
+                                // リーグIDのリスト（leagueKeyが指定されている場合はそれを使用、なければ主要リーグをすべて試行）
+                                let leagueIdsToTry = [];
+                                if (leagueKey && leagueMap[leagueKey]) {
+                                    leagueIdsToTry = [leagueMap[leagueKey]];
+                                } else {
+                                    // leagueKeyがない場合、チーム名からリーグを推測する
+                                    const homeNorm = home.toLowerCase();
+                                    const awayNorm = away.toLowerCase();
+                                    
+                                    // La Ligaの主要チーム
+                                    const laLigaTeams = ['real madrid', 'barcelona', 'atletico', 'valencia', 'sevilla', 
+                                                         'villareal', 'real sociedad', 'athletic', 'betis', 'rayo vallecano',
+                                                         'girona', 'getafe', 'osasuna', 'celta', 'mallorca'];
+                                                    
+                                    // Premier Leagueの主要チーム
+                                    const premierLeagueTeams = ['manchester united', 'manchester city', 'liverpool', 'chelsea',
+                                                               'arsenal', 'tottenham', 'newcastle', 'brighton', 'west ham'];
+                                    
+                                    // チーム名からリーグを推測
+                                    const isLaLiga = laLigaTeams.some(team => homeNorm.includes(team) || awayNorm.includes(team));
+                                    const isPremierLeague = premierLeagueTeams.some(team => homeNorm.includes(team) || awayNorm.includes(team));
+                                    
+                                    if (isLaLiga) {
+                                        leagueIdsToTry = [140]; // La Liga
+                                        console.log('🔍 Detected La Liga teams - searching La Liga only');
+                                    } else if (isPremierLeague) {
+                                        leagueIdsToTry = [39]; // Premier League
+                                        console.log('🔍 Detected Premier League teams - searching Premier League only');
+                                    } else {
+                                        // 推測できない場合、主要リーグをすべて試行
+                                        leagueIdsToTry = [140, 39, 135, 78, 61]; // La Liga, Premier League, Serie A, Bundesliga, Ligue 1
+                                        console.log('🔍 League not detected - searching all major leagues');
+                                    }
+                                }
                                 
                                 // シーズンの抽出（kickoffUtcから）
-                                // 過去シーズンの試合の場合、kickoffUtcから正しいシーズンを判定
+                                // サッカーのシーズンは通常8月に始まり、翌年5月に終わる
                                 let season = matchDate.getFullYear();
-                                // 8月以降は新しいシーズンが始まる
-                                if (matchDate.getMonth() >= 7) { // 0-indexed, 7 = August
-                                    // 8月以降の試合はその年のシーズン
-                                    season = matchDate.getFullYear();
-                                } else {
-                                    // 1-7月の試合は前年のシーズン
+                                if (matchDate.getMonth() < 7) { // 1-7月（0-6）は前年のシーズン
                                     season = matchDate.getFullYear() - 1;
                                 }
+                                // 8月以降（7-11）はその年のシーズン
                                 
-                                // 複数のシーズンで検索を試みる（2025年の試合の場合、2024と2025の両方を試す）
-                                const seasonsToTry = [season];
-                                if (matchDate.getFullYear() >= 2025 && season === 2024) {
-                                    seasonsToTry.push(2025); // 2025年の試合の場合、2025シーズンも試す
+                                // 複数のシーズンで検索を試みる（未来の試合やデータの不一致に対応）
+                                const seasonsToTry = [];
+                                const currentYear = matchDate.getFullYear();
+                                const currentMonth = matchDate.getMonth();
+                                
+                                // 現在のシーズン
+                                seasonsToTry.push(season);
+                                
+                                // 2025年11月のような未来の日付の場合、2024-2025シーズンも試す
+                                if (currentYear >= 2025) {
+                                    seasonsToTry.push(2024); // 2024-2025シーズン
+                                    if (currentYear > 2025 || (currentYear === 2025 && currentMonth >= 7)) {
+                                        seasonsToTry.push(2025); // 2025-2026シーズン（未来の試合）
+                                    }
+                                } else if (currentYear === 2024) {
+                                    // 2024年の場合、2023-2024シーズンと2024-2025シーズンの両方を試す
+                                    if (currentMonth < 7) {
+                                        seasonsToTry.push(2023); // 2023-2024シーズン（1-7月）
+                                    } else {
+                                        seasonsToTry.push(2024); // 2024-2025シーズン（8-12月）
+                                    }
                                 }
+                                
+                                // 重複を除去してソート
+                                const uniqueSeasons = [...new Set(seasonsToTry)].sort((a, b) => b - a); // 新しいシーズンから試す
+                                console.log(`🔍 Will search seasons: ${uniqueSeasons.join(', ')} for date: ${matchDate.toISOString()}`);
                                 
                                 let correctFixture = null;
                                 
-                                for (const trySeason of seasonsToTry) {
-                                    // API-Footballで検索
-                                    const searchParams = new URLSearchParams({
-                                        from: fromDate,
-                                        to: toDate,
-                                        season: trySeason.toString()
-                                    });
-                                    if (leagueId) {
-                                        searchParams.set('league', leagueId.toString());
-                                    }
-                                    
-                                    console.log(`🔍 Searching for correct fixture (season ${trySeason}):`, searchParams.toString());
-                                    
-                                    try {
-                                        const searchResponse = await axios.get(`https://v3.football.api-sports.io/fixtures?${searchParams.toString()}`, {
-                                            headers,
-                                            timeout: 15000
+                                // チーム名の正規化関数（検索ループの外で定義）
+                                const norm = (s) => {
+                                    if (!s) return '';
+                                    return s.toLowerCase()
+                                        .normalize('NFKD')
+                                        .replace(/[\u0300-\u036f]/g, '')
+                                        .replace(/\./g, '')
+                                        .replace(/\s+(cf|fc|de|del|la|el|club|united|city|ac|sc)\s+/gi, ' ')
+                                        .replace(/\s+(cf|fc|de|del|la|el|club|united|city|ac|sc)$/gi, '')
+                                        .replace(/^(cf|fc|de|del|la|el|club|united|city|ac|sc)\s+/gi, '')
+                                        .replace(/\s+/g, ' ')
+                                        .trim();
+                                };
+                                
+                                const getKeyWords = (s) => {
+                                    const normalized = norm(s);
+                                    return normalized
+                                        .split(' ')
+                                        .filter(word => word.length > 2 && !['cf', 'fc', 'de', 'del', 'la', 'el', 'club', 'ac', 'sc', 'balompie'].includes(word.toLowerCase()))
+                                        .join(' ');
+                                };
+                                
+                                const clickedHomeKeywords = getKeyWords(home);
+                                const clickedAwayKeywords = getKeyWords(away);
+                                
+                                // リーグとシーズンの組み合わせで検索
+                                for (const tryLeagueId of leagueIdsToTry) {
+                                    for (const trySeason of uniqueSeasons) {
+                                        if (correctFixture) break; // 既に見つかったら終了
+                                        
+                                        const searchParams = new URLSearchParams({
+                                            from: fromDate,
+                                            to: toDate,
+                                            season: trySeason.toString(),
+                                            league: tryLeagueId.toString()
                                         });
                                         
-                                        if (searchResponse.data?.response && searchResponse.data.response.length > 0) {
-                                    // チーム名でマッチング（より柔軟なマッチング）
-                                    const norm = (s) => {
-                                        if (!s) return '';
-                                        return s.toLowerCase()
-                                            .normalize('NFKD')
-                                            .replace(/[\u0300-\u036f]/g, '')
-                                            .replace(/\./g, '')
-                                            .replace(/\s+(cf|fc|de|del|la|el|club|united|city|ac|sc)\s+/gi, ' ')
-                                            .replace(/\s+(cf|fc|de|del|la|el|club|united|city|ac|sc)$/gi, '')
-                                            .replace(/^(cf|fc|de|del|la|el|club|united|city|ac|sc)\s+/gi, '')
-                                            .replace(/\s+/g, ' ')
-                                            .trim();
-                                    };
-                                    
-                                    const getKeyWords = (s) => {
-                                        const normalized = norm(s);
-                                        return normalized
-                                            .split(' ')
-                                            .filter(word => word.length > 2 && !['cf', 'fc', 'de', 'del', 'la', 'el', 'club', 'ac', 'sc'].includes(word.toLowerCase()))
-                                            .join(' ');
-                                    };
-                                    
-                                    const clickedHomeKeywords = getKeyWords(home);
-                                    const clickedAwayKeywords = getKeyWords(away);
-                                    
-                                            const foundFixture = searchResponse.data.response.find(f => {
-                                                const fHomeName = f.teams?.home?.name || '';
-                                                const fAwayName = f.teams?.away?.name || '';
-                                                const fHomeKeywords = getKeyWords(fHomeName);
-                                                const fAwayKeywords = getKeyWords(fAwayName);
-                                                
-                                                // キーワードベースのマッチング
-                                                const homeMatch = fHomeKeywords.includes(clickedHomeKeywords) || 
-                                                                 clickedHomeKeywords.includes(fHomeKeywords) ||
-                                                                 norm(fHomeName).includes(clickedHomeKeywords) ||
-                                                                 norm(home).includes(fHomeKeywords);
-                                                const awayMatch = fAwayKeywords.includes(clickedAwayKeywords) || 
-                                                                 clickedAwayKeywords.includes(fAwayKeywords) ||
-                                                                 norm(fAwayName).includes(clickedAwayKeywords) ||
-                                                                 norm(away).includes(fAwayKeywords);
-                                                
-                                                // 順序が逆の場合も考慮
-                                                const homeMatchReversed = fHomeKeywords.includes(clickedAwayKeywords) || 
-                                                                         clickedAwayKeywords.includes(fHomeKeywords);
-                                                const awayMatchReversed = fAwayKeywords.includes(clickedHomeKeywords) || 
-                                                                         clickedHomeKeywords.includes(fAwayKeywords);
-                                                
-                                                return (homeMatch && awayMatch) || (homeMatchReversed && awayMatchReversed);
+                                        console.log(`🔍 Searching for correct fixture (league: ${tryLeagueId}, season: ${trySeason}):`, searchParams.toString());
+                                        
+                                        try {
+                                            const searchResponse = await axios.get(`https://v3.football.api-sports.io/fixtures?${searchParams.toString()}`, {
+                                                headers,
+                                                timeout: 15000
                                             });
                                             
-                                            if (foundFixture?.fixture?.id) {
-                                                console.log(`✅ Found correct fixture ID (season ${trySeason}):`, foundFixture.fixture.id);
-                                                console.log('   Teams:', foundFixture.teams.home.name, 'vs', foundFixture.teams.away.name);
+                                            if (searchResponse.data?.response && searchResponse.data.response.length > 0) {
+                                                console.log(`📊 Found ${searchResponse.data.response.length} fixtures in league ${tryLeagueId}, season ${trySeason}`);
                                                 
-                                                // 正しいfixture IDを使用して再取得
-                                                fixtureId = foundFixture.fixture.id.toString();
-                                                fixtureData = foundFixture;
-                                                correctFixture = foundFixture;
+                                                const foundFixture = searchResponse.data.response.find(f => {
+                                                    const fHomeName = f.teams?.home?.name || '';
+                                                    const fAwayName = f.teams?.away?.name || '';
+                                                    const fHomeKeywords = getKeyWords(fHomeName);
+                                                    const fAwayKeywords = getKeyWords(fAwayName);
+                                                    
+                                                    // キーワードベースのマッチング
+                                                    const homeMatch = fHomeKeywords.includes(clickedHomeKeywords) || 
+                                                                     clickedHomeKeywords.includes(fHomeKeywords) ||
+                                                                     norm(fHomeName).includes(clickedHomeKeywords) ||
+                                                                     norm(home).includes(fHomeKeywords);
+                                                    const awayMatch = fAwayKeywords.includes(clickedAwayKeywords) || 
+                                                                     clickedAwayKeywords.includes(fAwayKeywords) ||
+                                                                     norm(fAwayName).includes(clickedAwayKeywords) ||
+                                                                     norm(away).includes(fAwayKeywords);
+                                                    
+                                                    // 順序が逆の場合も考慮
+                                                    const homeMatchReversed = fHomeKeywords.includes(clickedAwayKeywords) || 
+                                                                             clickedAwayKeywords.includes(fHomeKeywords);
+                                                    const awayMatchReversed = fAwayKeywords.includes(clickedHomeKeywords) || 
+                                                                             clickedHomeKeywords.includes(fAwayKeywords);
+                                                    
+                                                    return (homeMatch && awayMatch) || (homeMatchReversed && awayMatchReversed);
+                                                });
                                                 
-                                                console.log('🔄 Retrying with correct fixture ID:', fixtureId);
-                                                
-                                                // 正しいfixture IDが見つかったので、ループを抜ける
-                                                break;
+                                                if (foundFixture?.fixture?.id) {
+                                                    console.log(`✅ Found correct fixture ID (league: ${tryLeagueId}, season: ${trySeason}):`, foundFixture.fixture.id);
+                                                    console.log('   Teams:', foundFixture.teams.home.name, 'vs', foundFixture.teams.away.name);
+                                                    
+                                                    // 正しいfixture IDを使用
+                                                    fixtureId = foundFixture.fixture.id.toString();
+                                                    fixtureData = foundFixture;
+                                                    correctFixture = foundFixture;
+                                                    
+                                                    console.log('🔄 Using correct fixture ID:', fixtureId);
+                                                    break; // 見つかったのでループを抜ける
+                                                }
                                             }
+                                        } catch (searchError) {
+                                            console.warn(`⚠️ Error searching league ${tryLeagueId}, season ${trySeason}:`, searchError.message);
+                                            continue;
                                         }
-                                    } catch (searchError) {
-                                        console.warn(`⚠️ Error searching season ${trySeason}:`, searchError.message);
-                                        continue; // 次のシーズンを試す
                                     }
+                                    if (correctFixture) break; // 見つかったら外側のループも抜ける
                                 }
                                 
                                 if (!correctFixture) {
-                                    console.warn('⚠️ Could not find correct fixture in any season');
-                                    // チーム名と日付で検索しても見つからない場合、元のfixtureIdを使用
-                                    // ただし、明らかに異なる試合の場合は警告を出す
-                                    if (bothTeamsMismatch) {
-                                        console.error('❌ Both teams mismatch - cannot find correct fixture');
-                                        console.error('   Provided fixture ID points to different match');
-                                        console.error('   API teams:', { home: apiHomeTeam, away: apiAwayTeam });
-                                        console.error('   Requested teams:', { home, away });
-                                        // 404を返さず、警告を出して続行（統計データは取得できない可能性が高いが、試行する）
-                                    }
+                                    console.warn('⚠️ Could not find correct fixture in any league/season');
+                                    console.warn('   Searched leagues:', leagueIdsToTry);
+                                    console.warn('   Searched seasons:', uniqueSeasons);
+                                    console.warn('   Requested teams:', { home, away });
                                 } else {
-                                    // 正しいfixtureが見つかった場合、fixtureDataを再取得
+                                    // 正しいfixtureが見つかった場合、fixtureDataを再取得（より詳細な情報を得るため）
                                     try {
                                         const correctFixtureResponse = await axios.get(`https://v3.football.api-sports.io/fixtures?id=${fixtureId}`, {
                                             headers,
@@ -2095,26 +2146,25 @@ app.get('/api/match/details', async (req, res) => {
                                         if (correctFixtureResponse.data?.response && correctFixtureResponse.data.response.length > 0) {
                                             fixtureData = correctFixtureResponse.data.response[0];
                                             console.log('✅ Updated fixtureData with correct fixture');
+                                            console.log('   Correct teams:', fixtureData.teams.home.name, 'vs', fixtureData.teams.away.name);
                                         }
                                     } catch (refetchError) {
                                         console.warn('⚠️ Error refetching correct fixture data:', refetchError.message);
+                                        // 既にcorrectFixtureから取得しているので、エラーが発生しても続行
                                     }
                                 }
                             } catch (searchError) {
                                 console.error('❌ Error searching for correct fixture:', searchError.message);
-                                console.warn('⚠️ Continuing with provided fixture ID');
+                                console.warn('⚠️ Continuing with provided fixture ID (may be incorrect)');
                             }
-                        } else if (fixtureId && fixtureId !== 'undefined' && fixtureId !== 'null' && fixtureId !== '') {
+                        } else if (bothTeamsMismatch) {
+                            // チーム名が一致せず、kickoffUtcもない場合は警告のみ
+                            console.warn('⚠️ Both teams mismatch but cannot search - missing kickoffUtc or team names');
+                            console.warn('   Provided fixture ID may be incorrect');
+                        } else {
                             // 一部のチームが一致しない場合でも続行
                             console.warn('⚠️ Partial team name mismatch - continuing with data retrieval');
                             console.warn('   This may be due to team name variations between data sources');
-                        } else {
-                            // 警告を出すが、データは返す（統計やラインアップは取得できる可能性がある）
-                            if (bothTeamsMismatch) {
-                                console.warn('⚠️ Both teams mismatch - attempting to fetch data anyway');
-                            } else {
-                                console.warn('⚠️ Partial match - continuing with data retrieval');
-                            }
                         }
                     } else {
                         // home/awayが提供されていない場合、fixtureIdをそのまま使用
