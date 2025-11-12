@@ -375,6 +375,17 @@
             border-radius: 2px;
         }
 
+        .stats-list {
+            margin-top: 1rem;
+        }
+
+        .no-data {
+            color: #a0a0a0;
+            text-align: center;
+            padding: 2rem;
+            font-style: italic;
+        }
+
         .lineup-section {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
@@ -515,41 +526,7 @@
             <div class="events-section">
                 <h3>試合経過</h3>
                 <div id="matchEvents">
-                    <div class="event-item">
-                        <span class="event-time">15'</span>
-                        <div class="event-icon goal">⚽</div>
-                        <div class="event-description">
-                            <strong>得点!</strong> Marcus Rashford (アシスト: Bruno Fernandes)
-                        </div>
-                    </div>
-                    <div class="event-item">
-                        <span class="event-time">23'</span>
-                        <div class="event-icon card">🟨</div>
-                        <div class="event-description">
-                            <strong>イエローカード</strong> Harry Maguire
-                        </div>
-                    </div>
-                    <div class="event-item">
-                        <span class="event-time">45'</span>
-                        <div class="event-icon substitution">🔄</div>
-                        <div class="event-description">
-                            <strong>選手交代</strong> Anthony Martial → Mason Greenwood
-                        </div>
-                    </div>
-                    <div class="event-item">
-                        <span class="event-time">67'</span>
-                        <div class="event-icon goal">⚽</div>
-                        <div class="event-description">
-                            <strong>得点!</strong> Heung-min Son (アシスト: Harry Kane)
-                        </div>
-                    </div>
-                    <div class="event-item">
-                        <span class="event-time">89'</span>
-                        <div class="event-icon goal">⚽</div>
-                        <div class="event-description">
-                            <strong>得点!</strong> Bruno Fernandes (ペナルティ)
-                        </div>
-                    </div>
+                    <div class="no-data">イベントデータを読み込み中...</div>
                 </div>
             </div>
         </div>
@@ -587,128 +564,9 @@
         <div id="statsTab" class="tab-content">
             <div class="stats-section">
                 <h3>試合統計</h3>
-                <div class="stats-comparison">
-                    <div class="team-stats">
-                        <h4>Manchester United</h4>
-                        <div class="stat-item">
-                            <span class="stat-label">シュート</span>
-                            <span class="stat-value">15</span>
+                <div id="stats" class="stats-list">
+                    <div class="no-data">統計データを読み込み中...</div>
                         </div>
-                        <div class="stat-item">
-                            <span class="stat-label">枠内シュート</span>
-                            <span class="stat-value">8</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">ボール支配率</span>
-                            <span class="stat-value">58%</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">パス</span>
-                            <span class="stat-value">485</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">パス成功率</span>
-                            <span class="stat-value">87%</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">ファウル</span>
-                            <span class="stat-value">12</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">イエローカード</span>
-                            <span class="stat-value">2</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">レッドカード</span>
-                            <span class="stat-value">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">オフサイド</span>
-                            <span class="stat-value">3</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">コーナーキック</span>
-                            <span class="stat-value">7</span>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-comparison">
-                        <div class="stat-bar">
-                            <div class="stat-bar-fill" style="width: 58%"></div>
-                        </div>
-                        <div class="stat-bar">
-                            <div class="stat-bar-fill" style="width: 65%"></div>
-                        </div>
-                        <div class="stat-bar">
-                            <div class="stat-bar-fill" style="width: 58%"></div>
-                        </div>
-                        <div class="stat-bar">
-                            <div class="stat-bar-fill" style="width: 87%"></div>
-                        </div>
-                        <div class="stat-bar">
-                            <div class="stat-bar-fill" style="width: 87%"></div>
-                        </div>
-                        <div class="stat-bar">
-                            <div class="stat-bar-fill" style="width: 80%"></div>
-                        </div>
-                        <div class="stat-bar">
-                            <div class="stat-bar-fill" style="width: 66%"></div>
-                        </div>
-                        <div class="stat-bar">
-                            <div class="stat-bar-fill" style="width: 0%"></div>
-                        </div>
-                        <div class="stat-bar">
-                            <div class="stat-bar-fill" style="width: 60%"></div>
-                        </div>
-                        <div class="stat-bar">
-                            <div class="stat-bar-fill" style="width: 70%"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="team-stats away">
-                        <h4>Tottenham</h4>
-                        <div class="stat-item">
-                            <span class="stat-label">シュート</span>
-                            <span class="stat-value">12</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">枠内シュート</span>
-                            <span class="stat-value">5</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">ボール支配率</span>
-                            <span class="stat-value">42%</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">パス</span>
-                            <span class="stat-value">352</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">パス成功率</span>
-                            <span class="stat-value">84%</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">ファウル</span>
-                            <span class="stat-value">15</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">イエローカード</span>
-                            <span class="stat-value">3</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">レッドカード</span>
-                            <span class="stat-value">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">オフサイド</span>
-                            <span class="stat-value">2</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">コーナーキック</span>
-                            <span class="stat-value">5</span>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -716,162 +574,10 @@
         <div id="lineupTab" class="tab-content">
             <div class="lineup-section">
                 <h3>ラインアップ</h3>
-                <div class="lineup-grid">
-                    <div class="lineup-team">
-                        <h4>Manchester United</h4>
-                        
-                        <div class="lineup-category">
-                            <h5>スタメン</h5>
-                            <div class="player-item">
-                                <div class="player-number">1</div>
-                                <span>David de Gea (GK)</span>
+                <div id="lineup" class="lineup-grid">
+                    <div class="no-data">ラインアップデータを読み込み中...</div>
                             </div>
-                            <div class="player-item">
-                                <div class="player-number">29</div>
-                                <span>Aaron Wan-Bissaka (RB)</span>
                             </div>
-                            <div class="player-item">
-                                <div class="player-number">5</div>
-                                <span>Harry Maguire (CB)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">19</div>
-                                <span>Raphael Varane (CB)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">23</div>
-                                <span>Luke Shaw (LB)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">39</div>
-                                <span>Scott McTominay (CDM)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">18</div>
-                                <span>Bruno Fernandes (CAM)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">14</div>
-                                <span>Christian Eriksen (CM)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">10</div>
-                                <span>Marcus Rashford (LW)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">9</div>
-                                <span>Anthony Martial (ST)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">25</div>
-                                <span>Jadon Sancho (RW)</span>
-                            </div>
-                        </div>
-
-                        <div class="lineup-category">
-                            <h5>ベンチ</h5>
-                            <div class="player-item">
-                                <div class="player-number">22</div>
-                                <span>Tom Heaton (GK)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">2</div>
-                                <span>Victor Lindelof (CB)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">11</div>
-                                <span>Mason Greenwood (FW)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">17</div>
-                                <span>Fred (CM)</span>
-                            </div>
-                        </div>
-
-                        <div class="lineup-category">
-                            <h5>監督</h5>
-                            <div class="player-item">
-                                <span>Erik ten Hag</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="lineup-team">
-                        <h4>Tottenham</h4>
-                        
-                        <div class="lineup-category">
-                            <h5>スタメン</h5>
-                            <div class="player-item">
-                                <div class="player-number">1</div>
-                                <span>Hugo Lloris (GK)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">2</div>
-                                <span>Matt Doherty (RB)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">15</div>
-                                <span>Eric Dier (CB)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">33</div>
-                                <span>Ben Davies (CB)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">19</div>
-                                <span>Ryan Sessegnon (LB)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">5</div>
-                                <span>Pierre-Emile Hojbjerg (CDM)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">30</div>
-                                <span>Rodrigo Bentancur (CM)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">7</div>
-                                <span>Heung-min Son (LW)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">10</div>
-                                <span>Harry Kane (ST)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">21</div>
-                                <span>Dejan Kulusevski (RW)</span>
-                            </div>
-                        </div>
-
-                        <div class="lineup-category">
-                            <h5>ベンチ</h5>
-                            <div class="player-item">
-                                <div class="player-number">20</div>
-                                <span>Fraser Forster (GK)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">6</div>
-                                <span>Davinson Sanchez (CB)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">14</div>
-                                <span>Ivan Perisic (LW)</span>
-                            </div>
-                            <div class="player-item">
-                                <div class="player-number">38</div>
-                                <span>Yves Bissouma (CM)</span>
-                            </div>
-                        </div>
-
-                        <div class="lineup-category">
-                            <h5>監督</h5>
-                            <div class="player-item">
-                                <span>Antonio Conte</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -896,24 +602,51 @@
         }
 
         // 試合データをURLパラメータから取得
-        function loadMatchData() {
+        async function loadMatchData() {
             const urlParams = new URLSearchParams(window.location.search);
             const matchId = urlParams.get('id');
+            const league = urlParams.get('league') || '';
             
             if (matchId) {
+                try {
                 // 実際のAPIから試合データを取得
-                fetch(`/api/match/${matchId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        updateMatchDisplay(data);
-                    })
-                    .catch(error => {
-                        console.error('試合データの取得に失敗しました:', error);
-                        // フォールバックデータを使用
-                        loadFallbackMatchData();
+                    const response = await fetch(`/api/match/${matchId}/details?league=${encodeURIComponent(league)}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({})
                     });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    console.log('Match data response:', result);
+                    console.log('Match data stats:', result.data?.stats);
+                    console.log('Match data events:', result.data?.events);
+                    console.log('Match data lineups:', result.data?.lineups);
+                    
+                    if (result.success && result.data) {
+                        updateMatchDisplay(result.data);
+                        updateStatsTab(result.data.stats || null, result.data);
+                        updateEventsTab(result.data.events || []);
+                        updateLineupTab(result.data);
+                    } else {
+                        console.error('試合データの取得に失敗しました:', result);
+                        // エラーメッセージを表示
+                        const statsContainer = document.getElementById('stats');
+                        if (statsContainer) {
+                            statsContainer.innerHTML = `<div class="no-data">試合データの取得に失敗しました: ${result.error || '不明なエラー'}</div>`;
+                        }
+                        loadFallbackMatchData();
+                    }
+                } catch (error) {
+                        console.error('試合データの取得に失敗しました:', error);
+                        loadFallbackMatchData();
+                }
             } else {
-                // フォールバックデータを使用
                 loadFallbackMatchData();
             }
         }
@@ -921,60 +654,317 @@
         // フォールバック試合データの読み込み
         function loadFallbackMatchData() {
             const matchData = {
-                homeTeam: {
-                    name: 'Manchester United',
-                    logo: 'M',
-                    league: 'Premier League'
-                },
-                awayTeam: {
-                    name: 'Tottenham',
-                    logo: 'T',
-                    league: 'Premier League'
-                },
-                score: {
-                    home: 2,
-                    away: 1
-                },
+                homeTeam: 'Manchester United',
+                awayTeam: 'Tottenham',
+                homeScore: 2,
+                awayScore: 1,
                 date: '2024年12月15日 15:00',
                 venue: 'Old Trafford',
                 referee: 'Michael Oliver',
                 status: 'finished',
-                events: [
-                    { time: '15', type: 'goal', description: 'Marcus Rashford (アシスト: Bruno Fernandes)' },
-                    { time: '23', type: 'card', description: 'Harry Maguire' },
-                    { time: '45', type: 'substitution', description: 'Anthony Martial → Mason Greenwood' },
-                    { time: '67', type: 'goal', description: 'Heung-min Son (アシスト: Harry Kane)' },
-                    { time: '89', type: 'goal', description: 'Bruno Fernandes (ペナルティ)' }
-                ]
+                stats: null,
+                events: [],
+                lineups: null
             };
             
             updateMatchDisplay(matchData);
+            updateStatsTab(null, matchData);
+            updateEventsTab([]);
+            updateLineupTab(matchData);
         }
 
         // 試合表示の更新
         function updateMatchDisplay(data) {
             // チーム情報の更新
-            document.getElementById('homeTeamName').textContent = data.homeTeam.name;
-            document.getElementById('homeTeamLeague').textContent = data.homeTeam.league;
-            document.getElementById('homeTeamLogo').textContent = data.homeTeam.logo;
+            const homeTeamName = data.homeTeam || 'ホームチーム';
+            const awayTeamName = data.awayTeam || 'アウェイチーム';
             
-            document.getElementById('awayTeamName').textContent = data.awayTeam.name;
-            document.getElementById('awayTeamLeague').textContent = data.awayTeam.league;
-            document.getElementById('awayTeamLogo').textContent = data.awayTeam.logo;
+            document.getElementById('homeTeamName').textContent = homeTeamName;
+            document.getElementById('homeTeamLogo').textContent = homeTeamName.charAt(0).toUpperCase();
+            document.getElementById('awayTeamName').textContent = awayTeamName;
+            document.getElementById('awayTeamLogo').textContent = awayTeamName.charAt(0).toUpperCase();
+            
+            // リーグ情報
+            const leagueName = data.league || 'リーグ未定';
+            document.getElementById('homeTeamLeague').textContent = leagueName;
+            document.getElementById('awayTeamLeague').textContent = leagueName;
             
             // スコアの更新
-            document.getElementById('matchScore').textContent = `${data.score.home} - ${data.score.away}`;
+            const homeScore = data.homeScore !== null && data.homeScore !== undefined ? data.homeScore : '-';
+            const awayScore = data.awayScore !== null && data.awayScore !== undefined ? data.awayScore : '-';
+            document.getElementById('matchScore').textContent = `${homeScore} - ${awayScore}`;
             
             // 試合情報の更新
-            document.getElementById('matchDate').textContent = data.date;
-            document.getElementById('matchVenue').textContent = data.venue;
-            document.getElementById('matchReferee').textContent = data.referee;
+            if (data.date) {
+                const dateObj = new Date(data.date);
+                document.getElementById('matchDate').textContent = dateObj.toLocaleString('ja-JP');
+            }
+            document.getElementById('matchVenue').textContent = data.venue || '会場未定';
+            document.getElementById('matchReferee').textContent = data.referee || '審判未定';
             
             // 試合ステータスの更新
             const statusElement = document.getElementById('matchStatus');
-            statusElement.textContent = data.status === 'finished' ? '試合終了' : 
-                                      data.status === 'live' ? '試合中' : '予定';
-            statusElement.className = `match-status ${data.status}`;
+            const status = data.status || 'scheduled';
+            statusElement.textContent = status === 'FT' || status === 'finished' ? '試合終了' : 
+                                      status === 'LIVE' || status === 'live' ? '試合中' : '予定';
+            statusElement.className = `match-status ${status === 'FT' || status === 'finished' ? 'finished' : status === 'LIVE' || status === 'live' ? 'live' : 'scheduled'}`;
+        }
+
+        // 統計タブを更新
+        function updateStatsTab(statsData, matchData = null) {
+            const statsContainer = document.getElementById('stats');
+            if (!statsContainer) {
+                console.warn('Stats container not found');
+                return;
+            }
+
+            console.log('Updating stats tab with data:', statsData);
+            
+            if (statsData && Object.keys(statsData).length > 0) {
+                let statsHTML = '';
+                
+                // 統計項目の定義（表示順序とラベル）
+                const statsOrder = [
+                    { key: 'possession', label: 'ボール支配率', suffix: '%', isPercentage: true },
+                    { key: 'shots', label: 'シュート数' },
+                    { key: 'shotsOnTarget', label: '枠内シュート' },
+                    { key: 'shotsOffTarget', label: '枠外シュート' },
+                    { key: 'shotsInsideBox', label: 'ペナルティエリア内シュート' },
+                    { key: 'shotsOutsideBox', label: 'ペナルティエリア外シュート' },
+                    { key: 'corners', label: 'コーナーキック' },
+                    { key: 'fouls', label: 'ファウル' },
+                    { key: 'yellowCards', label: 'イエローカード' },
+                    { key: 'redCards', label: 'レッドカード' },
+                    { key: 'offsides', label: 'オフサイド' },
+                    { key: 'saves', label: 'セーブ' },
+                    { key: 'goalkeepersSaves', label: 'GKセーブ' },
+                    { key: 'passes', label: 'パス数' },
+                    { key: 'passesAccuracy', label: 'パス成功率', suffix: '%', isPercentage: true },
+                    { key: 'attacks', label: '攻撃回数' },
+                    { key: 'dangerousAttacks', label: '危険な攻撃回数' },
+                    { key: 'ballSafe', label: 'ボールセーフ' },
+                    { key: 'throwIns', label: 'スローイン' },
+                    { key: 'freeKicks', label: 'フリーキック' },
+                    { key: 'goalKicks', label: 'ゴールキック' },
+                    { key: 'substitutions', label: '交代回数' },
+                    { key: 'tackles', label: 'タックル' },
+                    { key: 'blockedShots', label: 'ブロックされたシュート' },
+                    { key: 'hitWoodwork', label: 'ポスト・クロスバー' },
+                    { key: 'bigChances', label: 'ビッグチャンス' }
+                ];
+                
+                // 各統計項目を処理
+                statsOrder.forEach(({ key, label, suffix = '', isPercentage = false }) => {
+                    const value = statsData[key];
+                    if (value && typeof value === 'object' && (value.home !== undefined || value.away !== undefined)) {
+                        const homeValue = value.home || 0;
+                        const awayValue = value.away || 0;
+                        
+                        // 両方とも0の場合は表示しない（重要度の低い統計を除外）
+                        if (homeValue === 0 && awayValue === 0 && key !== 'possession' && key !== 'shots' && key !== 'shotsOnTarget') {
+                            return;
+                        }
+                        
+                        let statValue = '';
+                        if (isPercentage) {
+                            statValue = `${homeValue}% - ${awayValue}%`;
+                        } else {
+                            statValue = `${homeValue} - ${awayValue}${suffix}`;
+                        }
+                        
+                        statsHTML += `
+                            <div class="stat-item">
+                                <span class="stat-label">${label}</span>
+                                <span class="stat-value">${statValue}</span>
+                            </div>
+                        `;
+                    }
+                });
+                
+                if (statsHTML) {
+                    statsContainer.innerHTML = statsHTML;
+                    console.log('Stats HTML updated');
+                } else {
+                    const homeTeam = matchData?.homeTeam || 'ホームチーム';
+                    const awayTeam = matchData?.awayTeam || 'アウェイチーム';
+                    statsContainer.innerHTML = `<div class="no-data">${homeTeam} vs ${awayTeam}の統計データが利用できません</div>`;
+                }
+            } else {
+                // データがない場合の表示
+                const homeTeam = matchData?.homeTeam || 'ホームチーム';
+                const awayTeam = matchData?.awayTeam || 'アウェイチーム';
+                statsContainer.innerHTML = `<div class="no-data">${homeTeam} vs ${awayTeam}の統計データが利用できません</div>`;
+            }
+        }
+
+        // イベントタブを更新
+        function updateEventsTab(eventsData) {
+            const eventsContainer = document.getElementById('matchEvents');
+            if (!eventsContainer) {
+                console.warn('Events container not found');
+                return;
+            }
+
+            console.log('Updating events tab with data:', eventsData);
+            
+            if (eventsData && eventsData.length > 0) {
+                let eventsHTML = '';
+                
+                // イベントを時間順にソート
+                const sortedEvents = [...eventsData].sort((a, b) => {
+                    const timeA = typeof a.time === 'object' ? a.time?.elapsed || 0 : a.time || 0;
+                    const timeB = typeof b.time === 'object' ? b.time?.elapsed || 0 : b.time || 0;
+                    return timeA - timeB;
+                });
+                
+                sortedEvents.forEach(event => {
+                    // 時間の取得（オブジェクトの場合はelapsedプロパティ、数値の場合はそのまま）
+                    const time = typeof event.time === 'object' ? (event.time?.elapsed || 0) : (event.time || 0);
+                    const type = event.type || 'Unknown';
+                    const detail = event.detail || '';
+                    const player = event.player?.name || event.player || 'Unknown';
+                    const assist = event.assist?.name || event.assist || null;
+                    const team = event.team?.name || event.team || 'Unknown';
+                    
+                    let eventIcon = '⚽';
+                    let eventClass = 'goal';
+                    let description = '';
+                    
+                    // イベントタイプに応じてアイコンと説明を設定
+                    if (type === 'Goal' || detail === 'Normal Goal' || detail === 'Penalty' || detail === 'Own Goal') {
+                        eventIcon = '⚽';
+                        eventClass = 'goal';
+                        const goalType = detail === 'Penalty' ? ' (ペナルティ)' : detail === 'Own Goal' ? ' (オウンゴール)' : '';
+                        description = `<strong>得点!</strong> ${player}${goalType}${assist ? ` (アシスト: ${assist})` : ''}`;
+                    } else if (type === 'Card' || detail === 'Yellow Card') {
+                        eventIcon = '🟨';
+                        eventClass = 'card';
+                        description = `<strong>イエローカード</strong> ${player}`;
+                    } else if (detail === 'Red Card' || detail === 'Second Yellow card') {
+                        eventIcon = '🟥';
+                        eventClass = 'card';
+                        description = `<strong>レッドカード</strong> ${player}`;
+                    } else if (type === 'subst' || type === 'Substitution') {
+                        eventIcon = '🔄';
+                        eventClass = 'substitution';
+                        description = `<strong>選手交代</strong> ${player}`;
+                    } else {
+                        description = `<strong>${detail || type}</strong> ${player !== 'Unknown' ? player : ''}`;
+                    }
+                    
+                    eventsHTML += `
+                        <div class="event-item">
+                            <span class="event-time">${time}'</span>
+                            <div class="event-icon ${eventClass}">${eventIcon}</div>
+                            <div class="event-description">${description}</div>
+                        </div>
+                    `;
+                });
+                
+                eventsContainer.innerHTML = eventsHTML;
+            } else {
+                eventsContainer.innerHTML = '<div class="no-data">イベントデータが利用できません</div>';
+            }
+        }
+
+        // ラインアップタブを更新
+        function updateLineupTab(matchData) {
+            const lineupContainer = document.getElementById('lineup');
+            if (!lineupContainer) {
+                console.warn('Lineup container not found');
+                return;
+            }
+
+            console.log('Updating lineup tab with data:', matchData);
+            
+            const lineups = matchData.lineups;
+            const homeTeam = matchData.homeTeam || 'ホームチーム';
+            const awayTeam = matchData.awayTeam || 'アウェイチーム';
+            
+            if (lineups && (lineups.home || lineups.away)) {
+                let lineupHTML = '<div class="lineup-grid">';
+                
+                // ホームチーム
+                if (lineups.home) {
+                    lineupHTML += `
+                        <div class="lineup-team">
+                            <h4>${homeTeam}</h4>
+                            ${lineups.home.formation ? `<p>フォーメーション: ${lineups.home.formation}</p>` : ''}
+                            <div class="lineup-category">
+                                <h5>スタメン</h5>
+                                ${(lineups.home.startXI || []).map(player => `
+                                    <div class="player-item">
+                                        <div class="player-number">${player.number || ''}</div>
+                                        <span>${player.name || 'Unknown'} (${player.position || 'Unknown'})</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${lineups.home.substitutes && lineups.home.substitutes.length > 0 ? `
+                                <div class="lineup-category">
+                                    <h5>ベンチ</h5>
+                                    ${lineups.home.substitutes.map(player => `
+                                        <div class="player-item">
+                                            <div class="player-number">${player.number || ''}</div>
+                                            <span>${player.name || 'Unknown'} (${player.position || 'Unknown'})</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                            ${lineups.home.coach ? `
+                                <div class="lineup-category">
+                                    <h5>監督</h5>
+                                    <div class="player-item">
+                                        <span>${lineups.home.coach}</span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                // アウェイチーム
+                if (lineups.away) {
+                    lineupHTML += `
+                        <div class="lineup-team">
+                            <h4>${awayTeam}</h4>
+                            ${lineups.away.formation ? `<p>フォーメーション: ${lineups.away.formation}</p>` : ''}
+                            <div class="lineup-category">
+                                <h5>スタメン</h5>
+                                ${(lineups.away.startXI || []).map(player => `
+                                    <div class="player-item">
+                                        <div class="player-number">${player.number || ''}</div>
+                                        <span>${player.name || 'Unknown'} (${player.position || 'Unknown'})</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${lineups.away.substitutes && lineups.away.substitutes.length > 0 ? `
+                                <div class="lineup-category">
+                                    <h5>ベンチ</h5>
+                                    ${lineups.away.substitutes.map(player => `
+                                        <div class="player-item">
+                                            <div class="player-number">${player.number || ''}</div>
+                                            <span>${player.name || 'Unknown'} (${player.position || 'Unknown'})</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                            ${lineups.away.coach ? `
+                                <div class="lineup-category">
+                                    <h5>監督</h5>
+                                    <div class="player-item">
+                                        <span>${lineups.away.coach}</span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                lineupHTML += '</div>';
+                lineupContainer.innerHTML = lineupHTML;
+            } else {
+                lineupContainer.innerHTML = `<div class="no-data">${homeTeam} vs ${awayTeam}のラインアップデータが利用できません</div>`;
+            }
         }
 
         // ページ読み込み時に試合データを読み込み

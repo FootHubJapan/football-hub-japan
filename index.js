@@ -1869,15 +1869,28 @@ app.get('/api/match/details', async (req, res) => {
                 const apiHomeTeam = fixtureData.teams.home.name;
                 const apiAwayTeam = fixtureData.teams.away.name;
                 
-                // チーム名の正規化比較
+                // チーム名の正規化比較（より柔軟なマッチング）
                 const norm = (s) => {
                     if (!s) return '';
                     return s.toLowerCase()
                         .normalize('NFKD')
                         .replace(/[\u0300-\u036f]/g, '')
                         .replace(/\./g, '')
+                        .replace(/\s+(cf|fc|de|del|la|el|club|united|city|ac|sc)\s+/gi, ' ') // よくある接尾辞・前置詞を除去
+                        .replace(/\s+(cf|fc|de|del|la|el|club|united|city|ac|sc)$/gi, '') // 末尾の接尾辞を除去
+                        .replace(/^(cf|fc|de|del|la|el|club|united|city|ac|sc)\s+/gi, '') // 先頭の接尾辞を除去
                         .replace(/\s+/g, ' ')
                         .trim();
+                };
+                
+                // チーム名の主要部分を抽出（「Rayo Vallecano de Madrid」→「rayo vallecano」）
+                const getKeyWords = (s) => {
+                    const normalized = norm(s);
+                    // 2文字以上の単語を抽出（一般的な接尾辞を除外）
+                    return normalized
+                        .split(' ')
+                        .filter(word => word.length > 2 && !['cf', 'fc', 'de', 'del', 'la', 'el', 'club', 'ac', 'sc'].includes(word.toLowerCase()))
+                        .join(' ');
                 };
                 
                 const apiHomeNorm = norm(apiHomeTeam);
@@ -1885,18 +1898,41 @@ app.get('/api/match/details', async (req, res) => {
                 const clickedHomeNorm = norm(home);
                 const clickedAwayNorm = norm(away);
                 
-                // より柔軟なマッチング: チーム名の部分一致や順序の逆転を考慮
-                const homeMatch = apiHomeNorm.includes(clickedHomeNorm) || clickedHomeNorm.includes(apiHomeNorm) ||
-                                apiHomeNorm.includes(clickedAwayNorm) || clickedAwayNorm.includes(apiHomeNorm);
-                const awayMatch = apiAwayNorm.includes(clickedAwayNorm) || clickedAwayNorm.includes(apiAwayNorm) ||
-                                apiAwayNorm.includes(clickedHomeNorm) || clickedHomeNorm.includes(apiAwayNorm);
+                // 主要キーワードを抽出
+                const apiHomeKeywords = getKeyWords(apiHomeTeam);
+                const apiAwayKeywords = getKeyWords(apiAwayTeam);
+                const clickedHomeKeywords = getKeyWords(home);
+                const clickedAwayKeywords = getKeyWords(away);
+                
+                // より柔軟なマッチング: キーワードベースの部分一致
+                const homeMatch = apiHomeNorm.includes(clickedHomeKeywords) || 
+                                clickedHomeNorm.includes(apiHomeKeywords) ||
+                                apiHomeKeywords.includes(clickedHomeKeywords) ||
+                                clickedHomeKeywords.includes(apiHomeKeywords) ||
+                                apiHomeNorm === clickedHomeNorm;
+                const awayMatch = apiAwayNorm.includes(clickedAwayKeywords) || 
+                                clickedAwayNorm.includes(apiAwayKeywords) ||
+                                apiAwayKeywords.includes(clickedAwayKeywords) ||
+                                clickedAwayKeywords.includes(apiAwayKeywords) ||
+                                apiAwayNorm === clickedAwayNorm;
+                
+                // 順序が逆の場合も考慮
+                const homeMatchReversed = apiHomeNorm.includes(clickedAwayKeywords) || 
+                                         clickedAwayNorm.includes(apiHomeKeywords);
+                const awayMatchReversed = apiAwayNorm.includes(clickedHomeKeywords) || 
+                                         clickedHomeNorm.includes(apiAwayKeywords);
                 
                 // 両方のチームが一致するか、順序が逆でも一致するか確認
                 // ただし、home/awayが提供されていない場合はスキップ
+                let bothTeamsMismatch = false;
                 if (home && away) {
                     const isMatch = (homeMatch && awayMatch) || 
+                                   (homeMatchReversed && awayMatchReversed) ||
                                    (apiHomeNorm === clickedAwayNorm && apiAwayNorm === clickedHomeNorm) ||
                                    (apiHomeNorm === clickedHomeNorm && apiAwayNorm === clickedAwayNorm);
+                    
+                    // 両方のチームが不一致かどうかを判定
+                    bothTeamsMismatch = !homeMatch && !awayMatch && !homeMatchReversed && !awayMatchReversed;
                     
                     if (!isMatch) {
                         // より詳細なログを出力
@@ -1905,11 +1941,11 @@ app.get('/api/match/details', async (req, res) => {
                         console.warn('   Clicked match:', { home, away });
                         console.warn('   Normalized API:', { apiHomeNorm, apiAwayNorm });
                         console.warn('   Normalized clicked:', { clickedHomeNorm, clickedAwayNorm });
-                        console.warn('   Match results:', { homeMatch, awayMatch });
+                        console.warn('   Match results:', { homeMatch, awayMatch, homeMatchReversed, awayMatchReversed });
+                        console.warn('   Both teams mismatch:', bothTeamsMismatch);
                         
                         // fixture IDが直接指定されている場合でも、両方のチームが不一致の場合は
                         // チーム名と日付で正しいfixture IDを検索する
-                        const bothTeamsMismatch = !homeMatch && !awayMatch;
                         if (bothTeamsMismatch && home && away && kickoffUtc && leagueKey) {
                             console.warn('⚠️ Both teams mismatch - searching for correct fixture ID');
                             console.warn('   Searching with:', { home, away, kickoffUtc, leagueKey });
@@ -1967,28 +2003,54 @@ app.get('/api/match/details', async (req, res) => {
                                         });
                                         
                                         if (searchResponse.data?.response && searchResponse.data.response.length > 0) {
-                                    // チーム名でマッチング
+                                    // チーム名でマッチング（より柔軟なマッチング）
                                     const norm = (s) => {
                                         if (!s) return '';
                                         return s.toLowerCase()
                                             .normalize('NFKD')
                                             .replace(/[\u0300-\u036f]/g, '')
                                             .replace(/\./g, '')
+                                            .replace(/\s+(cf|fc|de|del|la|el|club|united|city|ac|sc)\s+/gi, ' ')
+                                            .replace(/\s+(cf|fc|de|del|la|el|club|united|city|ac|sc)$/gi, '')
+                                            .replace(/^(cf|fc|de|del|la|el|club|united|city|ac|sc)\s+/gi, '')
                                             .replace(/\s+/g, ' ')
                                             .trim();
                                     };
                                     
-                                    const clickedHomeNorm = norm(home);
-                                    const clickedAwayNorm = norm(away);
+                                    const getKeyWords = (s) => {
+                                        const normalized = norm(s);
+                                        return normalized
+                                            .split(' ')
+                                            .filter(word => word.length > 2 && !['cf', 'fc', 'de', 'del', 'la', 'el', 'club', 'ac', 'sc'].includes(word.toLowerCase()))
+                                            .join(' ');
+                                    };
+                                    
+                                    const clickedHomeKeywords = getKeyWords(home);
+                                    const clickedAwayKeywords = getKeyWords(away);
                                     
                                             const foundFixture = searchResponse.data.response.find(f => {
-                                                const fHomeNorm = norm(f.teams?.home?.name || '');
-                                                const fAwayNorm = norm(f.teams?.away?.name || '');
+                                                const fHomeName = f.teams?.home?.name || '';
+                                                const fAwayName = f.teams?.away?.name || '';
+                                                const fHomeKeywords = getKeyWords(fHomeName);
+                                                const fAwayKeywords = getKeyWords(fAwayName);
                                                 
-                                                const homeMatch = fHomeNorm.includes(clickedHomeNorm) || clickedHomeNorm.includes(fHomeNorm);
-                                                const awayMatch = fAwayNorm.includes(clickedAwayNorm) || clickedAwayNorm.includes(fAwayNorm);
+                                                // キーワードベースのマッチング
+                                                const homeMatch = fHomeKeywords.includes(clickedHomeKeywords) || 
+                                                                 clickedHomeKeywords.includes(fHomeKeywords) ||
+                                                                 norm(fHomeName).includes(clickedHomeKeywords) ||
+                                                                 norm(home).includes(fHomeKeywords);
+                                                const awayMatch = fAwayKeywords.includes(clickedAwayKeywords) || 
+                                                                 clickedAwayKeywords.includes(fAwayKeywords) ||
+                                                                 norm(fAwayName).includes(clickedAwayKeywords) ||
+                                                                 norm(away).includes(fAwayKeywords);
                                                 
-                                                return homeMatch && awayMatch;
+                                                // 順序が逆の場合も考慮
+                                                const homeMatchReversed = fHomeKeywords.includes(clickedAwayKeywords) || 
+                                                                         clickedAwayKeywords.includes(fHomeKeywords);
+                                                const awayMatchReversed = fAwayKeywords.includes(clickedHomeKeywords) || 
+                                                                         clickedHomeKeywords.includes(fAwayKeywords);
+                                                
+                                                return (homeMatch && awayMatch) || (homeMatchReversed && awayMatchReversed);
                                             });
                                             
                                             if (foundFixture?.fixture?.id) {
@@ -2013,35 +2075,56 @@ app.get('/api/match/details', async (req, res) => {
                                 }
                                 
                                 if (!correctFixture) {
-                                    console.warn('⚠️ Could not find correct fixture in any season - using provided ID');
+                                    console.warn('⚠️ Could not find correct fixture in any season');
+                                    // チーム名と日付で検索しても見つからない場合、元のfixtureIdを使用
+                                    // ただし、明らかに異なる試合の場合は警告を出す
+                                    if (bothTeamsMismatch) {
+                                        console.error('❌ Both teams mismatch - cannot find correct fixture');
+                                        console.error('   Provided fixture ID points to different match');
+                                        console.error('   API teams:', { home: apiHomeTeam, away: apiAwayTeam });
+                                        console.error('   Requested teams:', { home, away });
+                                        // 404を返さず、警告を出して続行（統計データは取得できない可能性が高いが、試行する）
+                                    }
+                                } else {
+                                    // 正しいfixtureが見つかった場合、fixtureDataを再取得
+                                    try {
+                                        const correctFixtureResponse = await axios.get(`https://v3.football.api-sports.io/fixtures?id=${fixtureId}`, {
+                                            headers,
+                                            timeout: 15000
+                                        });
+                                        if (correctFixtureResponse.data?.response && correctFixtureResponse.data.response.length > 0) {
+                                            fixtureData = correctFixtureResponse.data.response[0];
+                                            console.log('✅ Updated fixtureData with correct fixture');
+                                        }
+                                    } catch (refetchError) {
+                                        console.warn('⚠️ Error refetching correct fixture data:', refetchError.message);
+                                    }
                                 }
                             } catch (searchError) {
                                 console.error('❌ Error searching for correct fixture:', searchError.message);
                                 console.warn('⚠️ Continuing with provided fixture ID');
                             }
                         } else if (fixtureId && fixtureId !== 'undefined' && fixtureId !== 'null' && fixtureId !== '') {
-                            console.warn('⚠️ Fixture ID provided directly - continuing despite team name mismatch');
+                            // 一部のチームが一致しない場合でも続行
+                            console.warn('⚠️ Partial team name mismatch - continuing with data retrieval');
                             console.warn('   This may be due to team name variations between data sources');
                         } else {
                             // 警告を出すが、データは返す（統計やラインアップは取得できる可能性がある）
-                            // ただし、明らかに異なる試合の場合は404を返す
                             if (bothTeamsMismatch) {
-                                console.error('❌ Both teams mismatch - likely different match');
-                                return res.status(404).json({
-                                    ok: false,
-                                    reason: 'team_name_mismatch',
-                                    error: 'Fixture ID resolved to a different match',
-                                    apiTeams: { home: apiHomeTeam, away: apiAwayTeam },
-                                    clickedTeams: { home, away }
-                                });
+                                console.warn('⚠️ Both teams mismatch - attempting to fetch data anyway');
                             } else {
                                 console.warn('⚠️ Partial match - continuing with data retrieval');
                             }
                         }
+                    } else {
+                        // home/awayが提供されていない場合、fixtureIdをそのまま使用
+                        console.log('⚠️ No team names provided - using fixture ID as-is');
                     }
                 }
             } else {
                 console.warn('⚠️ No fixture data found for ID:', fixtureId);
+                // fixtureデータが見つからない場合でも、統計データの取得を試みる
+                console.warn('⚠️ Will attempt to fetch stats/lineups/events with fixture ID:', fixtureId);
             }
         } catch (fixtureError) {
             console.error('❌ Error fetching fixture:', fixtureError.message);
@@ -2050,11 +2133,15 @@ app.get('/api/match/details', async (req, res) => {
                 console.error('   Response data:', JSON.stringify(fixtureError.response.data, null, 2));
             }
             // エラーが発生しても続行（統計やラインアップは取得できる可能性がある）
+            // ただし、fixtureDataはnullのまま
         }
         
-        // 統計、ラインアップ、イベントを並列取得
+        // 統計、ラインアップ、イベントを並列取得（正しいfixtureIdを使用）
+        const finalFixtureId = fixtureData?.fixture?.id || fixtureId;
+        console.log('📊 Fetching stats/lineups/events for fixture ID:', finalFixtureId);
+        
         const [statsRes, lineupsRes, eventsRes] = await Promise.all([
-            axios.get(`https://v3.football.api-sports.io/fixtures/statistics?fixture=${fixtureId}`, { headers, timeout: 15000 }).catch(err => {
+            axios.get(`https://v3.football.api-sports.io/fixtures/statistics?fixture=${finalFixtureId}`, { headers, timeout: 15000 }).catch(err => {
                 console.error('❌ Error fetching statistics:', err.message);
                 if (err.response) {
                     console.error('   Response status:', err.response.status);
@@ -2062,7 +2149,7 @@ app.get('/api/match/details', async (req, res) => {
                 }
                 return { data: { response: [], results: 0 } };
             }),
-            axios.get(`https://v3.football.api-sports.io/fixtures/lineups?fixture=${fixtureId}`, { headers, timeout: 15000 }).catch(err => {
+            axios.get(`https://v3.football.api-sports.io/fixtures/lineups?fixture=${finalFixtureId}`, { headers, timeout: 15000 }).catch(err => {
                 console.error('❌ Error fetching lineups:', err.message);
                 if (err.response) {
                     console.error('   Response status:', err.response.status);
@@ -2070,7 +2157,7 @@ app.get('/api/match/details', async (req, res) => {
                 }
                 return { data: { response: [], results: 0 } };
             }),
-            axios.get(`https://v3.football.api-sports.io/fixtures/events?fixture=${fixtureId}`, { headers, timeout: 15000 }).catch(err => {
+            axios.get(`https://v3.football.api-sports.io/fixtures/events?fixture=${finalFixtureId}`, { headers, timeout: 15000 }).catch(err => {
                 console.error('❌ Error fetching events:', err.message);
                 if (err.response) {
                     console.error('   Response status:', err.response.status);
@@ -2222,9 +2309,12 @@ app.get('/api/match/details', async (req, res) => {
             });
         }
         
+        // レスポンスを返す前に、使用したfixtureIdを確認
+        const returnedFixtureId = fixtureData?.fixture?.id || finalFixtureId;
+        
         return res.json({
             ok: true,
-            fixtureId,
+            fixtureId: returnedFixtureId,
             hasStats: (statsRes.data?.results ?? 0) > 0,
             hasLineups: (lineupsRes.data?.results ?? 0) > 0,
             hasEvents: (eventsRes.data?.results ?? 0) > 0,
