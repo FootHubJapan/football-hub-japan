@@ -1757,14 +1757,14 @@
         // フォールバックデータ生成関数
         function generateFallbackPlayers(limit) {
             const japanesePlayers = [
-                { name: '久保建英', fullName: '久保建英', currentTeam: 'Real Sociedad', position: 'Forward', nationality: 'Japan', age: 22, photo: 'https://media.api-sports.io/football/players/32862.png', league: 'PD', englishName: 'Takefusa Kubo' },
-                { name: '三苫薫', fullName: '三苫薫', currentTeam: 'Brighton', position: 'Midfielder', nationality: 'Japan', age: 25, photo: 'https://media.api-sports.io/football/players/106835.png', league: 'PL', englishName: 'Kaoru Mitoma' },
-                { name: '堂安律', fullName: '堂安律', currentTeam: 'SC Freiburg', position: 'Midfielder', nationality: 'Japan', age: 25, photo: 'https://media.api-sports.io/football/players/2598.png', league: 'BL1', englishName: 'Ritsu Doan' },
-                { name: '田中碧', fullName: '田中碧', currentTeam: 'Fortuna Düsseldorf', position: 'Midfielder', nationality: 'Japan', age: 24, photo: 'https://media.api-sports.io/football/players/32863.png', league: 'BL1', englishName: 'Ao Tanaka' },
-                { name: '伊藤洋輝', fullName: '伊藤洋輝', currentTeam: 'VfB Stuttgart', position: 'Defender', nationality: 'Japan', age: 24, photo: 'https://media.api-sports.io/football/players/32864.png', league: 'BL1', englishName: 'Hiroki Ito' },
-                { name: '遠藤航', fullName: '遠藤航', currentTeam: 'Liverpool', position: 'Midfielder', nationality: 'Japan', age: 30, photo: 'https://media.api-sports.io/football/players/32865.png', league: 'PL', englishName: 'Wataru Endo' },
-                { name: '南野拓実', fullName: '南野拓実', currentTeam: 'Monaco', position: 'Forward', nationality: 'Japan', age: 28, photo: 'https://media.api-sports.io/football/players/32866.png', league: 'FL1', englishName: 'Takumi Minamino' },
-                { name: '浅野拓磨', fullName: '浅野拓磨', currentTeam: 'VfL Bochum', position: 'Forward', nationality: 'Japan', age: 29, photo: 'https://media.api-sports.io/football/players/32867.png', league: 'BL1', englishName: 'Takuma Asano' }
+                { id: '32862', playerId: 32862, apiFootballId: 32862, name: '久保建英', fullName: '久保建英', currentTeam: 'Real Sociedad', position: 'Forward', nationality: 'Japan', age: 22, photo: 'https://media.api-sports.io/football/players/32862.png', league: 'PD', englishName: 'Takefusa Kubo' },
+                { id: '106835', playerId: 106835, apiFootballId: 106835, name: '三苫薫', fullName: '三苫薫', currentTeam: 'Brighton', position: 'Midfielder', nationality: 'Japan', age: 25, photo: 'https://media.api-sports.io/football/players/106835.png', league: 'PL', englishName: 'Kaoru Mitoma' },
+                { id: '2598', playerId: 2598, apiFootballId: 2598, name: '堂安律', fullName: '堂安律', currentTeam: 'SC Freiburg', position: 'Midfielder', nationality: 'Japan', age: 25, photo: 'https://media.api-sports.io/football/players/2598.png', league: 'BL1', englishName: 'Ritsu Doan' },
+                { id: '32863', playerId: 32863, apiFootballId: 32863, name: '田中碧', fullName: '田中碧', currentTeam: 'Fortuna Düsseldorf', position: 'Midfielder', nationality: 'Japan', age: 24, photo: 'https://media.api-sports.io/football/players/32863.png', league: 'BL1', englishName: 'Ao Tanaka' },
+                { id: '32864', playerId: 32864, apiFootballId: 32864, name: '伊藤洋輝', fullName: '伊藤洋輝', currentTeam: 'VfB Stuttgart', position: 'Defender', nationality: 'Japan', age: 24, photo: 'https://media.api-sports.io/football/players/32864.png', league: 'BL1', englishName: 'Hiroki Ito' },
+                { id: '32865', playerId: 32865, apiFootballId: 32865, name: '遠藤航', fullName: '遠藤航', currentTeam: 'Liverpool', position: 'Midfielder', nationality: 'Japan', age: 30, photo: 'https://media.api-sports.io/football/players/32865.png', league: 'PL', englishName: 'Wataru Endo' },
+                { id: '32866', playerId: 32866, apiFootballId: 32866, name: '南野拓実', fullName: '南野拓実', currentTeam: 'Monaco', position: 'Forward', nationality: 'Japan', age: 28, photo: 'https://media.api-sports.io/football/players/32866.png', league: 'FL1', englishName: 'Takumi Minamino' },
+                { id: '32867', playerId: 32867, apiFootballId: 32867, name: '浅野拓磨', fullName: '浅野拓磨', currentTeam: 'VfL Bochum', position: 'Forward', nationality: 'Japan', age: 29, photo: 'https://media.api-sports.io/football/players/32867.png', league: 'BL1', englishName: 'Takuma Asano' }
             ];
 
             const worldStars = [
@@ -1789,7 +1789,10 @@
             
             uniquePlayers.forEach((basePlayer, index) => {
                 const player = {
-                    id: index + 1,
+                    // 正しいIDを優先的に使用（basePlayerにidがあればそれを使用、なければindex+1）
+                    id: basePlayer.id || basePlayer.playerId || basePlayer.apiFootballId || (index + 1),
+                    playerId: basePlayer.playerId || basePlayer.apiFootballId || basePlayer.id || (index + 1),
+                    apiFootballId: basePlayer.apiFootballId || basePlayer.playerId || basePlayer.id || (index + 1),
                     name: basePlayer.name,
                     fullName: basePlayer.fullName,
                     currentTeam: basePlayer.currentTeam,
@@ -2804,8 +2807,22 @@
                 }
 
                 // 内部ページに遷移（IDを優先、名前はフォールバック）
-                // 久保建英の場合、正しいIDは32862（API-Football ID）
-                const finalPlayerId = found ? (found.id || found.playerId || found.apiFootballId || playerId) : playerId;
+                // 見つかった選手の正しいIDを優先的に使用
+                let finalPlayerId = playerId;
+                
+                if (found) {
+                    // 見つかった選手のIDを優先的に使用（apiFootballId > playerId > id の順）
+                    finalPlayerId = found.apiFootballId || found.playerId || found.id || playerId;
+                    console.log('✅ 使用するID:', finalPlayerId, 'from:', {
+                        apiFootballId: found.apiFootballId,
+                        playerId: found.playerId,
+                        id: found.id,
+                        name: found.name
+                    });
+                } else {
+                    console.warn('⚠️ 選手が見つかりませんでした。元のIDを使用:', playerId);
+                }
+                
                 const detailUrl = `/player-detail.html?id=${encodeURIComponent(finalPlayerId)}`;
                 console.log('🔗 遷移URL:', detailUrl);
                 window.location.href = detailUrl;
@@ -3424,13 +3441,18 @@
         function getFallbackPlayers() {
             const fallbackPlayers = [
                 {
-                    id: '1',
+                    id: '32862',
+                    playerId: 32862,
+                    apiFootballId: 32862,
                     name: '久保建英',
                     fullName: '久保建英',
+                    englishName: 'Takefusa Kubo',
                     currentTeam: 'レアル・ソシエダード',
-                    position: 'Midfielder',
+                    position: 'Forward',
                     nationality: 'Japan',
                     age: 22,
+                    photo: 'https://media.api-sports.io/football/players/32862.png',
+                    league: 'PD',
                     stats: { 
                         goals: 8, 
                         assists: 6, 
@@ -3447,13 +3469,18 @@
                     }
                 },
                 {
-                    id: '2',
+                    id: '106835',
+                    playerId: 106835,
+                    apiFootballId: 106835,
                     name: '三笘薫',
                     fullName: '三笘薫',
+                    englishName: 'Kaoru Mitoma',
                     currentTeam: 'ブライトン',
                     position: 'Forward',
                     nationality: 'Japan',
                     age: 26,
+                    photo: 'https://media.api-sports.io/football/players/106835.png',
+                    league: 'PL',
                     stats: { 
                         goals: 12, 
                         assists: 8, 
