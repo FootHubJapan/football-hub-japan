@@ -2564,8 +2564,23 @@
             card.addEventListener('click', async (e) => {
                 if (e.target.classList.contains('detail-btn')) return;
                 
-                const playerId = player.id || player.playerId || player.player_id || player.name;
-                console.log('選手カードクリック:', playerId);
+                // IDを優先的に使用（名前は最後の手段）
+                const playerId = player.id || player.playerId || player.player_id || player.apiFootballId || player.footballDataId || player.name;
+                console.log('選手カードクリック:', {
+                    id: player.id,
+                    playerId: player.playerId,
+                    player_id: player.player_id,
+                    apiFootballId: player.apiFootballId,
+                    name: player.name,
+                    selectedId: playerId
+                });
+                
+                // 選手データを事前に保存（IDマッチングを確実にするため）
+                try {
+                    localStorage.setItem('clickedPlayer', JSON.stringify(player));
+                } catch (e) {
+                    console.warn('Failed to save clicked player:', e);
+                }
                 
                 // FotMobページに遷移
                 openPlayerDetailsPage(playerId);
@@ -2620,18 +2635,60 @@
                 // IDマッチングが失敗した場合のみ、名前での検索を試す
                 if (!found) {
                     const searchQuery = String(playerId).toLowerCase().trim();
+                    console.log('🔍 名前検索を実行:', searchQuery);
                     
-                    // 完全一致を優先
+                    // 完全一致を優先（日本語名も含む）
                     found = (playersCache || []).find(p => {
                         if (!p) return false;
                         const name = (p.name || '').toLowerCase();
                         const fullName = (p.fullName || '').toLowerCase();
                         const englishName = (p.englishName || '').toLowerCase();
+                        const japaneseName = (p.japaneseName || '').toLowerCase();
                         
-                        return name === searchQuery || 
-                               fullName === searchQuery ||
-                               englishName === searchQuery;
+                        // 完全一致をチェック
+                        const exactMatch = name === searchQuery || 
+                                         fullName === searchQuery ||
+                                         englishName === searchQuery ||
+                                         japaneseName === searchQuery;
+                        
+                        if (exactMatch) {
+                            console.log('✅ 完全一致で見つかりました:', p.name || p.fullName);
+                            return true;
+                        }
+                        
+                        return false;
                     });
+                    
+                    // 完全一致が見つからない場合、部分一致を試す（最後の手段）
+                    if (!found && searchQuery.length >= 3) {
+                        // 日本語名の部分一致を優先
+                        const japaneseMatches = (playersCache || []).filter(p => {
+                            if (!p) return false;
+                            const name = (p.name || '').toLowerCase();
+                            const fullName = (p.fullName || '').toLowerCase();
+                            const japaneseName = (p.japaneseName || '').toLowerCase();
+                            
+                            return name.includes(searchQuery) || 
+                                   fullName.includes(searchQuery) ||
+                                   japaneseName.includes(searchQuery);
+                        });
+                        
+                        // 日本語名でマッチした選手を優先
+                        if (japaneseMatches.length > 0) {
+                            found = japaneseMatches[0];
+                            console.log('✅ 日本語名で部分一致:', found.name || found.fullName);
+                        } else {
+                            // 英語名での部分一致
+                            found = (playersCache || []).find(p => {
+                                if (!p) return false;
+                                const englishName = (p.englishName || '').toLowerCase();
+                                return englishName.includes(searchQuery);
+                            });
+                            if (found) {
+                                console.log('✅ 英語名で部分一致:', found.name || found.fullName);
+                            }
+                        }
+                    }
                 }
 
                 try {

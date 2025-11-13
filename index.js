@@ -6490,34 +6490,57 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
         // 2. IDマッチングが失敗した場合のみ、名前での検索を試す（完全一致を優先）
         if (!player) {
             const searchQuery = playerId.toLowerCase().trim();
+            console.log(`🔍 名前検索を実行: "${searchQuery}"`);
             
-            // 完全一致を優先
+            // 完全一致を優先（日本語名も含む）
             player = playersData.find(p => {
                 const name = (p.name || '').toLowerCase();
                 const fullName = (p.fullName || '').toLowerCase();
                 const englishName = (p.englishName || '').toLowerCase();
+                const japaneseName = (p.japaneseName || '').toLowerCase();
                 
-                // 完全一致
-                return name === searchQuery || 
-                       fullName === searchQuery ||
-                       englishName === searchQuery;
+                // 完全一致（日本語名を優先）
+                const exactMatch = japaneseName === searchQuery ||
+                                 name === searchQuery || 
+                                 fullName === searchQuery ||
+                                 englishName === searchQuery;
+                
+                if (exactMatch) {
+                    console.log(`✅ 完全一致で見つかりました: ${p.name || p.fullName || p.japaneseName}`);
+                    return true;
+                }
+                
+                return false;
             });
             
             // 完全一致が見つからない場合、部分一致を試す（最後の手段）
-            if (!player) {
-                player = playersData.find(p => {
+            if (!player && searchQuery.length >= 3) {
+                // 日本語名でマッチした選手を優先
+                const japaneseMatches = playersData.filter(p => {
                     const name = (p.name || '').toLowerCase();
                     const fullName = (p.fullName || '').toLowerCase();
-                    const englishName = (p.englishName || '').toLowerCase();
+                    const japaneseName = (p.japaneseName || '').toLowerCase();
                     
-                    // 部分一致（ただし、検索クエリが短すぎる場合は除外）
-                    if (searchQuery.length >= 3) {
-                        return name.includes(searchQuery) || 
-                               fullName.includes(searchQuery) ||
-                               englishName.includes(searchQuery);
-                    }
-                    return false;
+                    return japaneseName.includes(searchQuery) ||
+                           name.includes(searchQuery) || 
+                           fullName.includes(searchQuery);
                 });
+                
+                if (japaneseMatches.length > 0) {
+                    // 日本語名でマッチした最初の選手を選択
+                    player = japaneseMatches[0];
+                    console.log(`✅ 日本語名で部分一致: ${player.name || player.fullName || player.japaneseName}`);
+                } else {
+                    // 英語名での部分一致
+                    player = playersData.find(p => {
+                        const englishName = (p.englishName || '').toLowerCase();
+                        return englishName.includes(searchQuery);
+                    });
+                    
+                    if (player) {
+                        console.log(`✅ 英語名で部分一致: ${player.name || player.fullName}`);
+                    }
+                }
             }
         }
         

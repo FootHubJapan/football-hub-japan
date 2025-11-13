@@ -612,20 +612,38 @@
                 }
                 
                 // 3. ローカルストレージから選手データを取得（厳密なIDマッチング）
+                // clickedPlayerは、データベースからクリックした選手の完全なデータが保存されている
                 const clickedPlayer = JSON.parse(localStorage.getItem('clickedPlayer') || 'null');
                 
                 // 厳密なIDマッチング（型変換を避ける）
                 if (clickedPlayer) {
+                    // IDマッチング（複数の形式に対応）
                     const idMatch = clickedPlayer.id === playerId || 
                                    clickedPlayer.playerId === playerId ||
                                    clickedPlayer.player_id === playerId ||
+                                   clickedPlayer.apiFootballId === playerId ||
+                                   clickedPlayer.footballDataId === playerId ||
                                    String(clickedPlayer.id) === String(playerId) ||
                                    String(clickedPlayer.playerId) === String(playerId);
                     
-                    if (idMatch) {
-                        console.log('Using clicked player data:', clickedPlayer);
+                    // 名前マッチング（IDが一致しない場合でも、名前が一致していれば使用）
+                    const nameMatch = !idMatch && (
+                        (clickedPlayer.name && clickedPlayer.name.toLowerCase() === String(playerId).toLowerCase()) ||
+                        (clickedPlayer.fullName && clickedPlayer.fullName.toLowerCase() === String(playerId).toLowerCase()) ||
+                        (clickedPlayer.japaneseName && clickedPlayer.japaneseName.toLowerCase() === String(playerId).toLowerCase())
+                    );
+                    
+                    if (idMatch || nameMatch) {
+                        console.log('✅ Using clicked player data:', clickedPlayer.name || clickedPlayer.id);
+                        console.log('   Match type:', idMatch ? 'ID match' : 'Name match');
                         displayPlayerData(clickedPlayer);
                         return;
+                    } else {
+                        console.log('⚠️ clickedPlayer exists but does not match:', {
+                            clickedPlayerId: clickedPlayer.id || clickedPlayer.playerId,
+                            clickedPlayerName: clickedPlayer.name,
+                            requestedId: playerId
+                        });
                     }
                 }
                 
