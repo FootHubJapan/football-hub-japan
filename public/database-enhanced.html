@@ -2534,57 +2534,91 @@
 
         // 選手カード作成関数（簡素化版）
         function createPlayerCard(player) {
+            // 選手データをクロージャに保存（ループ内での上書きを防ぐ）
+            const playerData = { ...player }; // オブジェクトのコピーを作成
+            
             const card = document.createElement('div');
             card.className = 'player-card';
             
             // 顔写真URLを取得
-            const photoUrl = getValidPhotoUrl(player.photo) || 
-                           `https://media.api-sports.io/football/players/${player.id}.png` ||
+            const photoUrl = getValidPhotoUrl(playerData.photo) || 
+                           `https://media.api-sports.io/football/players/${playerData.id || playerData.playerId || playerData.apiFootballId}.png` ||
                            'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjMzMzMzMzIi8+Cjx0ZXh0IHg9IjQwIiB5PSI0NSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPj88L3RleHQ+Cjwvc3ZnPg==';
+            
+            // IDを優先的に取得（名前は最後の手段）
+            const cardPlayerId = playerData.id || playerData.playerId || playerData.apiFootballId || playerData.footballDataId || playerData.name;
+            const cardPlayerName = playerData.name || playerData.fullName || '';
             
             card.innerHTML = `
                 <div class="player-avatar">
                     <img src="${photoUrl}" 
-                         alt="${player.name}" 
+                         alt="${cardPlayerName}" 
                          onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjMzMzMzMzIi8+Cjx0ZXh0IHg9IjQwIiB5PSI0NSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPj88L3RleHQ+Cjwvc3ZnPg=='"
-                         onload="console.log('Photo loaded successfully for:', '${player.name}')"
+                         onload="console.log('Photo loaded successfully for:', '${cardPlayerName}')"
                          style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #00ff88; box-shadow: 0 4px 8px rgba(0,255,136,0.3);">
                 </div>
                 <div class="player-info">
-                    <h3 class="player-name">${player.name || player.fullName || 'Unknown'}</h3>
-                    <p class="player-team">${player.currentTeam || 'Unknown Team'}</p>
-                    <p class="player-position">${player.position || 'Unknown Position'}</p>
+                    <h3 class="player-name">${cardPlayerName || 'Unknown'}</h3>
+                    <p class="player-team">${playerData.currentTeam || 'Unknown Team'}</p>
+                    <p class="player-position">${playerData.position || 'Unknown Position'}</p>
                 </div>
                 <div class="player-actions">
-                    <button class="detail-btn" onclick="openPlayerDetailsPage('${player.id || player.playerId || player.apiFootballId || player.name}', '${player.name || ''}')">詳細表示</button>
+                    <button class="detail-btn" data-player-id="${cardPlayerId}" data-player-name="${cardPlayerName}">詳細表示</button>
                 </div>
             `;
             
-            // クリックイベントを追加（FotMobページに遷移）
+            // クリックイベントを追加（クロージャでplayerDataを確実に保持）
             card.addEventListener('click', async (e) => {
-                if (e.target.classList.contains('detail-btn')) return;
+                if (e.target.classList.contains('detail-btn')) {
+                    // ボタンクリック時も同じ処理
+                    const btn = e.target;
+                    const btnPlayerId = btn.getAttribute('data-player-id') || cardPlayerId;
+                    const btnPlayerName = btn.getAttribute('data-player-name') || cardPlayerName;
+                    
+                    console.log('🔘 詳細表示ボタンクリック:', {
+                        playerId: btnPlayerId,
+                        playerName: btnPlayerName,
+                        playerData: {
+                            id: playerData.id,
+                            playerId: playerData.playerId,
+                            apiFootballId: playerData.apiFootballId,
+                            name: playerData.name
+                        }
+                    });
+                    
+                    // 選手データを事前に保存
+                    try {
+                        localStorage.setItem('clickedPlayer', JSON.stringify(playerData));
+                        console.log('✅ 選手データを事前保存:', cardPlayerName || cardPlayerId);
+                    } catch (e) {
+                        console.warn('Failed to save clicked player:', e);
+                    }
+                    
+                    openPlayerDetailsPage(btnPlayerId, btnPlayerName);
+                    return;
+                }
                 
-                // IDを優先的に使用（名前は最後の手段）
-                const playerId = player.id || player.playerId || player.player_id || player.apiFootballId || player.footballDataId || player.name;
-                console.log('選手カードクリック:', {
-                    id: player.id,
-                    playerId: player.playerId,
-                    player_id: player.player_id,
-                    apiFootballId: player.apiFootballId,
-                    name: player.name,
-                    selectedId: playerId
+                // カード全体のクリック
+                console.log('🖱️ 選手カードクリック:', {
+                    id: playerData.id,
+                    playerId: playerData.playerId,
+                    player_id: playerData.player_id,
+                    apiFootballId: playerData.apiFootballId,
+                    name: playerData.name,
+                    selectedId: cardPlayerId,
+                    selectedName: cardPlayerName
                 });
                 
                 // 選手データを事前に保存（IDマッチングを確実にするため）
                 try {
-                    localStorage.setItem('clickedPlayer', JSON.stringify(player));
-                    console.log('✅ 選手データを事前保存:', player.name || player.id);
+                    localStorage.setItem('clickedPlayer', JSON.stringify(playerData));
+                    console.log('✅ 選手データを事前保存:', cardPlayerName || cardPlayerId);
                 } catch (e) {
                     console.warn('Failed to save clicked player:', e);
                 }
                 
                 // 選手名も渡す（名前検索のフォールバック用）
-                openPlayerDetailsPage(playerId, player.name || player.fullName);
+                openPlayerDetailsPage(cardPlayerId, cardPlayerName);
             });
             
             card.style.cursor = 'pointer';
@@ -2595,21 +2629,48 @@
         function openPlayerDetailsPage(playerId, playerName = null) {
             try {
                 console.log('🔍 内部選手詳細ページに遷移中:', { playerId, playerName });
+                console.log('🔍 現在のcurrentPlayers:', currentPlayers?.length || 0, '名');
 
                 // 現在の一覧から該当選手を取得し保存（厳密なIDマッチング）
                 let playersCache = [];
                 try {
                     playersCache = Array.isArray(currentPlayers) ? currentPlayers : [];
+                    console.log('🔍 playersCache:', playersCache.length, '名');
+                    
+                    // デバッグ: 久保建英が含まれているか確認
+                    if (playerName && (playerName.includes('久保') || playerName.includes('Kubo'))) {
+                        const kuboInCache = playersCache.find(p => 
+                            (p.name && p.name.includes('久保')) || 
+                            (p.fullName && p.fullName.includes('久保')) ||
+                            (p.name && p.name.includes('Kubo')) ||
+                            (p.fullName && p.fullName.includes('Kubo'))
+                        );
+                        console.log('🔍 久保建英がplayersCacheに含まれているか:', kuboInCache ? 'YES' : 'NO');
+                        if (kuboInCache) {
+                            console.log('🔍 久保建英のデータ:', {
+                                id: kuboInCache.id,
+                                playerId: kuboInCache.playerId,
+                                apiFootballId: kuboInCache.apiFootballId,
+                                name: kuboInCache.name,
+                                fullName: kuboInCache.fullName
+                            });
+                        }
+                    }
                 } catch {}
 
                 // 厳密なIDマッチングを優先
-                let found = (playersCache || []).find(p => {
+                let found = null;
+                console.log('🔍 IDマッチング開始:', playerId);
+                
+                found = (playersCache || []).find(p => {
                     if (!p) return false;
                     
                     // 厳密な一致
                     if (p.id === playerId || 
                         p.playerId === playerId || 
-                        p.player_id === playerId) {
+                        p.player_id === playerId ||
+                        p.apiFootballId === playerId) {
+                        console.log('✅ ID完全一致:', p.name || p.id);
                         return true;
                     }
                     
@@ -2617,7 +2678,9 @@
                     const numericPlayerId = parseInt(playerId, 10);
                     if (!isNaN(numericPlayerId)) {
                         if (p.playerId === numericPlayerId || 
+                            p.apiFootballId === numericPlayerId ||
                             parseInt(p.playerId, 10) === numericPlayerId) {
+                            console.log('✅ ID数値一致:', p.name || p.id);
                             return true;
                         }
                     }
@@ -2625,7 +2688,8 @@
                     // api_プレフィックス形式のIDに対応
                     if (typeof playerId === 'string' && playerId.startsWith('api_')) {
                         const numericId = parseInt(playerId.replace('api_', ''), 10);
-                        if (!isNaN(numericId) && p.playerId === numericId) {
+                        if (!isNaN(numericId) && (p.playerId === numericId || p.apiFootballId === numericId)) {
+                            console.log('✅ api_プレフィックス一致:', p.name || p.id);
                             return true;
                         }
                     }
@@ -2633,13 +2697,19 @@
                     return false;
                 });
                 
+                if (found) {
+                    console.log('✅ IDマッチング成功:', found.name || found.id);
+                } else {
+                    console.log('⚠️ IDマッチング失敗');
+                }
+                
                 // IDマッチングが失敗した場合のみ、名前での検索を試す
-                if (!found) {
-                    const searchQuery = String(playerId).toLowerCase().trim();
+                if (!found && playerName) {
+                    const searchQuery = String(playerName).toLowerCase().trim();
                     console.log('🔍 名前検索を実行:', searchQuery);
                     
                     // 完全一致を優先（日本語名も含む）
-                    found = (playersCache || []).find(p => {
+                    const exactMatches = (playersCache || []).filter(p => {
                         if (!p) return false;
                         const name = (p.name || '').toLowerCase();
                         const fullName = (p.fullName || '').toLowerCase();
@@ -2647,21 +2717,24 @@
                         const japaneseName = (p.japaneseName || '').toLowerCase();
                         
                         // 完全一致をチェック
-                        const exactMatch = name === searchQuery || 
-                                         fullName === searchQuery ||
-                                         englishName === searchQuery ||
-                                         japaneseName === searchQuery;
-                        
-                        if (exactMatch) {
-                            console.log('✅ 完全一致で見つかりました:', p.name || p.fullName);
-                            return true;
-                        }
-                        
-                        return false;
+                        return name === searchQuery || 
+                               fullName === searchQuery ||
+                               englishName === searchQuery ||
+                               japaneseName === searchQuery;
                     });
                     
-                    // 完全一致が見つからない場合、部分一致を試す（最後の手段）
-                    if (!found && searchQuery.length >= 3) {
+                    if (exactMatches.length > 0) {
+                        // 完全一致が見つかった場合、最初の1つを選択
+                        found = exactMatches[0];
+                        console.log('✅ 完全一致で見つかりました:', found.name || found.fullName);
+                        console.log('🔍 完全一致の候補数:', exactMatches.length);
+                        
+                        // 複数の候補がある場合、警告を出す
+                        if (exactMatches.length > 1) {
+                            console.warn('⚠️ 複数の完全一致候補があります:', exactMatches.map(p => p.name || p.id));
+                        }
+                    } else if (searchQuery.length >= 3) {
+                        // 完全一致が見つからない場合、部分一致を試す（最後の手段）
                         // 日本語名の部分一致を優先
                         const japaneseMatches = (playersCache || []).filter(p => {
                             if (!p) return false;
@@ -2678,15 +2751,24 @@
                         if (japaneseMatches.length > 0) {
                             found = japaneseMatches[0];
                             console.log('✅ 日本語名で部分一致:', found.name || found.fullName);
+                            console.log('🔍 部分一致の候補数:', japaneseMatches.length);
+                            
+                            // 複数の候補がある場合、警告を出す
+                            if (japaneseMatches.length > 1) {
+                                console.warn('⚠️ 複数の部分一致候補があります:', japaneseMatches.map(p => p.name || p.id));
+                            }
                         } else {
                             // 英語名での部分一致
-                            found = (playersCache || []).find(p => {
+                            const englishMatches = (playersCache || []).filter(p => {
                                 if (!p) return false;
                                 const englishName = (p.englishName || '').toLowerCase();
                                 return englishName.includes(searchQuery);
                             });
-                            if (found) {
+                            
+                            if (englishMatches.length > 0) {
+                                found = englishMatches[0];
                                 console.log('✅ 英語名で部分一致:', found.name || found.fullName);
+                                console.log('🔍 部分一致の候補数:', englishMatches.length);
                             }
                         }
                     }
