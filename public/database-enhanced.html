@@ -2556,7 +2556,7 @@
                     <p class="player-position">${player.position || 'Unknown Position'}</p>
                 </div>
                 <div class="player-actions">
-                    <button class="detail-btn" onclick="openPlayerDetailsPage('${player.id || player.name}')">詳細表示</button>
+                    <button class="detail-btn" onclick="openPlayerDetailsPage('${player.id || player.playerId || player.apiFootballId || player.name}', '${player.name || ''}')">詳細表示</button>
                 </div>
             `;
             
@@ -2578,12 +2578,13 @@
                 // 選手データを事前に保存（IDマッチングを確実にするため）
                 try {
                     localStorage.setItem('clickedPlayer', JSON.stringify(player));
+                    console.log('✅ 選手データを事前保存:', player.name || player.id);
                 } catch (e) {
                     console.warn('Failed to save clicked player:', e);
                 }
                 
-                // FotMobページに遷移
-                openPlayerDetailsPage(playerId);
+                // 選手名も渡す（名前検索のフォールバック用）
+                openPlayerDetailsPage(playerId, player.name || player.fullName);
             });
             
             card.style.cursor = 'pointer';
@@ -2591,9 +2592,9 @@
         }
 
         // 内部の選手詳細ページに遷移（データを保持して遷移）
-        function openPlayerDetailsPage(playerId) {
+        function openPlayerDetailsPage(playerId, playerName = null) {
             try {
-                console.log('内部選手詳細ページに遷移中:', playerId);
+                console.log('🔍 内部選手詳細ページに遷移中:', { playerId, playerName });
 
                 // 現在の一覧から該当選手を取得し保存（厳密なIDマッチング）
                 let playersCache = [];
@@ -2695,6 +2696,22 @@
                     if (found) {
                         console.log('✅ 選手データを保存:', found.name || found.id);
                         localStorage.setItem('clickedPlayer', JSON.stringify(found));
+                    } else if (playerName) {
+                        // 選手が見つからない場合でも、名前でマッチする可能性があるので保存
+                        console.log('⚠️ 選手が見つかりませんでしたが、名前で検索します:', playerName);
+                        // 名前で検索して保存
+                        const nameMatch = (playersCache || []).find(p => {
+                            if (!p) return false;
+                            const name = (p.name || '').toLowerCase();
+                            const fullName = (p.fullName || '').toLowerCase();
+                            const japaneseName = (p.japaneseName || '').toLowerCase();
+                            const searchName = playerName.toLowerCase();
+                            return name === searchName || fullName === searchName || japaneseName === searchName;
+                        });
+                        if (nameMatch) {
+                            console.log('✅ 名前でマッチした選手を保存:', nameMatch.name || nameMatch.id);
+                            localStorage.setItem('clickedPlayer', JSON.stringify(nameMatch));
+                        }
                     } else {
                         console.warn('⚠️ 選手が見つかりませんでした:', playerId);
                     }
@@ -2704,8 +2721,11 @@
                     console.warn('Failed to persist clicked/current players:', e);
                 }
 
-                // 内部ページに遷移
-                const detailUrl = `/player-detail.html?id=${encodeURIComponent(playerId)}`;
+                // 内部ページに遷移（IDを優先、名前はフォールバック）
+                // 久保建英の場合、正しいIDは32862（API-Football ID）
+                const finalPlayerId = found ? (found.id || found.playerId || found.apiFootballId || playerId) : playerId;
+                const detailUrl = `/player-detail.html?id=${encodeURIComponent(finalPlayerId)}`;
+                console.log('🔗 遷移URL:', detailUrl);
                 window.location.href = detailUrl;
             } catch (error) {
                 console.error('内部ページ遷移エラー:', error);
