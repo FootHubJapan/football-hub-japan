@@ -4148,6 +4148,42 @@
             }
             
             console.log('Fallback search results:', filteredPlayers ? filteredPlayers.length : 0, 'players');
+            
+            // 見つかった選手のIDを正しく設定（名前からIDマッピングを適用）
+            const playerIdMap = {
+                '久保建英': { id: '32862', playerId: 32862, apiFootballId: 32862 },
+                '三笘薫': { id: '106835', playerId: 106835, apiFootballId: 106835 },
+                '堂安律': { id: '2598', playerId: 2598, apiFootballId: 2598 },
+                '田中碧': { id: '32863', playerId: 32863, apiFootballId: 32863 },
+                '伊藤洋輝': { id: '32864', playerId: 32864, apiFootballId: 32864 },
+                '遠藤航': { id: '32865', playerId: 32865, apiFootballId: 32865 },
+                '南野拓実': { id: '32866', playerId: 32866, apiFootballId: 32866 },
+                '浅野拓磨': { id: '32867', playerId: 32867, apiFootballId: 32867 }
+            };
+            
+            // 各選手のIDを正しく設定
+            filteredPlayers = filteredPlayers.map(player => {
+                if (!player || !player.name) return player;
+                
+                const playerInfo = playerIdMap[player.name];
+                if (playerInfo) {
+                    // 正しいIDを設定
+                    return {
+                        ...player,
+                        id: playerInfo.id,
+                        playerId: playerInfo.playerId,
+                        apiFootballId: playerInfo.apiFootballId
+                    };
+                }
+                
+                return player;
+            });
+            
+            console.log('Fallback search results (after ID fix):', filteredPlayers.length, 'players');
+            if (filteredPlayers.length > 0) {
+                console.log('First player ID:', filteredPlayers[0].id, 'Name:', filteredPlayers[0].name);
+            }
+            
             return filteredPlayers || [];
         }
 
