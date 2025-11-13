@@ -2580,18 +2580,67 @@
             try {
                 console.log('内部選手詳細ページに遷移中:', playerId);
 
-                // 現在の一覧から該当選手を取得し保存
+                // 現在の一覧から該当選手を取得し保存（厳密なIDマッチング）
                 let playersCache = [];
                 try {
                     playersCache = Array.isArray(currentPlayers) ? currentPlayers : [];
                 } catch {}
 
-                const found = (playersCache || []).find(p => 
-                    (p && (p.id == playerId || p.playerId == playerId || p.player_id == playerId || p.name === playerId))
-                );
+                // 厳密なIDマッチングを優先
+                let found = (playersCache || []).find(p => {
+                    if (!p) return false;
+                    
+                    // 厳密な一致
+                    if (p.id === playerId || 
+                        p.playerId === playerId || 
+                        p.player_id === playerId) {
+                        return true;
+                    }
+                    
+                    // 数値IDのマッチング（型変換を考慮）
+                    const numericPlayerId = parseInt(playerId, 10);
+                    if (!isNaN(numericPlayerId)) {
+                        if (p.playerId === numericPlayerId || 
+                            parseInt(p.playerId, 10) === numericPlayerId) {
+                            return true;
+                        }
+                    }
+                    
+                    // api_プレフィックス形式のIDに対応
+                    if (typeof playerId === 'string' && playerId.startsWith('api_')) {
+                        const numericId = parseInt(playerId.replace('api_', ''), 10);
+                        if (!isNaN(numericId) && p.playerId === numericId) {
+                            return true;
+                        }
+                    }
+                    
+                    return false;
+                });
+                
+                // IDマッチングが失敗した場合のみ、名前での検索を試す
+                if (!found) {
+                    const searchQuery = String(playerId).toLowerCase().trim();
+                    
+                    // 完全一致を優先
+                    found = (playersCache || []).find(p => {
+                        if (!p) return false;
+                        const name = (p.name || '').toLowerCase();
+                        const fullName = (p.fullName || '').toLowerCase();
+                        const englishName = (p.englishName || '').toLowerCase();
+                        
+                        return name === searchQuery || 
+                               fullName === searchQuery ||
+                               englishName === searchQuery;
+                    });
+                }
 
                 try {
-                    if (found) localStorage.setItem('clickedPlayer', JSON.stringify(found));
+                    if (found) {
+                        console.log('✅ 選手データを保存:', found.name || found.id);
+                        localStorage.setItem('clickedPlayer', JSON.stringify(found));
+                    } else {
+                        console.warn('⚠️ 選手が見つかりませんでした:', playerId);
+                    }
                     // 念のため一覧も保存
                     localStorage.setItem('currentPlayers', JSON.stringify(playersCache || []));
                 } catch (e) {

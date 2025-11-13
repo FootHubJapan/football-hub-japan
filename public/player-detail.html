@@ -611,23 +611,83 @@
                     console.log('⚠️ 従来のAPIデータの取得中にエラー:', apiError.message);
                 }
                 
-                // 3. ローカルストレージから選手データを取得
+                // 3. ローカルストレージから選手データを取得（厳密なIDマッチング）
                 const clickedPlayer = JSON.parse(localStorage.getItem('clickedPlayer') || 'null');
                 
-                if (clickedPlayer && (clickedPlayer.id == playerId || clickedPlayer.playerId == playerId)) {
-                    console.log('Using clicked player data:', clickedPlayer);
-                    displayPlayerData(clickedPlayer);
-                    return;
+                // 厳密なIDマッチング（型変換を避ける）
+                if (clickedPlayer) {
+                    const idMatch = clickedPlayer.id === playerId || 
+                                   clickedPlayer.playerId === playerId ||
+                                   clickedPlayer.player_id === playerId ||
+                                   String(clickedPlayer.id) === String(playerId) ||
+                                   String(clickedPlayer.playerId) === String(playerId);
+                    
+                    if (idMatch) {
+                        console.log('Using clicked player data:', clickedPlayer);
+                        displayPlayerData(clickedPlayer);
+                        return;
+                    }
                 }
                 
                 const storedPlayers = JSON.parse(localStorage.getItem('currentPlayers') || '[]');
-                const player = storedPlayers.find(p => 
-                    p.id == playerId || 
-                    p.playerId == playerId || 
-                    p.player_id == playerId ||
-                    p.englishName === playerId ||
-                    p.name === playerId
-                );
+                
+                // 厳密なIDマッチングを優先
+                let player = storedPlayers.find(p => {
+                    // 厳密な一致
+                    if (p.id === playerId || 
+                        p.playerId === playerId || 
+                        p.player_id === playerId) {
+                        return true;
+                    }
+                    
+                    // 数値IDのマッチング（型変換を考慮）
+                    const numericPlayerId = parseInt(playerId, 10);
+                    if (!isNaN(numericPlayerId)) {
+                        if (p.playerId === numericPlayerId || 
+                            parseInt(p.playerId, 10) === numericPlayerId) {
+                            return true;
+                        }
+                    }
+                    
+                    // api_プレフィックス形式のIDに対応
+                    if (playerId.startsWith('api_')) {
+                        const numericId = parseInt(playerId.replace('api_', ''), 10);
+                        if (!isNaN(numericId) && p.playerId === numericId) {
+                            return true;
+                        }
+                    }
+                    
+                    return false;
+                });
+                
+                // IDマッチングが失敗した場合のみ、名前での検索を試す
+                if (!player) {
+                    const searchQuery = playerId.toLowerCase().trim();
+                    
+                    // 完全一致を優先
+                    player = storedPlayers.find(p => {
+                        const name = (p.name || '').toLowerCase();
+                        const fullName = (p.fullName || '').toLowerCase();
+                        const englishName = (p.englishName || '').toLowerCase();
+                        
+                        return name === searchQuery || 
+                               fullName === searchQuery ||
+                               englishName === searchQuery;
+                    });
+                    
+                    // 完全一致が見つからない場合、部分一致を試す（最後の手段）
+                    if (!player && searchQuery.length >= 3) {
+                        player = storedPlayers.find(p => {
+                            const name = (p.name || '').toLowerCase();
+                            const fullName = (p.fullName || '').toLowerCase();
+                            const englishName = (p.englishName || '').toLowerCase();
+                            
+                            return name.includes(searchQuery) || 
+                                   fullName.includes(searchQuery) ||
+                                   englishName.includes(searchQuery);
+                        });
+                    }
+                }
                 
                 console.log('Searching for player ID:', playerId);
                 console.log('Available players:', storedPlayers.length);
@@ -1131,7 +1191,21 @@
                 });
                 
                 if (stats2025.length > 0) {
-                    competitions = stats2025.map(stat => ({
+                    // 重複を除去（コンペティション名で重複チェック）
+                    const seenCompetitions = new Set();
+                    const uniqueStats = [];
+                    
+                    for (const stat of stats2025) {
+                        const compName = (stat.leagueName || 'リーグ').toLowerCase().trim();
+                        if (!seenCompetitions.has(compName)) {
+                            seenCompetitions.add(compName);
+                            uniqueStats.push(stat);
+                        } else {
+                            console.log(`⚠️ 重複データをスキップ: ${stat.leagueName}`);
+                        }
+                    }
+                    
+                    competitions = uniqueStats.map(stat => ({
                         name: stat.leagueName || 'リーグ',
                         goals: stat.goals || 0,
                         assists: stat.assists || 0,
@@ -1141,6 +1215,8 @@
                         rating: stat.rating || 'N/A',
                         matches: stat.appearances || stat.lineups || 0
                     }));
+                    
+                    console.log(`📊 重複除去後: ${competitions.length}コンペティション`);
                 } else {
                     console.log('⚠️ 2025/26シーズンのデータが見つかりませんでした');
                     // 空の配列を返す（フォールバックデータは使用しない）

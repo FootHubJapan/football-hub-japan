@@ -6439,35 +6439,87 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
             playersData = Array.isArray(parsed) ? parsed : (parsed.players || []);
         }
         
-        // 選手を検索（複数のID形式に対応）
-        const player = playersData.find(p => {
-            // 通常のIDマッチング
+        // 選手を検索（複数のID形式に対応）- IDマッチングを優先、名前検索は最後の手段
+        let player = null;
+        
+        // 1. まずIDマッチングを試す（厳密な一致）
+        player = playersData.find(p => {
+            // 通常のIDマッチング（厳密な一致）
             if (p.id === playerId || 
                 p.apiFootballId === playerId || 
                 p.footballDataId === playerId ||
                 p.playerId === playerId ||
-                p.player_id === playerId ||
-                String(p.playerId) === String(playerId)) {
+                p.player_id === playerId) {
                 return true;
+            }
+            
+            // 数値IDのマッチング（型変換を考慮）
+            const numericPlayerId = parseInt(playerId, 10);
+            if (!isNaN(numericPlayerId)) {
+                if (p.playerId === numericPlayerId || 
+                    p.apiFootballId === numericPlayerId ||
+                    p.footballDataId === numericPlayerId ||
+                    parseInt(p.playerId, 10) === numericPlayerId) {
+                    return true;
+                }
             }
             
             // api_1100形式のIDに対応（playerIdが1100の場合）
             if (playerId.startsWith('api_')) {
                 const numericId = playerId.replace('api_', '');
-                return String(p.playerId) === numericId || String(p.id) === playerId;
+                const numericIdInt = parseInt(numericId, 10);
+                if (!isNaN(numericIdInt)) {
+                    return p.playerId === numericIdInt || 
+                           p.apiFootballId === numericIdInt ||
+                           String(p.id) === playerId;
+                }
             }
             
             // fd_形式のIDに対応
             if (playerId.startsWith('fd_')) {
                 const numericId = playerId.replace('fd_', '');
-                return String(p.footballDataId) === numericId;
+                const numericIdInt = parseInt(numericId, 10);
+                if (!isNaN(numericIdInt)) {
+                    return p.footballDataId === numericIdInt;
+                }
             }
             
-            // 名前での検索（部分一致）
-            const nameMatch = p.name?.toLowerCase().includes(playerId.toLowerCase()) ||
-                             p.fullName?.toLowerCase().includes(playerId.toLowerCase());
-            return nameMatch;
+            return false;
         });
+        
+        // 2. IDマッチングが失敗した場合のみ、名前での検索を試す（完全一致を優先）
+        if (!player) {
+            const searchQuery = playerId.toLowerCase().trim();
+            
+            // 完全一致を優先
+            player = playersData.find(p => {
+                const name = (p.name || '').toLowerCase();
+                const fullName = (p.fullName || '').toLowerCase();
+                const englishName = (p.englishName || '').toLowerCase();
+                
+                // 完全一致
+                return name === searchQuery || 
+                       fullName === searchQuery ||
+                       englishName === searchQuery;
+            });
+            
+            // 完全一致が見つからない場合、部分一致を試す（最後の手段）
+            if (!player) {
+                player = playersData.find(p => {
+                    const name = (p.name || '').toLowerCase();
+                    const fullName = (p.fullName || '').toLowerCase();
+                    const englishName = (p.englishName || '').toLowerCase();
+                    
+                    // 部分一致（ただし、検索クエリが短すぎる場合は除外）
+                    if (searchQuery.length >= 3) {
+                        return name.includes(searchQuery) || 
+                               fullName.includes(searchQuery) ||
+                               englishName.includes(searchQuery);
+                    }
+                    return false;
+                });
+            }
+        }
         
         if (!player) {
             return res.status(404).json({ 
