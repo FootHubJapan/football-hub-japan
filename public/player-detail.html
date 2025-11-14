@@ -1246,6 +1246,57 @@
                 competitions = [];
             }
 
+            // 2025/26シーズンのデータがない場合、APIから直接取得を試みる
+            if (competitions.length === 0 && player.playerId) {
+                console.log('🔄 2025/26シーズンのデータをAPIから取得中...');
+                try {
+                    const apiPlayerId = player.apiFootballId || player.playerId;
+                    const season2025Response = await fetch(`/api/player/career-stats/${apiPlayerId}?seasons=2025`);
+                    
+                    if (season2025Response.ok) {
+                        const season2025Data = await season2025Response.json();
+                        const season2025Stats = season2025Data.careerStats || [];
+                        
+                        // 2025/26シーズンのデータを取得
+                        const stats2025 = season2025Stats.filter(stat => {
+                            const season = stat.season || stat.seasonYear;
+                            return season === '2025' || season === '2025/2026' || season === '2025/26';
+                        });
+                        
+                        if (stats2025.length > 0) {
+                            console.log(`✅ APIから2025/26シーズンのデータを取得: ${stats2025.length}コンペティション`);
+                            
+                            // 重複を除去
+                            const seenCompetitions = new Set();
+                            const uniqueStats = [];
+                            
+                            for (const stat of stats2025) {
+                                const compName = (stat.leagueName || stat.league || 'リーグ').toLowerCase().trim();
+                                if (!seenCompetitions.has(compName)) {
+                                    seenCompetitions.add(compName);
+                                    uniqueStats.push(stat);
+                                }
+                            }
+                            
+                            competitions = uniqueStats.map(stat => ({
+                                name: stat.leagueName || stat.league || 'リーグ',
+                                goals: stat.goals || 0,
+                                assists: stat.assists || 0,
+                                yellowCards: stat.yellowCards || 0,
+                                redCards: stat.redCards || 0,
+                                minutes: stat.minutes || 0,
+                                rating: stat.rating || 'N/A',
+                                matches: stat.appearances || stat.matches || stat.lineups || 0
+                            }));
+                            
+                            console.log(`📊 APIから取得した2025/26シーズンのコンペティション数: ${competitions.length}`);
+                        }
+                    }
+                } catch (apiError) {
+                    console.log('⚠️ APIから2025/26シーズンのデータ取得に失敗:', apiError.message);
+                }
+            }
+
             // データがない場合はメッセージを表示
             if (competitions.length === 0) {
                 const tbody = document.getElementById('competitionStatsBody');
