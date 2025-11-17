@@ -355,6 +355,19 @@
             overflow: visible !important;
             position: relative !important;
         }
+        
+        /* 試合統計タブのスクロール対応 */
+        .modal-content .tab-pane#stats {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            max-height: calc(80vh - 200px) !important;
+        }
+        
+        .modal-content .tab-pane#stats.active {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            max-height: calc(80vh - 200px) !important;
+        }
 
         /* モーダル全体の寸法制限を解除 */
         .modal-content {
