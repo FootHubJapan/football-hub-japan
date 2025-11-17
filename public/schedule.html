@@ -304,6 +304,7 @@
             overflow: hidden;
             position: relative;
             min-height: 0;
+            height: calc(80vh - 200px);
             max-height: calc(80vh - 200px);
         }
 
@@ -327,7 +328,8 @@
             position: relative;
             overflow-y: auto;
             overflow-x: hidden;
-            max-height: calc(80vh - 200px);
+            height: 100%;
+            max-height: 100%;
         }
 
         /* 強制表示用のスタイル */
@@ -339,7 +341,8 @@
             width: 100% !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
-            max-height: calc(80vh - 200px) !important;
+            height: 100% !important;
+            max-height: 100% !important;
         }
 
         /* タブペイン内のコンテナを確実に表示 */
@@ -358,15 +361,27 @@
         
         /* 試合統計タブのスクロール対応 */
         .modal-content .tab-pane#stats {
+            position: relative !important;
+            height: 100% !important;
+            max-height: 100% !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
-            max-height: calc(80vh - 200px) !important;
         }
         
         .modal-content .tab-pane#stats.active {
+            position: relative !important;
+            height: 100% !important;
+            max-height: 100% !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
-            max-height: calc(80vh - 200px) !important;
+        }
+        
+        /* 試合統計タブ内のコンテンツ */
+        .modal-content .tab-pane#stats .possession-section,
+        .modal-content .tab-pane#stats .top-stats-section,
+        .modal-content .tab-pane#stats .stats-categories,
+        .modal-content .tab-pane#stats .h2h-section {
+            position: relative;
         }
 
 
