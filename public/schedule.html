@@ -313,11 +313,15 @@
             left: 0;
             right: 0;
             bottom: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .modal-content .tab-pane.active {
             display: block;
             position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         /* 強制表示用のスタイル */
@@ -4798,9 +4802,16 @@
                         </div>
                         <div class="match-score">
                             <div class="score-display">
-                                <span class="home-score">${matchData.homeScore || '-'}</span>
-                                <span class="score-separator">-</span>
-                                <span class="away-score">${matchData.awayScore || '-'}</span>
+                                ${(() => {
+                                    const isFinishedOrLive = matchData.status === 'Finished' || matchData.status === 'FT' || matchData.status === 'LIVE' || matchData.status === 'HT' || matchData.status === '試合中' || matchData.status === '終了';
+                                    const displayHomeScore = isFinishedOrLive 
+                                        ? (matchData.homeScore !== undefined && matchData.homeScore !== null ? matchData.homeScore : 0)
+                                        : (matchData.homeScore !== undefined && matchData.homeScore !== null ? matchData.homeScore : '-');
+                                    const displayAwayScore = isFinishedOrLive
+                                        ? (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : 0)
+                                        : (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : '-');
+                                    return `<span class="home-score">${displayHomeScore}</span><span class="score-separator">-</span><span class="away-score">${displayAwayScore}</span>`;
+                                })()}
                             </div>
                         </div>
                     </div>
@@ -5790,6 +5801,28 @@
             console.log('Displaying detailed match info:', matchData);
             
             try {
+                // モーダルヘッダーのチーム名とスコアを更新
+                const homeTeamNameEl = document.getElementById('homeTeamName');
+                const awayTeamNameEl = document.getElementById('awayTeamName');
+                const modalScoreEl = document.getElementById('modalScore');
+                
+                if (homeTeamNameEl) {
+                    homeTeamNameEl.textContent = matchData.homeTeam || matchData.home || '-';
+                }
+                if (awayTeamNameEl) {
+                    awayTeamNameEl.textContent = matchData.awayTeam || matchData.away || '-';
+                }
+                if (modalScoreEl) {
+                    const isFinishedOrLive = matchData.status === 'Finished' || matchData.status === 'FT' || matchData.status === 'LIVE' || matchData.status === 'HT' || matchData.status === '試合中' || matchData.status === '終了';
+                    const homeScore = isFinishedOrLive 
+                        ? (matchData.homeScore !== undefined && matchData.homeScore !== null ? matchData.homeScore : 0)
+                        : (matchData.homeScore !== undefined && matchData.homeScore !== null ? matchData.homeScore : '-');
+                    const awayScore = isFinishedOrLive
+                        ? (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : 0)
+                        : (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : '-');
+                    modalScoreEl.textContent = `${homeScore} - ${awayScore}`;
+                }
+                
                 // 基本情報タブを更新
                 updateBasicInfo(matchData);
                 
