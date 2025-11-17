@@ -346,7 +346,8 @@
 
         /* 強制表示用のスタイル */
         .modal-content .tab-pane[style*="display: block"] {
-            display: block !important;
+            display: flex !important;
+            flex-direction: column !important;
             opacity: 1 !important;
             visibility: visible !important;
             min-height: 250px !important;
@@ -355,6 +356,25 @@
             overflow-x: hidden !important;
             height: 100% !important;
             max-height: 100% !important;
+        }
+        
+        /* 試合統計タブの強制表示スタイル（最優先） */
+        .modal-content .tab-pane#stats[style*="display: block"],
+        .modal-content .tab-pane#stats[style*="display: flex"],
+        .modal-content .tab-pane#stats.active[style*="display: block"],
+        .modal-content .tab-pane#stats.active[style*="display: flex"] {
+            display: flex !important;
+            flex-direction: column !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            height: calc(80vh - 200px) !important;
+            max-height: calc(80vh - 200px) !important;
+            min-height: calc(80vh - 200px) !important;
+            width: 100% !important;
+            overflow-y: scroll !important;
+            overflow-x: hidden !important;
+            padding: 0 !important;
+            position: relative !important;
         }
 
         /* タブペイン内のコンテナを確実に表示 */
