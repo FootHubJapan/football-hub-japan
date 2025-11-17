@@ -182,41 +182,6 @@
             border-radius: 5px;
         }
 
-        .auto-refresh-section {
-            background: #2a2a2a;
-            border: 1px solid #333333;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .refresh-controls {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .refresh-controls label {
-            color: #cccccc;
-            margin-right: 0.5rem;
-        }
-
-        .refresh-controls select {
-            background: #333333;
-            color: #ffffff;
-            padding: 0.3rem;
-            border: 1px solid #555555;
-            border-radius: 3px;
-        }
-
-        .refresh-status {
-            color: #00ff88;
-            font-weight: bold;
-            padding: 0.3rem 0.8rem;
-            background: #1a1a1a;
-            border-radius: 3px;
-        }
 
         .comparison-type-tabs {
             display: flex;
@@ -590,22 +555,6 @@
                 <div class="selection-counter" id="selectionCounter">0/6 項目選択中</div>
             </div>
 
-            <!-- 自動リフレッシュ設定 -->
-            <div class="auto-refresh-section">
-                <h3 class="selection-title">🔄 自動リフレッシュ設定</h3>
-                <div class="refresh-controls">
-                    <label for="autoRefreshToggle">自動リフレッシュ:</label>
-                    <input type="checkbox" id="autoRefreshToggle" onchange="toggleAutoRefresh()">
-                    <label for="refreshInterval">間隔:</label>
-                    <select id="refreshInterval" onchange="updateRefreshInterval()">
-                        <option value="30">30秒</option>
-                        <option value="60" selected>1分</option>
-                        <option value="300">5分</option>
-                        <option value="600">10分</option>
-                    </select>
-                    <span id="refreshStatus" class="refresh-status">停止中</span>
-                </div>
-            </div>
 
             <div class="selection-controls">
                 <div class="selection-group">
@@ -787,13 +736,14 @@
             { value: 'offsides', label: 'オフサイド' },
             { value: 'blocks', label: 'ブロック' }
         ];
-        let autoRefreshInterval = null;
-        let refreshInterval = 60000; // デフォルト1分
+        // 全選手データをキャッシュ
+        let allPlayersCache = [];
+        let playersCacheLoaded = false;
 
         // 初期化
         document.addEventListener('DOMContentLoaded', function() {
             initializeStatsDropdowns();
-            loadSamplePlayers();
+            loadAllPlayers();
             updateSelectedStats();
         });
 
@@ -855,50 +805,6 @@
             }
         }
 
-        // 自動リフレッシュの切り替え
-        function toggleAutoRefresh() {
-            const toggle = document.getElementById('autoRefreshToggle');
-            const status = document.getElementById('refreshStatus');
-            
-            if (toggle.checked) {
-                startAutoRefresh();
-                status.textContent = '実行中';
-                status.style.color = '#00ff88';
-            } else {
-                stopAutoRefresh();
-                status.textContent = '停止中';
-                status.style.color = '#cccccc';
-            }
-        }
-
-        // 自動リフレッシュ開始
-        function startAutoRefresh() {
-            stopAutoRefresh(); // 既存のインターバルをクリア
-            autoRefreshInterval = setInterval(() => {
-                console.log('自動リフレッシュ実行:', new Date().toLocaleTimeString());
-                updateCharts();
-            }, refreshInterval);
-        }
-
-        // 自動リフレッシュ停止
-        function stopAutoRefresh() {
-            if (autoRefreshInterval) {
-                clearInterval(autoRefreshInterval);
-                autoRefreshInterval = null;
-            }
-        }
-
-        // リフレッシュ間隔更新
-        function updateRefreshInterval() {
-            const intervalSelect = document.getElementById('refreshInterval');
-            refreshInterval = parseInt(intervalSelect.value) * 1000;
-            
-            // 自動リフレッシュが有効な場合は再起動
-            const toggle = document.getElementById('autoRefreshToggle');
-            if (toggle.checked) {
-                startAutoRefresh();
-            }
-        }
 
         // 比較タイプ切り替え
         function switchType(type) {
@@ -921,7 +827,39 @@
         }
 
         // 選手検索
-        function searchPlayers(target) {
+        // 全選手データをデータベースから読み込み
+        async function loadAllPlayers() {
+            if (playersCacheLoaded && allPlayersCache.length > 0) {
+                return;
+            }
+
+            try {
+                console.log('🔄 全選手データをデータベースから読み込み中...');
+                
+                // 統合APIから全選手データを取得
+                const response = await fetch('/api/integrated/players?limit=10000');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    // レスポンスが配列の場合とオブジェクトの場合に対応
+                    allPlayersCache = Array.isArray(data) ? data : (data.players || data.results || []);
+                    playersCacheLoaded = true;
+                    console.log(`✅ ${allPlayersCache.length}名の選手データを読み込みました`);
+                } else {
+                    console.log('⚠️ 統合APIから取得失敗、フォールバックデータを使用');
+                    // フォールバック: サンプルデータを使用
+                    allPlayersCache = samplePlayers || [];
+                    playersCacheLoaded = true;
+                }
+            } catch (error) {
+                console.error('選手データ読み込みエラー:', error);
+                // フォールバック: サンプルデータを使用
+                allPlayersCache = samplePlayers || [];
+                playersCacheLoaded = true;
+            }
+        }
+
+        async function searchPlayers(target) {
             const searchInput = document.getElementById(`search${target}`);
             const query = searchInput.value.trim();
             
@@ -930,11 +868,25 @@
                 return;
             }
 
-            // サンプル選手データから検索
-            const results = samplePlayers.filter(player => 
-                player.name.toLowerCase().includes(query.toLowerCase()) ||
-                player.fullName.toLowerCase().includes(query.toLowerCase())
-            );
+            // キャッシュがまだ読み込まれていない場合は読み込む
+            if (!playersCacheLoaded) {
+                await loadAllPlayers();
+            }
+
+            // キャッシュされた選手データから検索
+            const results = allPlayersCache.filter(player => {
+                if (!player) return false;
+                const name = (player.name || '').toLowerCase();
+                const fullName = (player.fullName || '').toLowerCase();
+                const englishName = (player.englishName || '').toLowerCase();
+                const japaneseName = (player.japaneseName || '').toLowerCase();
+                const queryLower = query.toLowerCase();
+                
+                return name.includes(queryLower) ||
+                       fullName.includes(queryLower) ||
+                       englishName.includes(queryLower) ||
+                       japaneseName.includes(queryLower);
+            }).slice(0, 20); // 最大20件まで表示
 
             displaySearchResults(results, target);
         }
@@ -1164,9 +1116,6 @@
         ];
 
         // サンプル選手読み込み
-        function loadSamplePlayers() {
-            console.log('サンプル選手データ読み込み完了');
-        }
 
         // AI分析実行
         function performAIAnalysis() {
