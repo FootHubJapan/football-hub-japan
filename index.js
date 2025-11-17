@@ -5982,6 +5982,23 @@ async function getPlayerSeasonStatsFromAPIFootball(playerId, season) {
             }
             
             if (totalStats.matches > 0 || totalStats.goals > 0 || totalStats.assists > 0) {
+                // パス成功率を計算（パス成功数 / パス総数 * 100）
+                let passesAccuracy = 0;
+                let passesSuccessful = 0;
+                for (const stat of statistics) {
+                    const successful = stat.passes?.successful || 0;
+                    passesSuccessful += successful;
+                }
+                if (totalStats.passes > 0) {
+                    passesAccuracy = Math.round((passesSuccessful / totalStats.passes) * 100);
+                }
+                
+                // ドリブル成功率を計算（ドリブル成功数 / ドリブル試行数 * 100）
+                let dribblesSuccessRate = 0;
+                if (totalStats.dribbles > 0) {
+                    dribblesSuccessRate = Math.round((totalStats.dribblesSuccess / totalStats.dribbles) * 100);
+                }
+                
                 return {
                     season: season,
                     club: mainClub,
@@ -5995,10 +6012,12 @@ async function getPlayerSeasonStatsFromAPIFootball(playerId, season) {
                     redCards: totalStats.redCards,
                     shots: totalStats.shots,
                     passes: totalStats.passes,
+                    passesAccuracy: passesAccuracy,
                     tackles: totalStats.tackles,
                     interceptions: totalStats.interceptions,
                     dribbles: totalStats.dribbles,
                     dribblesSuccess: totalStats.dribblesSuccess,
+                    dribblesSuccessRate: dribblesSuccessRate,
                     foulsWon: totalStats.foulsWon,
                     chancesCreated: totalStats.chancesCreated,
                     appearances: totalStats.matches // 互換性のため

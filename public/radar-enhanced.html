@@ -977,6 +977,26 @@
                     });
                     
                     if (seasonStats) {
+                        // パス成功率を取得（数値または文字列から数値を抽出）
+                        let passesAccuracy = 0;
+                        if (seasonStats.passesAccuracy !== undefined) {
+                            passesAccuracy = typeof seasonStats.passesAccuracy === 'string' 
+                                ? parseFloat(seasonStats.passesAccuracy.replace('%', '')) || 0
+                                : seasonStats.passesAccuracy;
+                        } else if (seasonStats.passAccuracy !== undefined) {
+                            passesAccuracy = typeof seasonStats.passAccuracy === 'string'
+                                ? parseFloat(seasonStats.passAccuracy.replace('%', '')) || 0
+                                : seasonStats.passAccuracy;
+                        }
+                        
+                        // ドリブル成功率を計算
+                        let dribblesSuccessRate = 0;
+                        const dribblesAttempted = seasonStats.dribblesAttempted || seasonStats.dribbles || 0;
+                        const dribblesSuccess = seasonStats.dribblesSuccess || 0;
+                        if (dribblesAttempted > 0) {
+                            dribblesSuccessRate = Math.round((dribblesSuccess / dribblesAttempted) * 100);
+                        }
+                        
                         // 統計データを選手オブジェクトに追加
                         currentPlayers[target].stats = {
                             goals: seasonStats.goals || 0,
@@ -985,9 +1005,10 @@
                             minutes: seasonStats.minutes || 0,
                             rating: seasonStats.rating || 0,
                             passesTotal: seasonStats.passesTotal || seasonStats.passes || 0,
-                            passesAccuracy: seasonStats.passesAccuracy || seasonStats.passAccuracy || 0,
-                            dribblesAttempted: seasonStats.dribblesAttempted || seasonStats.dribbles || 0,
-                            dribblesSuccess: seasonStats.dribblesSuccess || 0,
+                            passesAccuracy: passesAccuracy,
+                            dribblesAttempted: dribblesAttempted,
+                            dribblesSuccess: dribblesSuccess,
+                            dribblesSuccessRate: dribblesSuccessRate,
                             shotsTotal: seasonStats.shotsTotal || seasonStats.shots || 0,
                             shotsOnTarget: seasonStats.shotsOnTarget || 0,
                             tackles: seasonStats.tackles || 0,
@@ -1049,6 +1070,26 @@
                         });
                         
                         if (seasonStats) {
+                            // パス成功率を取得
+                            let passesAccuracy = 0;
+                            if (seasonStats.passesAccuracy !== undefined) {
+                                passesAccuracy = typeof seasonStats.passesAccuracy === 'string' 
+                                    ? parseFloat(seasonStats.passesAccuracy.replace('%', '')) || 0
+                                    : seasonStats.passesAccuracy;
+                            } else if (seasonStats.passAccuracy !== undefined) {
+                                passesAccuracy = typeof seasonStats.passAccuracy === 'string'
+                                    ? parseFloat(seasonStats.passAccuracy.replace('%', '')) || 0
+                                    : seasonStats.passAccuracy;
+                            }
+                            
+                            // ドリブル成功率を計算
+                            let dribblesSuccessRate = 0;
+                            const dribblesAttempted = seasonStats.dribblesAttempted || seasonStats.dribbles || 0;
+                            const dribblesSuccess = seasonStats.dribblesSuccess || 0;
+                            if (dribblesAttempted > 0) {
+                                dribblesSuccessRate = Math.round((dribblesSuccess / dribblesAttempted) * 100);
+                            }
+                            
                             currentPlayers[target].stats = {
                                 goals: seasonStats.goals || 0,
                                 assists: seasonStats.assists || 0,
@@ -1056,9 +1097,10 @@
                                 minutes: seasonStats.minutes || 0,
                                 rating: seasonStats.rating || 0,
                                 passesTotal: seasonStats.passesTotal || seasonStats.passes || 0,
-                                passesAccuracy: seasonStats.passesAccuracy || seasonStats.passAccuracy || 0,
-                                dribblesAttempted: seasonStats.dribblesAttempted || seasonStats.dribbles || 0,
-                                dribblesSuccess: seasonStats.dribblesSuccess || 0,
+                                passesAccuracy: passesAccuracy,
+                                dribblesAttempted: dribblesAttempted,
+                                dribblesSuccess: dribblesSuccess,
+                                dribblesSuccessRate: dribblesSuccessRate,
                                 shotsTotal: seasonStats.shotsTotal || seasonStats.shots || 0,
                                 shotsOnTarget: seasonStats.shotsOnTarget || 0,
                                 tackles: seasonStats.tackles || 0,
@@ -1121,7 +1163,7 @@
         }
 
         // 比較開始
-        function startComparison() {
+        async function startComparison() {
             if (!currentPlayers.A && !currentPlayers.B && !currentPlayers.C) {
                 alert('比較する選手を1人以上選択してください');
                 return;
@@ -1132,6 +1174,25 @@
                 return;
             }
 
+            // 選択されている選手の統計データが取得されているか確認
+            const season = document.getElementById('seasonSelect').value;
+            const seasonYear = season.split('-')[0];
+            
+            // 統計データが取得されていない選手のデータを取得
+            const loadPromises = [];
+            for (const [key, player] of Object.entries(currentPlayers)) {
+                if (player && (!player.stats || !player.stats.goals)) {
+                    console.log(`🔄 ${player.name}の統計データを取得中...`);
+                    loadPromises.push(loadPlayerStats(player, key));
+                }
+            }
+            
+            // すべてのデータ取得が完了するまで待つ
+            if (loadPromises.length > 0) {
+                await Promise.all(loadPromises);
+            }
+            
+            // チャートと統計比較を更新
             updateCharts();
             updateStatsComparison();
         }
