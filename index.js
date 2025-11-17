@@ -5903,41 +5903,105 @@ async function getPlayerSeasonStatsFromAPIFootball(playerId, season) {
                 }
             }
             
-            // 主要リーグが見つかった場合、試合数が最も多いものを選択
-            if (mainLeagueStats.length > 0) {
-                mainLeagueStats.sort((a, b) => b.appearances - a.appearances);
-                mainStats = mainLeagueStats[0].stat;
+            // すべてのリーグのデータを合計（シーズン全体の統計）
+            let totalStats = {
+                season: season,
+                club: 'Multiple',
+                league: 'All Competitions',
+                matches: 0,
+                goals: 0,
+                assists: 0,
+                rating: 0,
+                minutes: 0,
+                yellowCards: 0,
+                redCards: 0,
+                shots: 0,
+                passes: 0,
+                tackles: 0,
+                interceptions: 0,
+                dribbles: 0,
+                dribblesSuccess: 0,
+                foulsWon: 0,
+                chancesCreated: 0,
+                ratingSum: 0,
+                ratingCount: 0
+            };
+            
+            // すべての統計を合計
+            for (const stat of statistics) {
+                const appearances = stat.games?.appearences || stat.games?.lineups || 0;
+                const goals = stat.goals?.total || 0;
+                const assists = stat.goals?.assists || 0;
+                const minutes = stat.games?.minutes || 0;
+                const rating = stat.games?.rating ? parseFloat(stat.games.rating) : 0;
+                
+                totalStats.matches += appearances;
+                totalStats.goals += goals;
+                totalStats.assists += assists;
+                totalStats.minutes += minutes;
+                totalStats.yellowCards += stat.cards?.yellow || 0;
+                totalStats.redCards += stat.cards?.red || 0;
+                totalStats.shots += stat.shots?.total || 0;
+                totalStats.passes += stat.passes?.total || 0;
+                totalStats.tackles += stat.tackles?.total || 0;
+                totalStats.interceptions += stat.tackles?.interceptions || 0;
+                totalStats.dribbles += stat.dribbles?.attempts || 0;
+                totalStats.dribblesSuccess += stat.dribbles?.success || 0;
+                totalStats.foulsWon += stat.fouls?.won || 0;
+                totalStats.chancesCreated += stat.passes?.key || 0;
+                
+                // 評価の平均を計算
+                if (rating > 0 && appearances > 0) {
+                    totalStats.ratingSum += rating * appearances;
+                    totalStats.ratingCount += appearances;
+                }
             }
             
-            // 主要リーグが見つからなかった場合、試合数が最も多いものを使用
-            if (!mainStats && statistics.length > 0) {
-                mainStats = statistics.reduce((prev, current) => {
+            // メインリーグを決定（試合数が最も多いリーグ）
+            let mainLeague = 'All Competitions';
+            let mainClub = 'Multiple';
+            if (mainLeagueStats.length > 0) {
+                mainLeagueStats.sort((a, b) => b.appearances - a.appearances);
+                mainLeague = mainLeagueStats[0].stat.league?.name || 'All Competitions';
+                mainClub = mainLeagueStats[0].stat.team?.name || 'Multiple';
+            } else if (statistics.length > 0) {
+                const maxStat = statistics.reduce((prev, current) => {
                     const prevAppearances = prev.games?.appearences || prev.games?.lineups || 0;
                     const currentAppearances = current.games?.appearences || current.games?.lineups || 0;
                     return currentAppearances > prevAppearances ? current : prev;
                 });
+                mainLeague = maxStat.league?.name || 'All Competitions';
+                mainClub = maxStat.team?.name || 'Multiple';
             }
             
-            if (mainStats) {
+            // 評価の平均を計算
+            if (totalStats.ratingCount > 0) {
+                totalStats.rating = (totalStats.ratingSum / totalStats.ratingCount).toFixed(1);
+            } else {
+                totalStats.rating = 'N/A';
+            }
+            
+            if (totalStats.matches > 0 || totalStats.goals > 0 || totalStats.assists > 0) {
                 return {
                     season: season,
-                    club: mainStats.team?.name || 'Unknown',
-                    league: mainStats.league?.name || 'Unknown',
-                    matches: mainStats.games?.appearences || mainStats.games?.lineups || 0,
-                    goals: mainStats.goals?.total || 0,
-                    assists: mainStats.goals?.assists || 0,
-                    rating: mainStats.games?.rating ? parseFloat(mainStats.games.rating).toFixed(1) : 'N/A',
-                    minutes: mainStats.games?.minutes || 0,
-                    yellowCards: mainStats.cards?.yellow || 0,
-                    redCards: mainStats.cards?.red || 0,
-                    shots: mainStats.shots?.total || 0,
-                    passes: mainStats.passes?.total || 0,
-                    tackles: mainStats.tackles?.total || 0,
-                    interceptions: mainStats.tackles?.interceptions || 0,
-                    dribbles: mainStats.dribbles?.attempts || 0,
-                    dribblesSuccess: mainStats.dribbles?.success || 0,
-                    foulsWon: mainStats.fouls?.won || 0,
-                    chancesCreated: mainStats.passes?.key || 0
+                    club: mainClub,
+                    league: mainLeague,
+                    matches: totalStats.matches,
+                    goals: totalStats.goals,
+                    assists: totalStats.assists,
+                    rating: totalStats.rating,
+                    minutes: totalStats.minutes,
+                    yellowCards: totalStats.yellowCards,
+                    redCards: totalStats.redCards,
+                    shots: totalStats.shots,
+                    passes: totalStats.passes,
+                    tackles: totalStats.tackles,
+                    interceptions: totalStats.interceptions,
+                    dribbles: totalStats.dribbles,
+                    dribblesSuccess: totalStats.dribblesSuccess,
+                    foulsWon: totalStats.foulsWon,
+                    chancesCreated: totalStats.chancesCreated,
+                    appearances: totalStats.matches // 互換性のため
                 };
             }
         }
