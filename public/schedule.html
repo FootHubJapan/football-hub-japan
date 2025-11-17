@@ -315,6 +315,8 @@
             min-height: 0;
             height: calc(80vh - 200px);
             max-height: calc(80vh - 200px);
+            display: flex;
+            flex-direction: column;
         }
 
         /* より具体的なセレクターで優先度を下げる */
@@ -333,7 +335,8 @@
         }
 
         .modal-content .tab-pane.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
             position: relative;
             overflow-y: auto;
             overflow-x: hidden;
@@ -373,20 +376,26 @@
             position: relative !important;
             height: calc(80vh - 200px) !important;
             max-height: calc(80vh - 200px) !important;
+            min-height: calc(80vh - 200px) !important;
             overflow-y: scroll !important;
             overflow-x: hidden !important;
             -webkit-overflow-scrolling: touch;
             padding: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
         }
         
         .modal-content .tab-pane#stats.active {
             position: relative !important;
             height: calc(80vh - 200px) !important;
             max-height: calc(80vh - 200px) !important;
+            min-height: calc(80vh - 200px) !important;
             overflow-y: scroll !important;
             overflow-x: hidden !important;
             -webkit-overflow-scrolling: touch;
             padding: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
         }
         
         /* 試合統計タブ内のスクロールコンテナ */
