@@ -898,7 +898,7 @@
                         interceptions: (acc.interceptions || 0) + (stat.interceptions || 0),
                         duelsWon: (acc.duelsWon || 0) + (stat.duelsWon || 0),
                         aerialDuels: (acc.aerialDuels || 0) + (stat.aerialDuels || 0),
-                        dribblesAttempted: (acc.dribblesAttempted || 0) + (stat.dribblesAttempted || stat.dribbles || 0),
+                        dribblesAttempted: (acc.dribblesAttempted || 0) + (stat.dribblesAttempted || stat.dribblesAttempts || stat.dribbles || 0),
                         dribblesSuccess: (acc.dribblesSuccess || 0) + (stat.dribblesSuccess || 0),
                         chancesCreated: (acc.chancesCreated || 0) + (stat.chancesCreated || 0),
                         foulsDrawn: (acc.foulsDrawn || 0) + (stat.foulsDrawn || 0)
@@ -932,8 +932,14 @@
             document.getElementById('aerialDuels').textContent = aggregatedStats.aerialDuels || 0;
 
             // ドリブル・創造性
-            document.getElementById('dribblesAttempted').textContent = aggregatedStats.dribblesAttempted || aggregatedStats.dribbles || 0;
-            document.getElementById('dribblesSuccess').textContent = aggregatedStats.dribblesSuccess || 0;
+            // ドリブル試行は複数のフィールド名に対応（dribblesAttempted, dribblesAttempts, dribbles）
+            const dribblesAttempted = aggregatedStats.dribblesAttempted || aggregatedStats.dribblesAttempts || aggregatedStats.dribbles || 0;
+            // ドリブル成功が0より大きい場合、試行も少なくとも成功数以上である必要がある
+            const dribblesSuccess = aggregatedStats.dribblesSuccess || 0;
+            const finalDribblesAttempted = dribblesAttempted > 0 ? dribblesAttempted : (dribblesSuccess > 0 ? dribblesSuccess : 0);
+            
+            document.getElementById('dribblesAttempted').textContent = finalDribblesAttempted;
+            document.getElementById('dribblesSuccess').textContent = dribblesSuccess;
             document.getElementById('chancesCreated').textContent = aggregatedStats.chancesCreated || 0;
             document.getElementById('foulsDrawn').textContent = aggregatedStats.foulsDrawn || 0;
         }
