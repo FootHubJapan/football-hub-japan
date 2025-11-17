@@ -3182,6 +3182,119 @@ app.get('/api/fotmob/matches', async (req, res) => {
     }
 });
 
+// 過去の対戦成績（H2H）を取得
+app.get('/api/matches/h2h', async (req, res) => {
+    try {
+        const { home, away, from } = req.query;
+        
+        if (!home || !away) {
+            return res.status(400).json({
+                error: 'home and away team names are required'
+            });
+        }
+        
+        // API-Footballから過去の対戦を検索
+        try {
+            const axios = require('axios');
+            const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
+            
+            if (!API_FOOTBALL_KEY) {
+                throw new Error('API_FOOTBALL_KEY not configured');
+            }
+            
+            // チーム名からチームIDを検索
+            const homeTeamResponse = await axios.get('https://v3.football.api-sports.io/teams', {
+                params: { search: home },
+                headers: { 'X-RapidAPI-Key': API_FOOTBALL_KEY }
+            });
+            
+            const awayTeamResponse = await axios.get('https://v3.football.api-sports.io/teams', {
+                params: { search: away },
+                headers: { 'X-RapidAPI-Key': API_FOOTBALL_KEY }
+            });
+            
+            const homeTeamId = homeTeamResponse.data?.response?.[0]?.team?.id;
+            const awayTeamId = awayTeamResponse.data?.response?.[0]?.team?.id;
+            
+            if (!homeTeamId || !awayTeamId) {
+                return res.json({
+                    homeWins: 0,
+                    awayWins: 0,
+                    draws: 0,
+                    matches: []
+                });
+            }
+            
+            // H2Hデータを取得
+            const h2hResponse = await axios.get('https://v3.football.api-sports.io/fixtures/headtohead', {
+                params: {
+                    h2h: `${homeTeamId}-${awayTeamId}`,
+                    last: 10
+                },
+                headers: { 'X-RapidAPI-Key': API_FOOTBALL_KEY }
+            });
+            
+            const fixtures = h2hResponse.data?.response || [];
+            
+            // 対戦成績を計算
+            let homeWins = 0, awayWins = 0, draws = 0;
+            const matches = [];
+            
+            fixtures.forEach(fixture => {
+                const homeScore = fixture.goals?.home || 0;
+                const awayScore = fixture.goals?.away || 0;
+                const fixtureHome = fixture.teams?.home?.name || '';
+                const fixtureAway = fixture.teams?.away?.name || '';
+                
+                // チーム名の正規化（大文字小文字を無視）
+                const isHomeTeamHome = fixtureHome.toLowerCase().includes(home.toLowerCase()) || 
+                                      home.toLowerCase().includes(fixtureHome.toLowerCase());
+                
+                if (homeScore > awayScore) {
+                    if (isHomeTeamHome) homeWins++;
+                    else awayWins++;
+                } else if (awayScore > homeScore) {
+                    if (isHomeTeamHome) awayWins++;
+                    else homeWins++;
+                } else {
+                    draws++;
+                }
+                
+                matches.push({
+                    home: isHomeTeamHome ? fixtureHome : fixtureAway,
+                    away: isHomeTeamHome ? fixtureAway : fixtureHome,
+                    homeScore: isHomeTeamHome ? homeScore : awayScore,
+                    awayScore: isHomeTeamHome ? awayScore : homeScore,
+                    date: fixture.fixture?.date || ''
+                });
+            });
+            
+            res.json({
+                homeWins,
+                awayWins,
+                draws,
+                matches: matches.slice(0, 10)
+            });
+            
+        } catch (apiError) {
+            console.error('API-Football H2H error:', apiError.message);
+            // フォールバック: 空のデータを返す
+            res.json({
+                homeWins: 0,
+                awayWins: 0,
+                draws: 0,
+                matches: []
+            });
+        }
+    } catch (error) {
+        console.error('H2H API error:', error);
+        res.status(500).json({
+            error: 'Failed to get head-to-head data',
+            details: error.message
+        });
+    }
+});
+
 // 個別マッチの詳細情報を取得（Football-data.org）
 app.get('/api/match-details/:matchId', async (req, res) => {
     try {

@@ -319,6 +319,313 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        .section-title {
+            color: #00ff88;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        /* ポゼッション表示（FotMob風） */
+        .possession-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .possession-bar-container {
+            margin-top: 1rem;
+        }
+
+        .possession-bar {
+            display: flex;
+            height: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .possession-home {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 1rem;
+            color: white;
+            font-weight: bold;
+            transition: width 0.5s ease;
+        }
+
+        .possession-away {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 1rem;
+            color: white;
+            font-weight: bold;
+            transition: width 0.5s ease;
+        }
+
+        .possession-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #a0a0a0;
+        }
+
+        .possession-label {
+            font-weight: bold;
+            color: #fff;
+        }
+
+        /* トップ統計（FotMob風） */
+        .top-stats-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .top-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .top-stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .top-stat-label {
+            color: #a0a0a0;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .top-stat-values {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .top-stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .top-stat-value.home {
+            color: #3b82f6;
+        }
+
+        .top-stat-value.away {
+            color: #ef4444;
+        }
+
+        .top-stat-bar-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .top-stat-bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .top-stat-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .top-stat-bar-fill.home {
+            background: #3b82f6;
+        }
+
+        .top-stat-bar-fill.away {
+            background: #ef4444;
+        }
+
+        /* カテゴリ別統計 */
+        .stats-categories {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-category {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .category-title {
+            color: #00ff88;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .category-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .category-stat-item {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 1rem;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .category-stat-label {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            grid-column: 2;
+            text-align: center;
+        }
+
+        .category-stat-value {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .category-stat-value.home {
+            color: #3b82f6;
+            text-align: right;
+        }
+
+        .category-stat-value.away {
+            color: #ef4444;
+            text-align: left;
+        }
+
+        .category-stat-bar-container {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .category-stat-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-stat-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        .category-stat-bar-fill.home {
+            background: #3b82f6;
+        }
+
+        .category-stat-bar-fill.away {
+            background: #ef4444;
+        }
+
+        /* 過去の対戦成績 */
+        .h2h-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .h2h-container {
+            margin-top: 1rem;
+        }
+
+        .h2h-summary {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .h2h-stat {
+            text-align: center;
+        }
+
+        .h2h-stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00ff88;
+            margin-bottom: 0.25rem;
+        }
+
+        .h2h-stat-label {
+            color: #a0a0a0;
+            font-size: 0.85rem;
+        }
+
+        .h2h-matches {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .h2h-match-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border-left: 3px solid #00ff88;
+        }
+
+        .h2h-match-teams {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .h2h-match-score {
+            font-weight: bold;
+            color: #00ff88;
+            margin: 0 1rem;
+        }
+
+        .h2h-match-date {
+            color: #a0a0a0;
+            font-size: 0.85rem;
+        }
+
         .stats-comparison {
             display: grid;
             grid-template-columns: 1fr auto 1fr;
@@ -562,11 +869,68 @@
 
         <!-- 統計タブ -->
         <div id="statsTab" class="tab-content">
-            <div class="stats-section">
-                <h3>試合統計</h3>
-                <div id="stats" class="stats-list">
-                    <div class="no-data">統計データを読み込み中...</div>
-                        </div>
+            <!-- ポゼッション表示（FotMob風） -->
+            <div class="possession-section">
+                <h3 class="section-title">ポゼッション</h3>
+                <div id="possessionBar" class="possession-bar-container">
+                    <div class="possession-bar">
+                        <div class="possession-home" id="possessionHome" style="width: 50%;"></div>
+                        <div class="possession-away" id="possessionAway" style="width: 50%;"></div>
+                    </div>
+                    <div class="possession-labels">
+                        <span id="possessionHomeLabel" class="possession-label">50%</span>
+                        <span id="possessionAwayLabel" class="possession-label">50%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- トップ統計（FotMob風） -->
+            <div class="top-stats-section">
+                <h3 class="section-title">トップ統計</h3>
+                <div id="topStats" class="top-stats-grid">
+                    <!-- 動的に生成 -->
+                </div>
+            </div>
+
+            <!-- カテゴリ別統計 -->
+            <div class="stats-categories">
+                <!-- パス統計 -->
+                <div class="stats-category">
+                    <h4 class="category-title">パス</h4>
+                    <div id="passesStats" class="category-stats"></div>
+                </div>
+
+                <!-- 守備統計 -->
+                <div class="stats-category">
+                    <h4 class="category-title">守備</h4>
+                    <div id="defenseStats" class="category-stats"></div>
+                </div>
+
+                <!-- シュート統計 -->
+                <div class="stats-category">
+                    <h4 class="category-title">シュート</h4>
+                    <div id="shootingStats" class="category-stats"></div>
+                </div>
+
+                <!-- ドリブル統計 -->
+                <div class="stats-category">
+                    <h4 class="category-title">ドリブル</h4>
+                    <div id="dribblingStats" class="category-stats"></div>
+                </div>
+
+                <!-- ディシプリン統計 -->
+                <div class="stats-category">
+                    <h4 class="category-title">ディシプリン</h4>
+                    <div id="disciplineStats" class="category-stats"></div>
+                </div>
+            </div>
+
+            <!-- 過去の対戦成績 -->
+            <div class="h2h-section">
+                <h3 class="section-title">過去の対戦成績</h3>
+                <div id="h2hStats" class="h2h-container">
+                    <div class="no-data">過去の対戦データを読み込み中...</div>
+                </div>
             </div>
         </div>
 
@@ -710,91 +1074,319 @@
             statusElement.className = `match-status ${status === 'FT' || status === 'finished' ? 'finished' : status === 'LIVE' || status === 'live' ? 'live' : 'scheduled'}`;
         }
 
-        // 統計タブを更新
+        // 統計タブを更新（FotMob風UI）
         function updateStatsTab(statsData, matchData = null) {
-            const statsContainer = document.getElementById('stats');
-            if (!statsContainer) {
-                console.warn('Stats container not found');
+            console.log('Updating stats tab with data:', statsData);
+            
+            if (!statsData || Object.keys(statsData).length === 0) {
+                const homeTeam = matchData?.homeTeam || 'ホームチーム';
+                const awayTeam = matchData?.awayTeam || 'アウェイチーム';
+                document.getElementById('possessionBar').innerHTML = `<div class="no-data">統計データが利用できません</div>`;
                 return;
             }
 
-            console.log('Updating stats tab with data:', statsData);
+            // ポゼッション表示
+            updatePossession(statsData.possession);
             
-            if (statsData && Object.keys(statsData).length > 0) {
-                let statsHTML = '';
+            // トップ統計表示
+            updateTopStats(statsData, matchData);
+            
+            // カテゴリ別統計表示
+            updateCategoryStats(statsData);
+            
+            // 過去の対戦成績を取得
+            if (matchData) {
+                loadHeadToHead(matchData);
+            }
+        }
+
+        // ポゼッション表示を更新
+        function updatePossession(possessionData) {
+            if (!possessionData || (possessionData.home === undefined && possessionData.away === undefined)) {
+                return;
+            }
+            
+            const homePossession = possessionData.home || 50;
+            const awayPossession = possessionData.away || 50;
+            
+            document.getElementById('possessionHome').style.width = `${homePossession}%`;
+            document.getElementById('possessionAway').style.width = `${awayPossession}%`;
+            document.getElementById('possessionHomeLabel').textContent = `${homePossession}%`;
+            document.getElementById('possessionAwayLabel').textContent = `${awayPossession}%`;
+        }
+
+        // トップ統計を更新
+        function updateTopStats(statsData, matchData) {
+            const topStatsContainer = document.getElementById('topStats');
+            if (!topStatsContainer) return;
+            
+            const topStats = [
+                { key: 'shots', label: 'シュート数', home: statsData.shots?.home || 0, away: statsData.shots?.away || 0 },
+                { key: 'shotsOnTarget', label: '枠内シュート', home: statsData.shotsOnTarget?.home || 0, away: statsData.shotsOnTarget?.away || 0 },
+                { key: 'bigChances', label: 'ビッグチャンス', home: statsData.bigChances?.home || 0, away: statsData.bigChances?.away || 0 },
+                { key: 'expectedGoals', label: '期待値(xG)', home: statsData.expectedGoals?.home || 0, away: statsData.expectedGoals?.away || 0, isDecimal: true }
+            ];
+            
+            let html = '';
+            topStats.forEach(stat => {
+                const homeValue = stat.isDecimal ? parseFloat(stat.home).toFixed(2) : stat.home;
+                const awayValue = stat.isDecimal ? parseFloat(stat.away).toFixed(2) : stat.away;
+                const maxValue = Math.max(stat.home, stat.away, 1);
+                const homePercent = (stat.home / maxValue) * 100;
+                const awayPercent = (stat.away / maxValue) * 100;
                 
-                // 統計項目の定義（表示順序とラベル）
-                const statsOrder = [
-                    { key: 'possession', label: 'ボール支配率', suffix: '%', isPercentage: true },
-                    { key: 'shots', label: 'シュート数' },
-                    { key: 'shotsOnTarget', label: '枠内シュート' },
-                    { key: 'shotsOffTarget', label: '枠外シュート' },
-                    { key: 'shotsInsideBox', label: 'ペナルティエリア内シュート' },
-                    { key: 'shotsOutsideBox', label: 'ペナルティエリア外シュート' },
-                    { key: 'corners', label: 'コーナーキック' },
-                    { key: 'fouls', label: 'ファウル' },
-                    { key: 'yellowCards', label: 'イエローカード' },
-                    { key: 'redCards', label: 'レッドカード' },
-                    { key: 'offsides', label: 'オフサイド' },
-                    { key: 'saves', label: 'セーブ' },
-                    { key: 'goalkeepersSaves', label: 'GKセーブ' },
-                    { key: 'passes', label: 'パス数' },
-                    { key: 'passesAccuracy', label: 'パス成功率', suffix: '%', isPercentage: true },
-                    { key: 'attacks', label: '攻撃回数' },
-                    { key: 'dangerousAttacks', label: '危険な攻撃回数' },
-                    { key: 'ballSafe', label: 'ボールセーフ' },
-                    { key: 'throwIns', label: 'スローイン' },
-                    { key: 'freeKicks', label: 'フリーキック' },
-                    { key: 'goalKicks', label: 'ゴールキック' },
-                    { key: 'substitutions', label: '交代回数' },
-                    { key: 'tackles', label: 'タックル' },
-                    { key: 'blockedShots', label: 'ブロックされたシュート' },
-                    { key: 'hitWoodwork', label: 'ポスト・クロスバー' },
-                    { key: 'bigChances', label: 'ビッグチャンス' }
-                ];
-                
-                // 各統計項目を処理
-                statsOrder.forEach(({ key, label, suffix = '', isPercentage = false }) => {
-                    const value = statsData[key];
-                    if (value && typeof value === 'object' && (value.home !== undefined || value.away !== undefined)) {
-                        const homeValue = value.home || 0;
-                        const awayValue = value.away || 0;
-                        
-                        // 両方とも0の場合は表示しない（重要度の低い統計を除外）
-                        if (homeValue === 0 && awayValue === 0 && key !== 'possession' && key !== 'shots' && key !== 'shotsOnTarget') {
-                            return;
-                        }
-                        
-                        let statValue = '';
-                        if (isPercentage) {
-                            statValue = `${homeValue}% - ${awayValue}%`;
-                        } else {
-                            statValue = `${homeValue} - ${awayValue}${suffix}`;
-                        }
-                        
-                        statsHTML += `
-                            <div class="stat-item">
-                                <span class="stat-label">${label}</span>
-                                <span class="stat-value">${statValue}</span>
+                html += `
+                    <div class="top-stat-item">
+                        <div class="top-stat-label">${stat.label}</div>
+                        <div class="top-stat-values">
+                            <span class="top-stat-value home">${homeValue}</span>
+                            <div class="top-stat-bar-container">
+                                <div class="top-stat-bar">
+                                    <div class="top-stat-bar-fill home" style="width: ${homePercent}%;"></div>
+                                </div>
+                                <div class="top-stat-bar">
+                                    <div class="top-stat-bar-fill away" style="width: ${awayPercent}%;"></div>
+                                </div>
                             </div>
-                        `;
-                    }
+                            <span class="top-stat-value away">${awayValue}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            topStatsContainer.innerHTML = html;
+        }
+
+        // カテゴリ別統計を更新
+        function updateCategoryStats(statsData) {
+            // パス統計
+            const passesStats = [
+                { key: 'passes', label: '総パス', home: statsData.passes?.home || 0, away: statsData.passes?.away || 0 },
+                { key: 'passesAccuracy', label: 'パス成功率', home: statsData.passesAccuracy?.home || 0, away: statsData.passesAccuracy?.away || 0, suffix: '%' },
+                { key: 'keyPasses', label: 'キーパス', home: statsData.keyPasses?.home || 0, away: statsData.keyPasses?.away || 0 },
+                { key: 'longPasses', label: 'ロングパス', home: statsData.longPasses?.home || 0, away: statsData.longPasses?.away || 0 },
+                { key: 'crosses', label: 'クロス', home: statsData.crosses?.home || 0, away: statsData.crosses?.away || 0 }
+            ];
+            renderCategoryStats('passesStats', passesStats);
+            
+            // 守備統計
+            const defenseStats = [
+                { key: 'tackles', label: 'タックル', home: statsData.tackles?.home || 0, away: statsData.tackles?.away || 0 },
+                { key: 'interceptions', label: 'インターセプト', home: statsData.interceptions?.home || 0, away: statsData.interceptions?.away || 0 },
+                { key: 'clearances', label: 'クリアランス', home: statsData.clearances?.home || 0, away: statsData.clearances?.away || 0 },
+                { key: 'saves', label: 'GKセーブ', home: statsData.saves?.home || statsData.goalkeepersSaves?.home || 0, away: statsData.saves?.away || statsData.goalkeepersSaves?.away || 0 },
+                { key: 'blockedShots', label: 'ブロック', home: statsData.blockedShots?.home || 0, away: statsData.blockedShots?.away || 0 }
+            ];
+            renderCategoryStats('defenseStats', defenseStats);
+            
+            // シュート統計
+            const shootingStats = [
+                { key: 'shots', label: '総シュート', home: statsData.shots?.home || 0, away: statsData.shots?.away || 0 },
+                { key: 'shotsOnTarget', label: '枠内シュート', home: statsData.shotsOnTarget?.home || 0, away: statsData.shotsOnTarget?.away || 0 },
+                { key: 'shotsOffTarget', label: '枠外シュート', home: statsData.shotsOffTarget?.home || 0, away: statsData.shotsOffTarget?.away || 0 },
+                { key: 'shotsInsideBox', label: 'PA内シュート', home: statsData.shotsInsideBox?.home || 0, away: statsData.shotsInsideBox?.away || 0 },
+                { key: 'hitWoodwork', label: 'ポスト・クロスバー', home: statsData.hitWoodwork?.home || 0, away: statsData.hitWoodwork?.away || 0 }
+            ];
+            renderCategoryStats('shootingStats', shootingStats);
+            
+            // ドリブル統計
+            const dribblingStats = [
+                { key: 'dribblesAttempted', label: 'ドリブル試行', home: statsData.dribblesAttempted?.home || 0, away: statsData.dribblesAttempted?.away || 0 },
+                { key: 'dribblesSuccess', label: 'ドリブル成功', home: statsData.dribblesSuccess?.home || 0, away: statsData.dribblesSuccess?.away || 0 },
+                { key: 'duelsWon', label: '対戦勝利', home: statsData.duelsWon?.home || 0, away: statsData.duelsWon?.away || 0 },
+                { key: 'aerialDuels', label: '空中戦', home: statsData.aerialDuels?.home || 0, away: statsData.aerialDuels?.away || 0 }
+            ];
+            renderCategoryStats('dribblingStats', dribblingStats);
+            
+            // ディシプリン統計
+            const disciplineStats = [
+                { key: 'yellowCards', label: 'イエローカード', home: statsData.yellowCards?.home || 0, away: statsData.yellowCards?.away || 0 },
+                { key: 'redCards', label: 'レッドカード', home: statsData.redCards?.home || 0, away: statsData.redCards?.away || 0 },
+                { key: 'fouls', label: 'ファウル', home: statsData.fouls?.home || 0, away: statsData.fouls?.away || 0 },
+                { key: 'offsides', label: 'オフサイド', home: statsData.offsides?.home || 0, away: statsData.offsides?.away || 0 }
+            ];
+            renderCategoryStats('disciplineStats', disciplineStats);
+        }
+
+        // カテゴリ統計をレンダリング
+        function renderCategoryStats(containerId, stats) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            let html = '';
+            stats.forEach(stat => {
+                if (stat.home === 0 && stat.away === 0) return;
+                
+                const maxValue = Math.max(stat.home, stat.away, 1);
+                const homePercent = (stat.home / maxValue) * 100;
+                const awayPercent = (stat.away / maxValue) * 100;
+                const suffix = stat.suffix || '';
+                
+                html += `
+                    <div class="category-stat-item">
+                        <span class="category-stat-value home">${stat.home}${suffix}</span>
+                        <span class="category-stat-label">${stat.label}</span>
+                        <span class="category-stat-value away">${stat.away}${suffix}</span>
+                        <div class="category-stat-bar-container">
+                            <div class="category-stat-bar">
+                                <div class="category-stat-bar-fill home" style="width: ${homePercent}%;"></div>
+                            </div>
+                            <div class="category-stat-bar">
+                                <div class="category-stat-bar-fill away" style="width: ${awayPercent}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || '<div class="no-data">データがありません</div>';
+        }
+
+        // 過去の対戦成績を取得
+        async function loadHeadToHead(matchData) {
+            const h2hContainer = document.getElementById('h2hStats');
+            if (!h2hContainer) return;
+            
+            const homeTeam = matchData.homeTeam || '';
+            const awayTeam = matchData.awayTeam || '';
+            
+            if (!homeTeam || !awayTeam) {
+                h2hContainer.innerHTML = '<div class="no-data">チーム情報が不足しています</div>';
+                return;
+            }
+            
+            try {
+                // 過去の試合データを取得（過去1年間）
+                const oneYearAgo = new Date();
+                oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+                const fromDate = oneYearAgo.toISOString().split('T')[0];
+                
+                // 両チームの過去の試合を検索
+                const response = await fetch(`/api/matches/h2h?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&from=${fromDate}`);
+                
+                if (response.ok) {
+                    const h2hData = await response.json();
+                    renderHeadToHead(h2hData, homeTeam, awayTeam);
+                } else {
+                    // APIが存在しない場合、スケジュールデータから計算
+                    calculateHeadToHeadFromSchedule(homeTeam, awayTeam);
+                }
+            } catch (error) {
+                console.error('H2H取得エラー:', error);
+                // フォールバック: スケジュールデータから計算
+                calculateHeadToHeadFromSchedule(homeTeam, awayTeam);
+            }
+        }
+
+        // スケジュールデータから過去の対戦成績を計算
+        async function calculateHeadToHeadFromSchedule(homeTeam, awayTeam) {
+            const h2hContainer = document.getElementById('h2hStats');
+            if (!h2hContainer) return;
+            
+            try {
+                // ローカルストレージから過去の試合データを取得
+                const storedMatches = JSON.parse(localStorage.getItem('recentMatches') || '[]');
+                
+                // 両チームの対戦を検索
+                const h2hMatches = storedMatches.filter(match => {
+                    const matchHome = match.homeTeam || match.home || '';
+                    const matchAway = match.awayTeam || match.away || '';
+                    return (matchHome === homeTeam && matchAway === awayTeam) ||
+                           (matchHome === awayTeam && matchAway === homeTeam);
                 });
                 
-                if (statsHTML) {
-                    statsContainer.innerHTML = statsHTML;
-                    console.log('Stats HTML updated');
+                if (h2hMatches.length > 0) {
+                    // 対戦成績を計算
+                    let homeWins = 0, awayWins = 0, draws = 0;
+                    const matchList = [];
+                    
+                    h2hMatches.forEach(match => {
+                        const isHome = (match.homeTeam || match.home) === homeTeam;
+                        const homeScore = match.homeScore || match.score?.home || 0;
+                        const awayScore = match.awayScore || match.score?.away || 0;
+                        
+                        if (homeScore > awayScore) {
+                            if (isHome) homeWins++;
+                            else awayWins++;
+                        } else if (awayScore > homeScore) {
+                            if (isHome) awayWins++;
+                            else homeWins++;
+                        } else {
+                            draws++;
+                        }
+                        
+                        matchList.push({
+                            home: isHome ? homeTeam : awayTeam,
+                            away: isHome ? awayTeam : homeTeam,
+                            homeScore: isHome ? homeScore : awayScore,
+                            awayScore: isHome ? awayScore : homeScore,
+                            date: match.date || match.kickoffUtc || ''
+                        });
+                    });
+                    
+                    renderHeadToHead({
+                        homeWins,
+                        awayWins,
+                        draws,
+                        matches: matchList.slice(0, 10) // 最新10試合
+                    }, homeTeam, awayTeam);
                 } else {
-                    const homeTeam = matchData?.homeTeam || 'ホームチーム';
-                    const awayTeam = matchData?.awayTeam || 'アウェイチーム';
-                    statsContainer.innerHTML = `<div class="no-data">${homeTeam} vs ${awayTeam}の統計データが利用できません</div>`;
+                    h2hContainer.innerHTML = '<div class="no-data">過去の対戦データが見つかりませんでした</div>';
                 }
-            } else {
-                // データがない場合の表示
-                const homeTeam = matchData?.homeTeam || 'ホームチーム';
-                const awayTeam = matchData?.awayTeam || 'アウェイチーム';
-                statsContainer.innerHTML = `<div class="no-data">${homeTeam} vs ${awayTeam}の統計データが利用できません</div>`;
+            } catch (error) {
+                console.error('H2H計算エラー:', error);
+                h2hContainer.innerHTML = '<div class="no-data">過去の対戦データの取得に失敗しました</div>';
             }
+        }
+
+        // 過去の対戦成績を表示
+        function renderHeadToHead(h2hData, homeTeam, awayTeam) {
+            const h2hContainer = document.getElementById('h2hStats');
+            if (!h2hContainer) return;
+            
+            const homeWins = h2hData.homeWins || 0;
+            const awayWins = h2hData.awayWins || 0;
+            const draws = h2hData.draws || 0;
+            const matches = h2hData.matches || [];
+            
+            let html = `
+                <div class="h2h-summary">
+                    <div class="h2h-stat">
+                        <div class="h2h-stat-value">${homeWins}</div>
+                        <div class="h2h-stat-label">${homeTeam}の勝利</div>
+                    </div>
+                    <div class="h2h-stat">
+                        <div class="h2h-stat-value">${draws}</div>
+                        <div class="h2h-stat-label">引き分け</div>
+                    </div>
+                    <div class="h2h-stat">
+                        <div class="h2h-stat-value">${awayWins}</div>
+                        <div class="h2h-stat-label">${awayTeam}の勝利</div>
+                    </div>
+                </div>
+            `;
+            
+            if (matches.length > 0) {
+                html += '<div class="h2h-matches">';
+                matches.forEach(match => {
+                    const matchDate = match.date ? new Date(match.date).toLocaleDateString('ja-JP') : '';
+                    html += `
+                        <div class="h2h-match-item">
+                            <div class="h2h-match-teams">
+                                <span>${match.home}</span>
+                                <span class="h2h-match-score">${match.homeScore} - ${match.awayScore}</span>
+                                <span>${match.away}</span>
+                            </div>
+                            <div class="h2h-match-date">${matchDate}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            } else {
+                html += '<div class="no-data">過去の対戦記録がありません</div>';
+            }
+            
+            h2hContainer.innerHTML = html;
         }
 
         // イベントタブを更新
