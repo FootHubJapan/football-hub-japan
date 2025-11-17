@@ -171,6 +171,15 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+        }
+        
+        /* モーダルが開いている時、背景のスクロールを無効化 */
+        body.modal-open {
+            overflow: hidden !important;
+            position: fixed;
+            width: 100%;
+            height: 100%;
         }
 
         .modal-content {
@@ -358,7 +367,7 @@
             overflow: visible !important;
             position: relative !important;
         }
-        
+
         /* 試合統計タブのスクロール対応 */
         .modal-content .tab-pane#stats {
             position: relative !important;
@@ -366,6 +375,7 @@
             max-height: 100% !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch;
         }
         
         .modal-content .tab-pane#stats.active {
@@ -374,6 +384,12 @@
             max-height: 100% !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* 試合統計タブ内のスクロールイベントを確実に処理 */
+        .modal-content .tab-pane#stats {
+            touch-action: pan-y;
         }
         
         /* 試合統計タブ内のコンテンツ */
@@ -3225,7 +3241,12 @@
                         }
                         
                         // 強力に表示（CSSの優先度を上書き）
-                        targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: hidden !important;';
+                        // 試合統計タブの場合はスクロールを有効化
+                        if (targetTab === 'stats') {
+                            targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: 100% !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow-y: auto !important; overflow-x: hidden !important; max-height: calc(80vh - 200px) !important;';
+                        } else {
+                            targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: hidden !important;';
+                        }
                         
                         // タブペイン内のコンテナも強制表示
                         const containers = targetPane.querySelectorAll('.stats-container, .events-container, .lineup-container');
@@ -3370,6 +3391,8 @@
             if (closeBtn) {
                 closeBtn.onclick = function() {
                     modal.style.display = 'none';
+                    // モーダルが閉じた時、背景のスクロールを有効化
+                    document.body.style.overflow = '';
                 };
             }
             
@@ -3377,8 +3400,61 @@
             window.onclick = function(event) {
                 if (event.target === modal) {
                     modal.style.display = 'none';
+                    // モーダルが閉じた時、背景のスクロールを有効化
+                    document.body.style.overflow = '';
                 }
             };
+            
+            // モーダル内のスクロールイベントが背景に伝播しないようにする
+            modal.addEventListener('wheel', function(e) {
+                const statsTab = modal.querySelector('#stats');
+                if (statsTab && statsTab.classList.contains('active')) {
+                    // 試合統計タブがアクティブな場合、スクロールイベントを処理
+                    const canScrollUp = statsTab.scrollTop > 0;
+                    const canScrollDown = statsTab.scrollTop < (statsTab.scrollHeight - statsTab.clientHeight - 1);
+                    
+                    // スクロール可能な範囲内の場合、イベントを止める
+                    if ((e.deltaY < 0 && canScrollUp) || (e.deltaY > 0 && canScrollDown)) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        statsTab.scrollTop += e.deltaY;
+                    } else if (canScrollUp || canScrollDown) {
+                        // スクロール可能な範囲内だが、端に達している場合も止める
+                        e.stopPropagation();
+                        e.preventDefault();
+                    }
+                } else {
+                    // 試合統計タブ以外の場合も、モーダル内のスクロールは背景に伝播させない
+                    e.stopPropagation();
+                }
+            }, { passive: false });
+            
+            // モーダル内のタッチイベントも処理
+            modal.addEventListener('touchmove', function(e) {
+                const statsTab = modal.querySelector('#stats');
+                if (statsTab && statsTab.classList.contains('active')) {
+                    const canScrollUp = statsTab.scrollTop > 0;
+                    const canScrollDown = statsTab.scrollTop < (statsTab.scrollHeight - statsTab.clientHeight - 1);
+                    
+                    if (canScrollUp || canScrollDown) {
+                        e.stopPropagation();
+                    }
+                } else {
+                    e.stopPropagation();
+                }
+            }, { passive: false });
+            
+            // 試合統計タブ内のスクロールイベントを確実に処理
+            const statsTab = modal.querySelector('#stats');
+            if (statsTab) {
+                statsTab.addEventListener('wheel', function(e) {
+                    e.stopPropagation();
+                }, { passive: false });
+                
+                statsTab.addEventListener('touchmove', function(e) {
+                    e.stopPropagation();
+                }, { passive: false });
+            }
             
             // 初期データを読み込み
             loadMatches();
@@ -5003,9 +5079,9 @@
         // ポゼッション表示を更新
         function updatePossession(possessionData) {
             if (!possessionData || (possessionData.home === undefined && possessionData.away === undefined)) {
-                return;
-            }
-            
+                            return;
+                        }
+                        
             const homePossession = possessionData.home || 50;
             const awayPossession = possessionData.away || 50;
             
@@ -5055,8 +5131,8 @@
                             </div>
                             <span class="top-stat-value away">${awayValue}</span>
                         </div>
-                    </div>
-                `;
+                            </div>
+                        `;
             });
             
             topStatsContainer.innerHTML = html;
@@ -5138,10 +5214,10 @@
                             </div>
                             <div class="category-stat-bar">
                                 <div class="category-stat-bar-fill away" style="width: ${awayPercent}%;"></div>
-                            </div>
                         </div>
-                    </div>
-                `;
+                        </div>
+                        </div>
+                    `;
             });
             
             container.innerHTML = html || '<div class="no-data">データがありません</div>';
@@ -5170,7 +5246,7 @@
                 if (response.ok) {
                     const h2hData = await response.json();
                     renderHeadToHead(h2hData, homeTeam, awayTeam);
-                } else {
+            } else {
                     calculateHeadToHeadFromSchedule(homeTeam, awayTeam);
                 }
             } catch (error) {
@@ -5260,8 +5336,8 @@
                         <div class="h2h-stat-value">${awayWins}</div>
                         <div class="h2h-stat-label">${awayTeam}の勝利</div>
                     </div>
-                </div>
-            `;
+                    </div>
+                `;
             
             if (matches.length > 0) {
                 html += '<div class="h2h-matches">';
