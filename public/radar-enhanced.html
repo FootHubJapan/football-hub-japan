@@ -1243,7 +1243,30 @@
         function getStatValue(stats, statKey) {
             if (!stats) return 0;
             
-            const value = stats[statKey] || 0;
+            let value = 0;
+            
+            // パス成功率の特別処理
+            if (statKey === 'passesAccuracy') {
+                value = stats.passesAccuracy || stats.passAccuracy || 0;
+                // 文字列の場合は数値に変換
+                if (typeof value === 'string') {
+                    value = parseFloat(value.replace('%', '')) || 0;
+                }
+            } 
+            // ドリブル成功率の特別処理
+            else if (statKey === 'dribblesSuccessRate' || statKey === 'dribblesSuccess') {
+                if (stats.dribblesSuccessRate !== undefined) {
+                    value = stats.dribblesSuccessRate;
+                } else if (stats.dribblesAttempted > 0 && stats.dribblesSuccess !== undefined) {
+                    value = Math.round((stats.dribblesSuccess / stats.dribblesAttempted) * 100);
+                } else {
+                    value = 0;
+                }
+            } 
+            // その他の統計
+            else {
+                value = stats[statKey] || 0;
+            }
             
             // パーセンテージ値の場合はそのまま使用
             if (statKey.includes('Accuracy') || statKey.includes('Success')) {
