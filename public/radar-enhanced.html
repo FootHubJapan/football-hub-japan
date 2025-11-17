@@ -1125,6 +1125,26 @@
                         // オブジェクト形式のstats
                         const statsSeason = playerData.stats.season || '';
                         if (statsSeason.includes(seasonYear)) {
+                            // パス成功率を取得
+                            let passesAccuracy = 0;
+                            if (playerData.stats.passesAccuracy !== undefined) {
+                                passesAccuracy = typeof playerData.stats.passesAccuracy === 'string' 
+                                    ? parseFloat(playerData.stats.passesAccuracy.replace('%', '')) || 0
+                                    : playerData.stats.passesAccuracy;
+                            } else if (playerData.stats.passAccuracy !== undefined) {
+                                passesAccuracy = typeof playerData.stats.passAccuracy === 'string'
+                                    ? parseFloat(playerData.stats.passAccuracy.replace('%', '')) || 0
+                                    : playerData.stats.passAccuracy;
+                            }
+                            
+                            // ドリブル成功率を計算
+                            let dribblesSuccessRate = 0;
+                            const dribblesAttempted = playerData.stats.dribblesAttempted || playerData.stats.dribbles || 0;
+                            const dribblesSuccess = playerData.stats.dribblesSuccess || 0;
+                            if (dribblesAttempted > 0) {
+                                dribblesSuccessRate = Math.round((dribblesSuccess / dribblesAttempted) * 100);
+                            }
+                            
                             currentPlayers[target].stats = {
                                 goals: playerData.stats.goals || 0,
                                 assists: playerData.stats.assists || 0,
@@ -1132,9 +1152,10 @@
                                 minutes: playerData.stats.minutes || 0,
                                 rating: playerData.stats.rating || 0,
                                 passesTotal: playerData.stats.passesTotal || playerData.stats.passes || 0,
-                                passesAccuracy: playerData.stats.passesAccuracy || playerData.stats.passAccuracy || 0,
-                                dribblesAttempted: playerData.stats.dribblesAttempted || playerData.stats.dribbles || 0,
-                                dribblesSuccess: playerData.stats.dribblesSuccess || 0,
+                                passesAccuracy: passesAccuracy,
+                                dribblesAttempted: dribblesAttempted,
+                                dribblesSuccess: dribblesSuccess,
+                                dribblesSuccessRate: dribblesSuccessRate,
                                 shotsTotal: playerData.stats.shotsTotal || playerData.stats.shots || 0,
                                 shotsOnTarget: playerData.stats.shotsOnTarget || 0,
                                 tackles: playerData.stats.tackles || 0,
@@ -1146,7 +1167,9 @@
                             console.log(`✅ 統合APIから統計データを取得（オブジェクト形式）: ${player.name}`, {
                                 goals: currentPlayers[target].stats.goals,
                                 assists: currentPlayers[target].stats.assists,
-                                appearances: currentPlayers[target].stats.appearances
+                                appearances: currentPlayers[target].stats.appearances,
+                                passesAccuracy: currentPlayers[target].stats.passesAccuracy,
+                                dribblesSuccessRate: currentPlayers[target].stats.dribblesSuccessRate
                             });
                             
                             // データ取得後にチャートと統計比較を更新
