@@ -391,63 +391,39 @@
             position: relative !important;
         }
 
-        /* 試合統計タブのスクロール対応 */
-        .modal-content .tab-pane#stats {
-            position: relative !important;
-            height: 100% !important;
-            max-height: 100% !important;
-            min-height: 0 !important;
-            overflow-y: scroll !important;
-            overflow-x: hidden !important;
-            -webkit-overflow-scrolling: touch;
-            padding: 0 !important;
+        /* 試合統計タブのスクロールコンテナ（基本情報と同じスタイル） */
+        .stats-scroll-container {
+            max-height: 60vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
         }
         
-        .modal-content .tab-pane#stats.active {
-            position: relative !important;
-            height: 100% !important;
-            max-height: 100% !important;
-            min-height: 0 !important;
-            overflow-y: scroll !important;
-            overflow-x: hidden !important;
-            -webkit-overflow-scrolling: touch;
-            padding: 0 !important;
+        /* 試合統計タブのスクロールバー（基本情報と同じスタイル） */
+        .stats-scroll-container::-webkit-scrollbar {
+            width: 8px;
         }
         
-        /* 試合統計タブ内のスクロールコンテナ */
-        .modal-content .tab-pane#stats > * {
-            padding: 1.5rem;
-        }
-        
-        /* スクロールバーのスタイル */
-        .modal-content .tab-pane#stats::-webkit-scrollbar {
-            width: 12px;
-        }
-        
-        .modal-content .tab-pane#stats::-webkit-scrollbar-track {
+        .stats-scroll-container::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
+            border-radius: 4px;
         }
         
-        .modal-content .tab-pane#stats::-webkit-scrollbar-thumb {
+        .stats-scroll-container::-webkit-scrollbar-thumb {
             background: rgba(76, 175, 80, 0.6);
-            border-radius: 6px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
         }
         
-        .modal-content .tab-pane#stats::-webkit-scrollbar-thumb:hover {
+        .stats-scroll-container::-webkit-scrollbar-thumb:hover {
             background: rgba(76, 175, 80, 0.8);
         }
         
         /* Firefox用のスクロールバー */
-        .modal-content .tab-pane#stats {
+        .stats-scroll-container {
             scrollbar-width: thin;
             scrollbar-color: rgba(76, 175, 80, 0.6) rgba(255, 255, 255, 0.1);
-        }
-        
-        /* 試合統計タブ内のスクロールイベントを確実に処理 */
-        .modal-content .tab-pane#stats {
-            touch-action: pan-y;
         }
         
         /* 試合統計タブ内のコンテンツ */
@@ -3137,8 +3113,9 @@
                 
                 <!-- 試合統計タブ -->
                 <div id="stats" class="tab-pane">
-                    <!-- ポゼッション表示（FotMob風） -->
-                    <div class="possession-section">
+                    <div class="stats-scroll-container">
+                        <!-- ポゼッション表示（FotMob風） -->
+                        <div class="possession-section">
                         <h3 class="section-title">ポゼッション</h3>
                         <div id="possessionBar" class="possession-bar-container">
                             <div class="possession-bar">
@@ -3200,6 +3177,7 @@
                             <div class="no-data">過去の対戦データを読み込み中...</div>
                         </div>
                     </div>
+                    </div>
                 </div>
                 
                 <!-- 試合イベントタブ -->
@@ -3248,7 +3226,7 @@
             });
             
             // スクロールイベントの伝播を防ぐ
-            const scrollableContainers = document.querySelectorAll('.basic-info.fotmob-style, .stats-container, .events-container, .lineup-container, .formation-display, .lineup-players.fotmob-grid');
+            const scrollableContainers = document.querySelectorAll('.basic-info.fotmob-style, .stats-scroll-container, .stats-container, .events-container, .lineup-container, .formation-display, .lineup-players.fotmob-grid');
             scrollableContainers.forEach(container => {
                 container.addEventListener('wheel', function(e) {
                     e.stopPropagation();
@@ -3299,9 +3277,14 @@
                         }
                         
                         // 強力に表示（CSSの優先度を上書き）
-                        // 試合統計タブの場合はスクロールを有効化
+                        // 試合統計タブの場合はスクロールコンテナを設定
                         if (targetTab === 'stats') {
-                            targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: 100% !important; width: 100% !important; min-height: 0 !important; position: relative !important; overflow-y: scroll !important; overflow-x: hidden !important; max-height: 100% !important; padding: 0 !important;';
+                            targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: hidden !important;';
+                            // 試合統計タブ内のスクロールコンテナを設定
+                            const statsScrollContainer = targetPane.querySelector('.stats-scroll-container');
+                            if (statsScrollContainer) {
+                                statsScrollContainer.style.cssText = 'max-height: 60vh !important; overflow-y: auto !important; overflow-x: hidden !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important;';
+                            }
                         } else {
                             targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: hidden !important;';
                         }
