@@ -997,7 +997,19 @@
                             redCards: seasonStats.redCards || 0
                         };
                         
-                        console.log(`✅ 統計データを取得: ${player.name}`, currentPlayers[target].stats);
+                        console.log(`✅ 統計データを取得: ${player.name}`, {
+                            goals: currentPlayers[target].stats.goals,
+                            assists: currentPlayers[target].stats.assists,
+                            appearances: currentPlayers[target].stats.appearances,
+                            minutes: currentPlayers[target].stats.minutes,
+                            fullStats: currentPlayers[target].stats
+                        });
+                        
+                        // データ取得後にチャートと統計比較を更新
+                        if (selectedStats.length === 6) {
+                            updateCharts();
+                            updateStatsComparison();
+                        }
                     } else {
                         // シーズンデータがない場合、統合APIから取得を試みる
                         console.log(`⚠️ ${season}シーズンのデータが見つかりません、統合APIから取得を試みます`);
@@ -1055,7 +1067,17 @@
                                 yellowCards: seasonStats.yellowCards || 0,
                                 redCards: seasonStats.redCards || 0
                             };
-                            console.log(`✅ 統合APIから統計データを取得: ${player.name}`);
+                            console.log(`✅ 統合APIから統計データを取得: ${player.name}`, {
+                                goals: currentPlayers[target].stats.goals,
+                                assists: currentPlayers[target].stats.assists,
+                                appearances: currentPlayers[target].stats.appearances
+                            });
+                            
+                            // データ取得後にチャートと統計比較を更新
+                            if (selectedStats.length === 6) {
+                                updateCharts();
+                                updateStatsComparison();
+                            }
                         }
                     } else if (playerData.stats && typeof playerData.stats === 'object') {
                         // オブジェクト形式のstats
@@ -1079,7 +1101,17 @@
                                 yellowCards: playerData.stats.yellowCards || 0,
                                 redCards: playerData.stats.redCards || 0
                             };
-                            console.log(`✅ 統合APIから統計データを取得（オブジェクト形式）: ${player.name}`);
+                            console.log(`✅ 統合APIから統計データを取得（オブジェクト形式）: ${player.name}`, {
+                                goals: currentPlayers[target].stats.goals,
+                                assists: currentPlayers[target].stats.assists,
+                                appearances: currentPlayers[target].stats.appearances
+                            });
+                            
+                            // データ取得後にチャートと統計比較を更新
+                            if (selectedStats.length === 6) {
+                                updateCharts();
+                                updateStatsComparison();
+                            }
                         }
                     }
                 }
@@ -1230,6 +1262,11 @@
         // 統計比較更新
         function updateStatsComparison() {
             const statsGrid = document.getElementById('statsGrid');
+            if (!statsGrid) {
+                console.error('❌ statsGrid element not found');
+                return;
+            }
+            
             statsGrid.innerHTML = '';
 
             Object.entries(currentPlayers).forEach(([key, player]) => {
@@ -1244,6 +1281,7 @@
                         const statObj = availableStats.find(s => s.value === statKey);
                         if (statObj) {
                             const value = getStatRawValue(player.stats, statKey);
+                            console.log(`📊 ${player.name} - ${statObj.label}: ${value} (raw: ${player.stats[statKey]})`);
                             statsHTML += `
                                 <div class="stat-item">
                                     <span>${statObj.label}:</span>
@@ -1255,6 +1293,8 @@
                     
                     statCard.innerHTML = statsHTML;
                     statsGrid.appendChild(statCard);
+                } else {
+                    console.log(`⚠️ ${player?.name || key} の統計データがありません（統計比較）`);
                 }
             });
         }
