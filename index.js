@@ -6749,6 +6749,7 @@ app.get('/api/database/comprehensive-status', async (req, res) => {
         if (process.env.NODE_ENV === 'production' || !apiService || !apiService.dbManager) {
             console.log('📁 本番環境: players.jsonから直接読み込み');
             try {
+                const fs = require('fs');
                 const playersDataPath = path.join(__dirname, 'data', 'players.json');
                 if (fs.existsSync(playersDataPath)) {
                     const playersData = fs.readFileSync(playersDataPath, 'utf8');
