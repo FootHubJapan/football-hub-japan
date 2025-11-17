@@ -394,28 +394,24 @@
         /* 試合統計タブのスクロール対応 */
         .modal-content .tab-pane#stats {
             position: relative !important;
-            height: calc(80vh - 200px) !important;
-            max-height: calc(80vh - 200px) !important;
-            min-height: calc(80vh - 200px) !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            min-height: 0 !important;
             overflow-y: scroll !important;
             overflow-x: hidden !important;
             -webkit-overflow-scrolling: touch;
             padding: 0 !important;
-            display: flex !important;
-            flex-direction: column !important;
         }
         
         .modal-content .tab-pane#stats.active {
             position: relative !important;
-            height: calc(80vh - 200px) !important;
-            max-height: calc(80vh - 200px) !important;
-            min-height: calc(80vh - 200px) !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            min-height: 0 !important;
             overflow-y: scroll !important;
             overflow-x: hidden !important;
             -webkit-overflow-scrolling: touch;
             padding: 0 !important;
-            display: flex !important;
-            flex-direction: column !important;
         }
         
         /* 試合統計タブ内のスクロールコンテナ */
@@ -3305,7 +3301,7 @@
                         // 強力に表示（CSSの優先度を上書き）
                         // 試合統計タブの場合はスクロールを有効化
                         if (targetTab === 'stats') {
-                            targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: calc(80vh - 200px) !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow-y: scroll !important; overflow-x: hidden !important; max-height: calc(80vh - 200px) !important; padding: 0 !important;';
+                            targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: 100% !important; width: 100% !important; min-height: 0 !important; position: relative !important; overflow-y: scroll !important; overflow-x: hidden !important; max-height: 100% !important; padding: 0 !important;';
                         } else {
                             targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: hidden !important;';
                         }
