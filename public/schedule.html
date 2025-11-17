@@ -293,7 +293,9 @@
             width: 90%;
             max-width: 800px;
             max-height: 80vh;
-            overflow-y: auto;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         /* タブコンテンツ */
@@ -301,6 +303,8 @@
             flex: 1;
             overflow: hidden;
             position: relative;
+            min-height: 0;
+            max-height: calc(80vh - 200px);
         }
 
         /* より具体的なセレクターで優先度を下げる */
@@ -315,6 +319,7 @@
             bottom: 0;
             overflow-y: auto;
             overflow-x: hidden;
+            max-height: 100%;
         }
 
         .modal-content .tab-pane.active {
@@ -322,6 +327,7 @@
             position: relative;
             overflow-y: auto;
             overflow-x: hidden;
+            max-height: calc(80vh - 200px);
         }
 
         /* 強制表示用のスタイル */
@@ -331,7 +337,9 @@
             visibility: visible !important;
             min-height: 250px !important;
             width: 100% !important;
-            overflow: visible !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            max-height: calc(80vh - 200px) !important;
         }
 
         /* タブペイン内のコンテナを確実に表示 */
