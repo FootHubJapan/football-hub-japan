@@ -507,6 +507,7 @@
                 <div class="season-selection">
                     <label for="seasonSelect">シーズン:</label>
                     <select id="seasonSelect" class="season-dropdown" onchange="updateSeason()">
+                        <option value="2025-2026" selected>2025-2026</option>
                         <option value="2024-2025">2024-2025</option>
                         <option value="2023-2024">2023-2024</option>
                         <option value="2022-2023">2022-2023</option>
@@ -796,12 +797,21 @@
         }
 
         // シーズン更新
-        function updateSeason() {
+        async function updateSeason() {
             const season = document.getElementById('seasonSelect').value;
             console.log('シーズン更新:', season);
-            // シーズンに応じてデータを更新
+            
+            // 選択されている選手の統計データを再取得
+            for (const [key, player] of Object.entries(currentPlayers)) {
+                if (player) {
+                    await loadPlayerStats(player, key);
+                }
+            }
+            
+            // チャートと統計比較を更新
             if (currentPlayers.A || currentPlayers.B || currentPlayers.C) {
                 updateCharts();
+                updateStatsComparison();
             }
         }
 
@@ -916,7 +926,7 @@
         }
 
         // 選手選択
-        function selectPlayer(player, target) {
+        async function selectPlayer(player, target) {
             currentPlayers[target] = player;
             
             const selectedPlayerDiv = document.getElementById(`selectedPlayer${target}`);
@@ -931,6 +941,151 @@
             selectedPlayerDiv.style.display = 'flex';
             document.getElementById(`searchResults${target}`).innerHTML = '';
             document.getElementById(`search${target}`).value = '';
+            
+            // データベースから統計データを取得
+            await loadPlayerStats(player, target);
+        }
+
+        // 選手の統計データをデータベースから取得
+        async function loadPlayerStats(player, target) {
+            try {
+                const playerId = player.id || player.playerId || player.apiFootballId;
+                if (!playerId) {
+                    console.log('⚠️ 選手IDが見つかりません:', player.name);
+                    return;
+                }
+
+                const season = document.getElementById('seasonSelect').value;
+                const seasonYear = season.split('-')[0]; // "2025-2026" -> "2025"
+                
+                console.log(`🔄 選手統計データを取得中: ${player.name} (${season})`);
+                
+                // キャリアスタッツAPIからシーズン別データを取得
+                const response = await fetch(`/api/player/career-stats/${playerId}?seasons=${seasonYear}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const careerStats = data.careerStats || [];
+                    
+                    // 選択されたシーズンのデータを取得
+                    const seasonStats = careerStats.find(stat => {
+                        const statSeason = stat.season || stat.seasonYear;
+                        return statSeason === seasonYear || 
+                               statSeason === season || 
+                               statSeason === `${seasonYear}/${parseInt(seasonYear) + 1}` ||
+                               statSeason === `${seasonYear}-${parseInt(seasonYear) + 1}`;
+                    });
+                    
+                    if (seasonStats) {
+                        // 統計データを選手オブジェクトに追加
+                        currentPlayers[target].stats = {
+                            goals: seasonStats.goals || 0,
+                            assists: seasonStats.assists || 0,
+                            appearances: seasonStats.appearances || seasonStats.matches || 0,
+                            minutes: seasonStats.minutes || 0,
+                            rating: seasonStats.rating || 0,
+                            passesTotal: seasonStats.passesTotal || seasonStats.passes || 0,
+                            passesAccuracy: seasonStats.passesAccuracy || seasonStats.passAccuracy || 0,
+                            dribblesAttempted: seasonStats.dribblesAttempted || seasonStats.dribbles || 0,
+                            dribblesSuccess: seasonStats.dribblesSuccess || 0,
+                            shotsTotal: seasonStats.shotsTotal || seasonStats.shots || 0,
+                            shotsOnTarget: seasonStats.shotsOnTarget || 0,
+                            tackles: seasonStats.tackles || 0,
+                            interceptions: seasonStats.interceptions || 0,
+                            clearances: seasonStats.clearances || 0,
+                            yellowCards: seasonStats.yellowCards || 0,
+                            redCards: seasonStats.redCards || 0
+                        };
+                        
+                        console.log(`✅ 統計データを取得: ${player.name}`, currentPlayers[target].stats);
+                    } else {
+                        // シーズンデータがない場合、統合APIから取得を試みる
+                        console.log(`⚠️ ${season}シーズンのデータが見つかりません、統合APIから取得を試みます`);
+                        await loadPlayerStatsFromIntegratedAPI(player, target, seasonYear);
+                    }
+                } else {
+                    // API取得失敗時、統合APIから取得を試みる
+                    await loadPlayerStatsFromIntegratedAPI(player, target, seasonYear);
+                }
+            } catch (error) {
+                console.error('統計データ取得エラー:', error);
+                // エラー時も統合APIから取得を試みる
+                const season = document.getElementById('seasonSelect').value;
+                const seasonYear = season.split('-')[0];
+                await loadPlayerStatsFromIntegratedAPI(player, target, seasonYear);
+            }
+        }
+
+        // 統合APIから選手統計データを取得
+        async function loadPlayerStatsFromIntegratedAPI(player, target, seasonYear) {
+            try {
+                const playerId = player.id || player.playerId || player.apiFootballId;
+                if (!playerId) return;
+
+                const response = await fetch(`/api/integrated/player/${playerId}`);
+                
+                if (response.ok) {
+                    const playerData = await response.json();
+                    
+                    // 配列形式のstatsからシーズンデータを取得
+                    if (Array.isArray(playerData.stats)) {
+                        const seasonStats = playerData.stats.find(stat => {
+                            const statSeason = stat.season || '';
+                            return statSeason.includes(seasonYear) || 
+                                   statSeason === `${seasonYear}/2026` ||
+                                   statSeason === `${seasonYear}/26`;
+                        });
+                        
+                        if (seasonStats) {
+                            currentPlayers[target].stats = {
+                                goals: seasonStats.goals || 0,
+                                assists: seasonStats.assists || 0,
+                                appearances: seasonStats.appearances || 0,
+                                minutes: seasonStats.minutes || 0,
+                                rating: seasonStats.rating || 0,
+                                passesTotal: seasonStats.passesTotal || seasonStats.passes || 0,
+                                passesAccuracy: seasonStats.passesAccuracy || seasonStats.passAccuracy || 0,
+                                dribblesAttempted: seasonStats.dribblesAttempted || seasonStats.dribbles || 0,
+                                dribblesSuccess: seasonStats.dribblesSuccess || 0,
+                                shotsTotal: seasonStats.shotsTotal || seasonStats.shots || 0,
+                                shotsOnTarget: seasonStats.shotsOnTarget || 0,
+                                tackles: seasonStats.tackles || 0,
+                                interceptions: seasonStats.interceptions || 0,
+                                clearances: seasonStats.clearances || 0,
+                                yellowCards: seasonStats.yellowCards || 0,
+                                redCards: seasonStats.redCards || 0
+                            };
+                            console.log(`✅ 統合APIから統計データを取得: ${player.name}`);
+                        }
+                    } else if (playerData.stats && typeof playerData.stats === 'object') {
+                        // オブジェクト形式のstats
+                        const statsSeason = playerData.stats.season || '';
+                        if (statsSeason.includes(seasonYear)) {
+                            currentPlayers[target].stats = {
+                                goals: playerData.stats.goals || 0,
+                                assists: playerData.stats.assists || 0,
+                                appearances: playerData.stats.appearances || 0,
+                                minutes: playerData.stats.minutes || 0,
+                                rating: playerData.stats.rating || 0,
+                                passesTotal: playerData.stats.passesTotal || playerData.stats.passes || 0,
+                                passesAccuracy: playerData.stats.passesAccuracy || playerData.stats.passAccuracy || 0,
+                                dribblesAttempted: playerData.stats.dribblesAttempted || playerData.stats.dribbles || 0,
+                                dribblesSuccess: playerData.stats.dribblesSuccess || 0,
+                                shotsTotal: playerData.stats.shotsTotal || playerData.stats.shots || 0,
+                                shotsOnTarget: playerData.stats.shotsOnTarget || 0,
+                                tackles: playerData.stats.tackles || 0,
+                                interceptions: playerData.stats.interceptions || 0,
+                                clearances: playerData.stats.clearances || 0,
+                                yellowCards: playerData.stats.yellowCards || 0,
+                                redCards: playerData.stats.redCards || 0
+                            };
+                            console.log(`✅ 統合APIから統計データを取得（オブジェクト形式）: ${player.name}`);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('統合APIからの統計データ取得エラー:', error);
+            }
         }
 
         // 比較開始
@@ -964,10 +1119,15 @@
             const colors = ['#00ff88', '#ff4444', '#4444ff'];
 
             Object.entries(currentPlayers).forEach(([key, player], index) => {
-                if (player) {
+                if (player && player.stats) {
+                    // 実際の統計データから値を取得
+                    const data = selectedStats.map(stat => {
+                        return getStatValue(player.stats, stat);
+                    });
+                    
                     datasets.push({
                         label: player.name,
-                        data: generateRandomData(selectedStats.length),
+                        data: data,
                         borderColor: colors[index],
                         backgroundColor: colors[index] + '20',
                         borderWidth: 2
@@ -977,12 +1137,47 @@
 
             mainChart.data.labels = labels;
             mainChart.data.datasets = datasets;
+            
+            // 最大値を動的に設定
+            const allValues = datasets.flatMap(d => d.data);
+            const maxValue = Math.max(...allValues, 100);
+            mainChart.options.scales.r.max = Math.ceil(maxValue * 1.1); // 10%の余白
+            
             mainChart.update();
         }
 
-        // ランダムデータ生成
-        function generateRandomData(length) {
-            return Array.from({ length }, () => Math.floor(Math.random() * 100) + 1);
+        // 統計項目の値を取得（正規化して0-100の範囲に変換）
+        function getStatValue(stats, statKey) {
+            if (!stats) return 0;
+            
+            const value = stats[statKey] || 0;
+            
+            // パーセンテージ値の場合はそのまま使用
+            if (statKey.includes('Accuracy') || statKey.includes('Success')) {
+                return Math.min(100, Math.max(0, parseFloat(value) || 0));
+            }
+            
+            // その他の統計は最大値で正規化（暫定的な最大値を使用）
+            const maxValues = {
+                'goals': 50,
+                'assists': 30,
+                'appearances': 50,
+                'minutes': 4000,
+                'passesTotal': 3000,
+                'dribblesAttempted': 200,
+                'dribblesSuccess': 150,
+                'shotsTotal': 200,
+                'shotsOnTarget': 100,
+                'tackles': 150,
+                'interceptions': 100,
+                'clearances': 200,
+                'yellowCards': 15,
+                'redCards': 5
+            };
+            
+            const maxValue = maxValues[statKey] || 100;
+            const normalized = (value / maxValue) * 100;
+            return Math.min(100, Math.max(0, normalized));
         }
 
         // チャート初期化
@@ -1038,27 +1233,47 @@
             statsGrid.innerHTML = '';
 
             Object.entries(currentPlayers).forEach(([key, player]) => {
-                if (player) {
+                if (player && player.stats) {
                     const statCard = document.createElement('div');
                     statCard.className = 'stat-card';
-                    statCard.innerHTML = `
-                        <h3>${player.name}</h3>
-                        <div class="stat-item">
-                            <span>得点:</span>
-                            <span>${player.stats?.goals || 0}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>アシスト:</span>
-                            <span>${player.stats?.assists || 0}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>出場:</span>
-                            <span>${player.stats?.appearances || 0}</span>
-                        </div>
-                    `;
+                    
+                    // 選択された統計項目に応じて表示
+                    let statsHTML = `<h3>${player.name}</h3>`;
+                    
+                    selectedStats.forEach(statKey => {
+                        const statObj = availableStats.find(s => s.value === statKey);
+                        if (statObj) {
+                            const value = getStatRawValue(player.stats, statKey);
+                            statsHTML += `
+                                <div class="stat-item">
+                                    <span>${statObj.label}:</span>
+                                    <span>${formatStatValue(value, statKey)}</span>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    statCard.innerHTML = statsHTML;
                     statsGrid.appendChild(statCard);
                 }
             });
+        }
+
+        // 統計項目の生の値を取得（正規化なし）
+        function getStatRawValue(stats, statKey) {
+            if (!stats) return 0;
+            return stats[statKey] || 0;
+        }
+
+        // 統計値をフォーマット（パーセンテージなど）
+        function formatStatValue(value, statKey) {
+            if (statKey.includes('Accuracy') || statKey.includes('Success')) {
+                return `${parseFloat(value).toFixed(1)}%`;
+            }
+            if (statKey === 'minutes') {
+                return `${value}'`;
+            }
+            return value;
         }
 
         // サンプル選手データ
