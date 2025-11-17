@@ -873,29 +873,69 @@
 
         // 詳細統計を表示
         function displayDetailedStats(player) {
+            // statsが配列形式の場合、2025/26シーズンのデータを合計
+            let aggregatedStats = {};
+            
+            if (Array.isArray(player.stats)) {
+                // 2025/26シーズンのデータをフィルタリングして合計
+                const currentSeasonStats = player.stats.filter(stat => {
+                    const season = stat.season || '';
+                    return season.includes('2025') || season.includes('2026') || season === '2025/2026' || season === '2025/26';
+                });
+                
+                // すべての統計を合計
+                aggregatedStats = currentSeasonStats.reduce((acc, stat) => {
+                    return {
+                        shotsTotal: (acc.shotsTotal || 0) + (stat.shotsTotal || stat.shots || 0),
+                        shotsOnTarget: (acc.shotsOnTarget || 0) + (stat.shotsOnTarget || 0),
+                        expectedGoals: acc.expectedGoals || stat.expectedGoals || null,
+                        shotAccuracy: acc.shotAccuracy || stat.shotAccuracy || null,
+                        passesTotal: (acc.passesTotal || 0) + (stat.passesTotal || stat.passes || 0),
+                        keyPasses: (acc.keyPasses || 0) + (stat.keyPasses || 0),
+                        longPasses: (acc.longPasses || 0) + (stat.longPasses || 0),
+                        crosses: (acc.crosses || 0) + (stat.crosses || 0),
+                        tacklesTotal: (acc.tacklesTotal || 0) + (stat.tacklesTotal || stat.tackles || 0),
+                        interceptions: (acc.interceptions || 0) + (stat.interceptions || 0),
+                        duelsWon: (acc.duelsWon || 0) + (stat.duelsWon || 0),
+                        aerialDuels: (acc.aerialDuels || 0) + (stat.aerialDuels || 0),
+                        dribblesAttempted: (acc.dribblesAttempted || 0) + (stat.dribblesAttempted || stat.dribbles || 0),
+                        dribblesSuccess: (acc.dribblesSuccess || 0) + (stat.dribblesSuccess || 0),
+                        chancesCreated: (acc.chancesCreated || 0) + (stat.chancesCreated || 0),
+                        foulsDrawn: (acc.foulsDrawn || 0) + (stat.foulsDrawn || 0)
+                    };
+                }, {});
+            } else if (player.stats && typeof player.stats === 'object') {
+                // オブジェクト形式の場合はそのまま使用
+                aggregatedStats = player.stats;
+            }
+            
             // シュート統計
-            document.getElementById('shotsTotal').textContent = player.stats?.shotsTotal || player.stats?.shots || 0;
-            document.getElementById('shotsOnTarget').textContent = player.stats?.shotsOnTarget || 0;
-            document.getElementById('expectedGoals').textContent = player.stats?.expectedGoals || 'N/A';
-            document.getElementById('shotAccuracy').textContent = player.stats?.shotAccuracy || 'N/A';
+            document.getElementById('shotsTotal').textContent = aggregatedStats.shotsTotal || aggregatedStats.shots || 0;
+            document.getElementById('shotsOnTarget').textContent = aggregatedStats.shotsOnTarget || 0;
+            document.getElementById('expectedGoals').textContent = aggregatedStats.expectedGoals || 'N/A';
+            // シュート精度を計算（枠内シュート / 総シュート * 100）
+            const shotAccuracy = aggregatedStats.shotsTotal > 0 && aggregatedStats.shotsOnTarget > 0
+                ? ((aggregatedStats.shotsOnTarget / aggregatedStats.shotsTotal) * 100).toFixed(1) + '%'
+                : 'N/A';
+            document.getElementById('shotAccuracy').textContent = shotAccuracy;
 
             // パス・ポゼッション
-            document.getElementById('passesTotal').textContent = player.stats?.passesTotal || player.stats?.passes || 0;
-            document.getElementById('keyPasses').textContent = player.stats?.keyPasses || 0;
-            document.getElementById('longPasses').textContent = player.stats?.longPasses || 0;
-            document.getElementById('crosses').textContent = player.stats?.crosses || 0;
+            document.getElementById('passesTotal').textContent = aggregatedStats.passesTotal || aggregatedStats.passes || 0;
+            document.getElementById('keyPasses').textContent = aggregatedStats.keyPasses || 0;
+            document.getElementById('longPasses').textContent = aggregatedStats.longPasses || 0;
+            document.getElementById('crosses').textContent = aggregatedStats.crosses || 0;
 
             // 守備・対戦
-            document.getElementById('tacklesTotal').textContent = player.stats?.tacklesTotal || player.stats?.tackles || 0;
-            document.getElementById('interceptions').textContent = player.stats?.interceptions || 0;
-            document.getElementById('duelsWon').textContent = player.stats?.duelsWon || 0;
-            document.getElementById('aerialDuels').textContent = player.stats?.aerialDuels || 0;
+            document.getElementById('tacklesTotal').textContent = aggregatedStats.tacklesTotal || aggregatedStats.tackles || 0;
+            document.getElementById('interceptions').textContent = aggregatedStats.interceptions || 0;
+            document.getElementById('duelsWon').textContent = aggregatedStats.duelsWon || 0;
+            document.getElementById('aerialDuels').textContent = aggregatedStats.aerialDuels || 0;
 
             // ドリブル・創造性
-            document.getElementById('dribblesAttempted').textContent = player.stats?.dribblesAttempted || 0;
-            document.getElementById('dribblesSuccess').textContent = player.stats?.dribblesSuccess || 0;
-            document.getElementById('chancesCreated').textContent = player.stats?.chancesCreated || 0;
-            document.getElementById('foulsDrawn').textContent = player.stats?.foulsDrawn || 0;
+            document.getElementById('dribblesAttempted').textContent = aggregatedStats.dribblesAttempted || aggregatedStats.dribbles || 0;
+            document.getElementById('dribblesSuccess').textContent = aggregatedStats.dribblesSuccess || 0;
+            document.getElementById('chancesCreated').textContent = aggregatedStats.chancesCreated || 0;
+            document.getElementById('foulsDrawn').textContent = aggregatedStats.foulsDrawn || 0;
         }
 
         // キャリアスタートからの個人スタッツを生成（実際のAPIデータを使用）
