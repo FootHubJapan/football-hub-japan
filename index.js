@@ -5127,6 +5127,116 @@ async function handleMatchDetailsRequest(req, res) {
             }
         }
         
+        // Football-data.org APIから追加情報を取得（レフェリー、会場、詳細統計など）
+        if (matchDetails && process.env.FOOTBALL_DATA_API_KEY) {
+            try {
+                const axios = require('axios');
+                const matchDate = matchDetails.date || clickedMatchData?.date || clickedMatchData?.utcDate;
+                const homeTeam = matchDetails.homeTeam;
+                const awayTeam = matchDetails.awayTeam;
+                
+                if (matchDate && homeTeam && awayTeam) {
+                    // 日付からシーズンとリーグコードを取得
+                    const dateObj = new Date(matchDate);
+                    const season = dateObj.getFullYear();
+                    
+                    // リーグコードのマッピング
+                    const leagueCodeMap = {
+                        'Premier League': 'PL',
+                        'La Liga': 'PD',
+                        'Serie A': 'SA',
+                        'Bundesliga': 'BL1',
+                        'Ligue 1': 'FL1',
+                        'UEFA Champions League': 'CL',
+                        'UEFA Europa League': 'EL',
+                        'UEFA Europa Conference League': 'ECL'
+                    };
+                    
+                    const leagueCode = leagueCodeMap[matchDetails.league] || leagueCodeMap[league] || null;
+                    
+                    if (leagueCode) {
+                        // Football-data.orgから試合を検索
+                        const dateStr = dateObj.toISOString().split('T')[0];
+                        const fdResponse = await axios.get(`https://api.football-data.org/v4/competitions/${leagueCode}/matches`, {
+                            headers: {
+                                'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
+                            },
+                            params: {
+                                season: season,
+                                dateFrom: dateStr,
+                                dateTo: dateStr
+                            },
+                            timeout: 5000
+                        }).catch(err => {
+                            console.log(`⚠️ Football-data.org試合検索失敗:`, err.message);
+                            return null;
+                        });
+                        
+                        if (fdResponse && fdResponse.data && fdResponse.data.matches) {
+                            // チーム名でマッチする試合を検索
+                            const normalizeTeamName = (name) => {
+                                return name.toLowerCase().replace(/\s+/g, ' ').trim();
+                            };
+                            
+                            const normalizedHome = normalizeTeamName(homeTeam);
+                            const normalizedAway = normalizeTeamName(awayTeam);
+                            
+                            const fdMatch = fdResponse.data.matches.find(m => {
+                                const fdHome = normalizeTeamName(m.homeTeam.name);
+                                const fdAway = normalizeTeamName(m.awayTeam.name);
+                                
+                                return (fdHome === normalizedHome || fdHome.includes(normalizedHome) || normalizedHome.includes(fdHome)) &&
+                                       (fdAway === normalizedAway || fdAway.includes(normalizedAway) || normalizedAway.includes(fdAway));
+                            });
+                            
+                            if (fdMatch) {
+                                console.log(`✅ Football-data.orgから試合追加情報を取得: ${homeTeam} vs ${awayTeam}`);
+                                
+                                // 追加情報を統合
+                                matchDetails.footballData = {
+                                    referees: fdMatch.referees || [],
+                                    venue: fdMatch.venue || matchDetails.venue,
+                                    bookings: fdMatch.bookings || [],
+                                    substitutions: fdMatch.substitutions || [],
+                                    goalScorers: fdMatch.goals || [],
+                                    odds: fdMatch.odds || null,
+                                    // 詳細統計
+                                    statistics: {
+                                        freeKicks: {
+                                            home: fdMatch.statistics?.find(s => s.type === 'freeKicks')?.value?.home || null,
+                                            away: fdMatch.statistics?.find(s => s.type === 'freeKicks')?.value?.away || null
+                                        },
+                                        goalKicks: {
+                                            home: fdMatch.statistics?.find(s => s.type === 'goalKicks')?.value?.home || null,
+                                            away: fdMatch.statistics?.find(s => s.type === 'goalKicks')?.value?.away || null
+                                        },
+                                        throwIns: {
+                                            home: fdMatch.statistics?.find(s => s.type === 'throwIns')?.value?.home || null,
+                                            away: fdMatch.statistics?.find(s => s.type === 'throwIns')?.value?.away || null
+                                        }
+                                    }
+                                };
+                                
+                                // レフェリー情報を統合（API-Footballのデータがない場合）
+                                if (!matchDetails.referee || matchDetails.referee === 'Unknown') {
+                                    if (fdMatch.referees && fdMatch.referees.length > 0) {
+                                        matchDetails.referee = fdMatch.referees.map(r => r.name).join(', ');
+                                    }
+                                }
+                                
+                                // 会場情報を統合（より詳細な情報があれば）
+                                if (fdMatch.venue && fdMatch.venue !== 'Unknown') {
+                                    matchDetails.venue = fdMatch.venue;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log(`⚠️ Football-data.org試合情報取得エラー:`, error.message);
+            }
+        }
+        
         res.setHeader('Content-Type', 'application/json');
         res.json({ success: true, data: matchDetails });
         
@@ -6751,11 +6861,48 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
         // フロントエンドが配列形式とオブジェクト形式の両方に対応しているため、そのまま返す
         // 配列形式のstatsがあれば、すべてのコンペティション別統計を表示するために配列のまま返す
         
+        // Football-data.org APIから追加情報を取得（契約情報など）
+        let footballDataInfo = null;
+        if (player.footballDataId && process.env.FOOTBALL_DATA_API_KEY) {
+            try {
+                const axios = require('axios');
+                const fdResponse = await axios.get(`https://api.football-data.org/v4/persons/${player.footballDataId}`, {
+                    headers: {
+                        'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
+                    },
+                    timeout: 5000
+                }).catch(err => {
+                    console.log(`⚠️ Football-data.org選手情報取得失敗 (${player.footballDataId}):`, err.message);
+                    return null;
+                });
+                
+                if (fdResponse && fdResponse.data) {
+                    const fdData = fdResponse.data;
+                    footballDataInfo = {
+                        marketValue: fdData.marketValue || null,
+                        contractUntil: fdData.contractUntil || null,
+                        joinedDate: fdData.joinedDate || null,
+                        shirtNumber: fdData.shirtNumber || null
+                    };
+                    console.log(`✅ Football-data.orgから選手追加情報を取得: ${player.name}`);
+                }
+            } catch (error) {
+                console.log(`⚠️ Football-data.org選手情報取得エラー:`, error.message);
+            }
+        }
+        
         // 統合情報を追加
         const enhancedPlayer = {
             ...player,
             // player.statsをそのまま使用（配列形式なら配列、オブジェクト形式ならオブジェクト）
             stats: player.stats,
+            // Football-data.orgから取得した契約情報を追加
+            contract: footballDataInfo ? {
+                marketValue: footballDataInfo.marketValue,
+                contractUntil: footballDataInfo.contractUntil,
+                joinedDate: footballDataInfo.joinedDate,
+                shirtNumber: footballDataInfo.shirtNumber
+            } : null,
             integration: {
                 hasApiFootball: !!player.playerId || !!player.apiFootballId,
                 hasFootballData: !!player.footballDataId,

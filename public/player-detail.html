@@ -368,6 +368,15 @@
                 <h1 id="playerName" class="player-name">選手名</h1>
                 <p id="playerClub" class="player-club">所属チーム</p>
                 <div id="dataSourceInfo" style="color:#4ade80;font-size:12px;margin-top:4px;font-weight:600;"></div>
+                <!-- 契約情報セクション -->
+                <div id="contractInfo" class="contract-info" style="display:none;margin-top:1rem;padding:1rem;background:rgba(0,255,136,0.1);border-radius:8px;border:1px solid rgba(0,255,136,0.3);">
+                    <h3 style="color:#00ff88;font-size:1rem;margin-bottom:0.5rem;">📋 契約情報</h3>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;font-size:0.9rem;">
+                        <div><strong>市場価値:</strong> <span id="marketValue">-</span></div>
+                        <div><strong>契約満了:</strong> <span id="contractUntil">-</span></div>
+                        <div><strong>加入日:</strong> <span id="joinedDate">-</span></div>
+                    </div>
+                </div>
                 <div class="player-basics">
                     <div class="basic-item">
                         <div class="basic-value" id="playerAge">--</div>
@@ -805,6 +814,43 @@
             
             if (player.photo) {
                 document.getElementById('playerPhoto').src = player.photo;
+            }
+            
+            // 契約情報の表示
+            const contractInfo = document.getElementById('contractInfo');
+            if (player.contract && (player.contract.marketValue || player.contract.contractUntil || player.contract.joinedDate)) {
+                contractInfo.style.display = 'block';
+                
+                // 市場価値の表示
+                if (player.contract.marketValue) {
+                    const marketValue = player.contract.marketValue;
+                    // 数値の場合は通貨フォーマット
+                    if (typeof marketValue === 'number') {
+                        document.getElementById('marketValue').textContent = '€' + (marketValue / 1000000).toFixed(1) + 'M';
+                    } else {
+                        document.getElementById('marketValue').textContent = marketValue;
+                    }
+                } else {
+                    document.getElementById('marketValue').textContent = 'データなし';
+                }
+                
+                // 契約満了日の表示
+                if (player.contract.contractUntil) {
+                    const contractDate = new Date(player.contract.contractUntil);
+                    document.getElementById('contractUntil').textContent = contractDate.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+                } else {
+                    document.getElementById('contractUntil').textContent = 'データなし';
+                }
+                
+                // 加入日の表示
+                if (player.contract.joinedDate) {
+                    const joinedDate = new Date(player.contract.joinedDate);
+                    document.getElementById('joinedDate').textContent = joinedDate.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+                } else {
+                    document.getElementById('joinedDate').textContent = 'データなし';
+                }
+            } else {
+                contractInfo.style.display = 'none';
             }
             
             // データソースの表示
