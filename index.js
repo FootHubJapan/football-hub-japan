@@ -5296,7 +5296,10 @@ async function handleMatchDetailsRequest(req, res) {
             hasApiKey: !!process.env.FOOTBALL_DATA_API_KEY,
             matchDetailsKeys: matchDetails ? Object.keys(matchDetails) : [],
             matchDetailsLeague: matchDetails?.league,
-            clickedMatchDataLeague: clickedMatchData?.leagueName || clickedMatchData?.league || clickedMatchData?.competition
+            clickedMatchDataLeague: clickedMatchData?.leagueName || clickedMatchData?.league || clickedMatchData?.competition,
+            matchDetailsDate: matchDetails?.date,
+            matchDetailsHomeTeam: matchDetails?.homeTeam,
+            matchDetailsAwayTeam: matchDetails?.awayTeam
         });
         
         if (matchDetails && process.env.FOOTBALL_DATA_API_KEY) {
@@ -5400,19 +5403,34 @@ async function handleMatchDetailsRequest(req, res) {
                                 console.log('🔍 Football-data.org match data:', JSON.stringify(fdMatch, null, 2).substring(0, 2000));
                                 
                                 // 統計データの構造を確認
+                                console.log('🔍 Football-data.org match full structure:', {
+                                    hasStatistics: !!fdMatch.statistics,
+                                    statisticsType: Array.isArray(fdMatch.statistics) ? 'array' : typeof fdMatch.statistics,
+                                    statisticsLength: Array.isArray(fdMatch.statistics) ? fdMatch.statistics.length : 'N/A',
+                                    allKeys: Object.keys(fdMatch)
+                                });
+                                
                                 if (fdMatch.statistics && Array.isArray(fdMatch.statistics)) {
                                     console.log('📊 Football-data.org statistics:', fdMatch.statistics.length, 'items');
                                     fdMatch.statistics.forEach((stat, index) => {
-                                        console.log(`   [${index}] type: ${stat.type}, value:`, stat.value);
+                                        console.log(`   [${index}] type: ${stat.type}, value:`, JSON.stringify(stat.value));
                                     });
                                     
                                     // xGとビッグチャンスのデータを確認
-                                    const xgStat = fdMatch.statistics.find(s => s.type === 'expectedGoals' || s.type === 'xG');
-                                    const bigChancesStat = fdMatch.statistics.find(s => s.type === 'bigChances' || s.type === 'bigChancesCreated');
-                                    console.log('🔍 xG stat:', xgStat ? { type: xgStat.type, value: xgStat.value } : 'NOT FOUND');
-                                    console.log('🔍 Big Chances stat:', bigChancesStat ? { type: bigChancesStat.type, value: bigChancesStat.value } : 'NOT FOUND');
+                                    const xgStat = fdMatch.statistics.find(s => s.type === 'expectedGoals' || s.type === 'xG' || s.type === 'expected_goals');
+                                    const bigChancesStat = fdMatch.statistics.find(s => s.type === 'bigChances' || s.type === 'bigChancesCreated' || s.type === 'big_chances');
+                                    console.log('🔍 xG stat search result:', xgStat ? { type: xgStat.type, value: JSON.stringify(xgStat.value) } : 'NOT FOUND');
+                                    console.log('🔍 Big Chances stat search result:', bigChancesStat ? { type: bigChancesStat.type, value: JSON.stringify(bigChancesStat.value) } : 'NOT FOUND');
+                                    
+                                    // すべての統計タイプをリストアップ
+                                    const allStatTypes = fdMatch.statistics.map(s => s.type);
+                                    console.log('📋 All statistic types:', allStatTypes);
                                 } else {
-                                    console.log('⚠️ Football-data.org statistics not found or not an array:', fdMatch.statistics);
+                                    console.log('⚠️ Football-data.org statistics not found or not an array:', {
+                                        statistics: fdMatch.statistics,
+                                        type: typeof fdMatch.statistics,
+                                        isArray: Array.isArray(fdMatch.statistics)
+                                    });
                                 }
                                 
                                 // 追加情報を統合
