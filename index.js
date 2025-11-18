@@ -5130,12 +5130,21 @@ async function handleMatchDetailsRequest(req, res) {
         // Football-data.org APIから追加情報を取得（レフェリー、会場、詳細統計など）
         if (matchDetails && process.env.FOOTBALL_DATA_API_KEY) {
             try {
+                console.log('🔍 Football-data.org API呼び出し開始:', {
+                    hasMatchDetails: !!matchDetails,
+                    hasApiKey: !!process.env.FOOTBALL_DATA_API_KEY,
+                    homeTeam: matchDetails.homeTeam,
+                    awayTeam: matchDetails.awayTeam,
+                    league: matchDetails.league
+                });
+                
                 const axios = require('axios');
                 const matchDate = matchDetails.date || clickedMatchData?.date || clickedMatchData?.utcDate;
                 const homeTeam = matchDetails.homeTeam;
                 const awayTeam = matchDetails.awayTeam;
                 
                 if (matchDate && homeTeam && awayTeam) {
+                    console.log('📅 Football-data.org検索条件:', { matchDate, homeTeam, awayTeam });
                     // 日付からシーズンとリーグコードを取得
                     const dateObj = new Date(matchDate);
                     const season = dateObj.getFullYear();
@@ -5154,10 +5163,19 @@ async function handleMatchDetailsRequest(req, res) {
                     
                     const leagueCode = leagueCodeMap[matchDetails.league] || leagueCodeMap[league] || null;
                     
+                    console.log('🔍 リーグコードマッピング:', {
+                        matchLeague: matchDetails.league,
+                        queryLeague: league,
+                        mappedCode: leagueCode
+                    });
+                    
                     if (leagueCode) {
                         // Football-data.orgから試合を検索
                         const dateStr = dateObj.toISOString().split('T')[0];
-                        const fdResponse = await axios.get(`https://api.football-data.org/v4/competitions/${leagueCode}/matches`, {
+                        const fdUrl = `https://api.football-data.org/v4/competitions/${leagueCode}/matches`;
+                        console.log('📡 Football-data.org API呼び出し:', { url: fdUrl, season, dateStr });
+                        
+                        const fdResponse = await axios.get(fdUrl, {
                             headers: {
                                 'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
                             },
@@ -6865,8 +6883,17 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
         let footballDataInfo = null;
         if (player.footballDataId && process.env.FOOTBALL_DATA_API_KEY) {
             try {
+                console.log('🔍 Football-data.org選手情報取得開始:', {
+                    playerName: player.name,
+                    footballDataId: player.footballDataId,
+                    hasApiKey: !!process.env.FOOTBALL_DATA_API_KEY
+                });
+                
                 const axios = require('axios');
-                const fdResponse = await axios.get(`https://api.football-data.org/v4/persons/${player.footballDataId}`, {
+                const fdUrl = `https://api.football-data.org/v4/persons/${player.footballDataId}`;
+                console.log('📡 Football-data.org選手API呼び出し:', fdUrl);
+                
+                const fdResponse = await axios.get(fdUrl, {
                     headers: {
                         'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
                     },
