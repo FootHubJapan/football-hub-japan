@@ -5166,6 +5166,12 @@ async function handleMatchDetailsRequest(req, res) {
                 matchDetails.homeTeam = clickedHomeTeam;
                 matchDetails.awayTeam = clickedAwayTeam;
             }
+            
+            // リーグ名も設定（clickedMatchDataから取得）
+            if (!matchDetails.league || matchDetails.league === 'Unknown') {
+                matchDetails.league = clickedMatchData.leagueName || clickedMatchData.league || clickedMatchData.competition || league || 'Unknown';
+                console.log('✅ Set league from clickedMatchData:', matchDetails.league);
+            }
         }
         
         // Football-data.org APIから追加情報を取得（レフェリー、会場、詳細統計など）
@@ -5202,11 +5208,26 @@ async function handleMatchDetailsRequest(req, res) {
                         'UEFA Europa Conference League': 'ECL'
                     };
                     
-                    const leagueCode = leagueCodeMap[matchDetails.league] || leagueCodeMap[league] || null;
+                    // リーグコードを取得（複数のソースから）
+                    let leagueCode = null;
+                    if (matchDetails.league && matchDetails.league !== 'Unknown') {
+                        leagueCode = leagueCodeMap[matchDetails.league];
+                    }
+                    if (!leagueCode && league && league !== 'Unknown') {
+                        leagueCode = leagueCodeMap[league];
+                    }
+                    // clickedMatchDataからも取得を試みる
+                    if (!leagueCode && clickedMatchData) {
+                        const clickedLeague = clickedMatchData.leagueName || clickedMatchData.league || clickedMatchData.competition;
+                        if (clickedLeague && clickedLeague !== 'Unknown') {
+                            leagueCode = leagueCodeMap[clickedLeague];
+                        }
+                    }
                     
                     console.log('🔍 リーグコードマッピング:', {
                         matchLeague: matchDetails.league,
                         queryLeague: league,
+                        clickedLeague: clickedMatchData?.leagueName || clickedMatchData?.league || clickedMatchData?.competition,
                         mappedCode: leagueCode
                     });
                     
