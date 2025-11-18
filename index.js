@@ -4234,7 +4234,7 @@ async function handleMatchDetailsRequest(req, res) {
                 console.log('🔍 Fetching match details from API-Football:', { matchId, league });
                 
                 // fixtureDataが既に取得されている場合は、それをfixtureとして使用
-                let fixture = fixtureData || null;
+                fixture = fixtureData || null;
                 if (fixture) {
                     console.log('✅ Using fixtureData as fixture:', fixture.fixture?.id);
                 }
