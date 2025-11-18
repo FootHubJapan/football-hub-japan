@@ -4978,7 +4978,7 @@
                             <div class="detail-icon">🏟️</div>
                             <div class="detail-content">
                                 <div class="detail-label">会場</div>
-                                <div class="detail-value">${matchData.venue || '未定'}</div>
+                                <div class="detail-value">${matchData.footballData?.venue || matchData.venue || '未定'}</div>
                             </div>
                         </div>
 
@@ -4994,10 +4994,67 @@
                             <div class="detail-icon">👨‍⚖️</div>
                             <div class="detail-content">
                                 <div class="detail-label">主審</div>
-                                <div class="detail-value">${matchData.referee || '未定'}</div>
+                                <div class="detail-value">${matchData.footballData?.referees?.length > 0 ? matchData.footballData.referees.map(r => r.name).join(', ') : (matchData.referee || '未定')}</div>
                             </div>
                         </div>
                     </div>
+                    ${matchData.footballData ? `
+                    <div class="football-data-section" style="margin-top:1.5rem;padding:1rem;background:rgba(0,255,136,0.1);border-radius:8px;border:1px solid rgba(0,255,136,0.3);">
+                        <h3 style="color:#00ff88;font-size:1rem;margin-bottom:0.75rem;">📊 追加情報 (Football-data.org)</h3>
+                        ${matchData.footballData.statistics && (matchData.footballData.statistics.freeKicks || matchData.footballData.statistics.goalKicks || matchData.footballData.statistics.throwIns) ? `
+                        <div style="margin-bottom:1rem;">
+                            <h4 style="color:#ffffff;font-size:0.9rem;margin-bottom:0.5rem;">詳細統計</h4>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.75rem;font-size:0.85rem;">
+                                ${matchData.footballData.statistics.freeKicks ? `
+                                <div>
+                                    <strong style="color:#00ff88;">フリーキック:</strong><br>
+                                    ${matchData.homeTeam}: ${matchData.footballData.statistics.freeKicks.home || '-'}<br>
+                                    ${matchData.awayTeam}: ${matchData.footballData.statistics.freeKicks.away || '-'}
+                                </div>
+                                ` : ''}
+                                ${matchData.footballData.statistics.goalKicks ? `
+                                <div>
+                                    <strong style="color:#00ff88;">ゴールキック:</strong><br>
+                                    ${matchData.homeTeam}: ${matchData.footballData.statistics.goalKicks.home || '-'}<br>
+                                    ${matchData.awayTeam}: ${matchData.footballData.statistics.goalKicks.away || '-'}
+                                </div>
+                                ` : ''}
+                                ${matchData.footballData.statistics.throwIns ? `
+                                <div>
+                                    <strong style="color:#00ff88;">スローイン:</strong><br>
+                                    ${matchData.homeTeam}: ${matchData.footballData.statistics.throwIns.home || '-'}<br>
+                                    ${matchData.awayTeam}: ${matchData.footballData.statistics.throwIns.away || '-'}
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        ` : ''}
+                        ${matchData.footballData.bookings && matchData.footballData.bookings.length > 0 ? `
+                        <div style="margin-bottom:1rem;">
+                            <h4 style="color:#ffffff;font-size:0.9rem;margin-bottom:0.5rem;">警告・退場</h4>
+                            <div style="font-size:0.85rem;">
+                                ${matchData.footballData.bookings.map(booking => `
+                                    <div style="margin-bottom:0.25rem;">
+                                        ${booking.minute}' - ${booking.player?.name || 'Unknown'} (${booking.team?.name || 'Unknown'}) - ${booking.card === 'YELLOW' ? '🟨 イエロー' : booking.card === 'RED' ? '🟥 レッド' : booking.card}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        ${matchData.footballData.substitutions && matchData.footballData.substitutions.length > 0 ? `
+                        <div>
+                            <h4 style="color:#ffffff;font-size:0.9rem;margin-bottom:0.5rem;">交代</h4>
+                            <div style="font-size:0.85rem;">
+                                ${matchData.footballData.substitutions.map(sub => `
+                                    <div style="margin-bottom:0.25rem;">
+                                        ${sub.minute}' - ${sub.team?.name || 'Unknown'}: ${sub.playerOut?.name || 'Unknown'} → ${sub.playerIn?.name || 'Unknown'}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    ` : ''}
 
                     <!-- 得点者・アシスト者セクション -->
                     <div class="scorers-assists-section">
