@@ -416,6 +416,139 @@ app.get('/test-firebase-fix', (req, res) => {
     res.sendFile(path.join(__dirname, 'test-firebase-fix.html'));
 });
 
+// Football-data.org APIテストエンドポイント（ビッグチャンスとxGを確認）
+app.get('/api/test/football-data', async (req, res) => {
+    try {
+        const { leagueCode = 'PL', date = '2025-11-09', homeTeam = 'Manchester City', awayTeam = 'Liverpool' } = req.query;
+        
+        if (!process.env.FOOTBALL_DATA_API_KEY) {
+            return res.status(500).json({ error: 'FOOTBALL_DATA_API_KEY not configured' });
+        }
+        
+        const axios = require('axios');
+        const dateObj = new Date(date);
+        const season = dateObj.getFullYear();
+        const dateStr = dateObj.toISOString().split('T')[0];
+        const fdUrl = `https://api.football-data.org/v4/competitions/${leagueCode}/matches`;
+        
+        console.log('🔍 Test API call:', { url: fdUrl, season, dateStr, homeTeam, awayTeam });
+        
+        const fdResponse = await axios.get(fdUrl, {
+            headers: {
+                'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
+            },
+            params: {
+                season: season,
+                dateFrom: dateStr,
+                dateTo: dateStr
+            },
+            timeout: 10000
+        }).catch(err => {
+            console.error('❌ Football-data.org API error:', err.message);
+            return { error: err.message, response: null };
+        });
+        
+        if (fdResponse.error) {
+            return res.status(500).json({ error: fdResponse.error });
+        }
+        
+        if (!fdResponse.data || !fdResponse.data.matches) {
+            return res.json({ 
+                message: 'No matches found',
+                date: dateStr,
+                leagueCode,
+                matches: []
+            });
+        }
+        
+        // チーム名でマッチする試合を検索
+        const normalizeTeamName = (name) => {
+            return name.toLowerCase().replace(/\s+/g, ' ').trim();
+        };
+        
+        const normalizedHome = normalizeTeamName(homeTeam);
+        const normalizedAway = normalizeTeamName(awayTeam);
+        
+        const fdMatch = fdResponse.data.matches.find(m => {
+            const fdHome = normalizeTeamName(m.homeTeam.name);
+            const fdAway = normalizeTeamName(m.awayTeam.name);
+            
+            return (fdHome === normalizedHome || fdHome.includes(normalizedHome) || normalizedHome.includes(fdHome)) &&
+                   (fdAway === normalizedAway || fdAway.includes(normalizedAway) || normalizedAway.includes(fdAway));
+        });
+        
+        if (!fdMatch) {
+            return res.json({
+                message: 'Match not found',
+                date: dateStr,
+                leagueCode,
+                homeTeam,
+                awayTeam,
+                availableMatches: fdResponse.data.matches.map(m => ({
+                    home: m.homeTeam.name,
+                    away: m.awayTeam.name,
+                    date: m.utcDate
+                }))
+            });
+        }
+        
+        // 統計データを確認
+        const result = {
+            match: {
+                homeTeam: fdMatch.homeTeam.name,
+                awayTeam: fdMatch.awayTeam.name,
+                date: fdMatch.utcDate,
+                score: `${fdMatch.score.fullTime.home} - ${fdMatch.score.fullTime.away}`
+            },
+            statistics: {
+                hasStatistics: !!fdMatch.statistics,
+                statisticsType: Array.isArray(fdMatch.statistics) ? 'array' : typeof fdMatch.statistics,
+                statisticsLength: Array.isArray(fdMatch.statistics) ? fdMatch.statistics.length : 'N/A',
+                allStatTypes: Array.isArray(fdMatch.statistics) ? fdMatch.statistics.map(s => s.type) : []
+            }
+        };
+        
+        if (fdMatch.statistics && Array.isArray(fdMatch.statistics)) {
+            // すべての統計を追加
+            result.statistics.allStats = fdMatch.statistics.map(stat => ({
+                type: stat.type,
+                value: stat.value
+            }));
+            
+            // xGとビッグチャンスを検索
+            const xgStat = fdMatch.statistics.find(s => 
+                s.type === 'expectedGoals' || 
+                s.type === 'xG' || 
+                s.type === 'expected_goals' ||
+                s.type === 'expectedGoalsTotal'
+            );
+            
+            const bigChancesStat = fdMatch.statistics.find(s => 
+                s.type === 'bigChances' || 
+                s.type === 'bigChancesCreated' || 
+                s.type === 'big_chances' ||
+                s.type === 'bigChancesTotal'
+            );
+            
+            result.statistics.xG = xgStat ? {
+                type: xgStat.type,
+                value: xgStat.value
+            } : 'NOT FOUND';
+            
+            result.statistics.bigChances = bigChancesStat ? {
+                type: bigChancesStat.type,
+                value: bigChancesStat.value
+            } : 'NOT FOUND';
+        }
+        
+        res.json(result);
+        
+    } catch (error) {
+        console.error('❌ Test API error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.get('/database-final', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'database-final.html'));
 });
