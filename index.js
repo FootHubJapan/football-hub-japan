@@ -2145,6 +2145,7 @@ app.get('/api/match/details', async (req, res) => {
                                         });
                                         if (correctFixtureResponse.data?.response && correctFixtureResponse.data.response.length > 0) {
                                             fixtureData = correctFixtureResponse.data.response[0];
+                                            fixture = fixtureData; // fixture変数も更新
                                             console.log('✅ Updated fixtureData with correct fixture');
                                             console.log('   Correct teams:', fixtureData.teams.home.name, 'vs', fixtureData.teams.away.name);
                                         }
