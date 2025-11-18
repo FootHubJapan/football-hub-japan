@@ -5176,7 +5176,10 @@ async function handleMatchDetailsRequest(req, res) {
             matchDetailsLeague: matchDetails?.league,
             matchDetailsHomeTeam: matchDetails?.homeTeam,
             matchDetailsAwayTeam: matchDetails?.awayTeam
-        }); else if (clickedMatchData) {
+        });
+        
+        // matchDetailsが存在する場合、clickedMatchDataからチーム名とリーグ名を上書き（確実性のため）
+        if (matchDetails && clickedMatchData) {
             // APIからデータを取得できた場合でも、クリックした試合のチーム名で上書き（確実性のため）
             const clickedHomeTeam = clickedMatchData.homeTeam || clickedMatchData.home || clickedMatchData.teams?.home?.name;
             const clickedAwayTeam = clickedMatchData.awayTeam || clickedMatchData.away || clickedMatchData.teams?.away?.name;
