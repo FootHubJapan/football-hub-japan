@@ -5111,6 +5111,47 @@ async function handleMatchDetailsRequest(req, res) {
                     });
                 } else {
                     console.log('⚠️ Fixture data not found or invalid');
+                    // fixtureDataが存在する場合は、それからmatchDetailsを作成
+                    if (fixtureData) {
+                        console.log('✅ Creating matchDetails from fixtureData:', fixtureData.fixture?.id);
+                        const homeTeam = fixtureData.teams?.home?.name || home || 'Unknown';
+                        const awayTeam = fixtureData.teams?.away?.name || away || 'Unknown';
+                        
+                        matchDetails = {
+                            id: fixtureData.fixture?.id || matchId,
+                            league: league || clickedMatchData?.leagueName || clickedMatchData?.league || clickedMatchData?.competition || 'Unknown',
+                            homeTeam: homeTeam,
+                            awayTeam: awayTeam,
+                            homeScore: fixtureData.goals?.home || null,
+                            awayScore: fixtureData.goals?.away || null,
+                            date: fixtureData.fixture?.date || kickoffUtc || new Date().toISOString(),
+                            venue: fixtureData.fixture?.venue?.name || 'Unknown',
+                            status: fixtureData.fixture?.status?.short || 'SCHEDULED',
+                            statusLong: fixtureData.fixture?.status?.long || 'Scheduled',
+                            referee: fixtureData.fixture?.referee || 'Unknown',
+                            stats: null, // 統計データは後で統合
+                            events: [], // イベントデータは後で統合
+                            lineups: null // ラインアップデータは後で統合
+                        };
+                        
+                        // 統計、イベント、ラインアップデータを統合
+                        if (stats && stats.length > 0) {
+                            // statsは既に処理済み
+                            matchDetails.stats = stats;
+                        }
+                        if (events && events.length > 0) {
+                            matchDetails.events = events;
+                        }
+                        if (lineups) {
+                            matchDetails.lineups = lineups;
+                        }
+                        
+                        console.log('✅ Created matchDetails from fixtureData:', {
+                            id: matchDetails.id,
+                            teams: `${matchDetails.homeTeam} vs ${matchDetails.awayTeam}`,
+                            league: matchDetails.league
+                        });
+                    }
                 }
             } catch (apiError) {
                 console.error('❌ API-Football match details error:', apiError.message);
