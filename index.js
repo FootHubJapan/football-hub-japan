@@ -4227,7 +4227,11 @@ async function handleMatchDetailsRequest(req, res) {
             try {
                 console.log('🔍 Fetching match details from API-Football:', { matchId, league });
                 
-                let fixture = null;
+                // fixtureDataが既に取得されている場合は、それをfixtureとして使用
+                let fixture = fixtureData || null;
+                if (fixture) {
+                    console.log('✅ Using fixtureData as fixture:', fixture.fixture?.id);
+                }
                 
                 // クリックした試合データからチーム名と日付を取得
                 const clickedHomeTeam = clickedMatchData?.homeTeam || clickedMatchData?.home || clickedMatchData?.teams?.home?.name;
