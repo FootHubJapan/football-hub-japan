@@ -2258,7 +2258,10 @@ app.get('/api/match/details', async (req, res) => {
                                 pos: playerObj?.pos || player.pos || 'Unknown',
                                 photo: playerObj?.photo || player.photo || null
                             },
-                            photo: playerObj?.photo || player.photo || null
+                            photo: playerObj?.photo || player.photo || null,
+                            rating: playerObj?.statistics?.[0]?.games?.rating || 
+                                   player.statistics?.[0]?.games?.rating ||
+                                   player.rating || null
                         };
                     }),
                     substitutes: (lineupData.substitutes || []).map(player => {
@@ -2275,7 +2278,10 @@ app.get('/api/match/details', async (req, res) => {
                                 pos: playerObj?.pos || player.pos || 'Unknown',
                                 photo: playerObj?.photo || player.photo || null
                             },
-                            photo: playerObj?.photo || player.photo || null
+                            photo: playerObj?.photo || player.photo || null,
+                            rating: playerObj?.statistics?.[0]?.games?.rating || 
+                                   player.statistics?.[0]?.games?.rating ||
+                                   player.rating || null
                         };
                     }),
                     coach: lineupData.coach?.name || 'Unknown'
@@ -4957,7 +4963,10 @@ async function handleMatchDetailsRequest(req, res) {
                                             number: playerNumber,
                                             position: playerPosition,
                                             player: player.player || player, // playerオブジェクト全体を保持
-                                            photo: player.player?.photo || player.photo || null
+                                            photo: player.player?.photo || player.photo || null,
+                                            rating: player.player?.statistics?.[0]?.games?.rating || 
+                                                   player.statistics?.[0]?.games?.rating ||
+                                                   player.rating || null
                                         };
                                     }),
                                     substitutes: lineup.substitutes ? lineup.substitutes.map(player => {
@@ -4971,7 +4980,10 @@ async function handleMatchDetailsRequest(req, res) {
                                             number: playerNumber,
                                             position: playerPosition,
                                             player: player.player || player, // playerオブジェクト全体を保持
-                                            photo: player.player?.photo || player.photo || null
+                                            photo: player.player?.photo || player.photo || null,
+                                            rating: player.player?.statistics?.[0]?.games?.rating || 
+                                                   player.statistics?.[0]?.games?.rating ||
+                                                   player.rating || null
                                         };
                                     }) : [],
                                     coach: lineup.coach?.name || 'Unknown'
