@@ -5175,6 +5175,14 @@ async function handleMatchDetailsRequest(req, res) {
         }
         
         // Football-data.org APIから追加情報を取得（レフェリー、会場、詳細統計など）
+        console.log('🔍 Football-data.org API呼び出し前チェック:', {
+            hasMatchDetails: !!matchDetails,
+            hasApiKey: !!process.env.FOOTBALL_DATA_API_KEY,
+            matchDetailsKeys: matchDetails ? Object.keys(matchDetails) : [],
+            matchDetailsLeague: matchDetails?.league,
+            clickedMatchDataLeague: clickedMatchData?.leagueName || clickedMatchData?.league || clickedMatchData?.competition
+        });
+        
         if (matchDetails && process.env.FOOTBALL_DATA_API_KEY) {
             try {
                 console.log('🔍 Football-data.org API呼び出し開始:', {
@@ -5349,7 +5357,19 @@ async function handleMatchDetailsRequest(req, res) {
             } catch (error) {
                 console.log(`⚠️ Football-data.org試合情報取得エラー:`, error.message);
             }
+        } else {
+            console.log('⚠️ Football-data.org API呼び出しスキップ:', {
+                hasMatchDetails: !!matchDetails,
+                hasApiKey: !!process.env.FOOTBALL_DATA_API_KEY
+            });
         }
+        
+        console.log('📤 Sending match details response:', {
+            hasMatchDetails: !!matchDetails,
+            hasFootballData: !!matchDetails?.footballData,
+            league: matchDetails?.league,
+            referee: matchDetails?.referee
+        });
         
         res.setHeader('Content-Type', 'application/json');
         res.json({ success: true, data: matchDetails });
