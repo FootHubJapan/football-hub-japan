@@ -2067,25 +2067,25 @@ app.get('/api/match/details', async (req, res) => {
                                     for (const trySeason of uniqueSeasons) {
                                         if (correctFixture) break; // 既に見つかったら終了
                                         
-                                        const searchParams = new URLSearchParams({
-                                            from: fromDate,
-                                            to: toDate,
+                                    const searchParams = new URLSearchParams({
+                                        from: fromDate,
+                                        to: toDate,
                                             season: trySeason.toString(),
                                             league: tryLeagueId.toString()
+                                    });
+                                    
+                                        console.log(`🔍 Searching for correct fixture (league: ${tryLeagueId}, season: ${trySeason}):`, searchParams.toString());
+                                    
+                                    try {
+                                        const searchResponse = await axios.get(`https://v3.football.api-sports.io/fixtures?${searchParams.toString()}`, {
+                                            headers,
+                                            timeout: 15000
                                         });
                                         
-                                        console.log(`🔍 Searching for correct fixture (league: ${tryLeagueId}, season: ${trySeason}):`, searchParams.toString());
-                                        
-                                        try {
-                                            const searchResponse = await axios.get(`https://v3.football.api-sports.io/fixtures?${searchParams.toString()}`, {
-                                                headers,
-                                                timeout: 15000
-                                            });
-                                            
-                                            if (searchResponse.data?.response && searchResponse.data.response.length > 0) {
+                                        if (searchResponse.data?.response && searchResponse.data.response.length > 0) {
                                                 console.log(`📊 Found ${searchResponse.data.response.length} fixtures in league ${tryLeagueId}, season ${trySeason}`);
-                                                
-                                                const foundFixture = searchResponse.data.response.find(f => {
+                                    
+                                            const foundFixture = searchResponse.data.response.find(f => {
                                                     const fHomeName = f.teams?.home?.name || '';
                                                     const fAwayName = f.teams?.away?.name || '';
                                                     const fHomeKeywords = getKeyWords(fHomeName);
@@ -2108,25 +2108,25 @@ app.get('/api/match/details', async (req, res) => {
                                                                              clickedHomeKeywords.includes(fAwayKeywords);
                                                     
                                                     return (homeMatch && awayMatch) || (homeMatchReversed && awayMatchReversed);
-                                                });
-                                                
-                                                if (foundFixture?.fixture?.id) {
+                                            });
+                                            
+                                            if (foundFixture?.fixture?.id) {
                                                     console.log(`✅ Found correct fixture ID (league: ${tryLeagueId}, season: ${trySeason}):`, foundFixture.fixture.id);
-                                                    console.log('   Teams:', foundFixture.teams.home.name, 'vs', foundFixture.teams.away.name);
-                                                    
+                                                console.log('   Teams:', foundFixture.teams.home.name, 'vs', foundFixture.teams.away.name);
+                                                
                                                     // 正しいfixture IDを使用
-                                                    fixtureId = foundFixture.fixture.id.toString();
-                                                    fixtureData = foundFixture;
-                                                    correctFixture = foundFixture;
-                                                    
+                                                fixtureId = foundFixture.fixture.id.toString();
+                                                fixtureData = foundFixture;
+                                                correctFixture = foundFixture;
+                                                
                                                     console.log('🔄 Using correct fixture ID:', fixtureId);
                                                     break; // 見つかったのでループを抜ける
-                                                }
                                             }
-                                        } catch (searchError) {
+                                        }
+                                    } catch (searchError) {
                                             console.warn(`⚠️ Error searching league ${tryLeagueId}, season ${trySeason}:`, searchError.message);
                                             continue;
-                                        }
+                                    }
                                     }
                                     if (correctFixture) break; // 見つかったら外側のループも抜ける
                                 }
@@ -2166,7 +2166,7 @@ app.get('/api/match/details', async (req, res) => {
                             console.warn('⚠️ Partial team name mismatch - continuing with data retrieval');
                             console.warn('   This may be due to team name variations between data sources');
                         }
-                    } else {
+                        } else {
                         // home/awayが提供されていない場合、fixtureIdをそのまま使用
                         console.log('⚠️ No team names provided - using fixture ID as-is');
                     }
@@ -5025,24 +5025,24 @@ async function handleMatchDetailsRequest(req, res) {
                                         
                                         // 既にデータがある場合は上書きしない（優先度を保持）
                                         if (!lineups[teamKey]) {
-                                lineups[teamKey] = {
-                                    formation: lineup.formation || 'Unknown',
-                                    startXI: lineup.startXI.map(player => {
-                                        const playerName = player.player?.name || player.name || 'Unknown';
-                                        const playerPosition = player.player?.pos || player.pos || 'Unknown';
-                                        const playerNumber = player.player?.number || player.number || 0;
-                                        
-                                        return {
-                                            name: playerName,
-                                            number: playerNumber,
-                                            position: playerPosition,
-                                            player: player.player || player, // playerオブジェクト全体を保持
+                                            lineups[teamKey] = {
+                                                formation: lineup.formation || 'Unknown',
+                                                startXI: lineup.startXI.map(player => {
+                                                    const playerName = player.player?.name || player.name || 'Unknown';
+                                                    const playerPosition = player.player?.pos || player.pos || 'Unknown';
+                                                    const playerNumber = player.player?.number || player.number || 0;
+                                                    
+                                                    return {
+                                                        name: playerName,
+                                                        number: playerNumber,
+                                                        position: playerPosition,
+                                                        player: player.player || player, // playerオブジェクト全体を保持
                                             photo: player.player?.photo || player.photo || null,
                                             rating: player.player?.statistics?.[0]?.games?.rating || 
                                                    player.statistics?.[0]?.games?.rating ||
                                                    player.rating || null
-                                        };
-                                    }),
+                                                    };
+                                                }),
                                                 substitutes: lineup.substitutes ? lineup.substitutes.map(player => {
                                                     const playerName = player.player?.name || player.name || 'Unknown';
                                                     const playerPosition = player.player?.pos || player.pos || 'Unknown';
@@ -5112,6 +5112,8 @@ async function handleMatchDetailsRequest(req, res) {
                 console.error('❌ API-Football match details error:', apiError.message);
                 console.error('❌ API-Football match details error stack:', apiError.stack);
                 console.log('📋 Using fallback data instead');
+                // エラーが発生した場合でも、matchDetailsをnullに設定して、後続の処理でclickedMatchDataから作成できるようにする
+                matchDetails = null;
             }
         }
         
@@ -5124,6 +5126,12 @@ async function handleMatchDetailsRequest(req, res) {
         // データが見つからない場合は、クリックした試合データから基本情報を作成
         if (!matchDetails) {
             console.log('⚠️ No match details found from API, creating from clicked match data');
+            console.log('🔍 clickedMatchData check:', {
+                hasClickedMatchData: !!clickedMatchData,
+                clickedMatchDataKeys: clickedMatchData ? Object.keys(clickedMatchData) : [],
+                home: clickedMatchData?.home || clickedMatchData?.homeTeam,
+                away: clickedMatchData?.away || clickedMatchData?.awayTeam
+            });
             if (clickedMatchData) {
                 // クリックした試合データから基本情報を作成
                 const homeTeam = clickedMatchData.homeTeam || clickedMatchData.home || clickedMatchData.teams?.home?.name || 'Unknown';
@@ -5131,7 +5139,7 @@ async function handleMatchDetailsRequest(req, res) {
                 
                 matchDetails = {
                     id: matchId,
-                    league: league || clickedMatchData.leagueName || clickedMatchData.league || 'Unknown',
+                    league: league || clickedMatchData.leagueName || clickedMatchData.league || clickedMatchData.competition || 'Unknown',
                     homeTeam: homeTeam,
                     awayTeam: awayTeam,
                     homeScore: clickedMatchData.homeScore || clickedMatchData.home_score || clickedMatchData.goals?.home || null,
@@ -5145,7 +5153,12 @@ async function handleMatchDetailsRequest(req, res) {
                     events: null, // イベントデータはない
                     lineups: null // ラインアップデータはない
                 };
-                console.log('✅ Created match details from clicked match data:', { homeTeam, awayTeam });
+                console.log('✅ Created match details from clicked match data:', { 
+                    homeTeam, 
+                    awayTeam, 
+                    league: matchDetails.league,
+                    id: matchDetails.id
+                });
             } else {
                 // クリックした試合データもない場合はエラーを返す
                 console.error('❌ No match data available from API or clicked match');
@@ -5155,7 +5168,15 @@ async function handleMatchDetailsRequest(req, res) {
                     matchId 
                 });
             }
-        } else if (clickedMatchData) {
+        }
+        
+        console.log('🔍 Final matchDetails check before Football-data.org:', {
+            hasMatchDetails: !!matchDetails,
+            matchDetailsId: matchDetails?.id,
+            matchDetailsLeague: matchDetails?.league,
+            matchDetailsHomeTeam: matchDetails?.homeTeam,
+            matchDetailsAwayTeam: matchDetails?.awayTeam
+        }); else if (clickedMatchData) {
             // APIからデータを取得できた場合でも、クリックした試合のチーム名で上書き（確実性のため）
             const clickedHomeTeam = clickedMatchData.homeTeam || clickedMatchData.home || clickedMatchData.teams?.home?.name;
             const clickedAwayTeam = clickedMatchData.awayTeam || clickedMatchData.away || clickedMatchData.teams?.away?.name;
