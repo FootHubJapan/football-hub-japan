@@ -4562,13 +4562,17 @@ async function handleMatchDetailsRequest(req, res) {
                     }
                 }
                 
+                // 統計、イベント、ラインアップデータの変数をスコープ外で定義
+                let stats = null;
+                let events = [];
+                let lineups = null;
+                
                 if (fixture) {
                     console.log('✅ Processing fixture data from API-Football');
                     console.log('✅ Fixture ID:', fixture.fixture.id);
                     console.log('✅ Teams:', `${fixture.teams.home.name} vs ${fixture.teams.away.name}`);
                     
                     // 統計データの処理（最初に/fixtures?idから試行、なければ/fixtures/statisticsエンドポイントを呼び出す）
-                    let stats = null;
                     
                     // まず/fixtures?idレスポンスの統計データを確認
                     if (fixture.statistics && Array.isArray(fixture.statistics) && fixture.statistics.length > 0) {
@@ -4939,7 +4943,7 @@ async function handleMatchDetailsRequest(req, res) {
                     }
                     
                     // ラインアップデータの処理
-                    let lineups = null;
+                    lineups = null;
                     
                     // まず/fixtures/{id}からライナップを取得を試みる
                     if (fixture.lineups && Array.isArray(fixture.lineups) && fixture.lineups.length > 0) {
