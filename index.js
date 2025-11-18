@@ -5013,21 +5013,24 @@ async function handleMatchDetailsRequest(req, res) {
                                         
                                         // 既にデータがある場合は上書きしない（優先度を保持）
                                         if (!lineups[teamKey]) {
-                                            lineups[teamKey] = {
-                                                formation: lineup.formation || 'Unknown',
-                                                startXI: lineup.startXI.map(player => {
-                                                    const playerName = player.player?.name || player.name || 'Unknown';
-                                                    const playerPosition = player.player?.pos || player.pos || 'Unknown';
-                                                    const playerNumber = player.player?.number || player.number || 0;
-                                                    
-                                                    return {
-                                                        name: playerName,
-                                                        number: playerNumber,
-                                                        position: playerPosition,
-                                                        player: player.player || player, // playerオブジェクト全体を保持
-                                                        photo: player.player?.photo || player.photo || null
-                                                    };
-                                                }),
+                                lineups[teamKey] = {
+                                    formation: lineup.formation || 'Unknown',
+                                    startXI: lineup.startXI.map(player => {
+                                        const playerName = player.player?.name || player.name || 'Unknown';
+                                        const playerPosition = player.player?.pos || player.pos || 'Unknown';
+                                        const playerNumber = player.player?.number || player.number || 0;
+                                        
+                                        return {
+                                            name: playerName,
+                                            number: playerNumber,
+                                            position: playerPosition,
+                                            player: player.player || player, // playerオブジェクト全体を保持
+                                            photo: player.player?.photo || player.photo || null,
+                                            rating: player.player?.statistics?.[0]?.games?.rating || 
+                                                   player.statistics?.[0]?.games?.rating ||
+                                                   player.rating || null
+                                        };
+                                    }),
                                                 substitutes: lineup.substitutes ? lineup.substitutes.map(player => {
                                                     const playerName = player.player?.name || player.name || 'Unknown';
                                                     const playerPosition = player.player?.pos || player.pos || 'Unknown';
@@ -5038,7 +5041,10 @@ async function handleMatchDetailsRequest(req, res) {
                                                         number: playerNumber,
                                                         position: playerPosition,
                                                         player: player.player || player, // playerオブジェクト全体を保持
-                                                        photo: player.player?.photo || player.photo || null
+                                                        photo: player.player?.photo || player.photo || null,
+                                                        rating: player.player?.statistics?.[0]?.games?.rating || 
+                                                               player.statistics?.[0]?.games?.rating ||
+                                                               player.rating || null
                                                     };
                                                 }) : [],
                                                 coach: lineup.coach?.name || 'Unknown'
