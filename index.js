@@ -5318,6 +5318,25 @@ async function handleMatchDetailsRequest(req, res) {
                             if (fdMatch) {
                                 console.log(`✅ Football-data.orgから試合追加情報を取得: ${homeTeam} vs ${awayTeam}`);
                                 
+                                // Football-data.org APIのレスポンス全体をログに出力
+                                console.log('🔍 Football-data.org match data:', JSON.stringify(fdMatch, null, 2).substring(0, 2000));
+                                
+                                // 統計データの構造を確認
+                                if (fdMatch.statistics && Array.isArray(fdMatch.statistics)) {
+                                    console.log('📊 Football-data.org statistics:', fdMatch.statistics.length, 'items');
+                                    fdMatch.statistics.forEach((stat, index) => {
+                                        console.log(`   [${index}] type: ${stat.type}, value:`, stat.value);
+                                    });
+                                    
+                                    // xGとビッグチャンスのデータを確認
+                                    const xgStat = fdMatch.statistics.find(s => s.type === 'expectedGoals' || s.type === 'xG');
+                                    const bigChancesStat = fdMatch.statistics.find(s => s.type === 'bigChances' || s.type === 'bigChancesCreated');
+                                    console.log('🔍 xG stat:', xgStat ? { type: xgStat.type, value: xgStat.value } : 'NOT FOUND');
+                                    console.log('🔍 Big Chances stat:', bigChancesStat ? { type: bigChancesStat.type, value: bigChancesStat.value } : 'NOT FOUND');
+                                } else {
+                                    console.log('⚠️ Football-data.org statistics not found or not an array:', fdMatch.statistics);
+                                }
+                                
                                 // 追加情報を統合
                                 matchDetails.footballData = {
                                     referees: fdMatch.referees || [],
@@ -5357,19 +5376,30 @@ async function handleMatchDetailsRequest(req, res) {
                                 
                                 // 統計データを統合（xG、ビッグチャンスなど）
                                 if (fdMatch.statistics && Array.isArray(fdMatch.statistics)) {
+                                    console.log('🔄 Integrating statistics from Football-data.org...');
                                     fdMatch.statistics.forEach(stat => {
                                         if (stat.type === 'expectedGoals' || stat.type === 'xG') {
                                             if (!matchDetails.stats) matchDetails.stats = {};
                                             if (!matchDetails.stats.expectedGoals) matchDetails.stats.expectedGoals = { home: 0, away: 0 };
                                             matchDetails.stats.expectedGoals.home = stat.value?.home || 0;
                                             matchDetails.stats.expectedGoals.away = stat.value?.away || 0;
+                                            console.log(`✅ Integrated xG: home=${matchDetails.stats.expectedGoals.home}, away=${matchDetails.stats.expectedGoals.away}`);
                                         }
                                         if (stat.type === 'bigChances' || stat.type === 'bigChancesCreated') {
                                             if (!matchDetails.stats) matchDetails.stats = {};
                                             if (!matchDetails.stats.bigChances) matchDetails.stats.bigChances = { home: 0, away: 0 };
                                             matchDetails.stats.bigChances.home = stat.value?.home || 0;
                                             matchDetails.stats.bigChances.away = stat.value?.away || 0;
+                                            console.log(`✅ Integrated Big Chances: home=${matchDetails.stats.bigChances.home}, away=${matchDetails.stats.bigChances.away}`);
                                         }
+                                    });
+                                    
+                                    // 統合後のstatsを確認
+                                    console.log('📊 Final matchDetails.stats after integration:', {
+                                        hasExpectedGoals: !!matchDetails.stats?.expectedGoals,
+                                        expectedGoals: matchDetails.stats?.expectedGoals,
+                                        hasBigChances: !!matchDetails.stats?.bigChances,
+                                        bigChances: matchDetails.stats?.bigChances
                                     });
                                 }
                                 
