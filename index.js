@@ -2233,6 +2233,12 @@ app.get('/api/match/details', async (req, res) => {
             eventsErrors: eventsRes.data?.errors || null
         });
         
+        // fixtureDataが存在する場合は、fixture変数を更新
+        if (fixtureData && !fixture) {
+            console.log('✅ Updating fixture from fixtureData after fetching stats/lineups/events');
+            fixture = fixtureData;
+        }
+        
         // ラインアップデータを正規化
         let normalizedLineups = null;
         if (lineups && lineups.length > 0) {
