@@ -4475,8 +4475,27 @@
                 const result = await response.json();
                 console.log('📊 API response:', result);
                 
-                if (result.ok && result.fixtureId) {
-                    console.log('✅ Match details fetched successfully:', result);
+                if (result.success && result.data) {
+                    console.log('✅ Match details fetched successfully:', result.data);
+                    
+                    // result.dataをそのまま使用（既に正しい形式になっている）
+                    const matchDetails = result.data;
+                    
+                    // デバッグログを追加
+                    console.log('🔍 Match details structure:', {
+                        hasStats: !!matchDetails.stats,
+                        hasExpectedGoals: !!matchDetails.stats?.expectedGoals,
+                        hasBigChances: !!matchDetails.stats?.bigChances,
+                        hasFootballData: !!matchDetails.footballData,
+                        statsKeys: matchDetails.stats ? Object.keys(matchDetails.stats) : [],
+                        expectedGoals: matchDetails.stats?.expectedGoals,
+                        bigChances: matchDetails.stats?.bigChances
+                    });
+                    
+                    displayDetailedMatchInfo(matchDetails);
+                } else if (result.ok && result.fixtureId) {
+                    // 後方互換性のためのフォールバック
+                    console.log('✅ Match details fetched successfully (legacy format):', result);
                     
                     // データを既存の形式に変換
                     const matchDetails = {
@@ -4490,7 +4509,8 @@
                         venue: result.fixture?.fixture?.venue?.name || 'Unknown',
                         stats: result.stats || null,
                         events: result.events || [],
-                        lineups: result.lineups || null
+                        lineups: result.lineups || null,
+                        footballData: result.footballData || null
                     };
                     
                     displayDetailedMatchInfo(matchDetails);
