@@ -4702,7 +4702,17 @@ async function handleMatchDetailsRequest(req, res) {
                                             break;
                                         case 'Big Chances':
                                         case 'Big chances':
+                                        case 'Big chances created':
                                             stats.bigChances[teamKey] = value;
+                                            break;
+                                        case 'Expected Goals':
+                                        case 'Expected goals':
+                                        case 'xG':
+                                        case 'XG':
+                                            // xGは小数値なので、parseFloatを使用
+                                            const xgValue = typeof stat.value === 'string' ? parseFloat(stat.value) : (parseFloat(stat.value) || 0);
+                                            if (!stats.expectedGoals) stats.expectedGoals = { home: 0, away: 0 };
+                                            stats.expectedGoals[teamKey] = xgValue;
                                             break;
                                     }
                                 });
@@ -4754,7 +4764,8 @@ async function handleMatchDetailsRequest(req, res) {
                                     tackles: { home: 0, away: 0 },
                                     blockedShots: { home: 0, away: 0 },
                                     hitWoodwork: { home: 0, away: 0 },
-                                    bigChances: { home: 0, away: 0 }
+                                    bigChances: { home: 0, away: 0 },
+                                    expectedGoals: { home: 0, away: 0 }
                                 };
                                 
                                 statsResponse.data.response.forEach(teamStats => {
@@ -4867,7 +4878,17 @@ async function handleMatchDetailsRequest(req, res) {
                                                     break;
                                                 case 'Big Chances':
                                                 case 'Big chances':
+                                                case 'Big chances created':
                                                     stats.bigChances[teamKey] = value;
+                                                    break;
+                                                case 'Expected Goals':
+                                                case 'Expected goals':
+                                                case 'xG':
+                                                case 'XG':
+                                                    // xGは小数値なので、parseFloatを使用
+                                                    const xgValue = typeof stat.value === 'string' ? parseFloat(stat.value) : (parseFloat(stat.value) || 0);
+                                                    if (!stats.expectedGoals) stats.expectedGoals = { home: 0, away: 0 };
+                                                    stats.expectedGoals[teamKey] = xgValue;
                                                     break;
                                             }
                                         });
@@ -4878,7 +4899,9 @@ async function handleMatchDetailsRequest(req, res) {
                                     possession: stats.possession,
                                     shots: stats.shots,
                                     corners: stats.corners,
-                                    passes: stats.passes
+                                    passes: stats.passes,
+                                    expectedGoals: stats.expectedGoals,
+                                    bigChances: stats.bigChances
                                 });
                             } else {
                                 console.warn('⚠️ Statistics API returned empty response or no data');
@@ -5235,16 +5258,50 @@ async function handleMatchDetailsRequest(req, res) {
                                     }
                                 };
                                 
-                                // レフェリー情報を統合（API-Footballのデータがない場合）
-                                if (!matchDetails.referee || matchDetails.referee === 'Unknown') {
-                                    if (fdMatch.referees && fdMatch.referees.length > 0) {
-                                        matchDetails.referee = fdMatch.referees.map(r => r.name).join(', ');
-                                    }
+                                // レフェリー情報を統合（常にFootball-data.orgのデータを優先）
+                                if (fdMatch.referees && fdMatch.referees.length > 0) {
+                                    const mainReferee = fdMatch.referees.find(r => r.type === 'REFEREE') || fdMatch.referees[0];
+                                    matchDetails.referee = mainReferee.name;
+                                    console.log(`✅ レフェリー情報を統合: ${matchDetails.referee}`);
                                 }
                                 
                                 // 会場情報を統合（より詳細な情報があれば）
                                 if (fdMatch.venue && fdMatch.venue !== 'Unknown') {
                                     matchDetails.venue = fdMatch.venue;
+                                }
+                                
+                                // 統計データを統合（xG、ビッグチャンスなど）
+                                if (fdMatch.statistics && Array.isArray(fdMatch.statistics)) {
+                                    fdMatch.statistics.forEach(stat => {
+                                        if (stat.type === 'expectedGoals' || stat.type === 'xG') {
+                                            if (!matchDetails.stats) matchDetails.stats = {};
+                                            if (!matchDetails.stats.expectedGoals) matchDetails.stats.expectedGoals = { home: 0, away: 0 };
+                                            matchDetails.stats.expectedGoals.home = stat.value?.home || 0;
+                                            matchDetails.stats.expectedGoals.away = stat.value?.away || 0;
+                                        }
+                                        if (stat.type === 'bigChances' || stat.type === 'bigChancesCreated') {
+                                            if (!matchDetails.stats) matchDetails.stats = {};
+                                            if (!matchDetails.stats.bigChances) matchDetails.stats.bigChances = { home: 0, away: 0 };
+                                            matchDetails.stats.bigChances.home = stat.value?.home || 0;
+                                            matchDetails.stats.bigChances.away = stat.value?.away || 0;
+                                        }
+                                    });
+                                }
+                                
+                                // 詳細統計の構造を修正（Football-data.orgの実際の構造に合わせる）
+                                if (fdMatch.statistics && Array.isArray(fdMatch.statistics)) {
+                                    const statsMap = {};
+                                    fdMatch.statistics.forEach(stat => {
+                                        if (stat.type && stat.value) {
+                                            statsMap[stat.type] = stat.value;
+                                        }
+                                    });
+                                    
+                                    matchDetails.footballData.statistics = {
+                                        freeKicks: statsMap.freeKicks || null,
+                                        goalKicks: statsMap.goalKicks || null,
+                                        throwIns: statsMap.throwIns || null
+                                    };
                                 }
                             }
                         }

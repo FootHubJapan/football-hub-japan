@@ -5168,10 +5168,96 @@
             // カテゴリ別統計表示
             updateCategoryStats(statsData);
             
+            // Football-data.orgの詳細統計を表示
+            if (matchData && matchData.footballData && matchData.footballData.statistics) {
+                updateDetailedStats(matchData.footballData.statistics, matchData);
+            }
+            
             // 過去の対戦成績を取得
             if (matchData) {
                 loadHeadToHead(matchData);
             }
+        }
+        
+        // Football-data.orgの詳細統計を表示
+        function updateDetailedStats(detailedStats, matchData) {
+            const statsContainer = document.querySelector('.stats-categories');
+            if (!statsContainer) return;
+            
+            // 詳細統計セクションを追加
+            let detailedStatsHtml = '';
+            
+            if (detailedStats.freeKicks || detailedStats.goalKicks || detailedStats.throwIns) {
+                detailedStatsHtml = `
+                    <div class="stats-category">
+                        <h4 class="category-title">詳細統計</h4>
+                        <div id="detailedStats" class="category-stats">
+                `;
+                
+                const detailedStatsList = [];
+                if (detailedStats.freeKicks) {
+                    detailedStatsList.push({
+                        label: 'フリーキック',
+                        home: detailedStats.freeKicks.home || 0,
+                        away: detailedStats.freeKicks.away || 0
+                    });
+                }
+                if (detailedStats.goalKicks) {
+                    detailedStatsList.push({
+                        label: 'ゴールキック',
+                        home: detailedStats.goalKicks.home || 0,
+                        away: detailedStats.goalKicks.away || 0
+                    });
+                }
+                if (detailedStats.throwIns) {
+                    detailedStatsList.push({
+                        label: 'スローイン',
+                        home: detailedStats.throwIns.home || 0,
+                        away: detailedStats.throwIns.away || 0
+                    });
+                }
+                
+                detailedStatsHtml += renderCategoryStatsHTML(detailedStatsList);
+                detailedStatsHtml += `
+                        </div>
+                    </div>
+                `;
+                
+                // ディシプリン統計の後に追加
+                const disciplineCategory = statsContainer.querySelector('#disciplineStats')?.closest('.stats-category');
+                if (disciplineCategory) {
+                    disciplineCategory.insertAdjacentHTML('afterend', detailedStatsHtml);
+                } else {
+                    statsContainer.insertAdjacentHTML('beforeend', detailedStatsHtml);
+                }
+            }
+        }
+        
+        // カテゴリ統計のHTMLを生成（詳細統計用）
+        function renderCategoryStatsHTML(stats) {
+            let html = '';
+            stats.forEach(stat => {
+                const maxValue = Math.max(stat.home, stat.away, 1);
+                const homePercent = (stat.home / maxValue) * 100;
+                const awayPercent = (stat.away / maxValue) * 100;
+                
+                html += `
+                    <div class="category-stat-item">
+                        <span class="category-stat-value home">${stat.home}</span>
+                        <span class="category-stat-label">${stat.label}</span>
+                        <span class="category-stat-value away">${stat.away}</span>
+                        <div class="category-stat-bar-container">
+                            <div class="category-stat-bar">
+                                <div class="category-stat-bar-fill home" style="width: ${homePercent}%;"></div>
+                            </div>
+                            <div class="category-stat-bar">
+                                <div class="category-stat-bar-fill away" style="width: ${awayPercent}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            return html || '<div class="no-data">データがありません</div>';
         }
 
         // ポゼッション表示を更新
@@ -6302,8 +6388,24 @@
             const playerName = player.name || player.player?.name || 'Unknown';
             const playerNumber = player.number || player.player?.number || 0;
             const playerPhoto = player.photo || player.player?.photo || null;
-            const playerRating = player.rating || player.player?.rating || 'N/A';
-            const ratingClass = player.ratingClass || (typeof playerRating === 'number' && playerRating >= 7 ? 'high' : typeof playerRating === 'number' && playerRating >= 6 ? 'medium' : 'low');
+            // 選手採点を取得（複数のソースから）
+            let playerRating = player.rating || 
+                              player.player?.rating || 
+                              player.player?.statistics?.[0]?.games?.rating ||
+                              player.statistics?.[0]?.games?.rating ||
+                              'N/A';
+            // 数値の場合は小数点第1位まで表示
+            if (typeof playerRating === 'number') {
+                playerRating = playerRating.toFixed(1);
+            } else if (typeof playerRating === 'string' && playerRating !== 'N/A') {
+                const numRating = parseFloat(playerRating);
+                if (!isNaN(numRating)) {
+                    playerRating = numRating.toFixed(1);
+                }
+            }
+            const ratingClass = player.ratingClass || 
+                              (typeof parseFloat(playerRating) === 'number' && parseFloat(playerRating) >= 7 ? 'high' : 
+                               typeof parseFloat(playerRating) === 'number' && parseFloat(playerRating) >= 6 ? 'medium' : 'low');
                 
                 // 名前は常に選手写真の真下に配置（中央揃え）
                 return `
