@@ -1866,6 +1866,7 @@ app.get('/api/match/details', async (req, res) => {
             
             if (fixtureResponse.data?.response && fixtureResponse.data.response.length > 0) {
                 fixtureData = fixtureResponse.data.response[0];
+                fixture = fixtureData; // fixture変数も更新
                 const apiHomeTeam = fixtureData.teams.home.name;
                 const apiAwayTeam = fixtureData.teams.away.name;
                 
