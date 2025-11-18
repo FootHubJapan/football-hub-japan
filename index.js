@@ -2236,10 +2236,28 @@ app.get('/api/match/details', async (req, res) => {
         });
         
         // fixtureDataが存在する場合は、fixture変数を更新
+        console.log('🔍 Before updating fixture:', {
+            hasFixtureData: !!fixtureData,
+            hasFixture: !!fixture,
+            fixtureDataId: fixtureData?.fixture?.id || 'N/A',
+            fixtureId: fixture?.fixture?.id || 'N/A'
+        });
+        
         if (fixtureData && !fixture) {
             console.log('✅ Updating fixture from fixtureData after fetching stats/lineups/events');
             fixture = fixtureData;
+        } else if (fixtureData && fixture) {
+            console.log('✅ fixture already set, using existing fixture');
+        } else if (!fixtureData) {
+            console.log('⚠️ fixtureData is null, cannot update fixture');
         }
+        
+        console.log('🔍 After updating fixture:', {
+            hasFixtureData: !!fixtureData,
+            hasFixture: !!fixture,
+            fixtureDataId: fixtureData?.fixture?.id || 'N/A',
+            fixtureId: fixture?.fixture?.id || 'N/A'
+        });
         
         // ラインアップデータを正規化
         let normalizedLineups = null;
@@ -4574,6 +4592,13 @@ async function handleMatchDetailsRequest(req, res) {
                 let stats = null;
                 let events = [];
                 let lineups = null;
+                
+                console.log('🔍 Before processing fixture:', {
+                    hasFixture: !!fixture,
+                    hasFixtureData: !!fixtureData,
+                    fixtureId: fixture?.fixture?.id || fixtureData?.fixture?.id || 'N/A',
+                    fixtureDataId: fixtureData?.fixture?.id || 'N/A'
+                });
                 
                 if (fixture) {
                     console.log('✅ Processing fixture data from API-Football');
