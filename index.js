@@ -5082,7 +5082,7 @@ async function handleMatchDetailsRequest(req, res) {
                     
                     matchDetails = {
                         id: fixture.fixture.id,
-                        league: league || 'Unknown',
+                        league: league || clickedMatchData?.leagueName || clickedMatchData?.league || clickedMatchData?.competition || 'Unknown',
                         homeTeam: fixture.teams.home.name,
                         awayTeam: fixture.teams.away.name,
                         homeScore: fixture.goals.home,
@@ -5102,14 +5102,24 @@ async function handleMatchDetailsRequest(req, res) {
                         teams: `${matchDetails.homeTeam} vs ${matchDetails.awayTeam}`,
                         hasStats: !!matchDetails.stats,
                         hasEvents: !!matchDetails.events && matchDetails.events.length > 0,
-                        hasLineups: !!(matchDetails.lineups?.home && matchDetails.lineups?.away)
+                        hasLineups: !!(matchDetails.lineups?.home && matchDetails.lineups?.away),
+                        league: matchDetails.league
                     });
+                } else {
+                    console.log('⚠️ Fixture data not found or invalid');
                 }
             } catch (apiError) {
                 console.error('❌ API-Football match details error:', apiError.message);
+                console.error('❌ API-Football match details error stack:', apiError.stack);
                 console.log('📋 Using fallback data instead');
             }
         }
+        
+        console.log('🔍 After API-Football processing:', {
+            hasMatchDetails: !!matchDetails,
+            matchDetailsId: matchDetails?.id,
+            matchDetailsLeague: matchDetails?.league
+        });
         
         // データが見つからない場合は、クリックした試合データから基本情報を作成
         if (!matchDetails) {
