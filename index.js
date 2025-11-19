@@ -2845,6 +2845,173 @@ app.get('/api/match/details', async (req, res) => {
                                                     }
                                                     console.log(`✅ Integrated Big Chances: home=${normalizedStats.bigChances.home}, away=${normalizedStats.bigChances.away}`);
                                                 }
+                                                
+                                                // Statistic Add-Onの統計を処理
+                                                // Corners（コーナーキック）
+                                                if (stat.type === 'corners' || stat.type === 'Corner Kicks' || stat.type === 'Corner kicks') {
+                                                    if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
+                                                        normalizedStats.corners.home = parseInt(statValue.home) || normalizedStats.corners.home;
+                                                        normalizedStats.corners.away = parseInt(statValue.away) || normalizedStats.corners.away;
+                                                    } else if (statValue !== null && statValue !== undefined) {
+                                                        const value = parseInt(statValue) || 0;
+                                                        if (stat.team) {
+                                                            normalizedStats.corners[stat.team] = value;
+                                                        } else {
+                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
+                                                            normalizedStats.corners[statIndex % 2 === 0 ? 'home' : 'away'] = value;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Free-Kicks（フリーキック）
+                                                if (stat.type === 'freeKicks' || stat.type === 'Free-Kicks' || stat.type === 'Free kicks' || stat.type === 'free_kicks') {
+                                                    if (!normalizedStats.freeKicks) normalizedStats.freeKicks = { home: 0, away: 0 };
+                                                    if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
+                                                        normalizedStats.freeKicks.home = parseInt(statValue.home) || normalizedStats.freeKicks.home;
+                                                        normalizedStats.freeKicks.away = parseInt(statValue.away) || normalizedStats.freeKicks.away;
+                                                    } else if (statValue !== null && statValue !== undefined) {
+                                                        const value = parseInt(statValue) || 0;
+                                                        if (stat.team) {
+                                                            normalizedStats.freeKicks[stat.team] = value;
+                                                        } else {
+                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
+                                                            normalizedStats.freeKicks[statIndex % 2 === 0 ? 'home' : 'away'] = value;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Goal-Kicks（ゴールキック）
+                                                if (stat.type === 'goalKicks' || stat.type === 'Goal-Kicks' || stat.type === 'Goal kicks' || stat.type === 'goal_kicks') {
+                                                    if (!normalizedStats.goalKicks) normalizedStats.goalKicks = { home: 0, away: 0 };
+                                                    if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
+                                                        normalizedStats.goalKicks.home = parseInt(statValue.home) || normalizedStats.goalKicks.home;
+                                                        normalizedStats.goalKicks.away = parseInt(statValue.away) || normalizedStats.goalKicks.away;
+                                                    } else if (statValue !== null && statValue !== undefined) {
+                                                        const value = parseInt(statValue) || 0;
+                                                        if (stat.team) {
+                                                            normalizedStats.goalKicks[stat.team] = value;
+                                                        } else {
+                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
+                                                            normalizedStats.goalKicks[statIndex % 2 === 0 ? 'home' : 'away'] = value;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Offsides（オフサイド）
+                                                if (stat.type === 'offsides' || stat.type === 'Offsides' || stat.type === 'offside') {
+                                                    if (!normalizedStats.offsides) normalizedStats.offsides = { home: 0, away: 0 };
+                                                    if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
+                                                        normalizedStats.offsides.home = parseInt(statValue.home) || normalizedStats.offsides.home;
+                                                        normalizedStats.offsides.away = parseInt(statValue.away) || normalizedStats.offsides.away;
+                                                    } else if (statValue !== null && statValue !== undefined) {
+                                                        const value = parseInt(statValue) || 0;
+                                                        if (stat.team) {
+                                                            normalizedStats.offsides[stat.team] = value;
+                                                        } else {
+                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
+                                                            normalizedStats.offsides[statIndex % 2 === 0 ? 'home' : 'away'] = value;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Fouls（ファウル）
+                                                if (stat.type === 'fouls' || stat.type === 'Fouls') {
+                                                    if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
+                                                        normalizedStats.fouls.home = parseInt(statValue.home) || normalizedStats.fouls.home;
+                                                        normalizedStats.fouls.away = parseInt(statValue.away) || normalizedStats.fouls.away;
+                                                    } else if (statValue !== null && statValue !== undefined) {
+                                                        const value = parseInt(statValue) || 0;
+                                                        if (stat.team) {
+                                                            normalizedStats.fouls[stat.team] = value;
+                                                        } else {
+                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
+                                                            normalizedStats.fouls[statIndex % 2 === 0 ? 'home' : 'away'] = value;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Ball possession（ボールポゼッション）
+                                                if (stat.type === 'possession' || stat.type === 'Ball Possession' || stat.type === 'Possession' || stat.type === 'ballPossession') {
+                                                    if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
+                                                        normalizedStats.possession.home = parseInt(statValue.home) || normalizedStats.possession.home;
+                                                        normalizedStats.possession.away = parseInt(statValue.away) || normalizedStats.possession.away;
+                                                    } else if (statValue !== null && statValue !== undefined) {
+                                                        const value = parseInt(statValue) || 0;
+                                                        if (stat.team) {
+                                                            normalizedStats.possession[stat.team] = value;
+                                                        } else {
+                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
+                                                            normalizedStats.possession[statIndex % 2 === 0 ? 'home' : 'away'] = value;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Saves（セーブ）
+                                                if (stat.type === 'saves' || stat.type === 'Saves' || stat.type === 'Goalkeeper Saves' || stat.type === 'goalkeeperSaves') {
+                                                    if (!normalizedStats.saves) normalizedStats.saves = { home: 0, away: 0 };
+                                                    if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
+                                                        normalizedStats.saves.home = parseInt(statValue.home) || normalizedStats.saves.home;
+                                                        normalizedStats.saves.away = parseInt(statValue.away) || normalizedStats.saves.away;
+                                                    } else if (statValue !== null && statValue !== undefined) {
+                                                        const value = parseInt(statValue) || 0;
+                                                        if (stat.team) {
+                                                            normalizedStats.saves[stat.team] = value;
+                                                        } else {
+                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
+                                                            normalizedStats.saves[statIndex % 2 === 0 ? 'home' : 'away'] = value;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Throw-Ins（スローイン）
+                                                if (stat.type === 'throwIns' || stat.type === 'Throw-Ins' || stat.type === 'Throw ins' || stat.type === 'throw_ins') {
+                                                    if (!normalizedStats.throwIns) normalizedStats.throwIns = { home: 0, away: 0 };
+                                                    if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
+                                                        normalizedStats.throwIns.home = parseInt(statValue.home) || normalizedStats.throwIns.home;
+                                                        normalizedStats.throwIns.away = parseInt(statValue.away) || normalizedStats.throwIns.away;
+                                                    } else if (statValue !== null && statValue !== undefined) {
+                                                        const value = parseInt(statValue) || 0;
+                                                        if (stat.team) {
+                                                            normalizedStats.throwIns[stat.team] = value;
+                                                        } else {
+                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
+                                                            normalizedStats.throwIns[statIndex % 2 === 0 ? 'home' : 'away'] = value;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Shots on / off goal（シュート）
+                                                if (stat.type === 'shotsOnGoal' || stat.type === 'Shots on Goal' || stat.type === 'Shots on Target' || 
+                                                    stat.type === 'shotsOnTarget' || stat.type === 'shots_on_goal') {
+                                                    if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
+                                                        normalizedStats.shotsOnTarget.home = parseInt(statValue.home) || normalizedStats.shotsOnTarget.home;
+                                                        normalizedStats.shotsOnTarget.away = parseInt(statValue.away) || normalizedStats.shotsOnTarget.away;
+                                                    } else if (statValue !== null && statValue !== undefined) {
+                                                        const value = parseInt(statValue) || 0;
+                                                        if (stat.team) {
+                                                            normalizedStats.shotsOnTarget[stat.team] = value;
+                                                        } else {
+                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
+                                                            normalizedStats.shotsOnTarget[statIndex % 2 === 0 ? 'home' : 'away'] = value;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                if (stat.type === 'shotsOffGoal' || stat.type === 'Shots off Goal' || stat.type === 'Shots off Target' || 
+                                                    stat.type === 'shotsOffTarget' || stat.type === 'shots_off_goal') {
+                                                    if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
+                                                        normalizedStats.shotsOffTarget.home = parseInt(statValue.home) || normalizedStats.shotsOffTarget.home;
+                                                        normalizedStats.shotsOffTarget.away = parseInt(statValue.away) || normalizedStats.shotsOffTarget.away;
+                                                    } else if (statValue !== null && statValue !== undefined) {
+                                                        const value = parseInt(statValue) || 0;
+                                                        if (stat.team) {
+                                                            normalizedStats.shotsOffTarget[stat.team] = value;
+                                                        } else {
+                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
+                                                            normalizedStats.shotsOffTarget[statIndex % 2 === 0 ? 'home' : 'away'] = value;
+                                                        }
+                                                    }
+                                                }
                                             });
                                             
                                             console.log('📊 Final Big Chances from Football-data.org (xG is from API-Football):', {
