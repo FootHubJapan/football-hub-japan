@@ -2606,25 +2606,18 @@ app.get('/api/match/details', async (req, res) => {
             });
         }
         
-        // Football-data.orgからxGとビッグチャンスを取得（API-Footballに含まれていない場合のみ）
-        const hasXGFromApiFootball = normalizedStats?.expectedGoals && 
-                                     (normalizedStats.expectedGoals.home > 0 || normalizedStats.expectedGoals.away > 0);
-        const hasBigChancesFromApiFootball = normalizedStats?.bigChances && 
-                                            (normalizedStats.bigChances.home > 0 || normalizedStats.bigChances.away > 0);
-        
+        // Football-data.orgからxGとビッグチャンスを取得（API-Footballでは取得できないデータ）
+        // 注意: API-Footballから取得したxGは無視し、football-data.orgから取得したデータで上書きする
         console.log('🔍 Football-data.org integration check:', {
             hasNormalizedStats: !!normalizedStats,
             hasFixtureData: !!fixtureData,
             hasApiKey: !!process.env.FOOTBALL_DATA_API_KEY,
-            hasXGFromApiFootball: hasXGFromApiFootball,
-            hasBigChancesFromApiFootball: hasBigChancesFromApiFootball,
             normalizedStatsKeys: normalizedStats ? Object.keys(normalizedStats) : [],
             fixtureDataKeys: fixtureData ? Object.keys(fixtureData) : []
         });
         
-        // API-FootballにxGとビッグチャンスが含まれていない場合のみ、football-data.orgから取得を試みる
-        if (normalizedStats && fixtureData && process.env.FOOTBALL_DATA_API_KEY && 
-            (!hasXGFromApiFootball || !hasBigChancesFromApiFootball)) {
+        // football-data.orgからxGとビッグチャンスを取得（常に試行）
+        if (normalizedStats && fixtureData && process.env.FOOTBALL_DATA_API_KEY) {
             try {
                 const homeTeam = fixtureData.teams?.home?.name || home;
                 const awayTeam = fixtureData.teams?.away?.name || away;
@@ -2761,18 +2754,17 @@ app.get('/api/match/details', async (req, res) => {
                                             console.log('✅ Statistics found in match detail response');
                                         }
                                         
-                                        // xGとビッグチャンスを統合
+                                        // xGとビッグチャンスを統合（football-data.orgから取得したデータで上書き）
                                         if (detailedFdMatch.statistics && Array.isArray(detailedFdMatch.statistics)) {
                                             console.log('🔄 Integrating xG and Big Chances from Football-data.org...');
+                                            console.log('📊 Football-data.org statistics sample:', JSON.stringify(detailedFdMatch.statistics.slice(0, 5), null, 2));
                                             
-                                            if (!normalizedStats.expectedGoals) {
-                                                normalizedStats.expectedGoals = { home: 0, away: 0 };
-                                            }
-                                            if (!normalizedStats.bigChances) {
-                                                normalizedStats.bigChances = { home: 0, away: 0 };
-                                            }
+                                            // API-Footballから取得したxGとビッグチャンスをリセット（football-data.orgのデータで上書きするため）
+                                            normalizedStats.expectedGoals = { home: 0, away: 0 };
+                                            normalizedStats.bigChances = { home: 0, away: 0 };
                                             
                                             detailedFdMatch.statistics.forEach(stat => {
+                                                console.log(`🔍 Processing stat: type=${stat.type}, value=`, stat.value);
                                                 // xGの処理
                                                 if (stat.type === 'expectedGoals' || stat.type === 'xG' || stat.type === 'expected_goals' || 
                                                     stat.type === 'Expected Goals' || stat.type === 'Expected goals' ||
@@ -2811,14 +2803,44 @@ app.get('/api/match/details', async (req, res) => {
                                                     console.log(`✅ Integrated Big Chances: home=${normalizedStats.bigChances.home}, away=${normalizedStats.bigChances.away}`);
                                                 }
                                             });
+                                            
+                                            console.log('📊 Final xG and Big Chances from Football-data.org:', {
+                                                expectedGoals: normalizedStats.expectedGoals,
+                                                bigChances: normalizedStats.bigChances
+                                            });
+                                        } else {
+                                            console.warn('⚠️ Football-data.org statistics not available - xG and Big Chances will be 0');
+                                            // football-data.orgから取得できない場合、API-Footballから取得したxGもクリア
+                                            normalizedStats.expectedGoals = { home: 0, away: 0 };
+                                            normalizedStats.bigChances = { home: 0, away: 0 };
                                         }
                                     } catch (detailError) {
                                         console.warn('⚠️ Error fetching detailed match from Football-data.org:', detailError.message);
+                                        // エラーが発生した場合も、API-Footballから取得したxGをクリア
+                                        normalizedStats.expectedGoals = { home: 0, away: 0 };
+                                        normalizedStats.bigChances = { home: 0, away: 0 };
                                     }
+                                } else {
+                                    console.warn('⚠️ Match not found in Football-data.org - xG and Big Chances will be 0');
+                                    // 試合が見つからない場合、API-Footballから取得したxGをクリア
+                                    normalizedStats.expectedGoals = { home: 0, away: 0 };
+                                    normalizedStats.bigChances = { home: 0, away: 0 };
                                 }
                             }
                         } catch (fdError) {
                             console.warn('⚠️ Error fetching match from Football-data.org:', fdError.message);
+                            // エラーが発生した場合も、API-Footballから取得したxGをクリア
+                            if (normalizedStats) {
+                                normalizedStats.expectedGoals = { home: 0, away: 0 };
+                                normalizedStats.bigChances = { home: 0, away: 0 };
+                            }
+                        }
+                    } else {
+                        console.warn('⚠️ League code not found - xG and Big Chances will be 0');
+                        // リーグコードが見つからない場合、API-Footballから取得したxGをクリア
+                        if (normalizedStats) {
+                            normalizedStats.expectedGoals = { home: 0, away: 0 };
+                            normalizedStats.bigChances = { home: 0, away: 0 };
                         }
                     }
                 } else {
