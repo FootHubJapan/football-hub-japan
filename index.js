@@ -2515,7 +2515,13 @@ app.get('/api/match/details', async (req, res) => {
                 passes: { home: 0, away: 0 },
                 passesAccuracy: { home: 0, away: 0 },
                 expectedGoals: { home: 0, away: 0 },
-                bigChances: { home: 0, away: 0 }
+                bigChances: { home: 0, away: 0 },
+                // Statistic Add-Onから取得する統計
+                freeKicks: { home: 0, away: 0 },
+                goalKicks: { home: 0, away: 0 },
+                offsides: { home: 0, away: 0 },
+                saves: { home: 0, away: 0 },
+                throwIns: { home: 0, away: 0 }
             };
             
             stats.forEach(teamStats => {
@@ -2802,7 +2808,21 @@ app.get('/api/match/details', async (req, res) => {
                                                 console.log(`🔍 Processing stat: type=${stat.type}, value=`, stat.value);
                                                 // xGはAPI-Football（API-Sport）のみで提供されているため、football-data.orgからは取得しない
                                                 
-                                                // ビッグチャンスの処理
+                                                // Statistic Add-Onの統計を処理
+                                                let statValue = stat.value;
+                                                if (statValue !== null && statValue !== undefined) {
+                                                    // オブジェクトの場合は、home/awayを確認
+                                                    if (typeof statValue === 'object' && !Array.isArray(statValue)) {
+                                                        // オブジェクト形式の場合
+                                                        if (statValue.home !== undefined || statValue.away !== undefined) {
+                                                            // 既にhome/awayが分かれている
+                                                        } else {
+                                                            // 単一の値の場合、teamキーを使用
+                                                            statValue = statValue.value || statValue;
+                                                        }
+                                                    }
+                                                    
+                                                    // ビッグチャンスの処理
                                                 if (stat.type === 'bigChances' || stat.type === 'bigChancesCreated' || stat.type === 'big_chances' ||
                                                     stat.type === 'Big Chances' || stat.type === 'Big chances' ||
                                                     stat.type === 'bigChancesTotal' || stat.type === 'big_chances_total') {
