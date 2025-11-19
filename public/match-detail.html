@@ -876,63 +876,58 @@
                     <div class="possession-bar">
                         <div class="possession-home" id="possessionHome" style="width: 50%;"></div>
                         <div class="possession-away" id="possessionAway" style="width: 50%;"></div>
-                    </div>
+                        </div>
                     <div class="possession-labels">
                         <span id="possessionHomeLabel" class="possession-label">50%</span>
                         <span id="possessionAwayLabel" class="possession-label">50%</span>
+                        </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-
+                    
             <!-- トップ統計（FotMob風） -->
             <div class="top-stats-section">
                 <h3 class="section-title">トップ統計</h3>
                 <div id="topStats" class="top-stats-grid">
                     <!-- 動的に生成 -->
-                </div>
-            </div>
-
+                        </div>
+                    </div>
+                    
             <!-- カテゴリ別統計 -->
             <div class="stats-categories">
                 <!-- パス統計 -->
                 <div class="stats-category">
                     <h4 class="category-title">パス</h4>
                     <div id="passesStats" class="category-stats"></div>
-                </div>
+        </div>
 
                 <!-- 守備統計 -->
                 <div class="stats-category">
                     <h4 class="category-title">守備</h4>
                     <div id="defenseStats" class="category-stats"></div>
-                </div>
+                        </div>
 
                 <!-- シュート統計 -->
                 <div class="stats-category">
                     <h4 class="category-title">シュート</h4>
                     <div id="shootingStats" class="category-stats"></div>
-                </div>
+                        </div>
 
-                <!-- ドリブル統計 -->
-                <div class="stats-category">
-                    <h4 class="category-title">ドリブル</h4>
-                    <div id="dribblingStats" class="category-stats"></div>
-                </div>
 
                 <!-- ディシプリン統計 -->
                 <div class="stats-category">
                     <h4 class="category-title">ディシプリン</h4>
                     <div id="disciplineStats" class="category-stats"></div>
-                </div>
-            </div>
+                            </div>
+                        </div>
 
             <!-- 過去の対戦成績 -->
             <div class="h2h-section">
                 <h3 class="section-title">過去の対戦成績</h3>
                 <div id="h2hStats" class="h2h-container">
                     <div class="no-data">過去の対戦データを読み込み中...</div>
-                </div>
-            </div>
-        </div>
+                            </div>
+                            </div>
+                        </div>
 
         <!-- ラインアップタブ -->
         <div id="lineupTab" class="tab-content">
@@ -940,8 +935,8 @@
                 <h3>ラインアップ</h3>
                 <div id="lineup" class="lineup-grid">
                     <div class="no-data">ラインアップデータを読み込み中...</div>
-                            </div>
-                            </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1123,7 +1118,6 @@
             const topStats = [
                 { key: 'shots', label: 'シュート数', home: statsData.shots?.home || 0, away: statsData.shots?.away || 0 },
                 { key: 'shotsOnTarget', label: '枠内シュート', home: statsData.shotsOnTarget?.home || 0, away: statsData.shotsOnTarget?.away || 0 },
-                { key: 'bigChances', label: 'ビッグチャンス', home: statsData.bigChances?.home || 0, away: statsData.bigChances?.away || 0 },
                 { key: 'expectedGoals', label: '期待値(xG)', home: statsData.expectedGoals?.home || 0, away: statsData.expectedGoals?.away || 0, isDecimal: true }
             ];
             
@@ -1188,15 +1182,6 @@
                 { key: 'hitWoodwork', label: 'ポスト・クロスバー', home: statsData.hitWoodwork?.home || 0, away: statsData.hitWoodwork?.away || 0 }
             ];
             renderCategoryStats('shootingStats', shootingStats);
-            
-            // ドリブル統計
-            const dribblingStats = [
-                { key: 'dribblesAttempted', label: 'ドリブル試行', home: statsData.dribblesAttempted?.home || 0, away: statsData.dribblesAttempted?.away || 0 },
-                { key: 'dribblesSuccess', label: 'ドリブル成功', home: statsData.dribblesSuccess?.home || 0, away: statsData.dribblesSuccess?.away || 0 },
-                { key: 'duelsWon', label: '対戦勝利', home: statsData.duelsWon?.home || 0, away: statsData.duelsWon?.away || 0 },
-                { key: 'aerialDuels', label: '空中戦', home: statsData.aerialDuels?.home || 0, away: statsData.aerialDuels?.away || 0 }
-            ];
-            renderCategoryStats('dribblingStats', dribblingStats);
             
             // ディシプリン統計
             const disciplineStats = [
