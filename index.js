@@ -2700,12 +2700,23 @@ app.get('/api/match/details', async (req, res) => {
                                         });
                                         
                                         let detailedFdMatch = detailResponse.data;
+                                        
+                                        // Statistic Add-Onを契約している場合、statisticsが含まれている可能性がある
+                                        // レスポンス全体を確認して、statisticsがどこかに含まれているかチェック
+                                        const responseString = JSON.stringify(detailedFdMatch, null, 2);
+                                        const hasStatisticsInResponse = responseString.toLowerCase().includes('statistic') || 
+                                                                       responseString.toLowerCase().includes('xg') ||
+                                                                       responseString.toLowerCase().includes('expected');
+                                        
                                         console.log('📊 Football-data.org match detail response:', {
                                             hasStatistics: !!detailedFdMatch.statistics,
                                             statisticsType: Array.isArray(detailedFdMatch.statistics) ? 'array' : typeof detailedFdMatch.statistics,
                                             statisticsLength: Array.isArray(detailedFdMatch.statistics) ? detailedFdMatch.statistics.length : 'N/A',
                                             allKeys: Object.keys(detailedFdMatch),
-                                            fullResponse: JSON.stringify(detailedFdMatch, null, 2).substring(0, 2000)
+                                            hasStatisticsInResponse: hasStatisticsInResponse,
+                                            homeTeamKeys: detailedFdMatch.homeTeam ? Object.keys(detailedFdMatch.homeTeam) : [],
+                                            awayTeamKeys: detailedFdMatch.awayTeam ? Object.keys(detailedFdMatch.awayTeam) : [],
+                                            fullResponse: responseString.substring(0, 3000)
                                         });
                                         
                                         // statisticsが含まれていない場合、別のエンドポイントから取得を試みる
