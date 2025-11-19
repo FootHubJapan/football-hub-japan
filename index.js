@@ -2704,7 +2704,8 @@ app.get('/api/match/details', async (req, res) => {
                                             hasStatistics: !!detailedFdMatch.statistics,
                                             statisticsType: Array.isArray(detailedFdMatch.statistics) ? 'array' : typeof detailedFdMatch.statistics,
                                             statisticsLength: Array.isArray(detailedFdMatch.statistics) ? detailedFdMatch.statistics.length : 'N/A',
-                                            allKeys: Object.keys(detailedFdMatch)
+                                            allKeys: Object.keys(detailedFdMatch),
+                                            fullResponse: JSON.stringify(detailedFdMatch, null, 2).substring(0, 2000)
                                         });
                                         
                                         // statisticsが含まれていない場合、別のエンドポイントから取得を試みる
