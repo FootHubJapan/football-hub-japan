@@ -2801,32 +2801,6 @@ app.get('/api/match/details', async (req, res) => {
                                                 
                                                 // Statistic Add-Onの統計を処理
                                                 let statValue = stat.value;
-                                                
-                                                // ビッグチャンスの処理
-                                                if (stat.type === 'bigChances' || stat.type === 'bigChancesCreated' || stat.type === 'big_chances' ||
-                                                    stat.type === 'Big Chances' || stat.type === 'Big chances' ||
-                                                    stat.type === 'bigChancesTotal' || stat.type === 'big_chances_total') {
-                                                    if (statValue && typeof statValue === 'object' && !Array.isArray(statValue)) {
-                                                        normalizedStats.bigChances.home = parseInt(statValue.home) || 0;
-                                                        normalizedStats.bigChances.away = parseInt(statValue.away) || 0;
-                                                    } else if (statValue !== null && statValue !== undefined) {
-                                                        const value = parseInt(statValue) || 0;
-                                                        // teamキーがある場合はそれを使用、ない場合はインデックスで判定
-                                                        if (stat.team) {
-                                                            normalizedStats.bigChances[stat.team] = value;
-                                                        } else {
-                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
-                                                            if (statIndex % 2 === 0) {
-                                                                normalizedStats.bigChances.home = value;
-                                                            } else {
-                                                                normalizedStats.bigChances.away = value;
-                                                            }
-                                                        }
-                                                    }
-                                                    console.log(`✅ Integrated Big Chances: home=${normalizedStats.bigChances.home}, away=${normalizedStats.bigChances.away}`);
-                                                }
-                                                
-                                                // Statistic Add-Onの統計を処理
                                                 // オブジェクト形式のキー名にも対応（例: shotsOnGoal, ballPossession など）
                                                 
                                                 // Corners（コーナーキック）
@@ -3089,10 +3063,6 @@ app.get('/api/match/details', async (req, res) => {
                                             (normalizedStats.expectedGoals.home === 0 && normalizedStats.expectedGoals.away === 0)) {
                                             console.log('ℹ️ Using API-Football xG as fallback (football-data.org error)');
                                         }
-                                        // ビッグチャンスはAPI-Footballから取得できないため、0のまま
-                                        if (!normalizedStats.bigChances) {
-                                            normalizedStats.bigChances = { home: 0, away: 0 };
-                                        }
                                     }
                                 } else {
                                     console.warn('⚠️ Match not found in Football-data.org');
@@ -3100,10 +3070,6 @@ app.get('/api/match/details', async (req, res) => {
                                     if (!normalizedStats.expectedGoals || 
                                         (normalizedStats.expectedGoals.home === 0 && normalizedStats.expectedGoals.away === 0)) {
                                         console.log('ℹ️ Using API-Football xG as fallback (match not found in football-data.org)');
-                                    }
-                                    // ビッグチャンスはAPI-Footballから取得できないため、0のまま
-                                    if (!normalizedStats.bigChances) {
-                                        normalizedStats.bigChances = { home: 0, away: 0 };
                                     }
                                 }
                             }
@@ -3115,10 +3081,6 @@ app.get('/api/match/details', async (req, res) => {
                                     (normalizedStats.expectedGoals.home === 0 && normalizedStats.expectedGoals.away === 0)) {
                                     console.log('ℹ️ Using API-Football xG as fallback (football-data.org fetch error)');
                                 }
-                                // ビッグチャンスはAPI-Footballから取得できないため、0のまま
-                                if (!normalizedStats.bigChances) {
-                                    normalizedStats.bigChances = { home: 0, away: 0 };
-                                }
                             }
                         }
                     } else {
@@ -3128,10 +3090,6 @@ app.get('/api/match/details', async (req, res) => {
                             if (!normalizedStats.expectedGoals || 
                                 (normalizedStats.expectedGoals.home === 0 && normalizedStats.expectedGoals.away === 0)) {
                                 console.log('ℹ️ Using API-Football xG as fallback (league code not found)');
-                            }
-                            // ビッグチャンスはAPI-Footballから取得できないため、0のまま
-                            if (!normalizedStats.bigChances) {
-                                normalizedStats.bigChances = { home: 0, away: 0 };
                             }
                         }
                     }
