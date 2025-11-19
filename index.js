@@ -1382,7 +1382,7 @@ app.post('/api/ai/tactics', async (req, res) => {
 // 選手ランキング取得（動的データ優先）
 app.get('/api/ranking/players', async (req, res) => {
     try {
-        const { season = 2024, league, position, stat = 'goals' } = req.query;
+        const { season = 2026, league, position, stat = 'goals' } = req.query;
         
         console.log('🏆 Player Ranking Request:', { season, league, position, stat });
         
