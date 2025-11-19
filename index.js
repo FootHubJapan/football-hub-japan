@@ -2781,24 +2781,7 @@ app.get('/api/match/details', async (req, res) => {
                                             
                                             detailedFdMatch.statistics.forEach(stat => {
                                                 console.log(`🔍 Processing stat: type=${stat.type}, value=`, stat.value);
-                                                // xGの処理
-                                                if (stat.type === 'expectedGoals' || stat.type === 'xG' || stat.type === 'expected_goals' || 
-                                                    stat.type === 'Expected Goals' || stat.type === 'Expected goals' ||
-                                                    stat.type === 'expectedGoalsTotal' || stat.type === 'expected_goals_total') {
-                                                    if (stat.value && typeof stat.value === 'object' && !Array.isArray(stat.value)) {
-                                                        normalizedStats.expectedGoals.home = parseFloat(stat.value.home) || 0;
-                                                        normalizedStats.expectedGoals.away = parseFloat(stat.value.away) || 0;
-                                                    } else if (stat.value !== null && stat.value !== undefined) {
-                                                        const value = parseFloat(stat.value) || 0;
-                                                        const statIndex = detailedFdMatch.statistics.findIndex(s => s === stat);
-                                                        if (statIndex % 2 === 0) {
-                                                            normalizedStats.expectedGoals.home = value;
-                                                        } else {
-                                                            normalizedStats.expectedGoals.away = value;
-                                                        }
-                                                    }
-                                                    console.log(`✅ Integrated xG: home=${normalizedStats.expectedGoals.home}, away=${normalizedStats.expectedGoals.away}`);
-                                                }
+                                                // xGはAPI-Football（API-Sport）のみで提供されているため、football-data.orgからは取得しない
                                                 
                                                 // ビッグチャンスの処理
                                                 if (stat.type === 'bigChances' || stat.type === 'bigChancesCreated' || stat.type === 'big_chances' ||
@@ -2820,8 +2803,8 @@ app.get('/api/match/details', async (req, res) => {
                                                 }
                                             });
                                             
-                                            console.log('📊 Final xG and Big Chances from Football-data.org:', {
-                                                expectedGoals: normalizedStats.expectedGoals,
+                                            console.log('📊 Final Big Chances from Football-data.org (xG is from API-Football):', {
+                                                expectedGoals: normalizedStats.expectedGoals, // API-Footballから取得済み
                                                 bigChances: normalizedStats.bigChances
                                             });
                                         } else {
