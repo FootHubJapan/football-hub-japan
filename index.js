@@ -487,9 +487,34 @@ app.get('/api/test/football-data', async (req, res) => {
                 availableMatches: fdResponse.data.matches.map(m => ({
                     home: m.homeTeam.name,
                     away: m.awayTeam.name,
-                    date: m.utcDate
+                    date: m.utcDate,
+                    id: m.id
                 }))
             });
+        }
+        
+        // マッチIDを使って詳細なマッチ情報を取得（statisticsを含む）
+        const matchId = fdMatch.id;
+        console.log('🔍 Fetching detailed match info for ID:', matchId);
+        
+        let detailedMatch = null;
+        try {
+            const detailResponse = await axios.get(`https://api.football-data.org/v4/matches/${matchId}`, {
+                headers: {
+                    'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
+                },
+                timeout: 10000
+            });
+            
+            detailedMatch = detailResponse.data;
+            console.log('✅ Detailed match fetched:', {
+                hasStatistics: !!detailedMatch.statistics,
+                statisticsType: Array.isArray(detailedMatch.statistics) ? 'array' : typeof detailedMatch.statistics
+            });
+        } catch (detailError) {
+            console.error('❌ Error fetching detailed match:', detailError.message);
+            // 詳細取得に失敗した場合は、元のマッチデータを使用
+            detailedMatch = fdMatch;
         }
         
         // 統計データを確認
@@ -498,32 +523,34 @@ app.get('/api/test/football-data', async (req, res) => {
                 homeTeam: fdMatch.homeTeam.name,
                 awayTeam: fdMatch.awayTeam.name,
                 date: fdMatch.utcDate,
-                score: `${fdMatch.score.fullTime.home} - ${fdMatch.score.fullTime.away}`
+                score: `${fdMatch.score.fullTime.home} - ${fdMatch.score.fullTime.away}`,
+                id: matchId
             },
             statistics: {
-                hasStatistics: !!fdMatch.statistics,
-                statisticsType: Array.isArray(fdMatch.statistics) ? 'array' : typeof fdMatch.statistics,
-                statisticsLength: Array.isArray(fdMatch.statistics) ? fdMatch.statistics.length : 'N/A',
-                allStatTypes: Array.isArray(fdMatch.statistics) ? fdMatch.statistics.map(s => s.type) : []
+                hasStatistics: !!detailedMatch.statistics,
+                statisticsType: Array.isArray(detailedMatch.statistics) ? 'array' : typeof detailedMatch.statistics,
+                statisticsLength: Array.isArray(detailedMatch.statistics) ? detailedMatch.statistics.length : 'N/A',
+                allStatTypes: Array.isArray(detailedMatch.statistics) ? detailedMatch.statistics.map(s => s.type) : [],
+                rawStatistics: detailedMatch.statistics // デバッグ用
             }
         };
         
-        if (fdMatch.statistics && Array.isArray(fdMatch.statistics)) {
+        if (detailedMatch.statistics && Array.isArray(detailedMatch.statistics)) {
             // すべての統計を追加
-            result.statistics.allStats = fdMatch.statistics.map(stat => ({
+            result.statistics.allStats = detailedMatch.statistics.map(stat => ({
                 type: stat.type,
                 value: stat.value
             }));
             
             // xGとビッグチャンスを検索
-            const xgStat = fdMatch.statistics.find(s => 
+            const xgStat = detailedMatch.statistics.find(s => 
                 s.type === 'expectedGoals' || 
                 s.type === 'xG' || 
                 s.type === 'expected_goals' ||
                 s.type === 'expectedGoalsTotal'
             );
             
-            const bigChancesStat = fdMatch.statistics.find(s => 
+            const bigChancesStat = detailedMatch.statistics.find(s => 
                 s.type === 'bigChances' || 
                 s.type === 'bigChancesCreated' || 
                 s.type === 'big_chances' ||
