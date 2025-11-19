@@ -3035,9 +3035,8 @@ app.get('/api/match/details', async (req, res) => {
                                                 }
                                             });
                                             
-                                            console.log('📊 Final Big Chances from Football-data.org (xG is from API-Football):', {
-                                                expectedGoals: normalizedStats.expectedGoals, // API-Footballから取得済み
-                                                bigChances: normalizedStats.bigChances
+                                            console.log('📊 Final Statistics from Football-data.org (xG is from API-Football):', {
+                                                expectedGoals: normalizedStats.expectedGoals // API-Footballから取得済み
                                             });
                                         } else {
                                             console.warn('⚠️ Football-data.org statistics not available');
