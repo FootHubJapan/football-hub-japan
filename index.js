@@ -2513,7 +2513,9 @@ app.get('/api/match/details', async (req, res) => {
                 yellowCards: { home: 0, away: 0 },
                 redCards: { home: 0, away: 0 },
                 passes: { home: 0, away: 0 },
-                passesAccuracy: { home: 0, away: 0 }
+                passesAccuracy: { home: 0, away: 0 },
+                expectedGoals: { home: 0, away: 0 },
+                bigChances: { home: 0, away: 0 }
             };
             
             stats.forEach(teamStats => {
@@ -2571,21 +2573,51 @@ app.get('/api/match/details', async (req, res) => {
                         case 'Passes accurate':
                             normalizedStats.passesAccuracy[teamKey] = value;
                             break;
+                        case 'Expected Goals':
+                        case 'Expected goals':
+                        case 'xG':
+                        case 'XG':
+                            // xGは小数値なので、parseFloatを使用
+                            if (!normalizedStats.expectedGoals) {
+                                normalizedStats.expectedGoals = { home: 0, away: 0 };
+                            }
+                            const xgValue = typeof stat.value === 'string' ? parseFloat(stat.value) : (parseFloat(stat.value) || 0);
+                            normalizedStats.expectedGoals[teamKey] = xgValue;
+                            console.log(`✅ Found xG from API-Football: ${teamKey}=${xgValue}`);
+                            break;
+                        case 'Big Chances':
+                        case 'Big chances':
+                        case 'Big chances created':
+                            if (!normalizedStats.bigChances) {
+                                normalizedStats.bigChances = { home: 0, away: 0 };
+                            }
+                            normalizedStats.bigChances[teamKey] = value;
+                            console.log(`✅ Found Big Chances from API-Football: ${teamKey}=${value}`);
+                            break;
                     }
                 });
             });
         }
         
-        // Football-data.orgからxGとビッグチャンスを取得
+        // Football-data.orgからxGとビッグチャンスを取得（API-Footballに含まれていない場合のみ）
+        const hasXGFromApiFootball = normalizedStats?.expectedGoals && 
+                                     (normalizedStats.expectedGoals.home > 0 || normalizedStats.expectedGoals.away > 0);
+        const hasBigChancesFromApiFootball = normalizedStats?.bigChances && 
+                                            (normalizedStats.bigChances.home > 0 || normalizedStats.bigChances.away > 0);
+        
         console.log('🔍 Football-data.org integration check:', {
             hasNormalizedStats: !!normalizedStats,
             hasFixtureData: !!fixtureData,
             hasApiKey: !!process.env.FOOTBALL_DATA_API_KEY,
+            hasXGFromApiFootball: hasXGFromApiFootball,
+            hasBigChancesFromApiFootball: hasBigChancesFromApiFootball,
             normalizedStatsKeys: normalizedStats ? Object.keys(normalizedStats) : [],
             fixtureDataKeys: fixtureData ? Object.keys(fixtureData) : []
         });
         
-        if (normalizedStats && fixtureData && process.env.FOOTBALL_DATA_API_KEY) {
+        // API-FootballにxGとビッグチャンスが含まれていない場合のみ、football-data.orgから取得を試みる
+        if (normalizedStats && fixtureData && process.env.FOOTBALL_DATA_API_KEY && 
+            (!hasXGFromApiFootball || !hasBigChancesFromApiFootball)) {
             try {
                 const homeTeam = fixtureData.teams?.home?.name || home;
                 const awayTeam = fixtureData.teams?.away?.name || away;
