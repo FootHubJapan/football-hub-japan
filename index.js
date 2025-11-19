@@ -2837,8 +2837,11 @@ app.get('/api/match/details', async (req, res) => {
                                                 }
                                                 
                                                 // Statistic Add-Onの統計を処理
+                                                // オブジェクト形式のキー名にも対応（例: shotsOnGoal, ballPossession など）
+                                                
                                                 // Corners（コーナーキック）
-                                                if (stat.type === 'corners' || stat.type === 'Corner Kicks' || stat.type === 'Corner kicks') {
+                                                if (stat.type === 'corners' || stat.type === 'Corner Kicks' || stat.type === 'Corner kicks' ||
+                                                    stat.type === 'cornerKicks' || stat.type === 'corner_kicks') {
                                                     if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
                                                         normalizedStats.corners.home = parseInt(statValue.home) || normalizedStats.corners.home;
                                                         normalizedStats.corners.away = parseInt(statValue.away) || normalizedStats.corners.away;
@@ -2921,7 +2924,8 @@ app.get('/api/match/details', async (req, res) => {
                                                 }
                                                 
                                                 // Ball possession（ボールポゼッション）
-                                                if (stat.type === 'possession' || stat.type === 'Ball Possession' || stat.type === 'Possession' || stat.type === 'ballPossession') {
+                                                if (stat.type === 'possession' || stat.type === 'Ball Possession' || stat.type === 'Possession' || 
+                                                    stat.type === 'ballPossession' || stat.type === 'ball_possession') {
                                                     if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
                                                         normalizedStats.possession.home = parseInt(statValue.home) || normalizedStats.possession.home;
                                                         normalizedStats.possession.away = parseInt(statValue.away) || normalizedStats.possession.away;
@@ -2972,7 +2976,8 @@ app.get('/api/match/details', async (req, res) => {
                                                 
                                                 // Shots on / off goal（シュート）
                                                 if (stat.type === 'shotsOnGoal' || stat.type === 'Shots on Goal' || stat.type === 'Shots on Target' || 
-                                                    stat.type === 'shotsOnTarget' || stat.type === 'shots_on_goal') {
+                                                    stat.type === 'shotsOnTarget' || stat.type === 'shots_on_goal' ||
+                                                    stat.type === 'shotsOnTarget' || stat.type === 'shots_on_target') {
                                                     if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
                                                         normalizedStats.shotsOnTarget.home = parseInt(statValue.home) || normalizedStats.shotsOnTarget.home;
                                                         normalizedStats.shotsOnTarget.away = parseInt(statValue.away) || normalizedStats.shotsOnTarget.away;
