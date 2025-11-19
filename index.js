@@ -2576,6 +2576,168 @@ app.get('/api/match/details', async (req, res) => {
             });
         }
         
+        // Football-data.orgからxGとビッグチャンスを取得
+        if (normalizedStats && fixtureData && process.env.FOOTBALL_DATA_API_KEY) {
+            try {
+                const homeTeam = fixtureData.teams?.home?.name || home;
+                const awayTeam = fixtureData.teams?.away?.name || away;
+                const matchDate = fixtureData.fixture?.date || kickoffUtc;
+                
+                if (homeTeam && awayTeam && matchDate) {
+                    console.log('🔍 Fetching xG and Big Chances from Football-data.org:', { homeTeam, awayTeam, matchDate });
+                    
+                    // 日付からシーズンとリーグコードを取得
+                    const dateObj = new Date(matchDate);
+                    const season = dateObj.getFullYear();
+                    
+                    // リーグコードのマッピング
+                    const leagueCodeMap = {
+                        'PL': 'PL', 'PD': 'PD', 'SA': 'SA', 'BL1': 'BL1', 'FL1': 'FL1',
+                        'CL': 'CL', 'EL': 'EL', 'ECL': 'ECL',
+                        'premierLeague': 'PL', 'laLiga': 'PD', 'serieA': 'SA', 
+                        'bundesliga': 'BL1', 'ligue1': 'FL1', 'championsLeague': 'CL'
+                    };
+                    
+                    let leagueCode = leagueCodeMap[leagueKey] || null;
+                    
+                    if (leagueCode) {
+                        const dateStr = dateObj.toISOString().split('T')[0];
+                        const fdUrl = `https://api.football-data.org/v4/competitions/${leagueCode}/matches`;
+                        
+                        try {
+                            const fdResponse = await axios.get(fdUrl, {
+                                headers: {
+                                    'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
+                                },
+                                params: {
+                                    season: season,
+                                    dateFrom: dateStr,
+                                    dateTo: dateStr
+                                },
+                                timeout: 5000
+                            });
+                            
+                            if (fdResponse && fdResponse.data && fdResponse.data.matches) {
+                                const normalizeTeamName = (name) => {
+                                    return name.toLowerCase().replace(/\s+/g, ' ').trim();
+                                };
+                                
+                                const normalizedHome = normalizeTeamName(homeTeam);
+                                const normalizedAway = normalizeTeamName(awayTeam);
+                                
+                                const fdMatch = fdResponse.data.matches.find(m => {
+                                    const fdHome = normalizeTeamName(m.homeTeam.name);
+                                    const fdAway = normalizeTeamName(m.awayTeam.name);
+                                    
+                                    return (fdHome === normalizedHome || fdHome.includes(normalizedHome) || normalizedHome.includes(fdHome)) &&
+                                           (fdAway === normalizedAway || fdAway.includes(normalizedAway) || normalizedAway.includes(fdAway));
+                                });
+                                
+                                if (fdMatch) {
+                                    const fdMatchId = fdMatch.id;
+                                    console.log('✅ Found match in Football-data.org, fetching statistics for ID:', fdMatchId);
+                                    
+                                    try {
+                                        const detailResponse = await axios.get(`https://api.football-data.org/v4/matches/${fdMatchId}`, {
+                                            headers: {
+                                                'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
+                                            },
+                                            timeout: 10000
+                                        });
+                                        
+                                        let detailedFdMatch = detailResponse.data;
+                                        
+                                        // statisticsが含まれていない場合、別のエンドポイントから取得
+                                        if (!detailedFdMatch.statistics || 
+                                            (Array.isArray(detailedFdMatch.statistics) && detailedFdMatch.statistics.length === 0)) {
+                                            try {
+                                                const statsResponse = await axios.get(`https://api.football-data.org/v4/matches/${fdMatchId}/statistics`, {
+                                                    headers: {
+                                                        'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
+                                                    },
+                                                    timeout: 10000
+                                                });
+                                                
+                                                if (statsResponse.data) {
+                                                    if (Array.isArray(statsResponse.data)) {
+                                                        detailedFdMatch.statistics = statsResponse.data;
+                                                    } else if (statsResponse.data.statistics && Array.isArray(statsResponse.data.statistics)) {
+                                                        detailedFdMatch.statistics = statsResponse.data.statistics;
+                                                    } else {
+                                                        detailedFdMatch.statistics = statsResponse.data;
+                                                    }
+                                                }
+                                            } catch (statsError) {
+                                                console.warn('⚠️ Error fetching statistics from separate endpoint:', statsError.message);
+                                            }
+                                        }
+                                        
+                                        // xGとビッグチャンスを統合
+                                        if (detailedFdMatch.statistics && Array.isArray(detailedFdMatch.statistics)) {
+                                            console.log('🔄 Integrating xG and Big Chances from Football-data.org...');
+                                            
+                                            if (!normalizedStats.expectedGoals) {
+                                                normalizedStats.expectedGoals = { home: 0, away: 0 };
+                                            }
+                                            if (!normalizedStats.bigChances) {
+                                                normalizedStats.bigChances = { home: 0, away: 0 };
+                                            }
+                                            
+                                            detailedFdMatch.statistics.forEach(stat => {
+                                                // xGの処理
+                                                if (stat.type === 'expectedGoals' || stat.type === 'xG' || stat.type === 'expected_goals' || 
+                                                    stat.type === 'Expected Goals' || stat.type === 'Expected goals' ||
+                                                    stat.type === 'expectedGoalsTotal' || stat.type === 'expected_goals_total') {
+                                                    if (stat.value && typeof stat.value === 'object' && !Array.isArray(stat.value)) {
+                                                        normalizedStats.expectedGoals.home = parseFloat(stat.value.home) || 0;
+                                                        normalizedStats.expectedGoals.away = parseFloat(stat.value.away) || 0;
+                                                    } else if (stat.value !== null && stat.value !== undefined) {
+                                                        const value = parseFloat(stat.value) || 0;
+                                                        const statIndex = detailedFdMatch.statistics.findIndex(s => s === stat);
+                                                        if (statIndex % 2 === 0) {
+                                                            normalizedStats.expectedGoals.home = value;
+                                                        } else {
+                                                            normalizedStats.expectedGoals.away = value;
+                                                        }
+                                                    }
+                                                    console.log(`✅ Integrated xG: home=${normalizedStats.expectedGoals.home}, away=${normalizedStats.expectedGoals.away}`);
+                                                }
+                                                
+                                                // ビッグチャンスの処理
+                                                if (stat.type === 'bigChances' || stat.type === 'bigChancesCreated' || stat.type === 'big_chances' ||
+                                                    stat.type === 'Big Chances' || stat.type === 'Big chances' ||
+                                                    stat.type === 'bigChancesTotal' || stat.type === 'big_chances_total') {
+                                                    if (stat.value && typeof stat.value === 'object' && !Array.isArray(stat.value)) {
+                                                        normalizedStats.bigChances.home = parseInt(stat.value.home) || 0;
+                                                        normalizedStats.bigChances.away = parseInt(stat.value.away) || 0;
+                                                    } else if (stat.value !== null && stat.value !== undefined) {
+                                                        const value = parseInt(stat.value) || 0;
+                                                        const statIndex = detailedFdMatch.statistics.findIndex(s => s === stat);
+                                                        if (statIndex % 2 === 0) {
+                                                            normalizedStats.bigChances.home = value;
+                                                        } else {
+                                                            normalizedStats.bigChances.away = value;
+                                                        }
+                                                    }
+                                                    console.log(`✅ Integrated Big Chances: home=${normalizedStats.bigChances.home}, away=${normalizedStats.bigChances.away}`);
+                                                }
+                                            });
+                                        }
+                                    } catch (detailError) {
+                                        console.warn('⚠️ Error fetching detailed match from Football-data.org:', detailError.message);
+                                    }
+                                }
+                            }
+                        } catch (fdError) {
+                            console.warn('⚠️ Error fetching match from Football-data.org:', fdError.message);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Error in Football-data.org integration:', error.message);
+            }
+        }
+        
         // レスポンスを返す前に、使用したfixtureIdを確認
         const returnedFixtureId = fixtureData?.fixture?.id || finalFixtureId;
         
