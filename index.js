@@ -2577,11 +2577,21 @@ app.get('/api/match/details', async (req, res) => {
         }
         
         // Football-data.orgからxGとビッグチャンスを取得
+        console.log('🔍 Football-data.org integration check:', {
+            hasNormalizedStats: !!normalizedStats,
+            hasFixtureData: !!fixtureData,
+            hasApiKey: !!process.env.FOOTBALL_DATA_API_KEY,
+            normalizedStatsKeys: normalizedStats ? Object.keys(normalizedStats) : [],
+            fixtureDataKeys: fixtureData ? Object.keys(fixtureData) : []
+        });
+        
         if (normalizedStats && fixtureData && process.env.FOOTBALL_DATA_API_KEY) {
             try {
                 const homeTeam = fixtureData.teams?.home?.name || home;
                 const awayTeam = fixtureData.teams?.away?.name || away;
                 const matchDate = fixtureData.fixture?.date || kickoffUtc;
+                
+                console.log('🔍 Football-data.org fetch parameters:', { homeTeam, awayTeam, matchDate, leagueKey });
                 
                 if (homeTeam && awayTeam && matchDate) {
                     console.log('🔍 Fetching xG and Big Chances from Football-data.org:', { homeTeam, awayTeam, matchDate });
@@ -2590,15 +2600,27 @@ app.get('/api/match/details', async (req, res) => {
                     const dateObj = new Date(matchDate);
                     const season = dateObj.getFullYear();
                     
-                    // リーグコードのマッピング
+                    // リーグコードのマッピング（football-data.orgの実際のリーグコード）
                     const leagueCodeMap = {
-                        'PL': 'PL', 'PD': 'PD', 'SA': 'SA', 'BL1': 'BL1', 'FL1': 'FL1',
-                        'CL': 'CL', 'EL': 'EL', 'ECL': 'ECL',
-                        'premierLeague': 'PL', 'laLiga': 'PD', 'serieA': 'SA', 
-                        'bundesliga': 'BL1', 'ligue1': 'FL1', 'championsLeague': 'CL'
+                        'PL': '2021',           // Premier League
+                        'PD': '2014',           // La Liga
+                        'SA': '2019',           // Serie A
+                        'BL1': '2002',          // Bundesliga
+                        'FL1': '2015',          // Ligue 1
+                        'CL': '2001',           // UEFA Champions League
+                        'EL': '2018',           // UEFA Europa League
+                        'ECL': '2017',          // UEFA Europa Conference League
+                        'premierLeague': '2021',
+                        'laLiga': '2014',
+                        'serieA': '2019',
+                        'bundesliga': '2002',
+                        'ligue1': '2015',
+                        'championsLeague': '2001'
                     };
                     
                     let leagueCode = leagueCodeMap[leagueKey] || null;
+                    
+                    console.log('🔍 League code mapping:', { leagueKey, leagueCode, availableKeys: Object.keys(leagueCodeMap) });
                     
                     if (leagueCode) {
                         const dateStr = dateObj.toISOString().split('T')[0];
@@ -2732,10 +2754,23 @@ app.get('/api/match/details', async (req, res) => {
                             console.warn('⚠️ Error fetching match from Football-data.org:', fdError.message);
                         }
                     }
+                } else {
+                    console.warn('⚠️ Football-data.org integration skipped: missing required data', {
+                        hasHomeTeam: !!homeTeam,
+                        hasAwayTeam: !!awayTeam,
+                        hasMatchDate: !!matchDate
+                    });
                 }
             } catch (error) {
                 console.warn('⚠️ Error in Football-data.org integration:', error.message);
+                console.warn('⚠️ Error stack:', error.stack);
             }
+        } else {
+            console.warn('⚠️ Football-data.org integration skipped: missing prerequisites', {
+                hasNormalizedStats: !!normalizedStats,
+                hasFixtureData: !!fixtureData,
+                hasApiKey: !!process.env.FOOTBALL_DATA_API_KEY
+            });
         }
         
         // レスポンスを返す前に、使用したfixtureIdを確認
