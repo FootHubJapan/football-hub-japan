@@ -1402,7 +1402,7 @@ app.get('/api/ranking/players', async (req, res) => {
                 };
                 
                 const targetLeague = league ? leagueIds[league] : null;
-                const targetSeason = parseInt(season) || 2024;
+                const targetSeason = parseInt(season) || 2026;
                 
                 console.log('🔍 Fetching player statistics from API-Football:', { league, targetLeague, season: targetSeason, stat });
                 
@@ -1718,7 +1718,7 @@ app.get('/api/ranking/players', async (req, res) => {
 // チームランキング取得
 app.get('/api/ranking/teams', async (req, res) => {
     try {
-        const { league, season = 2024 } = req.query;
+        const { league, season = 2026 } = req.query;
         
         console.log('🏆 Team Ranking Request:', { league });
         
@@ -1751,7 +1751,7 @@ app.get('/api/ranking/teams', async (req, res) => {
                     },
                     params: {
                         league: targetLeague,
-                        season: parseInt(season) || 2024
+                        season: parseInt(season) || 2026
                     }
                 });
                 
@@ -1811,7 +1811,7 @@ app.get('/api/ranking/teams', async (req, res) => {
 // チャンピオンズリーグ順位取得
 app.get('/api/ranking/champions-league', async (req, res) => {
     try {
-        const { season = 2024 } = req.query;
+        const { season = 2026 } = req.query;
         console.log('🏆 Champions League Ranking Request:', { season });
         
         let standings = [];
@@ -1826,7 +1826,7 @@ app.get('/api/ranking/champions-league', async (req, res) => {
                     },
                     params: {
                         league: 2, // Champions League
-                        season: parseInt(season) || 2024
+                        season: parseInt(season) || 2026
                     }
                 });
                 
