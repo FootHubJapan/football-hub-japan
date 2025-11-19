@@ -2785,14 +2785,10 @@ app.get('/api/match/details', async (req, res) => {
                                                 : null;
                                         
                                         if (statisticsToProcess && statisticsToProcess.length > 0) {
-                                            console.log('🔄 Integrating Big Chances from Football-data.org (xG is from API-Football)...');
+                                            console.log('🔄 Integrating Statistics Add-On data from Football-data.org (xG is from API-Football)...');
                                             console.log('📊 Football-data.org statistics sample:', JSON.stringify(statisticsToProcess.slice(0, 5), null, 2));
                                             
                                             // xGはAPI-Footballから取得済みのため保持
-                                            // ビッグチャンスのみリセット（football-data.orgのデータで上書きするため）
-                                            if (!normalizedStats.bigChances) {
-                                                normalizedStats.bigChances = { home: 0, away: 0 };
-                                            }
                                             
                                             statisticsToProcess.forEach(stat => {
                                                 const teamKey = stat.team || (statisticsToProcess.indexOf(stat) % 2 === 0 ? 'home' : 'away');
