@@ -2614,7 +2614,7 @@ app.get('/api/match/details', async (req, res) => {
             fixtureDataKeys: fixtureData ? Object.keys(fixtureData) : []
         });
         
-        // football-data.orgからビッグチャンスのみ取得を試みる（xGはAPI-Footballから取得済み）
+        // football-data.orgからStatistic Add-Onの統計を取得を試みる（xGはAPI-Footballから取得済み）
         if (normalizedStats && fixtureData && process.env.FOOTBALL_DATA_API_KEY) {
             try {
                 const homeTeam = fixtureData.teams?.home?.name || home;
