@@ -2850,9 +2850,59 @@ app.get('/api/match/details', async (req, res) => {
                                                         const value = parseInt(statValue) || 0;
                                                         if (stat.team) {
                                                             normalizedStats.corners[stat.team] = value;
+                                                            console.log(`✅ Integrated Corners: ${stat.team}=${value}`);
                                                         } else {
                                                             const statIndex = statisticsToProcess.findIndex(s => s === stat);
                                                             normalizedStats.corners[statIndex % 2 === 0 ? 'home' : 'away'] = value;
+                                                            console.log(`✅ Integrated Corners: ${statIndex % 2 === 0 ? 'home' : 'away'}=${value}`);
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Shots（総シュート数）
+                                                if (stat.type === 'shots' || stat.type === 'Shots' || stat.type === 'Total Shots' || 
+                                                    stat.type === 'totalShots' || stat.type === 'shots') {
+                                                    if (statValue !== null && statValue !== undefined) {
+                                                        const value = parseInt(statValue) || 0;
+                                                        if (stat.team) {
+                                                            normalizedStats.shots[stat.team] = value;
+                                                            console.log(`✅ Integrated Shots: ${stat.team}=${value}`);
+                                                        } else {
+                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
+                                                            normalizedStats.shots[statIndex % 2 === 0 ? 'home' : 'away'] = value;
+                                                            console.log(`✅ Integrated Shots: ${statIndex % 2 === 0 ? 'home' : 'away'}=${value}`);
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Yellow Cards（イエローカード）
+                                                if (stat.type === 'yellowCards' || stat.type === 'Yellow Cards' || stat.type === 'Yellow cards' ||
+                                                    stat.type === 'yellow_cards' || stat.type === 'yellowCards') {
+                                                    if (statValue !== null && statValue !== undefined) {
+                                                        const value = parseInt(statValue) || 0;
+                                                        if (stat.team) {
+                                                            normalizedStats.yellowCards[stat.team] = value;
+                                                            console.log(`✅ Integrated Yellow Cards: ${stat.team}=${value}`);
+                                                        } else {
+                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
+                                                            normalizedStats.yellowCards[statIndex % 2 === 0 ? 'home' : 'away'] = value;
+                                                            console.log(`✅ Integrated Yellow Cards: ${statIndex % 2 === 0 ? 'home' : 'away'}=${value}`);
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Red Cards（レッドカード）
+                                                if (stat.type === 'redCards' || stat.type === 'Red Cards' || stat.type === 'Red cards' ||
+                                                    stat.type === 'red_cards' || stat.type === 'redCards') {
+                                                    if (statValue !== null && statValue !== undefined) {
+                                                        const value = parseInt(statValue) || 0;
+                                                        if (stat.team) {
+                                                            normalizedStats.redCards[stat.team] = value;
+                                                            console.log(`✅ Integrated Red Cards: ${stat.team}=${value}`);
+                                                        } else {
+                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
+                                                            normalizedStats.redCards[statIndex % 2 === 0 ? 'home' : 'away'] = value;
+                                                            console.log(`✅ Integrated Red Cards: ${statIndex % 2 === 0 ? 'home' : 'away'}=${value}`);
                                                         }
                                                     }
                                                 }
