@@ -509,8 +509,33 @@ app.get('/api/test/football-data', async (req, res) => {
             detailedMatch = detailResponse.data;
             console.log('✅ Detailed match fetched:', {
                 hasStatistics: !!detailedMatch.statistics,
-                statisticsType: Array.isArray(detailedMatch.statistics) ? 'array' : typeof detailedMatch.statistics
+                statisticsType: Array.isArray(detailedMatch.statistics) ? 'array' : typeof detailedMatch.statistics,
+                allKeys: Object.keys(detailedMatch),
+                rawResponse: JSON.stringify(detailedMatch).substring(0, 1000)
             });
+            
+            // statisticsが含まれていない場合、別のエンドポイントから取得を試みる
+            if (!detailedMatch.statistics) {
+                console.log('⚠️ Statistics not found in match detail, trying /matches/{id}/statistics endpoint...');
+                try {
+                    const statsResponse = await axios.get(`https://api.football-data.org/v4/matches/${matchId}/statistics`, {
+                        headers: {
+                            'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
+                        },
+                        timeout: 10000
+                    });
+                    
+                    if (statsResponse.data) {
+                        detailedMatch.statistics = statsResponse.data;
+                        console.log('✅ Statistics fetched from separate endpoint:', {
+                            hasStatistics: !!detailedMatch.statistics,
+                            statisticsType: Array.isArray(detailedMatch.statistics) ? 'array' : typeof detailedMatch.statistics
+                        });
+                    }
+                } catch (statsError) {
+                    console.warn('⚠️ Error fetching statistics from separate endpoint:', statsError.message);
+                }
+            }
         } catch (detailError) {
             console.error('❌ Error fetching detailed match:', detailError.message);
             // 詳細取得に失敗した場合は、元のマッチデータを使用
@@ -5576,8 +5601,33 @@ async function handleMatchDetailsRequest(req, res) {
                                     console.log('✅ Detailed match fetched from Football-data.org:', {
                                         hasStatistics: !!detailedFdMatch.statistics,
                                         statisticsType: Array.isArray(detailedFdMatch.statistics) ? 'array' : typeof detailedFdMatch.statistics,
-                                        statisticsLength: Array.isArray(detailedFdMatch.statistics) ? detailedFdMatch.statistics.length : 'N/A'
+                                        statisticsLength: Array.isArray(detailedFdMatch.statistics) ? detailedFdMatch.statistics.length : 'N/A',
+                                        allKeys: Object.keys(detailedFdMatch)
                                     });
+                                    
+                                    // statisticsが含まれていない場合、別のエンドポイントから取得を試みる
+                                    if (!detailedFdMatch.statistics) {
+                                        console.log('⚠️ Statistics not found in match detail, trying /matches/{id}/statistics endpoint...');
+                                        try {
+                                            const statsResponse = await axios.get(`https://api.football-data.org/v4/matches/${fdMatchId}/statistics`, {
+                                                headers: {
+                                                    'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
+                                                },
+                                                timeout: 10000
+                                            });
+                                            
+                                            if (statsResponse.data) {
+                                                detailedFdMatch.statistics = statsResponse.data;
+                                                console.log('✅ Statistics fetched from separate endpoint:', {
+                                                    hasStatistics: !!detailedFdMatch.statistics,
+                                                    statisticsType: Array.isArray(detailedFdMatch.statistics) ? 'array' : typeof detailedFdMatch.statistics,
+                                                    statisticsLength: Array.isArray(detailedFdMatch.statistics) ? detailedFdMatch.statistics.length : 'N/A'
+                                                });
+                                            }
+                                        } catch (statsError) {
+                                            console.warn('⚠️ Error fetching statistics from separate endpoint:', statsError.message);
+                                        }
+                                    }
                                 } catch (detailError) {
                                     console.warn('⚠️ Error fetching detailed match from Football-data.org:', detailError.message);
                                     // 詳細取得に失敗した場合は、元のマッチデータを使用
