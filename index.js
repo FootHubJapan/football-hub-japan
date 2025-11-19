@@ -1389,7 +1389,8 @@ app.get('/api/ranking/players', async (req, res) => {
         let players = [];
         
         // 優先順位1: API-Footballから直接取得
-        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
+        const apiKey = process.env.RAPIDAPI_KEY || process.env.API_FOOTBALL_KEY;
+        if (apiKey && apiKey !== 'YOUR_API_FOOTBALL_KEY' && apiKey !== 'your-api-football-key-here') {
             try {
                 // リーグIDのマッピング
                 const leagueIds = {
@@ -1411,7 +1412,7 @@ app.get('/api/ranking/players', async (req, res) => {
                     try {
                         const response = await axios.get(`https://v3.football.api-sports.io/players`, {
                             headers: {
-                                'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                                'x-rapidapi-key': apiKey,
                                 'x-rapidapi-host': 'v3.football.api-sports.io'
                             },
                             params: {
@@ -1470,7 +1471,7 @@ app.get('/api/ranking/players', async (req, res) => {
                         try {
                             const response = await axios.get(`https://v3.football.api-sports.io/players`, {
                                 headers: {
-                                    'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                                    'x-rapidapi-key': apiKey,
                                     'x-rapidapi-host': 'v3.football.api-sports.io'
                                 },
                                 params: {
