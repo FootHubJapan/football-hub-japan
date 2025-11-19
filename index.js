@@ -1384,12 +1384,154 @@ app.get('/api/ranking/players', async (req, res) => {
     try {
         const { season = 2024, league, position, stat = 'goals' } = req.query;
         
-        console.log('🏆 Player Ranking Request:', { league, position, stat });
+        console.log('🏆 Player Ranking Request:', { season, league, position, stat });
         
         let players = [];
         
-        // 優先順位1: DatabaseManagerから動的に最新データを取得
-        if (apiService && apiService.dbManager) {
+        // 優先順位1: API-Footballから直接取得
+        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
+            try {
+                // リーグIDのマッピング
+                const leagueIds = {
+                    'PL': 39,      // Premier League
+                    'PD': 140,     // La Liga
+                    'SA': 135,     // Serie A
+                    'BL1': 78,     // Bundesliga
+                    'FL1': 61,     // Ligue 1
+                    'J1': 98       // J1 League
+                };
+                
+                const targetLeague = league ? leagueIds[league] : null;
+                const targetSeason = parseInt(season) || 2024;
+                
+                console.log('🔍 Fetching player statistics from API-Football:', { league, targetLeague, season: targetSeason, stat });
+                
+                if (targetLeague) {
+                    // 特定リーグの選手統計を取得
+                    try {
+                        const response = await axios.get(`https://v3.football.api-sports.io/players`, {
+                            headers: {
+                                'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                                'x-rapidapi-host': 'v3.football.api-sports.io'
+                            },
+                            params: {
+                                league: targetLeague,
+                                season: targetSeason
+                            }
+                        });
+                        
+                        console.log('📊 API-Football players response:', response.data?.response?.length || 0, 'players');
+                        
+                        if (response.data && response.data.response && response.data.response.length > 0) {
+                            players = response.data.response.map(item => {
+                                const player = item.player;
+                                const stats = item.statistics && item.statistics.length > 0 ? item.statistics[0] : {};
+                                
+                                return {
+                                    id: player.id,
+                                    name: player.name,
+                                    age: player.age,
+                                    nationality: player.nationality,
+                                    photo: player.photo,
+                                    team: stats.team?.name || '',
+                                    currentTeam: stats.team?.name || '',
+                                    position: player.position || '',
+                                    detailedPosition: player.position || '',
+                                    league: stats.league?.name || '',
+                                    goals: stats.goals?.total || 0,
+                                    assists: stats.goals?.assists || 0,
+                                    appearances: stats.games?.appearences || 0,
+                                    minutes: stats.games?.minutes || 0,
+                                    rating: stats.games?.rating || 'N/A',
+                                    passes: stats.passes?.total || 0,
+                                    passAccuracy: stats.passes?.accuracy || '0%',
+                                    tackles: stats.tackles?.total || 0,
+                                    interceptions: stats.tackles?.interceptions || 0,
+                                    saves: stats.goals?.saves || 0,
+                                    cleanSheets: stats.goals?.saves || 0, // API-FootballにはcleanSheetsがないため、savesを使用
+                                    yellowCards: stats.cards?.yellow || 0,
+                                    redCards: stats.cards?.red || 0,
+                                    shots: stats.shots?.total || 0,
+                                    shotsOnTarget: stats.shots?.on || 0
+                                };
+                            });
+                            
+                            console.log('✅ Successfully processed', players.length, 'players from API-Football');
+                        }
+                    } catch (apiError) {
+                        console.error('❌ API-Football players error:', apiError.message);
+                    }
+                } else if (!league) {
+                    // リーグが指定されていない場合、全リーグから取得（時間がかかるため、主要リーグのみ）
+                    const majorLeagues = [39, 140, 135, 78, 61]; // PL, PD, SA, BL1, FL1
+                    const allPlayers = [];
+                    
+                    for (const leagueId of majorLeagues) {
+                        try {
+                            const response = await axios.get(`https://v3.football.api-sports.io/players`, {
+                                headers: {
+                                    'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                                    'x-rapidapi-host': 'v3.football.api-sports.io'
+                                },
+                                params: {
+                                    league: leagueId,
+                                    season: targetSeason
+                                }
+                            });
+                            
+                            if (response.data && response.data.response && response.data.response.length > 0) {
+                                const leaguePlayers = response.data.response.map(item => {
+                                    const player = item.player;
+                                    const stats = item.statistics && item.statistics.length > 0 ? item.statistics[0] : {};
+                                    
+                                    return {
+                                        id: player.id,
+                                        name: player.name,
+                                        age: player.age,
+                                        nationality: player.nationality,
+                                        photo: player.photo,
+                                        team: stats.team?.name || '',
+                                        currentTeam: stats.team?.name || '',
+                                        position: player.position || '',
+                                        detailedPosition: player.position || '',
+                                        league: stats.league?.name || '',
+                                        goals: stats.goals?.total || 0,
+                                        assists: stats.goals?.assists || 0,
+                                        appearances: stats.games?.appearences || 0,
+                                        minutes: stats.games?.minutes || 0,
+                                        rating: stats.games?.rating || 'N/A',
+                                        passes: stats.passes?.total || 0,
+                                        passAccuracy: stats.passes?.accuracy || '0%',
+                                        tackles: stats.tackles?.total || 0,
+                                        interceptions: stats.tackles?.interceptions || 0,
+                                        saves: stats.goals?.saves || 0,
+                                        cleanSheets: stats.goals?.saves || 0,
+                                        yellowCards: stats.cards?.yellow || 0,
+                                        redCards: stats.cards?.red || 0,
+                                        shots: stats.shots?.total || 0,
+                                        shotsOnTarget: stats.shots?.on || 0
+                                    };
+                                });
+                                
+                                allPlayers.push(...leaguePlayers);
+                                console.log(`✅ Fetched ${leaguePlayers.length} players from league ${leagueId}`);
+                            }
+                        } catch (leagueError) {
+                            console.error(`❌ Error fetching league ${leagueId}:`, leagueError.message);
+                        }
+                    }
+                    
+                    players = allPlayers;
+                    console.log('✅ Successfully processed', players.length, 'players from all major leagues');
+                }
+            } catch (apiError) {
+                console.error('❌ API-Football error:', apiError.message);
+                console.log('📋 Trying fallback data sources');
+            }
+        }
+        
+        // 優先順位2: DatabaseManagerから動的に最新データを取得
+        if (players.length === 0 && apiService && apiService.dbManager) {
             try {
                 console.log('🔄 DatabaseManagerから最新選手データを取得中...');
                 const dbPlayers = await apiService.dbManager.loadComprehensivePlayers();
@@ -1433,7 +1575,7 @@ app.get('/api/ranking/players', async (req, res) => {
             }
         }
         
-        // 優先順位2: ローカルファイルから選手を読み込む
+        // 優先順位3: ローカルファイルから選手を読み込む
         if (players.length === 0) {
             try {
                 const playersDataPath = path.join(__dirname, 'data', 'players.json');
