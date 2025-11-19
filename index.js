@@ -2603,7 +2603,7 @@ app.get('/api/match/details', async (req, res) => {
         }
         
         // xGはAPI-Football（API-Sport）のみで提供されているため、API-Footballから取得したデータを使用
-        // football-data.orgからはビッグチャンスのみ取得を試みる（Statistic Add-On契約時）
+        // football-data.orgからはStatistic Add-Onの統計を取得を試みる
         console.log('🔍 Football-data.org integration check:', {
             hasNormalizedStats: !!normalizedStats,
             hasFixtureData: !!fixtureData,
@@ -2624,7 +2624,7 @@ app.get('/api/match/details', async (req, res) => {
                 console.log('🔍 Football-data.org fetch parameters:', { homeTeam, awayTeam, matchDate, leagueKey });
                 
                 if (homeTeam && awayTeam && matchDate) {
-                    console.log('🔍 Fetching xG and Big Chances from Football-data.org:', { homeTeam, awayTeam, matchDate });
+                    console.log('🔍 Fetching Statistics Add-On data from Football-data.org:', { homeTeam, awayTeam, matchDate });
                     
                     // 日付からシーズンとリーグコードを取得
                     const dateObj = new Date(matchDate);
