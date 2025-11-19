@@ -1576,7 +1576,7 @@ app.get('/api/ranking/players', async (req, res) => {
 // チームランキング取得
 app.get('/api/ranking/teams', async (req, res) => {
     try {
-        const { league } = req.query;
+        const { league, season = 2024 } = req.query;
         
         console.log('🏆 Team Ranking Request:', { league });
         
@@ -1609,7 +1609,7 @@ app.get('/api/ranking/teams', async (req, res) => {
                     },
                     params: {
                         league: targetLeague,
-                        season: 2024
+                        season: parseInt(season) || 2024
                     }
                 });
                 
@@ -1669,7 +1669,8 @@ app.get('/api/ranking/teams', async (req, res) => {
 // チャンピオンズリーグ順位取得
 app.get('/api/ranking/champions-league', async (req, res) => {
     try {
-        console.log('🏆 Champions League Ranking Request');
+        const { season = 2024 } = req.query;
+        console.log('🏆 Champions League Ranking Request:', { season });
         
         let standings = [];
         
@@ -1683,7 +1684,7 @@ app.get('/api/ranking/champions-league', async (req, res) => {
                     },
                     params: {
                         league: 2, // Champions League
-                        season: 2024
+                        season: parseInt(season) || 2024
                     }
                 });
                 
