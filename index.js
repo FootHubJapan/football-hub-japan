@@ -1729,7 +1729,8 @@ app.get('/api/ranking/teams', async (req, res) => {
         
         let teams = [];
         
-        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
+        const apiKey = process.env.RAPIDAPI_KEY || process.env.API_FOOTBALL_KEY;
+        if (apiKey && apiKey !== 'YOUR_API_FOOTBALL_KEY' && apiKey !== 'your-api-football-key-here') {
             try {
                 // リーグIDのマッピング
                 const leagueIds = {
