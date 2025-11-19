@@ -439,24 +439,60 @@
             </div>
         </div>
 
-        <!-- リーグランキング -->
+        <!-- リーグ順位 -->
         <div id="leagueRanking" class="ranking-content">
-            <div class="chart-container">
-                <h3 class="chart-title">欧州5大リーグ比較</h3>
-                <canvas id="leagueChart" width="400" height="200"></canvas>
+            <div class="filters-section" style="margin-bottom: 2rem;">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label class="filter-label">リーグを選択</label>
+                        <select class="filter-select" id="leagueStandingsFilter" onchange="loadLeagueStandings()">
+                            <option value="">リーグを選択してください</option>
+                            <option value="PL">プレミアリーグ</option>
+                            <option value="PD">ラ・リーガ</option>
+                            <option value="SA">セリエA</option>
+                            <option value="BL1">ブンデスリーガ</option>
+                            <option value="FL1">リーグ・アン</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <div class="ranking-table">
                 <div class="table-header">
-                    <div class="table-row league-ranking">
+                    <div class="table-row team-ranking">
                         <div>順位</div>
-                        <div>リーグ</div>
-                        <div>平均得点</div>
-                        <div>平均観客</div>
-                        <div>評価</div>
+                        <div>チーム</div>
+                        <div>勝点</div>
+                        <div>勝</div>
+                        <div>分</div>
+                        <div>負</div>
                     </div>
                 </div>
-                <div id="leagueTableBody">
-                    <div class="no-data">リーグランキングを表示中...</div>
+                <div id="leagueStandingsBody">
+                    <div class="no-data">リーグを選択すると順位表が表示されます</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- チャンピオンズリーグ -->
+        <div id="championsRanking" class="ranking-content">
+            <div class="chart-container">
+                <h3 class="chart-title">チャンピオンズリーグ グループステージ</h3>
+                <canvas id="championsChart" width="400" height="200"></canvas>
+            </div>
+            <div class="ranking-table">
+                <div class="table-header">
+                    <div class="table-row team-ranking">
+                        <div>順位</div>
+                        <div>チーム</div>
+                        <div>グループ</div>
+                        <div>勝点</div>
+                        <div>勝</div>
+                        <div>分</div>
+                        <div>負</div>
+                    </div>
+                </div>
+                <div id="championsTableBody">
+                    <div class="loading">チャンピオンズリーグ順位を読み込み中...</div>
                 </div>
             </div>
         </div>
@@ -467,6 +503,7 @@
         let playerChart = null;
         let teamChart = null;
         let leagueChart = null;
+        let championsChart = null;
 
         // タブ切り替え
         function switchTab(tab, evt) {
@@ -479,8 +516,13 @@
             // コンテンツの表示切り替え
             document.querySelectorAll('.ranking-content').forEach(content => content.classList.remove('active'));
             
-            // タブ名を正しいID名に変換（players -> player, teams -> team, leagues -> league）
-            const tabId = tab === 'players' ? 'player' : tab === 'teams' ? 'team' : 'league';
+            // タブ名を正しいID名に変換
+            let tabId;
+            if (tab === 'players') tabId = 'player';
+            else if (tab === 'teams') tabId = 'team';
+            else if (tab === 'leagues') tabId = 'league';
+            else if (tab === 'champions') tabId = 'champions';
+            
             const contentElement = document.getElementById(tabId + 'Ranking');
             if (contentElement) {
                 contentElement.classList.add('active');
@@ -494,7 +536,9 @@
             } else if (tab === 'teams') {
                 loadTeamRanking();
             } else if (tab === 'leagues') {
-                loadLeagueRanking();
+                loadLeagueStandings();
+            } else if (tab === 'champions') {
+                loadChampionsLeagueRanking();
             }
         }
 
@@ -505,7 +549,9 @@
             } else if (currentTab === 'teams') {
                 loadTeamRanking();
             } else if (currentTab === 'leagues') {
-                loadLeagueRanking();
+                loadLeagueStandings();
+            } else if (currentTab === 'champions') {
+                loadChampionsLeagueRanking();
             }
         }
 

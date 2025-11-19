@@ -1666,6 +1666,81 @@ app.get('/api/ranking/teams', async (req, res) => {
     }
 });
 
+// チャンピオンズリーグ順位取得
+app.get('/api/ranking/champions-league', async (req, res) => {
+    try {
+        console.log('🏆 Champions League Ranking Request');
+        
+        let standings = [];
+        
+        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
+            try {
+                // チャンピオンズリーグのIDは2
+                const response = await axios.get(`https://v3.football.api-sports.io/standings`, {
+                    headers: {
+                        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                        'x-rapidapi-host': 'v3.football.api-sports.io'
+                    },
+                    params: {
+                        league: 2, // Champions League
+                        season: 2024
+                    }
+                });
+                
+                console.log('📊 API-Football Champions League standings response:', response.data?.response?.length || 0, 'groups');
+                
+                if (response.data && response.data.response && response.data.response[0]?.league?.standings) {
+                    // チャンピオンズリーグはグループステージがあるため、全グループを統合
+                    const allStandings = response.data.response[0].league.standings;
+                    allStandings.forEach((group, groupIndex) => {
+                        group.forEach(team => {
+                            standings.push({
+                                id: team.team.id,
+                                name: team.team.name,
+                                logo: team.team.logo,
+                                group: `Group ${String.fromCharCode(65 + groupIndex)}`, // A, B, C, ...
+                                position: team.rank || team.position,
+                                points: team.points,
+                                wins: team.all.win,
+                                draws: team.all.draw,
+                                losses: team.all.lose,
+                                goalsFor: team.all.goals.for,
+                                goalsAgainst: team.all.goals.against,
+                                goalDifference: team.goalsDiff,
+                                played: team.all.played,
+                                form: team.form
+                            });
+                        });
+                    });
+                    
+                    console.log('✅ Successfully processed', standings.length, 'teams from Champions League');
+                }
+            } catch (apiError) {
+                console.error('❌ API-Football Champions League error:', apiError.message);
+                console.log('📋 Using fallback data instead');
+            }
+        } else {
+            console.log('⚠️ No API key available, using fallback data');
+        }
+        
+        // フォールバックデータを使用
+        if (standings.length === 0) {
+            standings = [
+                { id: 1, name: 'Manchester City', group: 'Group A', position: 1, points: 15, wins: 5, draws: 0, losses: 0, goalsFor: 18, goalsAgainst: 5, goalDifference: 13, played: 5, form: 'WWWWW' },
+                { id: 2, name: 'Real Madrid', group: 'Group A', position: 2, points: 12, wins: 4, draws: 0, losses: 1, goalsFor: 15, goalsAgainst: 8, goalDifference: 7, played: 5, form: 'WWWLW' },
+                { id: 3, name: 'Bayern Munich', group: 'Group B', position: 1, points: 15, wins: 5, draws: 0, losses: 0, goalsFor: 20, goalsAgainst: 4, goalDifference: 16, played: 5, form: 'WWWWW' },
+                { id: 4, name: 'Paris Saint-Germain', group: 'Group B', position: 2, points: 10, wins: 3, draws: 1, losses: 1, goalsFor: 12, goalsAgainst: 7, goalDifference: 5, played: 5, form: 'WDWLW' }
+            ];
+        }
+        
+        res.json({ standings });
+        
+    } catch (error) {
+        console.error('Champions League ranking error:', error);
+        res.status(500).json({ error: 'Failed to get Champions League ranking' });
+    }
+});
+
 // リーグランキング取得
 app.get('/api/ranking/leagues', async (req, res) => {
     try {
