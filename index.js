@@ -2515,7 +2515,6 @@ app.get('/api/match/details', async (req, res) => {
                 passes: { home: 0, away: 0 },
                 passesAccuracy: { home: 0, away: 0 },
                 expectedGoals: { home: 0, away: 0 },
-                bigChances: { home: 0, away: 0 },
                 // Statistic Add-Onから取得する統計
                 freeKicks: { home: 0, away: 0 },
                 goalKicks: { home: 0, away: 0 },
@@ -2597,15 +2596,6 @@ app.get('/api/match/details', async (req, res) => {
                             const xgValue = typeof stat.value === 'string' ? parseFloat(stat.value) : (parseFloat(stat.value) || 0);
                             normalizedStats.expectedGoals[teamKey] = xgValue;
                             console.log(`✅ Found xG from API-Football: ${teamKey}=${xgValue} (type: ${stat.type})`);
-                            break;
-                        case 'Big Chances':
-                        case 'Big chances':
-                        case 'Big chances created':
-                            if (!normalizedStats.bigChances) {
-                                normalizedStats.bigChances = { home: 0, away: 0 };
-                            }
-                            normalizedStats.bigChances[teamKey] = value;
-                            console.log(`✅ Found Big Chances from API-Football: ${teamKey}=${value}`);
                             break;
                     }
                 });
