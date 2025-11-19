@@ -2583,13 +2583,14 @@ app.get('/api/match/details', async (req, res) => {
                         case 'Expected goals':
                         case 'xG':
                         case 'XG':
+                        case 'expected_goals':  // API-Footballの実際のタイプ名
                             // xGは小数値なので、parseFloatを使用
                             if (!normalizedStats.expectedGoals) {
                                 normalizedStats.expectedGoals = { home: 0, away: 0 };
                             }
                             const xgValue = typeof stat.value === 'string' ? parseFloat(stat.value) : (parseFloat(stat.value) || 0);
                             normalizedStats.expectedGoals[teamKey] = xgValue;
-                            console.log(`✅ Found xG from API-Football: ${teamKey}=${xgValue}`);
+                            console.log(`✅ Found xG from API-Football: ${teamKey}=${xgValue} (type: ${stat.type})`);
                             break;
                         case 'Big Chances':
                         case 'Big chances':
