@@ -347,12 +347,13 @@
             <button class="tab-btn" onclick="switchTab('leagues', event)">リーグランキング</button>
         </div>
 
-        <!-- フィルターセクション -->
-        <div class="filters-section">
+        <!-- フィルターセクション（選手ランキング・チームランキング用） -->
+        <div id="mainFiltersSection" class="filters-section">
             <div class="filters-grid">
                 <div class="filter-group">
                     <label class="filter-label">シーズン</label>
                     <select class="filter-select" id="seasonFilter">
+                        <option value="2026">2025/2026</option>
                         <option value="2025">2024/2025</option>
                         <option value="2024">2023/2024</option>
                         <option value="2023">2022/2023</option>
@@ -455,6 +456,7 @@
                     <div class="filter-group">
                         <label class="filter-label">シーズン</label>
                         <select class="filter-select" id="leagueStandingsSeasonFilter" onchange="loadLeagueStandings()">
+                            <option value="2026">2025/2026</option>
                             <option value="2025">2024/2025</option>
                             <option value="2024">2023/2024</option>
                             <option value="2023">2022/2023</option>
@@ -498,6 +500,7 @@
                     <div class="filter-group">
                         <label class="filter-label">シーズン</label>
                         <select class="filter-select" id="championsSeasonFilter" onchange="loadChampionsLeagueRanking()">
+                            <option value="2026">2025/2026</option>
                             <option value="2025">2024/2025</option>
                             <option value="2024">2023/2024</option>
                             <option value="2023">2022/2023</option>
@@ -563,12 +566,16 @@
 
             // タブに応じてデータを読み込み
             if (tab === 'players') {
+                document.getElementById('mainFiltersSection').style.display = 'block';
                 loadPlayerRanking();
             } else if (tab === 'teams') {
+                document.getElementById('mainFiltersSection').style.display = 'block';
                 loadTeamRanking();
             } else if (tab === 'leagues') {
+                document.getElementById('mainFiltersSection').style.display = 'none';
                 loadLeagueStandings();
             } else if (tab === 'champions') {
+                document.getElementById('mainFiltersSection').style.display = 'none';
                 loadChampionsLeagueRanking();
             }
         }
