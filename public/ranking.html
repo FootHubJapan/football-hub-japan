@@ -575,13 +575,14 @@
 
         // 選手ランキング読み込み
         async function loadPlayerRanking() {
+            const season = document.getElementById('seasonFilter').value;
             const league = document.getElementById('leagueFilter').value;
             const position = document.getElementById('positionFilter').value;
             const stat = document.getElementById('statFilter').value;
 
             try {
                 // APIから選手データを取得
-                const response = await fetch(`/api/ranking/players?league=${league}&position=${position}&stat=${stat}`);
+                const response = await fetch(`/api/ranking/players?season=${season}&league=${league}&position=${position}&stat=${stat}`);
                 let players;
 
                 if (response.ok) {
