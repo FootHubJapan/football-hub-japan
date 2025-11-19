@@ -2775,14 +2775,32 @@ app.get('/api/match/details', async (req, res) => {
                                         }
                                         
                                         // Statistic Add-On契約時、statisticsは各チームオブジェクトに含まれている可能性がある
+                                        console.log('🔍 Checking team statistics:', {
+                                            hasHomeTeamStatistics: !!detailedFdMatch.homeTeam?.statistics,
+                                            homeTeamStatisticsType: detailedFdMatch.homeTeam?.statistics ? typeof detailedFdMatch.homeTeam.statistics : 'N/A',
+                                            homeTeamStatisticsIsArray: Array.isArray(detailedFdMatch.homeTeam?.statistics),
+                                            homeTeamStatisticsLength: Array.isArray(detailedFdMatch.homeTeam?.statistics) ? detailedFdMatch.homeTeam.statistics.length : 'N/A',
+                                            hasAwayTeamStatistics: !!detailedFdMatch.awayTeam?.statistics,
+                                            awayTeamStatisticsType: detailedFdMatch.awayTeam?.statistics ? typeof detailedFdMatch.awayTeam.statistics : 'N/A',
+                                            awayTeamStatisticsIsArray: Array.isArray(detailedFdMatch.awayTeam?.statistics),
+                                            awayTeamStatisticsLength: Array.isArray(detailedFdMatch.awayTeam?.statistics) ? detailedFdMatch.awayTeam.statistics.length : 'N/A',
+                                            homeTeamStatisticsSample: detailedFdMatch.homeTeam?.statistics ? JSON.stringify(detailedFdMatch.homeTeam.statistics).substring(0, 500) : 'N/A',
+                                            awayTeamStatisticsSample: detailedFdMatch.awayTeam?.statistics ? JSON.stringify(detailedFdMatch.awayTeam.statistics).substring(0, 500) : 'N/A'
+                                        });
+                                        
                                         let teamStatistics = [];
-                                        if (detailedFdMatch.homeTeam?.statistics && Array.isArray(detailedFdMatch.homeTeam.statistics)) {
-                                            console.log('✅ Found statistics in homeTeam object');
+                                        if (detailedFdMatch.homeTeam?.statistics && Array.isArray(detailedFdMatch.homeTeam.statistics) && detailedFdMatch.homeTeam.statistics.length > 0) {
+                                            console.log('✅ Found statistics in homeTeam object:', detailedFdMatch.homeTeam.statistics.length, 'items');
                                             teamStatistics = teamStatistics.concat(detailedFdMatch.homeTeam.statistics.map(stat => ({ ...stat, team: 'home' })));
                                         }
-                                        if (detailedFdMatch.awayTeam?.statistics && Array.isArray(detailedFdMatch.awayTeam.statistics)) {
-                                            console.log('✅ Found statistics in awayTeam object');
+                                        if (detailedFdMatch.awayTeam?.statistics && Array.isArray(detailedFdMatch.awayTeam.statistics) && detailedFdMatch.awayTeam.statistics.length > 0) {
+                                            console.log('✅ Found statistics in awayTeam object:', detailedFdMatch.awayTeam.statistics.length, 'items');
                                             teamStatistics = teamStatistics.concat(detailedFdMatch.awayTeam.statistics.map(stat => ({ ...stat, team: 'away' })));
+                                        }
+                                        
+                                        if (teamStatistics.length > 0) {
+                                            console.log('📊 Combined team statistics:', teamStatistics.length, 'items');
+                                            console.log('📊 Team statistics types:', teamStatistics.map(s => s.type).slice(0, 10));
                                         }
                                         
                                         // ビッグチャンスのみ統合（xGはAPI-Footballから取得済みのため保持）
