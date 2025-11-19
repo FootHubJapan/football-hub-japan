@@ -3046,10 +3046,6 @@ app.get('/api/match/details', async (req, res) => {
                                                 (normalizedStats.expectedGoals.home === 0 && normalizedStats.expectedGoals.away === 0)) {
                                                 console.log('ℹ️ Using API-Football xG as fallback (football-data.org statistics not available)');
                                             }
-                                            // ビッグチャンスはAPI-Footballから取得できないため、0のまま
-                                            if (!normalizedStats.bigChances) {
-                                                normalizedStats.bigChances = { home: 0, away: 0 };
-                                            }
                                         }
                                     } catch (detailError) {
                                         console.warn('⚠️ Error fetching detailed match from Football-data.org:', detailError.message);
