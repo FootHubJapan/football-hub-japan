@@ -2768,10 +2768,28 @@ app.get('/api/match/details', async (req, res) => {
                                             console.log('✅ Statistics found in match detail response');
                                         }
                                         
+                                        // Statistic Add-On契約時、statisticsは各チームオブジェクトに含まれている可能性がある
+                                        let teamStatistics = [];
+                                        if (detailedFdMatch.homeTeam?.statistics && Array.isArray(detailedFdMatch.homeTeam.statistics)) {
+                                            console.log('✅ Found statistics in homeTeam object');
+                                            teamStatistics = teamStatistics.concat(detailedFdMatch.homeTeam.statistics.map(stat => ({ ...stat, team: 'home' })));
+                                        }
+                                        if (detailedFdMatch.awayTeam?.statistics && Array.isArray(detailedFdMatch.awayTeam.statistics)) {
+                                            console.log('✅ Found statistics in awayTeam object');
+                                            teamStatistics = teamStatistics.concat(detailedFdMatch.awayTeam.statistics.map(stat => ({ ...stat, team: 'away' })));
+                                        }
+                                        
                                         // ビッグチャンスのみ統合（xGはAPI-Footballから取得済みのため保持）
-                                        if (detailedFdMatch.statistics && Array.isArray(detailedFdMatch.statistics)) {
+                                        // まず、マッチレベルのstatisticsを確認
+                                        let statisticsToProcess = detailedFdMatch.statistics && Array.isArray(detailedFdMatch.statistics) 
+                                            ? detailedFdMatch.statistics 
+                                            : teamStatistics.length > 0 
+                                                ? teamStatistics 
+                                                : null;
+                                        
+                                        if (statisticsToProcess && statisticsToProcess.length > 0) {
                                             console.log('🔄 Integrating Big Chances from Football-data.org (xG is from API-Football)...');
-                                            console.log('📊 Football-data.org statistics sample:', JSON.stringify(detailedFdMatch.statistics.slice(0, 5), null, 2));
+                                            console.log('📊 Football-data.org statistics sample:', JSON.stringify(statisticsToProcess.slice(0, 5), null, 2));
                                             
                                             // xGはAPI-Footballから取得済みのため保持
                                             // ビッグチャンスのみリセット（football-data.orgのデータで上書きするため）
@@ -2779,7 +2797,8 @@ app.get('/api/match/details', async (req, res) => {
                                                 normalizedStats.bigChances = { home: 0, away: 0 };
                                             }
                                             
-                                            detailedFdMatch.statistics.forEach(stat => {
+                                            statisticsToProcess.forEach(stat => {
+                                                const teamKey = stat.team || (statisticsToProcess.indexOf(stat) % 2 === 0 ? 'home' : 'away');
                                                 console.log(`🔍 Processing stat: type=${stat.type}, value=`, stat.value);
                                                 // xGはAPI-Football（API-Sport）のみで提供されているため、football-data.orgからは取得しない
                                                 
@@ -2792,11 +2811,16 @@ app.get('/api/match/details', async (req, res) => {
                                                         normalizedStats.bigChances.away = parseInt(stat.value.away) || 0;
                                                     } else if (stat.value !== null && stat.value !== undefined) {
                                                         const value = parseInt(stat.value) || 0;
-                                                        const statIndex = detailedFdMatch.statistics.findIndex(s => s === stat);
-                                                        if (statIndex % 2 === 0) {
-                                                            normalizedStats.bigChances.home = value;
+                                                        // teamキーがある場合はそれを使用、ない場合はインデックスで判定
+                                                        if (stat.team) {
+                                                            normalizedStats.bigChances[stat.team] = value;
                                                         } else {
-                                                            normalizedStats.bigChances.away = value;
+                                                            const statIndex = statisticsToProcess.findIndex(s => s === stat);
+                                                            if (statIndex % 2 === 0) {
+                                                                normalizedStats.bigChances.home = value;
+                                                            } else {
+                                                                normalizedStats.bigChances.away = value;
+                                                            }
                                                         }
                                                     }
                                                     console.log(`✅ Integrated Big Chances: home=${normalizedStats.bigChances.home}, away=${normalizedStats.bigChances.away}`);
