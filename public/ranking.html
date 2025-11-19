@@ -616,28 +616,208 @@
             }
         }
 
-        // リーグランキング読み込み
-        async function loadLeagueRanking() {
+        // リーグ順位読み込み
+        async function loadLeagueStandings() {
+            const league = document.getElementById('leagueStandingsFilter').value;
+
+            if (!league) {
+                document.getElementById('leagueStandingsBody').innerHTML = '<div class="no-data">リーグを選択すると順位表が表示されます</div>';
+                return;
+            }
+
             try {
-                const response = await fetch('/api/ranking/leagues');
-                let leagues;
+                const response = await fetch(`/api/ranking/teams?league=${league}`);
+                let teams;
 
                 if (response.ok) {
                     const data = await response.json();
-                    leagues = data.leagues || [];
+                    teams = data.teams || [];
                 } else {
-                    leagues = generateFallbackLeagueData();
+                    teams = generateFallbackTeamData(league);
                 }
 
-                displayLeagueRanking(leagues);
-                updateLeagueChart(leagues);
+                displayLeagueStandings(teams);
 
             } catch (error) {
-                console.error('Error loading league ranking:', error);
-                const leagues = generateFallbackLeagueData();
-                displayLeagueRanking(leagues);
-                updateLeagueChart(leagues);
+                console.error('Error loading league standings:', error);
+                const teams = generateFallbackTeamData(league);
+                displayLeagueStandings(teams);
             }
+        }
+
+        // リーグ順位表示
+        function displayLeagueStandings(teams) {
+            const container = document.getElementById('leagueStandingsBody');
+            if (!container) return;
+
+            if (teams.length === 0) {
+                container.innerHTML = '<div class="no-data">順位データがありません</div>';
+                return;
+            }
+
+            // 勝点でソート
+            teams.sort((a, b) => {
+                if (b.points !== a.points) return b.points - a.points;
+                return b.goalDifference - a.goalDifference;
+            });
+
+            let html = '';
+            teams.forEach((team, index) => {
+                html += `
+                    <div class="table-row team-ranking">
+                        <div class="rank-number">${index + 1}</div>
+                        <div class="player-info">
+                            ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : `<div class="team-logo">${team.name.charAt(0)}</div>`}
+                            <div class="player-details">
+                                <h4>${team.name}</h4>
+                            </div>
+                        </div>
+                        <div class="stat-value">${team.points || 0}</div>
+                        <div class="stat-value">${team.wins || 0}</div>
+                        <div class="stat-value">${team.draws || 0}</div>
+                        <div class="stat-value">${team.losses || 0}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // チャンピオンズリーグ順位読み込み
+        async function loadChampionsLeagueRanking() {
+            try {
+                const response = await fetch('/api/ranking/champions-league');
+                let standings;
+
+                if (response.ok) {
+                    const data = await response.json();
+                    standings = data.standings || [];
+                } else {
+                    standings = generateFallbackChampionsLeagueData();
+                }
+
+                displayChampionsLeagueRanking(standings);
+                updateChampionsChart(standings);
+
+            } catch (error) {
+                console.error('Error loading Champions League ranking:', error);
+                const standings = generateFallbackChampionsLeagueData();
+                displayChampionsLeagueRanking(standings);
+                updateChampionsChart(standings);
+            }
+        }
+
+        // チャンピオンズリーグ順位表示
+        function displayChampionsLeagueRanking(standings) {
+            const container = document.getElementById('championsTableBody');
+            if (!container) return;
+
+            if (standings.length === 0) {
+                container.innerHTML = '<div class="no-data">順位データがありません</div>';
+                return;
+            }
+
+            // グループと順位でソート
+            standings.sort((a, b) => {
+                if (a.group !== b.group) return a.group.localeCompare(b.group);
+                return a.position - b.position;
+            });
+
+            let html = '';
+            standings.forEach(team => {
+                html += `
+                    <div class="table-row team-ranking">
+                        <div class="rank-number">${team.position || '-'}</div>
+                        <div class="player-info">
+                            ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : `<div class="team-logo">${team.name.charAt(0)}</div>`}
+                            <div class="player-details">
+                                <h4>${team.name}</h4>
+                            </div>
+                        </div>
+                        <div class="stat-value">${team.group || '-'}</div>
+                        <div class="stat-value">${team.points || 0}</div>
+                        <div class="stat-value">${team.wins || 0}</div>
+                        <div class="stat-value">${team.draws || 0}</div>
+                        <div class="stat-value">${team.losses || 0}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // チャンピオンズリーグチャート更新
+        function updateChampionsChart(standings) {
+            const ctx = document.getElementById('championsChart');
+            if (!ctx) return;
+
+            // グループごとに集計
+            const groupData = {};
+            standings.forEach(team => {
+                if (!groupData[team.group]) {
+                    groupData[team.group] = [];
+                }
+                groupData[team.group].push(team);
+            });
+
+            // グループごとにソート
+            Object.keys(groupData).forEach(group => {
+                groupData[group].sort((a, b) => b.points - a.points);
+            });
+
+            if (championsChart) {
+                championsChart.destroy();
+            }
+
+            const groups = Object.keys(groupData).sort();
+            const datasets = groups.map((group, index) => {
+                const teams = groupData[group].slice(0, 4); // 上位4チーム
+                return {
+                    label: group,
+                    data: teams.map(t => t.points),
+                    backgroundColor: `hsl(${index * 60}, 70%, 50%)`,
+                    borderColor: `hsl(${index * 60}, 70%, 40%)`,
+                    borderWidth: 1
+                };
+            });
+
+            championsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: groups,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#fff' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // フォールバックデータ生成
+        function generateFallbackChampionsLeagueData() {
+            return [
+                { id: 1, name: 'Manchester City', group: 'Group A', position: 1, points: 15, wins: 5, draws: 0, losses: 0 },
+                { id: 2, name: 'Real Madrid', group: 'Group A', position: 2, points: 12, wins: 4, draws: 0, losses: 1 },
+                { id: 3, name: 'Bayern Munich', group: 'Group B', position: 1, points: 15, wins: 5, draws: 0, losses: 0 },
+                { id: 4, name: 'Paris Saint-Germain', group: 'Group B', position: 2, points: 10, wins: 3, draws: 1, losses: 1 }
+            ];
         }
 
         // 選手ランキング表示
