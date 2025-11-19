@@ -2604,7 +2604,7 @@ app.get('/api/match/details', async (req, res) => {
         
         // xGはAPI-Football（API-Sport）のみで提供されているため、API-Footballから取得したデータを使用
         // football-data.orgからはビッグチャンスのみ取得を試みる（Statistic Add-On契約時）
-        console.log('🔍 Football-data.org integration check (Big Chances only):', {
+        console.log('🔍 Football-data.org integration check:', {
             hasNormalizedStats: !!normalizedStats,
             hasFixtureData: !!fixtureData,
             hasApiKey: !!process.env.FOOTBALL_DATA_API_KEY,
