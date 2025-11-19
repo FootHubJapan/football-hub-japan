@@ -2606,17 +2606,19 @@ app.get('/api/match/details', async (req, res) => {
             });
         }
         
-        // Football-data.orgからxGとビッグチャンスを取得（API-Footballでは取得できないデータ）
-        // 注意: API-Footballから取得したxGは無視し、football-data.orgから取得したデータで上書きする
-        console.log('🔍 Football-data.org integration check:', {
+        // xGはAPI-Football（API-Sport）のみで提供されているため、API-Footballから取得したデータを使用
+        // football-data.orgからはビッグチャンスのみ取得を試みる（Statistic Add-On契約時）
+        console.log('🔍 Football-data.org integration check (Big Chances only):', {
             hasNormalizedStats: !!normalizedStats,
             hasFixtureData: !!fixtureData,
             hasApiKey: !!process.env.FOOTBALL_DATA_API_KEY,
+            hasXGFromApiFootball: normalizedStats?.expectedGoals && 
+                                 (normalizedStats.expectedGoals.home > 0 || normalizedStats.expectedGoals.away > 0),
             normalizedStatsKeys: normalizedStats ? Object.keys(normalizedStats) : [],
             fixtureDataKeys: fixtureData ? Object.keys(fixtureData) : []
         });
         
-        // football-data.orgからxGとビッグチャンスを取得（常に試行）
+        // football-data.orgからビッグチャンスのみ取得を試みる（xGはAPI-Footballから取得済み）
         if (normalizedStats && fixtureData && process.env.FOOTBALL_DATA_API_KEY) {
             try {
                 const homeTeam = fixtureData.teams?.home?.name || home;
@@ -2766,14 +2768,16 @@ app.get('/api/match/details', async (req, res) => {
                                             console.log('✅ Statistics found in match detail response');
                                         }
                                         
-                                        // xGとビッグチャンスを統合（football-data.orgから取得したデータで上書き）
+                                        // ビッグチャンスのみ統合（xGはAPI-Footballから取得済みのため保持）
                                         if (detailedFdMatch.statistics && Array.isArray(detailedFdMatch.statistics)) {
-                                            console.log('🔄 Integrating xG and Big Chances from Football-data.org...');
+                                            console.log('🔄 Integrating Big Chances from Football-data.org (xG is from API-Football)...');
                                             console.log('📊 Football-data.org statistics sample:', JSON.stringify(detailedFdMatch.statistics.slice(0, 5), null, 2));
                                             
-                                            // API-Footballから取得したxGとビッグチャンスをリセット（football-data.orgのデータで上書きするため）
-                                            normalizedStats.expectedGoals = { home: 0, away: 0 };
-                                            normalizedStats.bigChances = { home: 0, away: 0 };
+                                            // xGはAPI-Footballから取得済みのため保持
+                                            // ビッグチャンスのみリセット（football-data.orgのデータで上書きするため）
+                                            if (!normalizedStats.bigChances) {
+                                                normalizedStats.bigChances = { home: 0, away: 0 };
+                                            }
                                             
                                             detailedFdMatch.statistics.forEach(stat => {
                                                 console.log(`🔍 Processing stat: type=${stat.type}, value=`, stat.value);
