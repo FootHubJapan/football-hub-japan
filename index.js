@@ -2842,6 +2842,7 @@ app.get('/api/match/details', async (req, res) => {
                                                 // Corners（コーナーキック）
                                                 if (stat.type === 'corners' || stat.type === 'Corner Kicks' || stat.type === 'Corner kicks' ||
                                                     stat.type === 'cornerKicks' || stat.type === 'corner_kicks') {
+                                                    console.log(`✅ Processing Corners: ${stat.team}=${statValue}`);
                                                     if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
                                                         normalizedStats.corners.home = parseInt(statValue.home) || normalizedStats.corners.home;
                                                         normalizedStats.corners.away = parseInt(statValue.away) || normalizedStats.corners.away;
@@ -2857,7 +2858,9 @@ app.get('/api/match/details', async (req, res) => {
                                                 }
                                                 
                                                 // Free-Kicks（フリーキック）
-                                                if (stat.type === 'freeKicks' || stat.type === 'Free-Kicks' || stat.type === 'Free kicks' || stat.type === 'free_kicks') {
+                                                if (stat.type === 'freeKicks' || stat.type === 'Free-Kicks' || stat.type === 'Free kicks' || 
+                                                    stat.type === 'free_kicks' || stat.type === 'freeKicks') {
+                                                    console.log(`✅ Processing Free-Kicks: ${stat.team}=${statValue}`);
                                                     if (!normalizedStats.freeKicks) normalizedStats.freeKicks = { home: 0, away: 0 };
                                                     if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
                                                         normalizedStats.freeKicks.home = parseInt(statValue.home) || normalizedStats.freeKicks.home;
@@ -2874,7 +2877,9 @@ app.get('/api/match/details', async (req, res) => {
                                                 }
                                                 
                                                 // Goal-Kicks（ゴールキック）
-                                                if (stat.type === 'goalKicks' || stat.type === 'Goal-Kicks' || stat.type === 'Goal kicks' || stat.type === 'goal_kicks') {
+                                                if (stat.type === 'goalKicks' || stat.type === 'Goal-Kicks' || stat.type === 'Goal kicks' || 
+                                                    stat.type === 'goal_kicks' || stat.type === 'goalKicks') {
+                                                    console.log(`✅ Processing Goal-Kicks: ${stat.team}=${statValue}`);
                                                     if (!normalizedStats.goalKicks) normalizedStats.goalKicks = { home: 0, away: 0 };
                                                     if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
                                                         normalizedStats.goalKicks.home = parseInt(statValue.home) || normalizedStats.goalKicks.home;
@@ -2891,7 +2896,9 @@ app.get('/api/match/details', async (req, res) => {
                                                 }
                                                 
                                                 // Offsides（オフサイド）
-                                                if (stat.type === 'offsides' || stat.type === 'Offsides' || stat.type === 'offside') {
+                                                if (stat.type === 'offsides' || stat.type === 'Offsides' || stat.type === 'offside' || 
+                                                    stat.type === 'offsides') {
+                                                    console.log(`✅ Processing Offsides: ${stat.team}=${statValue}`);
                                                     if (!normalizedStats.offsides) normalizedStats.offsides = { home: 0, away: 0 };
                                                     if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
                                                         normalizedStats.offsides.home = parseInt(statValue.home) || normalizedStats.offsides.home;
@@ -2908,7 +2915,8 @@ app.get('/api/match/details', async (req, res) => {
                                                 }
                                                 
                                                 // Fouls（ファウル）
-                                                if (stat.type === 'fouls' || stat.type === 'Fouls') {
+                                                if (stat.type === 'fouls' || stat.type === 'Fouls' || stat.type === 'fouls') {
+                                                    console.log(`✅ Processing Fouls: ${stat.team}=${statValue}`);
                                                     if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
                                                         normalizedStats.fouls.home = parseInt(statValue.home) || normalizedStats.fouls.home;
                                                         normalizedStats.fouls.away = parseInt(statValue.away) || normalizedStats.fouls.away;
@@ -2926,6 +2934,7 @@ app.get('/api/match/details', async (req, res) => {
                                                 // Ball possession（ボールポゼッション）
                                                 if (stat.type === 'possession' || stat.type === 'Ball Possession' || stat.type === 'Possession' || 
                                                     stat.type === 'ballPossession' || stat.type === 'ball_possession') {
+                                                    console.log(`✅ Processing Ball Possession: ${stat.team}=${statValue}`);
                                                     if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
                                                         normalizedStats.possession.home = parseInt(statValue.home) || normalizedStats.possession.home;
                                                         normalizedStats.possession.away = parseInt(statValue.away) || normalizedStats.possession.away;
@@ -2941,7 +2950,9 @@ app.get('/api/match/details', async (req, res) => {
                                                 }
                                                 
                                                 // Saves（セーブ）
-                                                if (stat.type === 'saves' || stat.type === 'Saves' || stat.type === 'Goalkeeper Saves' || stat.type === 'goalkeeperSaves') {
+                                                if (stat.type === 'saves' || stat.type === 'Saves' || stat.type === 'Goalkeeper Saves' || 
+                                                    stat.type === 'goalkeeperSaves' || stat.type === 'saves') {
+                                                    console.log(`✅ Processing Saves: ${stat.team}=${statValue}`);
                                                     if (!normalizedStats.saves) normalizedStats.saves = { home: 0, away: 0 };
                                                     if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
                                                         normalizedStats.saves.home = parseInt(statValue.home) || normalizedStats.saves.home;
@@ -2958,7 +2969,9 @@ app.get('/api/match/details', async (req, res) => {
                                                 }
                                                 
                                                 // Throw-Ins（スローイン）
-                                                if (stat.type === 'throwIns' || stat.type === 'Throw-Ins' || stat.type === 'Throw ins' || stat.type === 'throw_ins') {
+                                                if (stat.type === 'throwIns' || stat.type === 'Throw-Ins' || stat.type === 'Throw ins' || 
+                                                    stat.type === 'throw_ins' || stat.type === 'throwIns') {
+                                                    console.log(`✅ Processing Throw-Ins: ${stat.team}=${statValue}`);
                                                     if (!normalizedStats.throwIns) normalizedStats.throwIns = { home: 0, away: 0 };
                                                     if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
                                                         normalizedStats.throwIns.home = parseInt(statValue.home) || normalizedStats.throwIns.home;
@@ -2977,7 +2990,8 @@ app.get('/api/match/details', async (req, res) => {
                                                 // Shots on / off goal（シュート）
                                                 if (stat.type === 'shotsOnGoal' || stat.type === 'Shots on Goal' || stat.type === 'Shots on Target' || 
                                                     stat.type === 'shotsOnTarget' || stat.type === 'shots_on_goal' ||
-                                                    stat.type === 'shotsOnTarget' || stat.type === 'shots_on_target') {
+                                                    stat.type === 'shots_on_target' || stat.type === 'shotsOnGoal') {
+                                                    console.log(`✅ Processing Shots on Goal: ${stat.team}=${statValue}`);
                                                     if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
                                                         normalizedStats.shotsOnTarget.home = parseInt(statValue.home) || normalizedStats.shotsOnTarget.home;
                                                         normalizedStats.shotsOnTarget.away = parseInt(statValue.away) || normalizedStats.shotsOnTarget.away;
@@ -2993,7 +3007,9 @@ app.get('/api/match/details', async (req, res) => {
                                                 }
                                                 
                                                 if (stat.type === 'shotsOffGoal' || stat.type === 'Shots off Goal' || stat.type === 'Shots off Target' || 
-                                                    stat.type === 'shotsOffTarget' || stat.type === 'shots_off_goal') {
+                                                    stat.type === 'shotsOffTarget' || stat.type === 'shots_off_goal' ||
+                                                    stat.type === 'shots_off_target') {
+                                                    console.log(`✅ Processing Shots off Goal: ${stat.team}=${statValue}`);
                                                     if (statValue && typeof statValue === 'object' && !Array.isArray(statValue) && (statValue.home !== undefined || statValue.away !== undefined)) {
                                                         normalizedStats.shotsOffTarget.home = parseInt(statValue.home) || normalizedStats.shotsOffTarget.home;
                                                         normalizedStats.shotsOffTarget.away = parseInt(statValue.away) || normalizedStats.shotsOffTarget.away;
