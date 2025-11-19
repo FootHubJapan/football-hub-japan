@@ -5605,9 +5605,10 @@ async function handleMatchDetailsRequest(req, res) {
                                         allKeys: Object.keys(detailedFdMatch)
                                     });
                                     
-                                    // statisticsが含まれていない場合、別のエンドポイントから取得を試みる
-                                    if (!detailedFdMatch.statistics) {
-                                        console.log('⚠️ Statistics not found in match detail, trying /matches/{id}/statistics endpoint...');
+                                    // statisticsが含まれていない場合、または空の場合、別のエンドポイントから取得を試みる
+                                    if (!detailedFdMatch.statistics || 
+                                        (Array.isArray(detailedFdMatch.statistics) && detailedFdMatch.statistics.length === 0)) {
+                                        console.log('⚠️ Statistics not found or empty in match detail, trying /matches/{id}/statistics endpoint...');
                                         try {
                                             const statsResponse = await axios.get(`https://api.football-data.org/v4/matches/${fdMatchId}/statistics`, {
                                                 headers: {
@@ -5617,15 +5618,47 @@ async function handleMatchDetailsRequest(req, res) {
                                             });
                                             
                                             if (statsResponse.data) {
-                                                detailedFdMatch.statistics = statsResponse.data;
+                                                // statisticsエンドポイントのレスポンス構造を確認
+                                                console.log('📊 Statistics endpoint response structure:', {
+                                                    hasData: !!statsResponse.data,
+                                                    dataType: typeof statsResponse.data,
+                                                    isArray: Array.isArray(statsResponse.data),
+                                                    keys: Object.keys(statsResponse.data || {})
+                                                });
+                                                
+                                                // レスポンスが配列の場合
+                                                if (Array.isArray(statsResponse.data)) {
+                                                    detailedFdMatch.statistics = statsResponse.data;
+                                                } 
+                                                // レスポンスがオブジェクトでstatisticsプロパティがある場合
+                                                else if (statsResponse.data.statistics && Array.isArray(statsResponse.data.statistics)) {
+                                                    detailedFdMatch.statistics = statsResponse.data.statistics;
+                                                }
+                                                // その他の場合
+                                                else {
+                                                    detailedFdMatch.statistics = statsResponse.data;
+                                                }
+                                                
                                                 console.log('✅ Statistics fetched from separate endpoint:', {
                                                     hasStatistics: !!detailedFdMatch.statistics,
                                                     statisticsType: Array.isArray(detailedFdMatch.statistics) ? 'array' : typeof detailedFdMatch.statistics,
                                                     statisticsLength: Array.isArray(detailedFdMatch.statistics) ? detailedFdMatch.statistics.length : 'N/A'
                                                 });
+                                                
+                                                // 統計データの構造をログに出力
+                                                if (Array.isArray(detailedFdMatch.statistics) && detailedFdMatch.statistics.length > 0) {
+                                                    console.log('📊 Statistics sample:', JSON.stringify(detailedFdMatch.statistics.slice(0, 3), null, 2));
+                                                }
                                             }
                                         } catch (statsError) {
                                             console.warn('⚠️ Error fetching statistics from separate endpoint:', statsError.message);
+                                            if (statsError.response) {
+                                                console.warn('⚠️ Statistics endpoint error response:', {
+                                                    status: statsError.response.status,
+                                                    statusText: statsError.response.statusText,
+                                                    data: JSON.stringify(statsError.response.data).substring(0, 500)
+                                                });
+                                            }
                                         }
                                     }
                                 } catch (detailError) {
@@ -5708,19 +5741,64 @@ async function handleMatchDetailsRequest(req, res) {
                                 // 統計データを統合（xG、ビッグチャンスなど）
                                 if (detailedFdMatch.statistics && Array.isArray(detailedFdMatch.statistics)) {
                                     console.log('🔄 Integrating statistics from Football-data.org...');
+                                    
+                                    // statsオブジェクトを初期化（まだ存在しない場合）
+                                    if (!matchDetails.stats) {
+                                        matchDetails.stats = {};
+                                    }
+                                    
                                     detailedFdMatch.statistics.forEach(stat => {
-                                        if (stat.type === 'expectedGoals' || stat.type === 'xG') {
-                                            if (!matchDetails.stats) matchDetails.stats = {};
-                                            if (!matchDetails.stats.expectedGoals) matchDetails.stats.expectedGoals = { home: 0, away: 0 };
-                                            matchDetails.stats.expectedGoals.home = stat.value?.home || 0;
-                                            matchDetails.stats.expectedGoals.away = stat.value?.away || 0;
+                                        // xGの処理（複数のタイプ名に対応）
+                                        if (stat.type === 'expectedGoals' || stat.type === 'xG' || stat.type === 'expected_goals' || 
+                                            stat.type === 'Expected Goals' || stat.type === 'Expected goals' ||
+                                            stat.type === 'expectedGoalsTotal' || stat.type === 'expected_goals_total') {
+                                            if (!matchDetails.stats.expectedGoals) {
+                                                matchDetails.stats.expectedGoals = { home: 0, away: 0 };
+                                            }
+                                            
+                                            // valueがオブジェクトの場合（home/awayを含む）
+                                            if (stat.value && typeof stat.value === 'object' && !Array.isArray(stat.value)) {
+                                                matchDetails.stats.expectedGoals.home = parseFloat(stat.value.home) || 0;
+                                                matchDetails.stats.expectedGoals.away = parseFloat(stat.value.away) || 0;
+                                            } else if (stat.value !== null && stat.value !== undefined) {
+                                                // valueが数値の場合、配列のインデックスで判断
+                                                const value = parseFloat(stat.value) || 0;
+                                                // 配列のインデックスで判断（最初がhome、次がaway）
+                                                const statIndex = detailedFdMatch.statistics.findIndex(s => s === stat);
+                                                if (statIndex % 2 === 0) {
+                                                    matchDetails.stats.expectedGoals.home = value;
+                                                } else {
+                                                    matchDetails.stats.expectedGoals.away = value;
+                                                }
+                                            }
+                                            
                                             console.log(`✅ Integrated xG: home=${matchDetails.stats.expectedGoals.home}, away=${matchDetails.stats.expectedGoals.away}`);
                                         }
-                                        if (stat.type === 'bigChances' || stat.type === 'bigChancesCreated') {
-                                            if (!matchDetails.stats) matchDetails.stats = {};
-                                            if (!matchDetails.stats.bigChances) matchDetails.stats.bigChances = { home: 0, away: 0 };
-                                            matchDetails.stats.bigChances.home = stat.value?.home || 0;
-                                            matchDetails.stats.bigChances.away = stat.value?.away || 0;
+                                        
+                                        // ビッグチャンスの処理（複数のタイプ名に対応）
+                                        if (stat.type === 'bigChances' || stat.type === 'bigChancesCreated' || stat.type === 'big_chances' ||
+                                            stat.type === 'Big Chances' || stat.type === 'Big chances' ||
+                                            stat.type === 'bigChancesTotal' || stat.type === 'big_chances_total') {
+                                            if (!matchDetails.stats.bigChances) {
+                                                matchDetails.stats.bigChances = { home: 0, away: 0 };
+                                            }
+                                            
+                                            // valueがオブジェクトの場合（home/awayを含む）
+                                            if (stat.value && typeof stat.value === 'object' && !Array.isArray(stat.value)) {
+                                                matchDetails.stats.bigChances.home = parseInt(stat.value.home) || 0;
+                                                matchDetails.stats.bigChances.away = parseInt(stat.value.away) || 0;
+                                            } else if (stat.value !== null && stat.value !== undefined) {
+                                                // valueが数値の場合、配列のインデックスで判断
+                                                const value = parseInt(stat.value) || 0;
+                                                // 配列のインデックスで判断（最初がhome、次がaway）
+                                                const statIndex = detailedFdMatch.statistics.findIndex(s => s === stat);
+                                                if (statIndex % 2 === 0) {
+                                                    matchDetails.stats.bigChances.home = value;
+                                                } else {
+                                                    matchDetails.stats.bigChances.away = value;
+                                                }
+                                            }
+                                            
                                             console.log(`✅ Integrated Big Chances: home=${matchDetails.stats.bigChances.home}, away=${matchDetails.stats.bigChances.away}`);
                                         }
                                     });
