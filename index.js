@@ -2810,27 +2810,16 @@ app.get('/api/match/details', async (req, res) => {
                                                 
                                                 // Statistic Add-Onの統計を処理
                                                 let statValue = stat.value;
-                                                if (statValue !== null && statValue !== undefined) {
-                                                    // オブジェクトの場合は、home/awayを確認
-                                                    if (typeof statValue === 'object' && !Array.isArray(statValue)) {
-                                                        // オブジェクト形式の場合
-                                                        if (statValue.home !== undefined || statValue.away !== undefined) {
-                                                            // 既にhome/awayが分かれている
-                                                        } else {
-                                                            // 単一の値の場合、teamキーを使用
-                                                            statValue = statValue.value || statValue;
-                                                        }
-                                                    }
-                                                    
-                                                    // ビッグチャンスの処理
+                                                
+                                                // ビッグチャンスの処理
                                                 if (stat.type === 'bigChances' || stat.type === 'bigChancesCreated' || stat.type === 'big_chances' ||
                                                     stat.type === 'Big Chances' || stat.type === 'Big chances' ||
                                                     stat.type === 'bigChancesTotal' || stat.type === 'big_chances_total') {
-                                                    if (stat.value && typeof stat.value === 'object' && !Array.isArray(stat.value)) {
-                                                        normalizedStats.bigChances.home = parseInt(stat.value.home) || 0;
-                                                        normalizedStats.bigChances.away = parseInt(stat.value.away) || 0;
-                                                    } else if (stat.value !== null && stat.value !== undefined) {
-                                                        const value = parseInt(stat.value) || 0;
+                                                    if (statValue && typeof statValue === 'object' && !Array.isArray(statValue)) {
+                                                        normalizedStats.bigChances.home = parseInt(statValue.home) || 0;
+                                                        normalizedStats.bigChances.away = parseInt(statValue.away) || 0;
+                                                    } else if (statValue !== null && statValue !== undefined) {
+                                                        const value = parseInt(statValue) || 0;
                                                         // teamキーがある場合はそれを使用、ない場合はインデックスで判定
                                                         if (stat.team) {
                                                             normalizedStats.bigChances[stat.team] = value;
