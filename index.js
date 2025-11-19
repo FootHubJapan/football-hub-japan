@@ -5559,81 +5559,106 @@ async function handleMatchDetailsRequest(req, res) {
                             if (fdMatch) {
                                 console.log(`✅ Football-data.orgから試合追加情報を取得: ${homeTeam} vs ${awayTeam}`);
                                 
+                                // マッチIDを使って詳細なマッチ情報を取得（statisticsを含む）
+                                const fdMatchId = fdMatch.id;
+                                console.log('🔍 Fetching detailed match info from Football-data.org for ID:', fdMatchId);
+                                
+                                let detailedFdMatch = fdMatch;
+                                try {
+                                    const detailResponse = await axios.get(`https://api.football-data.org/v4/matches/${fdMatchId}`, {
+                                        headers: {
+                                            'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
+                                        },
+                                        timeout: 10000
+                                    });
+                                    
+                                    detailedFdMatch = detailResponse.data;
+                                    console.log('✅ Detailed match fetched from Football-data.org:', {
+                                        hasStatistics: !!detailedFdMatch.statistics,
+                                        statisticsType: Array.isArray(detailedFdMatch.statistics) ? 'array' : typeof detailedFdMatch.statistics,
+                                        statisticsLength: Array.isArray(detailedFdMatch.statistics) ? detailedFdMatch.statistics.length : 'N/A'
+                                    });
+                                } catch (detailError) {
+                                    console.warn('⚠️ Error fetching detailed match from Football-data.org:', detailError.message);
+                                    // 詳細取得に失敗した場合は、元のマッチデータを使用
+                                    detailedFdMatch = fdMatch;
+                                }
+                                
                                 // Football-data.org APIのレスポンス全体をログに出力
-                                console.log('🔍 Football-data.org match data:', JSON.stringify(fdMatch, null, 2).substring(0, 2000));
+                                console.log('🔍 Football-data.org match data:', JSON.stringify(detailedFdMatch, null, 2).substring(0, 2000));
                                 
                                 // 統計データの構造を確認
                                 console.log('🔍 Football-data.org match full structure:', {
-                                    hasStatistics: !!fdMatch.statistics,
-                                    statisticsType: Array.isArray(fdMatch.statistics) ? 'array' : typeof fdMatch.statistics,
-                                    statisticsLength: Array.isArray(fdMatch.statistics) ? fdMatch.statistics.length : 'N/A',
-                                    allKeys: Object.keys(fdMatch)
+                                    hasStatistics: !!detailedFdMatch.statistics,
+                                    statisticsType: Array.isArray(detailedFdMatch.statistics) ? 'array' : typeof detailedFdMatch.statistics,
+                                    statisticsLength: Array.isArray(detailedFdMatch.statistics) ? detailedFdMatch.statistics.length : 'N/A',
+                                    allKeys: Object.keys(detailedFdMatch)
                                 });
                                 
-                                if (fdMatch.statistics && Array.isArray(fdMatch.statistics)) {
-                                    console.log('📊 Football-data.org statistics:', fdMatch.statistics.length, 'items');
-                                    fdMatch.statistics.forEach((stat, index) => {
+                                if (detailedFdMatch.statistics && Array.isArray(detailedFdMatch.statistics)) {
+                                    console.log('📊 Football-data.org statistics:', detailedFdMatch.statistics.length, 'items');
+                                    detailedFdMatch.statistics.forEach((stat, index) => {
                                         console.log(`   [${index}] type: ${stat.type}, value:`, JSON.stringify(stat.value));
                                     });
                                     
                                     // xGとビッグチャンスのデータを確認
-                                    const xgStat = fdMatch.statistics.find(s => s.type === 'expectedGoals' || s.type === 'xG' || s.type === 'expected_goals');
-                                    const bigChancesStat = fdMatch.statistics.find(s => s.type === 'bigChances' || s.type === 'bigChancesCreated' || s.type === 'big_chances');
+                                    const xgStat = detailedFdMatch.statistics.find(s => s.type === 'expectedGoals' || s.type === 'xG' || s.type === 'expected_goals');
+                                    const bigChancesStat = detailedFdMatch.statistics.find(s => s.type === 'bigChances' || s.type === 'bigChancesCreated' || s.type === 'big_chances');
                                     console.log('🔍 xG stat search result:', xgStat ? { type: xgStat.type, value: JSON.stringify(xgStat.value) } : 'NOT FOUND');
                                     console.log('🔍 Big Chances stat search result:', bigChancesStat ? { type: bigChancesStat.type, value: JSON.stringify(bigChancesStat.value) } : 'NOT FOUND');
                                     
                                     // すべての統計タイプをリストアップ
-                                    const allStatTypes = fdMatch.statistics.map(s => s.type);
+                                    const allStatTypes = detailedFdMatch.statistics.map(s => s.type);
                                     console.log('📋 All statistic types:', allStatTypes);
                                 } else {
                                     console.log('⚠️ Football-data.org statistics not found or not an array:', {
-                                        statistics: fdMatch.statistics,
-                                        type: typeof fdMatch.statistics,
-                                        isArray: Array.isArray(fdMatch.statistics)
+                                        statistics: detailedFdMatch.statistics,
+                                        type: typeof detailedFdMatch.statistics,
+                                        isArray: Array.isArray(detailedFdMatch.statistics)
                                     });
                                 }
                                 
                                 // 追加情報を統合
                                 matchDetails.footballData = {
-                                    referees: fdMatch.referees || [],
-                                    venue: fdMatch.venue || matchDetails.venue,
-                                    bookings: fdMatch.bookings || [],
-                                    substitutions: fdMatch.substitutions || [],
-                                    goalScorers: fdMatch.goals || [],
-                                    odds: fdMatch.odds || null,
+                                    referees: detailedFdMatch.referees || [],
+                                    venue: detailedFdMatch.venue || matchDetails.venue,
+                                    bookings: detailedFdMatch.bookings || [],
+                                    substitutions: detailedFdMatch.substitutions || [],
+                                    goalScorers: detailedFdMatch.goals || [],
+                                    odds: detailedFdMatch.odds || null,
                                     // 詳細統計
                                     statistics: {
                                         freeKicks: {
-                                            home: fdMatch.statistics?.find(s => s.type === 'freeKicks')?.value?.home || null,
-                                            away: fdMatch.statistics?.find(s => s.type === 'freeKicks')?.value?.away || null
+                                            home: detailedFdMatch.statistics?.find(s => s.type === 'freeKicks')?.value?.home || null,
+                                            away: detailedFdMatch.statistics?.find(s => s.type === 'freeKicks')?.value?.away || null
                                         },
                                         goalKicks: {
-                                            home: fdMatch.statistics?.find(s => s.type === 'goalKicks')?.value?.home || null,
-                                            away: fdMatch.statistics?.find(s => s.type === 'goalKicks')?.value?.away || null
+                                            home: detailedFdMatch.statistics?.find(s => s.type === 'goalKicks')?.value?.home || null,
+                                            away: detailedFdMatch.statistics?.find(s => s.type === 'goalKicks')?.value?.away || null
                                         },
                                         throwIns: {
-                                            home: fdMatch.statistics?.find(s => s.type === 'throwIns')?.value?.home || null,
-                                            away: fdMatch.statistics?.find(s => s.type === 'throwIns')?.value?.away || null
+                                            home: detailedFdMatch.statistics?.find(s => s.type === 'throwIns')?.value?.home || null,
+                                            away: detailedFdMatch.statistics?.find(s => s.type === 'throwIns')?.value?.away || null
                                         }
                                     }
                                 };
                                 
                                 // レフェリー情報を統合（常にFootball-data.orgのデータを優先）
-                                if (fdMatch.referees && fdMatch.referees.length > 0) {
-                                    const mainReferee = fdMatch.referees.find(r => r.type === 'REFEREE') || fdMatch.referees[0];
+                                if (detailedFdMatch.referees && detailedFdMatch.referees.length > 0) {
+                                    const mainReferee = detailedFdMatch.referees.find(r => r.type === 'REFEREE') || detailedFdMatch.referees[0];
                                     matchDetails.referee = mainReferee.name;
                                     console.log(`✅ レフェリー情報を統合: ${matchDetails.referee}`);
                                 }
                                 
                                 // 会場情報を統合（より詳細な情報があれば）
-                                if (fdMatch.venue && fdMatch.venue !== 'Unknown') {
-                                    matchDetails.venue = fdMatch.venue;
+                                if (detailedFdMatch.venue && detailedFdMatch.venue !== 'Unknown') {
+                                    matchDetails.venue = detailedFdMatch.venue;
                                 }
                                 
                                 // 統計データを統合（xG、ビッグチャンスなど）
-                                if (fdMatch.statistics && Array.isArray(fdMatch.statistics)) {
+                                if (detailedFdMatch.statistics && Array.isArray(detailedFdMatch.statistics)) {
                                     console.log('🔄 Integrating statistics from Football-data.org...');
-                                    fdMatch.statistics.forEach(stat => {
+                                    detailedFdMatch.statistics.forEach(stat => {
                                         if (stat.type === 'expectedGoals' || stat.type === 'xG') {
                                             if (!matchDetails.stats) matchDetails.stats = {};
                                             if (!matchDetails.stats.expectedGoals) matchDetails.stats.expectedGoals = { home: 0, away: 0 };
@@ -5660,9 +5685,9 @@ async function handleMatchDetailsRequest(req, res) {
                                 }
                                 
                                 // 詳細統計の構造を修正（Football-data.orgの実際の構造に合わせる）
-                                if (fdMatch.statistics && Array.isArray(fdMatch.statistics)) {
+                                if (detailedFdMatch.statistics && Array.isArray(detailedFdMatch.statistics)) {
                                     const statsMap = {};
-                                    fdMatch.statistics.forEach(stat => {
+                                    detailedFdMatch.statistics.forEach(stat => {
                                         if (stat.type && stat.value) {
                                             statsMap[stat.type] = stat.value;
                                         }
