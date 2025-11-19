@@ -2523,6 +2523,12 @@ app.get('/api/match/details', async (req, res) => {
                 const isHome = teamId === (fixtureData?.teams?.home?.id || null);
                 const teamKey = isHome ? 'home' : 'away';
                 
+                // デバッグ: すべてのstatisticsタイプをログに出力
+                if (teamStats.statistics && teamStats.statistics.length > 0) {
+                    const statTypes = teamStats.statistics.map(s => s.type);
+                    console.log(`📊 API-Football statistics types for ${teamKey} team:`, statTypes);
+                }
+                
                 (teamStats.statistics || []).forEach(stat => {
                     let value = stat.value;
                     if (typeof value === 'string' && value.includes('%')) {
