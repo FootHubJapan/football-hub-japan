@@ -2668,16 +2668,30 @@ app.get('/api/match/details', async (req, res) => {
                                         });
                                         
                                         let detailedFdMatch = detailResponse.data;
+                                        console.log('📊 Football-data.org match detail response:', {
+                                            hasStatistics: !!detailedFdMatch.statistics,
+                                            statisticsType: Array.isArray(detailedFdMatch.statistics) ? 'array' : typeof detailedFdMatch.statistics,
+                                            statisticsLength: Array.isArray(detailedFdMatch.statistics) ? detailedFdMatch.statistics.length : 'N/A',
+                                            allKeys: Object.keys(detailedFdMatch)
+                                        });
                                         
-                                        // statisticsが含まれていない場合、別のエンドポイントから取得
+                                        // statisticsが含まれていない場合、別のエンドポイントから取得を試みる
                                         if (!detailedFdMatch.statistics || 
                                             (Array.isArray(detailedFdMatch.statistics) && detailedFdMatch.statistics.length === 0)) {
+                                            console.log('⚠️ Statistics not found in match detail, trying /matches/{id}/statistics endpoint...');
                                             try {
                                                 const statsResponse = await axios.get(`https://api.football-data.org/v4/matches/${fdMatchId}/statistics`, {
                                                     headers: {
                                                         'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
                                                     },
                                                     timeout: 10000
+                                                });
+                                                
+                                                console.log('✅ Statistics endpoint response:', {
+                                                    status: statsResponse.status,
+                                                    hasData: !!statsResponse.data,
+                                                    dataType: typeof statsResponse.data,
+                                                    isArray: Array.isArray(statsResponse.data)
                                                 });
                                                 
                                                 if (statsResponse.data) {
@@ -2688,10 +2702,24 @@ app.get('/api/match/details', async (req, res) => {
                                                     } else {
                                                         detailedFdMatch.statistics = statsResponse.data;
                                                     }
+                                                    console.log('✅ Statistics fetched from separate endpoint:', {
+                                                        statisticsLength: Array.isArray(detailedFdMatch.statistics) ? detailedFdMatch.statistics.length : 'N/A'
+                                                    });
                                                 }
                                             } catch (statsError) {
                                                 console.warn('⚠️ Error fetching statistics from separate endpoint:', statsError.message);
+                                                if (statsError.response) {
+                                                    console.warn('⚠️ Statistics endpoint error:', {
+                                                        status: statsError.response.status,
+                                                        statusText: statsError.response.statusText,
+                                                        message: statsError.response.data?.message || 'No message'
+                                                    });
+                                                }
+                                                // 404エラーの場合、statisticsエンドポイントが利用できない可能性があるので、続行
+                                                console.log('ℹ️ Continuing without separate statistics endpoint (may not be available for this match)');
                                             }
+                                        } else {
+                                            console.log('✅ Statistics found in match detail response');
                                         }
                                         
                                         // xGとビッグチャンスを統合
