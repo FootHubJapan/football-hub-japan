@@ -1748,7 +1748,7 @@ app.get('/api/ranking/teams', async (req, res) => {
                 
                 const response = await axios.get(`https://v3.football.api-sports.io/standings`, {
                     headers: {
-                        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                        'x-rapidapi-key': apiKey,
                         'x-rapidapi-host': 'v3.football.api-sports.io'
                     },
                     params: {
@@ -1818,12 +1818,13 @@ app.get('/api/ranking/champions-league', async (req, res) => {
         
         let standings = [];
         
-        if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
+        const apiKey = process.env.RAPIDAPI_KEY || process.env.API_FOOTBALL_KEY;
+        if (apiKey && apiKey !== 'YOUR_API_FOOTBALL_KEY' && apiKey !== 'your-api-football-key-here') {
             try {
                 // チャンピオンズリーグのIDは2
                 const response = await axios.get(`https://v3.football.api-sports.io/standings`, {
                     headers: {
-                        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                        'x-rapidapi-key': apiKey,
                         'x-rapidapi-host': 'v3.football.api-sports.io'
                     },
                     params: {
