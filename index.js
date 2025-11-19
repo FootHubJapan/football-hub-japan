@@ -2731,28 +2731,54 @@ app.get('/api/match/details', async (req, res) => {
                                         // /matches/{id}/statisticsエンドポイントは存在しないため、リクエストしない
                                         console.log('ℹ️ Statistics Add-On: statistics are nested in homeTeam/awayTeam objects, not in a separate endpoint');
                                         
-                                        // Statistic Add-On契約時、statisticsは各チームオブジェクトに含まれている可能性がある
+                                        // Statistic Add-On契約時、statisticsは各チームオブジェクトに含まれる（オブジェクト形式）
+                                        // 例: homeTeam.statistics = { shotsOnGoal: 7, shotsOffGoal: 3, ballPossession: 58, ... }
                                         console.log('🔍 Checking team statistics:', {
                                             hasHomeTeamStatistics: !!detailedFdMatch.homeTeam?.statistics,
                                             homeTeamStatisticsType: detailedFdMatch.homeTeam?.statistics ? typeof detailedFdMatch.homeTeam.statistics : 'N/A',
                                             homeTeamStatisticsIsArray: Array.isArray(detailedFdMatch.homeTeam?.statistics),
-                                            homeTeamStatisticsLength: Array.isArray(detailedFdMatch.homeTeam?.statistics) ? detailedFdMatch.homeTeam.statistics.length : 'N/A',
+                                            homeTeamStatisticsIsObject: detailedFdMatch.homeTeam?.statistics && typeof detailedFdMatch.homeTeam.statistics === 'object' && !Array.isArray(detailedFdMatch.homeTeam.statistics),
+                                            homeTeamStatisticsKeys: detailedFdMatch.homeTeam?.statistics && typeof detailedFdMatch.homeTeam.statistics === 'object' ? Object.keys(detailedFdMatch.homeTeam.statistics) : [],
                                             hasAwayTeamStatistics: !!detailedFdMatch.awayTeam?.statistics,
                                             awayTeamStatisticsType: detailedFdMatch.awayTeam?.statistics ? typeof detailedFdMatch.awayTeam.statistics : 'N/A',
                                             awayTeamStatisticsIsArray: Array.isArray(detailedFdMatch.awayTeam?.statistics),
-                                            awayTeamStatisticsLength: Array.isArray(detailedFdMatch.awayTeam?.statistics) ? detailedFdMatch.awayTeam.statistics.length : 'N/A',
+                                            awayTeamStatisticsIsObject: detailedFdMatch.awayTeam?.statistics && typeof detailedFdMatch.awayTeam.statistics === 'object' && !Array.isArray(detailedFdMatch.awayTeam.statistics),
+                                            awayTeamStatisticsKeys: detailedFdMatch.awayTeam?.statistics && typeof detailedFdMatch.awayTeam.statistics === 'object' ? Object.keys(detailedFdMatch.awayTeam.statistics) : [],
                                             homeTeamStatisticsSample: detailedFdMatch.homeTeam?.statistics ? JSON.stringify(detailedFdMatch.homeTeam.statistics).substring(0, 500) : 'N/A',
                                             awayTeamStatisticsSample: detailedFdMatch.awayTeam?.statistics ? JSON.stringify(detailedFdMatch.awayTeam.statistics).substring(0, 500) : 'N/A'
                                         });
                                         
+                                        // statisticsを配列形式に変換（オブジェクト形式の場合）
                                         let teamStatistics = [];
-                                        if (detailedFdMatch.homeTeam?.statistics && Array.isArray(detailedFdMatch.homeTeam.statistics) && detailedFdMatch.homeTeam.statistics.length > 0) {
-                                            console.log('✅ Found statistics in homeTeam object:', detailedFdMatch.homeTeam.statistics.length, 'items');
-                                            teamStatistics = teamStatistics.concat(detailedFdMatch.homeTeam.statistics.map(stat => ({ ...stat, team: 'home' })));
+                                        
+                                        // homeTeam.statisticsを処理（オブジェクト形式）
+                                        if (detailedFdMatch.homeTeam?.statistics) {
+                                            if (typeof detailedFdMatch.homeTeam.statistics === 'object' && !Array.isArray(detailedFdMatch.homeTeam.statistics)) {
+                                                // オブジェクト形式の場合、各キーをstatistics配列に変換
+                                                console.log('✅ Found statistics object in homeTeam:', Object.keys(detailedFdMatch.homeTeam.statistics).length, 'keys');
+                                                Object.entries(detailedFdMatch.homeTeam.statistics).forEach(([key, value]) => {
+                                                    teamStatistics.push({ type: key, value: value, team: 'home' });
+                                                });
+                                            } else if (Array.isArray(detailedFdMatch.homeTeam.statistics) && detailedFdMatch.homeTeam.statistics.length > 0) {
+                                                // 配列形式の場合
+                                                console.log('✅ Found statistics array in homeTeam:', detailedFdMatch.homeTeam.statistics.length, 'items');
+                                                teamStatistics = teamStatistics.concat(detailedFdMatch.homeTeam.statistics.map(stat => ({ ...stat, team: 'home' })));
+                                            }
                                         }
-                                        if (detailedFdMatch.awayTeam?.statistics && Array.isArray(detailedFdMatch.awayTeam.statistics) && detailedFdMatch.awayTeam.statistics.length > 0) {
-                                            console.log('✅ Found statistics in awayTeam object:', detailedFdMatch.awayTeam.statistics.length, 'items');
-                                            teamStatistics = teamStatistics.concat(detailedFdMatch.awayTeam.statistics.map(stat => ({ ...stat, team: 'away' })));
+                                        
+                                        // awayTeam.statisticsを処理（オブジェクト形式）
+                                        if (detailedFdMatch.awayTeam?.statistics) {
+                                            if (typeof detailedFdMatch.awayTeam.statistics === 'object' && !Array.isArray(detailedFdMatch.awayTeam.statistics)) {
+                                                // オブジェクト形式の場合、各キーをstatistics配列に変換
+                                                console.log('✅ Found statistics object in awayTeam:', Object.keys(detailedFdMatch.awayTeam.statistics).length, 'keys');
+                                                Object.entries(detailedFdMatch.awayTeam.statistics).forEach(([key, value]) => {
+                                                    teamStatistics.push({ type: key, value: value, team: 'away' });
+                                                });
+                                            } else if (Array.isArray(detailedFdMatch.awayTeam.statistics) && detailedFdMatch.awayTeam.statistics.length > 0) {
+                                                // 配列形式の場合
+                                                console.log('✅ Found statistics array in awayTeam:', detailedFdMatch.awayTeam.statistics.length, 'items');
+                                                teamStatistics = teamStatistics.concat(detailedFdMatch.awayTeam.statistics.map(stat => ({ ...stat, team: 'away' })));
+                                            }
                                         }
                                         
                                         if (teamStatistics.length > 0) {
