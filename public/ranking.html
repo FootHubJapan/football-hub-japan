@@ -198,11 +198,23 @@
         }
 
         .table-row.team-ranking {
-            grid-template-columns: 60px 1fr 80px 80px 80px 80px 80px 80px 80px 100px;
+            grid-template-columns: 60px 1fr 80px 80px 80px 80px 80px 80px 80px 100px !important;
         }
 
         .table-row.team-ranking.champions-ranking {
-            grid-template-columns: 60px 1fr 100px 80px 80px 80px 80px 80px 80px 80px 100px;
+            grid-template-columns: 60px 1fr 100px 80px 80px 80px 80px 80px 80px 80px 100px !important;
+        }
+
+        .table-row.team-ranking > div {
+            text-align: center;
+        }
+
+        .table-row.team-ranking > div:first-child {
+            text-align: center;
+        }
+
+        .table-row.team-ranking > div:nth-child(2) {
+            text-align: left;
         }
 
         .table-row:hover {
