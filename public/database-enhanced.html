@@ -4373,17 +4373,35 @@
             // フォールバックデータを確実に含める（重複を避けながら）
             const fallbackPlayers = generateFallbackPlayers(100);
             const existingNames = new Set((currentPlayers || []).map(p => (p.name || '').toLowerCase()));
+            
+            // デバッグ: ベリンガムが既にcurrentPlayersに含まれているか確認
+            const hasBellingham = Array.from(existingNames).some(name => name.includes('bellingham'));
+            console.log(`🔍 デバッグ: currentPlayersにベリンガムが含まれているか: ${hasBellingham}`);
+            console.log(`🔍 デバッグ: currentPlayersの総数: ${(currentPlayers || []).length}`);
+            
+            // ベリンガムがフォールバックデータに含まれているか確認
+            const bellinghamInFallback = fallbackPlayers.find(p => (p.name || '').toLowerCase().includes('bellingham'));
+            console.log(`🔍 デバッグ: フォールバックデータにベリンガムが含まれているか: ${!!bellinghamInFallback}`);
+            if (bellinghamInFallback) {
+                console.log(`🔍 デバッグ: ベリンガムのデータ:`, bellinghamInFallback);
+            }
+            
             const newPlayers = fallbackPlayers.filter(p => !existingNames.has((p.name || '').toLowerCase()));
             if (newPlayers.length > 0) {
                 currentPlayers = [...(currentPlayers || []), ...newPlayers];
                 console.log(`✅ フォールバックデータ${newPlayers.length}名を検索対象に追加`);
             }
             
+            // デバッグ: 追加後のcurrentPlayersにベリンガムが含まれているか確認
+            const hasBellinghamAfter = (currentPlayers || []).some(p => (p.name || '').toLowerCase().includes('bellingham'));
+            console.log(`🔍 デバッグ: 追加後のcurrentPlayersにベリンガムが含まれているか: ${hasBellinghamAfter}`);
+            
             let filteredPlayers = [...currentPlayers]; // 配列のコピーを作成
             
             // クエリによるフィルタリング（日本語対応）
             if (query && query.trim()) {
                 console.log(`🔍 フォールバック検索: "${query}" (日本語対応)`);
+                console.log(`🔍 デバッグ: フィルタリング前の選手数: ${filteredPlayers.length}`);
                 
                 // 日本語名と英語名の両方で検索
                 const searchTerms = [query.trim()];
@@ -4392,20 +4410,41 @@
                     console.log(`🇯🇵 日本語選手名検出: ${query} → ${japanesePlayerMap[query]}`);
                 }
                 
+                console.log(`🔍 デバッグ: 検索語: ${searchTerms.join(', ')}`);
+                
                 filteredPlayers = filteredPlayers.filter(player => {
                     if (!player || !player.name) return false;
                     
-                    return searchTerms.some(term => {
+                    const matches = searchTerms.some(term => {
                         const playerName = (player.name || '').toLowerCase();
                         const fullName = (player.fullName || '').toLowerCase();
                         const englishName = (player.englishName || '').toLowerCase();
                         const searchTerm = term.toLowerCase();
                         
-                        return playerName.includes(searchTerm) ||
-                               fullName.includes(searchTerm) ||
-                               englishName.includes(searchTerm);
+                        const nameMatch = playerName.includes(searchTerm);
+                        const fullNameMatch = fullName.includes(searchTerm);
+                        const englishNameMatch = englishName.includes(searchTerm);
+                        
+                        // デバッグ: ベリンガムの場合のみ詳細ログ
+                        if (playerName.includes('bellingham') || fullName.includes('bellingham') || englishName.includes('bellingham')) {
+                            console.log(`🔍 デバッグ: ベリンガムのマッチング確認:`, {
+                                playerName,
+                                fullName,
+                                englishName,
+                                searchTerm,
+                                nameMatch,
+                                fullNameMatch,
+                                englishNameMatch
+                            });
+                        }
+                        
+                        return nameMatch || fullNameMatch || englishNameMatch;
                     });
+                    
+                    return matches;
                 });
+                
+                console.log(`🔍 デバッグ: フィルタリング後の選手数: ${filteredPlayers.length}`);
             }
             
             // リーグによるフィルタリング
