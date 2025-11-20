@@ -890,9 +890,9 @@
                             ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : `<div class="team-logo">${team.name.charAt(0)}</div>`}
                             <div class="player-details">
                                 <h4>${team.name}</h4>
-                                <p style="color:#888;font-size:0.85rem;">${team.group || '-'}</p>
                             </div>
                         </div>
+                        <div class="col-group stat-value">${team.group || '-'}</div>
                         <div class="col-played stat-value">${team.played || 0}</div>
                         <div class="col-points stat-value">${team.points || 0}</div>
                         <div class="col-wins stat-value">${team.wins || 0}</div>
