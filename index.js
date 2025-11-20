@@ -10767,3 +10767,140 @@ app.post('/api/improve-quality', async (req, res) => {
     }
 });
 
+// 全選手データをFirebaseにインポートするエンドポイント（players.jsonから）
+app.post('/api/admin/import-players', async (req, res) => {
+    try {
+        console.log('🔄 全選手データのインポートを開始します...');
+        
+        const fs = require('fs').promises;
+        const playersFile = path.join(__dirname, 'data', 'players.json');
+        
+        // ファイルを読み込み
+        const fileContent = await fs.readFile(playersFile, 'utf8');
+        const data = JSON.parse(fileContent);
+        
+        // 配列形式またはオブジェクト形式に対応
+        const players = Array.isArray(data) ? data : (data.players || []);
+        console.log(`📊 ${players.length}名の選手データを読み込みました`);
+        
+        if (players.length === 0) {
+            return res.status(400).json({ 
+                error: '選手データが見つかりませんでした',
+                count: 0
+            });
+        }
+        
+        // Firebase Admin SDKが利用可能かチェック
+        let firebaseAdmin = null;
+        try {
+            firebaseAdmin = require('firebase-admin');
+            if (!firebaseAdmin.apps.length) {
+                // Firebase Admin SDKを初期化（環境変数から）
+                const serviceAccount = {
+                    projectId: process.env.FIREBASE_PROJECT_ID || 'football-hub-japan',
+                    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+                    clientEmail: process.env.FIREBASE_CLIENT_EMAIL
+                };
+                
+                if (serviceAccount.projectId && serviceAccount.privateKey && serviceAccount.clientEmail) {
+                    firebaseAdmin.initializeApp({
+                        credential: firebaseAdmin.credential.cert(serviceAccount)
+                    });
+                } else {
+                    throw new Error('Firebase Admin SDK credentials not configured');
+                }
+            }
+        } catch (firebaseError) {
+            console.error('❌ Firebase Admin SDK初期化エラー:', firebaseError);
+            return res.status(500).json({ 
+                error: 'Firebase Admin SDKが利用できません',
+                message: firebaseError.message,
+                suggestion: 'Firebase Admin SDKの認証情報を設定してください'
+            });
+        }
+        
+        const db = firebaseAdmin.firestore();
+        
+        // バッチ処理でFirebaseに書き込み（500件ずつ）
+        const batchSize = 500;
+        let importedCount = 0;
+        let errorCount = 0;
+        
+        for (let i = 0; i < players.length; i += batchSize) {
+            const batch = db.batch();
+            const batchPlayers = players.slice(i, i + batchSize);
+            
+            console.log(`📤 バッチ ${Math.floor(i / batchSize) + 1}/${Math.ceil(players.length / batchSize)} を処理中... (${i + 1}-${Math.min(i + batchSize, players.length)}/${players.length})`);
+            
+            for (const player of batchPlayers) {
+                if (!player || !player.id) {
+                    console.warn(`⚠️ 無効な選手データをスキップ:`, player?.name || 'Unknown');
+                    errorCount++;
+                    continue;
+                }
+                
+                // 選手IDを正規化（FirestoreのドキュメントIDとして使用）
+                const playerId = player.id.toString().replace(/[^a-zA-Z0-9_-]/g, '_');
+                const playerRef = db.collection('players').doc(playerId);
+                
+                // データを正規化
+                const playerData = {
+                    ...player,
+                    id: playerId,
+                    importedAt: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+                    lastUpdated: player.lastUpdated || new Date().toISOString()
+                };
+                
+                batch.set(playerRef, playerData, { merge: true });
+            }
+            
+            // バッチをコミット
+            try {
+                await batch.commit();
+                importedCount += batchPlayers.length;
+                console.log(`✅ ${importedCount}/${players.length}名の選手をインポートしました`);
+            } catch (batchError) {
+                console.error(`❌ バッチ ${Math.floor(i / batchSize) + 1} のコミットに失敗:`, batchError);
+                errorCount += batchPlayers.length;
+            }
+            
+            // レート制限を避けるため、少し待機
+            if (i + batchSize < players.length) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+        
+        // インポート状態を記録
+        try {
+            await db.collection('metadata').doc('import_status').set({
+                lastImport: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+                totalPlayers: importedCount,
+                source: 'players.json',
+                version: '1.0'
+            }, { merge: true });
+        } catch (metaError) {
+            console.warn('⚠️ メタデータの更新に失敗:', metaError);
+        }
+        
+        console.log('\n✅ インポート完了！');
+        console.log(`📊 成功: ${importedCount}名`);
+        console.log(`❌ エラー: ${errorCount}名`);
+        console.log(`📈 合計: ${players.length}名`);
+        
+        res.json({
+            success: true,
+            imported: importedCount,
+            errors: errorCount,
+            total: players.length,
+            message: `${importedCount}名の選手データをFirebaseにインポートしました`
+        });
+        
+    } catch (error) {
+        console.error('❌ インポートエラー:', error);
+        res.status(500).json({
+            error: 'インポート中にエラーが発生しました',
+            message: error.message
+        });
+    }
+});
+

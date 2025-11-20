@@ -3366,6 +3366,11 @@
             if (importRealDataBtn) {
                 importRealDataBtn.addEventListener('click', importRealData);
             }
+            
+            const importAllPlayersBtn = document.getElementById('importAllPlayersBtn');
+            if (importAllPlayersBtn) {
+                importAllPlayersBtn.addEventListener('click', importAllPlayersFromFile);
+            }
 
             const clearCachedDataBtn = document.getElementById('clearCachedDataBtn');
             if (clearCachedDataBtn) {
