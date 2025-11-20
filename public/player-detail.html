@@ -572,7 +572,6 @@
                     <tr>
                         <th>シーズン</th>
                         <th>クラブ</th>
-                        <th>リーグ</th>
                         <th>試合</th>
                         <th>ゴール</th>
                         <th>アシスト</th>
@@ -1169,43 +1168,55 @@
             if (player.careerStats && Array.isArray(player.careerStats) && player.careerStats.length > 0) {
                 console.log(`✅ キャリアスタッツをデータベースから取得: ${player.careerStats.length}レコード`);
                 
-                // シーズンごとにグループ化
+                // シーズンごとにグループ化して全コンペティションの合計を計算
                 const statsBySeason = {};
                 player.careerStats.forEach(stat => {
                     const season = stat.season || 'Unknown';
+                    const club = stat.teamName || stat.team || stat.club || 'Unknown';
+                    
                     if (!statsBySeason[season]) {
-                        statsBySeason[season] = [];
+                        statsBySeason[season] = {
+                            season: season,
+                            club: club,
+                            matches: 0,
+                            goals: 0,
+                            assists: 0,
+                            ratingSum: 0,
+                            ratingCount: 0
+                        };
                     }
-                    statsBySeason[season].push(stat);
+                    
+                    // 各シーズンの全コンペティション（リーグ戦+カップ戦）の合計を計算
+                    statsBySeason[season].matches += (stat.matches || stat.appearances || 0);
+                    statsBySeason[season].goals += (stat.goals || 0);
+                    statsBySeason[season].assists += (stat.assists || 0);
+                    if (stat.rating) {
+                        const rating = parseFloat(stat.rating);
+                        if (!isNaN(rating)) {
+                            statsBySeason[season].ratingSum += rating;
+                            statsBySeason[season].ratingCount += 1;
+                        }
+                    }
                 });
                 
-                // 各シーズンごとにメインリーグを選択
-                const seasonStats = [];
-                for (const [season, stats] of Object.entries(statsBySeason)) {
-                    const mainStat = selectMainLeagueForSeason(stats);
-                    if (mainStat) {
-                        seasonStats.push({ ...mainStat, season });
-                    }
-                }
-                
                 // シーズンでソート（新しい順）
-                seasonStats.sort((a, b) => {
+                const sortedSeasons = Object.values(statsBySeason).sort((a, b) => {
                     const seasonA = parseInt(a.season?.split('/')[0]) || 0;
                     const seasonB = parseInt(b.season?.split('/')[0]) || 0;
                     return seasonB - seasonA;
                 });
                 
-                seasonStats.forEach(stat => {
+                sortedSeasons.forEach(stat => {
                     const seasonDisplay = stat.season || 'Unknown';
+                    const avgRating = stat.ratingCount > 0 ? (stat.ratingSum / stat.ratingCount).toFixed(1) : 'N/A';
                     html += `
                         <tr>
                             <td>${seasonDisplay}</td>
-                            <td>${stat.teamName || stat.team || 'Unknown'}</td>
-                            <td>${stat.leagueName || stat.league || 'Unknown'}</td>
-                            <td>${stat.matches || stat.appearances || 0}</td>
-                            <td>${stat.goals || 0}</td>
-                            <td>${stat.assists || 0}</td>
-                            <td>${stat.rating ? parseFloat(stat.rating).toFixed(1) : 'N/A'}</td>
+                            <td>${stat.club || 'Unknown'}</td>
+                            <td>${stat.matches}</td>
+                            <td>${stat.goals}</td>
+                            <td>${stat.assists}</td>
+                            <td>${avgRating}</td>
                         </tr>
                     `;
                 });
@@ -1253,24 +1264,55 @@
                     if (careerStats.length > 0) {
                         html = '';
                         
+                        // シーズンごとにグループ化して全コンペティションの合計を計算
+                        const statsBySeason = {};
+                        careerStats.forEach(stat => {
+                            const season = stat.season || 'Unknown';
+                            const club = stat.club || stat.teamName || stat.team || 'Unknown';
+                            
+                            if (!statsBySeason[season]) {
+                                statsBySeason[season] = {
+                                    season: season,
+                                    club: club,
+                                    matches: 0,
+                                    goals: 0,
+                                    assists: 0,
+                                    ratingSum: 0,
+                                    ratingCount: 0
+                                };
+                            }
+                            
+                            // 各シーズンの全コンペティション（リーグ戦+カップ戦）の合計を計算
+                            statsBySeason[season].matches += (stat.matches || stat.appearances || 0);
+                            statsBySeason[season].goals += (stat.goals || 0);
+                            statsBySeason[season].assists += (stat.assists || 0);
+                            if (stat.rating) {
+                                const rating = parseFloat(stat.rating);
+                                if (!isNaN(rating)) {
+                                    statsBySeason[season].ratingSum += rating;
+                                    statsBySeason[season].ratingCount += 1;
+                                }
+                            }
+                        });
+                        
                         // シーズンでソート（新しい順）
-                        const sortedStats = [...careerStats].sort((a, b) => {
+                        const sortedSeasons = Object.values(statsBySeason).sort((a, b) => {
                             const seasonA = parseInt(a.season) || 0;
                             const seasonB = parseInt(b.season) || 0;
                             return seasonB - seasonA;
                         });
                         
-                        sortedStats.forEach(stat => {
+                        sortedSeasons.forEach(stat => {
                             const seasonDisplay = `${stat.season}/${parseInt(stat.season) + 1}`;
+                            const avgRating = stat.ratingCount > 0 ? (stat.ratingSum / stat.ratingCount).toFixed(1) : 'N/A';
                             html += `
                                 <tr>
                                     <td>${seasonDisplay}</td>
-                                    <td>${stat.club || stat.teamName || 'Unknown'}</td>
-                                    <td>${stat.league || stat.leagueName || 'Unknown'}</td>
-                                    <td>${stat.matches || stat.appearances || 0}</td>
-                                    <td>${stat.goals || 0}</td>
-                                    <td>${stat.assists || 0}</td>
-                                    <td>${stat.rating ? parseFloat(stat.rating).toFixed(1) : 'N/A'}</td>
+                                    <td>${stat.club || 'Unknown'}</td>
+                                    <td>${stat.matches}</td>
+                                    <td>${stat.goals}</td>
+                                    <td>${stat.assists}</td>
+                                    <td>${avgRating}</td>
                                 </tr>
                             `;
                         });
