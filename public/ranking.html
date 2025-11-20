@@ -451,16 +451,16 @@
             <div class="ranking-table">
                 <div class="table-header">
                     <div class="table-row team-ranking">
-                        <div>順位</div>
-                        <div>チーム</div>
-                        <div>試合</div>
-                        <div>勝点</div>
-                        <div>勝</div>
-                        <div>分</div>
-                        <div>負</div>
-                        <div>得点</div>
-                        <div>失点</div>
-                        <div>得失点差</div>
+                        <div class="col-rank">順位</div>
+                        <div class="col-team">チーム</div>
+                        <div class="col-played">試合</div>
+                        <div class="col-points">勝点</div>
+                        <div class="col-wins">勝</div>
+                        <div class="col-draws">分</div>
+                        <div class="col-losses">負</div>
+                        <div class="col-goals-for">得点</div>
+                        <div class="col-goals-against">失点</div>
+                        <div class="col-goal-diff">得失点差</div>
                     </div>
                 </div>
                 <div id="teamTableBody">
@@ -499,16 +499,16 @@
             <div class="ranking-table">
                 <div class="table-header">
                     <div class="table-row team-ranking">
-                        <div>順位</div>
-                        <div>チーム</div>
-                        <div>試合</div>
-                        <div>勝点</div>
-                        <div>勝</div>
-                        <div>分</div>
-                        <div>負</div>
-                        <div>得点</div>
-                        <div>失点</div>
-                        <div>得失点差</div>
+                        <div class="col-rank">順位</div>
+                        <div class="col-team">チーム</div>
+                        <div class="col-played">試合</div>
+                        <div class="col-points">勝点</div>
+                        <div class="col-wins">勝</div>
+                        <div class="col-draws">分</div>
+                        <div class="col-losses">負</div>
+                        <div class="col-goals-for">得点</div>
+                        <div class="col-goals-against">失点</div>
+                        <div class="col-goal-diff">得失点差</div>
                     </div>
                 </div>
                 <div id="leagueStandingsBody">
@@ -540,17 +540,17 @@
             <div class="ranking-table">
                 <div class="table-header">
                     <div class="table-row team-ranking champions-ranking">
-                        <div>順位</div>
-                        <div>チーム</div>
-                        <div>グループ</div>
-                        <div>試合</div>
-                        <div>勝点</div>
-                        <div>勝</div>
-                        <div>分</div>
-                        <div>負</div>
-                        <div>得点</div>
-                        <div>失点</div>
-                        <div>得失点差</div>
+                        <div class="col-rank">順位</div>
+                        <div class="col-team">チーム</div>
+                        <div class="col-group">グループ</div>
+                        <div class="col-played">試合</div>
+                        <div class="col-points">勝点</div>
+                        <div class="col-wins">勝</div>
+                        <div class="col-draws">分</div>
+                        <div class="col-losses">負</div>
+                        <div class="col-goals-for">得点</div>
+                        <div class="col-goals-against">失点</div>
+                        <div class="col-goal-diff">得失点差</div>
                     </div>
                 </div>
                 <div id="championsTableBody">
@@ -801,22 +801,22 @@
             standings.forEach(team => {
                 html += `
                     <div class="table-row team-ranking champions-ranking">
-                        <div class="rank-number">${team.position || '-'}</div>
-                        <div class="player-info">
+                        <div class="col-rank rank-number">${team.position || '-'}</div>
+                        <div class="col-team player-info">
                             ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : `<div class="team-logo">${team.name.charAt(0)}</div>`}
                             <div class="player-details">
                                 <h4>${team.name}</h4>
                             </div>
                         </div>
-                        <div class="stat-value">${team.group || '-'}</div>
-                        <div class="stat-value">${team.played || 0}</div>
-                        <div class="stat-value">${team.points || 0}</div>
-                        <div class="stat-value">${team.wins || 0}</div>
-                        <div class="stat-value">${team.draws || 0}</div>
-                        <div class="stat-value">${team.losses || 0}</div>
-                        <div class="stat-value">${team.goalsFor || 0}</div>
-                        <div class="stat-value">${team.goalsAgainst || 0}</div>
-                        <div class="stat-value">${team.goalDifference >= 0 ? '+' : ''}${team.goalDifference || 0}</div>
+                        <div class="col-group stat-value">${team.group || '-'}</div>
+                        <div class="col-played stat-value">${team.played || 0}</div>
+                        <div class="col-points stat-value">${team.points || 0}</div>
+                        <div class="col-wins stat-value">${team.wins || 0}</div>
+                        <div class="col-draws stat-value">${team.draws || 0}</div>
+                        <div class="col-losses stat-value">${team.losses || 0}</div>
+                        <div class="col-goals-for stat-value">${team.goalsFor || 0}</div>
+                        <div class="col-goals-against stat-value">${team.goalsAgainst || 0}</div>
+                        <div class="col-goal-diff stat-value">${team.goalDifference >= 0 ? '+' : ''}${team.goalDifference || 0}</div>
                     </div>
                 `;
             });
