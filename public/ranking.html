@@ -257,7 +257,7 @@
 
         .team-ranking {
             display: grid;
-            grid-template-columns: 60px 1fr 100px 100px 100px 100px;
+            grid-template-columns: 60px 1fr 80px 80px 80px 80px 80px 80px 80px 100px;
         }
 
         .team-logo {
@@ -611,7 +611,7 @@
             const league = document.getElementById('leagueFilter').value;
             const position = document.getElementById('positionFilter').value;
             const stat = document.getElementById('statFilter').value;
-        
+
             try {
                 // APIから選手データを取得
                 const response = await fetch(`/api/ranking/players?season=${season}&league=${league}&position=${position}&stat=${stat}`);
@@ -640,12 +640,12 @@
         async function loadTeamRanking() {
             const season = document.getElementById('seasonFilter').value;
             const league = document.getElementById('leagueFilter').value;
-        
+
             if (!league) {
                 document.getElementById('teamTableBody').innerHTML = '<div class="no-data">チームランキングを表示するには、リーグを選択してください。</div>';
                 return;
             }
-        
+
             try {
                 const response = await fetch(`/api/ranking/teams?season=${season}&league=${league}`);
                 let teams;
