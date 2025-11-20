@@ -4454,6 +4454,30 @@
                 });
                 
                 console.log(`🔍 デバッグ: フィルタリング後の選手数: ${filteredPlayers.length}`);
+                
+                // 検索結果が0件の場合、フォールバックデータから直接検索
+                if (filteredPlayers.length === 0) {
+                    console.log('⚠️ 検索結果が0件のため、フォールバックデータから直接検索を実行');
+                    const directFallbackSearch = generateFallbackPlayers(100).filter(player => {
+                        if (!player || !player.name) return false;
+                        
+                        return searchTerms.some(term => {
+                            const playerName = (player.name || '').toLowerCase();
+                            const fullName = (player.fullName || '').toLowerCase();
+                            const englishName = (player.englishName || '').toLowerCase();
+                            const searchTerm = term.toLowerCase();
+                            
+                            return playerName.includes(searchTerm) ||
+                                   fullName.includes(searchTerm) ||
+                                   englishName.includes(searchTerm);
+                        });
+                    });
+                    
+                    if (directFallbackSearch.length > 0) {
+                        console.log(`✅ フォールバックデータから直接検索で${directFallbackSearch.length}名の選手を発見`);
+                        filteredPlayers = directFallbackSearch;
+                    }
+                }
             }
             
             // リーグによるフィルタリング
@@ -4510,6 +4534,35 @@
             }
             
             console.log('Fallback search results:', filteredPlayers ? filteredPlayers.length : 0, 'players');
+            
+            // 検索結果が0件の場合、フォールバックデータから直接検索（フィルタリングを無視）
+            if (filteredPlayers.length === 0 && query && query.trim()) {
+                console.log('⚠️ 検索結果が0件のため、フォールバックデータから直接検索を実行（フィルタリング無視）');
+                const directFallbackSearch = generateFallbackPlayers(100).filter(player => {
+                    if (!player || !player.name) return false;
+                    
+                    const searchTerms = [query.trim()];
+                    if (japanesePlayerMap && japanesePlayerMap[query]) {
+                        searchTerms.push(japanesePlayerMap[query]);
+                    }
+                    
+                    return searchTerms.some(term => {
+                        const playerName = (player.name || '').toLowerCase();
+                        const fullName = (player.fullName || '').toLowerCase();
+                        const englishName = (player.englishName || '').toLowerCase();
+                        const searchTerm = term.toLowerCase();
+                        
+                        return playerName.includes(searchTerm) ||
+                               fullName.includes(searchTerm) ||
+                               englishName.includes(searchTerm);
+                    });
+                });
+                
+                if (directFallbackSearch.length > 0) {
+                    console.log(`✅ フォールバックデータから直接検索で${directFallbackSearch.length}名の選手を発見`);
+                    filteredPlayers = directFallbackSearch;
+                }
+            }
             
             // 見つかった選手のIDを正しく設定（名前からIDマッピングを適用）
             const playerIdMap = {
