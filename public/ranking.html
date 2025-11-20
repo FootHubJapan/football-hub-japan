@@ -197,6 +197,14 @@
             transition: all 0.3s ease;
         }
 
+        .table-row.team-ranking {
+            grid-template-columns: 60px 1fr 80px 80px 80px 80px 80px 80px 80px 100px;
+        }
+
+        .table-row.team-ranking.champions-ranking {
+            grid-template-columns: 60px 1fr 100px 80px 80px 80px 80px 80px 80px 80px 100px;
+        }
+
         .table-row:hover {
             background: rgba(255, 255, 255, 0.05);
         }
@@ -255,14 +263,6 @@
             color: #00ff88;
         }
 
-        .team-ranking {
-            display: grid;
-            grid-template-columns: 60px 1fr 80px 80px 80px 80px 80px 80px 80px 100px;
-        }
-
-        .team-ranking.champions-ranking {
-            grid-template-columns: 60px 1fr 100px 80px 80px 80px 80px 80px 80px 80px 100px;
-        }
 
         .team-logo {
             width: 30px;
