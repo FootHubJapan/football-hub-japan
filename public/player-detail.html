@@ -476,13 +476,6 @@
                             </div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-label">期待値(xG)</div>
-                            <div class="stat-value" id="expectedGoals">--</div>
-                            <div class="stat-bar-container">
-                                <div class="stat-bar" id="expectedGoalsBar" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="stat-item">
                             <div class="stat-label">シュート精度</div>
                             <div class="stat-value" id="shotAccuracy">--</div>
                             <div class="stat-bar-container">
@@ -507,20 +500,6 @@
                             <div class="stat-value" id="keyPasses">--</div>
                             <div class="stat-bar-container">
                                 <div class="stat-bar" id="keyPassesBar" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">ロングパス</div>
-                            <div class="stat-value" id="longPasses">--</div>
-                            <div class="stat-bar-container">
-                                <div class="stat-bar" id="longPassesBar" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">クロス</div>
-                            <div class="stat-value" id="crosses">--</div>
-                            <div class="stat-bar-container">
-                                <div class="stat-bar" id="crossesBar" style="width: 0%"></div>
                             </div>
                         </div>
                     </div>
@@ -553,13 +532,6 @@
                                 <div class="stat-bar" id="duelsWonBar" style="width: 0%"></div>
                             </div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-label">空中戦</div>
-                            <div class="stat-value" id="aerialDuels">--</div>
-                            <div class="stat-bar-container">
-                                <div class="stat-bar" id="aerialDuelsBar" style="width: 0%"></div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -578,13 +550,6 @@
                             <div class="stat-value" id="dribblesSuccess">--</div>
                             <div class="stat-bar-container">
                                 <div class="stat-bar" id="dribblesSuccessBar" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">チャンス創出</div>
-                            <div class="stat-value" id="chancesCreated">--</div>
-                            <div class="stat-bar-container">
-                                <div class="stat-bar" id="chancesCreatedBar" style="width: 0%"></div>
                             </div>
                         </div>
                         <div class="stat-item">
@@ -982,19 +947,14 @@
                     return {
                         shotsTotal: (acc.shotsTotal || 0) + (stat.shotsTotal || stat.shots || 0),
                         shotsOnTarget: (acc.shotsOnTarget || 0) + (stat.shotsOnTarget || 0),
-                        expectedGoals: acc.expectedGoals || stat.expectedGoals || null,
                         shotAccuracy: acc.shotAccuracy || stat.shotAccuracy || null,
                         passesTotal: (acc.passesTotal || 0) + (stat.passesTotal || stat.passes || 0),
                         keyPasses: (acc.keyPasses || 0) + (stat.keyPasses || 0),
-                        longPasses: (acc.longPasses || 0) + (stat.longPasses || 0),
-                        crosses: (acc.crosses || 0) + (stat.crosses || 0),
                         tacklesTotal: (acc.tacklesTotal || 0) + (stat.tacklesTotal || stat.tackles || 0),
                         interceptions: (acc.interceptions || 0) + (stat.interceptions || 0),
                         duelsWon: (acc.duelsWon || 0) + (stat.duelsWon || 0),
-                        aerialDuels: (acc.aerialDuels || 0) + (stat.aerialDuels || 0),
                         dribblesAttempted: (acc.dribblesAttempted || 0) + (stat.dribblesAttempted || stat.dribblesAttempts || stat.dribbles || 0),
                         dribblesSuccess: (acc.dribblesSuccess || 0) + (stat.dribblesSuccess || 0),
-                        chancesCreated: (acc.chancesCreated || 0) + (stat.chancesCreated || 0),
                         foulsDrawn: (acc.foulsDrawn || 0) + (stat.foulsDrawn || 0)
                     };
                 }, {});
@@ -1007,19 +967,14 @@
             const maxValues = {
                 shotsTotal: 100,
                 shotsOnTarget: 50,
-                expectedGoals: 20,
                 shotAccuracy: 100,
                 passesTotal: 500,
                 keyPasses: 50,
-                longPasses: 30,
-                crosses: 20,
                 tacklesTotal: 100,
                 interceptions: 50,
                 duelsWon: 200,
-                aerialDuels: 50,
                 dribblesAttempted: 100,
                 dribblesSuccess: 50,
-                chancesCreated: 50,
                 foulsDrawn: 30
             };
             
@@ -1067,13 +1022,6 @@
             const shotsOnTarget = aggregatedStats.shotsOnTarget || 0;
             updateStatBar('shotsOnTarget', shotsOnTarget, maxValues.shotsOnTarget);
             
-            const expectedGoals = aggregatedStats.expectedGoals;
-            if (expectedGoals !== null && expectedGoals !== undefined) {
-                updateStatBar('expectedGoals', parseFloat(expectedGoals), maxValues.expectedGoals);
-            } else {
-                document.getElementById('expectedGoals').textContent = 'N/A';
-            }
-            
             // シュート精度を計算（枠内シュート / 総シュート * 100）
             const shotAccuracy = shotsTotal > 0 && shotsOnTarget > 0
                 ? ((shotsOnTarget / shotsTotal) * 100).toFixed(1) + '%'
@@ -1090,12 +1038,6 @@
             
             const keyPasses = aggregatedStats.keyPasses || 0;
             updateStatBar('keyPasses', keyPasses, maxValues.keyPasses);
-            
-            const longPasses = aggregatedStats.longPasses || 0;
-            updateStatBar('longPasses', longPasses, maxValues.longPasses);
-            
-            const crosses = aggregatedStats.crosses || 0;
-            updateStatBar('crosses', crosses, maxValues.crosses);
 
             // 守備・対戦
             const tacklesTotal = aggregatedStats.tacklesTotal || aggregatedStats.tackles || 0;
@@ -1106,9 +1048,6 @@
             
             const duelsWon = aggregatedStats.duelsWon || 0;
             updateStatBar('duelsWon', duelsWon, maxValues.duelsWon);
-            
-            const aerialDuels = aggregatedStats.aerialDuels || 0;
-            updateStatBar('aerialDuels', aerialDuels, maxValues.aerialDuels);
 
             // ドリブル・創造性
             const dribblesAttempted = aggregatedStats.dribblesAttempted || aggregatedStats.dribblesAttempts || aggregatedStats.dribbles || 0;
@@ -1117,9 +1056,6 @@
             
             updateStatBar('dribblesAttempted', finalDribblesAttempted, maxValues.dribblesAttempted);
             updateStatBar('dribblesSuccess', dribblesSuccess, maxValues.dribblesSuccess);
-            
-            const chancesCreated = aggregatedStats.chancesCreated || 0;
-            updateStatBar('chancesCreated', chancesCreated, maxValues.chancesCreated);
             
             const foulsDrawn = aggregatedStats.foulsDrawn || 0;
             updateStatBar('foulsDrawn', foulsDrawn, maxValues.foulsDrawn);
