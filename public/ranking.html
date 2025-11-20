@@ -714,11 +714,11 @@
                 if (league === 'CL') {
                     const response = await fetch(`/api/ranking/champions-league?season=${season}`);
                     let standings;
-        
-                    if (response.ok) {
-                        const data = await response.json();
+
+                if (response.ok) {
+                    const data = await response.json();
                         standings = data.standings || [];
-                    } else {
+                } else {
                         standings = generateFallbackChampionsLeagueData();
                     }
         
@@ -737,7 +737,7 @@
         
                     displayLeagueStandings(teams);
                 }
-        
+
             } catch (error) {
                 console.error('Error loading league standings:', error);
                 if (league === 'CL') {
@@ -791,6 +791,12 @@
             });
 
             container.innerHTML = html;
+            console.log('✅ Champions League ranking displayed successfully:', html.length, 'characters');
+            
+            // 表示確認のため、最初の数チームをログ出力
+            if (standings.length > 0) {
+                console.log('📋 Sample teams:', standings.slice(0, 3).map(t => ({ name: t.name, group: t.group, position: t.position })));
+            }
         }
 
         // チャンピオンズリーグ順位読み込み
