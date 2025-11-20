@@ -6087,18 +6087,20 @@
                 const playerName = player.player?.name || player.name || `Player ${index + 1}`;
                 const playerPosition = player.player?.pos || player.position || player.pos || 'Unknown';
                 
-                // ポジションに応じた座標を取得
+                // ポジションに応じた座標を取得（左右反転対応）
                 let coords = null;
                 if (playerPosition === 'GK') coords = positions.GK;
                 else if (playerPosition === 'CB') coords = positions.CB;
-                else if (playerPosition === 'LB') coords = positions.LB;
-                else if (playerPosition === 'RB') coords = positions.RB;
+                else if (playerPosition === 'LB') coords = positions.RB; // 左右反転: LBはRB位置を使用
+                else if (playerPosition === 'RB') coords = positions.LB; // 左右反転: RBはLB位置を使用
                 else if (playerPosition === 'DM') coords = positions.DM;
                 else if (playerPosition === 'CM') coords = positions.CM;
-                else if (playerPosition === 'LW' || playerPosition === 'LM') coords = positions.LW || positions.LM;
-                else if (playerPosition === 'RW' || playerPosition === 'RM') coords = positions.RW || positions.RM;
+                else if (playerPosition === 'LW' || playerPosition === 'LM') coords = positions.RW || positions.RM; // 左右反転: LWはRW位置を使用
+                else if (playerPosition === 'RW' || playerPosition === 'RM') coords = positions.LW || positions.LM; // 左右反転: RWはLW位置を使用
                 else if (playerPosition === 'ST') coords = positions.ST;
                 else if (playerPosition === 'AM') coords = positions.AM;
+                else if (playerPosition === 'LWB') coords = positions.RWB; // 左右反転: LWBはRWB位置を使用
+                else if (playerPosition === 'RWB') coords = positions.LWB; // 左右反転: RWBはLWB位置を使用
                 
                 // デフォルト位置（フォーメーションに基づく）
                 if (!coords) {
@@ -6535,17 +6537,17 @@
                     // GK (左のゴール)
                     positions.push({ left: 8, top: 50 });
                     // Defenders (左から2番目のライン)
-                    positions.push({ left: 18, top: 15 }); // LB
+                    positions.push({ left: 18, top: 85 }); // LB (左右反転: 元RB位置)
                     positions.push({ left: 18, top: 35 }); // LCB
                     positions.push({ left: 18, top: 65 }); // RCB
-                    positions.push({ left: 18, top: 85 }); // RB
+                    positions.push({ left: 18, top: 15 }); // RB (左右反転: 元LB位置)
                     // Midfielders (左から3番目のライン) - 間隔を広げて名前が見やすく
                     positions.push({ left: 28, top: 38 }); // LCM (間隔を広げる)
                     positions.push({ left: 28, top: 62 }); // RCM (間隔を広げる)
                     // Attacking Midfielders (左から4番目のライン)
-                    positions.push({ left: 38, top: 15 }); // LW
+                    positions.push({ left: 38, top: 85 }); // LW (左右反転: 元RW位置)
                     positions.push({ left: 38, top: 50 }); // AM
-                    positions.push({ left: 38, top: 85 }); // RW
+                    positions.push({ left: 38, top: 15 }); // RW (左右反転: 元LW位置)
                     // Striker (左から5番目のライン)
                     positions.push({ left: 45, top: 50 });
                     break;
@@ -6573,15 +6575,15 @@
                     // GK (左のゴール)
                     positions.push({ left: 8, top: 50 });
                     // Defenders (左から2番目のライン)
-                    positions.push({ left: 18, top: 15 }); // LB
+                    positions.push({ left: 18, top: 85 }); // LB (左右反転: 元RB位置)
                     positions.push({ left: 18, top: 35 }); // LCB
                     positions.push({ left: 18, top: 65 }); // RCB
-                    positions.push({ left: 18, top: 85 }); // RB
+                    positions.push({ left: 18, top: 15 }); // RB (左右反転: 元LB位置)
                     // Midfielders (左から3番目のライン)
-                    positions.push({ left: 28, top: 15 }); // LM
+                    positions.push({ left: 28, top: 85 }); // LM (左右反転: 元RM位置)
                     positions.push({ left: 28, top: 40 }); // LCM
                     positions.push({ left: 28, top: 60 }); // RCM
-                    positions.push({ left: 28, top: 85 }); // RM
+                    positions.push({ left: 28, top: 15 }); // RM (左右反転: 元LM位置)
                     // Strikers (左から4番目のライン)
                     positions.push({ left: 38, top: 40 }); // LS
                     positions.push({ left: 38, top: 60 }); // RS
@@ -6591,15 +6593,15 @@
                     // GK (左のゴール)
                     positions.push({ left: 8, top: 50 });
                     // Defenders (左から2番目のライン)
-                    positions.push({ left: 18, top: 20 }); // LCB
+                    positions.push({ left: 18, top: 80 }); // LCB (左右反転: 元RCB位置)
                     positions.push({ left: 18, top: 50 }); // CB
-                    positions.push({ left: 18, top: 80 }); // RCB
+                    positions.push({ left: 18, top: 20 }); // RCB (左右反転: 元LCB位置)
                     // Midfielders (左から3番目のライン) - 間隔を広げて名前が見やすく
-                    positions.push({ left: 28, top: 12 }); // LWB (上に移動)
+                    positions.push({ left: 28, top: 88 }); // LWB (左右反転: 元RWB位置)
                     positions.push({ left: 28, top: 32 }); // LCM (間隔を広げる)
                     positions.push({ left: 28, top: 50 }); // CM (中央)
                     positions.push({ left: 28, top: 68 }); // RCM (間隔を広げる)
-                    positions.push({ left: 28, top: 88 }); // RWB (下に移動)
+                    positions.push({ left: 28, top: 12 }); // RWB (左右反転: 元LWB位置)
                     // Strikers (左から4番目のライン)
                     positions.push({ left: 38, top: 40 }); // LS
                     positions.push({ left: 38, top: 60 }); // RS
@@ -6609,31 +6611,31 @@
                     // GK (左のゴール)
                             positions.push({ left: 8, top: 50 });
                     // Defenders (左から2番目のライン)
-                    positions.push({ left: 18, top: 15 }); // LB
+                    positions.push({ left: 18, top: 85 }); // LB (左右反転: 元RB位置)
                     positions.push({ left: 18, top: 35 }); // LCB
                     positions.push({ left: 18, top: 65 }); // RCB
-                    positions.push({ left: 18, top: 85 }); // RB
+                    positions.push({ left: 18, top: 15 }); // RB (左右反転: 元LB位置)
                     // Midfielders (左から3番目のライン) - 間隔を広げて名前が見やすく
                     positions.push({ left: 28, top: 30 }); // LCM (上に移動)
                     positions.push({ left: 28, top: 50 }); // CM (中央)
                     positions.push({ left: 28, top: 70 }); // RCM (下に移動)
                     // Forwards (左から4番目のライン)
-                    positions.push({ left: 38, top: 15 }); // LW
+                    positions.push({ left: 38, top: 85 }); // LW (左右反転: 元RW位置)
                     positions.push({ left: 38, top: 50 }); // ST
-                    positions.push({ left: 38, top: 85 }); // RW
+                    positions.push({ left: 38, top: 15 }); // RW (左右反転: 元LW位置)
                     break;
                     
                 default:
                     // デフォルトの4-4-2（ホームチーム基準）
                     positions.push({ left: 8, top: 50 }); // GK
-                    positions.push({ left: 18, top: 15 }); // LB
+                    positions.push({ left: 18, top: 85 }); // LB (左右反転: 元RB位置)
                     positions.push({ left: 18, top: 35 }); // LCB
                     positions.push({ left: 18, top: 65 }); // RCB
-                    positions.push({ left: 18, top: 85 }); // RB
-                    positions.push({ left: 28, top: 15 }); // LM
+                    positions.push({ left: 18, top: 15 }); // RB (左右反転: 元LB位置)
+                    positions.push({ left: 28, top: 85 }); // LM (左右反転: 元RM位置)
                     positions.push({ left: 28, top: 40 }); // LCM
                     positions.push({ left: 28, top: 60 }); // RCM
-                    positions.push({ left: 28, top: 85 }); // RM
+                    positions.push({ left: 28, top: 15 }); // RM (左右反転: 元LM位置)
                     positions.push({ left: 38, top: 40 }); // LS
                     positions.push({ left: 38, top: 60 }); // RS
                     break;
