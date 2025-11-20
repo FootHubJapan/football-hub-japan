@@ -1463,6 +1463,12 @@
             currentTab = tab;
             
             // タブボタンのアクティブ状態を更新
+            if (element) {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                element.classList.add('active');
+            }
+            
+            // タブボタンのアクティブ状態を更新
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             if (element) {
                 element.classList.add('active');
@@ -3990,6 +3996,10 @@
             
             // イベントリスナーを設定
             setupEventListeners();
+            
+            // 初期表示: 全選手を表示
+            console.log('🔄 初期表示: 全選手データを読み込み中...');
+            await switchTab('players');
             
             // オーナー機能の表示/非表示を設定
             toggleOwnerFeatures();
