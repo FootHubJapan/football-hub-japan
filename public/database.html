@@ -2324,20 +2324,30 @@
                                 'クリスティアーノ': ['cristiano ronaldo', 'ronaldo'] // 別表記
                             };
                             
-                            // 基本フィールドの検索
+                            // 基本フィールドの検索（複数のフィールドを検索対象に含める）
                             const nameMatch = (() => {
                                 const playerName = (player.name || '').toLowerCase();
                                 const playerFullName = (player.fullName || '').toLowerCase();
+                                const playerLastName = (player.lastName || '').toLowerCase();
+                                const playerEnglishName = (player.englishName || '').toLowerCase();
+                                const playerJapaneseName = (player.japaneseName || '').toLowerCase();
                                 
-                                // 直接マッチ
-                                if (playerName.includes(query) || playerFullName.includes(query)) {
+                                // 直接マッチ（複数のフィールドを検索）
+                                if (playerName.includes(query) || 
+                                    playerFullName.includes(query) || 
+                                    playerLastName.includes(query) ||
+                                    playerEnglishName.includes(query) ||
+                                    playerJapaneseName.includes(query)) {
                                     return true;
                                 }
                                 
                                 // 日本語マッピングによる検索
                                 if (playerNameMapping[query]) {
                                     return playerNameMapping[query].some(name => 
-                                        playerName.includes(name) || playerFullName.includes(name)
+                                        playerName.includes(name) || 
+                                        playerFullName.includes(name) ||
+                                        playerLastName.includes(name) ||
+                                        playerEnglishName.includes(name)
                                     );
                                 }
                                 
@@ -2345,7 +2355,10 @@
                                 for (const [japanese, englishNames] of Object.entries(playerNameMapping)) {
                                     if (englishNames.some(name => name.includes(query))) {
                                         return englishNames.some(name => 
-                                            playerName.includes(name) || playerFullName.includes(name)
+                                            playerName.includes(name) || 
+                                            playerFullName.includes(name) ||
+                                            playerLastName.includes(name) ||
+                                            playerEnglishName.includes(name)
                                         );
                                     }
                                 }
@@ -2354,7 +2367,10 @@
                                 for (const [japanese, englishNames] of Object.entries(playerNameMapping)) {
                                     if (japanese.includes(query) || query.includes(japanese)) {
                                         return englishNames.some(name => 
-                                            playerName.includes(name) || playerFullName.includes(name)
+                                            playerName.includes(name) || 
+                                            playerFullName.includes(name) ||
+                                            playerLastName.includes(name) ||
+                                            playerEnglishName.includes(name)
                                         );
                                     }
                                 }
@@ -2366,7 +2382,10 @@
                                         const similarity = calculateSimilarity(query, japanese);
                                         if (similarity > 0.6) { // 60%以上の類似度
                                             return englishNames.some(name => 
-                                                playerName.includes(name) || playerFullName.includes(name)
+                                                playerName.includes(name) || 
+                                                playerFullName.includes(name) ||
+                                                playerLastName.includes(name) ||
+                                                playerEnglishName.includes(name)
                                             );
                                         }
                                     }
@@ -2408,8 +2427,20 @@
                                 return false;
                             })();
                             
-                            return nameMatch || teamMatch || positionMatch;
+                            const result = nameMatch || teamMatch || positionMatch;
+                            
+                            // デバッグ: Bellinghamの場合のみ詳細ログ
+                            if (query.includes('bellingham') && result) {
+                                console.log('✅ Bellinghamマッチ:', player.name || player.fullName);
+                            }
+                            
+                            return result;
                         });
+                        
+                        console.log('📊 検索後の選手数:', filteredPlayers.length);
+                        if (query.includes('bellingham')) {
+                            console.log('🔍 Bellingham検索結果:', filteredPlayers.map(p => ({ name: p.name, fullName: p.fullName, lastName: p.lastName })));
+                        }
                     }
                     
                     // ポジションでフィルタリング（日本語対応）
