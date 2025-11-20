@@ -505,6 +505,8 @@
                             <option value="SA">セリエA</option>
                             <option value="BL1">ブンデスリーガ</option>
                             <option value="FL1">リーグ・アン</option>
+                            <option value="J1">J1リーグ</option>
+                            <option value="CL">チャンピオンズリーグ</option>
                         </select>
                     </div>
                 </div>
@@ -708,22 +710,44 @@
             }
         
             try {
-                const response = await fetch(`/api/ranking/teams?season=${season}&league=${league}`);
-                let teams;
-
-                if (response.ok) {
-                    const data = await response.json();
-                    teams = data.teams || [];
+                // チャンピオンズリーグの場合は専用エンドポイントを使用
+                if (league === 'CL') {
+                    const response = await fetch(`/api/ranking/champions-league?season=${season}`);
+                    let standings;
+        
+                    if (response.ok) {
+                        const data = await response.json();
+                        standings = data.standings || [];
+                    } else {
+                        standings = generateFallbackChampionsLeagueData();
+                    }
+        
+                    displayChampionsLeagueRanking(standings);
+                    updateChampionsChart(standings);
                 } else {
-                    teams = generateFallbackTeamData(league);
+                    const response = await fetch(`/api/ranking/teams?season=${season}&league=${league}`);
+                    let teams;
+        
+                    if (response.ok) {
+                        const data = await response.json();
+                        teams = data.teams || [];
+                    } else {
+                        teams = generateFallbackTeamData(league);
+                    }
+        
+                    displayLeagueStandings(teams);
                 }
-
-                displayLeagueStandings(teams);
-
+        
             } catch (error) {
                 console.error('Error loading league standings:', error);
-                const teams = generateFallbackTeamData(league);
-                displayLeagueStandings(teams);
+                if (league === 'CL') {
+                    const standings = generateFallbackChampionsLeagueData();
+                    displayChampionsLeagueRanking(standings);
+                    updateChampionsChart(standings);
+                } else {
+                    const teams = generateFallbackTeamData(league);
+                    displayLeagueStandings(teams);
+                }
             }
         }
 
