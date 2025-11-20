@@ -1413,6 +1413,7 @@
             }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="header">
@@ -3821,7 +3822,27 @@
                 </div>
                 <div id="detailsMeta" style="color:#bdbdbd;font-size:12px;margin-bottom:8px;"></div>
                 <div id="detailsDataSource" style="color:#4ade80;font-size:11px;margin-bottom:8px;font-weight:600;"></div>
-                <div id="detailsStats" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;"></div>
+                <div id="detailsContract" style="color:#ffd700;font-size:11px;margin-bottom:8px;"></div>
+                <div id="detailsStats" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px;"></div>
+                <div id="detailsChartContainer" style="margin-bottom:12px;background:#1a1a1a;padding:12px;border-radius:8px;border:1px solid #2a2a2a;">
+                    <div style="color:#00ff88;font-size:12px;font-weight:600;margin-bottom:8px;">ドリブル・シュート統計</div>
+                    <canvas id="detailsStatsChart" width="400" height="200"></canvas>
+                </div>
+                <div id="detailsCareer" style="margin-bottom:12px;max-height:200px;overflow-y:auto;">
+                    <div style="color:#00ff88;font-size:12px;font-weight:600;margin-bottom:8px;">キャリアスタートからの個人スタッツ（リーグのみ）</div>
+                    <table style="width:100%;font-size:11px;border-collapse:collapse;">
+                        <thead>
+                            <tr style="background:#2a2a2a;color:#00ff88;">
+                                <th style="padding:4px;text-align:left;border:1px solid #333;">シーズン</th>
+                                <th style="padding:4px;text-align:left;border:1px solid #333;">クラブ</th>
+                                <th style="padding:4px;text-align:center;border:1px solid #333;">試合</th>
+                                <th style="padding:4px;text-align:center;border:1px solid #333;">ゴール</th>
+                                <th style="padding:4px;text-align:center;border:1px solid #333;">アシスト</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailsCareerBody"></tbody>
+                    </table>
+                </div>
                 <div style="margin-top:12px;display:flex;gap:8px;">
                     <a id="openRadar" href="/radar" style="flex:1;text-align:center;background:#14cf93;color:#000;padding:8px;border-radius:8px;text-decoration:none;font-weight:700;">レーダーチャートで表示</a>
                 </div>
@@ -3835,7 +3856,7 @@
             const panel = document.getElementById('playerDetailsPanel');
             const name = player.name || player.fullName || player.japaneseName || 'Unknown Player';
             const team = player.currentTeam || player.team || player.teamName || 'Unknown Team';
-            const position = player.position || 'Unknown Position';
+            const position = player.position || player.detailedPosition || player.stats?.position || 'Unknown Position';
             const nationality = player.nationality || 'Unknown';
             let stats = player.stats || {};
             let dataSource = 'local';
@@ -3925,6 +3946,18 @@
                 dataSourceEl.style.color = dataSource === 'local' ? '#888' : '#4ade80';
             }
             
+            // 契約情報を表示
+            const contractEl = document.getElementById('detailsContract');
+            if (contractEl) {
+                const contract = player.contract || {};
+                const contractInfo = [];
+                if (contract.transferFee) contractInfo.push(`移籍金: ${contract.transferFee}`);
+                if (contract.contractUntil) contractInfo.push(`契約期限: ${contract.contractUntil}`);
+                if (contract.contractYears) contractInfo.push(`契約年数: ${contract.contractYears}年`);
+                if (contract.marketValue) contractInfo.push(`市場価値: ${contract.marketValue}`);
+                contractEl.textContent = contractInfo.length > 0 ? contractInfo.join(' | ') : '';
+            }
+            
             const statsEl = document.getElementById('detailsStats');
             statsEl.innerHTML = '';
             const items = [
@@ -3935,9 +3968,9 @@
                 ['評価', stats.rating || 'N/A'],
                 ['黄', stats.yellowCards || 0],
                 ['赤', stats.redCards || 0],
-                ['シュート', stats.shots || 0],
+                ['シュート', stats.shots || stats.shotsTotal || 0],
                 ['枠内', stats.shotsOnTarget || 0],
-                ['パス', stats.passes || 0],
+                ['パス', stats.passes || stats.passesTotal || 0],
                 ['成功率', stats.passAccuracy || 'N/A'],
                 ['タックル', stats.tackles || 0]
             ];
@@ -3950,9 +3983,179 @@
                 box.innerHTML = `<div style=\"color:#888;font-size:11px;\">${label}</div><div style=\"color:#e5e5e5;font-weight:700;font-size:13px;\">${value}</div>`;
                 statsEl.appendChild(box);
             });
+            
+            // ドリブル・シュート統計の棒グラフを表示
+            displayStatsChart(stats);
+            
+            // キャリアスタッツを表示（リーグのみ）
+            displayCareerStats(player);
+            
             const radarLink = document.getElementById('openRadar');
             radarLink.href = `/radar?player=${encodeURIComponent(name)}`;
             panel.style.display = 'block';
+        }
+
+        // 統計グラフを表示
+        function displayStatsChart(stats) {
+            const canvas = document.getElementById('detailsStatsChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // 既存のチャートを破棄
+            if (window.detailsStatsChartInstance) {
+                window.detailsStatsChartInstance.destroy();
+            }
+            
+            // Chart.jsが利用可能か確認
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js is not loaded');
+                return;
+            }
+            
+            const chartData = {
+                labels: ['ドリブル試行', 'ドリブル成功', 'シュート', 'シュート枠内', 'パス', 'タックル'],
+                datasets: [{
+                    label: '統計',
+                    data: [
+                        stats.dribblesAttempted || stats.dribbles || 0,
+                        stats.dribblesSuccess || stats.dribblesWon || 0,
+                        stats.shots || stats.shotsTotal || 0,
+                        stats.shotsOnTarget || 0,
+                        stats.passes || stats.passesTotal || 0,
+                        stats.tackles || 0
+                    ],
+                    backgroundColor: [
+                        'rgba(0, 255, 136, 0.8)',
+                        'rgba(0, 212, 255, 0.8)',
+                        'rgba(255, 107, 107, 0.8)',
+                        'rgba(255, 217, 61, 0.8)',
+                        'rgba(159, 255, 243, 0.8)',
+                        'rgba(255, 159, 243, 0.8)'
+                    ],
+                    borderColor: [
+                        '#00ff88',
+                        '#00d4ff',
+                        '#ff6b6b',
+                        '#ffd93d',
+                        '#9ffff3',
+                        '#ff9ff3'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+            
+            window.detailsStatsChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#fff',
+                                font: { size: 10 }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#fff',
+                                font: { size: 10 }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // キャリアスタッツを表示（リーグのみ）
+        async function displayCareerStats(player) {
+            const tbody = document.getElementById('detailsCareerBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:8px;color:#888;">データを読み込み中...</td></tr>';
+            
+            try {
+                // APIからキャリアデータを取得
+                let careerData = [];
+                if (player.id || player.playerId) {
+                    try {
+                        const response = await fetch(`/api/integrated/player/${encodeURIComponent(player.id || player.playerId)}?_t=${Date.now()}`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.career && Array.isArray(data.career)) {
+                                // リーグのみをフィルタリング（カップ戦を除外）
+                                careerData = data.career.filter(stat => {
+                                    const leagueName = (stat.league || stat.leagueName || '').toLowerCase();
+                                    // カップ戦を除外
+                                    return !leagueName.includes('cup') && 
+                                           !leagueName.includes('カップ') &&
+                                           !leagueName.includes('champions league') &&
+                                           !leagueName.includes('europa league') &&
+                                           !leagueName.includes('super cup');
+                                });
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Career stats fetch error:', error);
+                    }
+                }
+                
+                // フォールバック: プレイヤーのstats配列から取得
+                if (careerData.length === 0 && player.stats && Array.isArray(player.stats)) {
+                    careerData = player.stats.filter(stat => {
+                        const leagueName = (stat.league || stat.leagueName || '').toLowerCase();
+                        return !leagueName.includes('cup') && 
+                               !leagueName.includes('カップ') &&
+                               !leagueName.includes('champions league') &&
+                               !leagueName.includes('europa league');
+                    });
+                }
+                
+                if (careerData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:8px;color:#888;">キャリアデータがありません</td></tr>';
+                    return;
+                }
+                
+                // シーズンでソート（新しい順）
+                careerData.sort((a, b) => {
+                    const seasonA = parseInt(a.season) || 0;
+                    const seasonB = parseInt(b.season) || 0;
+                    return seasonB - seasonA;
+                });
+                
+                let html = '';
+                careerData.forEach(stat => {
+                    const seasonDisplay = stat.season || 'Unknown';
+                    html += `
+                        <tr style="border-bottom:1px solid #333;">
+                            <td style="padding:4px;color:#e5e5e5;">${seasonDisplay}</td>
+                            <td style="padding:4px;color:#e5e5e5;">${stat.club || stat.teamName || stat.team || 'Unknown'}</td>
+                            <td style="padding:4px;text-align:center;color:#e5e5e5;">${stat.matches || stat.appearances || 0}</td>
+                            <td style="padding:4px;text-align:center;color:#00ff88;">${stat.goals || 0}</td>
+                            <td style="padding:4px;text-align:center;color:#00d4ff;">${stat.assists || 0}</td>
+                        </tr>
+                    `;
+                });
+                
+                tbody.innerHTML = html;
+            } catch (error) {
+                console.error('Error displaying career stats:', error);
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:8px;color:#ff6b6b;">エラーが発生しました</td></tr>';
+            }
         }
 
         // 選手を選択
@@ -4178,12 +4381,28 @@
             if (league && league.trim()) {
                 filteredPlayers = filteredPlayers.filter(player => {
                     if (!player) return false;
-                    const playerLeague = (player.league || '').toLowerCase();
-                    const playerTeam = (player.currentTeam || '').toLowerCase();
+                    const playerLeague = (player.league || player.leagueName || '').toLowerCase();
+                    const playerTeam = (player.currentTeam || player.team || player.teamName || '').toLowerCase();
                     const searchLeague = league.toLowerCase();
                     
-                    return playerLeague.includes(searchLeague) || 
-                           playerTeam.includes(searchLeague);
+                    // リーグ名のマッピング（日本語・英語対応）
+                    const leagueMappings = {
+                        'j1': ['j1', 'j1リーグ', 'j1 league', 'j-league', 'j.league'],
+                        'pl': ['premier league', 'プレミアリーグ', 'premier'],
+                        'pd': ['la liga', 'ラ・リーガ', 'laliga'],
+                        'sa': ['serie a', 'セリエa', 'serie'],
+                        'bl1': ['bundesliga', 'ブンデスリーガ', 'bundes'],
+                        'fl1': ['ligue 1', 'リーグ・アン', 'ligue']
+                    };
+                    
+                    const normalizedSearch = searchLeague.replace(/\s+/g, '');
+                    const leagueVariants = leagueMappings[normalizedSearch] || [searchLeague];
+                    
+                    return leagueVariants.some(variant => 
+                        playerLeague.includes(variant) || 
+                        playerTeam.includes(variant)
+                    ) || playerLeague.includes(searchLeague) || 
+                       playerTeam.includes(searchLeague);
                 });
             }
             

@@ -6399,14 +6399,25 @@
                 // アウェイチームの場合、ポジション情報を取得して左右反転を適用
                 if (teamType === 'away') {
                     const playerPosition = player.position || player.player?.pos || player.pos || '';
-                    // LB/RB、LW/RW、LWB/RWBの左右反転を適用
-                    // アウェイチームは既にcreatePlayerMarker内でleftが反転されるため、
-                    // ここではtop位置を反転して左右を正しく配置
-                    if (playerPosition === 'LB' || playerPosition === 'RB' || 
-                        playerPosition === 'LW' || playerPosition === 'RW' || 
-                        playerPosition === 'LWB' || playerPosition === 'RWB' ||
-                        playerPosition === 'LM' || playerPosition === 'RM') {
-                        // top位置を反転（左右反転: 左側の選手を右側に、右側の選手を左側に）
+                    // LB/RB、LW/RW、LWB/RWB、LM/RMの左右反転を適用
+                    // アウェイチームは右側に配置されるため、左右のポジションを反転する必要がある
+                    if (playerPosition === 'LB') {
+                        // LB（左サイドバック）→ 右側ではRB位置（topを反転）
+                        pos = { ...pos, top: 100 - pos.top };
+                    } else if (playerPosition === 'RB') {
+                        // RB（右サイドバック）→ 右側ではLB位置（topを反転）
+                        pos = { ...pos, top: 100 - pos.top };
+                    } else if (playerPosition === 'LW' || playerPosition === 'LM') {
+                        // LW/LM（左ウィング/左ミッド）→ 右側ではRW/RM位置（topを反転）
+                        pos = { ...pos, top: 100 - pos.top };
+                    } else if (playerPosition === 'RW' || playerPosition === 'RM') {
+                        // RW/RM（右ウィング/右ミッド）→ 右側ではLW/LM位置（topを反転）
+                        pos = { ...pos, top: 100 - pos.top };
+                    } else if (playerPosition === 'LWB') {
+                        // LWB（左ウィングバック）→ 右側ではRWB位置（topを反転）
+                        pos = { ...pos, top: 100 - pos.top };
+                    } else if (playerPosition === 'RWB') {
+                        // RWB（右ウィングバック）→ 右側ではLWB位置（topを反転）
                         pos = { ...pos, top: 100 - pos.top };
                     }
                 }

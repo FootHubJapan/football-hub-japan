@@ -791,11 +791,11 @@
             });
 
             container.innerHTML = html;
-            console.log('✅ Champions League ranking displayed successfully:', html.length, 'characters');
+            console.log('✅ League standings displayed successfully:', html.length, 'characters');
             
             // 表示確認のため、最初の数チームをログ出力
-            if (standings.length > 0) {
-                console.log('📋 Sample teams:', standings.slice(0, 3).map(t => ({ name: t.name, group: t.group, position: t.position })));
+            if (teams.length > 0) {
+                console.log('📋 Sample teams:', teams.slice(0, 3).map(t => ({ name: t.name, points: t.points })));
             }
         }
 
