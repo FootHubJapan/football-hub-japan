@@ -397,6 +397,14 @@
                         <div class="basic-value" id="playerNationality">--</div>
                         <div class="basic-label">国籍</div>
                     </div>
+                    <div class="basic-item">
+                        <div class="basic-value" id="transferFeeDisplay">--</div>
+                        <div class="basic-label">移籍金</div>
+                    </div>
+                    <div class="basic-item">
+                        <div class="basic-value" id="contractYearsDisplay">--</div>
+                        <div class="basic-label">契約年数</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -820,6 +828,34 @@
             document.getElementById('playerHeight').textContent = (player.height || 175) + 'cm';
             document.getElementById('playerPosition').textContent = player.position || player.detailedPosition || player.stats?.position || '--';
             document.getElementById('playerNationality').textContent = player.nationality;
+            
+            // 移籍金の表示
+            if (player.contract && player.contract.transferFee) {
+                document.getElementById('transferFeeDisplay').textContent = player.contract.transferFee;
+            } else {
+                document.getElementById('transferFeeDisplay').textContent = '--';
+            }
+            
+            // 契約年数の表示
+            if (player.contract) {
+                if (player.contract.contractYears) {
+                    document.getElementById('contractYearsDisplay').textContent = player.contract.contractYears + '年';
+                } else if (player.contract.contractUntil) {
+                    // 契約期限から契約年数を計算
+                    const contractDate = new Date(player.contract.contractUntil);
+                    const today = new Date();
+                    const years = Math.floor((contractDate - today) / (1000 * 60 * 60 * 24 * 365));
+                    if (years > 0) {
+                        document.getElementById('contractYearsDisplay').textContent = years + '年';
+                    } else {
+                        document.getElementById('contractYearsDisplay').textContent = '--';
+                    }
+                } else {
+                    document.getElementById('contractYearsDisplay').textContent = '--';
+                }
+            } else {
+                document.getElementById('contractYearsDisplay').textContent = '--';
+            }
             
             if (player.photo) {
                 document.getElementById('playerPhoto').src = player.photo;
