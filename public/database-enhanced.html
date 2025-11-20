@@ -1828,7 +1828,7 @@
         // フォールバックデータを直接読み込み
         function loadFallbackData() {
             console.log('Loading fallback data...');
-            const fallbackData = generateFallbackPlayers(19); // 19名に制限
+            const fallbackData = generateFallbackPlayers(100); // 100名まで取得（ベリンガムを含む）
             currentPlayers = fallbackData;
             
             // デバッグ用：各選手の顔写真URLを確認
@@ -4264,6 +4264,22 @@
                     grid.innerHTML = '<div class="loading">検索中...</div>';
                 }
 
+                // フォールバックデータを確実にcurrentPlayersに含める（検索時に確実に見つかるように）
+                if (!currentPlayers || currentPlayers.length === 0) {
+                    const fallbackPlayers = generateFallbackPlayers(100);
+                    currentPlayers = fallbackPlayers;
+                    console.log(`✅ フォールバックデータ${fallbackPlayers.length}名をcurrentPlayersに追加`);
+                } else {
+                    // 既存のcurrentPlayersにフォールバックデータを追加（重複を避けながら）
+                    const fallbackPlayers = generateFallbackPlayers(100);
+                    const existingNames = new Set(currentPlayers.map(p => (p.name || '').toLowerCase()));
+                    const newPlayers = fallbackPlayers.filter(p => !existingNames.has((p.name || '').toLowerCase()));
+                    if (newPlayers.length > 0) {
+                        currentPlayers = [...currentPlayers, ...newPlayers];
+                        console.log(`✅ フォールバックデータ${newPlayers.length}名をcurrentPlayersに追加、合計${currentPlayers.length}名`);
+                    }
+                }
+
                 // API連携で検索（日本語対応強化）
                 const filters = {};
                 if (league) filters.league = league;
@@ -4289,9 +4305,13 @@
                 }
                 
                 if (searchResult.players && searchResult.players.length > 0) {
-                    currentPlayers = searchResult.players;
+                    // API検索結果とフォールバックデータをマージ（重複を避けながら）
+                    const apiPlayerNames = new Set(searchResult.players.map(p => (p.name || '').toLowerCase()));
+                    const fallbackPlayers = generateFallbackPlayers(100);
+                    const newFallbackPlayers = fallbackPlayers.filter(p => !apiPlayerNames.has((p.name || '').toLowerCase()));
+                    currentPlayers = [...searchResult.players, ...newFallbackPlayers];
                     displayPlayers(searchResult.players);
-                    console.log(`✅ API検索結果: ${searchResult.players.length}名の選手を発見`);
+                    console.log(`✅ API検索結果: ${searchResult.players.length}名の選手を発見、フォールバックデータ${newFallbackPlayers.length}名を追加`);
                 } else {
                     // API検索で結果がない場合、フォールバック検索
                     console.log('API検索で結果なし、フォールバック検索を実行');
@@ -4348,6 +4368,15 @@
             // フォールバックデータが利用できない場合、生成
             if (!currentPlayers || currentPlayers.length === 0) {
                 currentPlayers = generateFallbackPlayers(100);
+            }
+            
+            // フォールバックデータを確実に含める（重複を避けながら）
+            const fallbackPlayers = generateFallbackPlayers(100);
+            const existingNames = new Set((currentPlayers || []).map(p => (p.name || '').toLowerCase()));
+            const newPlayers = fallbackPlayers.filter(p => !existingNames.has((p.name || '').toLowerCase()));
+            if (newPlayers.length > 0) {
+                currentPlayers = [...(currentPlayers || []), ...newPlayers];
+                console.log(`✅ フォールバックデータ${newPlayers.length}名を検索対象に追加`);
             }
             
             let filteredPlayers = [...currentPlayers]; // 配列のコピーを作成
