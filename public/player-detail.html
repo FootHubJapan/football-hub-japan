@@ -148,28 +148,60 @@
         }
 
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            display: flex;
+            flex-direction: column;
             gap: 1rem;
         }
 
         .stat-item {
-            background: #333333;
-            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            background: #1f1f1f;
             border-radius: 8px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #00ff88;
         }
 
         .stat-label {
             color: #cccccc;
             font-size: 0.9rem;
-            margin-top: 0.5rem;
+            min-width: 120px;
+            text-align: left;
+        }
+
+        .stat-value {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #ffffff;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .stat-bar-container {
+            flex: 1;
+            height: 20px;
+            background: #2a2a2a;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stat-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .stat-bar.low {
+            background: linear-gradient(90deg, #ff6b6b, #ff8e8e);
+        }
+
+        .stat-bar.medium {
+            background: linear-gradient(90deg, #ffd93d, #ffe66d);
+        }
+
+        .stat-bar.high {
+            background: linear-gradient(90deg, #00ff88, #4ade80);
         }
 
         .detailed-stats-section {
@@ -422,20 +454,32 @@
                 <h2 class="stats-title">シュート統計</h2>
                 <div class="stats-grid">
                     <div class="stat-item">
-                        <div class="stat-value" id="shotsTotal">--</div>
                         <div class="stat-label">総シュート</div>
+                        <div class="stat-value" id="shotsTotal">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="shotsTotalBar" style="width: 0%"></div>
+                        </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="shotsOnTarget">--</div>
                         <div class="stat-label">枠内シュート</div>
+                        <div class="stat-value" id="shotsOnTarget">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="shotsOnTargetBar" style="width: 0%"></div>
+                        </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="expectedGoals">--</div>
                         <div class="stat-label">期待値(xG)</div>
+                        <div class="stat-value" id="expectedGoals">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="expectedGoalsBar" style="width: 0%"></div>
+                        </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="shotAccuracy">--</div>
                         <div class="stat-label">シュート精度</div>
+                        <div class="stat-value" id="shotAccuracy">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="shotAccuracyBar" style="width: 0%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -444,20 +488,32 @@
                 <h2 class="stats-title">パス・ポゼッション</h2>
                 <div class="stats-grid">
                     <div class="stat-item">
-                        <div class="stat-value" id="passesTotal">--</div>
                         <div class="stat-label">総パス</div>
+                        <div class="stat-value" id="passesTotal">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="passesTotalBar" style="width: 0%"></div>
+                        </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="keyPasses">--</div>
                         <div class="stat-label">キーパス</div>
+                        <div class="stat-value" id="keyPasses">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="keyPassesBar" style="width: 0%"></div>
+                        </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="longPasses">--</div>
                         <div class="stat-label">ロングパス</div>
+                        <div class="stat-value" id="longPasses">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="longPassesBar" style="width: 0%"></div>
+                        </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="crosses">--</div>
                         <div class="stat-label">クロス</div>
+                        <div class="stat-value" id="crosses">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="crossesBar" style="width: 0%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -466,20 +522,32 @@
                 <h2 class="stats-title">守備・対戦</h2>
                 <div class="stats-grid">
                     <div class="stat-item">
-                        <div class="stat-value" id="tacklesTotal">--</div>
                         <div class="stat-label">総タックル</div>
+                        <div class="stat-value" id="tacklesTotal">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="tacklesTotalBar" style="width: 0%"></div>
+                        </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="interceptions">--</div>
                         <div class="stat-label">インターセプト</div>
+                        <div class="stat-value" id="interceptions">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="interceptionsBar" style="width: 0%"></div>
+                        </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="duelsWon">--</div>
                         <div class="stat-label">対戦勝利</div>
+                        <div class="stat-value" id="duelsWon">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="duelsWonBar" style="width: 0%"></div>
+                        </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="aerialDuels">--</div>
                         <div class="stat-label">空中戦</div>
+                        <div class="stat-value" id="aerialDuels">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="aerialDuelsBar" style="width: 0%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -488,20 +556,32 @@
                 <h2 class="stats-title">ドリブル・創造性</h2>
                 <div class="stats-grid">
                     <div class="stat-item">
-                        <div class="stat-value" id="dribblesAttempted">--</div>
                         <div class="stat-label">ドリブル試行</div>
+                        <div class="stat-value" id="dribblesAttempted">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="dribblesAttemptedBar" style="width: 0%"></div>
+                        </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="dribblesSuccess">--</div>
                         <div class="stat-label">ドリブル成功</div>
+                        <div class="stat-value" id="dribblesSuccess">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="dribblesSuccessBar" style="width: 0%"></div>
+                        </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="chancesCreated">--</div>
                         <div class="stat-label">チャンス創出</div>
+                        <div class="stat-value" id="chancesCreated">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="chancesCreatedBar" style="width: 0%"></div>
+                        </div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value" id="foulsDrawn">--</div>
                         <div class="stat-label">ファウル獲得</div>
+                        <div class="stat-value" id="foulsDrawn">--</div>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" id="foulsDrawnBar" style="width: 0%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -916,39 +996,126 @@
                 aggregatedStats = player.stats;
             }
             
+            // 各統計項目の最大値（パーセンテージ計算用）
+            const maxValues = {
+                shotsTotal: 100,
+                shotsOnTarget: 50,
+                expectedGoals: 20,
+                shotAccuracy: 100,
+                passesTotal: 500,
+                keyPasses: 50,
+                longPasses: 30,
+                crosses: 20,
+                tacklesTotal: 100,
+                interceptions: 50,
+                duelsWon: 200,
+                aerialDuels: 50,
+                dribblesAttempted: 100,
+                dribblesSuccess: 50,
+                chancesCreated: 50,
+                foulsDrawn: 30
+            };
+            
+            // 横棒グラフを更新する関数
+            function updateStatBar(statId, value, maxValue) {
+                const valueEl = document.getElementById(statId);
+                const barEl = document.getElementById(statId + 'Bar');
+                
+                if (!valueEl || !barEl) return;
+                
+                let displayValue = value;
+                let percentage = 0;
+                
+                if (typeof value === 'number') {
+                    percentage = Math.min((value / maxValue) * 100, 100);
+                    valueEl.textContent = value;
+                } else if (typeof value === 'string' && value.includes('%')) {
+                    // パーセンテージの場合
+                    const numValue = parseFloat(value.replace('%', ''));
+                    percentage = Math.min(numValue, 100);
+                    valueEl.textContent = value;
+                } else {
+                    valueEl.textContent = value || '--';
+                    barEl.style.width = '0%';
+                    return;
+                }
+                
+                // 棒グラフの色を決定（低: 赤、中: 黄、高: 緑）
+                barEl.className = 'stat-bar';
+                if (percentage < 33) {
+                    barEl.classList.add('low');
+                } else if (percentage < 66) {
+                    barEl.classList.add('medium');
+                } else {
+                    barEl.classList.add('high');
+                }
+                
+                barEl.style.width = percentage + '%';
+            }
+            
             // シュート統計
-            document.getElementById('shotsTotal').textContent = aggregatedStats.shotsTotal || aggregatedStats.shots || 0;
-            document.getElementById('shotsOnTarget').textContent = aggregatedStats.shotsOnTarget || 0;
-            document.getElementById('expectedGoals').textContent = aggregatedStats.expectedGoals || 'N/A';
+            const shotsTotal = aggregatedStats.shotsTotal || aggregatedStats.shots || 0;
+            updateStatBar('shotsTotal', shotsTotal, maxValues.shotsTotal);
+            
+            const shotsOnTarget = aggregatedStats.shotsOnTarget || 0;
+            updateStatBar('shotsOnTarget', shotsOnTarget, maxValues.shotsOnTarget);
+            
+            const expectedGoals = aggregatedStats.expectedGoals;
+            if (expectedGoals !== null && expectedGoals !== undefined) {
+                updateStatBar('expectedGoals', parseFloat(expectedGoals), maxValues.expectedGoals);
+            } else {
+                document.getElementById('expectedGoals').textContent = 'N/A';
+            }
+            
             // シュート精度を計算（枠内シュート / 総シュート * 100）
-            const shotAccuracy = aggregatedStats.shotsTotal > 0 && aggregatedStats.shotsOnTarget > 0
-                ? ((aggregatedStats.shotsOnTarget / aggregatedStats.shotsTotal) * 100).toFixed(1) + '%'
+            const shotAccuracy = shotsTotal > 0 && shotsOnTarget > 0
+                ? ((shotsOnTarget / shotsTotal) * 100).toFixed(1) + '%'
                 : 'N/A';
-            document.getElementById('shotAccuracy').textContent = shotAccuracy;
+            if (shotAccuracy !== 'N/A') {
+                updateStatBar('shotAccuracy', parseFloat(shotAccuracy.replace('%', '')), maxValues.shotAccuracy);
+            } else {
+                document.getElementById('shotAccuracy').textContent = 'N/A';
+            }
 
             // パス・ポゼッション
-            document.getElementById('passesTotal').textContent = aggregatedStats.passesTotal || aggregatedStats.passes || 0;
-            document.getElementById('keyPasses').textContent = aggregatedStats.keyPasses || 0;
-            document.getElementById('longPasses').textContent = aggregatedStats.longPasses || 0;
-            document.getElementById('crosses').textContent = aggregatedStats.crosses || 0;
+            const passesTotal = aggregatedStats.passesTotal || aggregatedStats.passes || 0;
+            updateStatBar('passesTotal', passesTotal, maxValues.passesTotal);
+            
+            const keyPasses = aggregatedStats.keyPasses || 0;
+            updateStatBar('keyPasses', keyPasses, maxValues.keyPasses);
+            
+            const longPasses = aggregatedStats.longPasses || 0;
+            updateStatBar('longPasses', longPasses, maxValues.longPasses);
+            
+            const crosses = aggregatedStats.crosses || 0;
+            updateStatBar('crosses', crosses, maxValues.crosses);
 
             // 守備・対戦
-            document.getElementById('tacklesTotal').textContent = aggregatedStats.tacklesTotal || aggregatedStats.tackles || 0;
-            document.getElementById('interceptions').textContent = aggregatedStats.interceptions || 0;
-            document.getElementById('duelsWon').textContent = aggregatedStats.duelsWon || 0;
-            document.getElementById('aerialDuels').textContent = aggregatedStats.aerialDuels || 0;
+            const tacklesTotal = aggregatedStats.tacklesTotal || aggregatedStats.tackles || 0;
+            updateStatBar('tacklesTotal', tacklesTotal, maxValues.tacklesTotal);
+            
+            const interceptions = aggregatedStats.interceptions || 0;
+            updateStatBar('interceptions', interceptions, maxValues.interceptions);
+            
+            const duelsWon = aggregatedStats.duelsWon || 0;
+            updateStatBar('duelsWon', duelsWon, maxValues.duelsWon);
+            
+            const aerialDuels = aggregatedStats.aerialDuels || 0;
+            updateStatBar('aerialDuels', aerialDuels, maxValues.aerialDuels);
 
             // ドリブル・創造性
-            // ドリブル試行は複数のフィールド名に対応（dribblesAttempted, dribblesAttempts, dribbles）
             const dribblesAttempted = aggregatedStats.dribblesAttempted || aggregatedStats.dribblesAttempts || aggregatedStats.dribbles || 0;
-            // ドリブル成功が0より大きい場合、試行も少なくとも成功数以上である必要がある
             const dribblesSuccess = aggregatedStats.dribblesSuccess || 0;
             const finalDribblesAttempted = dribblesAttempted > 0 ? dribblesAttempted : (dribblesSuccess > 0 ? dribblesSuccess : 0);
             
-            document.getElementById('dribblesAttempted').textContent = finalDribblesAttempted;
-            document.getElementById('dribblesSuccess').textContent = dribblesSuccess;
-            document.getElementById('chancesCreated').textContent = aggregatedStats.chancesCreated || 0;
-            document.getElementById('foulsDrawn').textContent = aggregatedStats.foulsDrawn || 0;
+            updateStatBar('dribblesAttempted', finalDribblesAttempted, maxValues.dribblesAttempted);
+            updateStatBar('dribblesSuccess', dribblesSuccess, maxValues.dribblesSuccess);
+            
+            const chancesCreated = aggregatedStats.chancesCreated || 0;
+            updateStatBar('chancesCreated', chancesCreated, maxValues.chancesCreated);
+            
+            const foulsDrawn = aggregatedStats.foulsDrawn || 0;
+            updateStatBar('foulsDrawn', foulsDrawn, maxValues.foulsDrawn);
             
             // 棒グラフを表示
             displayStatsChart(aggregatedStats);
