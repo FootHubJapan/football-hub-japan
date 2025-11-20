@@ -2100,20 +2100,41 @@ app.get('/api/transfers/player/:playerId', async (req, res) => {
         console.log(`🔍 移籍情報取得: Player ID ${playerId}`);
         
         if (process.env.RAPIDAPI_KEY && process.env.RAPIDAPI_KEY !== 'YOUR_API_FOOTBALL_KEY') {
-            const response = await axios.get(`https://v3.football.api-sports.io/transfers`, {
-                headers: {
-                    'x-rapidapi-key': process.env.RAPIDAPI_KEY,
-                    'x-rapidapi-host': 'v3.football.api-sports.io'
-                },
-                params: { player: playerId }
-            });
-            
-            if (response.data && response.data.response) {
-                res.json({
-                    success: true,
-                    transfers: response.data.response
+            try {
+                const response = await axios.get(`https://v3.football.api-sports.io/transfers`, {
+                    headers: {
+                        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+                        'x-rapidapi-host': 'v3.football.api-sports.io'
+                    },
+                    params: { player: playerId }
                 });
-                return;
+                
+                if (response.data && response.data.response && response.data.response.length > 0) {
+                    // 最新の移籍情報を取得
+                    const latestTransfer = response.data.response[0];
+                    const transfers = latestTransfer.transfers || [];
+                    
+                    // 最新の移籍情報から移籍金を取得
+                    if (transfers.length > 0) {
+                        const mostRecent = transfers[0];
+                        const transferFee = mostRecent.type === 'Transfer' && mostRecent.amount ? mostRecent.amount : null;
+                        
+                        res.json({
+                            success: true,
+                            transfers: response.data.response,
+                            latestTransferFee: transferFee
+                        });
+                        return;
+                    }
+                    
+                    res.json({
+                        success: true,
+                        transfers: response.data.response
+                    });
+                    return;
+                }
+            } catch (apiError) {
+                console.error('❌ API-Football移籍情報取得エラー:', apiError.message);
             }
         }
         
@@ -8254,6 +8275,17 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
                         joinedDate: fdData.joinedDate || null,
                         shirtNumber: fdData.shirtNumber || null
                     };
+                    
+                    // 契約期限から契約年数を計算
+                    if (fdData.contractUntil) {
+                        const contractDate = new Date(fdData.contractUntil);
+                        const today = new Date();
+                        const years = Math.floor((contractDate - today) / (1000 * 60 * 60 * 24 * 365));
+                        if (years > 0) {
+                            footballDataInfo.contractYears = years;
+                        }
+                    }
+                    
                     console.log(`✅ Football-data.orgから選手追加情報を取得: ${player.name}`);
                 }
             } catch (error) {
@@ -8281,6 +8313,7 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
             contract: footballDataInfo ? {
                 marketValue: footballDataInfo.marketValue,
                 contractUntil: footballDataInfo.contractUntil,
+                contractYears: footballDataInfo.contractYears,
                 joinedDate: footballDataInfo.joinedDate,
                 shirtNumber: footballDataInfo.shirtNumber
             } : null,
