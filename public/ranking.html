@@ -226,7 +226,7 @@
         .table-row.team-ranking .col-goals-against,
         .table-row.team-ranking .col-goal-diff {
             text-align: left;
-            padding-left: 10px;
+            padding-left: 12px;
         }
 
         .table-row:hover {
@@ -821,7 +821,12 @@
         // チャンピオンズリーグ順位表示
         function displayChampionsLeagueRanking(standings) {
             const container = document.getElementById('championsTableBody');
-            if (!container) return;
+            if (!container) {
+                console.error('❌ championsTableBody element not found');
+                return;
+            }
+
+            console.log('📊 Displaying Champions League ranking:', standings.length, 'teams');
 
             if (standings.length === 0) {
                 container.innerHTML = '<div class="no-data">順位データがありません</div>';
@@ -859,6 +864,7 @@
             });
 
             container.innerHTML = html;
+            console.log('✅ Champions League ranking displayed successfully');
         }
 
         // チャンピオンズリーグチャート更新

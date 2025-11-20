@@ -6389,11 +6389,24 @@
             return players.map((player, index) => {
                 // インデックスがフォーメーションの位置数を超えないように制限
                 const positionIndex = Math.min(index, basePositions.length - 1);
-                const pos = basePositions[positionIndex];
+                let pos = basePositions[positionIndex];
                 
                 if (!pos) {
                     console.warn(`No position found for player ${player.name} at index ${index}`);
                     return '';
+                }
+                
+                // アウェイチームの場合、ポジション情報を取得して左右反転を適用
+                if (teamType === 'away') {
+                    const playerPosition = player.position || player.player?.pos || player.pos || '';
+                    // LB/RB、LW/RW、LWB/RWBの左右反転を適用
+                    if (playerPosition === 'LB' || playerPosition === 'RB' || 
+                        playerPosition === 'LW' || playerPosition === 'RW' || 
+                        playerPosition === 'LWB' || playerPosition === 'RWB' ||
+                        playerPosition === 'LM' || playerPosition === 'RM') {
+                        // top位置を反転（左右反転）
+                        pos = { ...pos, top: 100 - pos.top };
+                    }
                 }
                 
                 return createPlayerMarker(pos, player, teamType, homeTeam, awayTeam);
