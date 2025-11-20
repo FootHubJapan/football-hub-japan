@@ -3829,7 +3829,7 @@
                     <canvas id="detailsStatsChart" width="400" height="200"></canvas>
                 </div>
                 <div id="detailsCareer" style="margin-bottom:12px;max-height:200px;overflow-y:auto;">
-                    <div style="color:#00ff88;font-size:12px;font-weight:600;margin-bottom:8px;">キャリアスタートからの個人スタッツ（リーグのみ）</div>
+                    <div style="color:#00ff88;font-size:12px;font-weight:600;margin-bottom:8px;">キャリアスタートからの個人スタッツ（全コンペティション）</div>
                     <table style="width:100%;font-size:11px;border-collapse:collapse;">
                         <thead>
                             <tr style="background:#2a2a2a;color:#00ff88;">
@@ -4031,6 +4031,30 @@
                 ['成功率', stats.passAccuracy || 'N/A'],
                 ['タックル', stats.tackles || 0]
             ];
+            
+            // 契約情報を追加（移籍金・契約年数）
+            if (player.contract) {
+                const contract = player.contract;
+                if (contract.transferFee) {
+                    items.push(['移籍金', contract.transferFee]);
+                }
+                if (contract.contractYears) {
+                    items.push(['契約年数', contract.contractYears + '年']);
+                } else if (contract.contractUntil) {
+                    const contractDate = new Date(contract.contractUntil);
+                    const today = new Date();
+                    const years = Math.floor((contractDate - today) / (1000 * 60 * 60 * 24 * 365));
+                    if (years > 0) {
+                        items.push(['契約年数', years + '年']);
+                    }
+                }
+                if (contract.marketValue) {
+                    const marketValue = typeof contract.marketValue === 'number' 
+                        ? '€' + (contract.marketValue / 1000000).toFixed(1) + 'M'
+                        : contract.marketValue;
+                    items.push(['市場価値', marketValue]);
+                }
+            }
             items.forEach(([label, value]) => {
                 const box = document.createElement('div');
                 box.style.border = '1px solid #2a2a2a';
@@ -4154,16 +4178,8 @@
                         if (response.ok) {
                             const data = await response.json();
                             if (data.career && Array.isArray(data.career)) {
-                                // リーグのみをフィルタリング（カップ戦を除外）
-                                careerData = data.career.filter(stat => {
-                                    const leagueName = (stat.league || stat.leagueName || '').toLowerCase();
-                                    // カップ戦を除外
-                                    return !leagueName.includes('cup') && 
-                                           !leagueName.includes('カップ') &&
-                                           !leagueName.includes('champions league') &&
-                                           !leagueName.includes('europa league') &&
-                                           !leagueName.includes('super cup');
-                                });
+                                // 全コンペティションを含める（カップ戦も含む）
+                                careerData = data.career;
                             }
                         }
                     } catch (error) {
@@ -4171,15 +4187,9 @@
                     }
                 }
                 
-                // フォールバック: プレイヤーのstats配列から取得
+                // フォールバック: プレイヤーのstats配列から取得（カップ戦も含める）
                 if (careerData.length === 0 && player.stats && Array.isArray(player.stats)) {
-                    careerData = player.stats.filter(stat => {
-                        const leagueName = (stat.league || stat.leagueName || '').toLowerCase();
-                        return !leagueName.includes('cup') && 
-                               !leagueName.includes('カップ') &&
-                               !leagueName.includes('champions league') &&
-                               !leagueName.includes('europa league');
-                    });
+                    careerData = player.stats;
                 }
                 
                 if (careerData.length === 0) {
@@ -4187,23 +4197,45 @@
                     return;
                 }
                 
+                // シーズンごとにグループ化して合計を計算
+                const statsBySeason = {};
+                careerData.forEach(stat => {
+                    const season = stat.season || 'Unknown';
+                    const club = stat.club || stat.teamName || stat.team || 'Unknown';
+                    
+                    if (!statsBySeason[season]) {
+                        statsBySeason[season] = {
+                            season: season,
+                            club: club,
+                            matches: 0,
+                            goals: 0,
+                            assists: 0
+                        };
+                    }
+                    
+                    // 各シーズンの合計を計算（リーグ戦とカップ戦を含む）
+                    statsBySeason[season].matches += (stat.matches || stat.appearances || 0);
+                    statsBySeason[season].goals += (stat.goals || 0);
+                    statsBySeason[season].assists += (stat.assists || 0);
+                });
+                
                 // シーズンでソート（新しい順）
-                careerData.sort((a, b) => {
+                const sortedSeasons = Object.values(statsBySeason).sort((a, b) => {
                     const seasonA = parseInt(a.season) || 0;
                     const seasonB = parseInt(b.season) || 0;
                     return seasonB - seasonA;
                 });
                 
                 let html = '';
-                careerData.forEach(stat => {
+                sortedSeasons.forEach(stat => {
                     const seasonDisplay = stat.season || 'Unknown';
                     html += `
                         <tr style="border-bottom:1px solid #333;">
                             <td style="padding:4px;color:#e5e5e5;">${seasonDisplay}</td>
-                            <td style="padding:4px;color:#e5e5e5;">${stat.club || stat.teamName || stat.team || 'Unknown'}</td>
-                            <td style="padding:4px;text-align:center;color:#e5e5e5;">${stat.matches || stat.appearances || 0}</td>
-                            <td style="padding:4px;text-align:center;color:#00ff88;">${stat.goals || 0}</td>
-                            <td style="padding:4px;text-align:center;color:#00d4ff;">${stat.assists || 0}</td>
+                            <td style="padding:4px;color:#e5e5e5;">${stat.club || 'Unknown'}</td>
+                            <td style="padding:4px;text-align:center;color:#e5e5e5;">${stat.matches}</td>
+                            <td style="padding:4px;text-align:center;color:#00ff88;">${stat.goals}</td>
+                            <td style="padding:4px;text-align:center;color:#00d4ff;">${stat.assists}</td>
                         </tr>
                     `;
                 });
@@ -4445,11 +4477,11 @@
                     // リーグ名のマッピング（日本語・英語対応）
                     const leagueMappings = {
                         'j1': ['j1', 'j1リーグ', 'j1 league', 'j-league', 'j.league'],
-                        'pl': ['premier league', 'プレミアリーグ', 'premier'],
-                        'pd': ['la liga', 'ラ・リーガ', 'laliga'],
-                        'sa': ['serie a', 'セリエa', 'serie'],
-                        'bl1': ['bundesliga', 'ブンデスリーガ', 'bundes'],
-                        'fl1': ['ligue 1', 'リーグ・アン', 'ligue']
+                        'pl': ['pl', 'premier league', 'プレミアリーグ', 'premier'],
+                        'pd': ['pd', 'la liga', 'ラ・リーガ', 'laliga', 'primera division'],
+                        'sa': ['sa', 'serie a', 'セリエa', 'serie'],
+                        'bl1': ['bl1', 'bundesliga', 'ブンデスリーガ', 'bundes'],
+                        'fl1': ['fl1', 'ligue 1', 'リーグ・アン', 'ligue']
                     };
                     
                     const normalizedSearch = searchLeague.replace(/\s+/g, '');

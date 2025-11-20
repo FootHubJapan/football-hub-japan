@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         * {
@@ -515,6 +516,12 @@
             </div>
         </div>
 
+        <!-- ドリブル・シュート統計の棒グラフ -->
+        <div class="stats-card" style="margin-top: 2rem;">
+            <h2 class="stats-title">ドリブル・シュート統計（棒グラフ）</h2>
+            <canvas id="statsChart" width="400" height="200"></canvas>
+        </div>
+
         <div class="career-section">
             <h2 class="career-title">キャリアスタートからの個人スタッツ</h2>
             <table class="career-table">
@@ -988,6 +995,96 @@
             document.getElementById('dribblesSuccess').textContent = dribblesSuccess;
             document.getElementById('chancesCreated').textContent = aggregatedStats.chancesCreated || 0;
             document.getElementById('foulsDrawn').textContent = aggregatedStats.foulsDrawn || 0;
+            
+            // 棒グラフを表示
+            displayStatsChart(aggregatedStats);
+        }
+        
+        // 統計グラフを表示
+        function displayStatsChart(stats) {
+            const canvas = document.getElementById('statsChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // 既存のチャートを破棄
+            if (window.statsChartInstance) {
+                window.statsChartInstance.destroy();
+            }
+            
+            // Chart.jsが利用可能か確認
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js is not loaded');
+                return;
+            }
+            
+            const chartData = {
+                labels: ['ドリブル試行', 'ドリブル成功', 'シュート', 'シュート枠内', 'パス', 'タックル'],
+                datasets: [{
+                    label: '統計',
+                    data: [
+                        stats.dribblesAttempted || stats.dribbles || 0,
+                        stats.dribblesSuccess || stats.dribblesWon || 0,
+                        stats.shots || stats.shotsTotal || 0,
+                        stats.shotsOnTarget || 0,
+                        stats.passes || stats.passesTotal || 0,
+                        stats.tackles || 0
+                    ],
+                    backgroundColor: [
+                        'rgba(0, 255, 136, 0.8)',
+                        'rgba(0, 212, 255, 0.8)',
+                        'rgba(255, 107, 107, 0.8)',
+                        'rgba(255, 217, 61, 0.8)',
+                        'rgba(159, 255, 243, 0.8)',
+                        'rgba(255, 159, 243, 0.8)'
+                    ],
+                    borderColor: [
+                        '#00ff88',
+                        '#00d4ff',
+                        '#ff6b6b',
+                        '#ffd93d',
+                        '#9ffff3',
+                        '#ff9ff3'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+            
+            window.statsChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#ffffff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#ffffff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         // キャリアスタートからの個人スタッツを生成（実際のAPIデータを使用）
