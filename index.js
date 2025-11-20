@@ -8269,16 +8269,23 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
                 
                 if (fdResponse && fdResponse.data) {
                     const fdData = fdResponse.data;
+                    
+                    // Football-data.orgのAPIレスポンス構造を確認
+                    // currentContractオブジェクトから契約情報を取得
+                    const currentContract = fdData.currentContract || {};
+                    const contractUntil = currentContract.until || fdData.contractUntil || null;
+                    const joinedDate = currentContract.start || fdData.joinedDate || null;
+                    
                     footballDataInfo = {
                         marketValue: fdData.marketValue || null,
-                        contractUntil: fdData.contractUntil || null,
-                        joinedDate: fdData.joinedDate || null,
+                        contractUntil: contractUntil,
+                        joinedDate: joinedDate,
                         shirtNumber: fdData.shirtNumber || null
                     };
                     
                     // 契約期限から契約年数を計算
-                    if (fdData.contractUntil) {
-                        const contractDate = new Date(fdData.contractUntil);
+                    if (contractUntil) {
+                        const contractDate = new Date(contractUntil);
                         const today = new Date();
                         const years = Math.floor((contractDate - today) / (1000 * 60 * 60 * 24 * 365));
                         if (years > 0) {
@@ -8286,7 +8293,11 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
                         }
                     }
                     
-                    console.log(`✅ Football-data.orgから選手追加情報を取得: ${player.name}`);
+                    console.log(`✅ Football-data.orgから選手追加情報を取得: ${player.name}`, {
+                        contractUntil: contractUntil,
+                        contractYears: footballDataInfo.contractYears,
+                        marketValue: footballDataInfo.marketValue
+                    });
                 }
             } catch (error) {
                 console.log(`⚠️ Football-data.org選手情報取得エラー:`, error.message);

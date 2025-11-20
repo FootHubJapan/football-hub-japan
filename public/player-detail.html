@@ -601,6 +601,35 @@
                                 integration: player.integration
                             };
                             
+                            // 移籍金を取得（API-Footballから）
+                            if (displayData.id || displayData.playerId) {
+                                try {
+                                    const transferResponse = await fetch(`/api/transfers/player/${encodeURIComponent(displayData.id || displayData.playerId)}?_t=${Date.now()}`);
+                                    if (transferResponse.ok) {
+                                        const transferData = await transferResponse.json();
+                                        if (transferData && transferData.latestTransferFee) {
+                                            // 最新の移籍金を取得
+                                            if (!displayData.contract) displayData.contract = {};
+                                            displayData.contract.transferFee = transferData.latestTransferFee;
+                                            console.log(`✅ 移籍金を取得: ${transferData.latestTransferFee}`);
+                                        } else if (transferData && transferData.transfers && transferData.transfers.length > 0) {
+                                            // フォールバック: 移籍情報から移籍金を取得
+                                            const latestTransfer = transferData.transfers[0];
+                                            if (latestTransfer.transfers && latestTransfer.transfers.length > 0) {
+                                                const mostRecent = latestTransfer.transfers[0];
+                                                if (mostRecent.amount) {
+                                                    if (!displayData.contract) displayData.contract = {};
+                                                    displayData.contract.transferFee = mostRecent.amount;
+                                                    console.log(`✅ 移籍金を取得（フォールバック）: ${mostRecent.amount}`);
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch (transferError) {
+                                    console.log(`⚠️ 移籍情報取得失敗: ${transferError.message}`);
+                                }
+                            }
+                            
                             displayPlayerData(displayData);
                             return;
                         } else {
