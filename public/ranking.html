@@ -595,13 +595,11 @@
 
         // 選手ランキング読み込み
         async function loadPlayerRanking() {
-            const seasonValue = document.getElementById('seasonFilter').value;
-            // API-Footballはシーズン開始年を使用するため、1年減らす（2025/2026 → 2025）
-            const season = parseInt(seasonValue) - 1;
+            const season = document.getElementById('seasonFilter').value;
             const league = document.getElementById('leagueFilter').value;
             const position = document.getElementById('positionFilter').value;
             const stat = document.getElementById('statFilter').value;
-
+        
             try {
                 // APIから選手データを取得
                 const response = await fetch(`/api/ranking/players?season=${season}&league=${league}&position=${position}&stat=${stat}`);
@@ -628,16 +626,14 @@
 
         // チームランキング読み込み
         async function loadTeamRanking() {
-            const seasonValue = document.getElementById('seasonFilter').value;
-            // API-Footballはシーズン開始年を使用するため、1年減らす（2025/2026 → 2025）
-            const season = parseInt(seasonValue) - 1;
+            const season = document.getElementById('seasonFilter').value;
             const league = document.getElementById('leagueFilter').value;
-
+        
             if (!league) {
                 document.getElementById('teamTableBody').innerHTML = '<div class="no-data">チームランキングを表示するには、リーグを選択してください。</div>';
                 return;
             }
-
+        
             try {
                 const response = await fetch(`/api/ranking/teams?season=${season}&league=${league}`);
                 let teams;
@@ -662,9 +658,7 @@
 
         // リーグ順位読み込み
         async function loadLeagueStandings() {
-            const seasonValue = document.getElementById('leagueStandingsSeasonFilter').value;
-            // API-Footballはシーズン開始年を使用するため、1年減らす（2025/2026 → 2025）
-            const season = parseInt(seasonValue) - 1;
+            const season = document.getElementById('leagueStandingsSeasonFilter').value;
             const league = document.getElementById('leagueStandingsFilter').value;
         
             if (!league) {
@@ -732,9 +726,7 @@
 
         // チャンピオンズリーグ順位読み込み
         async function loadChampionsLeagueRanking() {
-            const seasonValue = document.getElementById('championsSeasonFilter').value;
-            // API-Footballはシーズン開始年を使用するため、1年減らす（2025/2026 → 2025）
-            const season = parseInt(seasonValue) - 1;
+            const season = document.getElementById('championsSeasonFilter').value;
             try {
                 const response = await fetch(`/api/ranking/champions-league?season=${season}`);
                 let standings;
