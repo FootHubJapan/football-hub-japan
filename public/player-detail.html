@@ -949,13 +949,13 @@
                         shotsOnTarget: (acc.shotsOnTarget || 0) + (stat.shotsOnTarget || 0),
                         shotAccuracy: acc.shotAccuracy || stat.shotAccuracy || null,
                         passesTotal: (acc.passesTotal || 0) + (stat.passesTotal || stat.passes || 0),
-                        keyPasses: (acc.keyPasses || 0) + (stat.keyPasses || 0),
+                        keyPasses: (acc.keyPasses || 0) + (stat.keyPasses || stat.passesKey || 0),
                         tacklesTotal: (acc.tacklesTotal || 0) + (stat.tacklesTotal || stat.tackles || 0),
                         interceptions: (acc.interceptions || 0) + (stat.interceptions || 0),
                         duelsWon: (acc.duelsWon || 0) + (stat.duelsWon || 0),
                         dribblesAttempted: (acc.dribblesAttempted || 0) + (stat.dribblesAttempted || stat.dribblesAttempts || stat.dribbles || 0),
                         dribblesSuccess: (acc.dribblesSuccess || 0) + (stat.dribblesSuccess || 0),
-                        foulsDrawn: (acc.foulsDrawn || 0) + (stat.foulsDrawn || 0)
+                        foulsDrawn: (acc.foulsDrawn || 0) + (stat.foulsDrawn || stat.foulsDraw || 0)
                     };
                 }, {});
             } else if (player.stats && typeof player.stats === 'object') {
@@ -1036,7 +1036,7 @@
             const passesTotal = aggregatedStats.passesTotal || aggregatedStats.passes || 0;
             updateStatBar('passesTotal', passesTotal, maxValues.passesTotal);
             
-            const keyPasses = aggregatedStats.keyPasses || 0;
+            const keyPasses = aggregatedStats.keyPasses || aggregatedStats.passesKey || 0;
             updateStatBar('keyPasses', keyPasses, maxValues.keyPasses);
 
             // 守備・対戦
@@ -1057,7 +1057,7 @@
             updateStatBar('dribblesAttempted', finalDribblesAttempted, maxValues.dribblesAttempted);
             updateStatBar('dribblesSuccess', dribblesSuccess, maxValues.dribblesSuccess);
             
-            const foulsDrawn = aggregatedStats.foulsDrawn || 0;
+            const foulsDrawn = aggregatedStats.foulsDrawn || aggregatedStats.foulsDraw || 0;
             updateStatBar('foulsDrawn', foulsDrawn, maxValues.foulsDrawn);
         }
 
