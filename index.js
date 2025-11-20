@@ -8028,7 +8028,9 @@ app.get('/api/integrated/matches', async (req, res) => {
 
 app.get('/api/integrated/players', async (req, res) => {
     try {
-        const { query, limit = 20, japanese = false } = req.query;
+        const { query, limit = 10000, japanese = false } = req.query;
+        
+        console.log('📊 統合選手データ取得リクエスト:', { query, limit, japanese });
         
         // 統合された選手データを読み込み
         const fs = require('fs');
@@ -8037,24 +8039,56 @@ app.get('/api/integrated/players', async (req, res) => {
         let players = [];
         if (fs.existsSync(playersFile)) {
             const data = await fs.promises.readFile(playersFile, 'utf8');
-            players = JSON.parse(data);
+            const parsed = JSON.parse(data);
+            // 配列形式またはオブジェクト形式に対応
+            players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+            console.log(`📊 players.jsonから${players.length}名の選手データを読み込み`);
         }
         
         // 検索処理
         if (query) {
-            const searchQuery = query.toLowerCase();
+            const searchQuery = query.toLowerCase().trim();
+            console.log(`🔍 検索クエリ: "${searchQuery}"`);
+            
             players = players.filter(player => {
+                if (!player) return false;
+                
                 const searchFields = [
-                    player.name, player.currentTeam, player.league, player.position
+                    player.name,
+                    player.fullName,
+                    player.lastName,
+                    player.englishName,
+                    player.japaneseName,
+                    player.currentTeam,
+                    player.team,
+                    player.league,
+                    player.position
                 ].filter(Boolean);
-                return searchFields.some(field => 
+                
+                const matches = searchFields.some(field => 
                     field.toLowerCase().includes(searchQuery)
                 );
+                
+                // デバッグ: BellinghamやValverdeの場合のみ詳細ログ
+                if (searchQuery.includes('bellingham') || searchQuery.includes('valverde')) {
+                    if (matches) {
+                        console.log(`✅ マッチ:`, {
+                            name: player.name,
+                            fullName: player.fullName,
+                            lastName: player.lastName,
+                            englishName: player.englishName
+                        });
+                    }
+                }
+                
+                return matches;
             });
+            
+            console.log(`🔍 検索結果: ${players.length}名の選手が見つかりました`);
         }
         
         // 日本語検索
-        if (japanese === 'true' || /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(query)) {
+        if (japanese === 'true' || (query && /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(query))) {
             const japaneseMappings = {
                 '久保建英': 'Takefusa Kubo',
                 '三笘薫': 'Kaoru Mitoma',
@@ -8064,40 +8098,57 @@ app.get('/api/integrated/players', async (req, res) => {
                 'サラー': 'Salah',
                 'ハーランド': 'Haaland',
                 'メッシ': 'Messi',
-                'ロナウド': 'Ronaldo'
+                'ロナウド': 'Ronaldo',
+                'ベリンガム': 'Bellingham',
+                'ジュード・ベリンガム': 'Jude Bellingham',
+                'バルベルデ': 'Valverde',
+                'フェデリコ・バルベルデ': 'Federico Valverde'
             };
             
             const mappedQuery = japaneseMappings[query] || query;
-            players = players.filter(player => {
-                const searchFields = [
-                    player.name, player.currentTeam, player.league
-                ].filter(Boolean);
-                return searchFields.some(field => 
-                    field.toLowerCase().includes(mappedQuery.toLowerCase())
-                );
-            });
+            if (mappedQuery !== query) {
+                console.log(`🔍 日本語マッピング: "${query}" → "${mappedQuery}"`);
+                players = players.filter(player => {
+                    const searchFields = [
+                        player.name,
+                        player.fullName,
+                        player.lastName,
+                        player.englishName,
+                        player.currentTeam,
+                        player.team,
+                        player.league
+                    ].filter(Boolean);
+                    return searchFields.some(field => 
+                        field.toLowerCase().includes(mappedQuery.toLowerCase())
+                    );
+                });
+            }
         }
         
         // 制限適用
-        players = players.slice(0, parseInt(limit));
+        const limitedPlayers = players.slice(0, parseInt(limit));
+        console.log(`📊 制限適用後: ${limitedPlayers.length}名（全${players.length}名中）`);
         
         // 統合情報を追加
-        const enhancedPlayers = players.map(player => ({
+        const enhancedPlayers = limitedPlayers.map(player => ({
             ...player,
             integration: {
-                hasApiFootball: !!player.apiFootballId,
+                hasApiFootball: !!player.apiFootballId || !!player.playerId,
                 hasFootballData: !!player.footballDataId,
                 hasPhoto: !!player.photo,
                 sources: [
-                    player.apiFootballId ? 'API-Football' : null,
+                    (player.apiFootballId || player.playerId) ? 'API-Football' : null,
                     player.footballDataId ? 'Football-data.org' : null
                 ].filter(Boolean)
             }
         }));
         
+        console.log(`✅ 統合選手データ返却: ${enhancedPlayers.length}名`);
+        
         res.json({ 
             players: enhancedPlayers,
-            total: enhancedPlayers.length,
+            total: players.length, // 検索前の全件数
+            limited: limitedPlayers.length,
             query,
             sources: ['API-Football', 'Football-data.org'],
             timestamp: new Date().toISOString()

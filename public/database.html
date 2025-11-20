@@ -1492,10 +1492,54 @@
                 switch(tab) {
                     case 'players':
                         console.log('選手データを取得中...');
-                        currentData = await window.firebaseDataService.getPlayers();
-                        console.log('取得した選手データ:', currentData.length, '件');
-                        console.log('データの型:', typeof currentData);
-                        console.log('データの最初の要素:', currentData[0]);
+                        
+                        // まずAPIから全選手データを取得を試みる
+                        try {
+                            console.log('🔄 APIから全選手データを取得中...');
+                            const apiResponse = await fetch('/api/integrated/players?limit=10000');
+                            if (apiResponse.ok) {
+                                const apiData = await apiResponse.json();
+                                // レスポンスが配列の場合とオブジェクトの場合に対応
+                                const apiPlayers = Array.isArray(apiData) ? apiData : (apiData.players || apiData.results || []);
+                                if (apiPlayers.length > 0) {
+                                    currentData = apiPlayers;
+                                    console.log(`✅ APIから${currentData.length}名の選手データを取得`);
+                                    displayData(currentData, currentTab);
+                                    return;
+                                }
+                            }
+                        } catch (apiError) {
+                            console.log('⚠️ APIからの取得に失敗:', apiError);
+                        }
+                        
+                        // APIが失敗した場合、Firebaseから取得
+                        try {
+                            currentData = await window.firebaseDataService.getPlayers();
+                            console.log('取得した選手データ:', currentData.length, '件');
+                            console.log('データの型:', typeof currentData);
+                            console.log('データの最初の要素:', currentData[0]);
+                            
+                            // Firebaseから取得したデータが少ない場合、APIを再試行
+                            if (currentData.length < 100) {
+                                console.log('⚠️ Firebaseデータが少ないため、APIから再取得を試みます...');
+                                try {
+                                    const apiResponse = await fetch('/api/ranking/players?limit=10000');
+                                    if (apiResponse.ok) {
+                                        const apiData = await apiResponse.json();
+                                        const apiPlayers = apiData.players || [];
+                                        if (apiPlayers.length > currentData.length) {
+                                            currentData = apiPlayers;
+                                            console.log(`✅ APIから${currentData.length}名の選手データを取得（Firebaseより多い）`);
+                                        }
+                                    }
+                                } catch (retryError) {
+                                    console.log('⚠️ API再取得に失敗:', retryError);
+                                }
+                            }
+                        } catch (firebaseError) {
+                            console.error('Firebaseからの取得に失敗:', firebaseError);
+                            currentData = [];
+                        }
                         break;
                     case 'teams':
                         console.log('チームデータを取得中...');
