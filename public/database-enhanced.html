@@ -4396,7 +4396,16 @@
             const hasBellinghamAfter = (currentPlayers || []).some(p => (p.name || '').toLowerCase().includes('bellingham'));
             console.log(`🔍 デバッグ: 追加後のcurrentPlayersにベリンガムが含まれているか: ${hasBellinghamAfter}`);
             
-            let filteredPlayers = [...currentPlayers]; // 配列のコピーを作成
+            // 検索対象にフォールバックデータを確実に含める（currentPlayersとは別に）
+            const searchTargetPlayers = [...(currentPlayers || [])];
+            const fallbackForSearch = generateFallbackPlayers(100);
+            const searchTargetNames = new Set(searchTargetPlayers.map(p => (p.name || '').toLowerCase()));
+            const additionalFallbackPlayers = fallbackForSearch.filter(p => !searchTargetNames.has((p.name || '').toLowerCase()));
+            const allSearchTargetPlayers = [...searchTargetPlayers, ...additionalFallbackPlayers];
+            
+            console.log(`🔍 デバッグ: 検索対象の総選手数: ${allSearchTargetPlayers.length} (currentPlayers: ${searchTargetPlayers.length}, 追加フォールバック: ${additionalFallbackPlayers.length})`);
+            
+            let filteredPlayers = [...allSearchTargetPlayers]; // 配列のコピーを作成
             
             // クエリによるフィルタリング（日本語対応）
             if (query && query.trim()) {
