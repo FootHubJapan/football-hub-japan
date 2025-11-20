@@ -369,17 +369,6 @@
                 <h1 id="playerName" class="player-name">選手名</h1>
                 <p id="playerClub" class="player-club">所属チーム</p>
                 <div id="dataSourceInfo" style="color:#4ade80;font-size:12px;margin-top:4px;font-weight:600;"></div>
-                <!-- 契約情報セクション -->
-                <div id="contractInfo" class="contract-info" style="display:none;margin-top:1rem;padding:1rem;background:rgba(0,255,136,0.1);border-radius:8px;border:1px solid rgba(0,255,136,0.3);">
-                    <h3 style="color:#00ff88;font-size:1rem;margin-bottom:0.5rem;">📋 契約情報</h3>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;font-size:0.9rem;">
-                        <div><strong>市場価値:</strong> <span id="marketValue">-</span></div>
-                        <div><strong>移籍金:</strong> <span id="transferFee">-</span></div>
-                        <div><strong>契約満了:</strong> <span id="contractUntil">-</span></div>
-                        <div><strong>契約年数:</strong> <span id="contractYears">-</span></div>
-                        <div><strong>加入日:</strong> <span id="joinedDate">-</span></div>
-                    </div>
-                </div>
                 <div class="player-basics">
                     <div class="basic-item">
                         <div class="basic-value" id="playerAge">--</div>
@@ -396,14 +385,6 @@
                     <div class="basic-item">
                         <div class="basic-value" id="playerNationality">--</div>
                         <div class="basic-label">国籍</div>
-                    </div>
-                    <div class="basic-item">
-                        <div class="basic-value" id="transferFeeDisplay">--</div>
-                        <div class="basic-label">移籍金</div>
-                    </div>
-                    <div class="basic-item">
-                        <div class="basic-value" id="contractYearsDisplay">--</div>
-                        <div class="basic-label">契約年数</div>
                     </div>
                 </div>
             </div>
@@ -600,35 +581,6 @@
                                 stats: player.stats || [],
                                 integration: player.integration
                             };
-                            
-                            // 移籍金を取得（API-Footballから）
-                            if (displayData.id || displayData.playerId) {
-                                try {
-                                    const transferResponse = await fetch(`/api/transfers/player/${encodeURIComponent(displayData.id || displayData.playerId)}?_t=${Date.now()}`);
-                                    if (transferResponse.ok) {
-                                        const transferData = await transferResponse.json();
-                                        if (transferData && transferData.latestTransferFee) {
-                                            // 最新の移籍金を取得
-                                            if (!displayData.contract) displayData.contract = {};
-                                            displayData.contract.transferFee = transferData.latestTransferFee;
-                                            console.log(`✅ 移籍金を取得: ${transferData.latestTransferFee}`);
-                                        } else if (transferData && transferData.transfers && transferData.transfers.length > 0) {
-                                            // フォールバック: 移籍情報から移籍金を取得
-                                            const latestTransfer = transferData.transfers[0];
-                                            if (latestTransfer.transfers && latestTransfer.transfers.length > 0) {
-                                                const mostRecent = latestTransfer.transfers[0];
-                                                if (mostRecent.amount) {
-                                                    if (!displayData.contract) displayData.contract = {};
-                                                    displayData.contract.transferFee = mostRecent.amount;
-                                                    console.log(`✅ 移籍金を取得（フォールバック）: ${mostRecent.amount}`);
-                                                }
-                                            }
-                                        }
-                                    }
-                                } catch (transferError) {
-                                    console.log(`⚠️ 移籍情報取得失敗: ${transferError.message}`);
-                                }
-                            }
                             
                             displayPlayerData(displayData);
                             return;
@@ -858,97 +810,8 @@
             document.getElementById('playerPosition').textContent = player.position || player.detailedPosition || player.stats?.position || '--';
             document.getElementById('playerNationality').textContent = player.nationality;
             
-            // 移籍金の表示
-            if (player.contract && player.contract.transferFee) {
-                document.getElementById('transferFeeDisplay').textContent = player.contract.transferFee;
-            } else {
-                document.getElementById('transferFeeDisplay').textContent = '--';
-            }
-            
-            // 契約年数の表示
-            if (player.contract) {
-                if (player.contract.contractYears) {
-                    document.getElementById('contractYearsDisplay').textContent = player.contract.contractYears + '年';
-                } else if (player.contract.contractUntil) {
-                    // 契約期限から契約年数を計算
-                    const contractDate = new Date(player.contract.contractUntil);
-                    const today = new Date();
-                    const years = Math.floor((contractDate - today) / (1000 * 60 * 60 * 24 * 365));
-                    if (years > 0) {
-                        document.getElementById('contractYearsDisplay').textContent = years + '年';
-                    } else {
-                        document.getElementById('contractYearsDisplay').textContent = '--';
-                    }
-                } else {
-                    document.getElementById('contractYearsDisplay').textContent = '--';
-                }
-            } else {
-                document.getElementById('contractYearsDisplay').textContent = '--';
-            }
-            
             if (player.photo) {
                 document.getElementById('playerPhoto').src = player.photo;
-            }
-            
-            // 契約情報の表示
-            const contractInfo = document.getElementById('contractInfo');
-            if (player.contract && (player.contract.marketValue || player.contract.contractUntil || player.contract.joinedDate || player.contract.transferFee || player.contract.contractYears)) {
-                contractInfo.style.display = 'block';
-                
-                // 市場価値の表示
-                if (player.contract.marketValue) {
-                    const marketValue = player.contract.marketValue;
-                    // 数値の場合は通貨フォーマット
-                    if (typeof marketValue === 'number') {
-                        document.getElementById('marketValue').textContent = '€' + (marketValue / 1000000).toFixed(1) + 'M';
-                    } else {
-                        document.getElementById('marketValue').textContent = marketValue;
-                    }
-                } else {
-                    document.getElementById('marketValue').textContent = 'データなし';
-                }
-                
-                // 移籍金の表示
-                if (player.contract.transferFee) {
-                    document.getElementById('transferFee').textContent = player.contract.transferFee;
-                } else {
-                    document.getElementById('transferFee').textContent = 'データなし';
-                }
-                
-                // 契約満了日の表示
-                if (player.contract.contractUntil) {
-                    const contractDate = new Date(player.contract.contractUntil);
-                    document.getElementById('contractUntil').textContent = contractDate.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
-                } else {
-                    document.getElementById('contractUntil').textContent = 'データなし';
-                }
-                
-                // 契約年数の表示
-                if (player.contract.contractYears) {
-                    document.getElementById('contractYears').textContent = player.contract.contractYears + '年';
-                } else if (player.contract.contractUntil) {
-                    // 契約期限から契約年数を計算
-                    const contractDate = new Date(player.contract.contractUntil);
-                    const today = new Date();
-                    const years = Math.floor((contractDate - today) / (1000 * 60 * 60 * 24 * 365));
-                    if (years > 0) {
-                        document.getElementById('contractYears').textContent = years + '年';
-                    } else {
-                        document.getElementById('contractYears').textContent = 'データなし';
-                    }
-                } else {
-                    document.getElementById('contractYears').textContent = 'データなし';
-                }
-                
-                // 加入日の表示
-                if (player.contract.joinedDate) {
-                    const joinedDate = new Date(player.contract.joinedDate);
-                    document.getElementById('joinedDate').textContent = joinedDate.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
-                } else {
-                    document.getElementById('joinedDate').textContent = 'データなし';
-                }
-            } else {
-                contractInfo.style.display = 'none';
             }
             
             // データソースの表示

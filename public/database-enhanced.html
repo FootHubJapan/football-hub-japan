@@ -3822,7 +3822,6 @@
                 </div>
                 <div id="detailsMeta" style="color:#bdbdbd;font-size:12px;margin-bottom:8px;"></div>
                 <div id="detailsDataSource" style="color:#4ade80;font-size:11px;margin-bottom:8px;font-weight:600;"></div>
-                <div id="detailsContract" style="color:#ffd700;font-size:11px;margin-bottom:8px;"></div>
                 <div id="detailsStats" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px;"></div>
                 <div id="detailsChartContainer" style="margin-bottom:12px;background:#1a1a1a;padding:12px;border-radius:8px;border:1px solid #2a2a2a;">
                     <div style="color:#00ff88;font-size:12px;font-weight:600;margin-bottom:8px;">ドリブル・シュート統計</div>
@@ -3884,34 +3883,6 @@
                         }
                     } catch (integratedError) {
                         console.log(`⚠️ 統合API取得失敗: ${integratedError.message}`);
-                    }
-                }
-                
-                // 移籍情報を取得（API-Footballから）
-                if (player.id || player.playerId) {
-                    try {
-                        const transferResponse = await fetch(`/api/transfers/player/${encodeURIComponent(player.id || player.playerId)}?_t=${Date.now()}`);
-                        if (transferResponse.ok) {
-                            const transferData = await transferResponse.json();
-                            if (transferData && transferData.latestTransferFee) {
-                                // 最新の移籍金を取得
-                                if (!player.contract) player.contract = {};
-                                player.contract.transferFee = transferData.latestTransferFee;
-                                console.log(`✅ 移籍金を取得: ${transferData.latestTransferFee}`);
-                            } else if (transferData && transferData.transfers && transferData.transfers.length > 0) {
-                                // フォールバック: 移籍情報から移籍金を取得
-                                const latestTransfer = transferData.transfers[0];
-                                if (latestTransfer.transfers && latestTransfer.transfers.length > 0) {
-                                    const mostRecent = latestTransfer.transfers[0];
-                                    if (mostRecent.amount) {
-                                        if (!player.contract) player.contract = {};
-                                        player.contract.transferFee = mostRecent.amount;
-                                    }
-                                }
-                            }
-                        }
-                    } catch (transferError) {
-                        console.log(`⚠️ 移籍情報取得失敗: ${transferError.message}`);
                     }
                 }
 
@@ -3980,40 +3951,6 @@
             }
             
             // 契約情報を表示（統合APIから取得したデータも使用）
-            const contractEl = document.getElementById('detailsContract');
-            if (contractEl) {
-                const contract = player.contract || integratedData?.contract || {};
-                const contractInfo = [];
-                
-                // 移籍金
-                if (contract.transferFee) {
-                    contractInfo.push(`移籍金: ${contract.transferFee}`);
-                }
-                
-                // 契約期限から契約年数を計算
-                if (contract.contractUntil) {
-                    const contractDate = new Date(contract.contractUntil);
-                    const today = new Date();
-                    const years = Math.floor((contractDate - today) / (1000 * 60 * 60 * 24 * 365));
-                    if (years > 0) {
-                        contractInfo.push(`契約期限: ${contract.contractUntil} (残り${years}年)`);
-                    } else {
-                        contractInfo.push(`契約期限: ${contract.contractUntil}`);
-                    }
-                }
-                
-                // 契約年数（直接指定されている場合）
-                if (contract.contractYears) {
-                    contractInfo.push(`契約年数: ${contract.contractYears}年`);
-                }
-                
-                // 市場価値
-                if (contract.marketValue) {
-                    contractInfo.push(`市場価値: ${contract.marketValue}`);
-                }
-                
-                contractEl.textContent = contractInfo.length > 0 ? contractInfo.join(' | ') : '';
-            }
             
             const statsEl = document.getElementById('detailsStats');
             statsEl.innerHTML = '';
@@ -4031,30 +3968,6 @@
                 ['成功率', stats.passAccuracy || 'N/A'],
                 ['タックル', stats.tackles || 0]
             ];
-            
-            // 契約情報を追加（移籍金・契約年数）
-            if (player.contract) {
-                const contract = player.contract;
-                if (contract.transferFee) {
-                    items.push(['移籍金', contract.transferFee]);
-                }
-                if (contract.contractYears) {
-                    items.push(['契約年数', contract.contractYears + '年']);
-                } else if (contract.contractUntil) {
-                    const contractDate = new Date(contract.contractUntil);
-                    const today = new Date();
-                    const years = Math.floor((contractDate - today) / (1000 * 60 * 60 * 24 * 365));
-                    if (years > 0) {
-                        items.push(['契約年数', years + '年']);
-                    }
-                }
-                if (contract.marketValue) {
-                    const marketValue = typeof contract.marketValue === 'number' 
-                        ? '€' + (contract.marketValue / 1000000).toFixed(1) + 'M'
-                        : contract.marketValue;
-                    items.push(['市場価値', marketValue]);
-                }
-            }
             items.forEach(([label, value]) => {
                 const box = document.createElement('div');
                 box.style.border = '1px solid #2a2a2a';

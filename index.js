@@ -8243,66 +8243,13 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
         // フロントエンドが配列形式とオブジェクト形式の両方に対応しているため、そのまま返す
         // 配列形式のstatsがあれば、すべてのコンペティション別統計を表示するために配列のまま返す
         
-        // Football-data.org APIから追加情報を取得（契約情報など）
+        // Football-data.org APIから追加情報を取得（契約情報は取得不可のためコメントアウト）
+        // 注意: Football-data.orgとAPI-Footballは市場価値・契約情報を提供していません
+        // 市場価値データは Transfermarkt が著作権を持っており、再配布を許可していないため
         let footballDataInfo = null;
-        if (player.footballDataId && process.env.FOOTBALL_DATA_API_KEY) {
-            try {
-                console.log('🔍 Football-data.org選手情報取得開始:', {
-                    playerName: player.name,
-                    footballDataId: player.footballDataId,
-                    hasApiKey: !!process.env.FOOTBALL_DATA_API_KEY
-                });
-                
-                const axios = require('axios');
-                const fdUrl = `https://api.football-data.org/v4/persons/${player.footballDataId}`;
-                console.log('📡 Football-data.org選手API呼び出し:', fdUrl);
-                
-                const fdResponse = await axios.get(fdUrl, {
-                    headers: {
-                        'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY
-                    },
-                    timeout: 5000
-                }).catch(err => {
-                    console.log(`⚠️ Football-data.org選手情報取得失敗 (${player.footballDataId}):`, err.message);
-                    return null;
-                });
-                
-                if (fdResponse && fdResponse.data) {
-                    const fdData = fdResponse.data;
-                    
-                    // Football-data.orgのAPIレスポンス構造を確認
-                    // currentContractオブジェクトから契約情報を取得
-                    const currentContract = fdData.currentContract || {};
-                    const contractUntil = currentContract.until || fdData.contractUntil || null;
-                    const joinedDate = currentContract.start || fdData.joinedDate || null;
-                    
-                    footballDataInfo = {
-                        marketValue: fdData.marketValue || null,
-                        contractUntil: contractUntil,
-                        joinedDate: joinedDate,
-                        shirtNumber: fdData.shirtNumber || null
-                    };
-                    
-                    // 契約期限から契約年数を計算
-                    if (contractUntil) {
-                        const contractDate = new Date(contractUntil);
-                        const today = new Date();
-                        const years = Math.floor((contractDate - today) / (1000 * 60 * 60 * 24 * 365));
-                        if (years > 0) {
-                            footballDataInfo.contractYears = years;
-                        }
-                    }
-                    
-                    console.log(`✅ Football-data.orgから選手追加情報を取得: ${player.name}`, {
-                        contractUntil: contractUntil,
-                        contractYears: footballDataInfo.contractYears,
-                        marketValue: footballDataInfo.marketValue
-                    });
-                }
-            } catch (error) {
-                console.log(`⚠️ Football-data.org選手情報取得エラー:`, error.message);
-            }
-        }
+        // if (player.footballDataId && process.env.FOOTBALL_DATA_API_KEY) {
+        //     // 契約情報は取得不可のため、この処理は無効化
+        // }
         
         // ポジション情報を確実に含める（複数のソースから取得）
         const position = player.position || 
@@ -8320,14 +8267,8 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
             detailedPosition: player.detailedPosition || position || null,
             // player.statsをそのまま使用（配列形式なら配列、オブジェクト形式ならオブジェクト）
             stats: player.stats,
-            // Football-data.orgから取得した契約情報を追加
-            contract: footballDataInfo ? {
-                marketValue: footballDataInfo.marketValue,
-                contractUntil: footballDataInfo.contractUntil,
-                contractYears: footballDataInfo.contractYears,
-                joinedDate: footballDataInfo.joinedDate,
-                shirtNumber: footballDataInfo.shirtNumber
-            } : null,
+            // 契約情報は取得不可（Football-data.orgとAPI-Footballは市場価値・契約情報を提供していないため）
+            contract: null,
             integration: {
                 hasApiFootball: !!player.playerId || !!player.apiFootballId,
                 hasFootballData: !!player.footballDataId,
