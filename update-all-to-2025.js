@@ -111,17 +111,29 @@ async function updateAllPlayers() {
             continue;
         }
         
-        // 既に2025データがある選手はスキップ
+        // 既に2025データがある選手はスキップ（統計データが0の場合は更新対象）
         if (player.source && player.source.includes('2025') && player.stats.appearances > 0) {
             skippedCount++;
             continue;
         }
         
+        // 統計データが0の選手は強制的に更新
+        if (player.source && player.source.includes('2025') && player.stats.appearances === 0) {
+            console.log(`  🔄 ${player.name}: 統計データが0のため強制更新`);
+        }
+        
+        // 2025データで統計が0の選手も更新対象として続行
+        // 統計データが0の選手は強制的に更新
+        
         // playerIdを取得
         const playerId = player.playerId || player.id?.toString().replace('api_', '');
-        if (!playerId || playerId.includes('efficient') || playerId.includes('hybrid')) {
+        if (!playerId || typeof playerId !== 'string' || playerId.includes('efficient') || playerId.includes('hybrid')) {
             skippedCount++;
             continue;
+        }
+        
+        if (i < 5) {
+            console.log(`  🔍 ${player.name} (ID: ${playerId}): APIリクエスト送信中...`);
         }
         
         const stats2025 = await fetch2025Stats(playerId, player.name, player.leagueId);
