@@ -6396,30 +6396,12 @@
                     return '';
                 }
                 
-                // アウェイチームの場合、ポジション情報を取得して左右反転を適用
+                // アウェイチームの場合、左右を反転させる
+                // キーパーから見て、左側の選手（LB、LW、LWB、LMなど）は左側に、右側の選手（RB、RW、RWB、RMなど）は右側に配置されるべき
+                // アウェイチームは右側に配置されるため、すべての選手のtop位置を反転させる必要がある
                 if (teamType === 'away') {
-                    const playerPosition = player.position || player.player?.pos || player.pos || '';
-                    // LB/RB、LW/RW、LWB/RWB、LM/RMの左右反転を適用
-                    // アウェイチームは右側に配置されるため、左右のポジションを反転する必要がある
-                    if (playerPosition === 'LB') {
-                        // LB（左サイドバック）→ 右側ではRB位置（topを反転）
-                        pos = { ...pos, top: 100 - pos.top };
-                    } else if (playerPosition === 'RB') {
-                        // RB（右サイドバック）→ 右側ではLB位置（topを反転）
-                        pos = { ...pos, top: 100 - pos.top };
-                    } else if (playerPosition === 'LW' || playerPosition === 'LM') {
-                        // LW/LM（左ウィング/左ミッド）→ 右側ではRW/RM位置（topを反転）
-                        pos = { ...pos, top: 100 - pos.top };
-                    } else if (playerPosition === 'RW' || playerPosition === 'RM') {
-                        // RW/RM（右ウィング/右ミッド）→ 右側ではLW/LM位置（topを反転）
-                        pos = { ...pos, top: 100 - pos.top };
-                    } else if (playerPosition === 'LWB') {
-                        // LWB（左ウィングバック）→ 右側ではRWB位置（topを反転）
-                        pos = { ...pos, top: 100 - pos.top };
-                    } else if (playerPosition === 'RWB') {
-                        // RWB（右ウィングバック）→ 右側ではLWB位置（topを反転）
-                        pos = { ...pos, top: 100 - pos.top };
-                    }
+                    // すべての選手のtop位置を反転（左右を反転）
+                    pos = { ...pos, top: 100 - pos.top };
                 }
                 
                 return createPlayerMarker(pos, player, teamType, homeTeam, awayTeam);
