@@ -8261,9 +8261,20 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
             }
         }
         
+        // ポジション情報を確実に含める（複数のソースから取得）
+        const position = player.position || 
+                         player.detailedPosition || 
+                         player.stats?.position ||
+                         (Array.isArray(player.stats) && player.stats[0]?.position) ||
+                         (player.stats && typeof player.stats === 'object' && player.stats.position) ||
+                         null;
+        
         // 統合情報を追加
         const enhancedPlayer = {
             ...player,
+            // ポジション情報を確実に含める
+            position: position || player.position || null,
+            detailedPosition: player.detailedPosition || position || null,
             // player.statsをそのまま使用（配列形式なら配列、オブジェクト形式ならオブジェクト）
             stats: player.stats,
             // Football-data.orgから取得した契約情報を追加

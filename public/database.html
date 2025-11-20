@@ -1548,7 +1548,7 @@
                                 ? ageDiff - 1 : ageDiff;
                         }
                         
-                        const position = item.position || 'Unknown';
+                        const position = item.position || item.detailedPosition || item.stats?.position || (Array.isArray(item.stats) && item.stats[0]?.position) || 'Unknown';
                         const stats = item.seasons?.['2024-2025']?.stats || {};
                         
                         html += `
