@@ -882,7 +882,12 @@
             });
 
             container.innerHTML = html;
-            console.log('✅ Champions League ranking displayed successfully');
+            console.log('✅ Champions League ranking displayed successfully:', html.length, 'characters');
+            
+            // 表示確認のため、最初の数チームをログ出力
+            if (standings.length > 0) {
+                console.log('📋 Sample teams:', standings.slice(0, 3).map(t => ({ name: t.name, group: t.group, position: t.position })));
+            }
         }
 
         // チャンピオンズリーグチャート更新
