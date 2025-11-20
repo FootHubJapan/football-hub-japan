@@ -1382,7 +1382,7 @@ app.post('/api/ai/tactics', async (req, res) => {
 // 選手ランキング取得（動的データ優先）
 app.get('/api/ranking/players', async (req, res) => {
     try {
-        const { season = 2026, league, position, stat = 'goals' } = req.query;
+        const { season = 2025, league, position, stat = 'goals' } = req.query;
         
         console.log('🏆 Player Ranking Request:', { season, league, position, stat });
         
@@ -1403,7 +1403,7 @@ app.get('/api/ranking/players', async (req, res) => {
                 };
                 
                 const targetLeague = league ? leagueIds[league] : null;
-                const targetSeason = parseInt(season) || 2026;
+                const targetSeason = parseInt(season) || 2025;
                 
                 console.log('🔍 Fetching player statistics from API-Football:', { league, targetLeague, season: targetSeason, stat });
                 
@@ -1719,7 +1719,7 @@ app.get('/api/ranking/players', async (req, res) => {
 // チームランキング取得
 app.get('/api/ranking/teams', async (req, res) => {
     try {
-        const { league, season = 2026 } = req.query;
+        const { league, season = 2025 } = req.query;
         
         console.log('🏆 Team Ranking Request:', { league });
         
@@ -1753,7 +1753,7 @@ app.get('/api/ranking/teams', async (req, res) => {
                     },
                     params: {
                         league: targetLeague,
-                        season: parseInt(season) || 2026
+                        season: parseInt(season) || 2025
                     }
                 });
                 
@@ -1813,7 +1813,7 @@ app.get('/api/ranking/teams', async (req, res) => {
 // チャンピオンズリーグ順位取得
 app.get('/api/ranking/champions-league', async (req, res) => {
     try {
-        const { season = 2026 } = req.query;
+        const { season = 2025 } = req.query;
         console.log('🏆 Champions League Ranking Request:', { season });
         
         let standings = [];
@@ -1829,7 +1829,7 @@ app.get('/api/ranking/champions-league', async (req, res) => {
                     },
                     params: {
                         league: 2, // Champions League
-                        season: parseInt(season) || 2026
+                        season: parseInt(season) || 2025
                     }
                 });
                 
@@ -6376,7 +6376,7 @@ async function handleMatchDetailsRequest(req, res) {
                                                 
                                                 // レスポンスが配列の場合
                                                 if (Array.isArray(statsResponse.data)) {
-                                                    detailedFdMatch.statistics = statsResponse.data;
+                                                detailedFdMatch.statistics = statsResponse.data;
                                                 } 
                                                 // レスポンスがオブジェクトでstatisticsプロパティがある場合
                                                 else if (statsResponse.data.statistics && Array.isArray(statsResponse.data.statistics)) {

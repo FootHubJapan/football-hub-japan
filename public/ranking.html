@@ -456,11 +456,11 @@
                     <div class="filter-group">
                         <label class="filter-label">シーズン</label>
                         <select class="filter-select" id="leagueStandingsSeasonFilter" onchange="loadLeagueStandings()">
-                            <option value="2026">2025/2026</option>
-                            <option value="2025">2024/2025</option>
-                            <option value="2024">2023/2024</option>
-                            <option value="2023">2022/2023</option>
-                            <option value="2022">2021/2022</option>
+                            <option value="2025">2025/2026</option>
+                            <option value="2024">2024/2025</option>
+                            <option value="2023">2023/2024</option>
+                            <option value="2022">2022/2023</option>
+                            <option value="2021">2021/2022</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -500,11 +500,11 @@
                     <div class="filter-group">
                         <label class="filter-label">シーズン</label>
                         <select class="filter-select" id="championsSeasonFilter" onchange="loadChampionsLeagueRanking()">
-                            <option value="2026">2025/2026</option>
-                            <option value="2025">2024/2025</option>
-                            <option value="2024">2023/2024</option>
-                            <option value="2023">2022/2023</option>
-                            <option value="2022">2021/2022</option>
+                            <option value="2025">2025/2026</option>
+                            <option value="2024">2024/2025</option>
+                            <option value="2023">2023/2024</option>
+                            <option value="2022">2022/2023</option>
+                            <option value="2021">2021/2022</option>
                         </select>
                     </div>
                 </div>
@@ -595,7 +595,9 @@
 
         // 選手ランキング読み込み
         async function loadPlayerRanking() {
-            const season = document.getElementById('seasonFilter').value;
+            const seasonValue = document.getElementById('seasonFilter').value;
+            // API-Footballはシーズン開始年を使用するため、1年減らす（2025/2026 → 2025）
+            const season = parseInt(seasonValue) - 1;
             const league = document.getElementById('leagueFilter').value;
             const position = document.getElementById('positionFilter').value;
             const stat = document.getElementById('statFilter').value;
@@ -626,7 +628,9 @@
 
         // チームランキング読み込み
         async function loadTeamRanking() {
-            const season = document.getElementById('seasonFilter').value;
+            const seasonValue = document.getElementById('seasonFilter').value;
+            // API-Footballはシーズン開始年を使用するため、1年減らす（2025/2026 → 2025）
+            const season = parseInt(seasonValue) - 1;
             const league = document.getElementById('leagueFilter').value;
 
             if (!league) {
@@ -658,14 +662,16 @@
 
         // リーグ順位読み込み
         async function loadLeagueStandings() {
-            const season = document.getElementById('leagueStandingsSeasonFilter').value;
+            const seasonValue = document.getElementById('leagueStandingsSeasonFilter').value;
+            // API-Footballはシーズン開始年を使用するため、1年減らす（2025/2026 → 2025）
+            const season = parseInt(seasonValue) - 1;
             const league = document.getElementById('leagueStandingsFilter').value;
-
+        
             if (!league) {
                 document.getElementById('leagueStandingsBody').innerHTML = '<div class="no-data">リーグを選択すると順位表が表示されます</div>';
                 return;
             }
-
+        
             try {
                 const response = await fetch(`/api/ranking/teams?season=${season}&league=${league}`);
                 let teams;
@@ -726,7 +732,9 @@
 
         // チャンピオンズリーグ順位読み込み
         async function loadChampionsLeagueRanking() {
-            const season = document.getElementById('championsSeasonFilter').value;
+            const seasonValue = document.getElementById('championsSeasonFilter').value;
+            // API-Footballはシーズン開始年を使用するため、1年減らす（2025/2026 → 2025）
+            const season = parseInt(seasonValue) - 1;
             try {
                 const response = await fetch(`/api/ranking/champions-league?season=${season}`);
                 let standings;
