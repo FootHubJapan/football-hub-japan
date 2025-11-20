@@ -1399,7 +1399,8 @@ app.get('/api/ranking/players', async (req, res) => {
                     'SA': 135,     // Serie A
                     'BL1': 78,     // Bundesliga
                     'FL1': 61,     // Ligue 1
-                    'J1': 98       // J1 League
+                    'J1': 98,      // J1 League
+                    'CL': 2        // Champions League
                 };
                 
                 const targetLeague = league ? leagueIds[league] : null;
@@ -1739,7 +1740,8 @@ app.get('/api/ranking/teams', async (req, res) => {
                     'SA': 135,     // Serie A
                     'BL1': 78,     // Bundesliga
                     'FL1': 61,     // Ligue 1
-                    'J1': 98       // J1 League
+                    'J1': 98,      // J1 League
+                    'CL': 2        // Champions League
                 };
                 
                 const targetLeague = leagueIds[league];
