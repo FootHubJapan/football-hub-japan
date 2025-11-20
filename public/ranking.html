@@ -734,21 +734,21 @@
             teams.forEach((team, index) => {
                 html += `
                     <div class="table-row team-ranking">
-                        <div class="rank-number">${index + 1}</div>
-                        <div class="player-info">
+                        <div class="col-rank rank-number">${index + 1}</div>
+                        <div class="col-team player-info">
                             ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : `<div class="team-logo">${team.name.charAt(0)}</div>`}
                             <div class="player-details">
                                 <h4>${team.name}</h4>
                             </div>
                         </div>
-                        <div class="stat-value">${team.played || 0}</div>
-                        <div class="stat-value">${team.points || 0}</div>
-                        <div class="stat-value">${team.wins || 0}</div>
-                        <div class="stat-value">${team.draws || 0}</div>
-                        <div class="stat-value">${team.losses || 0}</div>
-                        <div class="stat-value">${team.goalsFor || 0}</div>
-                        <div class="stat-value">${team.goalsAgainst || 0}</div>
-                        <div class="stat-value">${team.goalDifference >= 0 ? '+' : ''}${team.goalDifference || 0}</div>
+                        <div class="col-played stat-value">${team.played || 0}</div>
+                        <div class="col-points stat-value">${team.points || 0}</div>
+                        <div class="col-wins stat-value">${team.wins || 0}</div>
+                        <div class="col-draws stat-value">${team.draws || 0}</div>
+                        <div class="col-losses stat-value">${team.losses || 0}</div>
+                        <div class="col-goals-for stat-value">${team.goalsFor || 0}</div>
+                        <div class="col-goals-against stat-value">${team.goalsAgainst || 0}</div>
+                        <div class="col-goal-diff stat-value">${team.goalDifference >= 0 ? '+' : ''}${team.goalDifference || 0}</div>
                     </div>
                 `;
             });
