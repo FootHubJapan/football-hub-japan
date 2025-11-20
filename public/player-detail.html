@@ -809,7 +809,7 @@
             document.getElementById('playerClub').textContent = player.currentTeam;
             document.getElementById('playerAge').textContent = player.age + '歳';
             document.getElementById('playerHeight').textContent = (player.height || 175) + 'cm';
-            document.getElementById('playerPosition').textContent = player.position;
+            document.getElementById('playerPosition').textContent = player.position || player.detailedPosition || player.stats?.position || '--';
             document.getElementById('playerNationality').textContent = player.nationality;
             
             if (player.photo) {
