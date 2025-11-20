@@ -3468,6 +3468,38 @@
                 showDataStatus('データインポート中にエラーが発生しました', 'error');
             }
         }
+        
+        // 全選手データをFirebaseにインポート（players.jsonから）
+        async function importAllPlayersFromFile() {
+            try {
+                showDataStatus('全選手データのインポートを開始しました。時間がかかる場合があります（約6961名）...', 'info');
+                
+                const response = await fetch('/api/admin/import-players', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || errorData.error || 'インポートに失敗しました');
+                }
+                
+                const result = await response.json();
+                console.log('✅ インポート結果:', result);
+                
+                showDataStatus(`✅ データインポートが完了しました！\n${result.imported}名の選手をインポートしました`, 'success');
+                
+                // データを再表示
+                setTimeout(async () => {
+                    await switchTab('players');
+                }, 2000);
+            } catch (error) {
+                console.error('全選手データインポートエラー:', error);
+                showDataStatus(`データインポート中にエラーが発生しました: ${error.message}`, 'error');
+            }
+        }
 
         // キャッシュクリア
         async function clearCachedData() {
