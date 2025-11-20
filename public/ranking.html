@@ -940,18 +940,22 @@
             
             tbody.innerHTML = teams.map((team, index) => `
                 <div class="table-row team-ranking">
-                    <div class="rank-number">${index + 1}</div>
-                    <div class="player-info">
+                    <div class="col-rank rank-number">${index + 1}</div>
+                    <div class="col-team player-info">
                         <div class="team-logo">${team.name.substring(0, 2).toUpperCase()}</div>
                         <div class="player-details">
                             <h4>${team.name}</h4>
                             <p>${team.league}</p>
                         </div>
                     </div>
-                    <div class="stat-value">${team.points}</div>
-                    <div class="stat-value">${team.wins}</div>
-                    <div class="stat-value">${team.draws}</div>
-                    <div class="stat-value">${team.losses}</div>
+                    <div class="col-played stat-value">${team.played || 0}</div>
+                    <div class="col-points stat-value">${team.points}</div>
+                    <div class="col-wins stat-value">${team.wins}</div>
+                    <div class="col-draws stat-value">${team.draws}</div>
+                    <div class="col-losses stat-value">${team.losses}</div>
+                    <div class="col-goals-for stat-value">${team.goalsFor || 0}</div>
+                    <div class="col-goals-against stat-value">${team.goalsAgainst || 0}</div>
+                    <div class="col-goal-diff stat-value">${team.goalDifference >= 0 ? '+' : ''}${team.goalDifference || 0}</div>
                 </div>
             `).join('');
         }
