@@ -6400,11 +6400,13 @@
                 if (teamType === 'away') {
                     const playerPosition = player.position || player.player?.pos || player.pos || '';
                     // LB/RB、LW/RW、LWB/RWBの左右反転を適用
+                    // アウェイチームは既にcreatePlayerMarker内でleftが反転されるため、
+                    // ここではtop位置を反転して左右を正しく配置
                     if (playerPosition === 'LB' || playerPosition === 'RB' || 
                         playerPosition === 'LW' || playerPosition === 'RW' || 
                         playerPosition === 'LWB' || playerPosition === 'RWB' ||
                         playerPosition === 'LM' || playerPosition === 'RM') {
-                        // top位置を反転（左右反転）
+                        // top位置を反転（左右反転: 左側の選手を右側に、右側の選手を左側に）
                         pos = { ...pos, top: 100 - pos.top };
                     }
                 }

@@ -796,22 +796,34 @@
         // チャンピオンズリーグ順位読み込み
         async function loadChampionsLeagueRanking() {
             const season = document.getElementById('championsSeasonFilter').value;
+            console.log('🏆 Loading Champions League ranking for season:', season);
             try {
                 const response = await fetch(`/api/ranking/champions-league?season=${season}`);
-                let standings;
+                console.log('📡 Champions League API response status:', response.status);
+                
+                let standings = [];
 
                 if (response.ok) {
                     const data = await response.json();
-                    standings = data.standings || [];
+                    console.log('📊 Champions League API data:', data);
+                    standings = data.standings || data.standings || [];
+                    console.log('✅ Champions League standings count:', standings.length);
+                    
+                    if (standings.length === 0) {
+                        console.warn('⚠️ No standings data, using fallback');
+                        standings = generateFallbackChampionsLeagueData();
+                    }
                 } else {
+                    console.error('❌ Champions League API error:', response.status, response.statusText);
                     standings = generateFallbackChampionsLeagueData();
                 }
 
+                console.log('📋 Final standings to display:', standings.length);
                 displayChampionsLeagueRanking(standings);
                 updateChampionsChart(standings);
 
             } catch (error) {
-                console.error('Error loading Champions League ranking:', error);
+                console.error('❌ Error loading Champions League ranking:', error);
                 const standings = generateFallbackChampionsLeagueData();
                 displayChampionsLeagueRanking(standings);
                 updateChampionsChart(standings);
