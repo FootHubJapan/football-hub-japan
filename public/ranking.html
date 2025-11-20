@@ -260,6 +260,10 @@
             grid-template-columns: 60px 1fr 80px 80px 80px 80px 80px 80px 80px 100px;
         }
 
+        .team-ranking.champions-ranking {
+            grid-template-columns: 60px 1fr 100px 80px 80px 80px 80px 80px 80px 80px 100px;
+        }
+
         .team-logo {
             width: 30px;
             height: 30px;
@@ -784,7 +788,7 @@
             let html = '';
             standings.forEach(team => {
                 html += `
-                    <div class="table-row team-ranking">
+                    <div class="table-row team-ranking champions-ranking">
                         <div class="rank-number">${team.position || '-'}</div>
                         <div class="player-info">
                             ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : `<div class="team-logo">${team.name.charAt(0)}</div>`}
