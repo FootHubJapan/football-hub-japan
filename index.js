@@ -8376,6 +8376,8 @@ app.get('/api/integrated/players', async (req, res) => {
                 .replace(/careras/gi, 'carreras')
                 .replace(/carerras/gi, 'carreras');
             
+            const beforeFilterCount = players.length;
+            
             players = players.filter(player => {
                 if (!player) return false;
                 
@@ -8393,26 +8395,46 @@ app.get('/api/integrated/players', async (req, res) => {
                 
                 // 通常の検索
                 let matches = searchFields.some(field => 
-                    field.toLowerCase().includes(searchQuery) ||
-                    field.toLowerCase().includes(normalizedQuery)
+                    field && field.toLowerCase().includes(searchQuery) ||
+                    field && field.toLowerCase().includes(normalizedQuery)
                 );
                 
-                // 特殊ケース: CarrerasとHuijsenの検索強化
+                // 特殊ケース: CarrerasとHuijsenの検索強化（最優先）
                 if (!matches) {
                     if (searchQuery.includes('carreras') || searchQuery.includes('careras') || normalizedQuery.includes('carreras')) {
                         matches = searchFields.some(field => 
-                            field.toLowerCase().includes('carreras')
+                            field && field.toLowerCase().includes('carreras')
                         );
                     }
                     if (!matches && (searchQuery.includes('huijsen') || searchQuery.includes('hujisen') || normalizedQuery.includes('huijsen'))) {
                         matches = searchFields.some(field => 
-                            field.toLowerCase().includes('huijsen')
+                            field && field.toLowerCase().includes('huijsen')
                         );
                     }
                 }
                 
                 return matches;
             });
+            
+            console.log(`🔍 検索結果: ${beforeFilterCount}名 → ${players.length}名 (クエリ: "${query}")`);
+            
+            // デバッグ: CarrerasとHuijsenが検索結果に含まれているか確認
+            if (searchQuery.includes('carreras') || searchQuery.includes('careras')) {
+                const carrerasPlayers = players.filter(p => 
+                    (p.name || '').toLowerCase().includes('carreras') ||
+                    (p.fullName || '').toLowerCase().includes('carreras') ||
+                    (p.lastName || '').toLowerCase().includes('carreras')
+                );
+                console.log(`🔍 Carreras検索結果: ${carrerasPlayers.length}名`, carrerasPlayers.slice(0, 3).map(p => p.name || p.fullName));
+            }
+            if (searchQuery.includes('huijsen') || searchQuery.includes('hujisen')) {
+                const huijsenPlayers = players.filter(p => 
+                    (p.name || '').toLowerCase().includes('huijsen') ||
+                    (p.fullName || '').toLowerCase().includes('huijsen') ||
+                    (p.lastName || '').toLowerCase().includes('huijsen')
+                );
+                console.log(`🔍 Huijsen検索結果: ${huijsenPlayers.length}名`, huijsenPlayers.slice(0, 3).map(p => p.name || p.fullName));
+            }
         }
         
         // 日本語検索
