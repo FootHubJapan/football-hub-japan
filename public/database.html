@@ -1805,7 +1805,28 @@
             }
             
             tableBody.innerHTML = html;
-            console.log(`${tabType}データの表示が完了しました`);
+            
+            // デバッグ: 表示された選手数をログ出力
+            if (tabType === 'players' && data.length > 0) {
+                console.log(`📊 ${data.length}名の選手を表示しました`);
+                
+                // CarrerasとHuijsenが含まれているか確認
+                const hasCarreras = data.some(p => 
+                    (p.name || '').toLowerCase().includes('carreras') ||
+                    (p.fullName || '').toLowerCase().includes('carreras') ||
+                    (p.lastName || '').toLowerCase().includes('carreras')
+                );
+                const hasHuijsen = data.some(p => 
+                    (p.name || '').toLowerCase().includes('huijsen') ||
+                    (p.fullName || '').toLowerCase().includes('huijsen') ||
+                    (p.lastName || '').toLowerCase().includes('huijsen')
+                );
+                if (hasCarreras || hasHuijsen) {
+                    console.log(`✅ データベースに含まれています: Carreras=${hasCarreras}, Huijsen=${hasHuijsen}`);
+                } else {
+                    console.log(`⚠️ データベースに含まれていません: Carreras=${hasCarreras}, Huijsen=${hasHuijsen}`);
+                }
+            }
         }
 
 
