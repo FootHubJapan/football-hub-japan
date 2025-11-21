@@ -3298,9 +3298,16 @@
                     }
                     
                     console.log('📊 取得進捗:', progress);
+                } else if (response.status === 404 || response.status === 502) {
+                    // エンドポイントが存在しない場合はスキップ（エラーを出さない）
+                    return;
                 }
             } catch (error) {
-                console.error('進捗取得エラー:', error);
+                // エラーを無視（エンドポイントが存在しない場合）
+                if (error.message && (error.message.includes('Failed to fetch') || error.message.includes('502'))) {
+                    return;
+                }
+                // その他のエラーはログに出力しない（スパムを避けるため）
             }
         }
 
