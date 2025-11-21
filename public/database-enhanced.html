@@ -1640,20 +1640,46 @@
         // 初期選手データ読み込み
         async function loadInitialPlayers() {
             try {
+                // 既に全選手データが読み込まれている場合は再読み込みしない
+                if (allPlayers.length > 0) {
+                    currentPlayers = allPlayers;
+                    displayPlayers(allPlayers.slice(0, 100));
+                    return;
+                }
+                
                 console.log('🔄 初期選手データを読み込み中...');
                 
-                // 優先順位1: ランキングAPIから全選手データを取得（limitを増やす）
+                // /api/integrated/playersから全選手データを取得
+                try {
+                    const response = await fetch('/api/integrated/players?limit=10000');
+                    if (response.ok) {
+                        const data = await response.json();
+                        const players = Array.isArray(data) ? data : (data.players || data.results || []);
+                        if (players.length > 0) {
+                            allPlayers = players; // 全選手データを保持
+                            currentPlayers = players;
+                            // 最初の100名を表示
+                            displayPlayers(players.slice(0, 100));
+                            console.log(`✅ ${players.length}名の選手データを取得、全データを保持`);
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.log('APIからの取得に失敗:', error);
+                }
+                
+                // フォールバック: ランキングAPIから全選手データを取得
                 try {
                     console.log('🔄 ランキングAPIから全選手データを取得中...');
-                    const response = await fetch('/api/ranking/players?limit=10000'); // 最大10000名まで取得
+                    const response = await fetch('/api/ranking/players?limit=10000');
                     if (response.ok) {
                         const data = await response.json();
                         if (data.players && data.players.length > 0) {
+                            allPlayers = data.players; // 全選手データを保持
                             currentPlayers = data.players;
-                            // 最初の100名を表示（無限スクロールで追加読み込み）
+                            // 最初の100名を表示
                             displayPlayers(data.players.slice(0, 100));
-                            console.log(`✅ ${data.players.length}名の選手データを取得（${data.source}）、最初の100名を表示`);
-                            console.log(`📊 データソース: ${data.source}, フィルタ済み: ${data.filtered}, 合計: ${data.total}`);
+                            console.log(`✅ ${data.players.length}名の選手データを取得（${data.source}）、全データを保持`);
                             return;
                         }
                     }
@@ -1850,6 +1876,7 @@
         const playersPerPage = 50; // 1ページあたり50名表示
         let io;
         let currentPlayers = [];
+        let allPlayers = []; // 全選手データを常に保持
 
         // 不足している関数を追加
         function getSelectedDetailedPositions() {
@@ -4270,39 +4297,61 @@
                     grid.innerHTML = '<div class="loading">検索中...</div>';
                 }
 
-                // /api/integrated/playersから直接検索（フォールバックデータは使わない）
-                let players = [];
-                try {
-                    const apiUrl = query 
-                        ? `/api/integrated/players?limit=10000&query=${encodeURIComponent(query)}`
-                        : '/api/integrated/players?limit=10000';
+                // 全選手データが読み込まれていない場合は先に読み込む
+                if (allPlayers.length === 0) {
+                    await loadInitialPlayers();
+                }
+                
+                // 全選手データから検索（APIを呼び出さない）
+                let players = [...allPlayers]; // 全選手データのコピーを作成
+                
+                // 検索クエリでフィルタリング
+                if (query && query.trim()) {
+                    const searchQuery = query.trim().toLowerCase();
                     
-                    const apiResponse = await fetch(apiUrl);
-                    if (apiResponse.ok) {
-                        const apiData = await apiResponse.json();
-                        players = Array.isArray(apiData) ? apiData : (apiData.players || apiData.results || []);
-                        console.log(`✅ /api/integrated/playersから${players.length}名の選手データを取得 (クエリ: "${query}")`);
+                    // スペルミス対応
+                    const normalizedQuery = searchQuery
+                        .replace(/hujisen/gi, 'huijsen')
+                        .replace(/careras/gi, 'carreras')
+                        .replace(/carerras/gi, 'carreras');
+                    
+                    players = players.filter(player => {
+                        if (!player) return false;
                         
-                        // デバッグ: CarrerasとHuijsenが検索結果に含まれているか確認
-                        if (query && (query.toLowerCase().includes('carreras') || query.toLowerCase().includes('huijsen') || query.toLowerCase().includes('hujisen'))) {
-                            const carrerasPlayers = players.filter(p => 
-                                (p.name || '').toLowerCase().includes('carreras') ||
-                                (p.fullName || '').toLowerCase().includes('carreras') ||
-                                (p.lastName || '').toLowerCase().includes('carreras')
-                            );
-                            const huijsenPlayers = players.filter(p => 
-                                (p.name || '').toLowerCase().includes('huijsen') ||
-                                (p.fullName || '').toLowerCase().includes('huijsen') ||
-                                (p.lastName || '').toLowerCase().includes('huijsen')
-                            );
-                            console.log(`🔍 Carreras検索結果: ${carrerasPlayers.length}名`, carrerasPlayers.slice(0, 3).map(p => p.name || p.fullName));
-                            console.log(`🔍 Huijsen検索結果: ${huijsenPlayers.length}名`, huijsenPlayers.slice(0, 3).map(p => p.name || p.fullName));
+                        const searchFields = [
+                            player.name,
+                            player.fullName,
+                            player.lastName,
+                            player.englishName,
+                            player.japaneseName,
+                            player.currentTeam,
+                            player.team,
+                            player.league,
+                            player.position
+                        ].filter(Boolean);
+                        
+                        // 通常の検索
+                        let matches = searchFields.some(field => 
+                            field && field.toLowerCase().includes(searchQuery) ||
+                            field && field.toLowerCase().includes(normalizedQuery)
+                        );
+                        
+                        // 特殊ケース: CarrerasとHuijsenの検索強化（最優先）
+                        if (!matches) {
+                            if (searchQuery.includes('carreras') || searchQuery.includes('careras') || normalizedQuery.includes('carreras')) {
+                                matches = searchFields.some(field => 
+                                    field && field.toLowerCase().includes('carreras')
+                                );
+                            }
+                            if (!matches && (searchQuery.includes('huijsen') || searchQuery.includes('hujisen') || normalizedQuery.includes('huijsen'))) {
+                                matches = searchFields.some(field => 
+                                    field && field.toLowerCase().includes('huijsen')
+                                );
+                            }
                         }
-                    } else {
-                        console.error(`❌ APIレスポンスエラー: ${apiResponse.status} ${apiResponse.statusText}`);
-                    }
-                } catch (apiError) {
-                    console.error('API検索エラー:', apiError);
+                        
+                        return matches;
+                    });
                 }
                 
                 // リーグフィルタリング
@@ -4321,10 +4370,10 @@
                     });
                 }
                 
+                // 検索結果を表示（currentPlayersは更新しない、検索結果のみ表示）
                 if (players.length > 0) {
-                    currentPlayers = players;
                     displayPlayers(players);
-                    console.log(`✅ 検索結果: ${players.length}名の選手を表示`);
+                    console.log(`✅ 検索結果: ${players.length}名の選手を表示 (全${allPlayers.length}名から検索)`);
                 } else {
                     showError('選手が見つかりませんでした');
                     const grid = document.getElementById('playersGrid');
@@ -4352,9 +4401,15 @@
             if (leagueSelect) leagueSelect.value = '';
             if (detailedPositionSelect) detailedPositionSelect.value = '';
             
-            // 初期データを再読み込み
-            loadInitialPlayers();
-            console.log('Search cleared, reloading initial players');
+            // 全選手データを再表示（APIを呼び出さない）
+            if (allPlayers.length > 0) {
+                currentPlayers = allPlayers;
+                displayPlayers(allPlayers.slice(0, 100));
+                console.log('検索をクリア、全選手データを表示');
+            } else {
+                // 全選手データが読み込まれていない場合のみ読み込む
+                loadInitialPlayers();
+            }
         }
 
         // フォールバック検索処理（日本語対応強化）
