@@ -1906,8 +1906,6 @@
             const minGoals = parseInt(document.getElementById('minGoals')?.value) || 0;
             const minAssists = parseInt(document.getElementById('minAssists')?.value) || 0;
             
-            console.log('検索開始:', { searchType, searchQuery, searchPosition, searchLeague, ageRange, marketValue, minGoals, minAssists });
-            
             // 検索クエリが空でもフィルターが設定されている場合は検索を実行
             if (!searchQuery && !searchPosition && !searchLeague && !ageRange && !marketValue && minGoals === 0 && minAssists === 0) {
                 showSearchResult('検索キーワードまたはフィルターを設定してください', 'warning');
@@ -1922,7 +1920,6 @@
             
             try {
                 if (searchType === 'players') {
-                    console.log(`選手検索開始: "${searchQuery}"`);
                     
                     // 選手データを取得（APIから直接取得、フォールバックデータは使わない）
                     let players = [];
@@ -2562,19 +2559,6 @@
                             return result;
                         });
                         
-                        console.log('📊 検索後の選手数:', filteredPlayers.length);
-                        if (query.includes('bellingham') || query.includes('valverde')) {
-                            const searchTerm = query.includes('bellingham') ? 'Bellingham' : 'Valverde';
-                            console.log(`🔍 ${searchTerm}検索結果:`, filteredPlayers.map(p => ({ name: p.name, fullName: p.fullName, lastName: p.lastName })));
-                            
-                            // Valverde検索の場合、詳細ログ
-                            if (query.includes('valverde')) {
-                                console.log('🔍 Valverde検索デバッグ: 検索後の選手数', filteredPlayers.length);
-                                const valverdeAfter = filteredPlayers.filter(p => p && (p.name || '').toLowerCase().includes('valverde') || (p.fullName || '').toLowerCase().includes('valverde') || (p.lastName || '').toLowerCase().includes('valverde'));
-                                console.log('🔍 Valverde検索デバッグ: 検索後のValverde選手数', valverdeAfter.length);
-                                valverdeAfter.slice(0, 3).forEach(p => console.log('  -', p.name, p.fullName, p.lastName));
-                            }
-                        }
                     }
                     
                     // ポジションでフィルタリング（日本語対応）
@@ -2806,7 +2790,6 @@
                 resultDiv.style.display = 'block';
             }
             
-            console.log('検索結果:', message, type);
             
             // 5秒後に自動で非表示
             setTimeout(() => {
