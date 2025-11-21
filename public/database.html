@@ -1934,7 +1934,12 @@
                     // 選手データを取得（APIから直接取得、フォールバックデータは使わない）
                     let players = [];
                     try {
-                        const apiResponse = await fetch('/api/integrated/players?limit=10000');
+                        // 検索クエリがある場合は検索APIを使用、ない場合は全データを取得
+                        const apiUrl = searchQuery 
+                            ? `/api/integrated/players?limit=10000&query=${encodeURIComponent(searchQuery)}`
+                            : '/api/integrated/players?limit=10000';
+                        
+                        const apiResponse = await fetch(apiUrl);
                         if (apiResponse.ok) {
                             const apiData = await apiResponse.json();
                             players = Array.isArray(apiData) ? apiData : (apiData.players || apiData.results || []);
@@ -1955,10 +1960,10 @@
                     document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
                     document.getElementById('playersTab').style.display = 'block';
                     
-                    // フィルタリングを適用
+                    // フィルタリングを適用（APIで検索済みの場合は追加フィルタリングのみ）
                     let filteredPlayers = players;
                     
-                    // 検索クエリでフィルタリング（日本語対応）
+                    // 検索クエリで追加フィルタリング（日本語対応、APIで検索済みの場合は軽量フィルタリング）
                     if (searchQuery) {
                         const query = searchQuery.toLowerCase();
                         filteredPlayers = filteredPlayers.filter(player => {
