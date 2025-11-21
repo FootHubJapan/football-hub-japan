@@ -8245,11 +8245,34 @@ app.get('/api/integrated/matches', async (req, res) => {
     }
 });
 
+// 主要クラブのチームID定義
+const MAJOR_CLUBS = {
+    // Premier League BIG6
+    'Arsenal': 42,
+    'Chelsea': 49,
+    'Liverpool': 40,
+    'Manchester City': 50,
+    'Manchester United': 33,
+    'Tottenham': 47,
+    // La Liga
+    'Real Madrid': 541,
+    'Barcelona': 529,
+    'Atletico Madrid': 530,
+    // Bundesliga
+    'Bayern Munich': 157,
+    'Borussia Dortmund': 165,
+    // Ligue 1
+    'Paris Saint-Germain': 85,
+    // Serie A
+    'AC Milan': 489,
+    'Inter Milan': 108,
+    'Juventus': 109,
+    'Napoli': 113
+};
+
 app.get('/api/integrated/players', async (req, res) => {
     try {
-        const { query, limit = 10000, japanese = false } = req.query;
-        
-        console.log('📊 統合選手データ取得リクエスト:', { query, limit, japanese });
+        const { query, limit = 10000, japanese = false, majorClubsOnly = false } = req.query;
         
         // 統合された選手データを読み込み
         const fs = require('fs');
@@ -8261,7 +8284,33 @@ app.get('/api/integrated/players', async (req, res) => {
             const parsed = JSON.parse(data);
             // 配列形式またはオブジェクト形式に対応
             players = Array.isArray(parsed) ? parsed : (parsed.players || []);
-            console.log(`📊 players.jsonから${players.length}名の選手データを読み込み`);
+            
+            // 主要クラブの選手のみを返す場合
+            if (majorClubsOnly === 'true') {
+                const majorTeamIds = Object.values(MAJOR_CLUBS);
+                players = players.filter(p => {
+                    const teamId = p.teamId || p.team?.id || p.currentTeamId;
+                    const teamName = (p.currentTeam || p.team || '').toLowerCase();
+                    return majorTeamIds.includes(teamId) || 
+                           teamName.includes('real madrid') ||
+                           teamName.includes('barcelona') ||
+                           teamName.includes('atletico') ||
+                           teamName.includes('arsenal') ||
+                           teamName.includes('chelsea') ||
+                           teamName.includes('liverpool') ||
+                           teamName.includes('manchester city') ||
+                           teamName.includes('manchester united') ||
+                           teamName.includes('tottenham') ||
+                           teamName.includes('bayern') ||
+                           teamName.includes('dortmund') ||
+                           teamName.includes('paris') ||
+                           teamName.includes('psg') ||
+                           teamName.includes('milan') ||
+                           teamName.includes('inter') ||
+                           teamName.includes('juventus') ||
+                           teamName.includes('napoli');
+                });
+            }
             
             // 重複を排除（ID、apiFootballId、playerId、名前+チームで判定）
             const seenIds = new Set();

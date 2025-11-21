@@ -1504,13 +1504,30 @@
                 
                 switch(tab) {
                     case 'players':
-                        // まずAPIから全選手データを取得を試みる
+                        // まず主要クラブの選手データを優先的に取得
                         try {
+                            // 主要クラブの選手データを取得
+                            const majorClubsResponse = await fetch('/api/integrated/players?limit=10000&majorClubsOnly=true');
+                            let majorClubsPlayers = [];
+                            if (majorClubsResponse.ok) {
+                                const majorClubsData = await majorClubsResponse.json();
+                                majorClubsPlayers = Array.isArray(majorClubsData) ? majorClubsData : (majorClubsData.players || majorClubsData.results || []);
+                            }
+                            
+                            // 全選手データを取得
                             const apiResponse = await fetch('/api/integrated/players?limit=10000');
                             if (apiResponse.ok) {
                                 const apiData = await apiResponse.json();
                                 // レスポンスが配列の場合とオブジェクトの場合に対応
-                                const apiPlayers = Array.isArray(apiData) ? apiData : (apiData.players || apiData.results || []);
+                                let apiPlayers = Array.isArray(apiData) ? apiData : (apiData.players || apiData.results || []);
+                                
+                                // 主要クラブの選手を優先的に先頭に配置
+                                if (majorClubsPlayers.length > 0) {
+                                    const majorClubsPlayerIds = new Set(majorClubsPlayers.map(p => p.id || p.apiFootballId || p.playerId));
+                                    const otherPlayers = apiPlayers.filter(p => !majorClubsPlayerIds.has(p.id || p.apiFootballId || p.playerId));
+                                    apiPlayers = [...majorClubsPlayers, ...otherPlayers];
+                                }
+                                
                                 if (apiPlayers.length > 0) {
                                     // 重複を排除
                                     currentData = removeDuplicatePlayers(apiPlayers);
@@ -2418,11 +2435,25 @@
                                 const playerEnglishName = (player.englishName || '').toLowerCase();
                                 const playerJapaneseName = (player.japaneseName || '').toLowerCase();
                                 
-                                // スペルミス対応（huijsen/hujisenなど）
-                                const normalizedQuery = query.replace(/hujisen/gi, 'huijsen');
+                                // スペルミス対応（huijsen/hujisen、carreras/carerasなど）
+                                const normalizedQuery = query
+                                    .replace(/hujisen/gi, 'huijsen')
+                                    .replace(/careras/gi, 'carreras')
+                                    .replace(/carerras/gi, 'carreras');
                                 
-                                // クエリを正規化（大文字小文字を無視、スペースを削除）
-                                const normalize = (str) => (str || '').toLowerCase().replace(/\s+/g, '');
+                                // クエリを正規化（大文字小文字を無視、スペースを削除、アクセントを除去）
+                                const normalize = (str) => {
+                                    if (!str) return '';
+                                    return str.toLowerCase()
+                                        .replace(/\s+/g, '')
+                                        .replace(/[áàâä]/g, 'a')
+                                        .replace(/[éèêë]/g, 'e')
+                                        .replace(/[íìîï]/g, 'i')
+                                        .replace(/[óòôö]/g, 'o')
+                                        .replace(/[úùûü]/g, 'u')
+                                        .replace(/[ñ]/g, 'n');
+                                };
+                                
                                 const normalizedPlayerName = normalize(playerName);
                                 const normalizedFullName = normalize(playerFullName);
                                 const normalizedLastName = normalize(playerLastName);
@@ -2437,11 +2468,11 @@
                                     normalizedFullName.includes(normalizedQueryFixed) || 
                                     normalizedLastName.includes(normalizedQueryFixed) ||
                                     // 元のクエリでも検索（後方互換性）
-                                    playerName.includes(query) || 
-                                    playerFullName.includes(query) || 
-                                    playerLastName.includes(query) ||
-                                    playerEnglishName.includes(query) ||
-                                    playerJapaneseName.includes(query)) {
+                                    playerName.toLowerCase().includes(query.toLowerCase()) || 
+                                    playerFullName.toLowerCase().includes(query.toLowerCase()) || 
+                                    playerLastName.toLowerCase().includes(query.toLowerCase()) ||
+                                    playerEnglishName.toLowerCase().includes(query.toLowerCase()) ||
+                                    playerJapaneseName.toLowerCase().includes(query.toLowerCase())) {
                                     return true;
                                 }
                                 
@@ -2454,6 +2485,22 @@
                                         normalizedLastName.includes(word)
                                     );
                                     if (allWordsMatch) return true;
+                                }
+                                
+                                // 特殊ケース: CarrerasとHuijsenの検索強化
+                                if (query.toLowerCase().includes('carreras') || query.toLowerCase().includes('careras')) {
+                                    if (normalizedLastName.includes('carreras') || 
+                                        normalizedFullName.includes('carreras') ||
+                                        normalizedPlayerName.includes('carreras')) {
+                                        return true;
+                                    }
+                                }
+                                if (query.toLowerCase().includes('huijsen') || query.toLowerCase().includes('hujisen')) {
+                                    if (normalizedLastName.includes('huijsen') || 
+                                        normalizedFullName.includes('huijsen') ||
+                                        normalizedPlayerName.includes('huijsen')) {
+                                        return true;
+                                    }
                                 }
                                 
                                 // 日本語マッピングによる検索
