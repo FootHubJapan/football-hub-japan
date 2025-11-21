@@ -2444,18 +2444,39 @@
                                 // スペルミス対応（huijsen/hujisenなど）
                                 const normalizedQuery = query.replace(/hujisen/gi, 'huijsen');
                                 
-                                // 直接マッチ（複数のフィールドを検索）
-                                if (playerName.includes(query) || 
+                                // クエリを正規化（大文字小文字を無視、スペースを削除）
+                                const normalize = (str) => (str || '').toLowerCase().replace(/\s+/g, '');
+                                const normalizedPlayerName = normalize(playerName);
+                                const normalizedFullName = normalize(playerFullName);
+                                const normalizedLastName = normalize(playerLastName);
+                                const normalizedQueryLower = normalize(query);
+                                const normalizedQueryFixed = normalize(normalizedQuery);
+                                
+                                // 直接マッチ（複数のフィールドを検索、正規化後）
+                                if (normalizedPlayerName.includes(normalizedQueryLower) || 
+                                    normalizedFullName.includes(normalizedQueryLower) || 
+                                    normalizedLastName.includes(normalizedQueryLower) ||
+                                    normalizedPlayerName.includes(normalizedQueryFixed) || 
+                                    normalizedFullName.includes(normalizedQueryFixed) || 
+                                    normalizedLastName.includes(normalizedQueryFixed) ||
+                                    // 元のクエリでも検索（後方互換性）
+                                    playerName.includes(query) || 
                                     playerFullName.includes(query) || 
                                     playerLastName.includes(query) ||
                                     playerEnglishName.includes(query) ||
-                                    playerJapaneseName.includes(query) ||
-                                    playerName.includes(normalizedQuery) || 
-                                    playerFullName.includes(normalizedQuery) || 
-                                    playerLastName.includes(normalizedQuery) ||
-                                    playerEnglishName.includes(normalizedQuery) ||
-                                    playerJapaneseName.includes(normalizedQuery)) {
+                                    playerJapaneseName.includes(query)) {
                                     return true;
+                                }
+                                
+                                // 部分一致検索（単語単位）
+                                const queryWords = normalizedQueryLower.split(/\s+/).filter(w => w.length > 0);
+                                if (queryWords.length > 0) {
+                                    const allWordsMatch = queryWords.every(word => 
+                                        normalizedPlayerName.includes(word) || 
+                                        normalizedFullName.includes(word) || 
+                                        normalizedLastName.includes(word)
+                                    );
+                                    if (allWordsMatch) return true;
                                 }
                                 
                                 // 日本語マッピングによる検索
