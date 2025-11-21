@@ -1532,7 +1532,6 @@
                             
                             // Firebaseから取得したデータが少ない場合、APIを再試行
                             if (currentData.length < 100) {
-                                console.log('⚠️ Firebaseデータが少ないため、APIから再取得を試みます...');
                                 try {
                                     const apiResponse = await fetch('/api/ranking/players?limit=10000');
                                     if (apiResponse.ok) {
@@ -1540,11 +1539,10 @@
                                         const apiPlayers = apiData.players || [];
                                         if (apiPlayers.length > currentData.length) {
                                             currentData = apiPlayers;
-                                            console.log(`✅ APIから${currentData.length}名の選手データを取得（Firebaseより多い）`);
                                         }
                                     }
                                 } catch (retryError) {
-                                    console.log('⚠️ API再取得に失敗:', retryError);
+                                    // API再取得に失敗
                                 }
                             }
                         } catch (firebaseError) {
