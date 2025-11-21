@@ -1414,7 +1414,7 @@ app.get('/api/ranking/players', async (req, res) => {
                         if (Array.isArray(player.stats) && player.stats.length > 0) {
                             // 指定シーズンのstatsを検索
                             const seasonStats = player.stats.filter(stat => {
-                                const statSeason = stat.season || stat.seasonName || '';
+                                const statSeason = String(stat.season || stat.seasonName || '');
                                 return seasonPatterns.some(pattern => 
                                     statSeason.includes(pattern) || 
                                     statSeason === String(targetSeason)
@@ -1462,12 +1462,12 @@ app.get('/api/ranking/players', async (req, res) => {
                                 )[0];
                                 matchedLeague = playerStats?.leagueName || playerStats?.league;
                             }
-                        } else if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
-                            // statsが単一オブジェクトの場合
-                            const statSeason = player.stats.season || player.stats.seasonName || '';
-                            const matchesSeason = seasonPatterns.some(pattern => 
-                                statSeason.includes(pattern) || statSeason === String(targetSeason)
-                            );
+                            } else if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
+                                // statsが単一オブジェクトの場合
+                                const statSeason = String(player.stats.season || player.stats.seasonName || '');
+                                const matchesSeason = seasonPatterns.some(pattern => 
+                                    statSeason.includes(pattern) || statSeason === String(targetSeason)
+                                );
                             
                             if (matchesSeason || !league) {
                                 playerStats = player.stats;
@@ -1519,6 +1519,7 @@ app.get('/api/ranking/players', async (req, res) => {
         // 優先順位2: ローカルファイルから選手を読み込む（DatabaseManagerが失敗した場合）
         if (players.length === 0) {
             try {
+                const fs = require('fs');
                 const playersDataPath = path.join(__dirname, 'data', 'players.json');
                 console.log(`📁 Checking for players data at: ${playersDataPath}`);
                 
@@ -1549,7 +1550,7 @@ app.get('/api/ranking/players', async (req, res) => {
                             if (Array.isArray(player.stats) && player.stats.length > 0) {
                                 // 指定シーズンのstatsを検索
                                 const seasonStats = player.stats.filter(stat => {
-                                    const statSeason = stat.season || stat.seasonName || '';
+                                    const statSeason = String(stat.season || stat.seasonName || '');
                                     return seasonPatterns.some(pattern => 
                                         statSeason.includes(pattern) || 
                                         statSeason === String(targetSeason)
@@ -1596,7 +1597,7 @@ app.get('/api/ranking/players', async (req, res) => {
                                     matchedLeague = playerStats?.leagueName || playerStats?.league;
                                 }
                             } else if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
-                                const statSeason = player.stats.season || player.stats.seasonName || '';
+                                const statSeason = String(player.stats.season || player.stats.seasonName || '');
                                 const matchesSeason = seasonPatterns.some(pattern => 
                                     statSeason.includes(pattern) || statSeason === String(targetSeason)
                                 );
