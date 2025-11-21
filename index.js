@@ -8045,6 +8045,59 @@ app.get('/api/integrated/players', async (req, res) => {
             // 配列形式またはオブジェクト形式に対応
             players = Array.isArray(parsed) ? parsed : (parsed.players || []);
             console.log(`📊 players.jsonから${players.length}名の選手データを読み込み`);
+            
+            // 重複を排除（ID、apiFootballId、playerId、名前+チームで判定）
+            const seenIds = new Set();
+            const seenApiIds = new Set();
+            const seenPlayerIds = new Set();
+            const seenNameTeam = new Set();
+            
+            players = players.filter(player => {
+                if (!player) return false;
+                
+                // IDで判定
+                if (player.id) {
+                    if (seenIds.has(player.id)) {
+                        console.log(`⚠️ 重複選手をスキップ（ID）: ${player.name} (ID: ${player.id})`);
+                        return false;
+                    }
+                    seenIds.add(player.id);
+                }
+                
+                // apiFootballIdで判定
+                if (player.apiFootballId) {
+                    if (seenApiIds.has(player.apiFootballId)) {
+                        console.log(`⚠️ 重複選手をスキップ（apiFootballId）: ${player.name} (apiFootballId: ${player.apiFootballId})`);
+                        return false;
+                    }
+                    seenApiIds.add(player.apiFootballId);
+                }
+                
+                // playerIdで判定
+                if (player.playerId) {
+                    if (seenPlayerIds.has(player.playerId)) {
+                        console.log(`⚠️ 重複選手をスキップ（playerId）: ${player.name} (playerId: ${player.playerId})`);
+                        return false;
+                    }
+                    seenPlayerIds.add(player.playerId);
+                }
+                
+                // 名前+チームで判定（IDがない場合のフォールバック）
+                const name = (player.name || player.fullName || '').toLowerCase().trim();
+                const team = (player.currentTeam || player.team || '').toLowerCase().trim();
+                if (name && team) {
+                    const nameTeamKey = `${name}::${team}`;
+                    if (seenNameTeam.has(nameTeamKey)) {
+                        console.log(`⚠️ 重複選手をスキップ（名前+チーム）: ${player.name} (${player.currentTeam || player.team})`);
+                        return false;
+                    }
+                    seenNameTeam.add(nameTeamKey);
+                }
+                
+                return true;
+            });
+            
+            console.log(`📊 重複排除後: ${players.length}名の選手データ`);
         }
         
         // 検索処理

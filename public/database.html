@@ -1512,8 +1512,9 @@
                                 // レスポンスが配列の場合とオブジェクトの場合に対応
                                 const apiPlayers = Array.isArray(apiData) ? apiData : (apiData.players || apiData.results || []);
                                 if (apiPlayers.length > 0) {
-                                    currentData = apiPlayers;
-                                    console.log(`✅ APIから${currentData.length}名の選手データを取得`);
+                                    // 重複を排除
+                                    currentData = removeDuplicatePlayers(apiPlayers);
+                                    console.log(`✅ APIから${currentData.length}名の選手データを取得（重複排除後）`);
                                     
                                     // キャリアスタッツが不足している選手を検出
                                     detectMissingCareerStats(currentData);
