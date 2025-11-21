@@ -1551,32 +1551,25 @@
                         }
                         break;
                     case 'teams':
-                        console.log('チームデータを取得中...');
                         currentData = await window.firebaseDataService.getTeams();
-                        console.log('取得したチームデータ:', currentData.length, '件');
                         break;
                     case 'leagues':
-                        console.log('リーグデータを取得中...');
                         try {
                             currentData = await window.firebaseDataService.getLeagues();
-                            console.log('取得したリーグデータ:', currentData.length, '件');
                             
                             // Firebaseから取得できなかった場合、APIから取得
                             if (!currentData || currentData.length === 0) {
-                                console.log('⚠️ Firebaseからリーグデータが取得できなかったため、APIから取得を試みます...');
                                 try {
                                     const apiResponse = await fetch('/api/football-data/leagues');
                                     if (apiResponse.ok) {
                                         const apiData = await apiResponse.json();
                                         currentData = Array.isArray(apiData) ? apiData : (apiData.leagues || apiData.competitions || []);
-                                        console.log(`✅ APIから${currentData.length}件のリーグデータを取得`);
                                     }
                                 } catch (apiError) {
-                                    console.log('⚠️ APIからの取得に失敗:', apiError);
+                                    // APIからの取得に失敗
                                 }
                             }
                         } catch (error) {
-                            console.error('リーグデータ取得エラー:', error);
                             currentData = [];
                         }
                         break;
