@@ -2660,11 +2660,15 @@
                         });
                     }
                     
-                    currentData = filteredPlayers;
+                    // 検索結果を表示（currentDataは更新しない、検索結果のみ表示）
+                    // 全データベースを保持するため、currentDataは更新せず、検索結果のみを表示
+                    console.log(`📊 検索結果: ${filteredPlayers.length}名の選手が見つかりました`);
                     
                     // 検索結果の表示
-                    if (currentData.length === 0) {
+                    if (filteredPlayers.length === 0) {
                         showSearchResult('検索結果が見つかりませんでした。条件を変更して再試行してください。', 'warning');
+                        // 検索結果がない場合でも、全データベースは保持
+                        displayData(currentData, currentTab);
                     } else {
                         const filters = [];
                         if (searchQuery) filters.push(`キーワード: "${searchQuery}"`);
@@ -2676,7 +2680,10 @@
                         if (minAssists > 0) filters.push(`最低アシスト: ${minAssists}`);
                         
                         const filterText = filters.length > 0 ? ` (${filters.join(', ')})` : '';
-                        showSearchResult(`${currentData.length}件の選手が見つかりました${filterText}`, 'success');
+                        showSearchResult(`${filteredPlayers.length}件の選手が見つかりました${filterText}`, 'success');
+                        
+                        // 検索結果のみを表示（currentDataは保持）
+                        displayData(filteredPlayers, currentTab);
                     }
                 } else {
                     // チーム・リーグ検索
@@ -2817,6 +2824,9 @@
             
             // 検索サジェストを非表示
             hideSearchSuggestions();
+            
+            // 全データベースを再表示
+            switchTab(currentTab);
             
             showSearchResult('すべてのフィルターをクリアしました', 'info');
         }
