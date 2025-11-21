@@ -3594,6 +3594,175 @@
             }
         }
 
+        // キャリアスタッツが不足している選手を検出
+        function detectMissingCareerStats(players) {
+            if (!players || !Array.isArray(players)) return;
+            
+            const missingPlayers = players.filter(p => {
+                if (!p.apiFootballId && !p.playerId) return false;
+                const hasCareerStats = p.careerStats && Array.isArray(p.careerStats) && p.careerStats.length > 0;
+                return !hasCareerStats || p.careerStats.length < 3; // 3シーズン未満の選手
+            });
+            
+            console.log(`📊 キャリアスタッツが不足している選手: ${missingPlayers.length}名`);
+            
+            if (missingPlayers.length > 0) {
+                displayMissingCareerStatsList(missingPlayers);
+            } else {
+                const section = document.getElementById('missingCareerStatsSection');
+                if (section) section.style.display = 'none';
+            }
+        }
+        
+        // 不足している選手のリストを表示
+        function displayMissingCareerStatsList(players) {
+            const section = document.getElementById('missingCareerStatsSection');
+            const list = document.getElementById('missingCareerStatsList');
+            
+            if (!section || !list) return;
+            
+            section.style.display = 'block';
+            list.innerHTML = '';
+            
+            // 最大20名まで表示
+            const displayPlayers = players.slice(0, 20);
+            
+            displayPlayers.forEach((player, index) => {
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'missing-player-item';
+                playerDiv.style.cssText = 'padding: 8px; border-bottom: 1px solid #333;';
+                playerDiv.innerHTML = `
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" class="player-checkbox" data-player-id="${player.id || player.apiFootballId || player.playerId}" 
+                               data-player-name="${player.name || player.fullName}" style="margin-right: 10px;">
+                        <span>${player.name || player.fullName} (${player.currentTeam || player.team || 'Unknown'})</span>
+                        <span style="margin-left: auto; color: #888; font-size: 0.9em;">
+                            ${player.careerStats && player.careerStats.length > 0 ? `${player.careerStats.length}シーズン` : 'データなし'}
+                        </span>
+                    </label>
+                `;
+                list.appendChild(playerDiv);
+            });
+            
+            if (players.length > 20) {
+                const moreDiv = document.createElement('div');
+                moreDiv.style.cssText = 'padding: 8px; color: #888; text-align: center;';
+                moreDiv.textContent = `他${players.length - 20}名の選手が不足しています`;
+                list.appendChild(moreDiv);
+            }
+            
+            // イベントリスナーを設定
+            const updateSelectedBtn = document.getElementById('updateSelectedPlayersBtn');
+            const updateAllBtn = document.getElementById('updateAllMissingBtn');
+            
+            if (updateSelectedBtn) {
+                updateSelectedBtn.onclick = () => updateSelectedPlayersCareerStats();
+            }
+            
+            if (updateAllBtn) {
+                updateAllBtn.onclick = () => updateAllMissingPlayersCareerStats(displayPlayers);
+            }
+        }
+        
+        // 選択した選手のキャリアスタッツを更新
+        async function updateSelectedPlayersCareerStats() {
+            const checkboxes = document.querySelectorAll('.player-checkbox:checked');
+            if (checkboxes.length === 0) {
+                showDataStatus('選手を選択してください', 'warning');
+                return;
+            }
+            
+            const playerIds = Array.from(checkboxes).map(cb => cb.getAttribute('data-player-id'));
+            
+            showDataStatus(`${playerIds.length}名の選手のキャリアスタッツを更新中...`, 'info');
+            
+            try {
+                const response = await fetch('/api/admin/update-multiple-career-stats', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        playerIds: playerIds,
+                        limit: playerIds.length,
+                        delay: 2000
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || errorData.error || '更新に失敗しました');
+                }
+                
+                const result = await response.json();
+                const successCount = result.results?.success?.length || 0;
+                const failedCount = result.results?.failed?.length || 0;
+                
+                showDataStatus(
+                    `✅ 更新完了！成功: ${successCount}名、失敗: ${failedCount}名`,
+                    successCount > 0 ? 'success' : 'warning'
+                );
+                
+                // データを再読み込み
+                setTimeout(async () => {
+                    await switchTab('players');
+                }, 2000);
+                
+            } catch (error) {
+                console.error('キャリアスタッツ更新エラー:', error);
+                showDataStatus(`更新中にエラーが発生しました: ${error.message}`, 'error');
+            }
+        }
+        
+        // すべての不足している選手のキャリアスタッツを更新
+        async function updateAllMissingPlayersCareerStats(players) {
+            const playerIds = players.map(p => p.id || p.apiFootballId || p.playerId).filter(Boolean);
+            
+            if (playerIds.length === 0) {
+                showDataStatus('更新対象の選手が見つかりません', 'warning');
+                return;
+            }
+            
+            showDataStatus(`${playerIds.length}名の選手のキャリアスタッツを更新中...`, 'info');
+            
+            try {
+                const response = await fetch('/api/admin/update-multiple-career-stats', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        playerIds: playerIds,
+                        limit: playerIds.length,
+                        delay: 2000
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || errorData.error || '更新に失敗しました');
+                }
+                
+                const result = await response.json();
+                const successCount = result.results?.success?.length || 0;
+                const failedCount = result.results?.failed?.length || 0;
+                
+                showDataStatus(
+                    `✅ 更新完了！成功: ${successCount}名、失敗: ${failedCount}名`,
+                    successCount > 0 ? 'success' : 'warning'
+                );
+                
+                // データを再読み込み
+                setTimeout(async () => {
+                    await switchTab('players');
+                }, 2000);
+                
+            } catch (error) {
+                console.error('キャリアスタッツ更新エラー:', error);
+                showDataStatus(`更新中にエラーが発生しました: ${error.message}`, 'error');
+            }
+        }
+
         // 全選手データをFirebaseにインポート（players.jsonから）
         async function importAllPlayersFromFile() {
             try {
