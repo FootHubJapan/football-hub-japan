@@ -2027,6 +2027,10 @@
                                 'トニ・クロース': ['toni kroos', 'kroos'],
                                 'バルベルデ': ['federico valverde', 'valverde'],
                                 'フェデリコ・バルベルデ': ['federico valverde', 'valverde'],
+                                'ハイセン': ['dean huijsen', 'huijsen', 'hujisen'],
+                                'ディーン・ハイセン': ['dean huijsen', 'huijsen', 'hujisen'],
+                                'カレーラス': ['alvaro carreras', 'carreras'],
+                                'アルバロ・カレーラス': ['alvaro carreras', 'carreras'],
                                 
                                 // === 日本人選手 ===
                                 '久保': ['takefusa kubo'],
@@ -2437,12 +2441,20 @@
                                 const playerEnglishName = (player.englishName || '').toLowerCase();
                                 const playerJapaneseName = (player.japaneseName || '').toLowerCase();
                                 
+                                // スペルミス対応（huijsen/hujisenなど）
+                                const normalizedQuery = query.replace(/hujisen/gi, 'huijsen');
+                                
                                 // 直接マッチ（複数のフィールドを検索）
                                 if (playerName.includes(query) || 
                                     playerFullName.includes(query) || 
                                     playerLastName.includes(query) ||
                                     playerEnglishName.includes(query) ||
-                                    playerJapaneseName.includes(query)) {
+                                    playerJapaneseName.includes(query) ||
+                                    playerName.includes(normalizedQuery) || 
+                                    playerFullName.includes(normalizedQuery) || 
+                                    playerLastName.includes(normalizedQuery) ||
+                                    playerEnglishName.includes(normalizedQuery) ||
+                                    playerJapaneseName.includes(normalizedQuery)) {
                                     return true;
                                 }
                                 
