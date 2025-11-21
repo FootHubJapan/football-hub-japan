@@ -4412,14 +4412,28 @@
                 console.log(`🔍 フォールバック検索: "${query}" (日本語対応)`);
                 console.log(`🔍 デバッグ: フィルタリング前の選手数: ${filteredPlayers.length}`);
                 
+                // スペルミス対応
+                const normalizedQuery = query.trim()
+                    .replace(/hujisen/gi, 'huijsen')
+                    .replace(/careras/gi, 'carreras')
+                    .replace(/carerras/gi, 'carreras');
+                
                 // 日本語名と英語名の両方で検索
-                const searchTerms = [query.trim()];
+                const searchTerms = [query.trim(), normalizedQuery];
                 if (japanesePlayerMap && japanesePlayerMap[query]) {
                     searchTerms.push(japanesePlayerMap[query]);
                     console.log(`🇯🇵 日本語選手名検出: ${query} → ${japanesePlayerMap[query]}`);
                 }
                 
-                console.log(`🔍 デバッグ: 検索語: ${searchTerms.join(', ')}`);
+                // CarrerasとHuijsenの日本語マッピングを追加
+                if (query.toLowerCase().includes('carreras') || query.toLowerCase().includes('careras')) {
+                    searchTerms.push('carreras', 'careras');
+                }
+                if (query.toLowerCase().includes('huijsen') || query.toLowerCase().includes('hujisen')) {
+                    searchTerms.push('huijsen', 'hujisen');
+                }
+                
+                console.log(`🔍 デバッグ: 検索語: ${[...new Set(searchTerms)].join(', ')}`);
                 
                 filteredPlayers = filteredPlayers.filter(player => {
                     if (!player || !player.name) return false;
@@ -4427,27 +4441,32 @@
                     const matches = searchTerms.some(term => {
                         const playerName = (player.name || '').toLowerCase();
                         const fullName = (player.fullName || '').toLowerCase();
+                        const lastName = (player.lastName || '').toLowerCase();
                         const englishName = (player.englishName || '').toLowerCase();
                         const searchTerm = term.toLowerCase();
                         
                         const nameMatch = playerName.includes(searchTerm);
                         const fullNameMatch = fullName.includes(searchTerm);
+                        const lastNameMatch = lastName.includes(searchTerm);
                         const englishNameMatch = englishName.includes(searchTerm);
                         
-                        // デバッグ: ベリンガムの場合のみ詳細ログ
-                        if (playerName.includes('bellingham') || fullName.includes('bellingham') || englishName.includes('bellingham')) {
-                            console.log(`🔍 デバッグ: ベリンガムのマッチング確認:`, {
+                        // デバッグ: CarrerasとHuijsenの場合のみ詳細ログ
+                        if (playerName.includes('carreras') || fullName.includes('carreras') || lastName.includes('carreras') ||
+                            playerName.includes('huijsen') || fullName.includes('huijsen') || lastName.includes('huijsen')) {
+                            console.log(`🔍 デバッグ: Carreras/Huijsenのマッチング確認:`, {
                                 playerName,
                                 fullName,
+                                lastName,
                                 englishName,
                                 searchTerm,
                                 nameMatch,
                                 fullNameMatch,
+                                lastNameMatch,
                                 englishNameMatch
                             });
                         }
                         
-                        return nameMatch || fullNameMatch || englishNameMatch;
+                        return nameMatch || fullNameMatch || lastNameMatch || englishNameMatch;
                     });
                     
                     return matches;
