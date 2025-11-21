@@ -3479,6 +3479,11 @@
                 fixDataConsistencyBtn.addEventListener('click', fixDataConsistency);
             }
 
+            const refreshPlayersFromApiBtn = document.getElementById('refreshPlayersFromApiBtn');
+            if (refreshPlayersFromApiBtn) {
+                refreshPlayersFromApiBtn.addEventListener('click', refreshPlayersFromApi);
+            }
+
             const clearCachedDataBtn = document.getElementById('clearCachedDataBtn');
             if (clearCachedDataBtn) {
                 clearCachedDataBtn.addEventListener('click', clearCachedData);
