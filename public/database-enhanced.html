@@ -2551,14 +2551,13 @@
             
             // IDを優先的に取得（名前は最後の手段）
             const cardPlayerId = playerData.id || playerData.playerId || playerData.apiFootballId || playerData.footballDataId || playerData.name;
-            const cardPlayerName = playerData.name || playerData.fullName || '';
+            const cardPlayerName = (playerData.name || playerData.fullName || '').replace(/'/g, "&#39;").replace(/"/g, "&quot;");
             
             card.innerHTML = `
                 <div class="player-avatar">
                     <img src="${photoUrl}" 
                          alt="${cardPlayerName}" 
                          onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjMzMzMzMzIi8+Cjx0ZXh0IHg9IjQwIiB5PSI0NSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPj88L3RleHQ+Cjwvc3ZnPg=='"
-                         onload="console.log('Photo loaded successfully for:', '${cardPlayerName}')"
                          style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #00ff88; box-shadow: 0 4px 8px rgba(0,255,136,0.3);">
                 </div>
                 <div class="player-info">
