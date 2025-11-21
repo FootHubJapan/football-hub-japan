@@ -1936,8 +1936,25 @@
                 if (searchType === 'players') {
                     console.log(`選手検索開始: "${searchQuery}"`);
                     
-                    // 選手データを取得
-                    let players = await window.firebaseDataService.getPlayers();
+                    // 選手データを取得（APIから直接取得、フォールバックデータは使わない）
+                    let players = [];
+                    try {
+                        console.log('🔄 APIから選手データを取得中...');
+                        const apiResponse = await fetch('/api/integrated/players?limit=10000');
+                        if (apiResponse.ok) {
+                            const apiData = await apiResponse.json();
+                            players = Array.isArray(apiData) ? apiData : (apiData.players || apiData.results || []);
+                            console.log(`✅ APIから${players.length}名の選手データを取得`);
+                            
+                            // 重複を排除
+                            players = removeDuplicatePlayers(players);
+                        } else {
+                            console.log('⚠️ APIからの取得に失敗、空の結果を返します');
+                        }
+                    } catch (apiError) {
+                        console.error('⚠️ APIからの取得エラー:', apiError);
+                    }
+                    
                     currentTab = 'players';
                     
                     // タブを切り替え
