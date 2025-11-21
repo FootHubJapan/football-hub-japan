@@ -11458,3 +11458,182 @@ app.post('/api/admin/update-multiple-career-stats', async (req, res) => {
     }
 });
 
+// APIから最新データを取得してplayers.jsonを更新するエンドポイント
+app.post('/api/admin/refresh-players-from-api', async (req, res) => {
+    try {
+        const { limit = 1000 } = req.body;
+        
+        console.log('🔄 APIから最新選手データを取得して更新開始...');
+        
+        const fs = require('fs');
+        const playersFile = path.join(__dirname, 'data', 'players.json');
+        
+        // 既存のplayers.jsonを読み込み
+        let existingPlayers = [];
+        if (fs.existsSync(playersFile)) {
+            const data = await fs.promises.readFile(playersFile, 'utf8');
+            const parsed = JSON.parse(data);
+            existingPlayers = Array.isArray(parsed) ? parsed : (parsed.players || []);
+        }
+        
+        // 既存選手をIDでマップ（更新用）
+        const existingPlayersMap = new Map();
+        existingPlayers.forEach(p => {
+            if (p.id) existingPlayersMap.set(p.id, p);
+            if (p.apiFootballId) existingPlayersMap.set(`api_${p.apiFootballId}`, p);
+            if (p.playerId) existingPlayersMap.set(`player_${p.playerId}`, p);
+        });
+        
+        // API-Footballから最新データを取得
+        const apiKey = process.env.RAPIDAPI_KEY || process.env.API_FOOTBALL_KEY;
+        if (!apiKey || apiKey === 'YOUR_API_FOOTBALL_KEY' || apiKey === 'your-api-football-key-here') {
+            return res.status(400).json({ 
+                error: 'APIキーが設定されていません',
+                message: 'API_FOOTBALL_KEYまたはRAPIDAPI_KEYを設定してください'
+            });
+        }
+        
+        const majorLeagues = [
+            { id: 39, name: 'Premier League' },
+            { id: 140, name: 'La Liga' },
+            { id: 135, name: 'Serie A' },
+            { id: 78, name: 'Bundesliga' },
+            { id: 61, name: 'Ligue 1' },
+            { id: 98, name: 'J1 League' }
+        ];
+        
+        const newPlayers = [];
+        const updatedPlayers = [];
+        const addedPlayers = [];
+        
+        // 各リーグから選手データを取得
+        for (const league of majorLeagues) {
+            try {
+                console.log(`📊 ${league.name}から選手データを取得中...`);
+                
+                const response = await axios.get(`https://v3.football.api-sports.io/players`, {
+                    headers: {
+                        'x-rapidapi-key': apiKey,
+                        'x-rapidapi-host': 'v3.football.api-sports.io'
+                    },
+                    params: {
+                        league: league.id,
+                        season: 2025
+                    }
+                });
+                
+                if (response.data && response.data.response && response.data.response.length > 0) {
+                    for (const item of response.data.response.slice(0, Math.floor(limit / majorLeagues.length))) {
+                        const player = item.player;
+                        const stats = item.statistics && item.statistics.length > 0 ? item.statistics[0] : {};
+                        
+                        const playerId = `api_${player.id}`;
+                        const playerData = {
+                            id: playerId,
+                            apiFootballId: player.id,
+                            playerId: player.id,
+                            name: player.name,
+                            fullName: player.name,
+                            age: player.age,
+                            nationality: player.nationality,
+                            photo: player.photo,
+                            currentTeam: stats.team?.name || '',
+                            team: stats.team?.name || '',
+                            position: player.position || '',
+                            detailedPosition: player.position || '',
+                            league: stats.league?.name || league.name,
+                            stats: {
+                                goals: stats.goals?.total || 0,
+                                assists: stats.goals?.assists || 0,
+                                appearances: stats.games?.appearences || 0,
+                                minutes: stats.games?.minutes || 0,
+                                rating: stats.games?.rating || 'N/A'
+                            },
+                            lastUpdated: new Date().toISOString(),
+                            source: 'api-football'
+                        };
+                        
+                        // 既存データがある場合は更新、ない場合は追加
+                        const existing = existingPlayersMap.get(playerId) || 
+                                       existingPlayersMap.get(`api_${player.id}`) ||
+                                       existingPlayersMap.get(`player_${player.id}`);
+                        
+                        if (existing) {
+                            // 既存データを更新（最新データで上書き）
+                            const index = existingPlayers.findIndex(p => 
+                                p.id === playerId || 
+                                p.apiFootballId === player.id ||
+                                p.playerId === player.id
+                            );
+                            if (index !== -1) {
+                                existingPlayers[index] = {
+                                    ...existingPlayers[index],
+                                    ...playerData,
+                                    careerStats: existingPlayers[index].careerStats || [] // キャリアスタッツは保持
+                                };
+                                updatedPlayers.push(playerData.name);
+                            }
+                        } else {
+                            // 新規追加
+                            existingPlayers.push(playerData);
+                            addedPlayers.push(playerData.name);
+                        }
+                        
+                        newPlayers.push(playerData);
+                    }
+                }
+                
+                // レート制限対策
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+            } catch (leagueError) {
+                console.error(`❌ ${league.name}からの取得エラー:`, leagueError.message);
+            }
+        }
+        
+        // 重複を排除
+        const seenIds = new Set();
+        const seenApiIds = new Set();
+        const uniquePlayers = existingPlayers.filter(player => {
+            if (!player) return false;
+            
+            let isDuplicate = false;
+            
+            if (player.id && seenIds.has(player.id)) {
+                isDuplicate = true;
+            } else if (player.id) {
+                seenIds.add(player.id);
+            }
+            
+            if (!isDuplicate && player.apiFootballId && seenApiIds.has(player.apiFootballId)) {
+                isDuplicate = true;
+            } else if (player.apiFootballId) {
+                seenApiIds.add(player.apiFootballId);
+            }
+            
+            return !isDuplicate;
+        });
+        
+        // players.jsonに保存
+        await fs.promises.writeFile(playersFile, JSON.stringify(uniquePlayers, null, 2), 'utf8');
+        
+        console.log(`✅ API更新完了: 取得${newPlayers.length}名、更新${updatedPlayers.length}名、追加${addedPlayers.length}名`);
+        
+        res.json({
+            success: true,
+            fetched: newPlayers.length,
+            updated: updatedPlayers.length,
+            added: addedPlayers.length,
+            total: uniquePlayers.length,
+            message: `APIから${newPlayers.length}名のデータを取得し、${updatedPlayers.length}名を更新、${addedPlayers.length}名を追加しました`
+        });
+        
+    } catch (error) {
+        console.error('❌ API更新エラー:', error);
+        res.status(500).json({
+            error: 'API更新に失敗しました',
+            message: error.message
+        });
+    }
+});
+
