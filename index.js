@@ -3276,11 +3276,228 @@ app.get('/api/match/details', async (req, res) => {
                                                         } else {
                                                             const statIndex = statisticsToProcess.findIndex(s => s === stat);
                                                             normalizedStats.shotsOffTarget[statIndex % 2 === 0 ? 'home' : 'away'] = value;
-                                                        }
-                                                    }
-                                                }
-                                            });
-                                            
+            }
+        }
+    }
+});
+
+// データ整合性チェックと更新エンドポイント
+app.get('/api/admin/check-data-consistency', async (req, res) => {
+    try {
+        const fs = require('fs');
+        const playersFile = path.join(__dirname, 'data', 'players.json');
+        
+        // players.jsonを読み込み
+        let localPlayers = [];
+        if (fs.existsSync(playersFile)) {
+            const data = await fs.promises.readFile(playersFile, 'utf8');
+            const parsed = JSON.parse(data);
+            localPlayers = Array.isArray(parsed) ? parsed : (parsed.players || []);
+        }
+        
+        // 重複チェック
+        const duplicateCheck = {
+            byId: {},
+            byApiFootballId: {},
+            byPlayerId: {},
+            byNameTeam: {}
+        };
+        
+        const duplicates = [];
+        const inconsistencies = [];
+        
+        localPlayers.forEach((player, index) => {
+            if (!player) return;
+            
+            // ID重複チェック
+            if (player.id) {
+                if (duplicateCheck.byId[player.id]) {
+                    duplicates.push({
+                        type: 'id',
+                        value: player.id,
+                        indices: [duplicateCheck.byId[player.id], index],
+                        players: [
+                            { name: localPlayers[duplicateCheck.byId[player.id]].name, id: localPlayers[duplicateCheck.byId[player.id]].id },
+                            { name: player.name, id: player.id }
+                        ]
+                    });
+                } else {
+                    duplicateCheck.byId[player.id] = index;
+                }
+            }
+            
+            // apiFootballId重複チェック
+            if (player.apiFootballId) {
+                if (duplicateCheck.byApiFootballId[player.apiFootballId]) {
+                    duplicates.push({
+                        type: 'apiFootballId',
+                        value: player.apiFootballId,
+                        indices: [duplicateCheck.byApiFootballId[player.apiFootballId], index],
+                        players: [
+                            { name: localPlayers[duplicateCheck.byApiFootballId[player.apiFootballId]].name, apiFootballId: localPlayers[duplicateCheck.byApiFootballId[player.apiFootballId]].apiFootballId },
+                            { name: player.name, apiFootballId: player.apiFootballId }
+                        ]
+                    });
+                } else {
+                    duplicateCheck.byApiFootballId[player.apiFootballId] = index;
+                }
+            }
+            
+            // データ不整合チェック（名前と写真が一致しない）
+            if (player.name && player.photo) {
+                // 同じIDで異なる名前や写真を持つ選手をチェック
+                const sameIdPlayers = localPlayers.filter(p => 
+                    p && p.id === player.id && 
+                    (p.name !== player.name || p.photo !== player.photo)
+                );
+                if (sameIdPlayers.length > 0) {
+                    inconsistencies.push({
+                        type: 'name_photo_mismatch',
+                        playerId: player.id,
+                        name: player.name,
+                        photo: player.photo,
+                        conflicting: sameIdPlayers.map(p => ({
+                            name: p.name,
+                            photo: p.photo
+                        }))
+                    });
+                }
+            }
+        });
+        
+        res.json({
+            totalPlayers: localPlayers.length,
+            duplicates: duplicates.length,
+            inconsistencies: inconsistencies.length,
+            duplicateDetails: duplicates.slice(0, 10), // 最初の10件のみ
+            inconsistencyDetails: inconsistencies.slice(0, 10), // 最初の10件のみ
+            message: `データ整合性チェック完了: 重複${duplicates.length}件、不整合${inconsistencies.length}件`
+        });
+        
+    } catch (error) {
+        console.error('データ整合性チェックエラー:', error);
+        res.status(500).json({
+            error: 'データ整合性チェックに失敗しました',
+            message: error.message
+        });
+    }
+});
+
+// データ整合性を修正するエンドポイント（重複を削除）
+app.post('/api/admin/fix-data-consistency', async (req, res) => {
+    try {
+        const fs = require('fs');
+        const playersFile = path.join(__dirname, 'data', 'players.json');
+        
+        // players.jsonを読み込み
+        let players = [];
+        if (fs.existsSync(playersFile)) {
+            const data = await fs.promises.readFile(playersFile, 'utf8');
+            const parsed = JSON.parse(data);
+            players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+        }
+        
+        const beforeCount = players.length;
+        
+        // 重複を排除（最新のデータを優先）
+        const seenIds = new Set();
+        const seenApiIds = new Set();
+        const seenPlayerIds = new Set();
+        const seenNameTeam = new Set();
+        const uniquePlayers = [];
+        const removedDuplicates = [];
+        
+        // 最新のデータを優先するため、lastUpdatedでソート
+        players.sort((a, b) => {
+            const dateA = a.lastUpdated ? new Date(a.lastUpdated).getTime() : 0;
+            const dateB = b.lastUpdated ? new Date(b.lastUpdated).getTime() : 0;
+            return dateB - dateA; // 新しい順
+        });
+        
+        for (const player of players) {
+            if (!player) continue;
+            
+            let isDuplicate = false;
+            let duplicateReason = '';
+            
+            // IDで判定
+            if (player.id) {
+                if (seenIds.has(player.id)) {
+                    isDuplicate = true;
+                    duplicateReason = `ID重複: ${player.id}`;
+                } else {
+                    seenIds.add(player.id);
+                }
+            }
+            
+            // apiFootballIdで判定
+            if (!isDuplicate && player.apiFootballId) {
+                if (seenApiIds.has(player.apiFootballId)) {
+                    isDuplicate = true;
+                    duplicateReason = `apiFootballId重複: ${player.apiFootballId}`;
+                } else {
+                    seenApiIds.add(player.apiFootballId);
+                }
+            }
+            
+            // playerIdで判定
+            if (!isDuplicate && player.playerId) {
+                if (seenPlayerIds.has(player.playerId)) {
+                    isDuplicate = true;
+                    duplicateReason = `playerId重複: ${player.playerId}`;
+                } else {
+                    seenPlayerIds.add(player.playerId);
+                }
+            }
+            
+            // 名前+チームで判定
+            if (!isDuplicate) {
+                const name = (player.name || player.fullName || '').toLowerCase().trim();
+                const team = (player.currentTeam || player.team || '').toLowerCase().trim();
+                if (name && team) {
+                    const nameTeamKey = `${name}::${team}`;
+                    if (seenNameTeam.has(nameTeamKey)) {
+                        isDuplicate = true;
+                        duplicateReason = `名前+チーム重複: ${name} (${team})`;
+                    } else {
+                        seenNameTeam.add(nameTeamKey);
+                    }
+                }
+            }
+            
+            if (isDuplicate) {
+                removedDuplicates.push({
+                    name: player.name || player.fullName,
+                    reason: duplicateReason
+                });
+            } else {
+                uniquePlayers.push(player);
+            }
+        }
+        
+        // 修正されたデータを保存
+        await fs.promises.writeFile(playersFile, JSON.stringify(uniquePlayers, null, 2), 'utf8');
+        
+        console.log(`✅ データ整合性修正完了: ${beforeCount}名 → ${uniquePlayers.length}名（${removedDuplicates.length}件の重複を削除）`);
+        
+        res.json({
+            success: true,
+            beforeCount: beforeCount,
+            afterCount: uniquePlayers.length,
+            removedCount: removedDuplicates.length,
+            removedDuplicates: removedDuplicates.slice(0, 20), // 最初の20件のみ
+            message: `${removedDuplicates.length}件の重複を削除しました`
+        });
+        
+    } catch (error) {
+        console.error('データ整合性修正エラー:', error);
+        res.status(500).json({
+            error: 'データ整合性修正に失敗しました',
+            message: error.message
+        });
+    }
+});
+
                                             console.log('📊 Final Statistics from Football-data.org (xG is from API-Football):', {
                                                 expectedGoals: normalizedStats.expectedGoals // API-Footballから取得済み
                                             });

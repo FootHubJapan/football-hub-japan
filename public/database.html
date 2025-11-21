@@ -3845,6 +3845,78 @@
             }
         }
 
+        // データ整合性チェック
+        async function checkDataConsistency() {
+            try {
+                showDataStatus('データ整合性をチェック中...', 'info');
+                
+                const response = await fetch('/api/admin/check-data-consistency');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || errorData.error || 'チェックに失敗しました');
+                }
+                
+                const result = await response.json();
+                console.log('✅ データ整合性チェック結果:', result);
+                
+                let message = `📊 データ整合性チェック完了\n`;
+                message += `総選手数: ${result.totalPlayers}名\n`;
+                message += `重複: ${result.duplicates}件\n`;
+                message += `不整合: ${result.inconsistencies}件`;
+                
+                if (result.duplicates > 0 || result.inconsistencies > 0) {
+                    message += `\n\n「データ整合性修正」ボタンで修正できます`;
+                    showDataStatus(message, 'warning');
+                } else {
+                    showDataStatus(message, 'success');
+                }
+                
+            } catch (error) {
+                console.error('データ整合性チェックエラー:', error);
+                showDataStatus(`データ整合性チェック中にエラーが発生しました: ${error.message}`, 'error');
+            }
+        }
+
+        // データ整合性修正（重複削除）
+        async function fixDataConsistency() {
+            if (!confirm('重複データを削除しますか？この操作は元に戻せません。')) {
+                return;
+            }
+            
+            try {
+                showDataStatus('データ整合性を修正中...', 'info');
+                
+                const response = await fetch('/api/admin/fix-data-consistency', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || errorData.error || '修正に失敗しました');
+                }
+                
+                const result = await response.json();
+                console.log('✅ データ整合性修正結果:', result);
+                
+                showDataStatus(
+                    `✅ データ整合性修正完了！\n修正前: ${result.beforeCount}名\n修正後: ${result.afterCount}名\n削除: ${result.removedCount}件の重複`,
+                    'success'
+                );
+                
+                // データを再表示
+                setTimeout(async () => {
+                    await switchTab('players');
+                }, 2000);
+                
+            } catch (error) {
+                console.error('データ整合性修正エラー:', error);
+                showDataStatus(`データ整合性修正中にエラーが発生しました: ${error.message}`, 'error');
+            }
+        }
+
         // 全選手データをFirebaseにインポート（players.jsonから）
         async function importAllPlayersFromFile() {
             try {
