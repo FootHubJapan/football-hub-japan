@@ -8369,7 +8369,12 @@ app.get('/api/integrated/players', async (req, res) => {
         // 検索処理
         if (query) {
             const searchQuery = query.toLowerCase().trim();
-            console.log(`🔍 検索クエリ: "${searchQuery}"`);
+            
+            // スペルミス対応
+            const normalizedQuery = searchQuery
+                .replace(/hujisen/gi, 'huijsen')
+                .replace(/careras/gi, 'carreras')
+                .replace(/carerras/gi, 'carreras');
             
             players = players.filter(player => {
                 if (!player) return false;
@@ -8386,26 +8391,28 @@ app.get('/api/integrated/players', async (req, res) => {
                     player.position
                 ].filter(Boolean);
                 
-                const matches = searchFields.some(field => 
-                    field.toLowerCase().includes(searchQuery)
+                // 通常の検索
+                let matches = searchFields.some(field => 
+                    field.toLowerCase().includes(searchQuery) ||
+                    field.toLowerCase().includes(normalizedQuery)
                 );
                 
-                // デバッグ: BellinghamやValverdeの場合のみ詳細ログ
-                if (searchQuery.includes('bellingham') || searchQuery.includes('valverde')) {
-                    if (matches) {
-                        console.log(`✅ マッチ:`, {
-                            name: player.name,
-                            fullName: player.fullName,
-                            lastName: player.lastName,
-                            englishName: player.englishName
-                        });
+                // 特殊ケース: CarrerasとHuijsenの検索強化
+                if (!matches) {
+                    if (searchQuery.includes('carreras') || searchQuery.includes('careras') || normalizedQuery.includes('carreras')) {
+                        matches = searchFields.some(field => 
+                            field.toLowerCase().includes('carreras')
+                        );
+                    }
+                    if (!matches && (searchQuery.includes('huijsen') || searchQuery.includes('hujisen') || normalizedQuery.includes('huijsen'))) {
+                        matches = searchFields.some(field => 
+                            field.toLowerCase().includes('huijsen')
+                        );
                     }
                 }
                 
                 return matches;
             });
-            
-            console.log(`🔍 検索結果: ${players.length}名の選手が見つかりました`);
         }
         
         // 日本語検索
