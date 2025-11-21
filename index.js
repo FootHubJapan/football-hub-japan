@@ -1397,15 +1397,87 @@ app.get('/api/ranking/players', async (req, res) => {
                 if (dbPlayers && dbPlayers.length > 0) {
                     console.log(`✅ DatabaseManagerから${dbPlayers.length}名の最新選手データを取得`);
                     
-                    // フォーマット変換
+                    // フォーマット変換（シーズンとリーグでフィルタリング）
+                    const targetSeason = parseInt(season) || 2025;
+                    const seasonPatterns = [
+                        `${targetSeason}/${targetSeason + 1}`,  // "2025/2026"
+                        `${targetSeason}`,                      // "2025"
+                        `${targetSeason}-${targetSeason + 1}`,  // "2025-2026"
+                        `${targetSeason}-${String(targetSeason + 1).slice(-2)}` // "2025-26"
+                    ];
+                    
                     players = dbPlayers.map(player => {
-                        // statsが配列の場合、最新シーズンのデータを取得
+                        // statsが配列の場合、指定シーズンのデータを取得
                         let playerStats = null;
+                        let matchedLeague = null;
+                        
                         if (Array.isArray(player.stats) && player.stats.length > 0) {
-                            // 最新の統計（appearancesが最も多いもの）を選択
-                            playerStats = player.stats.sort((a, b) => (b.appearances || 0) - (a.appearances || 0))[0];
+                            // 指定シーズンのstatsを検索
+                            const seasonStats = player.stats.filter(stat => {
+                                const statSeason = stat.season || stat.seasonName || '';
+                                return seasonPatterns.some(pattern => 
+                                    statSeason.includes(pattern) || 
+                                    statSeason === String(targetSeason)
+                                );
+                            });
+                            
+                            if (seasonStats.length > 0) {
+                                // リーグフィルタリング（リーグが指定されている場合）
+                                if (league) {
+                                    const leagueMap = {
+                                        'PL': ['Premier League', 'プレミアリーグ', 'Premier'],
+                                        'PD': ['La Liga', 'ラ・リーガ', 'Liga'],
+                                        'SA': ['Serie A', 'セリエA', 'Serie'],
+                                        'BL1': ['Bundesliga', 'ブンデスリーガ', 'Bundes'],
+                                        'FL1': ['Ligue 1', 'リーグ・アン', 'Ligue'],
+                                        'J1': ['J1 League', 'J1リーグ', 'J1', 'J League']
+                                    };
+                                    
+                                    const leagueKeywords = leagueMap[league] || [league];
+                                    const leagueFilteredStats = seasonStats.filter(stat => {
+                                        const statLeague = (stat.leagueName || stat.league || '').toLowerCase();
+                                        return leagueKeywords.some(keyword => 
+                                            statLeague.includes(keyword.toLowerCase())
+                                        );
+                                    });
+                                    
+                                    if (leagueFilteredStats.length > 0) {
+                                        // リーグマッチしたstatsから、appearancesが最も多いものを選択
+                                        playerStats = leagueFilteredStats.sort((a, b) => 
+                                            (b.appearances || 0) - (a.appearances || 0)
+                                        )[0];
+                                        matchedLeague = playerStats.leagueName || playerStats.league;
+                                    }
+                                } else {
+                                    // リーグ指定がない場合、appearancesが最も多いものを選択
+                                    playerStats = seasonStats.sort((a, b) => 
+                                        (b.appearances || 0) - (a.appearances || 0)
+                                    )[0];
+                                    matchedLeague = playerStats.leagueName || playerStats.league;
+                                }
+                            } else {
+                                // 指定シーズンのデータがない場合、最新シーズンのデータを使用（フォールバック）
+                                playerStats = player.stats.sort((a, b) => 
+                                    (b.appearances || 0) - (a.appearances || 0)
+                                )[0];
+                                matchedLeague = playerStats?.leagueName || playerStats?.league;
+                            }
                         } else if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
-                            playerStats = player.stats;
+                            // statsが単一オブジェクトの場合
+                            const statSeason = player.stats.season || player.stats.seasonName || '';
+                            const matchesSeason = seasonPatterns.some(pattern => 
+                                statSeason.includes(pattern) || statSeason === String(targetSeason)
+                            );
+                            
+                            if (matchesSeason || !league) {
+                                playerStats = player.stats;
+                                matchedLeague = playerStats.leagueName || playerStats.league;
+                            }
+                        }
+                        
+                        // リーグが指定されている場合、マッチしなかった選手は除外
+                        if (league && !matchedLeague) {
+                            return null;
                         }
                         
                         return {
@@ -1414,28 +1486,28 @@ app.get('/api/ranking/players', async (req, res) => {
                             age: player.age,
                             nationality: player.nationality,
                             photo: player.photo || player.photoUrl,
-                            team: player.currentTeam || player.team,
-                            currentTeam: player.currentTeam || player.team,
+                            team: playerStats?.teamName || player.currentTeam || player.team,
+                            currentTeam: playerStats?.teamName || player.currentTeam || player.team,
                             position: player.detailedPosition || player.position,
                             detailedPosition: player.detailedPosition || player.position,
-                            league: player.league || player.leagueName,
-                            goals: playerStats?.goals || player.stats?.goals || 0,
-                            assists: playerStats?.assists || player.stats?.assists || 0,
-                            appearances: playerStats?.appearances || player.stats?.appearances || playerStats?.lineups || player.stats?.lineups || 0,
-                            minutes: playerStats?.minutes || player.stats?.minutes || 0,
-                            rating: playerStats?.rating || player.stats?.rating || 'N/A',
-                            passes: playerStats?.passesTotal || player.stats?.passesTotal || 0,
-                            passAccuracy: playerStats?.passAccuracy || player.stats?.passAccuracy || '0%',
-                            tackles: playerStats?.tackles || player.stats?.tackles || 0,
-                            interceptions: playerStats?.interceptions || player.stats?.interceptions || 0,
-                            saves: playerStats?.saves || player.stats?.saves || 0,
-                            cleanSheets: playerStats?.cleanSheets || player.stats?.cleanSheets || 0,
-                            yellowCards: playerStats?.yellowCards || player.stats?.yellowCards || 0,
-                            redCards: playerStats?.redCards || player.stats?.redCards || 0,
-                            shots: playerStats?.shotsTotal || player.stats?.shotsTotal || 0,
-                            shotsOnTarget: playerStats?.shotsOnTarget || player.stats?.shotsOnTarget || 0
+                            league: matchedLeague || player.league || player.leagueName,
+                            goals: playerStats?.goals || 0,
+                            assists: playerStats?.assists || 0,
+                            appearances: playerStats?.appearances || playerStats?.lineups || 0,
+                            minutes: playerStats?.minutes || 0,
+                            rating: playerStats?.rating || 'N/A',
+                            passes: playerStats?.passesTotal || 0,
+                            passAccuracy: playerStats?.passAccuracy || '0%',
+                            tackles: playerStats?.tackles || 0,
+                            interceptions: playerStats?.interceptions || 0,
+                            saves: playerStats?.saves || 0,
+                            cleanSheets: playerStats?.cleanSheets || 0,
+                            yellowCards: playerStats?.yellowCards || 0,
+                            redCards: playerStats?.redCards || 0,
+                            shots: playerStats?.shotsTotal || 0,
+                            shotsOnTarget: playerStats?.shotsOnTarget || 0
                         };
-                    });
+                    }).filter(p => p !== null); // nullを除外
                     
                     console.log(`✅ Converted ${players.length} players from DatabaseManager`);
                 }
@@ -1460,15 +1532,84 @@ app.get('/api/ranking/players', async (req, res) => {
                     console.log(`📊 Loaded ${localPlayers.length} players from local database file`);
                     
                     if (localPlayers.length > 0) {
-                        // ローカルデータを統一フォーマットに変換
+                        // ローカルデータを統一フォーマットに変換（シーズンとリーグでフィルタリング）
+                        const targetSeason = parseInt(season) || 2025;
+                        const seasonPatterns = [
+                            `${targetSeason}/${targetSeason + 1}`,
+                            `${targetSeason}`,
+                            `${targetSeason}-${targetSeason + 1}`,
+                            `${targetSeason}-${String(targetSeason + 1).slice(-2)}`
+                        ];
+                        
                         players = localPlayers.map(player => {
-                            // statsが配列の場合、最新シーズンのデータを取得
+                            // statsが配列の場合、指定シーズンのデータを取得
                             let playerStats = null;
+                            let matchedLeague = null;
+                            
                             if (Array.isArray(player.stats) && player.stats.length > 0) {
-                                // 最新の統計（appearancesが最も多いもの）を選択
-                                playerStats = player.stats.sort((a, b) => (b.appearances || 0) - (a.appearances || 0))[0];
+                                // 指定シーズンのstatsを検索
+                                const seasonStats = player.stats.filter(stat => {
+                                    const statSeason = stat.season || stat.seasonName || '';
+                                    return seasonPatterns.some(pattern => 
+                                        statSeason.includes(pattern) || 
+                                        statSeason === String(targetSeason)
+                                    );
+                                });
+                                
+                                if (seasonStats.length > 0) {
+                                    // リーグフィルタリング（リーグが指定されている場合）
+                                    if (league) {
+                                        const leagueMap = {
+                                            'PL': ['Premier League', 'プレミアリーグ', 'Premier'],
+                                            'PD': ['La Liga', 'ラ・リーガ', 'Liga'],
+                                            'SA': ['Serie A', 'セリエA', 'Serie'],
+                                            'BL1': ['Bundesliga', 'ブンデスリーガ', 'Bundes'],
+                                            'FL1': ['Ligue 1', 'リーグ・アン', 'Ligue'],
+                                            'J1': ['J1 League', 'J1リーグ', 'J1', 'J League']
+                                        };
+                                        
+                                        const leagueKeywords = leagueMap[league] || [league];
+                                        const leagueFilteredStats = seasonStats.filter(stat => {
+                                            const statLeague = (stat.leagueName || stat.league || '').toLowerCase();
+                                            return leagueKeywords.some(keyword => 
+                                                statLeague.includes(keyword.toLowerCase())
+                                            );
+                                        });
+                                        
+                                        if (leagueFilteredStats.length > 0) {
+                                            playerStats = leagueFilteredStats.sort((a, b) => 
+                                                (b.appearances || 0) - (a.appearances || 0)
+                                            )[0];
+                                            matchedLeague = playerStats.leagueName || playerStats.league;
+                                        }
+                                    } else {
+                                        playerStats = seasonStats.sort((a, b) => 
+                                            (b.appearances || 0) - (a.appearances || 0)
+                                        )[0];
+                                        matchedLeague = playerStats.leagueName || playerStats.league;
+                                    }
+                                } else {
+                                    // 指定シーズンのデータがない場合、最新シーズンのデータを使用
+                                    playerStats = player.stats.sort((a, b) => 
+                                        (b.appearances || 0) - (a.appearances || 0)
+                                    )[0];
+                                    matchedLeague = playerStats?.leagueName || playerStats?.league;
+                                }
                             } else if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
-                                playerStats = player.stats;
+                                const statSeason = player.stats.season || player.stats.seasonName || '';
+                                const matchesSeason = seasonPatterns.some(pattern => 
+                                    statSeason.includes(pattern) || statSeason === String(targetSeason)
+                                );
+                                
+                                if (matchesSeason || !league) {
+                                    playerStats = player.stats;
+                                    matchedLeague = playerStats.leagueName || playerStats.league;
+                                }
+                            }
+                            
+                            // リーグが指定されている場合、マッチしなかった選手は除外
+                            if (league && !matchedLeague) {
+                                return null;
                             }
                             
                             return {
@@ -1477,11 +1618,11 @@ app.get('/api/ranking/players', async (req, res) => {
                                 age: player.age,
                                 nationality: player.nationality,
                                 photo: player.photo,
-                                team: player.currentTeam || player.team,
-                                currentTeam: player.currentTeam || player.team,
+                                team: playerStats?.teamName || player.currentTeam || player.team,
+                                currentTeam: playerStats?.teamName || player.currentTeam || player.team,
                                 position: player.detailedPosition || player.position,
                                 detailedPosition: player.detailedPosition || player.position,
-                                league: player.league,
+                                league: matchedLeague || player.league,
                                 goals: playerStats?.goals || 0,
                                 assists: playerStats?.assists || 0,
                                 appearances: playerStats?.appearances || playerStats?.lineups || 0,
@@ -1498,7 +1639,7 @@ app.get('/api/ranking/players', async (req, res) => {
                                 shots: playerStats?.shotsTotal || 0,
                                 shotsOnTarget: playerStats?.shotsOnTarget || 0
                             };
-                        });
+                        }).filter(p => p !== null); // nullを除外
                         
                         console.log(`✅ Converted ${players.length} players from local file`);
                     }
@@ -1655,23 +1796,24 @@ app.get('/api/ranking/players', async (req, res) => {
             }
         }
         
-        // リーグ名の正規化マッピング
-        const leagueMapping = {
-            'PL': ['Premier League', 'プレミアリーグ'],
-            'PD': ['La Liga', 'ラ・リーガ'],
-            'SA': ['Serie A', 'セリエA'],
-            'BL1': ['Bundesliga', 'ブンデスリーガ', '2. Bundesliga'],
-            'FL1': ['Ligue 1', 'リーグ・アン'],
-            'J1': ['J1 League', 'J1リーグ']
-        };
-        
-        // リーグフィルタリング
-        if (league && leagueMapping[league] && players.length > 0) {
+        // リーグフィルタリング（既にstatsレベルでフィルタリング済みの場合はスキップ）
+        // ただし、API-Footballから取得したデータの場合のみ追加フィルタリングを実行
+        if (league && players.length > 0) {
+            const leagueMapping = {
+                'PL': ['Premier League', 'プレミアリーグ', 'Premier'],
+                'PD': ['La Liga', 'ラ・リーガ', 'Liga'],
+                'SA': ['Serie A', 'セリエA', 'Serie'],
+                'BL1': ['Bundesliga', 'ブンデスリーガ', 'Bundes'],
+                'FL1': ['Ligue 1', 'リーグ・アン', 'Ligue'],
+                'J1': ['J1 League', 'J1リーグ', 'J1', 'J League']
+            };
+            
             const beforeFilter = players.length;
-            const validLeagues = leagueMapping[league];
-            players = players.filter(p => 
-                validLeagues.some(l => p.league && p.league.includes(l))
-            );
+            const validLeagues = leagueMapping[league] || [league];
+            players = players.filter(p => {
+                const playerLeague = (p.league || '').toLowerCase();
+                return validLeagues.some(l => playerLeague.includes(l.toLowerCase()));
+            });
             console.log(`✅ League filter: ${beforeFilter} → ${players.length} players in league: ${league}`);
         }
         
