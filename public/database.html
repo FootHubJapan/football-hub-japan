@@ -1611,6 +1611,23 @@
                 return;
             }
             
+            // デバッグ: CarrerasとHuijsenが含まれているか確認
+            if (tabType === 'players') {
+                const hasCarreras = data.some(p => 
+                    (p.name || '').toLowerCase().includes('carreras') ||
+                    (p.fullName || '').toLowerCase().includes('carreras') ||
+                    (p.lastName || '').toLowerCase().includes('carreras')
+                );
+                const hasHuijsen = data.some(p => 
+                    (p.name || '').toLowerCase().includes('huijsen') ||
+                    (p.fullName || '').toLowerCase().includes('huijsen') ||
+                    (p.lastName || '').toLowerCase().includes('huijsen')
+                );
+                if (hasCarreras || hasHuijsen) {
+                    console.log(`✅ データベースに含まれています: Carreras=${hasCarreras}, Huijsen=${hasHuijsen}`);
+                }
+            }
+            
             let html = '';
             
             if (data.length === 0) {
