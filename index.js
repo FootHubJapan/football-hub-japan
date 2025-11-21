@@ -1838,9 +1838,14 @@ app.get('/api/ranking/players', async (req, res) => {
         }
         
         // フォールバックを使用（データがない場合のみ）
+        // ただし、データベースからデータを取得できなかった場合のみ使用
         if (players.length === 0) {
             console.log('⚠️ No players available from any source, using fallback');
+            // フォールバックは最小限のデータのみ提供（全選手データはデータベースから取得する必要がある）
             players = generateFallbackPlayerRanking(league, position, stat);
+            console.log(`⚠️ Using fallback data: ${players.length} players (limited dataset)`);
+        } else {
+            console.log(`✅ Using database data: ${players.length} players (full dataset)`);
         }
         
         const limit = parseInt(req.query.limit) || 1000; // デフォルトで1000名まで返す
