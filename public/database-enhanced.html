@@ -4264,79 +4264,53 @@
                     grid.innerHTML = '<div class="loading">検索中...</div>';
                 }
 
-                // フォールバックデータを確実にcurrentPlayersに含める（検索時に確実に見つかるように）
-                if (!currentPlayers || currentPlayers.length === 0) {
-                    const fallbackPlayers = generateFallbackPlayers(100);
-                    currentPlayers = fallbackPlayers;
-                    console.log(`✅ フォールバックデータ${fallbackPlayers.length}名をcurrentPlayersに追加`);
-                } else {
-                    // 既存のcurrentPlayersにフォールバックデータを追加（重複を避けながら）
-                    const fallbackPlayers = generateFallbackPlayers(100);
-                    const existingNames = new Set(currentPlayers.map(p => (p.name || '').toLowerCase()));
-                    const newPlayers = fallbackPlayers.filter(p => !existingNames.has((p.name || '').toLowerCase()));
-                    if (newPlayers.length > 0) {
-                        currentPlayers = [...currentPlayers, ...newPlayers];
-                        console.log(`✅ フォールバックデータ${newPlayers.length}名をcurrentPlayersに追加、合計${currentPlayers.length}名`);
-                    }
-                }
-
-                // API連携で検索（日本語対応強化）
-                const filters = {};
-                if (league) filters.league = league;
-                if (detailedPosition) filters.position = detailedPosition;
-
-                // 日本語名が入力された場合、複数の検索クエリを試行
-                let searchResult = null;
-                if (query && japanesePlayerMap[query]) {
-                    const englishName = japanesePlayerMap[query];
-                    console.log(`🔍 日本語名 "${query}" で検索中...`);
+                // /api/integrated/playersから直接検索（フォールバックデータは使わない）
+                let players = [];
+                try {
+                    const apiUrl = query 
+                        ? `/api/integrated/players?limit=10000&query=${encodeURIComponent(query)}`
+                        : '/api/integrated/players?limit=10000';
                     
-                    // まず日本語名で検索
-                    searchResult = await searchPlayersFromBothAPIs(query, filters);
-                    
-                    // 日本語名で結果がない場合、英語名で検索
-                    if (!searchResult.players || searchResult.players.length === 0) {
-                        console.log(`🔍 英語名 "${englishName}" で検索中...`);
-                        searchResult = await searchPlayersFromBothAPIs(englishName, filters);
+                    const apiResponse = await fetch(apiUrl);
+                    if (apiResponse.ok) {
+                        const apiData = await apiResponse.json();
+                        players = Array.isArray(apiData) ? apiData : (apiData.players || apiData.results || []);
+                        console.log(`✅ /api/integrated/playersから${players.length}名の選手データを取得`);
                     }
-                } else {
-                                    // 通常の検索（両APIを試行）
-                searchResult = await searchPlayersFromBothAPIs(query, filters);
+                } catch (apiError) {
+                    console.error('API検索エラー:', apiError);
                 }
                 
-                if (searchResult.players && searchResult.players.length > 0) {
-                    // API検索結果とフォールバックデータをマージ（重複を避けながら）
-                    const apiPlayerNames = new Set(searchResult.players.map(p => (p.name || '').toLowerCase()));
-                    const fallbackPlayers = generateFallbackPlayers(100);
-                    const newFallbackPlayers = fallbackPlayers.filter(p => !apiPlayerNames.has((p.name || '').toLowerCase()));
-                    currentPlayers = [...searchResult.players, ...newFallbackPlayers];
-                    displayPlayers(searchResult.players);
-                    console.log(`✅ API検索結果: ${searchResult.players.length}名の選手を発見、フォールバックデータ${newFallbackPlayers.length}名を追加`);
-                } else {
-                    // API検索で結果がない場合、フォールバック検索
-                    console.log('API検索で結果なし、フォールバック検索を実行');
-                    const fallbackResults = performFallbackSearch(query, league, detailedPosition);
-                    if (fallbackResults && fallbackResults.length > 0) {
-                    currentPlayers = fallbackResults;
-                    displayPlayers(fallbackResults);
-                        console.log(`✅ フォールバック検索結果: ${fallbackResults.length}名の選手を発見`);
+                // リーグフィルタリング
+                if (league && players.length > 0) {
+                    players = players.filter(p => {
+                        const playerLeague = (p.league || p.currentTeam?.league || '').toLowerCase();
+                        return playerLeague.includes(league.toLowerCase());
+                    });
+                }
+                
+                // ポジションフィルタリング
+                if (detailedPosition && players.length > 0) {
+                    players = players.filter(p => {
+                        const playerPosition = (p.position || p.detailedPosition || '').toLowerCase();
+                        return playerPosition.includes(detailedPosition.toLowerCase());
+                    });
+                }
+                
+                if (players.length > 0) {
+                    currentPlayers = players;
+                    displayPlayers(players);
+                    console.log(`✅ 検索結果: ${players.length}名の選手を表示`);
                 } else {
                     showError('選手が見つかりませんでした');
-                        const grid = document.getElementById('playersGrid');
-                        if (grid) {
-                            grid.innerHTML = '<div class="no-results">検索条件に一致する選手が見つかりませんでした</div>';
-                        }
+                    const grid = document.getElementById('playersGrid');
+                    if (grid) {
+                        grid.innerHTML = '<div class="no-results">検索条件に一致する選手が見つかりませんでした</div>';
                     }
                 }
             } catch (error) {
                 console.error('検索エラー:', error);
                 showError('検索中にエラーが発生しました');
-                
-                // エラー時はフォールバック検索
-                const fallbackResults = performFallbackSearch(query, league, detailedPosition);
-                if (fallbackResults.length > 0) {
-                    currentPlayers = fallbackResults;
-                    displayPlayers(fallbackResults);
                 } else {
                     const grid = document.getElementById('playersGrid');
                     if (grid) {
