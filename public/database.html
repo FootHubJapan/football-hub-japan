@@ -3539,6 +3539,49 @@
             }
         }
         
+        // キャリアスタッツが不足している選手を更新
+        async function updateCareerStatsForMissingPlayers() {
+            try {
+                showDataStatus('キャリアスタッツが不足している選手を検索中...', 'info');
+                
+                const response = await fetch('/api/admin/update-multiple-career-stats', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        playerIds: [], // 空配列で自動検出
+                        limit: 20, // 一度に20名まで更新
+                        delay: 2000 // 2秒待機
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || errorData.error || '更新に失敗しました');
+                }
+                
+                const result = await response.json();
+                console.log('✅ キャリアスタッツ更新結果:', result);
+                
+                const successCount = result.results?.success?.length || 0;
+                const failedCount = result.results?.failed?.length || 0;
+                
+                showDataStatus(
+                    `✅ キャリアスタッツ更新が完了しました！\n成功: ${successCount}名、失敗: ${failedCount}名`,
+                    successCount > 0 ? 'success' : 'warning'
+                );
+                
+                // データを再表示
+                setTimeout(async () => {
+                    await switchTab('players');
+                }, 2000);
+            } catch (error) {
+                console.error('キャリアスタッツ更新エラー:', error);
+                showDataStatus(`キャリアスタッツ更新中にエラーが発生しました: ${error.message}`, 'error');
+            }
+        }
+
         // 全選手データをFirebaseにインポート（players.jsonから）
         async function importAllPlayersFromFile() {
             try {
