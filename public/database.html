@@ -3595,6 +3595,75 @@
             }
         }
 
+        // 重複選手を排除
+        function removeDuplicatePlayers(players) {
+            if (!players || !Array.isArray(players)) return players;
+            
+            const seenIds = new Set();
+            const seenApiIds = new Set();
+            const seenPlayerIds = new Set();
+            const seenNameTeam = new Set();
+            const uniquePlayers = [];
+            
+            for (const player of players) {
+                if (!player) continue;
+                
+                let isDuplicate = false;
+                
+                // IDで判定
+                if (player.id) {
+                    if (seenIds.has(player.id)) {
+                        console.log(`⚠️ 重複選手をスキップ（ID）: ${player.name} (ID: ${player.id})`);
+                        isDuplicate = true;
+                    } else {
+                        seenIds.add(player.id);
+                    }
+                }
+                
+                // apiFootballIdで判定
+                if (!isDuplicate && player.apiFootballId) {
+                    if (seenApiIds.has(player.apiFootballId)) {
+                        console.log(`⚠️ 重複選手をスキップ（apiFootballId）: ${player.name} (apiFootballId: ${player.apiFootballId})`);
+                        isDuplicate = true;
+                    } else {
+                        seenApiIds.add(player.apiFootballId);
+                    }
+                }
+                
+                // playerIdで判定
+                if (!isDuplicate && player.playerId) {
+                    if (seenPlayerIds.has(player.playerId)) {
+                        console.log(`⚠️ 重複選手をスキップ（playerId）: ${player.name} (playerId: ${player.playerId})`);
+                        isDuplicate = true;
+                    } else {
+                        seenPlayerIds.add(player.playerId);
+                    }
+                }
+                
+                // 名前+チームで判定（IDがない場合のフォールバック）
+                if (!isDuplicate) {
+                    const name = (player.name || player.fullName || '').toLowerCase().trim();
+                    const team = (player.currentTeam || player.team || '').toLowerCase().trim();
+                    if (name && team) {
+                        const nameTeamKey = `${name}::${team}`;
+                        if (seenNameTeam.has(nameTeamKey)) {
+                            console.log(`⚠️ 重複選手をスキップ（名前+チーム）: ${player.name} (${player.currentTeam || player.team})`);
+                            isDuplicate = true;
+                        } else {
+                            seenNameTeam.add(nameTeamKey);
+                        }
+                    }
+                }
+                
+                if (!isDuplicate) {
+                    uniquePlayers.push(player);
+                }
+            }
+            
+            console.log(`📊 重複排除: ${players.length}名 → ${uniquePlayers.length}名`);
+            return uniquePlayers;
+        }
+
         // キャリアスタッツが不足している選手を検出
         function detectMissingCareerStats(players) {
             if (!players || !Array.isArray(players)) return;
