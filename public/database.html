@@ -1287,6 +1287,14 @@
             </div>
             <div id="dataStatus" class="data-status"></div>
             <div id="apiStatus" class="api-status"></div>
+            <div id="missingCareerStatsSection" class="missing-career-stats-section" style="display: none; margin-top: 1rem; padding: 1rem; background: #2a2a2a; border-radius: 10px; border: 1px solid #00ff88;">
+                <h4 style="color: #00ff88; margin-bottom: 1rem;">📊 キャリアスタッツが不足している選手</h4>
+                <div id="missingCareerStatsList" class="missing-career-stats-list" style="max-height: 300px; overflow-y: auto;"></div>
+                <div style="margin-top: 1rem; display: flex; gap: 10px;">
+                    <button id="updateSelectedPlayersBtn" class="btn btn-primary">選択した選手を更新</button>
+                    <button id="updateAllMissingBtn" class="btn btn-success">すべて更新（最大20名）</button>
+                </div>
+            </div>
         </div>
 
         <div class="data-section">
@@ -1506,6 +1514,10 @@
                                 if (apiPlayers.length > 0) {
                                     currentData = apiPlayers;
                                     console.log(`✅ APIから${currentData.length}名の選手データを取得`);
+                                    
+                                    // キャリアスタッツが不足している選手を検出
+                                    detectMissingCareerStats(currentData);
+                                    
                                     displayData(currentData, currentTab);
                                     return;
                                 }
