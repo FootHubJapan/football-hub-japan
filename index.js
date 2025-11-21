@@ -10911,3 +10911,280 @@ app.post('/api/admin/import-players', async (req, res) => {
     }
 });
 
+// 選手のキャリアスタッツを取得してplayers.jsonに保存するエンドポイント
+app.post('/api/admin/update-player-career-stats/:playerId', async (req, res) => {
+    try {
+        const { playerId } = req.params;
+        const { seasons = '2020,2021,2022,2023,2024,2025' } = req.query;
+        
+        console.log(`🔄 選手キャリアスタッツ更新開始: ${playerId}`);
+        
+        const fs = require('fs');
+        const playersFile = path.join(__dirname, 'data', 'players.json');
+        
+        // players.jsonを読み込み
+        let players = [];
+        if (fs.existsSync(playersFile)) {
+            const data = await fs.promises.readFile(playersFile, 'utf8');
+            players = JSON.parse(data);
+        } else {
+            return res.status(404).json({ error: 'players.jsonが見つかりません' });
+        }
+        
+        // 選手を検索
+        const playerIndex = players.findIndex(p => 
+            p.id === playerId || 
+            p.apiFootballId === playerId || 
+            p.footballDataId === playerId ||
+            p.playerId === playerId ||
+            p.playerId === parseInt(playerId) ||
+            (p.id && p.id === `api_${playerId}`) ||
+            (p.id && p.id === playerId)
+        );
+        
+        if (playerIndex === -1) {
+            return res.status(404).json({ 
+                error: '選手が見つかりませんでした',
+                playerId
+            });
+        }
+        
+        const player = players[playerIndex];
+        const apiFootballPlayerId = player.apiFootballId || player.playerId || player.id?.replace('api_', '');
+        
+        if (!apiFootballPlayerId) {
+            return res.status(404).json({ 
+                error: '選手IDが見つかりませんでした',
+                playerId
+            });
+        }
+        
+        // キャリアスタッツを取得
+        const careerStats = [];
+        const seasonList = seasons.split(',');
+        
+        for (const season of seasonList) {
+            try {
+                let seasonStats = null;
+                
+                // API-Footballから取得
+                try {
+                    const apiFootballStats = await getPlayerSeasonStatsFromAPIFootball(apiFootballPlayerId, season);
+                    if (apiFootballStats) {
+                        seasonStats = {
+                            ...apiFootballStats,
+                            source: 'API-Football',
+                            season: season,
+                            league: apiFootballStats.league || 'Unknown'
+                        };
+                    }
+                } catch (error) {
+                    console.log(`⚠️ API-Football ${season}シーズンデータ取得失敗:`, error.message);
+                }
+                
+                // Football-data.orgから取得（フォールバック）
+                if (!seasonStats && player.footballDataId) {
+                    try {
+                        const footballDataStats = await getPlayerSeasonStatsFromFootballData(player.footballDataId, season);
+                        if (footballDataStats) {
+                            seasonStats = {
+                                ...footballDataStats,
+                                source: 'Football-data.org',
+                                season: season,
+                                league: footballDataStats.league || 'Unknown'
+                            };
+                        }
+                    } catch (error) {
+                        console.log(`⚠️ Football-data.org ${season}シーズンデータ取得失敗:`, error.message);
+                    }
+                }
+                
+                if (seasonStats && (seasonStats.goals > 0 || seasonStats.assists > 0 || seasonStats.appearances > 0 || seasonStats.matches > 0)) {
+                    careerStats.push(seasonStats);
+                }
+            } catch (error) {
+                console.log(`⚠️ ${season}シーズンデータ取得エラー:`, error.message);
+            }
+        }
+        
+        // キャリアスタッツをソート（新しい順）
+        careerStats.sort((a, b) => parseInt(b.season) - parseInt(a.season));
+        
+        // 選手データを更新
+        players[playerIndex] = {
+            ...player,
+            careerStats: careerStats,
+            lastUpdated: new Date().toISOString()
+        };
+        
+        // players.jsonに保存
+        await fs.promises.writeFile(playersFile, JSON.stringify(players, null, 2), 'utf8');
+        
+        console.log(`✅ 選手キャリアスタッツ更新完了: ${player.name} (${careerStats.length}シーズン)`);
+        
+        res.json({
+            success: true,
+            player: {
+                id: player.id,
+                name: player.name,
+                fullName: player.fullName
+            },
+            careerStats: careerStats,
+            totalSeasons: careerStats.length,
+            message: `${player.name}のキャリアスタッツを更新しました（${careerStats.length}シーズン）`
+        });
+        
+    } catch (error) {
+        console.error('❌ キャリアスタッツ更新エラー:', error);
+        res.status(500).json({
+            error: 'キャリアスタッツの更新に失敗しました',
+            message: error.message
+        });
+    }
+});
+
+// 複数選手のキャリアスタッツを一括更新するエンドポイント
+app.post('/api/admin/update-multiple-career-stats', async (req, res) => {
+    try {
+        const { playerIds = [], limit = 10, delay = 2000 } = req.body;
+        
+        console.log(`🔄 複数選手キャリアスタッツ一括更新開始: ${playerIds.length}名`);
+        
+        const fs = require('fs');
+        const playersFile = path.join(__dirname, 'data', 'players.json');
+        
+        // players.jsonを読み込み
+        let players = [];
+        if (fs.existsSync(playersFile)) {
+            const data = await fs.promises.readFile(playersFile, 'utf8');
+            players = JSON.parse(data);
+        } else {
+            return res.status(404).json({ error: 'players.jsonが見つかりません' });
+        }
+        
+        // 更新対象選手をフィルタリング（careerStatsがない、または少ない選手）
+        let targetPlayers = [];
+        if (playerIds.length > 0) {
+            targetPlayers = players.filter(p => 
+                playerIds.includes(p.id) || 
+                playerIds.includes(p.apiFootballId) ||
+                playerIds.includes(p.playerId)
+            );
+        } else {
+            // careerStatsがない、または少ない選手を自動検出
+            targetPlayers = players.filter(p => {
+                if (!p.apiFootballId && !p.playerId) return false;
+                const hasCareerStats = p.careerStats && Array.isArray(p.careerStats) && p.careerStats.length > 0;
+                return !hasCareerStats || p.careerStats.length < 3; // 3シーズン未満の選手
+            }).slice(0, limit);
+        }
+        
+        console.log(`📊 更新対象選手: ${targetPlayers.length}名`);
+        
+        const results = {
+            success: [],
+            failed: [],
+            total: targetPlayers.length
+        };
+        
+        // 各選手のキャリアスタッツを更新
+        for (let i = 0; i < targetPlayers.length; i++) {
+            const player = targetPlayers[i];
+            const playerId = player.apiFootballId || player.playerId || player.id?.replace('api_', '');
+            
+            if (!playerId) {
+                results.failed.push({
+                    player: player.name,
+                    reason: '選手IDが見つかりません'
+                });
+                continue;
+            }
+            
+            try {
+                console.log(`📊 [${i + 1}/${targetPlayers.length}] ${player.name}のキャリアスタッツを取得中...`);
+                
+                // キャリアスタッツを取得
+                const careerStats = [];
+                const seasons = [2020, 2021, 2022, 2023, 2024, 2025];
+                
+                for (const season of seasons) {
+                    try {
+                        let seasonStats = null;
+                        
+                        // API-Footballから取得
+                        try {
+                            const apiFootballStats = await getPlayerSeasonStatsFromAPIFootball(playerId, season);
+                            if (apiFootballStats) {
+                                seasonStats = {
+                                    ...apiFootballStats,
+                                    source: 'API-Football',
+                                    season: season.toString(),
+                                    league: apiFootballStats.league || 'Unknown'
+                                };
+                            }
+                        } catch (error) {
+                            // エラーは無視して続行
+                        }
+                        
+                        if (seasonStats && (seasonStats.goals > 0 || seasonStats.assists > 0 || seasonStats.appearances > 0 || seasonStats.matches > 0)) {
+                            careerStats.push(seasonStats);
+                        }
+                    } catch (error) {
+                        // エラーは無視して続行
+                    }
+                }
+                
+                // キャリアスタッツをソート
+                careerStats.sort((a, b) => parseInt(b.season) - parseInt(a.season));
+                
+                // 選手データを更新
+                const playerIndex = players.findIndex(p => p.id === player.id);
+                if (playerIndex !== -1) {
+                    players[playerIndex] = {
+                        ...players[playerIndex],
+                        careerStats: careerStats,
+                        lastUpdated: new Date().toISOString()
+                    };
+                }
+                
+                results.success.push({
+                    player: player.name,
+                    seasons: careerStats.length
+                });
+                
+                console.log(`✅ ${player.name}: ${careerStats.length}シーズンのデータを取得`);
+                
+                // レート制限対策：待機
+                if (i < targetPlayers.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+                
+            } catch (error) {
+                console.error(`❌ ${player.name}の更新に失敗:`, error.message);
+                results.failed.push({
+                    player: player.name,
+                    reason: error.message
+                });
+            }
+        }
+        
+        // players.jsonに保存
+        await fs.promises.writeFile(playersFile, JSON.stringify(players, null, 2), 'utf8');
+        
+        console.log(`✅ 一括更新完了: 成功${results.success.length}名、失敗${results.failed.length}名`);
+        
+        res.json({
+            success: true,
+            results: results,
+            message: `${results.success.length}名の選手のキャリアスタッツを更新しました`
+        });
+        
+    } catch (error) {
+        console.error('❌ 一括更新エラー:', error);
+        res.status(500).json({
+            error: '一括更新に失敗しました',
+            message: error.message
+        });
+    }
+});
+

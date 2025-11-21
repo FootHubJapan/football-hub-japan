@@ -1280,6 +1280,7 @@
                 <button id="checkDataStatusBtn" class="btn btn-info">データ状況確認</button>
                 <button id="importRealDataBtn" class="btn btn-primary">実際データインポート</button>
                 <button id="importAllPlayersBtn" class="btn btn-primary">全選手データインポート（players.jsonから）</button>
+                <button id="updateCareerStatsBtn" class="btn btn-primary">キャリアスタッツ更新（不足選手を自動検出）</button>
                 <button id="clearCachedDataBtn" class="btn btn-warning">キャッシュクリア</button>
                 <button id="refreshDataBtn" class="btn btn-success">データ更新</button>
                 <a href="/admin.html" class="btn btn-info" style="text-decoration: none; display: inline-block;">管理画面</a>
@@ -3429,6 +3430,11 @@
             const importAllPlayersBtn = document.getElementById('importAllPlayersBtn');
             if (importAllPlayersBtn) {
                 importAllPlayersBtn.addEventListener('click', importAllPlayersFromFile);
+            }
+
+            const updateCareerStatsBtn = document.getElementById('updateCareerStatsBtn');
+            if (updateCareerStatsBtn) {
+                updateCareerStatsBtn.addEventListener('click', updateCareerStatsForMissingPlayers);
             }
 
             const clearCachedDataBtn = document.getElementById('clearCachedDataBtn');
