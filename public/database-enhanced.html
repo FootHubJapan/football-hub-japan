@@ -4281,7 +4281,25 @@
                     if (apiResponse.ok) {
                         const apiData = await apiResponse.json();
                         players = Array.isArray(apiData) ? apiData : (apiData.players || apiData.results || []);
-                        console.log(`✅ /api/integrated/playersから${players.length}名の選手データを取得`);
+                        console.log(`✅ /api/integrated/playersから${players.length}名の選手データを取得 (クエリ: "${query}")`);
+                        
+                        // デバッグ: CarrerasとHuijsenが検索結果に含まれているか確認
+                        if (query && (query.toLowerCase().includes('carreras') || query.toLowerCase().includes('huijsen') || query.toLowerCase().includes('hujisen'))) {
+                            const carrerasPlayers = players.filter(p => 
+                                (p.name || '').toLowerCase().includes('carreras') ||
+                                (p.fullName || '').toLowerCase().includes('carreras') ||
+                                (p.lastName || '').toLowerCase().includes('carreras')
+                            );
+                            const huijsenPlayers = players.filter(p => 
+                                (p.name || '').toLowerCase().includes('huijsen') ||
+                                (p.fullName || '').toLowerCase().includes('huijsen') ||
+                                (p.lastName || '').toLowerCase().includes('huijsen')
+                            );
+                            console.log(`🔍 Carreras検索結果: ${carrerasPlayers.length}名`, carrerasPlayers.slice(0, 3).map(p => p.name || p.fullName));
+                            console.log(`🔍 Huijsen検索結果: ${huijsenPlayers.length}名`, huijsenPlayers.slice(0, 3).map(p => p.name || p.fullName));
+                        }
+                    } else {
+                        console.error(`❌ APIレスポンスエラー: ${apiResponse.status} ${apiResponse.statusText}`);
                     }
                 } catch (apiError) {
                     console.error('API検索エラー:', apiError);
