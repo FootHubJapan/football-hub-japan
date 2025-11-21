@@ -1449,7 +1449,7 @@
                 <div class="search-help">
                     <small>💡 日本語名でも検索可能: 久保建英、三苫薫、堂安律など</small>
                 </div>
-                <select id="leagueSelect">
+                <select id="leagueSelect" onchange="handleSearch()">
                     <option value="">すべてのリーグ</option>
                     <option value="PL">プレミアリーグ</option>
                     <option value="PD">ラ・リーガ</option>
@@ -2516,11 +2516,7 @@
             if (!grid) return;
             
             // 検索・一覧データを永続化（詳細ページ遷移用）
-            try {
-                localStorage.setItem('currentPlayers', JSON.stringify(players || []));
-            } catch (e) {
-                console.warn('Failed to persist currentPlayers to localStorage:', e);
-            }
+            // localStorageへの保存は行わない（メモリ不足を避けるため）
             
             // 表示をクリア
             grid.innerHTML = '';
@@ -4263,6 +4259,16 @@
             'レワンドフスキ': 'Robert Lewandowski'
         };
 
+        // リーグコードとリーグ名のマッピング
+        const leagueMap = {
+            'PL': ['premier league', 'prem', 'pl', 'プレミアリーグ'],
+            'PD': ['la liga', 'laliga', 'pd', 'ラ・リーガ', 'リーガ'],
+            'SA': ['serie a', 'seriea', 'sa', 'セリエa', 'セリエA'],
+            'BL1': ['bundesliga', 'bl1', 'ブンデスリーガ', 'ブンデス'],
+            'FL1': ['ligue 1', 'ligue1', 'fl1', 'リーグ・アン', 'リーグアン'],
+            'J1': ['j1 league', 'j1league', 'j1', 'j1リーグ', 'jリーグ']
+        };
+
         // 検索処理（API連携対応・日本語対応強化）
         async function performSearch() {
             const searchInput = document.getElementById('searchInput');
@@ -4356,10 +4362,22 @@
                 
                 // リーグフィルタリング
                 if (league && players.length > 0) {
+                    const leagueKeywords = leagueMap[league] || [league.toLowerCase()];
                     players = players.filter(p => {
-                        const playerLeague = (p.league || p.currentTeam?.league || '').toLowerCase();
-                        return playerLeague.includes(league.toLowerCase());
+                        const playerLeague = (p.league || p.leagueName || p.currentTeam?.league || '').toLowerCase();
+                        // リーグコードまたはリーグ名でマッチング
+                        return leagueKeywords.some(keyword => 
+                            playerLeague.includes(keyword) || 
+                            playerLeague === keyword ||
+                            (league === 'PL' && (playerLeague.includes('premier') || playerLeague.includes('prem'))) ||
+                            (league === 'PD' && (playerLeague.includes('liga') || playerLeague.includes('la liga'))) ||
+                            (league === 'SA' && (playerLeague.includes('serie') && playerLeague.includes('a'))) ||
+                            (league === 'BL1' && playerLeague.includes('bundesliga')) ||
+                            (league === 'FL1' && (playerLeague.includes('ligue') || playerLeague.includes('ligue 1'))) ||
+                            (league === 'J1' && (playerLeague.includes('j1') || playerLeague.includes('j league') || playerLeague.includes('jリーグ')))
+                        );
                     });
+                    console.log(`🔍 リーグフィルタリング: ${league} → ${players.length}名`);
                 }
                 
                 // ポジションフィルタリング
