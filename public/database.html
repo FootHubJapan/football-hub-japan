@@ -1504,11 +1504,8 @@
                 
                 switch(tab) {
                     case 'players':
-                        console.log('選手データを取得中...');
-                        
                         // まずAPIから全選手データを取得を試みる
                         try {
-                            console.log('🔄 APIから全選手データを取得中...');
                             const apiResponse = await fetch('/api/integrated/players?limit=10000');
                             if (apiResponse.ok) {
                                 const apiData = await apiResponse.json();
@@ -1517,7 +1514,6 @@
                                 if (apiPlayers.length > 0) {
                                     // 重複を排除
                                     currentData = removeDuplicatePlayers(apiPlayers);
-                                    console.log(`✅ APIから${currentData.length}名の選手データを取得（重複排除後）`);
                                     
                                     // キャリアスタッツが不足している選手を検出
                                     detectMissingCareerStats(currentData);
@@ -1527,15 +1523,12 @@
                                 }
                             }
                         } catch (apiError) {
-                            console.log('⚠️ APIからの取得に失敗:', apiError);
+                            // APIからの取得に失敗した場合はFirebaseから取得
                         }
                         
                         // APIが失敗した場合、Firebaseから取得
                         try {
                             currentData = await window.firebaseDataService.getPlayers();
-                            console.log('取得した選手データ:', currentData.length, '件');
-                            console.log('データの型:', typeof currentData);
-                            console.log('データの最初の要素:', currentData[0]);
                             
                             // Firebaseから取得したデータが少ない場合、APIを再試行
                             if (currentData.length < 100) {
@@ -1600,17 +1593,13 @@
 
         // データを表示する関数
         function displayData(data, tabType) {
-            console.log(`${tabType}データを表示中:`, data.length, '件');
-            
             // データが配列でない場合は配列に変換
             if (!Array.isArray(data)) {
-                console.warn('データが配列ではありません:', typeof data);
                 data = [];
             }
             
             const tableBody = document.getElementById(tabType + 'TableBody');
             if (!tableBody) {
-                console.error('テーブルボディが見つかりません:', tabType + 'TableBody');
                 return;
             }
             
@@ -2695,7 +2684,6 @@
                     
                     // 検索結果を表示（currentDataは更新しない、検索結果のみ表示）
                     // 全データベースを保持するため、currentDataは更新せず、検索結果のみを表示
-                    console.log(`📊 検索結果: ${filteredPlayers.length}名の選手が見つかりました`);
                     
                     // 検索結果の表示
                     if (filteredPlayers.length === 0) {
@@ -4620,15 +4608,8 @@
 
         // 初期表示
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('Database page loaded');
-            
             // 検索タイプ変更時のイベントリスナーを追加
             document.getElementById('searchType').addEventListener('change', updateSearchFilters);
-        
-            // デバッグ用：ポジションフィルターの動作確認
-            document.getElementById('searchPosition').addEventListener('change', function() {
-                console.log('ポジションフィルター変更:', this.value);
-            });
             
             // 初期フィルター状態を設定
             updateSearchFilters();
@@ -4639,15 +4620,13 @@
             // イベントリスナーを設定
             setupEventListeners();
             
-            // 初期表示: 全選手を表示
-            console.log('🔄 初期表示: 全選手データを読み込み中...');
-            await switchTab('players');
-            
             // オーナー機能の表示/非表示を設定
             toggleOwnerFeatures();
             
             // FirebaseDataServiceの初期化を待ってから初期タブを設定
             await waitForFirebaseDataService();
+            
+            // 初期表示: 全選手を表示
             await switchTab('players');
             
             // 自動データ更新チェック（オーナーのみ）
@@ -4662,13 +4641,11 @@
             const maxRetries = 50;
             
             while (!window.firebaseDataService && retryCount < maxRetries) {
-                console.log(`FirebaseDataServiceの初期化を待機中... (${retryCount + 1}/${maxRetries})`);
                 await new Promise(resolve => setTimeout(resolve, 200));
                 retryCount++;
             }
             
             if (!window.firebaseDataService) {
-                console.error('FirebaseDataServiceの初期化がタイムアウトしました');
                 throw new Error('FirebaseDataServiceの初期化に失敗しました');
             }
             
