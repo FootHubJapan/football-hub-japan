@@ -11686,3 +11686,66 @@ app.post('/api/admin/refresh-players-from-api', async (req, res) => {
     }
 });
 
+// 主要クラブの選手データを常時保持するエンドポイント
+app.get('/api/major-clubs/players', async (req, res) => {
+    try {
+        const fs = require('fs');
+        const playersFile = path.join(__dirname, 'data', 'players.json');
+        
+        let allPlayers = [];
+        if (fs.existsSync(playersFile)) {
+            const data = await fs.promises.readFile(playersFile, 'utf8');
+            const parsed = JSON.parse(data);
+            allPlayers = Array.isArray(parsed) ? parsed : (parsed.players || []);
+        }
+        
+        // 主要クラブのチーム名とID
+        const majorClubNames = [
+            'Real Madrid', 'Barcelona', 'Atletico Madrid',
+            'Arsenal', 'Chelsea', 'Liverpool', 'Manchester City', 'Manchester United', 'Tottenham',
+            'Bayern Munich', 'Borussia Dortmund',
+            'Paris Saint-Germain', 'PSG',
+            'AC Milan', 'Inter Milan', 'Juventus', 'Napoli'
+        ];
+        
+        // 主要クラブの選手をフィルタリング
+        const majorClubsPlayers = allPlayers.filter(player => {
+            const teamName = (player.currentTeam || player.team || '').toLowerCase();
+            const teamId = player.teamId || player.team?.id;
+            
+            // チームIDで判定
+            if (teamId && Object.values(MAJOR_CLUBS).includes(teamId)) {
+                return true;
+            }
+            
+            // チーム名で判定
+            return majorClubNames.some(clubName => 
+                teamName.includes(clubName.toLowerCase())
+            );
+        });
+        
+        // 重複を排除
+        const seenIds = new Set();
+        const uniquePlayers = majorClubsPlayers.filter(player => {
+            if (!player) return false;
+            const id = player.id || player.apiFootballId || player.playerId;
+            if (id && seenIds.has(id)) return false;
+            if (id) seenIds.add(id);
+            return true;
+        });
+        
+        res.json({
+            players: uniquePlayers,
+            count: uniquePlayers.length,
+            clubs: Object.keys(MAJOR_CLUBS)
+        });
+        
+    } catch (error) {
+        console.error('主要クラブ選手データ取得エラー:', error);
+        res.status(500).json({
+            error: '主要クラブ選手データの取得に失敗しました',
+            message: error.message
+        });
+    }
+});
+
