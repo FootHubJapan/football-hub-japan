@@ -4318,11 +4318,9 @@
             } catch (error) {
                 console.error('検索エラー:', error);
                 showError('検索中にエラーが発生しました');
-                } else {
-                    const grid = document.getElementById('playersGrid');
-                    if (grid) {
-                        grid.innerHTML = '<div class="no-results">検索中にエラーが発生しました</div>';
-                    }
+                const grid = document.getElementById('playersGrid');
+                if (grid) {
+                    grid.innerHTML = '<div class="no-results">検索中にエラーが発生しました</div>';
                 }
             }
         }
