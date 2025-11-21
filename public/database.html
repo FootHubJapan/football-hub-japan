@@ -3899,6 +3899,49 @@
             }
         }
 
+        // APIから最新データを取得してplayers.jsonを更新
+        async function refreshPlayersFromApi() {
+            if (!confirm('APIから最新データを取得してplayers.jsonを更新しますか？\n時間がかかる場合があります。')) {
+                return;
+            }
+            
+            try {
+                showDataStatus('APIから最新データを取得中...', 'info');
+                
+                const response = await fetch('/api/admin/refresh-players-from-api', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        limit: 1000
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || errorData.error || '更新に失敗しました');
+                }
+                
+                const result = await response.json();
+                console.log('✅ API更新結果:', result);
+                
+                showDataStatus(
+                    `✅ API更新完了！\n取得: ${result.fetched}名\n更新: ${result.updated}名\n追加: ${result.added}名`,
+                    'success'
+                );
+                
+                // データを再表示
+                setTimeout(async () => {
+                    await switchTab('players');
+                }, 2000);
+                
+            } catch (error) {
+                console.error('API更新エラー:', error);
+                showDataStatus(`API更新中にエラーが発生しました: ${error.message}`, 'error');
+            }
+        }
+
         // データ整合性修正（重複削除）
         async function fixDataConsistency() {
             if (!confirm('重複データを削除しますか？この操作は元に戻せません。')) {
