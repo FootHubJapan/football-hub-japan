@@ -1281,6 +1281,8 @@
                 <button id="importRealDataBtn" class="btn btn-primary">実際データインポート</button>
                 <button id="importAllPlayersBtn" class="btn btn-primary">全選手データインポート（players.jsonから）</button>
                 <button id="updateCareerStatsBtn" class="btn btn-primary">キャリアスタッツ更新（不足選手を自動検出）</button>
+                <button id="checkDataConsistencyBtn" class="btn btn-info">データ整合性チェック</button>
+                <button id="fixDataConsistencyBtn" class="btn btn-warning">データ整合性修正（重複削除）</button>
                 <button id="clearCachedDataBtn" class="btn btn-warning">キャッシュクリア</button>
                 <button id="refreshDataBtn" class="btn btn-success">データ更新</button>
                 <a href="/admin.html" class="btn btn-info" style="text-decoration: none; display: inline-block;">管理画面</a>
@@ -3448,6 +3450,16 @@
             const updateCareerStatsBtn = document.getElementById('updateCareerStatsBtn');
             if (updateCareerStatsBtn) {
                 updateCareerStatsBtn.addEventListener('click', updateCareerStatsForMissingPlayers);
+            }
+
+            const checkDataConsistencyBtn = document.getElementById('checkDataConsistencyBtn');
+            if (checkDataConsistencyBtn) {
+                checkDataConsistencyBtn.addEventListener('click', checkDataConsistency);
+            }
+
+            const fixDataConsistencyBtn = document.getElementById('fixDataConsistencyBtn');
+            if (fixDataConsistencyBtn) {
+                fixDataConsistencyBtn.addEventListener('click', fixDataConsistency);
             }
 
             const clearCachedDataBtn = document.getElementById('clearCachedDataBtn');
