@@ -1168,9 +1168,30 @@
             if (player.careerStats && Array.isArray(player.careerStats) && player.careerStats.length > 0) {
                 console.log(`✅ キャリアスタッツをデータベースから取得: ${player.careerStats.length}レコード`);
                 
-                // シーズンごとにグループ化して全コンペティションの合計を計算
+                // カップ戦を除外するフィルタ（リーグ戦のみを合計）
+                const cupCompetitions = [
+                    'Champions League', 'Europa League', 'Conference League',
+                    'Copa del Rey', 'FA Cup', 'Coppa Italia', 'DFB-Pokal', 'Coupe de France',
+                    'Super Cup', 'Club World Cup', 'UEFA Super Cup',
+                    'Copa', 'Cup', 'Pokal', 'Coupe', 'Supercup',
+                    'J.League Cup', '天皇杯', 'ルヴァンカップ'
+                ];
+                
+                const isLeagueCompetition = (stat) => {
+                    const league = stat.league || stat.competition || stat.leagueName || '';
+                    const leagueLower = league.toLowerCase();
+                    // カップ戦のキーワードが含まれていない場合のみリーグ戦と判定
+                    return !cupCompetitions.some(cup => leagueLower.includes(cup.toLowerCase()));
+                };
+                
+                // シーズンごとにグループ化してリーグ戦のみの合計を計算
                 const statsBySeason = {};
                 player.careerStats.forEach(stat => {
+                    // リーグ戦のみを対象とする
+                    if (!isLeagueCompetition(stat)) {
+                        return; // カップ戦はスキップ
+                    }
+                    
                     const season = stat.season || 'Unknown';
                     const club = stat.teamName || stat.team || stat.club || 'Unknown';
                     
@@ -1186,7 +1207,7 @@
                         };
                     }
                     
-                    // 各シーズンの全コンペティション（リーグ戦+カップ戦）の合計を計算
+                    // 各シーズンのリーグ戦のみの合計を計算
                     statsBySeason[season].matches += (stat.matches || stat.appearances || 0);
                     statsBySeason[season].goals += (stat.goals || 0);
                     statsBySeason[season].assists += (stat.assists || 0);
@@ -1264,9 +1285,30 @@
                     if (careerStats.length > 0) {
                         html = '';
                         
-                        // シーズンごとにグループ化して全コンペティションの合計を計算
+                        // カップ戦を除外するフィルタ（リーグ戦のみを合計）
+                        const cupCompetitions = [
+                            'Champions League', 'Europa League', 'Conference League',
+                            'Copa del Rey', 'FA Cup', 'Coppa Italia', 'DFB-Pokal', 'Coupe de France',
+                            'Super Cup', 'Club World Cup', 'UEFA Super Cup',
+                            'Copa', 'Cup', 'Pokal', 'Coupe', 'Supercup',
+                            'J.League Cup', '天皇杯', 'ルヴァンカップ'
+                        ];
+                        
+                        const isLeagueCompetition = (stat) => {
+                            const league = stat.league || stat.competition || stat.leagueName || '';
+                            const leagueLower = league.toLowerCase();
+                            // カップ戦のキーワードが含まれていない場合のみリーグ戦と判定
+                            return !cupCompetitions.some(cup => leagueLower.includes(cup.toLowerCase()));
+                        };
+                        
+                        // シーズンごとにグループ化してリーグ戦のみの合計を計算
                         const statsBySeason = {};
                         careerStats.forEach(stat => {
+                            // リーグ戦のみを対象とする
+                            if (!isLeagueCompetition(stat)) {
+                                return; // カップ戦はスキップ
+                            }
+                            
                             const season = stat.season || 'Unknown';
                             const club = stat.club || stat.teamName || stat.team || 'Unknown';
                             
@@ -1282,7 +1324,7 @@
                                 };
                             }
                             
-                            // 各シーズンの全コンペティション（リーグ戦+カップ戦）の合計を計算
+                            // 各シーズンのリーグ戦のみの合計を計算
                             statsBySeason[season].matches += (stat.matches || stat.appearances || 0);
                             statsBySeason[season].goals += (stat.goals || 0);
                             statsBySeason[season].assists += (stat.assists || 0);

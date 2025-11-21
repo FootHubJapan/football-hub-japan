@@ -1388,9 +1388,132 @@ app.get('/api/ranking/players', async (req, res) => {
         
         let players = [];
         
-        // 優先順位1: API-Footballから直接取得
+        // 優先順位1: DatabaseManagerから動的に最新データを取得（強化データベース優先）
+        if (apiService && apiService.dbManager) {
+            try {
+                console.log('🔄 DatabaseManagerから最新選手データを取得中...');
+                const dbPlayers = await apiService.dbManager.loadComprehensivePlayers();
+                
+                if (dbPlayers && dbPlayers.length > 0) {
+                    console.log(`✅ DatabaseManagerから${dbPlayers.length}名の最新選手データを取得`);
+                    
+                    // フォーマット変換
+                    players = dbPlayers.map(player => {
+                        // statsが配列の場合、最新シーズンのデータを取得
+                        let playerStats = null;
+                        if (Array.isArray(player.stats) && player.stats.length > 0) {
+                            // 最新の統計（appearancesが最も多いもの）を選択
+                            playerStats = player.stats.sort((a, b) => (b.appearances || 0) - (a.appearances || 0))[0];
+                        } else if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
+                            playerStats = player.stats;
+                        }
+                        
+                        return {
+                            id: player.id,
+                            name: player.name || player.fullName,
+                            age: player.age,
+                            nationality: player.nationality,
+                            photo: player.photo || player.photoUrl,
+                            team: player.currentTeam || player.team,
+                            currentTeam: player.currentTeam || player.team,
+                            position: player.detailedPosition || player.position,
+                            detailedPosition: player.detailedPosition || player.position,
+                            league: player.league || player.leagueName,
+                            goals: playerStats?.goals || player.stats?.goals || 0,
+                            assists: playerStats?.assists || player.stats?.assists || 0,
+                            appearances: playerStats?.appearances || player.stats?.appearances || playerStats?.lineups || player.stats?.lineups || 0,
+                            minutes: playerStats?.minutes || player.stats?.minutes || 0,
+                            rating: playerStats?.rating || player.stats?.rating || 'N/A',
+                            passes: playerStats?.passesTotal || player.stats?.passesTotal || 0,
+                            passAccuracy: playerStats?.passAccuracy || player.stats?.passAccuracy || '0%',
+                            tackles: playerStats?.tackles || player.stats?.tackles || 0,
+                            interceptions: playerStats?.interceptions || player.stats?.interceptions || 0,
+                            saves: playerStats?.saves || player.stats?.saves || 0,
+                            cleanSheets: playerStats?.cleanSheets || player.stats?.cleanSheets || 0,
+                            yellowCards: playerStats?.yellowCards || player.stats?.yellowCards || 0,
+                            redCards: playerStats?.redCards || player.stats?.redCards || 0,
+                            shots: playerStats?.shotsTotal || player.stats?.shotsTotal || 0,
+                            shotsOnTarget: playerStats?.shotsOnTarget || player.stats?.shotsOnTarget || 0
+                        };
+                    });
+                    
+                    console.log(`✅ Converted ${players.length} players from DatabaseManager`);
+                }
+            } catch (dbError) {
+                console.log('⚠️ DatabaseManagerからの取得に失敗:', dbError.message);
+            }
+        }
+        
+        // 優先順位2: ローカルファイルから選手を読み込む（DatabaseManagerが失敗した場合）
+        if (players.length === 0) {
+            try {
+                const playersDataPath = path.join(__dirname, 'data', 'players.json');
+                console.log(`📁 Checking for players data at: ${playersDataPath}`);
+                
+                if (fs.existsSync(playersDataPath)) {
+                    const playersData = fs.readFileSync(playersDataPath, 'utf8');
+                    const parsedData = JSON.parse(playersData);
+                    
+                    // 配列形式またはオブジェクト形式に対応
+                    const localPlayers = Array.isArray(parsedData) ? parsedData : (parsedData.players || []);
+                    
+                    console.log(`📊 Loaded ${localPlayers.length} players from local database file`);
+                    
+                    if (localPlayers.length > 0) {
+                        // ローカルデータを統一フォーマットに変換
+                        players = localPlayers.map(player => {
+                            // statsが配列の場合、最新シーズンのデータを取得
+                            let playerStats = null;
+                            if (Array.isArray(player.stats) && player.stats.length > 0) {
+                                // 最新の統計（appearancesが最も多いもの）を選択
+                                playerStats = player.stats.sort((a, b) => (b.appearances || 0) - (a.appearances || 0))[0];
+                            } else if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
+                                playerStats = player.stats;
+                            }
+                            
+                            return {
+                                id: player.id,
+                                name: player.name || player.fullName,
+                                age: player.age,
+                                nationality: player.nationality,
+                                photo: player.photo,
+                                team: player.currentTeam || player.team,
+                                currentTeam: player.currentTeam || player.team,
+                                position: player.detailedPosition || player.position,
+                                detailedPosition: player.detailedPosition || player.position,
+                                league: player.league,
+                                goals: playerStats?.goals || 0,
+                                assists: playerStats?.assists || 0,
+                                appearances: playerStats?.appearances || playerStats?.lineups || 0,
+                                minutes: playerStats?.minutes || 0,
+                                rating: playerStats?.rating || 'N/A',
+                                passes: playerStats?.passesTotal || 0,
+                                passAccuracy: playerStats?.passAccuracy || '0%',
+                                tackles: playerStats?.tackles || 0,
+                                interceptions: playerStats?.interceptions || 0,
+                                saves: playerStats?.saves || 0,
+                                cleanSheets: playerStats?.cleanSheets || 0,
+                                yellowCards: playerStats?.yellowCards || 0,
+                                redCards: playerStats?.redCards || 0,
+                                shots: playerStats?.shotsTotal || 0,
+                                shotsOnTarget: playerStats?.shotsOnTarget || 0
+                            };
+                        });
+                        
+                        console.log(`✅ Converted ${players.length} players from local file`);
+                    }
+                } else {
+                    console.log(`⚠️ Players data file not found at: ${playersDataPath}`);
+                }
+            } catch (localError) {
+                console.error('❌ Error loading local player data:', localError.message);
+                console.error('Stack trace:', localError.stack);
+            }
+        }
+        
+        // 優先順位3: API-Footballから直接取得（フォールバック）
         const apiKey = process.env.RAPIDAPI_KEY || process.env.API_FOOTBALL_KEY;
-        if (apiKey && apiKey !== 'YOUR_API_FOOTBALL_KEY' && apiKey !== 'your-api-football-key-here') {
+        if (players.length === 0 && apiKey && apiKey !== 'YOUR_API_FOOTBALL_KEY' && apiKey !== 'your-api-football-key-here') {
             try {
                 // リーグIDのマッピング
                 const leagueIds = {
@@ -1529,127 +1652,6 @@ app.get('/api/ranking/players', async (req, res) => {
             } catch (apiError) {
                 console.error('❌ API-Football error:', apiError.message);
                 console.log('📋 Trying fallback data sources');
-            }
-        }
-        
-        // 優先順位2: DatabaseManagerから動的に最新データを取得
-        if (players.length === 0 && apiService && apiService.dbManager) {
-            try {
-                console.log('🔄 DatabaseManagerから最新選手データを取得中...');
-                const dbPlayers = await apiService.dbManager.loadComprehensivePlayers();
-                
-                if (dbPlayers && dbPlayers.length > 0) {
-                    console.log(`✅ DatabaseManagerから${dbPlayers.length}名の最新選手データを取得`);
-                    
-                    // フォーマット変換
-                    players = dbPlayers.map(player => ({
-                        id: player.id,
-                        name: player.name || player.fullName,
-                        age: player.age,
-                        nationality: player.nationality,
-                        photo: player.photo || player.photoUrl,
-                        team: player.currentTeam || player.team,
-                        currentTeam: player.currentTeam || player.team,
-                        position: player.detailedPosition || player.position,
-                        detailedPosition: player.detailedPosition || player.position,
-                        league: player.league || player.leagueName,
-                        goals: player.stats?.goals || 0,
-                        assists: player.stats?.assists || 0,
-                        appearances: player.stats?.appearances || 0,
-                        minutes: player.stats?.minutes || 0,
-                        rating: player.stats?.rating || 'N/A',
-                        passes: player.stats?.passesTotal || 0,
-                        passAccuracy: player.stats?.passAccuracy || '0%',
-                        tackles: player.stats?.tackles || 0,
-                        interceptions: player.stats?.interceptions || 0,
-                        saves: player.stats?.saves || 0,
-                        cleanSheets: player.stats?.cleanSheets || 0,
-                        yellowCards: player.stats?.yellowCards || 0,
-                        redCards: player.stats?.redCards || 0,
-                        shots: player.stats?.shotsTotal || 0,
-                        shotsOnTarget: player.stats?.shotsOnTarget || 0
-                    }));
-                    
-                    console.log(`✅ Converted ${players.length} players from DatabaseManager`);
-                }
-            } catch (apiError) {
-                console.log('⚠️ DatabaseManagerからの取得に失敗:', apiError.message);
-            }
-        }
-        
-        // 優先順位3: ローカルファイルから選手を読み込む
-        if (players.length === 0) {
-            try {
-                const playersDataPath = path.join(__dirname, 'data', 'players.json');
-                console.log(`📁 Checking for players data at: ${playersDataPath}`);
-                
-                if (fs.existsSync(playersDataPath)) {
-                    const playersData = fs.readFileSync(playersDataPath, 'utf8');
-                    const parsedData = JSON.parse(playersData);
-                    
-                    // 配列形式またはオブジェクト形式に対応
-                    const localPlayers = Array.isArray(parsedData) ? parsedData : (parsedData.players || []);
-                    
-                    console.log(`📊 Loaded ${localPlayers.length} players from local database file`);
-                    
-                    if (localPlayers.length > 0) {
-                        // ローカルデータを統一フォーマットに変換
-                        players = localPlayers.map(player => {
-                            // statsが配列の場合、2025/26シーズンのデータを取得
-                            let playerStats = null;
-                            if (Array.isArray(player.stats) && player.stats.length > 0) {
-                                // 2025/26シーズンの統計を優先的に取得
-                                const stats2025 = player.stats.filter(s => 
-                                    s.season === '2025/2026' || s.season === '2025/26' || s.season === '2025'
-                                );
-                                // 最新の統計（appearancesが最も多いもの）を選択
-                                if (stats2025.length > 0) {
-                                    playerStats = stats2025.sort((a, b) => (b.appearances || 0) - (a.appearances || 0))[0];
-                                } else {
-                                    // 2025/26シーズンのデータがない場合は最初の統計を使用
-                                    playerStats = player.stats[0];
-                                }
-                            } else if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
-                                playerStats = player.stats;
-                            }
-                            
-                        return {
-                                id: player.id,
-                                name: player.name || player.fullName,
-                                age: player.age,
-                                nationality: player.nationality,
-                                photo: player.photo,
-                                team: player.currentTeam || player.team,
-                                currentTeam: player.currentTeam || player.team,
-                                position: player.detailedPosition || player.position,
-                                detailedPosition: player.detailedPosition || player.position,
-                                league: player.league,
-                                goals: playerStats?.goals || 0,
-                                assists: playerStats?.assists || 0,
-                                appearances: playerStats?.appearances || playerStats?.lineups || 0,
-                                minutes: playerStats?.minutes || 0,
-                                rating: playerStats?.rating || 'N/A',
-                                passes: playerStats?.passesTotal || 0,
-                                passAccuracy: playerStats?.passAccuracy || '0%',
-                                tackles: playerStats?.tackles || 0,
-                                interceptions: playerStats?.interceptions || 0,
-                                saves: playerStats?.saves || 0,
-                                cleanSheets: playerStats?.cleanSheets || 0,
-                                yellowCards: playerStats?.yellowCards || 0,
-                                redCards: playerStats?.redCards || 0,
-                                shots: playerStats?.shotsTotal || 0,
-                                shotsOnTarget: playerStats?.shotsOnTarget || 0
-                        };
-                    });
-                    
-                        console.log(`✅ Converted ${players.length} players from local file`);
-            }
-        } else {
-                    console.log(`⚠️ Players data file not found at: ${playersDataPath}`);
-                }
-            } catch (localError) {
-                console.error('❌ Error loading local player data:', localError.message);
-                console.error('Stack trace:', localError.stack);
             }
         }
         

@@ -1549,8 +1549,28 @@
                         break;
                     case 'leagues':
                         console.log('リーグデータを取得中...');
-                        currentData = await window.firebaseDataService.getLeagues();
-                        console.log('取得したリーグデータ:', currentData.length, '件');
+                        try {
+                            currentData = await window.firebaseDataService.getLeagues();
+                            console.log('取得したリーグデータ:', currentData.length, '件');
+                            
+                            // Firebaseから取得できなかった場合、APIから取得
+                            if (!currentData || currentData.length === 0) {
+                                console.log('⚠️ Firebaseからリーグデータが取得できなかったため、APIから取得を試みます...');
+                                try {
+                                    const apiResponse = await fetch('/api/football-data/leagues');
+                                    if (apiResponse.ok) {
+                                        const apiData = await apiResponse.json();
+                                        currentData = Array.isArray(apiData) ? apiData : (apiData.leagues || apiData.competitions || []);
+                                        console.log(`✅ APIから${currentData.length}件のリーグデータを取得`);
+                                    }
+                                } catch (apiError) {
+                                    console.log('⚠️ APIからの取得に失敗:', apiError);
+                                }
+                            }
+                        } catch (error) {
+                            console.error('リーグデータ取得エラー:', error);
+                            currentData = [];
+                        }
                         break;
                 }
             } catch (error) {
@@ -2638,7 +2658,45 @@
                                 if (searchType === 'teams') {
                                     matches = matches && item.name.toLowerCase().includes(searchQuery.toLowerCase());
                                 } else if (searchType === 'leagues') {
-                                    matches = matches && item.name.toLowerCase().includes(searchQuery.toLowerCase());
+                                    // リーグ検索を改善（複数フィールド検索、日本語・英語対応）
+                                    const searchLower = searchQuery.toLowerCase();
+                                    const itemName = (item.name || '').toLowerCase();
+                                    const itemCode = (item.code || '').toLowerCase();
+                                    const itemCountry = (item.country || item.area?.name || '').toLowerCase();
+                                    
+                                    // リーグ名のマッピング（日本語・英語対応）
+                                    const leagueMappings = {
+                                        'プレミアリーグ': ['premier league', 'pl', 'premier'],
+                                        'ラ・リーガ': ['la liga', 'pd', 'primera division', 'laliga'],
+                                        'セリエa': ['serie a', 'sa', 'serie'],
+                                        'ブンデスリーガ': ['bundesliga', 'bl1', 'bundes'],
+                                        'リーグ・アン': ['ligue 1', 'fl1', 'ligue', 'ligue un'],
+                                        'j1リーグ': ['j1', 'j1 league', 'j-league', 'j.league', 'j1リーグ']
+                                    };
+                                    
+                                    // マッピングをチェック
+                                    let foundMatch = false;
+                                    for (const [japanese, variants] of Object.entries(leagueMappings)) {
+                                        if (japanese.toLowerCase().includes(searchLower) || searchLower.includes(japanese.toLowerCase())) {
+                                            foundMatch = variants.some(variant => 
+                                                itemName.includes(variant) || 
+                                                itemCode.includes(variant)
+                                            );
+                                            if (foundMatch) break;
+                                        }
+                                        if (variants.some(variant => searchLower.includes(variant))) {
+                                            foundMatch = itemName.includes(japanese.toLowerCase()) || 
+                                                       itemCode.includes(japanese.toLowerCase()) ||
+                                                       itemName.includes(variants[0]);
+                                            if (foundMatch) break;
+                                        }
+                                    }
+                                    
+                                    // 通常の部分一致検索
+                                    matches = matches && (foundMatch || 
+                                        itemName.includes(searchLower) || 
+                                        itemCode.includes(searchLower) ||
+                                        itemCountry.includes(searchLower));
                                 }
                             }
                             
