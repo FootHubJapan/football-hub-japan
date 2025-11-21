@@ -8280,10 +8280,30 @@ app.get('/api/integrated/players', async (req, res) => {
         
         let players = [];
         if (fs.existsSync(playersFile)) {
-            const data = await fs.promises.readFile(playersFile, 'utf8');
-            const parsed = JSON.parse(data);
-            // 配列形式またはオブジェクト形式に対応
-            players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+            try {
+                // メモリ効率を向上させるため、ファイルサイズをチェック
+                const stats = await fs.promises.stat(playersFile);
+                const fileSizeMB = stats.size / (1024 * 1024);
+                
+                // 大きなファイルの場合はストリーミング処理を検討
+                if (fileSizeMB > 50) {
+                    console.log(`⚠️ 大きなファイルを読み込み中: ${fileSizeMB.toFixed(2)}MB`);
+                }
+                
+                const data = await fs.promises.readFile(playersFile, 'utf8');
+                const parsed = JSON.parse(data);
+                // 配列形式またはオブジェクト形式に対応
+                players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+                
+                // メモリを解放するため、不要なデータを削除
+                if (parsed && !Array.isArray(parsed)) {
+                    delete parsed.players;
+                }
+            } catch (readError) {
+                console.error('❌ players.json読み込みエラー:', readError.message);
+                // エラー時は空配列を返す
+                players = [];
+            }
             
             // 主要クラブの選手のみを返す場合
             if (majorClubsOnly === 'true') {
