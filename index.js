@@ -8495,19 +8495,8 @@ app.get('/api/integrated/players', async (req, res) => {
         
         console.log(`✅ 統合選手データ返却: ${enhancedPlayers.length}名`);
         
-        // クエリがない場合は配列形式で返す（データベースページの互換性のため）
-        if (!query) {
-            res.json(enhancedPlayers);
-        } else {
-            res.json({ 
-                players: enhancedPlayers,
-                total: players.length, // 検索前の全件数
-                limited: limitedPlayers.length,
-                query,
-                sources: ['API-Football', 'Football-data.org'],
-                timestamp: new Date().toISOString()
-            });
-        }
+        // データベースページの互換性のため、常に配列形式で返す
+        res.json(enhancedPlayers);
     } catch (error) {
         console.error('Integrated players error:', error);
         res.status(500).json({ 

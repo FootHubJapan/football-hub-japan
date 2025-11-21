@@ -1980,10 +1980,19 @@
                         const apiResponse = await fetch(apiUrl);
                         if (apiResponse.ok) {
                             const apiData = await apiResponse.json();
+                            // レスポンスが配列の場合はそのまま、オブジェクトの場合はplayersプロパティを取得
                             players = Array.isArray(apiData) ? apiData : (apiData.players || apiData.results || []);
                             
                             // 重複を排除
                             players = removeDuplicatePlayers(players);
+                            
+                            // デバッグ: 取得した選手数をログ出力
+                            if (searchQuery) {
+                                console.log(`🔍 検索結果: ${players.length}名の選手を取得 (クエリ: "${searchQuery}")`);
+                                if (players.length > 0) {
+                                    console.log(`📊 最初の3名:`, players.slice(0, 3).map(p => p.name || p.fullName));
+                                }
+                            }
                         }
                     } catch (apiError) {
                         // APIからの取得に失敗
