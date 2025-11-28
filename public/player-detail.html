@@ -1184,6 +1184,66 @@
                     return !cupCompetitions.some(cup => leagueLower.includes(cup.toLowerCase()));
                 };
                 
+                // シーズン値を正規化する関数
+                const normalizeSeason = (seasonStr) => {
+                    if (!seasonStr || seasonStr === 'Unknown') return 'Unknown';
+                    
+                    // 文字列に変換
+                    const season = String(seasonStr).trim();
+                    
+                    // 既に "YYYY/YYYY" 形式の場合はそのまま返す
+                    if (/^\d{4}\/\d{4}$/.test(season)) {
+                        return season;
+                    }
+                    
+                    // "YYYY/YY" 形式の場合は "YYYY/YYYY" に変換
+                    if (/^\d{4}\/\d{2}$/.test(season)) {
+                        const [start, end] = season.split('/');
+                        const endYear = parseInt(start) + 1;
+                        return `${start}/${endYear}`;
+                    }
+                    
+                    // "YYYY" 形式の場合は "YYYY/YYYY+1" に変換
+                    if (/^\d{4}$/.test(season)) {
+                        const year = parseInt(season);
+                        return `${year}/${year + 1}`;
+                    }
+                    
+                    // その他の形式はそのまま返す
+                    return season;
+                };
+                
+                // 現在の日付を取得して、実際に存在するシーズンのみを表示
+                const currentDate = new Date();
+                const currentYear = currentDate.getFullYear();
+                const currentMonth = currentDate.getMonth() + 1; // 0-11 → 1-12
+                
+                // シーズンが実際に存在するかチェック（未来のシーズンは除外）
+                const isValidSeason = (seasonStr) => {
+                    if (!seasonStr || seasonStr === 'Unknown') return false;
+                    
+                    const normalized = normalizeSeason(seasonStr);
+                    const [startYear] = normalized.split('/').map(Number);
+                    
+                    // シーズン開始年が現在の年より2年以上未来の場合は除外
+                    if (startYear > currentYear + 1) {
+                        return false;
+                    }
+                    
+                    // シーズン開始年が現在の年と同じ、または1年未来の場合
+                    // 月が8月以降（シーズン開始）の場合は許可
+                    if (startYear === currentYear || startYear === currentYear + 1) {
+                        // シーズンは通常8月から始まるので、7月以前は前シーズンとして扱う
+                        if (startYear === currentYear + 1 && currentMonth < 8) {
+                            return false; // まだ開始されていない未来のシーズン
+                        }
+                        return true;
+                    }
+                    
+                    // 過去のシーズンはすべて許可
+                    return startYear < currentYear;
+                };
+                
                 // シーズンごとにグループ化してリーグ戦のみの合計を計算
                 const statsBySeason = {};
                 player.careerStats.forEach(stat => {
@@ -1192,8 +1252,22 @@
                         return; // カップ戦はスキップ
                     }
                     
-                    const season = stat.season || 'Unknown';
+                    // シーズンを正規化
+                    const rawSeason = stat.season || 'Unknown';
+                    const season = normalizeSeason(rawSeason);
+                    
+                    // 有効なシーズンのみを処理
+                    if (!isValidSeason(season)) {
+                        console.log(`⚠️ 無効なシーズンをスキップ: "${rawSeason}" → "${season}" (選手: ${player.name || player.fullName})`);
+                        return;
+                    }
+                    
                     const club = stat.teamName || stat.team || stat.club || 'Unknown';
+                    
+                    // デバッグ: シーズンの正規化を確認
+                    if (rawSeason !== season) {
+                        console.log(`🔍 シーズン正規化: "${rawSeason}" → "${season}" (選手: ${player.name || player.fullName})`);
+                    }
                     
                     if (!statsBySeason[season]) {
                         statsBySeason[season] = {
@@ -1301,6 +1375,66 @@
                             return !cupCompetitions.some(cup => leagueLower.includes(cup.toLowerCase()));
                         };
                         
+                        // シーズン値を正規化する関数
+                        const normalizeSeason = (seasonStr) => {
+                            if (!seasonStr || seasonStr === 'Unknown') return 'Unknown';
+                            
+                            // 文字列に変換
+                            const season = String(seasonStr).trim();
+                            
+                            // 既に "YYYY/YYYY" 形式の場合はそのまま返す
+                            if (/^\d{4}\/\d{4}$/.test(season)) {
+                                return season;
+                            }
+                            
+                            // "YYYY/YY" 形式の場合は "YYYY/YYYY" に変換
+                            if (/^\d{4}\/\d{2}$/.test(season)) {
+                                const [start, end] = season.split('/');
+                                const endYear = parseInt(start) + 1;
+                                return `${start}/${endYear}`;
+                            }
+                            
+                            // "YYYY" 形式の場合は "YYYY/YYYY+1" に変換
+                            if (/^\d{4}$/.test(season)) {
+                                const year = parseInt(season);
+                                return `${year}/${year + 1}`;
+                            }
+                            
+                            // その他の形式はそのまま返す
+                            return season;
+                        };
+                        
+                        // 現在の日付を取得して、実際に存在するシーズンのみを表示
+                        const currentDate = new Date();
+                        const currentYear = currentDate.getFullYear();
+                        const currentMonth = currentDate.getMonth() + 1; // 0-11 → 1-12
+                        
+                        // シーズンが実際に存在するかチェック（未来のシーズンは除外）
+                        const isValidSeason = (seasonStr) => {
+                            if (!seasonStr || seasonStr === 'Unknown') return false;
+                            
+                            const normalized = normalizeSeason(seasonStr);
+                            const [startYear] = normalized.split('/').map(Number);
+                            
+                            // シーズン開始年が現在の年より2年以上未来の場合は除外
+                            if (startYear > currentYear + 1) {
+                                return false;
+                            }
+                            
+                            // シーズン開始年が現在の年と同じ、または1年未来の場合
+                            // 月が8月以降（シーズン開始）の場合は許可
+                            if (startYear === currentYear || startYear === currentYear + 1) {
+                                // シーズンは通常8月から始まるので、7月以前は前シーズンとして扱う
+                                if (startYear === currentYear + 1 && currentMonth < 8) {
+                                    return false; // まだ開始されていない未来のシーズン
+                                }
+                                return true;
+                            }
+                            
+                            // 過去のシーズンはすべて許可
+                            return startYear < currentYear;
+                        };
+                        
                         // シーズンごとにグループ化してリーグ戦のみの合計を計算
                         const statsBySeason = {};
                         careerStats.forEach(stat => {
@@ -1309,8 +1443,22 @@
                                 return; // カップ戦はスキップ
                             }
                             
-                            const season = stat.season || 'Unknown';
+                            // シーズンを正規化
+                            const rawSeason = stat.season || 'Unknown';
+                            const season = normalizeSeason(rawSeason);
+                            
+                            // 有効なシーズンのみを処理
+                            if (!isValidSeason(season)) {
+                                console.log(`⚠️ 無効なシーズンをスキップ: "${rawSeason}" → "${season}" (選手: ${player.name || player.fullName})`);
+                                return;
+                            }
+                            
                             const club = stat.club || stat.teamName || stat.team || 'Unknown';
+                            
+                            // デバッグ: シーズンの正規化を確認
+                            if (rawSeason !== season) {
+                                console.log(`🔍 シーズン正規化: "${rawSeason}" → "${season}" (選手: ${player.name || player.fullName})`);
+                            }
                             
                             if (!statsBySeason[season]) {
                                 statsBySeason[season] = {
