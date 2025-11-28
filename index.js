@@ -1435,13 +1435,27 @@ app.get('/api/ranking/players', async (req, res) => {
                         let matchedLeague = null;
                         
                         if (Array.isArray(player.stats) && player.stats.length > 0) {
-                            // 指定シーズンのstatsを検索
+                            // 親善試合を除外するキーワード
+                            const friendlyKeywords = [
+                                'friendly', 'friendlies', '親善', 'exhibition', 'test match',
+                                'friendly clubs', 'friendlies clubs', 'club friendly'
+                            ];
+                            
+                            // 指定シーズンのstatsを検索（親善試合を除外）
                             const seasonStats = player.stats.filter(stat => {
                                 const statSeason = String(stat.season || stat.seasonName || '');
-                                return seasonPatterns.some(pattern => 
+                                const matchesSeason = seasonPatterns.some(pattern => 
                                     statSeason.includes(pattern) || 
                                     statSeason === String(targetSeason)
                                 );
+                                
+                                if (!matchesSeason) return false;
+                                
+                                // 親善試合を除外
+                                const statLeague = String(stat.leagueName || stat.league || '').toLowerCase();
+                                const isFriendly = friendlyKeywords.some(keyword => statLeague.includes(keyword.toLowerCase()));
+                                
+                                return !isFriendly;
                             });
                             
                             if (seasonStats.length > 0) {
@@ -1535,10 +1549,26 @@ app.get('/api/ranking/players', async (req, res) => {
                                         return null;
                                     }
                                 } else {
-                                    // リーグ指定がない場合、appearancesが最も多いものを選択
-                                    playerStats = seasonStats.sort((a, b) => 
-                                        (b.appearances || 0) - (a.appearances || 0)
-                                    )[0];
+                                    // リーグ指定がない場合、appearancesが最も多いものを選択（親善試合を除外）
+                                    const nonFriendlyStats = seasonStats.filter(stat => {
+                                        const statLeague = String(stat.leagueName || stat.league || '').toLowerCase();
+                                        const friendlyKeywords = [
+                                            'friendly', 'friendlies', '親善', 'exhibition', 'test match',
+                                            'friendly clubs', 'friendlies clubs', 'club friendly'
+                                        ];
+                                        return !friendlyKeywords.some(keyword => statLeague.includes(keyword.toLowerCase()));
+                                    });
+                                    
+                                    if (nonFriendlyStats.length > 0) {
+                                        playerStats = nonFriendlyStats.sort((a, b) => 
+                                            (b.appearances || 0) - (a.appearances || 0)
+                                        )[0];
+                                    } else {
+                                        // 親善試合以外のデータがない場合は、親善試合を含むデータを使用（フォールバック）
+                                        playerStats = seasonStats.sort((a, b) => 
+                                            (b.appearances || 0) - (a.appearances || 0)
+                                        )[0];
+                                    }
                                     matchedLeague = String(playerStats.leagueName || playerStats.league || '').toLowerCase();
                                 }
                             } else {
@@ -1547,10 +1577,27 @@ app.get('/api/ranking/players', async (req, res) => {
                                     // リーグが指定されている場合、シーズンデータがない選手は除外
                                     return null;
                                 } else {
-                                    // リーグ指定がない場合、最新シーズンのデータを使用（フォールバック）
-                                    playerStats = player.stats.sort((a, b) => 
-                                        (b.appearances || 0) - (a.appearances || 0)
-                                    )[0];
+                                    // リーグ指定がない場合、最新シーズンのデータを使用（フォールバック、親善試合を除外）
+                                    const friendlyKeywords = [
+                                        'friendly', 'friendlies', '親善', 'exhibition', 'test match',
+                                        'friendly clubs', 'friendlies clubs', 'club friendly'
+                                    ];
+                                    
+                                    const nonFriendlyStats = player.stats.filter(stat => {
+                                        const statLeague = String(stat.leagueName || stat.league || '').toLowerCase();
+                                        return !friendlyKeywords.some(keyword => statLeague.includes(keyword.toLowerCase()));
+                                    });
+                                    
+                                    if (nonFriendlyStats.length > 0) {
+                                        playerStats = nonFriendlyStats.sort((a, b) => 
+                                            (b.appearances || 0) - (a.appearances || 0)
+                                        )[0];
+                                    } else {
+                                        // 親善試合以外のデータがない場合は、親善試合を含むデータを使用（フォールバック）
+                                        playerStats = player.stats.sort((a, b) => 
+                                            (b.appearances || 0) - (a.appearances || 0)
+                                        )[0];
+                                    }
                                     matchedLeague = String(playerStats?.leagueName || playerStats?.league || '').toLowerCase();
                                 }
                             }
@@ -1560,6 +1607,19 @@ app.get('/api/ranking/players', async (req, res) => {
                             const matchesSeason = seasonPatterns.some(pattern => 
                                 statSeason.includes(pattern) || statSeason === String(targetSeason)
                             );
+                            
+                            // 親善試合を除外
+                            const statLeague = String(player.stats.leagueName || player.stats.league || '').toLowerCase();
+                            const friendlyKeywords = [
+                                'friendly', 'friendlies', '親善', 'exhibition', 'test match',
+                                'friendly clubs', 'friendlies clubs', 'club friendly'
+                            ];
+                            const isFriendly = friendlyKeywords.some(keyword => statLeague.includes(keyword.toLowerCase()));
+                            
+                            // 親善試合の場合は除外
+                            if (isFriendly) {
+                                return null;
+                            }
                             
                             if (matchesSeason || !league) {
                                 // リーグフィルタリング（リーグが指定されている場合）
@@ -1807,13 +1867,27 @@ app.get('/api/ranking/players', async (req, res) => {
                             let matchedLeague = null;
                             
                             if (Array.isArray(player.stats) && player.stats.length > 0) {
-                                // 指定シーズンのstatsを検索
+                                // 親善試合を除外するキーワード
+                                const friendlyKeywords = [
+                                    'friendly', 'friendlies', '親善', 'exhibition', 'test match',
+                                    'friendly clubs', 'friendlies clubs', 'club friendly'
+                                ];
+                                
+                                // 指定シーズンのstatsを検索（親善試合を除外）
                                 const seasonStats = player.stats.filter(stat => {
                                     const statSeason = String(stat.season || stat.seasonName || '');
-                                    return seasonPatterns.some(pattern => 
+                                    const matchesSeason = seasonPatterns.some(pattern => 
                                         statSeason.includes(pattern) || 
                                         statSeason === String(targetSeason)
                                     );
+                                    
+                                    if (!matchesSeason) return false;
+                                    
+                                    // 親善試合を除外
+                                    const statLeague = String(stat.leagueName || stat.league || '').toLowerCase();
+                                    const isFriendly = friendlyKeywords.some(keyword => statLeague.includes(keyword.toLowerCase()));
+                                    
+                                    return !isFriendly;
                                 });
                                 
                                 if (seasonStats.length > 0) {
@@ -1899,10 +1973,22 @@ app.get('/api/ranking/players', async (req, res) => {
                                             return null;
                                         }
                                     } else {
-                                        // リーグ指定がない場合、appearancesが最も多いものを選択
-                                        playerStats = seasonStats.sort((a, b) => 
-                                            (b.appearances || 0) - (a.appearances || 0)
-                                        )[0];
+                                        // リーグ指定がない場合、appearancesが最も多いものを選択（親善試合を除外）
+                                        const nonFriendlyStats = seasonStats.filter(stat => {
+                                            const statLeague = String(stat.leagueName || stat.league || '').toLowerCase();
+                                            return !friendlyKeywords.some(keyword => statLeague.includes(keyword.toLowerCase()));
+                                        });
+                                        
+                                        if (nonFriendlyStats.length > 0) {
+                                            playerStats = nonFriendlyStats.sort((a, b) => 
+                                                (b.appearances || 0) - (a.appearances || 0)
+                                            )[0];
+                                        } else {
+                                            // 親善試合以外のデータがない場合は、親善試合を含むデータを使用（フォールバック）
+                                            playerStats = seasonStats.sort((a, b) => 
+                                                (b.appearances || 0) - (a.appearances || 0)
+                                            )[0];
+                                        }
                                         matchedLeague = String(playerStats.leagueName || playerStats.league || '').toLowerCase();
                                     }
                                 } else {
@@ -1911,10 +1997,22 @@ app.get('/api/ranking/players', async (req, res) => {
                                         // リーグが指定されている場合、シーズンデータがない選手は除外
                                         return null;
                                     } else {
-                                        // リーグ指定がない場合、最新シーズンのデータを使用（フォールバック）
-                                        playerStats = player.stats.sort((a, b) => 
-                                            (b.appearances || 0) - (a.appearances || 0)
-                                        )[0];
+                                        // リーグ指定がない場合、最新シーズンのデータを使用（フォールバック、親善試合を除外）
+                                        const nonFriendlyStats = player.stats.filter(stat => {
+                                            const statLeague = String(stat.leagueName || stat.league || '').toLowerCase();
+                                            return !friendlyKeywords.some(keyword => statLeague.includes(keyword.toLowerCase()));
+                                        });
+                                        
+                                        if (nonFriendlyStats.length > 0) {
+                                            playerStats = nonFriendlyStats.sort((a, b) => 
+                                                (b.appearances || 0) - (a.appearances || 0)
+                                            )[0];
+                                        } else {
+                                            // 親善試合以外のデータがない場合は、親善試合を含むデータを使用（フォールバック）
+                                            playerStats = player.stats.sort((a, b) => 
+                                                (b.appearances || 0) - (a.appearances || 0)
+                                            )[0];
+                                        }
                                         matchedLeague = String(playerStats?.leagueName || playerStats?.league || '').toLowerCase();
                                     }
                                 }
@@ -1924,6 +2022,15 @@ app.get('/api/ranking/players', async (req, res) => {
                                 const matchesSeason = seasonPatterns.some(pattern => 
                                     statSeason.includes(pattern) || statSeason === String(targetSeason)
                                 );
+                                
+                                // 親善試合を除外
+                                const statLeague = String(player.stats.leagueName || player.stats.league || '').toLowerCase();
+                                const isFriendly = friendlyKeywords.some(keyword => statLeague.includes(keyword.toLowerCase()));
+                                
+                                // 親善試合の場合は除外
+                                if (isFriendly) {
+                                    return null;
+                                }
                                 
                                 if (matchesSeason || !league) {
                                     // リーグフィルタリング（リーグが指定されている場合）
