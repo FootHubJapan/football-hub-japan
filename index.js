@@ -1406,6 +1406,29 @@ app.get('/api/ranking/players', async (req, res) => {
                         `${targetSeason}-${String(targetSeason + 1).slice(-2)}` // "2025-26"
                     ];
                     
+                    // スペインの主要チームリスト（PDフィルタ用）
+                    const spanishTeams = [
+                        'real madrid', 'barcelona', 'atletico madrid', 'atlético madrid', 'real sociedad',
+                        'sevilla', 'valencia', 'athletic bilbao', 'osasuna', 'villarreal',
+                        'celta vigo', 'real betis', 'getafe', 'levante', 'granada',
+                        'alaves', 'rayo vallecano', 'mallorca', 'girona', 'cadiz',
+                        'las palmas', 'espanyol', 'almeria', 'valladolid', 'elche',
+                        'real madrid cf', 'fc barcelona', 'atletico de madrid', 'real sociedad de futbol',
+                        'sevilla fc', 'valencia cf', 'athletic club', 'ca osasuna', 'villarreal cf',
+                        'rc celta de vigo', 'real betis balompie', 'getafe cf', 'levante ud',
+                        'granada cf', 'deportivo alaves', 'rayo vallecano', 'rcd mallorca',
+                        'girona fc', 'cadiz cf', 'ud las palmas', 'rcd espanyol',
+                        'ud almeria', 'real valladolid', 'elche cf'
+                    ];
+                    
+                    // ペルーのチーム名（除外用）
+                    const peruvianTeams = [
+                        'atletico grau', 'fbc melgar', 'atlético grau', 'melgar',
+                        'universitario', 'alianza lima', 'sporting cristal', 'césar vallejo',
+                        'carlos manucci', 'deportivo municipal', 'sport boys', 'cienciano',
+                        'ayacucho', 'cantolao', 'carlos stein', 'deportivo binacional'
+                    ];
+                    
                     players = dbPlayers.map(player => {
                         // statsが配列の場合、指定シーズンのデータを取得
                         let playerStats = null;
@@ -1481,9 +1504,28 @@ app.get('/api/ranking/players', async (req, res) => {
                                         )[0];
                                         matchedLeague = String(playerStats.leagueName || playerStats.league || '').toLowerCase();
                                         
-                                        // デバッグ: PDの場合、マッチしたリーグを確認
+                                        // PDの場合、チーム名も確認（スペインのチームのみ許可）
                                         if (league === 'PD') {
-                                            console.log(`✅ PDフィルタ: マッチした選手: ${player.name || player.fullName} (リーグ: "${matchedLeague}")`);
+                                            const teamName = String(playerStats.teamName || player.currentTeam || player.team || '').toLowerCase();
+                                            const isPeruvianTeam = peruvianTeams.some(pt => teamName.includes(pt));
+                                            const isSpanishTeam = spanishTeams.some(st => teamName.includes(st));
+                                            
+                                            if (isPeruvianTeam) {
+                                                // ペルーのチームは除外
+                                                console.log(`❌ PDフィルタ: ペルーのチームで除外: ${player.name || player.fullName} (チーム: "${teamName}")`);
+                                                return null;
+                                            } else if (!isSpanishTeam && teamName) {
+                                                // チーム名があるが、スペインのチームリストにない場合
+                                                // リーグ名が"la liga"（スペイン）の場合は許可、"primera división"のみの場合は除外
+                                                const isLaLiga = matchedLeague === 'la liga' || matchedLeague === 'laliga' || matchedLeague.includes('la liga');
+                                                if (!isLaLiga) {
+                                                    console.log(`❌ PDフィルタ: スペインのチームリストにないため除外: ${player.name || player.fullName} (チーム: "${teamName}", リーグ: "${matchedLeague}")`);
+                                                    return null;
+                                                }
+                                            }
+                                            
+                                            // デバッグ: PDの場合、マッチしたリーグを確認
+                                            console.log(`✅ PDフィルタ: マッチした選手: ${player.name || player.fullName} (リーグ: "${matchedLeague}", チーム: "${teamName}")`);
                                         }
                                     } else {
                                         // リーグが指定されているが、マッチするstatsがない場合、この選手を除外
@@ -1613,7 +1655,7 @@ app.get('/api/ranking/players', async (req, res) => {
                             if (league === 'PD') {
                                 // "la liga"または"laliga"または"primera división"のみマッチ
                                 // 他の"liga"を含むリーグ（primeira liga, liga mx等）は除外
-                                matches = matchedLeagueLower === 'la liga' || 
+                                const leagueMatches = matchedLeagueLower === 'la liga' || 
                                          matchedLeagueLower === 'laliga' || 
                                          matchedLeagueLower.includes('la liga') ||
                                          matchedLeagueLower.includes('primera división') ||
@@ -1630,6 +1672,36 @@ app.get('/api/ranking/players', async (req, res) => {
                                           !matchedLeagueLower.includes('superliga') &&
                                           !matchedLeagueLower.includes('pro league') &&
                                           !matchedLeagueLower.includes('major league'));
+                                
+                                // リーグ名がマッチした場合、チーム名も確認（スペインのチームのみ許可）
+                                if (leagueMatches) {
+                                    const teamName = String(playerStats?.teamName || player.currentTeam || player.team || '').toLowerCase();
+                                    const isPeruvianTeam = peruvianTeams.some(pt => teamName.includes(pt));
+                                    const isSpanishTeam = spanishTeams.some(st => teamName.includes(st));
+                                    
+                                    if (isPeruvianTeam) {
+                                        // ペルーのチームは除外
+                                        if (league === 'PD') {
+                                            console.log(`❌ PDフィルタ: ペルーのチームで除外: ${player.name || player.fullName} (チーム: "${teamName}")`);
+                                        }
+                                        matches = false;
+                                    } else if (isSpanishTeam) {
+                                        // スペインのチームは許可
+                                        matches = true;
+                                    } else if (teamName) {
+                                        // チーム名があるが、スペインのチームリストにない場合
+                                        // リーグ名が"la liga"（スペイン）の場合は許可、"primera división"のみの場合は除外
+                                        matches = matchedLeagueLower === 'la liga' || matchedLeagueLower === 'laliga' || matchedLeagueLower.includes('la liga');
+                                        if (!matches && league === 'PD') {
+                                            console.log(`❌ PDフィルタ: スペインのチームリストにないため除外: ${player.name || player.fullName} (チーム: "${teamName}", リーグ: "${matchedLeagueLower}")`);
+                                        }
+                                    } else {
+                                        // チーム名がない場合、リーグ名のみで判定
+                                        matches = leagueMatches;
+                                    }
+                                } else {
+                                    matches = false;
+                                }
                             } else {
                                 const validLeagues = leagueMap[league] || [league.toLowerCase()];
                                 matches = validLeagues.some(l => matchedLeagueLower.includes(l));
@@ -1706,6 +1778,29 @@ app.get('/api/ranking/players', async (req, res) => {
                             `${targetSeason}-${String(targetSeason + 1).slice(-2)}`
                         ];
                         
+                        // スペインの主要チームリスト（PDフィルタ用）
+                        const spanishTeams = [
+                            'real madrid', 'barcelona', 'atletico madrid', 'atlético madrid', 'real sociedad',
+                            'sevilla', 'valencia', 'athletic bilbao', 'osasuna', 'villarreal',
+                            'celta vigo', 'real betis', 'getafe', 'levante', 'granada',
+                            'alaves', 'rayo vallecano', 'mallorca', 'girona', 'cadiz',
+                            'las palmas', 'espanyol', 'almeria', 'valladolid', 'elche',
+                            'real madrid cf', 'fc barcelona', 'atletico de madrid', 'real sociedad de futbol',
+                            'sevilla fc', 'valencia cf', 'athletic club', 'ca osasuna', 'villarreal cf',
+                            'rc celta de vigo', 'real betis balompie', 'getafe cf', 'levante ud',
+                            'granada cf', 'deportivo alaves', 'rayo vallecano', 'rcd mallorca',
+                            'girona fc', 'cadiz cf', 'ud las palmas', 'rcd espanyol',
+                            'ud almeria', 'real valladolid', 'elche cf'
+                        ];
+                        
+                        // ペルーのチーム名（除外用）
+                        const peruvianTeams = [
+                            'atletico grau', 'fbc melgar', 'atlético grau', 'melgar',
+                            'universitario', 'alianza lima', 'sporting cristal', 'césar vallejo',
+                            'carlos manucci', 'deportivo municipal', 'sport boys', 'cienciano',
+                            'ayacucho', 'cantolao', 'carlos stein', 'deportivo binacional'
+                        ];
+                        
                         players = localPlayers.map(player => {
                             // statsが配列の場合、指定シーズンのデータを取得
                             let playerStats = null;
@@ -1773,9 +1868,28 @@ app.get('/api/ranking/players', async (req, res) => {
                                             )[0];
                                             matchedLeague = String(playerStats.leagueName || playerStats.league || '').toLowerCase();
                                             
-                                            // デバッグ: PDの場合、マッチしたリーグを確認
+                                            // PDの場合、チーム名も確認（スペインのチームのみ許可）
                                             if (league === 'PD') {
-                                                console.log(`✅ PDフィルタ(ローカル): マッチした選手: ${player.name || player.fullName} (リーグ: "${matchedLeague}")`);
+                                                const teamName = String(playerStats.teamName || player.currentTeam || player.team || '').toLowerCase();
+                                                const isPeruvianTeam = peruvianTeams.some(pt => teamName.includes(pt));
+                                                const isSpanishTeam = spanishTeams.some(st => teamName.includes(st));
+                                                
+                                                if (isPeruvianTeam) {
+                                                    // ペルーのチームは除外
+                                                    console.log(`❌ PDフィルタ(ローカル): ペルーのチームで除外: ${player.name || player.fullName} (チーム: "${teamName}")`);
+                                                    return null;
+                                                } else if (!isSpanishTeam && teamName) {
+                                                    // チーム名があるが、スペインのチームリストにない場合
+                                                    // リーグ名が"la liga"（スペイン）の場合は許可、"primera división"のみの場合は除外
+                                                    const isLaLiga = matchedLeague === 'la liga' || matchedLeague === 'laliga' || matchedLeague.includes('la liga');
+                                                    if (!isLaLiga) {
+                                                        console.log(`❌ PDフィルタ(ローカル): スペインのチームリストにないため除外: ${player.name || player.fullName} (チーム: "${teamName}", リーグ: "${matchedLeague}")`);
+                                                        return null;
+                                                    }
+                                                }
+                                                
+                                                // デバッグ: PDの場合、マッチしたリーグを確認
+                                                console.log(`✅ PDフィルタ(ローカル): マッチした選手: ${player.name || player.fullName} (リーグ: "${matchedLeague}", チーム: "${teamName}")`);
                                             }
                                         } else {
                                             // リーグが指定されているが、マッチするstatsがない場合、この選手を除外
@@ -1855,6 +1969,27 @@ app.get('/api/ranking/players', async (req, res) => {
                                         }
                                         
                                         if (matchesLeague) {
+                                            // PDの場合、チーム名も確認（スペインのチームのみ許可）
+                                            if (league === 'PD') {
+                                                const teamName = String(player.stats.teamName || player.currentTeam || player.team || '').toLowerCase();
+                                                const isPeruvianTeam = peruvianTeams.some(pt => teamName.includes(pt));
+                                                const isSpanishTeam = spanishTeams.some(st => teamName.includes(st));
+                                                
+                                                if (isPeruvianTeam) {
+                                                    // ペルーのチームは除外
+                                                    console.log(`❌ PDフィルタ(ローカル): ペルーのチームで除外: ${player.name || player.fullName} (チーム: "${teamName}")`);
+                                                    return null;
+                                                } else if (!isSpanishTeam && teamName) {
+                                                    // チーム名があるが、スペインのチームリストにない場合
+                                                    // リーグ名が"la liga"（スペイン）の場合は許可、"primera división"のみの場合は除外
+                                                    const isLaLiga = statLeague === 'la liga' || statLeague === 'laliga' || statLeague.includes('la liga');
+                                                    if (!isLaLiga) {
+                                                        console.log(`❌ PDフィルタ(ローカル): スペインのチームリストにないため除外: ${player.name || player.fullName} (チーム: "${teamName}", リーグ: "${statLeague}")`);
+                                                        return null;
+                                                    }
+                                                }
+                                            }
+                                            
                                             playerStats = player.stats;
                                             matchedLeague = String(playerStats.leagueName || playerStats.league || '').toLowerCase();
                                         } else {
@@ -1905,7 +2040,7 @@ app.get('/api/ranking/players', async (req, res) => {
                                 if (league === 'PD') {
                                     // "la liga"または"laliga"または"primera división"のみマッチ
                                     // 他の"liga"を含むリーグ（primeira liga, liga mx等）は除外
-                                    matches = matchedLeagueLower === 'la liga' || 
+                                    const leagueMatches = matchedLeagueLower === 'la liga' || 
                                              matchedLeagueLower === 'laliga' || 
                                              matchedLeagueLower.includes('la liga') ||
                                              matchedLeagueLower.includes('primera división') ||
@@ -1922,6 +2057,36 @@ app.get('/api/ranking/players', async (req, res) => {
                                               !matchedLeagueLower.includes('superliga') &&
                                               !matchedLeagueLower.includes('pro league') &&
                                               !matchedLeagueLower.includes('major league'));
+                                    
+                                    // リーグ名がマッチした場合、チーム名も確認（スペインのチームのみ許可）
+                                    if (leagueMatches) {
+                                        const teamName = String(playerStats?.teamName || player.currentTeam || player.team || '').toLowerCase();
+                                        const isPeruvianTeam = peruvianTeams.some(pt => teamName.includes(pt));
+                                        const isSpanishTeam = spanishTeams.some(st => teamName.includes(st));
+                                        
+                                        if (isPeruvianTeam) {
+                                            // ペルーのチームは除外
+                                            if (league === 'PD') {
+                                                console.log(`❌ PDフィルタ(ローカル): ペルーのチームで除外: ${player.name || player.fullName} (チーム: "${teamName}")`);
+                                            }
+                                            matches = false;
+                                        } else if (isSpanishTeam) {
+                                            // スペインのチームは許可
+                                            matches = true;
+                                        } else if (teamName) {
+                                            // チーム名があるが、スペインのチームリストにない場合
+                                            // リーグ名が"la liga"（スペイン）の場合は許可、"primera división"のみの場合は除外
+                                            matches = matchedLeagueLower === 'la liga' || matchedLeagueLower === 'laliga' || matchedLeagueLower.includes('la liga');
+                                            if (!matches && league === 'PD') {
+                                                console.log(`❌ PDフィルタ(ローカル): スペインのチームリストにないため除外: ${player.name || player.fullName} (チーム: "${teamName}", リーグ: "${matchedLeagueLower}")`);
+                                            }
+                                        } else {
+                                            // チーム名がない場合、リーグ名のみで判定
+                                            matches = leagueMatches;
+                                        }
+                                    } else {
+                                        matches = false;
+                                    }
                                 } else {
                                     const validLeagues = leagueMap[league] || [league.toLowerCase()];
                                     matches = validLeagues.some(l => matchedLeagueLower.includes(l));
