@@ -1168,7 +1168,7 @@
             if (player.careerStats && Array.isArray(player.careerStats) && player.careerStats.length > 0) {
                 console.log(`✅ キャリアスタッツをデータベースから取得: ${player.careerStats.length}レコード`);
                 
-                // カップ戦を除外するフィルタ（リーグ戦のみを合計）
+                // カップ戦と親善試合を除外するフィルタ（リーグ戦のみを合計）
                 const cupCompetitions = [
                     'Champions League', 'Europa League', 'Conference League',
                     'Copa del Rey', 'FA Cup', 'Coppa Italia', 'DFB-Pokal', 'Coupe de France',
@@ -1177,11 +1177,28 @@
                     'J.League Cup', '天皇杯', 'ルヴァンカップ'
                 ];
                 
+                // 親善試合を除外するキーワード
+                const friendlyKeywords = [
+                    'friendly', 'friendlies', '親善', 'exhibition', 'test match',
+                    'friendly clubs', 'friendlies clubs', 'club friendly'
+                ];
+                
                 const isLeagueCompetition = (stat) => {
                     const league = stat.league || stat.competition || stat.leagueName || '';
                     const leagueLower = league.toLowerCase();
-                    // カップ戦のキーワードが含まれていない場合のみリーグ戦と判定
-                    return !cupCompetitions.some(cup => leagueLower.includes(cup.toLowerCase()));
+                    
+                    // カップ戦のキーワードが含まれている場合は除外
+                    if (cupCompetitions.some(cup => leagueLower.includes(cup.toLowerCase()))) {
+                        return false;
+                    }
+                    
+                    // 親善試合のキーワードが含まれている場合は除外
+                    if (friendlyKeywords.some(keyword => leagueLower.includes(keyword.toLowerCase()))) {
+                        return false;
+                    }
+                    
+                    // カップ戦と親善試合以外はリーグ戦と判定
+                    return true;
                 };
                 
                 // シーズン値を正規化する関数
@@ -1359,7 +1376,7 @@
                     if (careerStats.length > 0) {
                         html = '';
                         
-                        // カップ戦を除外するフィルタ（リーグ戦のみを合計）
+                        // カップ戦と親善試合を除外するフィルタ（リーグ戦のみを合計）
                         const cupCompetitions = [
                             'Champions League', 'Europa League', 'Conference League',
                             'Copa del Rey', 'FA Cup', 'Coppa Italia', 'DFB-Pokal', 'Coupe de France',
@@ -1368,11 +1385,28 @@
                             'J.League Cup', '天皇杯', 'ルヴァンカップ'
                         ];
                         
+                        // 親善試合を除外するキーワード
+                        const friendlyKeywords = [
+                            'friendly', 'friendlies', '親善', 'exhibition', 'test match',
+                            'friendly clubs', 'friendlies clubs', 'club friendly'
+                        ];
+                        
                         const isLeagueCompetition = (stat) => {
                             const league = stat.league || stat.competition || stat.leagueName || '';
                             const leagueLower = league.toLowerCase();
-                            // カップ戦のキーワードが含まれていない場合のみリーグ戦と判定
-                            return !cupCompetitions.some(cup => leagueLower.includes(cup.toLowerCase()));
+                            
+                            // カップ戦のキーワードが含まれている場合は除外
+                            if (cupCompetitions.some(cup => leagueLower.includes(cup.toLowerCase()))) {
+                                return false;
+                            }
+                            
+                            // 親善試合のキーワードが含まれている場合は除外
+                            if (friendlyKeywords.some(keyword => leagueLower.includes(keyword.toLowerCase()))) {
+                                return false;
+                            }
+                            
+                            // カップ戦と親善試合以外はリーグ戦と判定
+                            return true;
                         };
                         
                         // シーズン値を正規化する関数
