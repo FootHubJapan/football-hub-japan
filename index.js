@@ -11362,25 +11362,28 @@ async function savePlayerData(playerData) {
 
 // 自動更新システムの初期化
 let autoUpdateInterval;
+let matchUpdateInterval;
 let lastUpdateTime = new Date();
+let processedMatches = new Set(); // 処理済み試合IDを記録
 
 // 自動更新システムを開始
 function startAutoUpdate() {
-    // 本番環境では自動更新を無効化（GitHubからデプロイされたデータをそのまま使用）
-    if (process.env.NODE_ENV === 'production') {
-        console.log('📊 本番環境: 自動更新システムを無効化（GitHubからデプロイされたデータを使用）');
-        return;
-    }
-    
     console.log('🔄 自動更新システムを開始します...');
     
-    // 初回更新を即座に実行
-    performAutoUpdate();
+    // 初回更新を即座に実行（本番環境ではスキップ）
+    if (process.env.NODE_ENV !== 'production') {
+        performAutoUpdate();
+        // 30分ごとに全選手データ更新
+        autoUpdateInterval = setInterval(performAutoUpdate, 30 * 60 * 1000);
+        console.log('✅ 全選手データ自動更新システムが開始されました（30分間隔）');
+    } else {
+        console.log('📊 本番環境: 全選手データ自動更新をスキップ（GitHubからデプロイされたデータを使用）');
+    }
     
-    // 30分ごとに自動更新
-    autoUpdateInterval = setInterval(performAutoUpdate, 30 * 60 * 1000);
-    
-    console.log('✅ 自動更新システムが開始されました（30分間隔）');
+    // 1時間ごとに終了した試合をチェックして選手データを更新（本番環境でも有効）
+    checkAndUpdateFinishedMatches();
+    matchUpdateInterval = setInterval(checkAndUpdateFinishedMatches, 60 * 60 * 1000);
+    console.log('✅ 試合ベース自動更新システムが開始されました（1時間間隔）');
 }
 
 // 自動更新の実行
@@ -11474,6 +11477,331 @@ async function updatePlayerInfo(playerName) {
         
     } catch (error) {
         console.log(`⚠️ ${playerName} の更新エラー:`, error.message);
+    }
+}
+
+// 終了した試合をチェックして選手データを更新
+async function checkAndUpdateFinishedMatches() {
+    try {
+        console.log('🔍 終了した試合をチェック中...');
+        
+        const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
+        if (!API_FOOTBALL_KEY) {
+            console.log('⚠️ API_FOOTBALL_KEYが設定されていません。試合ベース更新をスキップします。');
+            return;
+        }
+        
+        // 主要リーグのIDリスト
+        const majorLeagues = [
+            { id: 39, name: 'Premier League' }, // PL
+            { id: 140, name: 'La Liga' }, // PD
+            { id: 135, name: 'Serie A' }, // SA
+            { id: 78, name: 'Bundesliga' }, // BL1
+            { id: 61, name: 'Ligue 1' }, // FL1
+            { id: 169, name: 'J1 League' } // J1
+        ];
+        
+        const currentYear = new Date().getFullYear();
+        const season = currentYear;
+        
+        let totalUpdated = 0;
+        
+        for (const league of majorLeagues) {
+            try {
+                // 過去24時間以内に終了した試合を取得
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const today = new Date();
+                
+                const response = await axios.get('https://v3.football.api-sports.io/fixtures', {
+                    params: {
+                        league: league.id,
+                        season: season,
+                        status: 'FT', // Full Time (終了)
+                        from: yesterday.toISOString().split('T')[0],
+                        to: today.toISOString().split('T')[0]
+                    },
+                    headers: {
+                        'X-RapidAPI-Key': API_FOOTBALL_KEY
+                    }
+                });
+                
+                const fixtures = response.data?.response || [];
+                console.log(`📊 ${league.name}: ${fixtures.length}件の終了試合を検出`);
+                
+                for (const fixture of fixtures) {
+                    const fixtureId = fixture.fixture?.id;
+                    if (!fixtureId || processedMatches.has(fixtureId)) {
+                        continue; // 既に処理済み
+                    }
+                    
+                    try {
+                        await updatePlayersFromMatch(fixture, league);
+                        processedMatches.add(fixtureId);
+                        totalUpdated++;
+                        
+                        // APIレート制限対策
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    } catch (matchError) {
+                        console.error(`❌ 試合 ${fixtureId} の処理エラー:`, matchError.message);
+                    }
+                }
+                
+                // APIレート制限対策
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+            } catch (leagueError) {
+                console.error(`❌ ${league.name} の取得エラー:`, leagueError.message);
+            }
+        }
+        
+        console.log(`✅ 試合ベース更新完了: ${totalUpdated}件の試合を処理`);
+        
+        // 処理済み試合IDのクリーンアップ（1000件を超えたら古いものを削除）
+        if (processedMatches.size > 1000) {
+            const matchesArray = Array.from(processedMatches);
+            processedMatches = new Set(matchesArray.slice(-500));
+        }
+        
+    } catch (error) {
+        console.error('❌ 試合ベース更新エラー:', error.message);
+    }
+}
+
+// 試合から選手データを更新
+async function updatePlayersFromMatch(fixture, league) {
+    try {
+        const fixtureId = fixture.fixture?.id;
+        const homeTeamId = fixture.teams?.home?.id;
+        const awayTeamId = fixture.teams?.away?.id;
+        
+        if (!fixtureId || !homeTeamId || !awayTeamId) {
+            return;
+        }
+        
+        console.log(`🔄 試合 ${fixtureId} (${fixture.teams?.home?.name} vs ${fixture.teams?.away?.name}) の選手データを更新中...`);
+        
+        const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
+        
+        // 試合詳細を取得（イベント、スタッツなど）
+        const fixtureResponse = await axios.get(`https://v3.football.api-sports.io/fixtures`, {
+            params: {
+                id: fixtureId
+            },
+            headers: {
+                'X-RapidAPI-Key': API_FOOTBALL_KEY
+            }
+        });
+        
+        const matchData = fixtureResponse.data?.response?.[0];
+        if (!matchData) {
+            return;
+        }
+        
+        // 両チームの選手統計を取得
+        const [homeStats, awayStats] = await Promise.all([
+            getTeamPlayerStats(homeTeamId, league.id, matchData),
+            getTeamPlayerStats(awayTeamId, league.id, matchData)
+        ]);
+        
+        // 選手データを更新
+        const allPlayers = [...(homeStats || []), ...(awayStats || [])];
+        let updatedCount = 0;
+        
+        for (const playerData of allPlayers) {
+            try {
+                await updatePlayerStatsFromMatch(playerData, matchData, league);
+                updatedCount++;
+            } catch (playerError) {
+                console.error(`⚠️ 選手 ${playerData.name} の更新エラー:`, playerError.message);
+            }
+        }
+        
+        console.log(`✅ 試合 ${fixtureId}: ${updatedCount}名の選手データを更新`);
+        
+    } catch (error) {
+        console.error(`❌ 試合 ${fixture.fixture?.id} の選手更新エラー:`, error.message);
+    }
+}
+
+// チームの選手統計を取得
+async function getTeamPlayerStats(teamId, leagueId, matchData) {
+    try {
+        const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
+        const currentYear = new Date().getFullYear();
+        
+        // チームの選手リストを取得
+        const response = await axios.get('https://v3.football.api-sports.io/players/squads', {
+            params: {
+                team: teamId
+            },
+            headers: {
+                'X-RapidAPI-Key': API_FOOTBALL_KEY
+            }
+        });
+        
+        const players = response.data?.response?.[0]?.players || [];
+        
+        // 試合のイベントから得点・アシストを取得
+        const events = matchData.events || [];
+        const playerStatsMap = new Map();
+        
+        for (const event of events) {
+            const playerId = event.player?.id;
+            if (!playerId) continue;
+            
+            if (!playerStatsMap.has(playerId)) {
+                playerStatsMap.set(playerId, {
+                    id: playerId,
+                    name: event.player?.name,
+                    goals: 0,
+                    assists: 0,
+                    yellowCards: 0,
+                    redCards: 0
+                });
+            }
+            
+            const stats = playerStatsMap.get(playerId);
+            
+            if (event.type === 'Goal') {
+                stats.goals++;
+            } else if (event.type === 'Assist') {
+                stats.assists++;
+            } else if (event.type === 'Card' && event.detail === 'Yellow Card') {
+                stats.yellowCards++;
+            } else if (event.type === 'Card' && event.detail === 'Red Card') {
+                stats.redCards++;
+            }
+        }
+        
+        // 選手統計を取得
+        const playerStats = [];
+        for (const player of players.slice(0, 30)) { // 最初の30名のみ（API制限対策）
+            const matchStats = playerStatsMap.get(player.id);
+            if (matchStats) {
+                playerStats.push({
+                    ...matchStats,
+                    teamId: teamId,
+                    leagueId: leagueId
+                });
+            }
+        }
+        
+        return playerStats;
+        
+    } catch (error) {
+        console.error(`❌ チーム ${teamId} の選手統計取得エラー:`, error.message);
+        return [];
+    }
+}
+
+// 試合データから選手統計を更新
+async function updatePlayerStatsFromMatch(playerData, matchData, league) {
+    try {
+        const playerId = playerData.id;
+        const playerName = playerData.name;
+        
+        // 既存の選手データを取得（名前で検索）
+        let player = await cacheManager.getPlayerByName(playerName);
+        
+        // 名前で見つからない場合、全選手からIDで検索
+        if (!player) {
+            try {
+                const allPlayers = await cacheManager.getAllPlayers();
+                player = allPlayers.find(p => p.id === playerId || p.playerId === playerId);
+            } catch (error) {
+                // エラーは無視
+            }
+        }
+        
+        if (!player) {
+            // 選手が存在しない場合は、APIから基本情報を取得
+            try {
+                const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
+                const playerResponse = await axios.get('https://v3.football.api-sports.io/players', {
+                    params: {
+                        id: playerId
+                    },
+                    headers: {
+                        'X-RapidAPI-Key': API_FOOTBALL_KEY
+                    }
+                });
+                
+                const playerInfo = playerResponse.data?.response?.[0]?.player;
+                if (!playerInfo) {
+                    return; // 選手情報が取得できない
+                }
+                
+                player = {
+                    id: playerId,
+                    playerId: playerId,
+                    name: playerName,
+                    fullName: playerInfo.name,
+                    age: playerInfo.age,
+                    nationality: playerInfo.nationality,
+                    photo: playerInfo.photo,
+                    currentTeam: matchData.teams?.home?.id === playerData.teamId ? 
+                        matchData.teams?.home?.name : matchData.teams?.away?.name,
+                    league: league.name,
+                    stats: [],
+                    lastUpdated: new Date().toISOString()
+                };
+            } catch (apiError) {
+                console.error(`⚠️ 選手 ${playerName} の基本情報取得エラー:`, apiError.message);
+                return;
+            }
+        }
+        
+        // 現在のシーズンを取得
+        const currentYear = new Date().getFullYear();
+        const season = `${currentYear}/${currentYear + 1}`;
+        
+        // 既存のstatsを取得または初期化
+        if (!Array.isArray(player.stats)) {
+            player.stats = [];
+        }
+        
+        // 該当シーズン・リーグの統計を検索
+        let seasonStat = player.stats.find(s => 
+            (s.season === season || s.season === String(currentYear)) &&
+            (s.leagueName === league.name || s.league === league.name)
+        );
+        
+        if (!seasonStat) {
+            // 新しい統計エントリを作成
+            seasonStat = {
+                season: season,
+                leagueName: league.name,
+                league: league.name,
+                teamName: player.currentTeam,
+                appearances: 0,
+                goals: 0,
+                assists: 0,
+                yellowCards: 0,
+                redCards: 0,
+                minutes: 0
+            };
+            player.stats.push(seasonStat);
+        }
+        
+        // 試合の統計を追加
+        seasonStat.appearances = (seasonStat.appearances || 0) + 1;
+        seasonStat.goals = (seasonStat.goals || 0) + (playerData.goals || 0);
+        seasonStat.assists = (seasonStat.assists || 0) + (playerData.assists || 0);
+        seasonStat.yellowCards = (seasonStat.yellowCards || 0) + (playerData.yellowCards || 0);
+        seasonStat.redCards = (seasonStat.redCards || 0) + (playerData.redCards || 0);
+        seasonStat.minutes = (seasonStat.minutes || 0) + 90; // デフォルト90分
+        
+        // 最終更新日時を更新
+        player.lastUpdated = new Date().toISOString();
+        
+        // データベースに保存
+        await cacheManager.savePlayerData(player);
+        
+        console.log(`  ✅ ${playerName}: ${playerData.goals || 0}G ${playerData.assists || 0}A`);
+        
+    } catch (error) {
+        console.error(`❌ 選手 ${playerData.name} の統計更新エラー:`, error.message);
     }
 }
 
