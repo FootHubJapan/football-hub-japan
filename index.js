@@ -1544,15 +1544,28 @@ app.get('/api/ranking/players', async (req, res) => {
                             
                             const leagueMap = {
                                 'PL': ['premier league', 'プレミアリーグ', 'premier', 'prem'],
-                                'PD': ['la liga', 'ラ・リーガ', 'liga', 'laliga'],
+                                'PD': ['la liga', 'ラ・リーガ', 'laliga', 'primera división'],
                                 'SA': ['serie a', 'セリエa', 'serie', 'seriea'],
                                 'BL1': ['bundesliga', 'ブンデスリーガ', 'bundes'],
                                 'FL1': ['ligue 1', 'リーグ・アン', 'ligue', 'ligue1'],
                                 'J1': ['j1 league', 'j1リーグ', 'j1', 'j league', 'jleague']
                             };
                             
-                            const validLeagues = leagueMap[league] || [league.toLowerCase()];
-                            const matches = validLeagues.some(l => matchedLeagueLower.includes(l));
+                            let matches = false;
+                            
+                            // PD（ラ・リーガ）の場合は、より厳密なマッチング
+                            if (league === 'PD') {
+                                // "la liga"または"laliga"または"primera división"のみマッチ
+                                // 他の"liga"を含むリーグ（primeira liga, liga mx等）は除外
+                                matches = matchedLeagueLower === 'la liga' || 
+                                         matchedLeagueLower === 'laliga' || 
+                                         matchedLeagueLower.includes('la liga') ||
+                                         matchedLeagueLower.includes('primera división') ||
+                                         (matchedLeagueLower.includes('liga') && !matchedLeagueLower.includes('primeira') && !matchedLeagueLower.includes('mx') && !matchedLeagueLower.includes('profesional') && !matchedLeagueLower.includes('czech') && !matchedLeagueLower.includes('segunda') && !matchedLeagueLower.includes('bundes') && !matchedLeagueLower.includes('argentina'));
+                            } else {
+                                const validLeagues = leagueMap[league] || [league.toLowerCase()];
+                                matches = validLeagues.some(l => matchedLeagueLower.includes(l));
+                            }
                             
                             if (!matches) {
                                 // リーグが一致しない場合、確実に除外
@@ -1643,21 +1656,34 @@ app.get('/api/ranking/players', async (req, res) => {
                                 if (seasonStats.length > 0) {
                                     // リーグフィルタリング（リーグが指定されている場合）
                                     if (league) {
-                                        const leagueMap = {
-                                            'PL': ['Premier League', 'プレミアリーグ', 'Premier'],
-                                            'PD': ['La Liga', 'ラ・リーガ', 'Liga'],
-                                            'SA': ['Serie A', 'セリエA', 'Serie'],
-                                            'BL1': ['Bundesliga', 'ブンデスリーガ', 'Bundes'],
-                                            'FL1': ['Ligue 1', 'リーグ・アン', 'Ligue'],
-                                            'J1': ['J1 League', 'J1リーグ', 'J1', 'J League']
-                                        };
+                                    const leagueMap = {
+                                        'PL': ['premier league', 'プレミアリーグ', 'premier', 'prem'],
+                                        'PD': ['la liga', 'ラ・リーガ', 'laliga', 'primera división'],
+                                        'SA': ['serie a', 'セリエa', 'serie'],
+                                        'BL1': ['bundesliga', 'ブンデスリーガ', 'bundes'],
+                                        'FL1': ['ligue 1', 'リーグ・アン', 'ligue'],
+                                        'J1': ['j1 league', 'j1リーグ', 'j1', 'j league']
+                                    };
+                                    
+                                    const leagueKeywords = leagueMap[league] || [league.toLowerCase()];
+                                    const leagueFilteredStats = seasonStats.filter(stat => {
+                                        const statLeague = String(stat.leagueName || stat.league || '').toLowerCase();
                                         
-                                        const leagueKeywords = leagueMap[league] || [league];
-                                        const leagueFilteredStats = seasonStats.filter(stat => {
-                                            const statLeague = (stat.leagueName || stat.league || '').toLowerCase();
-                                            return leagueKeywords.some(keyword => 
-                                                statLeague.includes(keyword.toLowerCase())
-                                            );
+                                        // PD（ラ・リーガ）の場合は、より厳密なマッチング
+                                        if (league === 'PD') {
+                                            // "la liga"または"laliga"または"primera división"のみマッチ
+                                            // 他の"liga"を含むリーグ（primeira liga, liga mx等）は除外
+                                            return statLeague === 'la liga' || 
+                                                   statLeague === 'laliga' || 
+                                                   statLeague.includes('la liga') ||
+                                                   statLeague.includes('primera división') ||
+                                                   (statLeague.includes('liga') && !statLeague.includes('primeira') && !statLeague.includes('mx') && !statLeague.includes('profesional') && !statLeague.includes('czech') && !statLeague.includes('segunda'));
+                                        }
+                                        
+                                        // その他のリーグは通常のマッチング
+                                        return leagueKeywords.some(keyword => 
+                                            statLeague.includes(keyword.toLowerCase())
+                                        );
                                         });
                                         
                                         if (leagueFilteredStats.length > 0) {
@@ -1884,44 +1910,57 @@ app.get('/api/ranking/players', async (req, res) => {
         // データベースから取得したデータは既にstatsレベルでフィルタリング済みだが、
         // API-Footballから取得したデータや、リーグ情報が不完全なデータを除外する
         if (league && players.length > 0) {
-            const leagueMapping = {
-                'PL': ['premier league', 'プレミアリーグ', 'premier', 'prem'],
-                'PD': ['la liga', 'ラ・リーガ', 'liga', 'laliga'],
-                'SA': ['serie a', 'セリエa', 'serie', 'seriea'],
-                'BL1': ['bundesliga', 'ブンデスリーガ', 'bundes'],
-                'FL1': ['ligue 1', 'リーグ・アン', 'ligue', 'ligue1'],
-                'J1': ['j1 league', 'j1リーグ', 'j1', 'j league', 'jleague']
-            };
-            
-            const beforeFilter = players.length;
-            const validLeagues = leagueMapping[league] || [league.toLowerCase()];
-            
-            // デバッグ: フィルタリング前のリーグ情報を確認
-            if (league === 'PD') {
-                console.log(`🔍 PDフィルタリング前: ${beforeFilter}名の選手`);
-                const sampleLeagues = players.slice(0, 10).map(p => p.league).filter(Boolean);
-                console.log(`📊 サンプルリーグ情報:`, sampleLeagues);
-            }
-            
-            players = players.filter(p => {
-                const playerLeague = String(p.league || '').toLowerCase();
-                if (!playerLeague) {
-                    // デバッグ: リーグ情報がない選手をログ出力
-                    if (league === 'PD') {
-                        console.log(`⚠️ PDフィルタ: リーグ情報なしで除外: ${p.name || p.fullName}`);
-                    }
-                    return false; // リーグ情報がない選手は除外
-                }
-                
-                const matches = validLeagues.some(l => playerLeague.includes(l));
-                
-                // デバッグ: PDの場合、マッチしないリーグをログ出力
-                if (league === 'PD' && !matches) {
-                    console.log(`⚠️ PDフィルタ: 除外された選手: ${p.name || p.fullName} (リーグ: "${playerLeague}")`);
-                }
-                
-                return matches;
-            });
+                            const leagueMapping = {
+                                'PL': ['premier league', 'プレミアリーグ', 'premier', 'prem'],
+                                'PD': ['la liga', 'ラ・リーガ', 'laliga', 'primera división'],
+                                'SA': ['serie a', 'セリエa', 'serie', 'seriea'],
+                                'BL1': ['bundesliga', 'ブンデスリーガ', 'bundes'],
+                                'FL1': ['ligue 1', 'リーグ・アン', 'ligue', 'ligue1'],
+                                'J1': ['j1 league', 'j1リーグ', 'j1', 'j league', 'jleague']
+                            };
+                            
+                            const beforeFilter = players.length;
+                            
+                            // デバッグ: フィルタリング前のリーグ情報を確認
+                            if (league === 'PD') {
+                                console.log(`🔍 PDフィルタリング前: ${beforeFilter}名の選手`);
+                                const sampleLeagues = players.slice(0, 10).map(p => p.league).filter(Boolean);
+                                console.log(`📊 サンプルリーグ情報:`, sampleLeagues);
+                            }
+                            
+                            players = players.filter(p => {
+                                const playerLeague = String(p.league || '').toLowerCase();
+                                if (!playerLeague) {
+                                    // デバッグ: リーグ情報がない選手をログ出力
+                                    if (league === 'PD') {
+                                        console.log(`⚠️ PDフィルタ: リーグ情報なしで除外: ${p.name || p.fullName}`);
+                                    }
+                                    return false; // リーグ情報がない選手は除外
+                                }
+                                
+                                let matches = false;
+                                
+                                // PD（ラ・リーガ）の場合は、より厳密なマッチング
+                                if (league === 'PD') {
+                                    // "la liga"または"laliga"または"primera división"のみマッチ
+                                    // 他の"liga"を含むリーグ（primeira liga, liga mx等）は除外
+                                    matches = playerLeague === 'la liga' || 
+                                             playerLeague === 'laliga' || 
+                                             playerLeague.includes('la liga') ||
+                                             playerLeague.includes('primera división') ||
+                                             (playerLeague.includes('liga') && !playerLeague.includes('primeira') && !playerLeague.includes('mx') && !playerLeague.includes('profesional') && !playerLeague.includes('czech') && !playerLeague.includes('segunda') && !playerLeague.includes('bundes') && !playerLeague.includes('argentina'));
+                                } else {
+                                    const validLeagues = leagueMapping[league] || [league.toLowerCase()];
+                                    matches = validLeagues.some(l => playerLeague.includes(l));
+                                }
+                                
+                                // デバッグ: PDの場合、マッチしないリーグをログ出力
+                                if (league === 'PD' && !matches) {
+                                    console.log(`⚠️ PDフィルタ: 除外された選手: ${p.name || p.fullName} (リーグ: "${playerLeague}")`);
+                                }
+                                
+                                return matches;
+                            });
             console.log(`✅ Final league filter: ${beforeFilter} → ${players.length} players in league: ${league}`);
         }
         
