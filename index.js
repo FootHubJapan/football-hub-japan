@@ -1435,10 +1435,15 @@ app.get('/api/ranking/players', async (req, res) => {
                                     
                                     const leagueKeywords = leagueMap[league] || [league];
                                     const leagueFilteredStats = seasonStats.filter(stat => {
-                                        const statLeague = (stat.leagueName || stat.league || '').toLowerCase();
-                                        return leagueKeywords.some(keyword => 
+                                        const statLeague = String(stat.leagueName || stat.league || '').toLowerCase();
+                                        const matches = leagueKeywords.some(keyword => 
                                             statLeague.includes(keyword.toLowerCase())
                                         );
+                                        // デバッグ: PD（ラ・リーガ）の場合、マッチしないリーグをログ出力
+                                        if (league === 'PD' && !matches && statLeague) {
+                                            console.log(`⚠️ PDフィルタ: 除外されたリーグ: "${statLeague}" (選手: ${player.name || player.fullName})`);
+                                        }
+                                        return matches;
                                     });
                                     
                                     if (leagueFilteredStats.length > 0) {
@@ -1853,10 +1858,32 @@ app.get('/api/ranking/players', async (req, res) => {
             
             const beforeFilter = players.length;
             const validLeagues = leagueMapping[league] || [league.toLowerCase()];
+            
+            // デバッグ: フィルタリング前のリーグ情報を確認
+            if (league === 'PD') {
+                console.log(`🔍 PDフィルタリング前: ${beforeFilter}名の選手`);
+                const sampleLeagues = players.slice(0, 10).map(p => p.league).filter(Boolean);
+                console.log(`📊 サンプルリーグ情報:`, sampleLeagues);
+            }
+            
             players = players.filter(p => {
                 const playerLeague = String(p.league || '').toLowerCase();
-                if (!playerLeague) return false; // リーグ情報がない選手は除外
-                return validLeagues.some(l => playerLeague.includes(l));
+                if (!playerLeague) {
+                    // デバッグ: リーグ情報がない選手をログ出力
+                    if (league === 'PD') {
+                        console.log(`⚠️ PDフィルタ: リーグ情報なしで除外: ${p.name || p.fullName}`);
+                    }
+                    return false; // リーグ情報がない選手は除外
+                }
+                
+                const matches = validLeagues.some(l => playerLeague.includes(l));
+                
+                // デバッグ: PDの場合、マッチしないリーグをログ出力
+                if (league === 'PD' && !matches) {
+                    console.log(`⚠️ PDフィルタ: 除外された選手: ${p.name || p.fullName} (リーグ: "${playerLeague}")`);
+                }
+                
+                return matches;
             });
             console.log(`✅ Final league filter: ${beforeFilter} → ${players.length} players in league: ${league}`);
         }
