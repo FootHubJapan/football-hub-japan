@@ -1529,16 +1529,19 @@ app.get('/api/ranking/players', async (req, res) => {
                             }
                         }
                         
-                        // リーグが指定されている場合、マッチしなかった選手は除外（念のため）
-                        if (league && !matchedLeague) {
-                            if (league === 'PD') {
-                                console.log(`❌ PDフィルタ: matchedLeague未設定で除外: ${player.name || player.fullName}`);
+                        // リーグが指定されている場合、matchedLeagueが正しいリーグか最終確認（必須）
+                        if (league) {
+                            if (!matchedLeague) {
+                                // matchedLeagueが設定されていない場合、除外
+                                if (league === 'PD') {
+                                    console.log(`❌ PDフィルタ: matchedLeague未設定で除外: ${player.name || player.fullName}`);
+                                }
+                                return null;
                             }
-                            return null;
-                        }
-                        
-                        // リーグが指定されている場合、matchedLeagueが正しいリーグか最終確認
-                        if (league && matchedLeague) {
+                            
+                            // matchedLeagueを文字列に変換して小文字化
+                            const matchedLeagueLower = String(matchedLeague).toLowerCase();
+                            
                             const leagueMap = {
                                 'PL': ['premier league', 'プレミアリーグ', 'premier', 'prem'],
                                 'PD': ['la liga', 'ラ・リーガ', 'liga', 'laliga'],
@@ -1549,11 +1552,12 @@ app.get('/api/ranking/players', async (req, res) => {
                             };
                             
                             const validLeagues = leagueMap[league] || [league.toLowerCase()];
-                            const matches = validLeagues.some(l => matchedLeague.includes(l));
+                            const matches = validLeagues.some(l => matchedLeagueLower.includes(l));
                             
                             if (!matches) {
+                                // リーグが一致しない場合、確実に除外
                                 if (league === 'PD') {
-                                    console.log(`❌ PDフィルタ: 最終確認で不一致、除外: ${player.name || player.fullName} (リーグ: "${matchedLeague}")`);
+                                    console.log(`❌ PDフィルタ: 最終確認で不一致、除外: ${player.name || player.fullName} (リーグ: "${matchedLeagueLower}")`);
                                 }
                                 return null;
                             }
