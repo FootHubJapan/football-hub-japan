@@ -11704,11 +11704,18 @@ async function updatePlayerStatsFromMatch(playerData, matchData, league) {
         // 既存の選手データを取得（名前で検索）
         let player = await cacheManager.getPlayerByName(playerName);
         
-        // 名前で見つからない場合、全選手からIDで検索
+        // 名前で見つからない場合、DatabaseManagerからIDで検索
         if (!player) {
             try {
-                const allPlayers = await cacheManager.getAllPlayers();
-                player = allPlayers.find(p => p.id === playerId || p.playerId === playerId);
+                if (cacheManager.db && cacheManager.db.loadComprehensivePlayers) {
+                    const allPlayers = await cacheManager.db.loadComprehensivePlayers();
+                    player = allPlayers.find(p => 
+                        p.id === playerId || 
+                        p.playerId === playerId ||
+                        String(p.id) === String(playerId) ||
+                        String(p.playerId) === String(playerId)
+                    );
+                }
             } catch (error) {
                 // エラーは無視
             }
