@@ -1494,20 +1494,33 @@ app.get('/api/ranking/players', async (req, res) => {
                             if (matchesSeason || !league) {
                                 // リーグフィルタリング（リーグが指定されている場合）
                                 if (league) {
-                                    const leagueMap = {
-                                        'PL': ['Premier League', 'プレミアリーグ', 'Premier'],
-                                        'PD': ['La Liga', 'ラ・リーガ', 'Liga'],
-                                        'SA': ['Serie A', 'セリエA', 'Serie'],
-                                        'BL1': ['Bundesliga', 'ブンデスリーガ', 'Bundes'],
-                                        'FL1': ['Ligue 1', 'リーグ・アン', 'Ligue'],
-                                        'J1': ['J1 League', 'J1リーグ', 'J1', 'J League']
-                                    };
-                                    
-                                    const leagueKeywords = leagueMap[league] || [league];
-                                    const statLeague = String(player.stats.leagueName || player.stats.league || '').toLowerCase();
-                                    const matchesLeague = leagueKeywords.some(keyword => 
-                                        statLeague.includes(keyword.toLowerCase())
-                                    );
+                                        const leagueMap = {
+                                            'PL': ['premier league', 'プレミアリーグ', 'premier', 'prem'],
+                                            'PD': ['la liga', 'ラ・リーガ', 'laliga', 'primera división'],
+                                            'SA': ['serie a', 'セリエa', 'serie'],
+                                            'BL1': ['bundesliga', 'ブンデスリーガ', 'bundes'],
+                                            'FL1': ['ligue 1', 'リーグ・アン', 'ligue'],
+                                            'J1': ['j1 league', 'j1リーグ', 'j1', 'j league']
+                                        };
+                                        
+                                        const statLeague = String(player.stats.leagueName || player.stats.league || '').toLowerCase();
+                                        let matchesLeague = false;
+                                        
+                                        // PD（ラ・リーガ）の場合は、より厳密なマッチング
+                                        if (league === 'PD') {
+                                            // "la liga"または"laliga"または"primera división"のみマッチ
+                                            // 他の"liga"を含むリーグ（primeira liga, liga mx等）は除外
+                                            matchesLeague = statLeague === 'la liga' || 
+                                                           statLeague === 'laliga' || 
+                                                           statLeague.includes('la liga') ||
+                                                           statLeague.includes('primera división') ||
+                                                           (statLeague.includes('liga') && !statLeague.includes('primeira') && !statLeague.includes('mx') && !statLeague.includes('profesional') && !statLeague.includes('czech') && !statLeague.includes('segunda') && !statLeague.includes('bundes') && !statLeague.includes('argentina'));
+                                        } else {
+                                            const leagueKeywords = leagueMap[league] || [league.toLowerCase()];
+                                            matchesLeague = leagueKeywords.some(keyword => 
+                                                statLeague.includes(keyword.toLowerCase())
+                                            );
+                                        }
                                     
                                     if (matchesLeague) {
                                         playerStats = player.stats;
