@@ -65,61 +65,82 @@ function normalizePlayerStats(stat) {
 
 // API-Footballから選手の最新統計を取得
 async function fetchLatestPlayerStats(playerId, season = 2025) {
-    try {
-        const url = `https://v3.football.api-sports.io/players?id=${playerId}&season=${season}`;
-        const response = await axios.get(url, {
-            headers: {
-                'x-apisports-key': API_FOOTBALL_KEY,
-                'x-rapidapi-host': 'v3.football.api-sports.io'
-            },
-            timeout: 15000
-        });
+    // 2025と2024の両方を試す
+    const seasonsToTry = [season, 2024];
+    
+    for (const trySeason of seasonsToTry) {
+        try {
+            const url = `https://v3.football.api-sports.io/players?id=${playerId}&season=${trySeason}`;
+            const response = await axios.get(url, {
+                headers: {
+                    'x-apisports-key': API_FOOTBALL_KEY,
+                    'x-rapidapi-host': 'v3.football.api-sports.io'
+                },
+                timeout: 15000
+            });
 
-        if (!response.data || !response.data.response || response.data.response.length === 0) {
-            return null;
-        }
+            if (!response.data || !response.data.response || response.data.response.length === 0) {
+                continue; // 次のシーズンを試す
+            }
+            
+            // データが見つかった場合
+            const apiData = response.data.response[0];
+            if (!apiData || !apiData.statistics || apiData.statistics.length === 0) {
+                continue; // 次のシーズンを試す
+            }
 
-        const apiData = response.data.response[0];
-        const player = apiData.player;
-        const statistics = apiData.statistics || [];
+            const player = apiData.player;
+            const statistics = apiData.statistics || [];
 
-        // 統計データを正規化
-        const statsArray = [];
-        for (const stat of statistics) {
-            const normalized = normalizePlayerStats(stat);
-            if (normalized) {
-                statsArray.push(normalized);
+            // 統計データを正規化
+            const statsArray = [];
+            for (const stat of statistics) {
+                const normalized = normalizePlayerStats(stat);
+                if (normalized) {
+                    statsArray.push(normalized);
+                }
+            }
+
+            if (statsArray.length === 0) {
+                continue; // 次のシーズンを試す
+            }
+
+            // 最新のチーム名を取得（最も出場数の多いコンペティションから）
+            const mainStats = statsArray.sort((a, b) => (b.appearances || 0) - (a.appearances || 0))[0];
+            const latestTeamName = mainStats?.teamName || statistics[0]?.team?.name || 'Unknown';
+            const latestLeagueName = mainStats?.leagueName || statistics[0]?.league?.name || 'Unknown';
+
+            return {
+                player: {
+                    id: player.id,
+                    name: player.name,
+                    fullName: player.name,
+                    age: player.age,
+                    nationality: player.nationality,
+                    photo: player.photo,
+                    birth: player.birth
+                },
+                stats: statsArray,
+                currentTeam: latestTeamName,
+                league: latestLeagueName,
+                teamId: mainStats?.teamId || statistics[0]?.team?.id || null,
+                season: trySeason
+            };
+        } catch (error) {
+            if (error.response?.status === 429) {
+                console.error('   ⚠️ APIレート制限に達しました');
+                throw new Error('RATE_LIMIT');
+            }
+            // エラーが発生しても次のシーズンを試す
+            if (trySeason === seasonsToTry[seasonsToTry.length - 1]) {
+                // 最後のシーズンでもエラーが発生した場合のみログ出力
+                console.error(`   ⚠️ APIエラー (${trySeason}): ${error.message}`);
             }
         }
-
-        // 最新のチーム名を取得（最も出場数の多いコンペティションから）
-        const mainStats = statsArray.sort((a, b) => (b.appearances || 0) - (a.appearances || 0))[0];
-        const latestTeamName = mainStats?.teamName || statistics[0]?.team?.name || 'Unknown';
-        const latestLeagueName = mainStats?.leagueName || statistics[0]?.league?.name || 'Unknown';
-
-        return {
-            player: {
-                id: player.id,
-                name: player.name,
-                fullName: player.name,
-                age: player.age,
-                nationality: player.nationality,
-                photo: player.photo,
-                birth: player.birth
-            },
-            stats: statsArray,
-            currentTeam: latestTeamName,
-            league: latestLeagueName,
-            teamId: mainStats?.teamId || statistics[0]?.team?.id || null
-        };
-    } catch (error) {
-        if (error.response?.status === 429) {
-            console.error('   ⚠️ APIレート制限に達しました');
-            throw new Error('RATE_LIMIT');
-        }
-        console.error(`   ⚠️ APIエラー: ${error.message}`);
-        return null;
     }
+    
+    // すべてのシーズンでデータが見つからなかった
+    return null;
 }
 
 // 選手データを更新
@@ -147,11 +168,15 @@ async function updatePlayer(player, dbManager, requestCount) {
             requestCount.current = 0;
         }
 
-        // 最新統計を取得
+        // 最新統計を取得（2025と2024の両方を試す）
         const latestData = await fetchLatestPlayerStats(playerId, 2025);
         requestCount.current++;
 
         if (!latestData || !latestData.stats || latestData.stats.length === 0) {
+            // デバッグ情報を出力（最初の10名のみ）
+            if (requestCount.current <= 10) {
+                console.log(`   🔍 デバッグ: ${playerName} (ID: ${playerId}) - データなし`);
+            }
             return { updated: false, reason: 'NO_DATA' };
         }
 
@@ -163,10 +188,11 @@ async function updatePlayer(player, dbManager, requestCount) {
             existingStats = [player.stats];
         }
 
-        // 2025/2026シーズンの統計を更新（既存のものを削除してから追加）
+        // 最新シーズンの統計を更新（既存のものを削除してから追加）
+        const latestSeason = latestData.season || 2025;
         existingStats = existingStats.filter(s => {
             const statSeason = String(s.season || '');
-            return !statSeason.includes('2025') && !statSeason.includes('2026');
+            return !statSeason.includes(String(latestSeason)) && !statSeason.includes(String(latestSeason + 1));
         });
 
         // 新しい統計を追加
