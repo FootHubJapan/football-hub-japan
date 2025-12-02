@@ -391,7 +391,7 @@
 
     <div class="main-container">
         <h1 class="page-title">ランキングシステム</h1>
-        <p class="page-subtitle">ポジション別、リーグ別の詳細なランキング。選手の市場価値や移籍情報も追跡します。</p>
+        <p class="page-subtitle">全選手を対象としたポジション別、リーグ別の詳細なランキング。検索で選手を絞り込めます。</p>
 
         <!-- タブナビゲーション -->
         <div class="ranking-tabs">
@@ -403,6 +403,10 @@
         <!-- フィルターセクション（選手ランキング・チームランキング用） -->
         <div id="mainFiltersSection" class="filters-section">
             <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">検索（選手名・チーム名）</label>
+                    <input type="text" class="filter-select" id="searchFilter" placeholder="選手名やチーム名で検索..." style="width: 100%;">
+                </div>
                 <div class="filter-group">
                     <label class="filter-label">シーズン</label>
                     <select class="filter-select" id="seasonFilter">
@@ -418,7 +422,7 @@
                     <select class="filter-select" id="leagueFilter">
                         <option value="">すべてのリーグ</option>
                         <option value="PL">プレミアリーグ</option>
-                        <option value="PD">ラ・リーガ</option>
+                        <option value="PD">ラ・リーガ（スペインリーグのみ）</option>
                         <option value="SA">セリエA</option>
                         <option value="BL1">ブンデスリーガ</option>
                         <option value="FL1">リーグ・アン</option>
@@ -667,18 +671,37 @@
             const league = document.getElementById('leagueFilter').value;
             const position = document.getElementById('positionFilter').value;
             const stat = document.getElementById('statFilter').value;
+            const search = document.getElementById('searchFilter').value.trim();
 
             try {
-                // APIから選手データを取得
-                const response = await fetch(`/api/ranking/players?season=${season}&league=${league}&position=${position}&stat=${stat}`);
+                // APIから選手データを取得（検索パラメータを追加）
+                let url = `/api/ranking/players?season=${season}&league=${league}&position=${position}&stat=${stat}`;
+                if (search) {
+                    url += `&search=${encodeURIComponent(search)}`;
+                }
+                
+                const response = await fetch(url);
                 let players;
 
                 if (response.ok) {
                     const data = await response.json();
                     players = data.players || [];
+                    
+                    // クライアント側でも検索フィルタリング（追加の絞り込み）
+                    if (search && players.length > 0) {
+                        const searchLower = search.toLowerCase();
+                        players = players.filter(p => {
+                            const name = (p.name || '').toLowerCase();
+                            const team = (p.currentTeam || p.team || '').toLowerCase();
+                            const leagueName = (p.league || '').toLowerCase();
+                            return name.includes(searchLower) || 
+                                   team.includes(searchLower) || 
+                                   leagueName.includes(searchLower);
+                        });
+                    }
                 } else {
-                    // フォールバックデータを使用
-                    players = generateFallbackPlayerData(league, position, stat);
+                    // フォールバックデータを使用（全選手対応）
+                    players = generateFallbackPlayerData(league, position, stat, search);
                 }
 
                 displayPlayerRanking(players);
@@ -686,7 +709,7 @@
 
             } catch (error) {
                 console.error('Error loading player ranking:', error);
-                const players = generateFallbackPlayerData(league, position, stat);
+                const players = generateFallbackPlayerData(league, position, stat, search);
                 displayPlayerRanking(players);
                 updatePlayerChart(players.slice(0, 10));
             }
@@ -1261,32 +1284,35 @@
             });
         }
 
-        // フォールバック選手データ生成
-        function generateFallbackPlayerData(league, position, stat) {
-            const players = [
-                { name: '久保建英', team: 'レアル・ソシエダ', position: 'Midfielder', goals: 12, assists: 8, appearances: 28, rating: 7.8 },
-                { name: '三笘薫', team: 'ブライトン', position: 'Forward', goals: 8, assists: 6, appearances: 25, rating: 7.5 },
-                { name: '堂安律', team: 'フライブルク', position: 'Midfielder', goals: 6, assists: 4, appearances: 22, rating: 7.2 },
-                { name: '田中碧', team: 'フォルトゥナ・デュッセルドルフ', position: 'Midfielder', goals: 5, assists: 7, appearances: 24, rating: 7.0 },
-                { name: '伊藤洋輝', team: 'シュトゥットガルト', position: 'Defender', goals: 2, assists: 3, appearances: 26, rating: 6.9 },
-                { name: '南野拓実', team: 'モナコ', position: 'Forward', goals: 10, assists: 5, appearances: 27, rating: 7.6 },
-                { name: '浅野拓磨', team: 'ボーフム', position: 'Forward', goals: 7, assists: 4, appearances: 23, rating: 7.1 },
-                { name: '遠藤航', team: 'リバプール', position: 'Midfielder', goals: 1, assists: 2, appearances: 20, rating: 6.8 },
-                { name: '上田綺世', team: 'フェイエノールト', position: 'Forward', goals: 15, assists: 3, appearances: 29, rating: 7.9 },
-                { name: '前田大然', team: 'セルティック', position: 'Forward', goals: 11, assists: 6, appearances: 26, rating: 7.7 }
-            ];
+        // フォールバック選手データ生成（全選手対応）
+        function generateFallbackPlayerData(league, position, stat, search) {
+            // フォールバックデータは最小限（実際のデータはAPIから取得）
+            const players = [];
+
+            // 検索フィルタリング
+            if (search) {
+                const searchLower = search.toLowerCase();
+                return players.filter(p => {
+                    const name = (p.name || '').toLowerCase();
+                    const team = (p.team || p.currentTeam || '').toLowerCase();
+                    return name.includes(searchLower) || team.includes(searchLower);
+                });
+            }
 
             // リーグフィルタリング
             if (league) {
-                const leagueTeams = {
-                    'PL': ['ブライトン', 'リバプール'],
-                    'PD': ['レアル・ソシエダ'],
-                    'SA': ['モナコ'],
-                    'BL1': ['フライブルク', 'フォルトゥナ・デュッセルドルフ', 'シュトゥットガルト', 'ボーフム'],
-                    'FL1': [],
-                    'J1': []
-                };
-                return players.filter(p => leagueTeams[league]?.includes(p.team));
+                return players.filter(p => {
+                    const leagueTeams = {
+                        'PL': ['brighton', 'liverpool', 'arsenal', 'manchester city', 'chelsea'],
+                        'PD': ['real sociedad', 'real madrid', 'barcelona', 'atletico madrid'],
+                        'SA': ['monaco', 'inter milan', 'ac milan', 'juventus'],
+                        'BL1': ['freiburg', 'fortuna düsseldorf', 'stuttgart', 'bochum'],
+                        'FL1': ['monaco', 'psg', 'marseille'],
+                        'J1': []
+                    };
+                    const team = (p.team || p.currentTeam || '').toLowerCase();
+                    return leagueTeams[league]?.some(t => team.includes(t));
+                });
             }
 
             // ポジションフィルタリング
@@ -1296,6 +1322,30 @@
 
             return players;
         }
+        
+        // 検索フィールドのイベントリスナー追加
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchFilter');
+            if (searchInput) {
+                // Enterキーで検索
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        loadRanking();
+                    }
+                });
+                
+                // リアルタイム検索（オプション：入力後500ms待機）
+                let searchTimeout;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        if (currentTab === 'players') {
+                            loadPlayerRanking();
+                        }
+                    }, 500);
+                });
+            }
+        });
 
         // フォールバックチームデータ生成
         function generateFallbackTeamData(league) {

@@ -1382,9 +1382,9 @@ app.post('/api/ai/tactics', async (req, res) => {
 // 選手ランキング取得（動的データ優先）
 app.get('/api/ranking/players', async (req, res) => {
     try {
-        const { season = 2025, league, position, stat = 'goals' } = req.query;
+        const { season = 2025, league, position, stat = 'goals', search } = req.query;
         
-        console.log('🏆 Player Ranking Request:', { season, league, position, stat });
+        console.log('🏆 Player Ranking Request:', { season, league, position, stat, search });
         
         let players = [];
         
@@ -2450,6 +2450,24 @@ app.get('/api/ranking/players', async (req, res) => {
             console.log(`✅ Final league filter: ${beforeFilter} → ${players.length} players in league: ${league}`);
         }
         
+        // 検索フィルタリング（選手名、チーム名、リーグ名で検索）
+        if (search && search.trim() && players.length > 0) {
+            const beforeFilter = players.length;
+            const searchLower = search.trim().toLowerCase();
+            players = players.filter(p => {
+                const name = (p.name || p.fullName || '').toLowerCase();
+                const team = (p.currentTeam || p.team || '').toLowerCase();
+                const league = (p.league || '').toLowerCase();
+                const nationality = (p.nationality || '').toLowerCase();
+                
+                return name.includes(searchLower) || 
+                       team.includes(searchLower) || 
+                       league.includes(searchLower) ||
+                       nationality.includes(searchLower);
+            });
+            console.log(`✅ Search filter: ${beforeFilter} → ${players.length} players matching "${search}"`);
+        }
+        
         // ポジションフィルタリング
         if (position && players.length > 0) {
             const beforeFilter = players.length;
@@ -2487,7 +2505,7 @@ app.get('/api/ranking/players', async (req, res) => {
         res.json({ 
             players: returnedPlayers,
             total: players.length,
-            filtered: !!league || !!position,
+            filtered: !!league || !!position || !!search,
             limit: limit,
             source: players.length > 50 ? 'database' : 'fallback'
         });
@@ -9309,22 +9327,48 @@ app.get('/api/integrated/players', async (req, res) => {
 app.get('/api/integrated/player/:playerId', async (req, res) => {
     try {
         const { playerId } = req.params;
-        
-        // 統合された選手データを読み込み
-        const fs = require('fs');
-        const playersFile = path.join(__dirname, 'data', 'players.json');
+        console.log(`🔍 統合選手データ取得: ${playerId}`);
         
         let playersData = [];
-        if (fs.existsSync(playersFile)) {
-            const data = await fs.promises.readFile(playersFile, 'utf8');
-            const parsed = JSON.parse(data);
-            // 配列形式またはオブジェクト形式に対応
-            playersData = Array.isArray(parsed) ? parsed : (parsed.players || []);
+        let player = null;
+        
+        // 優先順位1: DatabaseManagerから最新データを取得（2025/2026シーズンを含む）
+        if (apiService && apiService.dbManager) {
+            try {
+                console.log('🔄 DatabaseManagerから最新選手データを取得中...');
+                playersData = await apiService.dbManager.loadComprehensivePlayers();
+                console.log(`✅ DatabaseManagerから${playersData.length}名の選手データを取得`);
+            } catch (dbError) {
+                console.log('⚠️ DatabaseManagerからの取得に失敗:', dbError.message);
+            }
+        }
+        
+        // 優先順位2: ローカルファイルから選手データを読み込み（DatabaseManagerが失敗した場合）
+        if (playersData.length === 0) {
+            try {
+                const fs = require('fs');
+                const playersFile = path.join(__dirname, 'data', 'players.json');
+                
+                if (fs.existsSync(playersFile)) {
+                    const data = await fs.promises.readFile(playersFile, 'utf8');
+                    const parsed = JSON.parse(data);
+                    // 配列形式またはオブジェクト形式に対応
+                    playersData = Array.isArray(parsed) ? parsed : (parsed.players || []);
+                    console.log(`✅ ローカルファイルから${playersData.length}名の選手データを取得`);
+                }
+            } catch (fileError) {
+                console.log('⚠️ ローカルファイルからの取得に失敗:', fileError.message);
+            }
+        }
+        
+        if (playersData.length === 0) {
+            return res.status(404).json({ 
+                error: '選手データが見つかりませんでした',
+                playerId
+            });
         }
         
         // 選手を検索（複数のID形式に対応）- IDマッチングを優先、名前検索は最後の手段
-        let player = null;
-        
         // 1. まずIDマッチングを試す（厳密な一致）
         player = playersData.find(p => {
             // 通常のIDマッチング（厳密な一致）
@@ -9332,7 +9376,9 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
                 p.apiFootballId === playerId || 
                 p.footballDataId === playerId ||
                 p.playerId === playerId ||
-                p.player_id === playerId) {
+                p.player_id === playerId ||
+                String(p.id) === String(playerId) ||
+                String(p.playerId) === String(playerId)) {
                 return true;
             }
             
@@ -9342,7 +9388,8 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
                 if (p.playerId === numericPlayerId || 
                     p.apiFootballId === numericPlayerId ||
                     p.footballDataId === numericPlayerId ||
-                    parseInt(p.playerId, 10) === numericPlayerId) {
+                    parseInt(p.playerId, 10) === numericPlayerId ||
+                    parseInt(String(p.id), 10) === numericPlayerId) {
                     return true;
                 }
             }
@@ -9354,7 +9401,8 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
                 if (!isNaN(numericIdInt)) {
                     return p.playerId === numericIdInt || 
                            p.apiFootballId === numericIdInt ||
-                           String(p.id) === playerId;
+                           String(p.id) === playerId ||
+                           parseInt(String(p.id), 10) === numericIdInt;
                 }
             }
             
