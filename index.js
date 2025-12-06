@@ -11651,17 +11651,23 @@ async function checkAndUpdateFinishedMatches() {
             { id: 169, name: 'J1 League' } // J1
         ];
         
+        // 2025/26シーズンのデータを取得
         const currentYear = new Date().getFullYear();
-        const season = currentYear;
+        const currentMonth = new Date().getMonth() + 1;
+        // 8月以降は新しいシーズン、7月以前は前シーズン
+        const season = (currentMonth >= 8) ? currentYear : currentYear - 1;
         
         let totalUpdated = 0;
+        const processedMatches = new Set();
         
         for (const league of majorLeagues) {
             try {
-                // 過去24時間以内に終了した試合を取得
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
+                // 過去72時間以内に終了した試合を取得（試合が終了してからデータが反映されるまでの時間を考慮）
+                const threeDaysAgo = new Date();
+                threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
                 const today = new Date();
+                
+                console.log(`📊 ${league.name} の終了試合を取得中... (${threeDaysAgo.toISOString().split('T')[0]} ～ ${today.toISOString().split('T')[0]})`);
                 
                 const response = await axios.get('https://v3.football.api-sports.io/fixtures', {
                     params: {
@@ -11672,7 +11678,7 @@ async function checkAndUpdateFinishedMatches() {
                         to: today.toISOString().split('T')[0]
                     },
                     headers: {
-                        'X-RapidAPI-Key': API_FOOTBALL_KEY
+                        'x-apisports-key': API_FOOTBALL_KEY
                     }
                 });
                 
@@ -11739,7 +11745,7 @@ async function updatePlayersFromMatch(fixture, league) {
                 id: fixtureId
             },
             headers: {
-                'X-RapidAPI-Key': API_FOOTBALL_KEY
+                'x-apisports-key': API_FOOTBALL_KEY
             }
         });
         
@@ -11786,7 +11792,7 @@ async function getTeamPlayerStats(teamId, leagueId, matchData) {
                 team: teamId
             },
             headers: {
-                'X-RapidAPI-Key': API_FOOTBALL_KEY
+                'x-apisports-key': API_FOOTBALL_KEY
             }
         });
         
