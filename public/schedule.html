@@ -5512,8 +5512,9 @@
             let html = '';
             stats.forEach(stat => {
                 const maxValue = Math.max(stat.home, stat.away, 1);
-                const homePercent = (stat.home / maxValue) * 100;
-                const awayPercent = (stat.away / maxValue) * 100;
+                // 中央起点で左右に伸びるバーのため、最大値の50%を基準にする
+                const homePercent = (stat.home / maxValue) * 50; // 最大50%まで右に伸びる
+                const awayPercent = (stat.away / maxValue) * 50; // 最大50%まで左に伸びる
                 
                 html += `
                     <div class="category-stat-item">
@@ -5521,10 +5522,9 @@
                         <span class="category-stat-label">${stat.label}</span>
                         <span class="category-stat-value away">${stat.away}</span>
                         <div class="category-stat-bar-container">
-                            <div class="category-stat-bar">
+                            <div class="category-stat-bar-wrapper">
+                                <div class="category-stat-bar-center"></div>
                                 <div class="category-stat-bar-fill home" style="width: ${homePercent}%;"></div>
-                            </div>
-                            <div class="category-stat-bar">
                                 <div class="category-stat-bar-fill away" style="width: ${awayPercent}%;"></div>
                             </div>
                         </div>
