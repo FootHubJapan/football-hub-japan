@@ -1501,13 +1501,13 @@
                         
                         // シーズンでソート（新しい順）
                         const sortedSeasons = Object.values(statsBySeason).sort((a, b) => {
-                            const seasonA = parseInt(a.season) || 0;
-                            const seasonB = parseInt(b.season) || 0;
+                            const seasonA = parseInt(a.season?.split('/')[0]) || 0;
+                            const seasonB = parseInt(b.season?.split('/')[0]) || 0;
                             return seasonB - seasonA;
                         });
                         
                         sortedSeasons.forEach(stat => {
-                            const seasonDisplay = `${stat.season}/${parseInt(stat.season) + 1}`;
+                            const seasonDisplay = stat.season || 'Unknown';
                             const avgRating = stat.ratingCount > 0 ? (stat.ratingSum / stat.ratingCount).toFixed(1) : 'N/A';
                             html += `
                                 <tr>
