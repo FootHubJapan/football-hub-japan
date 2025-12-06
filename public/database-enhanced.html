@@ -4468,7 +4468,7 @@
         }
 
         // 検索クリア機能
-        function clearSearch() {
+        window.clearSearch = function clearSearch() {
             const searchInput = document.getElementById('searchInput');
             const leagueSelect = document.getElementById('leagueSelect');
             const detailedPositionSelect = document.getElementById('detailedPositionSelect');
@@ -4486,7 +4486,7 @@
                 // 全選手データが読み込まれていない場合のみ読み込む
                 loadInitialPlayers();
             }
-        }
+        };
 
         // フォールバック検索処理（日本語対応強化）
         function performFallbackSearch(query, league, position, detailedPositions) {
@@ -4784,7 +4784,7 @@
             }
 
             displayPlayers(filteredPlayers);
-        }
+        };
 
         // 選手比較更新
         async function updateComparison() {
