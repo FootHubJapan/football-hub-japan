@@ -1373,7 +1373,7 @@
                 }
                 
                 // キャリアスタッツAPIを呼び出し
-                const response = await fetch(`/api/player/career-stats/${playerIdForApi}?seasons=2020,2021,2022,2023,2024,2025`);
+                const response = await fetch(`/api/player/career-stats/${playerIdForApi}?seasons=all`);
                 
                 if (response.ok) {
                     const data = await response.json();
