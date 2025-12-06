@@ -1651,10 +1651,13 @@
                 
                 // /api/integrated/playersから全選手データを取得
                 try {
+                    console.log('🔄 /api/integrated/playersから全選手データを取得中...');
                     const response = await fetch('/api/integrated/players?limit=10000');
                     if (response.ok) {
                         const data = await response.json();
                         const players = Array.isArray(data) ? data : (data.players || data.results || []);
+                        console.log(`📊 APIレスポンス: ${players.length}名の選手データを取得`);
+                        
                         if (players.length > 0) {
                             allPlayers = players; // 全選手データを保持
                             currentPlayers = players;
@@ -1662,10 +1665,14 @@
                             displayPlayers(players.slice(0, 100));
                             console.log(`✅ ${players.length}名の選手データを取得、全データを保持`);
                             return;
+                        } else {
+                            console.log('⚠️ APIから選手データが0件でした');
                         }
+                    } else {
+                        console.log(`⚠️ APIレスポンスエラー: ${response.status} ${response.statusText}`);
                     }
                 } catch (error) {
-                    console.log('APIからの取得に失敗:', error);
+                    console.error('❌ APIからの取得に失敗:', error);
                 }
                 
                 // フォールバック: ランキングAPIから全選手データを取得
