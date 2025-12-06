@@ -1620,7 +1620,21 @@
                 const stats2025 = player.stats.filter(stat => {
                     const season = stat.season;
                     // 2025/26シーズンのみを含める（シーズン情報がない場合は除外）
-                    return season === '2025/2026' || season === '2025/26' || season === '2025';
+                    // フォールバックデータ（ランダムな値など）を除外するため、実際のデータのみを許可
+                    if (!season || season === 'Unknown' || season === '') {
+                        return false; // シーズン情報がない場合は除外
+                    }
+                    // 2025/26シーズンのみを含める
+                    const isValidSeason = season === '2025/2026' || season === '2025/26' || season === '2025';
+                    if (!isValidSeason) {
+                        return false;
+                    }
+                    // フォールバックデータの可能性がある統計を除外（試合数が0、またはすべての統計が0の場合は除外）
+                    const hasRealData = (stat.appearances || stat.matches || 0) > 0 || 
+                                       (stat.goals || 0) > 0 || 
+                                       (stat.assists || 0) > 0 ||
+                                       (stat.minutes || 0) > 0;
+                    return hasRealData;
                 });
                 
                 console.log(`📊 2025/26シーズンのコンペティション数: ${stats2025.length}`);
