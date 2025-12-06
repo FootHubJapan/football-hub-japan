@@ -11824,20 +11824,40 @@ async function updatePlayersFromMatch(fixture, league) {
             getTeamPlayerStats(awayTeamId, league.id, matchData)
         ]);
         
-        // 選手データを更新
+        // 選手データを更新（バッチ更新）
         const allPlayers = [...(homeStats || []), ...(awayStats || [])];
-        let updatedCount = 0;
+        const updatedPlayers = [];
         
         for (const playerData of allPlayers) {
             try {
-                await updatePlayerStatsFromMatch(playerData, matchData, league);
-                updatedCount++;
+                const updatedPlayer = await updatePlayerStatsFromMatch(playerData, matchData, league, false); // false = 保存しない
+                if (updatedPlayer) {
+                    updatedPlayers.push(updatedPlayer);
+                }
             } catch (playerError) {
                 console.error(`⚠️ 選手 ${playerData.name} の更新エラー:`, playerError.message);
             }
         }
         
-        console.log(`✅ 試合 ${fixtureId}: ${updatedCount}名の選手データを更新`);
+        // 更新された選手を一度に保存（バッチ保存）
+        if (updatedPlayers.length > 0) {
+            try {
+                await cacheManager.db.saveComprehensivePlayers(updatedPlayers);
+                console.log(`✅ 試合 ${fixtureId}: ${updatedPlayers.length}名の選手データを更新（バッチ保存）`);
+            } catch (saveError) {
+                console.error(`❌ 試合 ${fixtureId} の選手データ保存エラー:`, saveError.message);
+                // 個別保存にフォールバック
+                for (const player of updatedPlayers) {
+                    try {
+                        await cacheManager.savePlayerData(player);
+                    } catch (individualError) {
+                        console.error(`❌ 選手 ${player.name} の個別保存エラー:`, individualError.message);
+                    }
+                }
+            }
+        } else {
+            console.log(`⚠️ 試合 ${fixtureId}: 更新された選手がありません`);
+        }
         
     } catch (error) {
         console.error(`❌ 試合 ${fixture.fixture?.id} の選手更新エラー:`, error.message);
@@ -11916,7 +11936,7 @@ async function getTeamPlayerStats(teamId, leagueId, matchData) {
 }
 
 // 試合データから選手統計を更新
-async function updatePlayerStatsFromMatch(playerData, matchData, league) {
+async function updatePlayerStatsFromMatch(playerData, matchData, league, saveImmediately = true) {
     try {
         const playerId = playerData.id;
         const playerName = playerData.name;
@@ -11956,7 +11976,7 @@ async function updatePlayerStatsFromMatch(playerData, matchData, league) {
                 
                 const playerInfo = playerResponse.data?.response?.[0]?.player;
                 if (!playerInfo) {
-                    return; // 選手情報が取得できない
+                    return null; // 選手情報が取得できない
                 }
                 
                 player = {
@@ -11975,7 +11995,7 @@ async function updatePlayerStatsFromMatch(playerData, matchData, league) {
                 };
             } catch (apiError) {
                 console.error(`⚠️ 選手 ${playerName} の基本情報取得エラー:`, apiError.message);
-                return;
+                return null;
             }
         }
         
@@ -12022,13 +12042,19 @@ async function updatePlayerStatsFromMatch(playerData, matchData, league) {
         // 最終更新日時を更新
         player.lastUpdated = new Date().toISOString();
         
-        // データベースに保存
-        await cacheManager.savePlayerData(player);
+        // 即座に保存する場合のみ保存
+        if (saveImmediately) {
+            await cacheManager.savePlayerData(player);
+            console.log(`  ✅ ${playerName}: ${playerData.goals || 0}G ${playerData.assists || 0}A`);
+        } else {
+            console.log(`  ✅ ${playerName}: ${playerData.goals || 0}G ${playerData.assists || 0}A (バッチ保存待ち)`);
+        }
         
-        console.log(`  ✅ ${playerName}: ${playerData.goals || 0}G ${playerData.assists || 0}A`);
+        return player;
         
     } catch (error) {
         console.error(`❌ 選手 ${playerData.name} の統計更新エラー:`, error.message);
+        return null;
     }
 }
 

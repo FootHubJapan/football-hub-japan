@@ -19,6 +19,10 @@ class DatabaseManager {
         this.lineupsPath = path.join(this.dataPath, 'lineups.json');
         this.standingsPath = path.join(this.dataPath, 'standings.json');
         
+        // 書き込みロック（同時書き込みを防ぐ）
+        this.writeLock = false;
+        this.writeQueue = [];
+        
         // 主要リーグとチームの定義
         this.majorLeagues = {
             'PL': { name: 'Premier League', country: 'England', teams: 20 },
@@ -147,16 +151,118 @@ class DatabaseManager {
     }
 
     /**
+     * 書き込みロックを取得（同時書き込みを防ぐ）
+     */
+    async acquireWriteLock() {
+        return new Promise((resolve) => {
+            if (!this.writeLock) {
+                this.writeLock = true;
+                resolve();
+            } else {
+                // ロックが取得できるまで待機
+                const checkLock = () => {
+                    if (!this.writeLock) {
+                        this.writeLock = true;
+                        resolve();
+                    } else {
+                        setTimeout(checkLock, 10);
+                    }
+                };
+                checkLock();
+            }
+        });
+    }
+
+    /**
+     * 書き込みロックを解放
+     */
+    releaseWriteLock() {
+        this.writeLock = false;
+    }
+
+    /**
+     * アトミックなファイル書き込み（一時ファイルに書き込んでからリネーム）
+     */
+    async atomicWriteFile(filePath, data) {
+        const tempPath = `${filePath}.tmp`;
+        try {
+            // 一時ファイルに書き込み
+            await fs.writeFile(tempPath, data, 'utf8');
+            // アトミックにリネーム（Unix系ではリネームはアトミック操作）
+            await fs.rename(tempPath, filePath);
+        } catch (error) {
+            // エラー時は一時ファイルを削除
+            try {
+                await fs.unlink(tempPath);
+            } catch (unlinkError) {
+                // 無視
+            }
+            throw error;
+        }
+    }
+
+    /**
      * 包括的な選手データを保存
      */
     async saveComprehensivePlayers(players) {
+        // 書き込みロックを取得
+        await this.acquireWriteLock();
+        
         try {
-            // 既存の選手データを読み込み
+            // 既存の選手データを読み込み（リトライロジック付き）
             let existingPlayers = [];
-            try {
-                existingPlayers = await this.loadComprehensivePlayers();
-            } catch (error) {
-                console.log('既存データの読み込みに失敗、新規作成します');
+            let retryCount = 0;
+            const maxRetries = 3;
+            
+            while (retryCount < maxRetries) {
+                try {
+                    const data = await fs.readFile(this.playersPath, 'utf8');
+                    // JSONパース前にバリデーション
+                    if (!data || data.trim().length === 0) {
+                        console.log('⚠️ players.jsonが空です。新規作成します。');
+                        existingPlayers = [];
+                        break;
+                    }
+                    
+                    // JSONパースを試行
+                    try {
+                        existingPlayers = JSON.parse(data);
+                        if (!Array.isArray(existingPlayers)) {
+                            console.log('⚠️ players.jsonの形式が不正です。新規作成します。');
+                            existingPlayers = [];
+                        }
+                        break; // 成功したらループを抜ける
+                    } catch (parseError) {
+                        console.error(`❌ JSONパースエラー (試行 ${retryCount + 1}/${maxRetries}):`, parseError.message);
+                        retryCount++;
+                        if (retryCount < maxRetries) {
+                            // 少し待ってからリトライ
+                            await new Promise(resolve => setTimeout(resolve, 100 * retryCount));
+                            continue;
+                        } else {
+                            // 最大リトライ回数に達した場合は空配列で続行
+                            console.log('⚠️ 最大リトライ回数に達しました。新規作成します。');
+                            existingPlayers = [];
+                            break;
+                        }
+                    }
+                } catch (readError) {
+                    if (readError.code === 'ENOENT') {
+                        // ファイルが存在しない場合は新規作成
+                        console.log('既存データの読み込みに失敗、新規作成します');
+                        existingPlayers = [];
+                        break;
+                    } else {
+                        console.error(`❌ ファイル読み込みエラー (試行 ${retryCount + 1}/${maxRetries}):`, readError.message);
+                        retryCount++;
+                        if (retryCount < maxRetries) {
+                            await new Promise(resolve => setTimeout(resolve, 100 * retryCount));
+                            continue;
+                        } else {
+                            throw readError;
+                        }
+                    }
+                }
             }
 
             // 新しい選手データを正規化
@@ -194,30 +300,55 @@ class DatabaseManager {
             const mergedPlayers = [...existingPlayers];
             
             for (const newPlayer of normalizedPlayers) {
-                // 名前とチームで重複チェック
+                // ID、名前とチームで重複チェック
                 const existingIndex = mergedPlayers.findIndex(p => 
-                    p.name === newPlayer.name && p.currentTeam === newPlayer.currentTeam
+                    (p.id === newPlayer.id || p.playerId === newPlayer.id) ||
+                    (p.name === newPlayer.name && p.currentTeam === newPlayer.currentTeam)
                 );
                 
                 if (existingIndex >= 0) {
-                    // 既存データを更新
-                    mergedPlayers[existingIndex] = { ...mergedPlayers[existingIndex], ...newPlayer };
+                    // 既存データを更新（statsをマージ）
+                    const existingStats = mergedPlayers[existingIndex].stats || [];
+                    const newStats = newPlayer.stats || [];
+                    const mergedStats = Array.isArray(existingStats) ? [...existingStats] : [];
+                    
+                    // 新しいstatsをマージ（同じシーズン・リーグの場合は上書き）
+                    if (Array.isArray(newStats)) {
+                        for (const newStat of newStats) {
+                            const statIndex = mergedStats.findIndex(s => 
+                                s.season === newStat.season && 
+                                (s.leagueName === newStat.leagueName || s.league === newStat.league)
+                            );
+                            if (statIndex >= 0) {
+                                mergedStats[statIndex] = { ...mergedStats[statIndex], ...newStat };
+                            } else {
+                                mergedStats.push(newStat);
+                            }
+                        }
+                    }
+                    
+                    mergedPlayers[existingIndex] = { 
+                        ...mergedPlayers[existingIndex], 
+                        ...newPlayer,
+                        stats: mergedStats
+                    };
                 } else {
                     // 新しいデータを追加
                     mergedPlayers.push(newPlayer);
                 }
             }
 
-            // マージされたデータを保存
-            await fs.writeFile(this.playersPath, JSON.stringify(mergedPlayers, null, 2));
+            // マージされたデータをアトミックに保存
+            const jsonData = JSON.stringify(mergedPlayers, null, 2);
+            await this.atomicWriteFile(this.playersPath, jsonData);
             
             // 統計を更新
             await this.updateStats({
                 totalPlayers: mergedPlayers.length,
                 lastUpdate: new Date().toISOString(),
-                leagues: [...new Set(mergedPlayers.map(p => p.league))],
-                teams: [...new Set(mergedPlayers.map(p => p.currentTeam))],
-                positions: [...new Set(mergedPlayers.map(p => p.position))]
+                leagues: [...new Set(mergedPlayers.map(p => p.league).filter(Boolean))],
+                teams: [...new Set(mergedPlayers.map(p => p.currentTeam).filter(Boolean))],
+                positions: [...new Set(mergedPlayers.map(p => p.position).filter(Boolean))]
             });
 
             console.log(`💾 包括的選手データを保存: ${normalizedPlayers.length}名（合計: ${mergedPlayers.length}名）`);
@@ -226,6 +357,9 @@ class DatabaseManager {
         } catch (error) {
             console.error('包括的選手データ保存エラー:', error);
             throw error;
+        } finally {
+            // 書き込みロックを解放
+            this.releaseWriteLock();
         }
     }
 
@@ -233,15 +367,61 @@ class DatabaseManager {
      * 包括的な選手データを読み込み
      */
     async loadComprehensivePlayers() {
-        try {
-            const data = await fs.readFile(this.playersPath, 'utf8');
-            const players = JSON.parse(data);
-            console.log(`📊 包括的選手データを読み込み: ${players.length}名`);
-            return players;
-        } catch (error) {
-            console.error('包括的選手データ読み込みエラー:', error);
-            return [];
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        while (retryCount < maxRetries) {
+            try {
+                const data = await fs.readFile(this.playersPath, 'utf8');
+                
+                // JSONパース前にバリデーション
+                if (!data || data.trim().length === 0) {
+                    console.log('⚠️ players.jsonが空です。空配列を返します。');
+                    return [];
+                }
+                
+                // JSONパースを試行
+                try {
+                    const players = JSON.parse(data);
+                    if (!Array.isArray(players)) {
+                        console.error('⚠️ players.jsonの形式が不正です（配列ではありません）。空配列を返します。');
+                        return [];
+                    }
+                    console.log(`📊 包括的選手データを読み込み: ${players.length}名`);
+                    return players;
+                } catch (parseError) {
+                    console.error(`❌ JSONパースエラー (試行 ${retryCount + 1}/${maxRetries}):`, parseError.message);
+                    retryCount++;
+                    if (retryCount < maxRetries) {
+                        // 少し待ってからリトライ
+                        await new Promise(resolve => setTimeout(resolve, 100 * retryCount));
+                        continue;
+                    } else {
+                        // 最大リトライ回数に達した場合は空配列を返す
+                        console.error('❌ 最大リトライ回数に達しました。空配列を返します。');
+                        return [];
+                    }
+                }
+            } catch (error) {
+                if (error.code === 'ENOENT') {
+                    // ファイルが存在しない場合は空配列を返す
+                    console.log('⚠️ players.jsonが存在しません。空配列を返します。');
+                    return [];
+                } else {
+                    console.error(`❌ ファイル読み込みエラー (試行 ${retryCount + 1}/${maxRetries}):`, error.message);
+                    retryCount++;
+                    if (retryCount < maxRetries) {
+                        await new Promise(resolve => setTimeout(resolve, 100 * retryCount));
+                        continue;
+                    } else {
+                        console.error('❌ 最大リトライ回数に達しました。空配列を返します。');
+                        return [];
+                    }
+                }
+            }
         }
+        
+        return [];
     }
 
     /**
