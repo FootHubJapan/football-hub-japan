@@ -1634,6 +1634,41 @@
                     return season;
                 };
                 
+                // 現在の日付を取得して、実際に存在するシーズンのみを表示
+                const currentDate = new Date();
+                const currentYear = currentDate.getFullYear();
+                const currentMonth = currentDate.getMonth() + 1; // 0-11 → 1-12
+                
+                // シーズンが実際に存在するかチェック（過去シーズンもすべて許可）
+                const isValidSeason = (seasonStr) => {
+                    if (!seasonStr || seasonStr === 'Unknown') return false;
+                    
+                    const normalized = normalizeSeason(seasonStr);
+                    const [startYear] = normalized.split('/').map(Number);
+                    
+                    // シーズン開始年が現在の年より2年以上未来の場合は除外
+                    if (startYear > currentYear + 1) {
+                        return false;
+                    }
+                    
+                    // 過去のシーズンはすべて許可（2020年以降）
+                    if (startYear < currentYear && startYear >= 2020) {
+                        return true;
+                    }
+                    
+                    // シーズン開始年が現在の年と同じ、または1年未来の場合
+                    if (startYear === currentYear || startYear === currentYear + 1) {
+                        // シーズンは通常8月から始まるので、7月以前は前シーズンとして扱う
+                        if (startYear === currentYear + 1 && currentMonth < 8) {
+                            return false; // まだ開始されていない未来のシーズン
+                        }
+                        return true;
+                    }
+                    
+                    // その他の過去シーズンも許可（2020年以前も含む）
+                    return startYear < currentYear;
+                };
+                
                 const statsBySeason = {};
                 player.stats.forEach(stat => {
                     if (!isLeagueCompetition(stat)) {
@@ -1643,7 +1678,8 @@
                     const rawSeason = stat.season || 'Unknown';
                     const season = normalizeSeason(rawSeason);
                     
-                    if (season === 'Unknown') {
+                    // シーズンが有効かチェック
+                    if (season === 'Unknown' || !isValidSeason(season)) {
                         return;
                     }
                     
