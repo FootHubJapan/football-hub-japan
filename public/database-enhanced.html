@@ -1892,8 +1892,7 @@
         let isLoading = false;
         const playersPerPage = 50; // 1ページあたり50名表示
         let io;
-        let currentPlayers = [];
-        let allPlayers = []; // 全選手データを常に保持
+        // currentPlayersとallPlayersは既にグローバルスコープで宣言済み（1605-1606行目）
 
         // 不足している関数を追加
         function getSelectedDetailedPositions() {
@@ -4287,7 +4286,7 @@
         };
 
         // 検索処理（API連携対応・日本語対応強化）
-        async function performSearch() {
+        window.performSearch = async function performSearch() {
             const searchInput = document.getElementById('searchInput');
             const leagueSelect = document.getElementById('leagueSelect');
             const detailedPositionSelect = document.getElementById('detailedPositionSelect');
@@ -4750,10 +4749,10 @@
         }
 
         // リアルタイム検索
-        function handleSearch() {
+        window.handleSearch = function handleSearch() {
             clearTimeout(window.searchTimeout);
-            window.searchTimeout = setTimeout(performSearch, 500);
-        }
+            window.searchTimeout = setTimeout(window.performSearch, 500);
+        };
 
         // フィルター設定
         function setFilter(filter) {
