@@ -4305,11 +4305,33 @@
 
                 // 全選手データが読み込まれていない場合は先に読み込む
                 if (allPlayers.length === 0) {
+                    console.log('⚠️ 全選手データが読み込まれていません。読み込み中...');
                     await loadInitialPlayers();
+                    
+                    // 読み込み後も空の場合は、APIから直接検索
+                    if (allPlayers.length === 0) {
+                        console.log('⚠️ 全選手データの読み込みに失敗。APIから直接検索します...');
+                        try {
+                            const searchUrl = query ? `/api/integrated/players?query=${encodeURIComponent(query)}&limit=10000` : '/api/integrated/players?limit=10000';
+                            const response = await fetch(searchUrl);
+                            if (response.ok) {
+                                const data = await response.json();
+                                const apiPlayers = Array.isArray(data) ? data : (data.players || data.results || []);
+                                if (apiPlayers.length > 0) {
+                                    allPlayers = apiPlayers;
+                                    console.log(`✅ APIから直接${apiPlayers.length}名の選手データを取得`);
+                                }
+                            }
+                        } catch (apiError) {
+                            console.error('APIからの直接検索に失敗:', apiError);
+                        }
+                    }
                 }
                 
                 // 全選手データから検索（APIを呼び出さない）
                 let players = [...allPlayers]; // 全選手データのコピーを作成
+                
+                console.log(`🔍 検索対象: ${players.length}名の選手データから検索`);
                 
                 // 検索クエリでフィルタリング
                 if (query && query.trim()) {
