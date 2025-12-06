@@ -1685,17 +1685,23 @@
                     const response = await fetch('/api/ranking/players?limit=10000');
                     if (response.ok) {
                         const data = await response.json();
+                        console.log(`📊 ランキングAPIレスポンス: ${data.players?.length || 0}名の選手データ`);
+                        
                         if (data.players && data.players.length > 0) {
                             allPlayers = data.players; // 全選手データを保持
                             currentPlayers = data.players;
                             // 最初の100名を表示
                             displayPlayers(data.players.slice(0, 100));
-                            console.log(`✅ ${data.players.length}名の選手データを取得（${data.source}）、全データを保持`);
+                            console.log(`✅ ${data.players.length}名の選手データを取得（${data.source || 'database'}）、全データを保持`);
                             return;
+                        } else {
+                            console.log('⚠️ ランキングAPIから選手データが0件でした');
                         }
+                    } else {
+                        console.log(`⚠️ ランキングAPIレスポンスエラー: ${response.status} ${response.statusText}`);
                     }
                 } catch (error) {
-                    console.log('ランキングAPIからの取得に失敗:', error);
+                    console.error('❌ ランキングAPIからの取得に失敗:', error);
                 }
                 
                 // 優先順位2: 包括的データベースから直接選手データを取得

@@ -9743,16 +9743,80 @@ app.get('/api/database/comprehensive-status', async (req, res) => {
         }
 
         console.log('✅ APIService available、データベース状態を取得中...');
-        const comprehensiveStatus = await apiService.dbManager.getComprehensiveStatus();
-        console.log('📊 包括的データベース状態:', comprehensiveStatus);
+        
+        // getComprehensiveStatusが存在しない場合は、players.jsonから取得
+        if (!apiService.dbManager.getComprehensiveStatus) {
+            console.log('⚠️ getComprehensiveStatusが存在しません。players.jsonから取得します。');
+            try {
+                const fs = require('fs');
+                const playersDataPath = path.join(__dirname, 'data', 'players.json');
+                if (fs.existsSync(playersDataPath)) {
+                    const playersData = fs.readFileSync(playersDataPath, 'utf8');
+                    const parsedData = JSON.parse(playersData);
+                    const localPlayers = Array.isArray(parsedData) ? parsedData : (parsedData.players || []);
+                    const fileStats = fs.statSync(playersDataPath);
+                    
+                    return res.json({
+                        totalPlayers: localPlayers.length,
+                        lastUpdate: fileStats.mtime.toISOString(),
+                        cacheSize: 0,
+                        apiServiceAvailable: true,
+                        source: 'local-file',
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            } catch (fileError) {
+                console.error('❌ players.json読み込みエラー:', fileError.message);
+            }
+        }
+        
+        try {
+            const comprehensiveStatus = await apiService.dbManager.getComprehensiveStatus();
+            console.log('📊 包括的データベース状態:', comprehensiveStatus);
 
-        res.json({
-            ...comprehensiveStatus,
-            cacheSize: apiService.cache ? apiService.cache.size : 0,
-            apiServiceAvailable: true,
-            majorLeagues: apiService.majorLeagues || {},
-            timestamp: new Date().toISOString()
-        });
+            res.json({
+                ...comprehensiveStatus,
+                cacheSize: apiService.cache ? apiService.cache.size : 0,
+                apiServiceAvailable: true,
+                majorLeagues: apiService.majorLeagues || {},
+                timestamp: new Date().toISOString()
+            });
+        } catch (dbError) {
+            console.error('❌ getComprehensiveStatusエラー:', dbError.message);
+            // エラー時もplayers.jsonから取得を試みる
+            try {
+                const fs = require('fs');
+                const playersDataPath = path.join(__dirname, 'data', 'players.json');
+                if (fs.existsSync(playersDataPath)) {
+                    const playersData = fs.readFileSync(playersDataPath, 'utf8');
+                    const parsedData = JSON.parse(playersData);
+                    const localPlayers = Array.isArray(parsedData) ? parsedData : (parsedData.players || []);
+                    const fileStats = fs.statSync(playersDataPath);
+                    
+                    return res.json({
+                        totalPlayers: localPlayers.length,
+                        lastUpdate: fileStats.mtime.toISOString(),
+                        cacheSize: 0,
+                        apiServiceAvailable: true,
+                        source: 'local-file-fallback',
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            } catch (fileError) {
+                console.error('❌ players.json読み込みエラー:', fileError.message);
+            }
+            
+            // それでもエラーの場合は空のレスポンスを返す
+            res.json({
+                totalPlayers: 0,
+                lastUpdate: null,
+                cacheSize: 0,
+                apiServiceAvailable: false,
+                source: 'error',
+                error: dbError.message,
+                timestamp: new Date().toISOString()
+            });
+        }
 
     } catch (error) {
         console.error('❌ 包括的データベース状態確認エラー:', error);
