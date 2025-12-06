@@ -3234,54 +3234,9 @@
                 <!-- 試合統計タブ -->
                 <div id="stats" class="tab-pane">
                     <div class="stats-scroll-container">
-                        <!-- ポゼッション表示（一番上） -->
-                        <div class="possession-section">
-                            <h3 class="section-title">ポゼッション</h3>
-                            <div id="possessionBar" class="possession-bar-container">
-                                <div class="possession-bar">
-                                    <div class="possession-home" id="possessionHome" style="width: 50%;"></div>
-                                    <div class="possession-away" id="possessionAway" style="width: 50%;"></div>
-                                </div>
-                                <div class="possession-labels">
-                                    <span id="possessionHomeLabel" class="possession-label">50%</span>
-                                    <span id="possessionAwayLabel" class="possession-label">50%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- カテゴリ別統計 -->
+                        <!-- 詳細統計 -->
                         <div class="stats-categories">
-                            <!-- パス統計 -->
-                            <div class="stats-category">
-                                <h4 class="category-title">パス</h4>
-                                <div id="passesStats" class="category-stats"></div>
-                            </div>
-
-                            <!-- 守備統計 -->
-                            <div class="stats-category">
-                                <h4 class="category-title">守備</h4>
-                                <div id="defenseStats" class="category-stats"></div>
-                            </div>
-
-                            <!-- シュート統計 -->
-                            <div class="stats-category">
-                                <h4 class="category-title">シュート</h4>
-                                <div id="shootingStats" class="category-stats"></div>
-                            </div>
-
-                            <!-- ドリブル統計 -->
-                            <div class="stats-category">
-                                <h4 class="category-title">ドリブル</h4>
-                                <div id="dribblingStats" class="category-stats"></div>
-                            </div>
-
-                            <!-- ディシプリン統計 -->
-                            <div class="stats-category">
-                                <h4 class="category-title">ディシプリン</h4>
-                                <div id="disciplineStats" class="category-stats"></div>
-                            </div>
-
-                            <!-- API-Football詳細統計（カテゴリ別統計と同じUI） -->
+                            <!-- API-Football詳細統計（ポゼッションを含む） -->
                             <div class="stats-category">
                                 <h4 class="category-title">詳細統計</h4>
                                 <div id="detailedStats" class="category-stats">
@@ -5366,11 +5321,13 @@
             }
         }
 
-        // 詳細統計をレンダリング（カテゴリ別統計と同じUI）
-        function renderDetailedStatistics(statistics, matchData) {
+        // 詳細統計をレンダリング（カテゴリ別統計と同じUI、ポゼッションを一番上に）
+        function renderDetailedStatistics(statistics, matchData, statsData = null) {
             const container = document.getElementById('detailedStats');
             if (!container || !statistics || !Array.isArray(statistics) || statistics.length < 2) {
-                if (container) {
+                if (container && statsData) {
+                    renderDetailedStatisticsFromStats(statsData, matchData);
+                } else if (container) {
                     container.innerHTML = '<div class="no-data">詳細統計データが利用できません</div>';
                 }
                 return;
@@ -5427,11 +5384,12 @@
                 awayStatsMap[stat.type] = value;
             });
 
-            // 表示する統計項目の順序
+            // 表示する統計項目の順序（ポゼッションを一番上に）
             const statOrder = [
+                'Ball Possession', // ポゼッションを一番上に
                 'Shots on Goal', 'Shots off Goal', 'Total Shots', 'Blocked Shots',
                 'Shots insidebox', 'Shots outsidebox', 'Fouls', 'Corner Kicks',
-                'Offsides', 'Ball Possession', 'Yellow Cards', 'Red Cards',
+                'Offsides', 'Yellow Cards', 'Red Cards',
                 'Goalkeeper Saves', 'Total passes', 'Passes accurate', 'Passes %'
             ];
 
@@ -5441,9 +5399,9 @@
                 const homeValue = homeStatsMap[statType];
                 const awayValue = awayStatsMap[statType];
                 
-                // 値が存在しない、または両方0の場合はスキップ
-                if (homeValue === undefined && awayValue === undefined) return;
-                if (homeValue === 0 && awayValue === 0) return;
+                // 値が存在しない、または両方0の場合はスキップ（ポゼッションは例外）
+                if (statType !== 'Ball Possession' && homeValue === undefined && awayValue === undefined) return;
+                if (statType !== 'Ball Possession' && homeValue === 0 && awayValue === 0) return;
 
                 const label = statMapping[statType] || statType.toUpperCase();
                 

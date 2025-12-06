@@ -989,48 +989,9 @@
 
         <!-- 統計タブ -->
         <div id="statsTab" class="tab-content">
-            <!-- ポゼッション表示（一番上） -->
-            <div class="possession-section">
-                <h3 class="section-title">ポゼッション</h3>
-                <div id="possessionBar" class="possession-bar-container">
-                    <div class="possession-bar">
-                        <div class="possession-home" id="possessionHome" style="width: 50%;"></div>
-                        <div class="possession-away" id="possessionAway" style="width: 50%;"></div>
-                    </div>
-                    <div class="possession-labels">
-                        <span id="possessionHomeLabel" class="possession-label">50%</span>
-                        <span id="possessionAwayLabel" class="possession-label">50%</span>
-                    </div>
-                </div>
-            </div>
-                    
-            <!-- カテゴリ別統計 -->
+            <!-- 詳細統計 -->
             <div class="stats-categories">
-                <!-- パス統計 -->
-                <div class="stats-category">
-                    <h4 class="category-title">パス</h4>
-                    <div id="passesStats" class="category-stats"></div>
-                </div>
-
-                <!-- 守備統計 -->
-                <div class="stats-category">
-                    <h4 class="category-title">守備</h4>
-                    <div id="defenseStats" class="category-stats"></div>
-                </div>
-
-                <!-- シュート統計 -->
-                <div class="stats-category">
-                    <h4 class="category-title">シュート</h4>
-                    <div id="shootingStats" class="category-stats"></div>
-                </div>
-
-                <!-- ディシプリン統計 -->
-                <div class="stats-category">
-                    <h4 class="category-title">ディシプリン</h4>
-                    <div id="disciplineStats" class="category-stats"></div>
-                </div>
-
-                <!-- API-Football詳細統計（カテゴリ別統計と同じUI） -->
+                <!-- API-Football詳細統計（ポゼッションを含む） -->
                 <div class="stats-category">
                     <h4 class="category-title">詳細統計</h4>
                     <div id="detailedStats" class="category-stats">
@@ -1224,7 +1185,7 @@
         }
 
         // API-Football詳細統計を取得
-        async function loadDetailedStatistics(fixtureId, matchData) {
+        async function loadDetailedStatistics(fixtureId, matchData, statsData = null) {
             const container = document.getElementById('detailedStats');
             if (!container) return;
 
@@ -1235,24 +1196,93 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success && data.statistics) {
-                        renderDetailedStatistics(data.statistics, matchData);
+                        renderDetailedStatistics(data.statistics, matchData, statsData);
                     } else {
-                        container.innerHTML = '<div class="no-data">詳細統計データが利用できません</div>';
+                        // APIから取得できない場合、statsDataから表示
+                        if (statsData) {
+                            renderDetailedStatisticsFromStats(statsData, matchData);
+                        } else {
+                            container.innerHTML = '<div class="no-data">詳細統計データが利用できません</div>';
+                        }
                     }
                 } else {
-                    container.innerHTML = '<div class="no-data">詳細統計データの取得に失敗しました</div>';
+                    // APIから取得できない場合、statsDataから表示
+                    if (statsData) {
+                        renderDetailedStatisticsFromStats(statsData, matchData);
+                    } else {
+                        container.innerHTML = '<div class="no-data">詳細統計データの取得に失敗しました</div>';
+                    }
                 }
             } catch (error) {
                 console.error('詳細統計取得エラー:', error);
-                container.innerHTML = '<div class="no-data">詳細統計データの取得中にエラーが発生しました</div>';
+                // エラー時もstatsDataから表示を試みる
+                if (statsData) {
+                    renderDetailedStatisticsFromStats(statsData, matchData);
+                } else {
+                    container.innerHTML = '<div class="no-data">詳細統計データの取得中にエラーが発生しました</div>';
+                }
             }
         }
 
-        // 詳細統計をレンダリング（カテゴリ別統計と同じUI）
-        function renderDetailedStatistics(statistics, matchData) {
+        // statsDataから詳細統計をレンダリング
+        function renderDetailedStatisticsFromStats(statsData, matchData) {
+            const container = document.getElementById('detailedStats');
+            if (!container) return;
+
+            const detailedStats = [];
+            
+            // ポゼッションを一番上に追加
+            if (statsData.possession) {
+                detailedStats.push({
+                    label: 'ボールポゼッション',
+                    home: statsData.possession.home || 50,
+                    away: statsData.possession.away || 50,
+                    homeDisplay: (statsData.possession.home || 50) + '%',
+                    awayDisplay: (statsData.possession.away || 50) + '%',
+                    suffix: '%'
+                });
+            }
+
+            // その他の統計項目を追加
+            const statItems = [
+                { key: 'shots', label: '総シュート', home: statsData.shots?.home, away: statsData.shots?.away },
+                { key: 'shotsOnTarget', label: '枠内シュート', home: statsData.shotsOnTarget?.home, away: statsData.shotsOnTarget?.away },
+                { key: 'shotsOffTarget', label: '枠外シュート', home: statsData.shotsOffTarget?.home, away: statsData.shotsOffTarget?.away },
+                { key: 'blockedShots', label: 'ブロックシュート', home: statsData.blockedShots?.home, away: statsData.blockedShots?.away },
+                { key: 'shotsInsideBox', label: 'PA内シュート', home: statsData.shotsInsideBox?.home, away: statsData.shotsInsideBox?.away },
+                { key: 'fouls', label: 'ファウル', home: statsData.fouls?.home, away: statsData.fouls?.away },
+                { key: 'corners', label: 'コーナーキック', home: statsData.corners?.home, away: statsData.corners?.away },
+                { key: 'offsides', label: 'オフサイド', home: statsData.offsides?.home, away: statsData.offsides?.away },
+                { key: 'yellowCards', label: 'イエローカード', home: statsData.yellowCards?.home, away: statsData.yellowCards?.away },
+                { key: 'redCards', label: 'レッドカード', home: statsData.redCards?.home, away: statsData.redCards?.away },
+                { key: 'saves', label: 'GKセーブ', home: statsData.saves?.home || statsData.goalkeepersSaves?.home, away: statsData.saves?.away || statsData.goalkeepersSaves?.away },
+                { key: 'passes', label: '総パス', home: statsData.passes?.home, away: statsData.passes?.away },
+                { key: 'passesAccuracy', label: 'パス成功率', home: statsData.passesAccuracy?.home, away: statsData.passesAccuracy?.away, suffix: '%' }
+            ];
+
+            statItems.forEach(item => {
+                if (item.home !== undefined && item.home !== null && item.away !== undefined && item.away !== null) {
+                    detailedStats.push({
+                        label: item.label,
+                        home: item.home || 0,
+                        away: item.away || 0,
+                        homeDisplay: item.home || 0,
+                        awayDisplay: item.away || 0,
+                        suffix: item.suffix || ''
+                    });
+                }
+            });
+
+            renderCategoryStats('detailedStats', detailedStats);
+        }
+
+        // 詳細統計をレンダリング（カテゴリ別統計と同じUI、ポゼッションを一番上に）
+        function renderDetailedStatistics(statistics, matchData, statsData = null) {
             const container = document.getElementById('detailedStats');
             if (!container || !statistics || !Array.isArray(statistics) || statistics.length < 2) {
-                if (container) {
+                if (container && statsData) {
+                    renderDetailedStatisticsFromStats(statsData, matchData);
+                } else if (container) {
                     container.innerHTML = '<div class="no-data">詳細統計データが利用できません</div>';
                 }
                 return;
@@ -1323,9 +1353,9 @@
                 const homeValue = homeStatsMap[statType];
                 const awayValue = awayStatsMap[statType];
                 
-                // 値が存在しない、または両方0の場合はスキップ
-                if (homeValue === undefined && awayValue === undefined) return;
-                if (homeValue === 0 && awayValue === 0) return;
+                // 値が存在しない、または両方0の場合はスキップ（ポゼッションは例外）
+                if (statType !== 'Ball Possession' && homeValue === undefined && awayValue === undefined) return;
+                if (statType !== 'Ball Possession' && homeValue === 0 && awayValue === 0) return;
 
                 const label = statMapping[statType] || statType.toUpperCase();
                 
