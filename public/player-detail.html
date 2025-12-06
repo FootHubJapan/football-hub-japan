@@ -1550,11 +1550,133 @@
                 console.log('⚠️ キャリアスタッツ取得エラー:', error.message);
             }
             
-            // フォールバック: player.statsは現在のシーズンのみなので、キャリアスタッツとしては使用しない
-            // 代わりに、データがないことを表示
+            // フォールバック: player.statsから過去のシーズンデータを取得を試みる
+            // player.statsが配列形式の場合、すべてのシーズンのデータを表示
+            if (player.stats && Array.isArray(player.stats) && player.stats.length > 0) {
+                console.log('🔄 player.statsからキャリアスタッツを生成中...');
+                
+                // カップ戦と親善試合を除外するフィルタ（リーグ戦のみを合計）
+                const cupCompetitions = [
+                    'Champions League', 'Europa League', 'Conference League',
+                    'Copa del Rey', 'FA Cup', 'Coppa Italia', 'DFB-Pokal', 'Coupe de France',
+                    'Super Cup', 'Club World Cup', 'UEFA Super Cup',
+                    'Copa', 'Cup', 'Pokal', 'Coupe', 'Supercup',
+                    'J.League Cup', '天皇杯', 'ルヴァンカップ'
+                ];
+                
+                const friendlyKeywords = [
+                    'friendly', 'friendlies', '親善', 'exhibition', 'test match',
+                    'friendly clubs', 'friendlies clubs', 'club friendly'
+                ];
+                
+                const isLeagueCompetition = (stat) => {
+                    const league = stat.league || stat.competition || stat.leagueName || '';
+                    const leagueLower = league.toLowerCase();
+                    
+                    if (cupCompetitions.some(cup => leagueLower.includes(cup.toLowerCase()))) {
+                        return false;
+                    }
+                    
+                    if (friendlyKeywords.some(keyword => leagueLower.includes(keyword.toLowerCase()))) {
+                        return false;
+                    }
+                    
+                    return true;
+                };
+                
+                const normalizeSeason = (seasonStr) => {
+                    if (!seasonStr || seasonStr === 'Unknown') return 'Unknown';
+                    const season = String(seasonStr).trim();
+                    
+                    if (/^\d{4}\/\d{4}$/.test(season)) {
+                        return season;
+                    }
+                    
+                    if (/^\d{4}\/\d{2}$/.test(season)) {
+                        const [start, end] = season.split('/');
+                        const endYear = parseInt(start) + 1;
+                        return `${start}/${endYear}`;
+                    }
+                    
+                    if (/^\d{4}$/.test(season)) {
+                        const year = parseInt(season);
+                        return `${year}/${year + 1}`;
+                    }
+                    
+                    return season;
+                };
+                
+                const statsBySeason = {};
+                player.stats.forEach(stat => {
+                    if (!isLeagueCompetition(stat)) {
+                        return;
+                    }
+                    
+                    const rawSeason = stat.season || 'Unknown';
+                    const season = normalizeSeason(rawSeason);
+                    
+                    if (season === 'Unknown') {
+                        return;
+                    }
+                    
+                    const club = stat.teamName || stat.team || stat.club || 'Unknown';
+                    
+                    if (!statsBySeason[season]) {
+                        statsBySeason[season] = {
+                            season: season,
+                            club: club,
+                            matches: 0,
+                            goals: 0,
+                            assists: 0,
+                            ratingSum: 0,
+                            ratingCount: 0
+                        };
+                    }
+                    
+                    statsBySeason[season].matches += (stat.matches || stat.appearances || 0);
+                    statsBySeason[season].goals += (stat.goals || 0);
+                    statsBySeason[season].assists += (stat.assists || 0);
+                    if (stat.rating) {
+                        const rating = parseFloat(stat.rating);
+                        if (!isNaN(rating)) {
+                            statsBySeason[season].ratingSum += rating;
+                            statsBySeason[season].ratingCount += 1;
+                        }
+                    }
+                });
+                
+                const sortedSeasons = Object.values(statsBySeason).sort((a, b) => {
+                    const seasonA = parseInt(a.season?.split('/')[0]) || 0;
+                    const seasonB = parseInt(b.season?.split('/')[0]) || 0;
+                    return seasonB - seasonA;
+                });
+                
+                if (sortedSeasons.length > 0) {
+                    html = '';
+                    sortedSeasons.forEach(stat => {
+                        const seasonDisplay = stat.season || 'Unknown';
+                        const avgRating = stat.ratingCount > 0 ? (stat.ratingSum / stat.ratingCount).toFixed(1) : 'N/A';
+                        html += `
+                            <tr>
+                                <td>${seasonDisplay}</td>
+                                <td>${stat.club || 'Unknown'}</td>
+                                <td>${stat.matches}</td>
+                                <td>${stat.goals}</td>
+                                <td>${stat.assists}</td>
+                                <td>${avgRating}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tbody.innerHTML = html;
+                    return;
+                }
+            }
+            
+            // データがない場合はメッセージを表示
             html = `
                 <tr>
-                    <td colspan="7" style="text-align: center; color: #888;">
+                    <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
                         過去のシーズンデータがありません。APIから取得中...
                     </td>
                 </tr>
