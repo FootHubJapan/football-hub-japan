@@ -1339,11 +1339,12 @@
                 awayStatsMap[stat.type] = value;
             });
 
-            // 表示する統計項目の順序
+            // 表示する統計項目の順序（ポゼッションを一番上に）
             const statOrder = [
+                'Ball Possession', // ポゼッションを一番上に
                 'Shots on Goal', 'Shots off Goal', 'Total Shots', 'Blocked Shots',
                 'Shots insidebox', 'Shots outsidebox', 'Fouls', 'Corner Kicks',
-                'Offsides', 'Ball Possession', 'Yellow Cards', 'Red Cards',
+                'Offsides', 'Yellow Cards', 'Red Cards',
                 'Goalkeeper Saves', 'Total passes', 'Passes accurate', 'Passes %'
             ];
 
