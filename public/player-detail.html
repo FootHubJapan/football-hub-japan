@@ -1816,12 +1816,8 @@
                             if (!isValidSeason) {
                                 return false;
                             }
-                            // フォールバックデータの可能性がある統計を除外（実際のデータがある場合のみ表示）
-                            const hasRealData = (stat.appearances || stat.matches || stat.lineups || 0) > 0 || 
-                                               (stat.goals || 0) > 0 || 
-                                               (stat.assists || 0) > 0 ||
-                                               (stat.minutes || 0) > 0;
-                            return hasRealData;
+                            // データがあれば表示（すべて0でも表示する - 更新中かもしれない）
+                            return true;
                         });
                         
                         if (stats2025.length > 0) {
