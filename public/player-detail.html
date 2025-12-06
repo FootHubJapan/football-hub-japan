@@ -1691,10 +1691,24 @@
                         const season2025Data = await season2025Response.json();
                         const season2025Stats = season2025Data.careerStats || [];
                         
-                        // 2025/26シーズンのデータを取得
+                        // 2025/26シーズンのデータを取得（フォールバックデータを除外）
                         const stats2025 = season2025Stats.filter(stat => {
                             const season = stat.season || stat.seasonYear;
-                            return season === '2025' || season === '2025/2026' || season === '2025/26';
+                            // シーズン情報がない場合は除外
+                            if (!season || season === 'Unknown' || season === '') {
+                                return false;
+                            }
+                            // 2025/26シーズンのみを含める
+                            const isValidSeason = season === '2025' || season === '2025/2026' || season === '2025/26';
+                            if (!isValidSeason) {
+                                return false;
+                            }
+                            // フォールバックデータの可能性がある統計を除外（実際のデータがある場合のみ表示）
+                            const hasRealData = (stat.appearances || stat.matches || stat.lineups || 0) > 0 || 
+                                               (stat.goals || 0) > 0 || 
+                                               (stat.assists || 0) > 0 ||
+                                               (stat.minutes || 0) > 0;
+                            return hasRealData;
                         });
                         
                         if (stats2025.length > 0) {
