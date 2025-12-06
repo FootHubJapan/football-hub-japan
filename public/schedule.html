@@ -3234,77 +3234,69 @@
                 <!-- 試合統計タブ -->
                 <div id="stats" class="tab-pane">
                     <div class="stats-scroll-container">
-                        <!-- ポゼッション表示（FotMob風） -->
+                        <!-- ポゼッション表示（一番上） -->
                         <div class="possession-section">
-                        <h3 class="section-title">ポゼッション</h3>
-                        <div id="possessionBar" class="possession-bar-container">
-                            <div class="possession-bar">
-                                <div class="possession-home" id="possessionHome" style="width: 50%;"></div>
-                                <div class="possession-away" id="possessionAway" style="width: 50%;"></div>
+                            <h3 class="section-title">ポゼッション</h3>
+                            <div id="possessionBar" class="possession-bar-container">
+                                <div class="possession-bar">
+                                    <div class="possession-home" id="possessionHome" style="width: 50%;"></div>
+                                    <div class="possession-away" id="possessionAway" style="width: 50%;"></div>
+                                </div>
+                                <div class="possession-labels">
+                                    <span id="possessionHomeLabel" class="possession-label">50%</span>
+                                    <span id="possessionAwayLabel" class="possession-label">50%</span>
+                                </div>
                             </div>
-                            <div class="possession-labels">
-                                <span id="possessionHomeLabel" class="possession-label">50%</span>
-                                <span id="possessionAwayLabel" class="possession-label">50%</span>
+                        </div>
+
+                        <!-- カテゴリ別統計 -->
+                        <div class="stats-categories">
+                            <!-- パス統計 -->
+                            <div class="stats-category">
+                                <h4 class="category-title">パス</h4>
+                                <div id="passesStats" class="category-stats"></div>
+                            </div>
+
+                            <!-- 守備統計 -->
+                            <div class="stats-category">
+                                <h4 class="category-title">守備</h4>
+                                <div id="defenseStats" class="category-stats"></div>
+                            </div>
+
+                            <!-- シュート統計 -->
+                            <div class="stats-category">
+                                <h4 class="category-title">シュート</h4>
+                                <div id="shootingStats" class="category-stats"></div>
+                            </div>
+
+                            <!-- ドリブル統計 -->
+                            <div class="stats-category">
+                                <h4 class="category-title">ドリブル</h4>
+                                <div id="dribblingStats" class="category-stats"></div>
+                            </div>
+
+                            <!-- ディシプリン統計 -->
+                            <div class="stats-category">
+                                <h4 class="category-title">ディシプリン</h4>
+                                <div id="disciplineStats" class="category-stats"></div>
+                            </div>
+
+                            <!-- API-Football詳細統計（カテゴリ別統計と同じUI） -->
+                            <div class="stats-category">
+                                <h4 class="category-title">詳細統計</h4>
+                                <div id="detailedStats" class="category-stats">
+                                    <div class="no-data">詳細統計データを読み込み中...</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- トップ統計（FotMob風） -->
-                    <div class="top-stats-section">
-                        <h3 class="section-title">トップ統計</h3>
-                        <div id="topStats" class="top-stats-grid">
-                            <!-- 動的に生成 -->
+                        <!-- 過去の対戦成績 -->
+                        <div class="h2h-section">
+                            <h3 class="section-title">過去の対戦成績</h3>
+                            <div id="h2hStats" class="h2h-container">
+                                <div class="no-data">過去の対戦データを読み込み中...</div>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- カテゴリ別統計 -->
-                    <div class="stats-categories">
-                        <!-- パス統計 -->
-                        <div class="stats-category">
-                            <h4 class="category-title">パス</h4>
-                            <div id="passesStats" class="category-stats"></div>
-                        </div>
-
-                        <!-- 守備統計 -->
-                        <div class="stats-category">
-                            <h4 class="category-title">守備</h4>
-                            <div id="defenseStats" class="category-stats"></div>
-                        </div>
-
-                        <!-- シュート統計 -->
-                        <div class="stats-category">
-                            <h4 class="category-title">シュート</h4>
-                            <div id="shootingStats" class="category-stats"></div>
-                        </div>
-
-                        <!-- ドリブル統計 -->
-                        <div class="stats-category">
-                            <h4 class="category-title">ドリブル</h4>
-                            <div id="dribblingStats" class="category-stats"></div>
-                        </div>
-
-                        <!-- ディシプリン統計 -->
-                        <div class="stats-category">
-                            <h4 class="category-title">ディシプリン</h4>
-                            <div id="disciplineStats" class="category-stats"></div>
-                        </div>
-                    </div>
-
-                    <!-- API-Football詳細統計（バーグラフ表示） -->
-                    <div class="detailed-stats-section">
-                        <h3 class="section-title">詳細統計</h3>
-                        <div id="detailedStats" class="detailed-stats-container">
-                            <div class="no-data">詳細統計データを読み込み中...</div>
-                        </div>
-                    </div>
-
-                    <!-- 過去の対戦成績 -->
-                    <div class="h2h-section">
-                        <h3 class="section-title">過去の対戦成績</h3>
-                        <div id="h2hStats" class="h2h-container">
-                            <div class="no-data">過去の対戦データを読み込み中...</div>
-                        </div>
-                    </div>
                     </div>
                 </div>
                 
@@ -5374,7 +5366,7 @@
             }
         }
 
-        // 詳細統計をレンダリング（API-Football風バーグラフ）
+        // 詳細統計をレンダリング（カテゴリ別統計と同じUI）
         function renderDetailedStatistics(statistics, matchData) {
             const container = document.getElementById('detailedStats');
             if (!container || !statistics || !Array.isArray(statistics) || statistics.length < 2) {
@@ -5443,7 +5435,8 @@
                 'Goalkeeper Saves', 'Total passes', 'Passes accurate', 'Passes %'
             ];
 
-            let html = '';
+            // カテゴリ別統計と同じUIでレンダリング
+            const detailedStats = [];
             statOrder.forEach(statType => {
                 const homeValue = homeStatsMap[statType];
                 const awayValue = awayStatsMap[statType];
@@ -5463,34 +5456,23 @@
                 if (statType === 'Ball Possession' || statType === 'Passes %') {
                     homeDisplay = typeof homeValue === 'string' ? homeValue : (homeValue || 0) + '%';
                     awayDisplay = typeof awayValue === 'string' ? awayValue : (awayValue || 0) + '%';
+                } else {
+                    homeDisplay = homeValue;
+                    awayDisplay = awayValue;
                 }
 
-                // 最大値を計算（左右に伸びるバーのため、最大値の50%を基準にする）
-                const maxValue = Math.max(homeNum, awayNum, 1);
-                // バーの幅は最大値の50%を基準に計算（中央から左右に50%ずつ）
-                const barMaxWidth = 50; // パーセンテージ
-                const homePercent = (homeNum / maxValue) * barMaxWidth;
-                const awayPercent = (awayNum / maxValue) * barMaxWidth;
-
-                html += `
-                    <div class="detailed-stat-item">
-                        <div class="detailed-stat-label">${label}</div>
-                        <div class="detailed-stat-bar-container">
-                            <span class="detailed-stat-value away">${awayDisplay}</span>
-                            <div class="detailed-stat-bar-wrapper">
-                                <div class="detailed-stat-bar">
-                                    <div class="detailed-stat-bar-center"></div>
-                                    <div class="detailed-stat-bar-fill away" style="width: ${awayPercent}%;"></div>
-                                    <div class="detailed-stat-bar-fill home" style="width: ${homePercent}%;"></div>
-                                </div>
-                            </div>
-                            <span class="detailed-stat-value home">${homeDisplay}</span>
-                        </div>
-                    </div>
-                `;
+                detailedStats.push({
+                    label: label,
+                    home: homeNum,
+                    away: awayNum,
+                    homeDisplay: homeDisplay,
+                    awayDisplay: awayDisplay,
+                    suffix: (statType === 'Ball Possession' || statType === 'Passes %') ? '%' : ''
+                });
             });
 
-            container.innerHTML = html || '<div class="no-data">詳細統計データがありません</div>';
+            // カテゴリ別統計と同じUIでレンダリング
+            renderCategoryStats('detailedStats', detailedStats);
         }
         
         // Football-data.orgの詳細統計を表示
@@ -5694,28 +5676,34 @@
             
             let html = '';
             stats.forEach(stat => {
-                if (stat.home === 0 && stat.away === 0) return;
+                // homeDisplayとawayDisplayが定義されている場合はそれを使用
+                const homeValue = stat.homeDisplay !== undefined ? stat.homeDisplay : stat.home;
+                const awayValue = stat.awayDisplay !== undefined ? stat.awayDisplay : stat.away;
+                const homeNum = typeof stat.home === 'number' ? stat.home : (typeof stat.homeDisplay === 'number' ? stat.homeDisplay : parseInt(stat.homeDisplay) || 0);
+                const awayNum = typeof stat.away === 'number' ? stat.away : (typeof stat.awayDisplay === 'number' ? stat.awayDisplay : parseInt(stat.awayDisplay) || 0);
                 
-                const maxValue = Math.max(stat.home, stat.away, 1);
-                const homePercent = (stat.home / maxValue) * 100;
-                const awayPercent = (stat.away / maxValue) * 100;
+                if (homeNum === 0 && awayNum === 0) return;
+                
+                const maxValue = Math.max(homeNum, awayNum, 1);
+                const homePercent = (homeNum / maxValue) * 100;
+                const awayPercent = (awayNum / maxValue) * 100;
                 const suffix = stat.suffix || '';
                 
                 html += `
                     <div class="category-stat-item">
-                        <span class="category-stat-value home">${stat.home}${suffix}</span>
+                        <span class="category-stat-value home">${homeValue}${suffix}</span>
                         <span class="category-stat-label">${stat.label}</span>
-                        <span class="category-stat-value away">${stat.away}${suffix}</span>
+                        <span class="category-stat-value away">${awayValue}${suffix}</span>
                         <div class="category-stat-bar-container">
                             <div class="category-stat-bar">
                                 <div class="category-stat-bar-fill home" style="width: ${homePercent}%;"></div>
                             </div>
                             <div class="category-stat-bar">
                                 <div class="category-stat-bar-fill away" style="width: ${awayPercent}%;"></div>
+                            </div>
                         </div>
-                        </div>
-                        </div>
-                    `;
+                    </div>
+                `;
             });
             
             container.innerHTML = html || '<div class="no-data">データがありません</div>';
