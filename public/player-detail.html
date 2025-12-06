@@ -1701,16 +1701,8 @@
                 }
             }
             
-            // データがない場合はメッセージを表示
-            html = `
-                <tr>
-                    <td colspan="6" style="text-align: center; color: #888; padding: 20px;">
-                        過去のシーズンデータがありません。APIから取得中...
-                    </td>
-                </tr>
-            `;
-            
-            tbody.innerHTML = html;
+            // データがない場合は何も表示しない（フォールバックデータは表示しない）
+            tbody.innerHTML = '';
         }
 
         // エラー表示
@@ -1878,71 +1870,13 @@
                 }
             }
 
-            // データがない場合はメッセージを表示
-            // データがない場合でも、他のシーズンのデータがあれば表示する
+            // データがない場合は何も表示しない（フォールバックデータは表示しない）
             if (competitions.length === 0) {
-                // 2025/26シーズン以外のデータも表示（更新中でも既存データを表示）
-                if (player.stats && Array.isArray(player.stats) && player.stats.length > 0) {
-                    console.log('📊 2025/26シーズンのデータがないため、他のシーズンのデータを表示');
-                    const allStats = player.stats.filter(stat => {
-                        const season = stat.season;
-                        // シーズン情報がない場合は除外
-                        if (!season || season === 'Unknown' || season === '') {
-                            return false;
-                        }
-                        // カップ戦と親善試合を除外
-                        const cupCompetitions = [
-                            'Champions League', 'Europa League', 'Conference League',
-                            'Copa del Rey', 'FA Cup', 'Coppa Italia', 'DFB-Pokal', 'Coupe de France',
-                            'Super Cup', 'Club World Cup', 'UEFA Super Cup',
-                            'Copa', 'Cup', 'Pokal', 'Coupe', 'Supercup',
-                            'J.League Cup', '天皇杯', 'ルヴァンカップ'
-                        ];
-                        const league = stat.league || stat.competition || stat.leagueName || '';
-                        const leagueLower = league.toLowerCase();
-                        if (cupCompetitions.some(cup => leagueLower.includes(cup.toLowerCase()))) {
-                            return false;
-                        }
-                        return true;
-                    });
-                    
-                    allStats.forEach((stat) => {
-                        const leagueName = stat.leagueName || stat.league || stat.competition || 'リーグ';
-                        const matches = stat.appearances || stat.matches || stat.lineups || 0;
-                        const goals = stat.goals || 0;
-                        const assists = stat.assists || 0;
-                        const yellowCards = stat.yellowCards || 0;
-                        const redCards = stat.redCards || 0;
-                        const minutes = stat.minutes || 0;
-                        const rating = stat.rating || 'N/A';
-                        
-                        competitions.push({
-                            name: `${leagueName} (${stat.season || 'Unknown'})`,
-                            goals: goals,
-                            assists: assists,
-                            yellowCards: yellowCards,
-                            redCards: redCards,
-                            minutes: minutes,
-                            rating: rating,
-                            matches: matches
-                        });
-                    });
+                const tbody = document.getElementById('competitionStatsBody');
+                if (tbody) {
+                    tbody.innerHTML = '';
                 }
-                
-                // それでもデータがない場合のみメッセージを表示
-                if (competitions.length === 0) {
-                    const tbody = document.getElementById('competitionStatsBody');
-                    if (tbody) {
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="8" style="text-align: center; color: #888; padding: 20px;">
-                                    2025/26シーズンの統計データがありません。データを更新中です...
-                                </td>
-                            </tr>
-                        `;
-                    }
-                    return;
-                }
+                return;
             }
 
             // 合計を計算
