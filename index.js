@@ -4397,6 +4397,59 @@ app.post('/api/admin/fix-data-consistency', async (req, res) => {
 });
 
 // 試合詳細取得（旧エンドポイント - 後方互換性のため保持）
+// API-Football試合統計エンドポイント
+app.get('/api/match/:id/statistics', async (req, res) => {
+    try {
+        const matchId = req.params.id;
+        console.log(`📊 Fetching match statistics for ID: ${matchId}`);
+        
+        const apiKey = process.env.API_FOOTBALL_KEY || process.env.RAPIDAPI_KEY;
+        if (!apiKey || apiKey === 'YOUR_API_FOOTBALL_KEY') {
+            return res.status(500).json({ 
+                success: false,
+                error: 'API key not configured' 
+            });
+        }
+
+        try {
+            const response = await axios.get(`https://v3.football.api-sports.io/fixtures/statistics`, {
+                headers: {
+                    'x-apisports-key': apiKey,
+                    'x-rapidapi-host': 'v3.football.api-sports.io'
+                },
+                params: { fixture: matchId },
+                timeout: 15000
+            });
+            
+            if (response.data && response.data.response && Array.isArray(response.data.response)) {
+                return res.json({
+                    success: true,
+                    statistics: response.data.response
+                });
+            } else {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Statistics not found'
+                });
+            }
+        } catch (apiError) {
+            console.error('API-Football statistics error:', apiError.message);
+            return res.status(500).json({
+                success: false,
+                error: 'Failed to fetch statistics from API-Football',
+                message: apiError.message
+            });
+        }
+    } catch (error) {
+        console.error('Match statistics error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get match statistics',
+            message: error.message
+        });
+    }
+});
+
 app.get('/api/match/:id', async (req, res) => {
     try {
         const matchId = req.params.id;
@@ -9325,6 +9378,16 @@ app.get('/api/integrated/players', async (req, res) => {
 });
 
 app.get('/api/integrated/player/:playerId', async (req, res) => {
+    // タイムアウト設定（30秒）
+    const timeout = setTimeout(() => {
+        if (!res.headersSent) {
+            res.status(504).json({ 
+                error: 'リクエストがタイムアウトしました',
+                playerId: req.params.playerId
+            });
+        }
+    }, 30000);
+    
     try {
         const { playerId } = req.params;
         console.log(`🔍 統合選手データ取得: ${playerId}`);
@@ -9332,36 +9395,43 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
         let playersData = [];
         let player = null;
         
-        // 優先順位1: DatabaseManagerから最新データを取得（2025/2026シーズンを含む）
-        if (apiService && apiService.dbManager) {
+        // 優先順位1: ローカルファイルから選手データを読み込み（高速）
+        try {
+            const fs = require('fs');
+            const playersFile = path.join(__dirname, 'data', 'players.json');
+            
+            if (fs.existsSync(playersFile)) {
+                console.log('🔄 ローカルファイルから選手データを読み込み中...');
+                const data = await fs.promises.readFile(playersFile, 'utf8');
+                const parsed = JSON.parse(data);
+                // 配列形式またはオブジェクト形式に対応
+                playersData = Array.isArray(parsed) ? parsed : (parsed.players || []);
+                console.log(`✅ ローカルファイルから${playersData.length}名の選手データを取得`);
+            }
+        } catch (fileError) {
+            console.log('⚠️ ローカルファイルからの取得に失敗:', fileError.message);
+        }
+        
+        // 優先順位2: DatabaseManagerから最新データを取得（ローカルファイルにデータがない場合のみ）
+        if (playersData.length === 0 && apiService && apiService.dbManager) {
             try {
                 console.log('🔄 DatabaseManagerから最新選手データを取得中...');
-                playersData = await apiService.dbManager.loadComprehensivePlayers();
+                // Promise.raceでタイムアウトを設定（15秒）
+                const loadPromise = apiService.dbManager.loadComprehensivePlayers();
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('DatabaseManager読み込みタイムアウト')), 15000)
+                );
+                
+                playersData = await Promise.race([loadPromise, timeoutPromise]);
                 console.log(`✅ DatabaseManagerから${playersData.length}名の選手データを取得`);
             } catch (dbError) {
                 console.log('⚠️ DatabaseManagerからの取得に失敗:', dbError.message);
             }
         }
         
-        // 優先順位2: ローカルファイルから選手データを読み込み（DatabaseManagerが失敗した場合）
+        // データがない場合
         if (playersData.length === 0) {
-            try {
-                const fs = require('fs');
-                const playersFile = path.join(__dirname, 'data', 'players.json');
-                
-                if (fs.existsSync(playersFile)) {
-                    const data = await fs.promises.readFile(playersFile, 'utf8');
-                    const parsed = JSON.parse(data);
-                    // 配列形式またはオブジェクト形式に対応
-                    playersData = Array.isArray(parsed) ? parsed : (parsed.players || []);
-                    console.log(`✅ ローカルファイルから${playersData.length}名の選手データを取得`);
-                }
-            } catch (fileError) {
-                console.log('⚠️ ローカルファイルからの取得に失敗:', fileError.message);
-            }
-        }
-        
-        if (playersData.length === 0) {
+            clearTimeout(timeout);
             return res.status(404).json({ 
                 error: '選手データが見つかりませんでした',
                 playerId
@@ -9524,12 +9594,27 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
             }
         };
         
+        // タイムアウトをクリア
+        clearTimeout(timeout);
+        
         // フロントエンドが期待する形式で返す（playerオブジェクトを直接返す）
         res.json(enhancedPlayer);
     } catch (error) {
+        clearTimeout(timeout);
         console.error('Integrated player error:', error);
+        
+        // タイムアウトエラーの場合は504を返す
+        if (error.message && error.message.includes('タイムアウト')) {
+            return res.status(504).json({ 
+                error: 'リクエストがタイムアウトしました',
+                playerId: req.params.playerId,
+                message: error.message
+            });
+        }
+        
         res.status(500).json({ 
             error: '統合選手データの取得に失敗しました',
+            playerId: req.params.playerId,
             message: error.message
         });
     }
