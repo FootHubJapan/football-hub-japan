@@ -1601,6 +1601,10 @@
     </div>
 
     <script>
+        // グローバル変数の初期化
+        let allPlayers = []; // 全選手データを保持
+        let currentPlayers = []; // 現在表示中の選手データ
+        
         // 初期化 - API連携対応 v3.0 (2025-01-21)
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('Database Enhanced v3.0 initializing with API integration...');
