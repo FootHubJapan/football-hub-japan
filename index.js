@@ -11514,6 +11514,23 @@ function startAutoUpdate() {
     }
     
     // 1時間ごとに終了した試合をチェックして選手データを更新（本番環境でも有効）
+    if (typeof checkAndUpdateFinishedMatches === 'function') {
+        // サーバー起動時に1回実行
+        setTimeout(() => {
+            checkAndUpdateFinishedMatches().catch(err => {
+                console.error('❌ 初期試合更新エラー:', err.message);
+            });
+        }, 60000); // 1分後に実行（サーバー起動を待つ）
+        
+        // その後、1時間ごとに実行
+        setInterval(() => {
+            checkAndUpdateFinishedMatches().catch(err => {
+                console.error('❌ 定期試合更新エラー:', err.message);
+            });
+        }, 60 * 60 * 1000); // 1時間ごと
+        
+        console.log('✅ 試合終了後の自動更新システムが開始されました（1時間間隔）');
+    }
     checkAndUpdateFinishedMatches();
     matchUpdateInterval = setInterval(checkAndUpdateFinishedMatches, 60 * 60 * 1000);
     console.log('✅ 試合ベース自動更新システムが開始されました（1時間間隔）');
@@ -11651,7 +11668,7 @@ async function checkAndUpdateFinishedMatches() {
                         league: league.id,
                         season: season,
                         status: 'FT', // Full Time (終了)
-                        from: yesterday.toISOString().split('T')[0],
+                        from: threeDaysAgo.toISOString().split('T')[0],
                         to: today.toISOString().split('T')[0]
                     },
                     headers: {
