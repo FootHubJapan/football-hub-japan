@@ -5313,10 +5313,164 @@
                 updateDetailedStats(matchData.footballData.statistics, matchData);
             }
             
+            // API-Football詳細統計を取得・表示
+            if (matchData) {
+                const fixtureId = matchData.fixtureId || matchData.id || matchData.fixture?.id || matchData.matchId;
+                if (fixtureId) {
+                    loadDetailedStatistics(fixtureId, matchData);
+                }
+            }
+            
             // 過去の対戦成績を取得
             if (matchData) {
                 loadHeadToHead(matchData);
             }
+        }
+
+        // API-Football詳細統計を取得
+        async function loadDetailedStatistics(fixtureId, matchData) {
+            const container = document.getElementById('detailedStats');
+            if (!container) return;
+
+            try {
+                console.log('🔄 API-Football詳細統計を取得中:', fixtureId);
+                const response = await fetch(`/api/match/${fixtureId}/statistics`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.statistics) {
+                        renderDetailedStatistics(data.statistics, matchData);
+                    } else {
+                        container.innerHTML = '<div class="no-data">詳細統計データが利用できません</div>';
+                    }
+                } else {
+                    container.innerHTML = '<div class="no-data">詳細統計データの取得に失敗しました</div>';
+                }
+            } catch (error) {
+                console.error('詳細統計取得エラー:', error);
+                container.innerHTML = '<div class="no-data">詳細統計データの取得中にエラーが発生しました</div>';
+            }
+        }
+
+        // 詳細統計をレンダリング（API-Football風バーグラフ）
+        function renderDetailedStatistics(statistics, matchData) {
+            const container = document.getElementById('detailedStats');
+            if (!container || !statistics || !Array.isArray(statistics) || statistics.length < 2) {
+                if (container) {
+                    container.innerHTML = '<div class="no-data">詳細統計データが利用できません</div>';
+                }
+                return;
+            }
+
+            const homeStats = statistics[0]?.statistics || [];
+            const awayStats = statistics[1]?.statistics || [];
+
+            // 統計項目のマッピング（API-Footballの統計名 → 日本語ラベル）
+            const statMapping = {
+                'Shots on Goal': 'SHOTS ON GOAL',
+                'Shots off Goal': 'SHOTS OFF GOAL',
+                'Total Shots': 'TOTAL SHOTS',
+                'Blocked Shots': 'BLOCKED SHOTS',
+                'Shots insidebox': 'SHOTS INSIDEBOX',
+                'Shots outsidebox': 'SHOTS OUTSIDEBOX',
+                'Fouls': 'FOULS',
+                'Corner Kicks': 'CORNER KICKS',
+                'Offsides': 'OFFSIDES',
+                'Ball Possession': 'BALL POSSESSION',
+                'Yellow Cards': 'YELLOW CARDS',
+                'Red Cards': 'RED CARDS',
+                'Goalkeeper Saves': 'GOALKEEPER SAVES',
+                'Total passes': 'TOTAL PASSES',
+                'Passes accurate': 'PASSES ACCURATE',
+                'Passes %': 'PASSES %'
+            };
+
+            // 統計データをマップに変換
+            const homeStatsMap = {};
+            const awayStatsMap = {};
+            
+            homeStats.forEach(stat => {
+                let value = stat.value;
+                if (typeof value === 'string' && value.includes('%')) {
+                    value = value; // パーセンテージは文字列のまま
+                } else if (typeof value === 'string' && value === 'null') {
+                    value = 0;
+                } else {
+                    value = parseInt(value) || 0;
+                }
+                homeStatsMap[stat.type] = value;
+            });
+            
+            awayStats.forEach(stat => {
+                let value = stat.value;
+                if (typeof value === 'string' && value.includes('%')) {
+                    value = value; // パーセンテージは文字列のまま
+                } else if (typeof value === 'string' && value === 'null') {
+                    value = 0;
+                } else {
+                    value = parseInt(value) || 0;
+                }
+                awayStatsMap[stat.type] = value;
+            });
+
+            // 表示する統計項目の順序
+            const statOrder = [
+                'Shots on Goal', 'Shots off Goal', 'Total Shots', 'Blocked Shots',
+                'Shots insidebox', 'Shots outsidebox', 'Fouls', 'Corner Kicks',
+                'Offsides', 'Ball Possession', 'Yellow Cards', 'Red Cards',
+                'Goalkeeper Saves', 'Total passes', 'Passes accurate', 'Passes %'
+            ];
+
+            let html = '';
+            statOrder.forEach(statType => {
+                const homeValue = homeStatsMap[statType];
+                const awayValue = awayStatsMap[statType];
+                
+                // 値が存在しない、または両方0の場合はスキップ
+                if (homeValue === undefined && awayValue === undefined) return;
+                if (homeValue === 0 && awayValue === 0) return;
+
+                const label = statMapping[statType] || statType.toUpperCase();
+                
+                // パーセンテージ表示の処理
+                let homeDisplay = homeValue || 0;
+                let awayDisplay = awayValue || 0;
+                let homeNum = typeof homeValue === 'string' ? parseInt(homeValue.replace('%', '')) || 0 : homeValue;
+                let awayNum = typeof awayValue === 'string' ? parseInt(awayValue.replace('%', '')) || 0 : awayValue;
+                
+                if (statType === 'Ball Possession' || statType === 'Passes %') {
+                    homeDisplay = typeof homeValue === 'string' ? homeValue : (homeValue || 0) + '%';
+                    awayDisplay = typeof awayValue === 'string' ? awayValue : (awayValue || 0) + '%';
+                }
+
+                const maxValue = Math.max(homeNum, awayNum, 1);
+                const homePercent = (homeNum / maxValue) * 100;
+                const awayPercent = (awayNum / maxValue) * 100;
+
+                html += `
+                    <div class="detailed-stat-item">
+                        <div class="detailed-stat-label">${label}</div>
+                        <div class="detailed-stat-bar-container">
+                            <span class="detailed-stat-value home">${homeDisplay}</span>
+                            <div class="detailed-stat-bar-wrapper">
+                                <div class="detailed-stat-bar">
+                                    <div class="detailed-stat-bar-fill home" style="width: ${homePercent}%;">
+                                        ${homePercent > 10 ? homeDisplay : ''}
+                                    </div>
+                                </div>
+                                <div class="detailed-stat-bar">
+                                    <div class="detailed-stat-bar-fill away" style="width: ${awayPercent}%;">
+                                        ${awayPercent > 10 ? awayDisplay : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="detailed-stat-value away">${awayDisplay}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html || '<div class="no-data">詳細統計データがありません</div>';
         }
         
         // Football-data.orgの詳細統計を表示
