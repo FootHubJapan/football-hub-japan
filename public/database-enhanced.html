@@ -4432,6 +4432,26 @@
                     displayPlayers(players);
                     console.log(`✅ 検索結果: ${players.length}名の選手を表示 (全${allPlayers.length}名から検索)`);
                 } else {
+                    // 検索結果が0件の場合、APIから直接検索を試みる
+                    if (query && query.trim() && allPlayers.length < 100) {
+                        console.log('⚠️ ローカルデータに検索結果がありません。APIから直接検索します...');
+                        try {
+                            const searchUrl = `/api/integrated/players?query=${encodeURIComponent(query)}&limit=10000`;
+                            const apiResponse = await fetch(searchUrl);
+                            if (apiResponse.ok) {
+                                const apiData = await apiResponse.json();
+                                const apiPlayers = Array.isArray(apiData) ? apiData : (apiData.players || apiData.results || []);
+                                if (apiPlayers.length > 0) {
+                                    console.log(`✅ APIから直接${apiPlayers.length}名の選手データを取得`);
+                                    displayPlayers(apiPlayers);
+                                    return;
+                                }
+                            }
+                        } catch (apiError) {
+                            console.error('APIからの直接検索に失敗:', apiError);
+                        }
+                    }
+                    
                     showError('選手が見つかりませんでした');
                     const grid = document.getElementById('playersGrid');
                     if (grid) {
