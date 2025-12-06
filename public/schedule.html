@@ -2099,7 +2099,7 @@
             background: #ef4444;
         }
 
-        /* 詳細統計（API-Football風バーグラフ） */
+        /* 詳細統計（中央起点の左右伸縮バーグラフ） */
         .detailed-stats-section {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
@@ -2113,10 +2113,7 @@
         }
 
         .detailed-stat-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             padding: 0.75rem 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -2127,38 +2124,74 @@
 
         .detailed-stat-label {
             font-size: 0.9rem;
-            color: #a0a0a0;
-            min-width: 150px;
-            text-align: left;
+            color: #fff;
+            text-align: center;
             font-weight: 600;
+            margin-bottom: 0.5rem;
         }
 
         .detailed-stat-bar-container {
-            flex: 1;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 0.75rem;
-            margin: 0 1rem;
+            position: relative;
+            height: 32px;
+        }
+
+        .detailed-stat-value {
+            font-size: 0.9rem;
+            font-weight: bold;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .detailed-stat-value.home {
+            color: #3b82f6;
+            order: 3;
+        }
+
+        .detailed-stat-value.away {
+            color: #10b981;
+            order: 1;
         }
 
         .detailed-stat-bar-wrapper {
             flex: 1;
+            max-width: 400px;
+            height: 24px;
+            position: relative;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            order: 2;
         }
 
         .detailed-stat-bar {
-            flex: 1;
-            height: 24px;
+            width: 100%;
+            height: 100%;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 4px;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
             display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .detailed-stat-bar-center {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-50%);
+            z-index: 1;
         }
 
         .detailed-stat-bar-fill {
+            position: absolute;
             height: 100%;
             transition: width 0.5s ease;
             display: flex;
@@ -2167,34 +2200,23 @@
             color: #fff;
             font-size: 0.75rem;
             font-weight: bold;
+            border-radius: 4px;
         }
 
         .detailed-stat-bar-fill.home {
             background: linear-gradient(135deg, #3b82f6, #2563eb);
+            right: 50%;
             justify-content: flex-end;
             padding-right: 0.5rem;
+            transform-origin: right center;
         }
 
         .detailed-stat-bar-fill.away {
             background: linear-gradient(135deg, #10b981, #059669);
+            left: 50%;
             justify-content: flex-start;
             padding-left: 0.5rem;
-        }
-
-        .detailed-stat-value {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: #fff;
-            min-width: 40px;
-            text-align: center;
-        }
-
-        .detailed-stat-value.home {
-            color: #3b82f6;
-        }
-
-        .detailed-stat-value.away {
-            color: #10b981;
+            transform-origin: left center;
         }
 
         /* 過去の対戦成績 */
@@ -5367,22 +5389,22 @@
 
             // 統計項目のマッピング（API-Footballの統計名 → 日本語ラベル）
             const statMapping = {
-                'Shots on Goal': 'SHOTS ON GOAL',
-                'Shots off Goal': 'SHOTS OFF GOAL',
-                'Total Shots': 'TOTAL SHOTS',
-                'Blocked Shots': 'BLOCKED SHOTS',
-                'Shots insidebox': 'SHOTS INSIDEBOX',
-                'Shots outsidebox': 'SHOTS OUTSIDEBOX',
-                'Fouls': 'FOULS',
-                'Corner Kicks': 'CORNER KICKS',
-                'Offsides': 'OFFSIDES',
-                'Ball Possession': 'BALL POSSESSION',
-                'Yellow Cards': 'YELLOW CARDS',
-                'Red Cards': 'RED CARDS',
-                'Goalkeeper Saves': 'GOALKEEPER SAVES',
-                'Total passes': 'TOTAL PASSES',
-                'Passes accurate': 'PASSES ACCURATE',
-                'Passes %': 'PASSES %'
+                'Shots on Goal': '枠内シュート',
+                'Shots off Goal': '枠外シュート',
+                'Total Shots': '総シュート',
+                'Blocked Shots': 'ブロックシュート',
+                'Shots insidebox': 'PA内シュート',
+                'Shots outsidebox': 'PA外シュート',
+                'Fouls': 'ファウル',
+                'Corner Kicks': 'コーナーキック',
+                'Offsides': 'オフサイド',
+                'Ball Possession': 'ボールポゼッション',
+                'Yellow Cards': 'イエローカード',
+                'Red Cards': 'レッドカード',
+                'Goalkeeper Saves': 'GKセーブ',
+                'Total passes': '総パス',
+                'Passes accurate': '成功パス',
+                'Passes %': 'パス成功率'
             };
 
             // 統計データをマップに変換
@@ -5443,28 +5465,26 @@
                     awayDisplay = typeof awayValue === 'string' ? awayValue : (awayValue || 0) + '%';
                 }
 
+                // 最大値を計算（左右に伸びるバーのため、最大値の50%を基準にする）
                 const maxValue = Math.max(homeNum, awayNum, 1);
-                const homePercent = (homeNum / maxValue) * 100;
-                const awayPercent = (awayNum / maxValue) * 100;
+                // バーの幅は最大値の50%を基準に計算（中央から左右に50%ずつ）
+                const barMaxWidth = 50; // パーセンテージ
+                const homePercent = (homeNum / maxValue) * barMaxWidth;
+                const awayPercent = (awayNum / maxValue) * barMaxWidth;
 
                 html += `
                     <div class="detailed-stat-item">
                         <div class="detailed-stat-label">${label}</div>
                         <div class="detailed-stat-bar-container">
-                            <span class="detailed-stat-value home">${homeDisplay}</span>
+                            <span class="detailed-stat-value away">${awayDisplay}</span>
                             <div class="detailed-stat-bar-wrapper">
                                 <div class="detailed-stat-bar">
-                                    <div class="detailed-stat-bar-fill home" style="width: ${homePercent}%;">
-                                        ${homePercent > 10 ? homeDisplay : ''}
-                                    </div>
-                                </div>
-                                <div class="detailed-stat-bar">
-                                    <div class="detailed-stat-bar-fill away" style="width: ${awayPercent}%;">
-                                        ${awayPercent > 10 ? awayDisplay : ''}
-                                    </div>
+                                    <div class="detailed-stat-bar-center"></div>
+                                    <div class="detailed-stat-bar-fill away" style="width: ${awayPercent}%;"></div>
+                                    <div class="detailed-stat-bar-fill home" style="width: ${homePercent}%;"></div>
                                 </div>
                             </div>
-                            <span class="detailed-stat-value away">${awayDisplay}</span>
+                            <span class="detailed-stat-value home">${homeDisplay}</span>
                         </div>
                     </div>
                 `;
