@@ -2072,31 +2072,51 @@
             grid-column: 1 / -1;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
             margin-top: 0.25rem;
+            position: relative;
+            height: 4px;
         }
 
-        .category-stat-bar {
+        .category-stat-bar-wrapper {
             flex: 1;
+            display: flex;
+            align-items: center;
+            position: relative;
             height: 4px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 2px;
-            position: relative;
-            overflow: hidden;
+        }
+
+        .category-stat-bar-center {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: rgba(255, 255, 255, 0.3);
+            z-index: 1;
+            transform: translateX(-1px);
         }
 
         .category-stat-bar-fill {
             height: 100%;
             border-radius: 2px;
             transition: width 0.5s ease;
+            position: absolute;
+            top: 0;
         }
 
         .category-stat-bar-fill.home {
             background: #3b82f6;
+            right: 50%;
+            transform-origin: right center;
         }
 
         .category-stat-bar-fill.away {
             background: #ef4444;
+            left: 50%;
+            transform-origin: left center;
         }
 
         /* 詳細統計（中央起点の左右伸縮バーグラフ） */
@@ -5643,8 +5663,9 @@
                 if (homeNum === 0 && awayNum === 0) return;
                 
                 const maxValue = Math.max(homeNum, awayNum, 1);
-                const homePercent = (homeNum / maxValue) * 100;
-                const awayPercent = (awayNum / maxValue) * 100;
+                // 中央起点で左右に伸びるバーのため、最大値の50%を基準にする
+                const homePercent = (homeNum / maxValue) * 50; // 最大50%まで右に伸びる
+                const awayPercent = (awayNum / maxValue) * 50; // 最大50%まで左に伸びる
                 const suffix = stat.suffix || '';
                 
                 html += `
@@ -5653,10 +5674,9 @@
                         <span class="category-stat-label">${stat.label}</span>
                         <span class="category-stat-value away">${awayValue}${suffix}</span>
                         <div class="category-stat-bar-container">
-                            <div class="category-stat-bar">
+                            <div class="category-stat-bar-wrapper">
+                                <div class="category-stat-bar-center"></div>
                                 <div class="category-stat-bar-fill home" style="width: ${homePercent}%;"></div>
-                            </div>
-                            <div class="category-stat-bar">
                                 <div class="category-stat-bar-fill away" style="width: ${awayPercent}%;"></div>
                             </div>
                         </div>
