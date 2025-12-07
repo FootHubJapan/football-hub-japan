@@ -1749,64 +1749,56 @@
                 competitions = [];
             }
 
-            // 2025/26シーズンのデータがない場合、APIから直接取得を試みる
-            if (competitions.length === 0 && player.playerId) {
-                console.log('🔄 2025/26シーズンのデータをAPIから取得中...');
-                try {
-                    const apiPlayerId = player.apiFootballId || player.playerId;
-                    const season2025Response = await fetch(`/api/player/career-stats/${apiPlayerId}?seasons=2025`);
-                    
-                    if (season2025Response.ok) {
-                        const season2025Data = await season2025Response.json();
-                        const season2025Stats = season2025Data.careerStats || [];
-                        
-                        // 2025/26シーズンのデータを取得（フォールバックデータを除外）
-                        const stats2025 = season2025Stats.filter(stat => {
-                            const season = stat.season || stat.seasonYear;
-                            // シーズン情報がない場合は除外
-                            if (!season || season === 'Unknown' || season === '') {
-                                return false;
-                            }
-                            // 2025/26シーズンのみを含める
-                            const isValidSeason = season === '2025' || season === '2025/2026' || season === '2025/26';
-                            if (!isValidSeason) {
-                                return false;
-                            }
-                            // データがあれば表示（すべて0でも表示する - 更新中かもしれない）
+            // 2025/26シーズンのデータがない場合、保存済みの全データから検索（APIから直接取得しない）
+            if (competitions.length === 0 && player.stats && Array.isArray(player.stats)) {
+                console.log('🔄 保存済みデータから2025/26シーズンを再検索中...');
+                
+                // すべてのstatsから2025/26シーズンのデータを検索（より緩い条件）
+                const allStats2025 = player.stats.filter(stat => {
+                    const season = stat.season || '';
+                    // シーズン情報がない場合でも、leagueNameがあれば含める可能性を検討
+                    if (!season || season === 'Unknown' || season === '') {
+                        // シーズン情報がないが、leagueNameがあり、2025年以降のデータの可能性がある場合は含める
+                        const leagueName = stat.leagueName || stat.league || '';
+                        if (leagueName && (stat.goals > 0 || stat.assists > 0 || stat.appearances > 0 || stat.matches > 0)) {
+                            // データがある場合は含める（2025/26シーズンの可能性が高い）
                             return true;
-                        });
-                        
-                        if (stats2025.length > 0) {
-                            console.log(`✅ APIから2025/26シーズンのデータを取得: ${stats2025.length}コンペティション`);
-                            
-                            // 重複を除去
-                            const seenCompetitions = new Set();
-                            const uniqueStats = [];
-                            
-                            for (const stat of stats2025) {
-                                const compName = (stat.leagueName || stat.league || 'リーグ').toLowerCase().trim();
-                                if (!seenCompetitions.has(compName)) {
-                                    seenCompetitions.add(compName);
-                                    uniqueStats.push(stat);
-                                }
-                            }
-                            
-                            competitions = uniqueStats.map(stat => ({
-                                name: stat.leagueName || stat.league || 'リーグ',
-                                goals: stat.goals || 0,
-                                assists: stat.assists || 0,
-                                yellowCards: stat.yellowCards || 0,
-                                redCards: stat.redCards || 0,
-                                minutes: stat.minutes || 0,
-                                rating: stat.rating || 'N/A',
-                                matches: stat.appearances || stat.matches || stat.lineups || 0
-                            }));
-                            
-                            console.log(`📊 APIから取得した2025/26シーズンのコンペティション数: ${competitions.length}`);
+                        }
+                        return false;
+                    }
+                    // 2025/26シーズンまたは2025年を含むシーズン
+                    const isValidSeason = season.includes('2025') || season.includes('2026') || 
+                                         season === '2025/2026' || season === '2025/26' || season === '2025';
+                    return isValidSeason;
+                });
+                
+                if (allStats2025.length > 0) {
+                    console.log(`✅ 保存済みデータから2025/26シーズンのデータを発見: ${allStats2025.length}コンペティション`);
+                    
+                    // 重複を除去
+                    const seenCompetitions = new Set();
+                    const uniqueStats = [];
+                    
+                    for (const stat of allStats2025) {
+                        const compName = (stat.leagueName || stat.league || 'リーグ').toLowerCase().trim();
+                        if (!seenCompetitions.has(compName)) {
+                            seenCompetitions.add(compName);
+                            uniqueStats.push(stat);
                         }
                     }
-                } catch (apiError) {
-                    console.log('⚠️ APIから2025/26シーズンのデータ取得に失敗:', apiError.message);
+                    
+                    competitions = uniqueStats.map(stat => ({
+                        name: stat.leagueName || stat.league || 'リーグ',
+                        goals: stat.goals || 0,
+                        assists: stat.assists || 0,
+                        yellowCards: stat.yellowCards || 0,
+                        redCards: stat.redCards || 0,
+                        minutes: stat.minutes || 0,
+                        rating: stat.rating || 'N/A',
+                        matches: stat.appearances || stat.matches || stat.lineups || 0
+                    }));
+                    
+                    console.log(`📊 保存済みデータから取得した2025/26シーズンのコンペティション数: ${competitions.length}`);
                 }
             }
 
@@ -1873,48 +1865,6 @@
         // ページ読み込み時に選手データを読み込み
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 DOM Content Loaded');
-            
-            // テスト用：強制的にコンペティション別スタッツを表示
-            setTimeout(() => {
-                console.log('🧪 Testing competition stats display...');
-                const tbody = document.getElementById('competitionStatsBody');
-                if (tbody) {
-                    console.log('✅ Found competitionStatsBody element');
-                    tbody.innerHTML = `
-                        <tr>
-                            <td class="competition-name">プレミアリーグ</td>
-                            <td class="stat-value">8</td>
-                            <td class="stat-value">3</td>
-                            <td class="stat-value">1</td>
-                            <td class="stat-value">-</td>
-                            <td class="stat-value">1080'</td>
-                            <td class="stat-value">7.8</td>
-                        </tr>
-                        <tr>
-                            <td class="competition-name">UEFAチャンピオンズリーグ</td>
-                            <td class="stat-value">4</td>
-                            <td class="stat-value">2</td>
-                            <td class="stat-value">-</td>
-                            <td class="stat-value">-</td>
-                            <td class="stat-value">360'</td>
-                            <td class="stat-value">8.1</td>
-                        </tr>
-                        <tr>
-                            <td class="competition-name total">合計</td>
-                            <td class="stat-value total">12</td>
-                            <td class="stat-value total">5</td>
-                            <td class="stat-value total">1</td>
-                            <td class="stat-value total">-</td>
-                            <td class="stat-value total">1440'</td>
-                            <td class="stat-value total">7.8</td>
-                        </tr>
-                    `;
-                    console.log('✅ Test data inserted into competition stats table');
-                } else {
-                    console.error('❌ competitionStatsBody element not found');
-                }
-            }, 1000);
-            
             loadPlayerData();
         });
     </script>
