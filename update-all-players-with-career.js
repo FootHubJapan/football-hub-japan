@@ -36,8 +36,11 @@ if (!API_FOOTBALL_KEY || API_FOOTBALL_KEY.length < 30) {
     process.exit(1);
 }
 
-// 更新するシーズンリスト（キャリアスタッツ用：2015年から2025年まで）
-const SEASONS = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
+// 更新するシーズンリスト（キャリアスタッツ用：2000年から2025年まで）
+const SEASONS = [];
+for (let year = 2000; year <= 2025; year++) {
+    SEASONS.push(year);
+}
 const REQUEST_DELAY = 200; // 0.2秒（Pro Plan: 300リクエスト/分に対応）
 
 // MAX_PLAYERSの取得（--retry-errorsや--error-fileが指定されていない場合のみ）
