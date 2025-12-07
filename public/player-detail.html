@@ -1490,53 +1490,7 @@
                             }
                         });
                         
-                        console.log(`📊 マージ後のシーズン数: ${Object.keys(statsBySeason).length}`);
-                        
-                        // マージ後のデータを表示
-                        if (Object.keys(statsBySeason).length > 0) {
-                            // シーズンでソート（新しい順）
-                            const sortedSeasons = Object.values(statsBySeason).sort((a, b) => {
-                                const seasonA = parseInt(a.season?.split('/')[0]) || 0;
-                                const seasonB = parseInt(b.season?.split('/')[0]) || 0;
-                                return seasonB - seasonA;
-                            });
-                            
-                            html = '';
-                            sortedSeasons.forEach(stat => {
-                                const seasonDisplay = stat.season || 'Unknown';
-                                const avgRating = stat.ratingCount > 0 ? (stat.ratingSum / stat.ratingCount).toFixed(1) : 'N/A';
-                                html += `
-                                    <tr>
-                                        <td>${seasonDisplay}</td>
-                                        <td>${stat.club || 'Unknown'}</td>
-                                        <td>${stat.matches}</td>
-                                        <td>${stat.goals}</td>
-                                        <td>${stat.assists}</td>
-                                        <td>${avgRating}</td>
-                                    </tr>
-                                `;
-                            });
-                            
-                            tbody.innerHTML = html;
-                            
-                            // データソース表示を更新
-                            const dataSourceInfo = document.createElement('div');
-                            dataSourceInfo.className = 'data-source-info';
-                            dataSourceInfo.innerHTML = `
-                                <div class="source-badge">
-                                    <span class="source-icon">🔗</span>
-                                    <span class="source-text">実際のAPIデータ (${data.sources?.join(', ') || 'API-Football + Football-data.org'})</span>
-                                </div>
-                            `;
-                            
-                            // キャリアテーブルの前にデータソース情報を挿入
-                            const careerSection = document.querySelector('.career-section');
-                            if (careerSection && !careerSection.querySelector('.data-source-info')) {
-                                careerSection.insertBefore(dataSourceInfo, careerSection.querySelector('.career-title'));
-                            }
-                            
-                            return;
-                        }
+                        console.log(`📊 APIデータマージ後のシーズン数: ${Object.keys(statsBySeason).length}`);
                     }
                 } else {
                     const errorData = await response.json().catch(() => ({}));
@@ -1547,10 +1501,11 @@
                 console.log('⚠️ キャリアスタッツ取得エラー:', error.message);
             }
             
-            // フォールバック: player.statsから過去のシーズンデータを取得を試みる（statsBySeasonにデータがない場合のみ）
-            if (Object.keys(statsBySeason).length === 0 && player.stats && Array.isArray(player.stats) && player.stats.length > 0) {
-                console.log('🔄 player.statsからキャリアスタッツを生成中...');
+            // フォールバック: player.statsから過去のシーズンデータを取得を試みる（APIデータにないシーズンを補完）
+            if (player.stats && Array.isArray(player.stats) && player.stats.length > 0) {
+                console.log(`🔄 player.statsからキャリアスタッツを補完中... (${player.stats.length}レコード)`);
                 
+                let addedCount = 0;
                 player.stats.forEach(stat => {
                     if (!isLeagueCompetition(stat)) {
                         return;
@@ -1592,10 +1547,16 @@
                             statsBySeason[season].ratingCount += 1;
                         }
                     }
+                    
+                    addedCount++;
                 });
+                
+                if (addedCount > 0) {
+                    console.log(`✅ player.statsから${addedCount}シーズンを追加`);
+                }
             }
             
-            // データが存在する場合は表示
+            // すべてのデータを統合して表示
             if (Object.keys(statsBySeason).length > 0) {
                 // シーズンでソート（新しい順）
                 const sortedSeasons = Object.values(statsBySeason).sort((a, b) => {
@@ -1603,6 +1564,8 @@
                     const seasonB = parseInt(b.season?.split('/')[0]) || 0;
                     return seasonB - seasonA;
                 });
+                
+                console.log(`📊 最終的なシーズン数: ${sortedSeasons.length} (${sortedSeasons.map(s => s.season).join(', ')})`);
                 
                 html = '';
                 sortedSeasons.forEach(stat => {
