@@ -36,9 +36,9 @@ if (!API_FOOTBALL_KEY || API_FOOTBALL_KEY.length < 30) {
     process.exit(1);
 }
 
-// 更新するシーズンリスト（キャリアスタッツ用）
-const SEASONS = [2020, 2021, 2022, 2023, 2024, 2025];
-const REQUEST_DELAY = 1200; // 1.2秒（API制限対策）
+// 更新するシーズンリスト（キャリアスタッツ用：2015年から2025年まで）
+const SEASONS = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
+const REQUEST_DELAY = 200; // 0.2秒（Pro Plan: 300リクエスト/分に対応）
 
 // MAX_PLAYERSの取得（--retry-errorsや--error-fileが指定されていない場合のみ）
 let MAX_PLAYERS = 10;
@@ -222,9 +222,17 @@ async function updateAllPlayersWithCareer() {
         const playersWithId = players.filter(p => p.playerId);
         
         // 既に更新された選手をスキップ（careerStatsが存在する場合は既に更新済みとみなす）
+        // ただし、careerStatsが3シーズン未満の場合は再更新する
         const playersToUpdateAll = playersWithId.filter(p => {
             // careerStatsが存在しない、または空の場合は未更新
-            return !p.careerStats || !Array.isArray(p.careerStats) || p.careerStats.length === 0;
+            if (!p.careerStats || !Array.isArray(p.careerStats) || p.careerStats.length === 0) {
+                return true;
+            }
+            // careerStatsが3シーズン未満の場合は再更新
+            if (p.careerStats.length < 3) {
+                return true;
+            }
+            return false;
         });
         
         console.log(`📊 playerIdを持つ選手: ${playersWithId.length}名`);
