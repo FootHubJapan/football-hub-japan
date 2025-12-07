@@ -1433,6 +1433,9 @@
                     const careerStats = data.careerStats || [];
                     
                     console.log(`✅ キャリアスタッツ取得成功: ${careerStats.length}シーズン`);
+                    careerStats.forEach((stat, idx) => {
+                        console.log(`  API取得 ${idx + 1}. シーズン: ${stat.season}, クラブ: ${stat.club || stat.teamName || stat.team}, 試合: ${stat.matches || stat.appearances}, ゴール: ${stat.goals}, アシスト: ${stat.assists}, source: ${stat.source || 'unknown'}`);
+                    });
                     
                     if (careerStats.length > 0) {
                         // 既存のstatsBySeasonにマージ（新しいデータで上書き）

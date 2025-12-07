@@ -8494,20 +8494,32 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
             // player.statsから取得したデータをcareerStatsに追加（APIから取得できない場合のフォールバック）
             Object.values(statsBySeason).forEach(stat => {
                 if (stat.matches > 0 || stat.appearances > 0 || stat.goals > 0 || stat.assists > 0) {
-                    careerStats.push({
-                        season: stat.season,
-                        league: stat.league,
-                        teamName: stat.teamName,
-                        matches: stat.matches || stat.appearances,
-                        appearances: stat.appearances || stat.matches,
-                        goals: stat.goals,
-                        assists: stat.assists,
-                        rating: stat.rating,
-                        source: 'player.stats'
+                    // 既存のcareerStatsに同じシーズンのデータがあるかチェック
+                    const existingIndex = careerStats.findIndex(cs => {
+                        const csSeason = String(cs.season || '').replace('/', '');
+                        const statSeason = String(stat.season || '').replace('/', '');
+                        return csSeason === statSeason || csSeason.includes(statSeason) || statSeason.includes(csSeason);
                     });
+                    
+                    if (existingIndex < 0) {
+                        // 既存のデータがない場合のみ追加
+                        careerStats.push({
+                            season: stat.season,
+                            league: stat.league,
+                            teamName: stat.teamName,
+                            matches: stat.matches || stat.appearances,
+                            appearances: stat.appearances || stat.matches,
+                            goals: stat.goals,
+                            assists: stat.assists,
+                            rating: stat.rating,
+                            source: 'player.stats'
+                        });
+                    }
                 }
             });
         }
+        
+        console.log(`📊 player.statsから取得したシーズン数: ${careerStats.length}`);
         
         for (const season of seasonList) {
             try {
@@ -8545,9 +8557,27 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
                     }
                 }
                 
-                // スタッツが取得できた場合のみ追加
-                if (seasonStats && (seasonStats.goals > 0 || seasonStats.assists > 0 || seasonStats.appearances > 0 || seasonStats.matches > 0)) {
-                    careerStats.push(seasonStats);
+                // スタッツが取得できた場合のみ追加（player.statsから取得したデータと重複しないようにチェック）
+                if (seasonStats) {
+                    // 既存のcareerStatsに同じシーズンのデータがあるかチェック
+                    const seasonStr = String(seasonStats.season || season);
+                    const existingIndex = careerStats.findIndex(cs => {
+                        const csSeason = String(cs.season || '').replace('/', '');
+                        const statSeason = seasonStr.replace('/', '');
+                        return csSeason === statSeason || csSeason.includes(statSeason) || statSeason.includes(csSeason);
+                    });
+                    
+                    if (existingIndex >= 0) {
+                        // 既存のデータをAPIデータで上書き（APIデータの方が正確）
+                        careerStats[existingIndex] = seasonStats;
+                        console.log(`🔄 シーズン ${seasonStr} のデータをAPIデータで上書き`);
+                    } else {
+                        // 新しいデータを追加（データがある場合のみ）
+                        if (seasonStats.goals > 0 || seasonStats.assists > 0 || seasonStats.appearances > 0 || seasonStats.matches > 0) {
+                            careerStats.push(seasonStats);
+                            console.log(`✅ シーズン ${seasonStr} のデータを追加`);
+                        }
+                    }
                 }
                 
             } catch (error) {
@@ -8556,7 +8586,18 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
         }
         
         // シーズン順でソート（新しい順）
-        careerStats.sort((a, b) => parseInt(b.season) - parseInt(a.season));
+        careerStats.sort((a, b) => {
+            const seasonA = String(a.season || '').replace('/', '');
+            const seasonB = String(b.season || '').replace('/', '');
+            const yearA = parseInt(seasonA) || 0;
+            const yearB = parseInt(seasonB) || 0;
+            return yearB - yearA;
+        });
+        
+        console.log(`📊 最終的なキャリアスタッツ数: ${careerStats.length}シーズン`);
+        careerStats.forEach((stat, idx) => {
+            console.log(`  ${idx + 1}. ${stat.season} - ${stat.teamName || stat.league}: ${stat.matches || stat.appearances}試合, ${stat.goals}ゴール, ${stat.assists}アシスト (source: ${stat.source || 'unknown'})`);
+        });
         
         res.json({ 
             player: {
