@@ -1415,7 +1415,7 @@
                 return;
             }
             
-            // 優先順位2: APIエンドポイントから取得
+            // 優先順位2: APIエンドポイントから取得（既存のstatsBySeasonにマージ）
             try {
                 console.log('🔄 キャリアスタッツを取得中...');
                 
@@ -1435,103 +1435,7 @@
                     console.log(`✅ キャリアスタッツ取得成功: ${careerStats.length}シーズン`);
                     
                     if (careerStats.length > 0) {
-                        html = '';
-                        
-                        // カップ戦と親善試合を除外するフィルタ（リーグ戦のみを合計）
-                        const cupCompetitions = [
-                            'Champions League', 'Europa League', 'Conference League',
-                            'Copa del Rey', 'FA Cup', 'Coppa Italia', 'DFB-Pokal', 'Coupe de France',
-                            'Super Cup', 'Club World Cup', 'UEFA Super Cup',
-                            'Copa', 'Cup', 'Pokal', 'Coupe', 'Supercup',
-                            'J.League Cup', '天皇杯', 'ルヴァンカップ'
-                        ];
-                        
-                        // 親善試合を除外するキーワード
-                        const friendlyKeywords = [
-                            'friendly', 'friendlies', '親善', 'exhibition', 'test match',
-                            'friendly clubs', 'friendlies clubs', 'club friendly'
-                        ];
-                        
-                        const isLeagueCompetition = (stat) => {
-                            const league = stat.league || stat.competition || stat.leagueName || '';
-                            const leagueLower = league.toLowerCase();
-                            
-                            // カップ戦のキーワードが含まれている場合は除外
-                            if (cupCompetitions.some(cup => leagueLower.includes(cup.toLowerCase()))) {
-                                return false;
-                            }
-                            
-                            // 親善試合のキーワードが含まれている場合は除外
-                            if (friendlyKeywords.some(keyword => leagueLower.includes(keyword.toLowerCase()))) {
-                                return false;
-                            }
-                            
-                            // カップ戦と親善試合以外はリーグ戦と判定
-                            return true;
-                        };
-                        
-                        // シーズン値を正規化する関数
-                        const normalizeSeason = (seasonStr) => {
-                            if (!seasonStr || seasonStr === 'Unknown') return 'Unknown';
-                            
-                            // 文字列に変換
-                            const season = String(seasonStr).trim();
-                            
-                            // 既に "YYYY/YYYY" 形式の場合はそのまま返す
-                            if (/^\d{4}\/\d{4}$/.test(season)) {
-                                return season;
-                            }
-                            
-                            // "YYYY/YY" 形式の場合は "YYYY/YYYY" に変換
-                            if (/^\d{4}\/\d{2}$/.test(season)) {
-                                const [start, end] = season.split('/');
-                                const endYear = parseInt(start) + 1;
-                                return `${start}/${endYear}`;
-                            }
-                            
-                            // "YYYY" 形式の場合は "YYYY/YYYY+1" に変換
-                            if (/^\d{4}$/.test(season)) {
-                                const year = parseInt(season);
-                                return `${year}/${year + 1}`;
-                            }
-                            
-                            // その他の形式はそのまま返す
-                            return season;
-                        };
-                        
-                        // 現在の日付を取得して、実際に存在するシーズンのみを表示
-                        const currentDate = new Date();
-                        const currentYear = currentDate.getFullYear();
-                        const currentMonth = currentDate.getMonth() + 1; // 0-11 → 1-12
-                        
-                        // シーズンが実際に存在するかチェック（未来のシーズンは除外）
-                        const isValidSeason = (seasonStr) => {
-                            if (!seasonStr || seasonStr === 'Unknown') return false;
-                            
-                            const normalized = normalizeSeason(seasonStr);
-                            const [startYear] = normalized.split('/').map(Number);
-                            
-                            // シーズン開始年が現在の年より2年以上未来の場合は除外
-                            if (startYear > currentYear + 1) {
-                                return false;
-                            }
-                            
-                            // シーズン開始年が現在の年と同じ、または1年未来の場合
-                            // 月が8月以降（シーズン開始）の場合は許可
-                            if (startYear === currentYear || startYear === currentYear + 1) {
-                                // シーズンは通常8月から始まるので、7月以前は前シーズンとして扱う
-                                if (startYear === currentYear + 1 && currentMonth < 8) {
-                                    return false; // まだ開始されていない未来のシーズン
-                                }
-                                return true;
-                            }
-                            
-                            // 過去のシーズンはすべて許可
-                            return startYear < currentYear;
-                        };
-                        
-                        // シーズンごとにグループ化してリーグ戦のみの合計を計算
-                        const statsBySeason = {};
+                        // 既存のstatsBySeasonにマージ（新しいデータで上書き）
                         careerStats.forEach(stat => {
                             // リーグ戦のみを対象とする
                             if (!isLeagueCompetition(stat)) {
@@ -1555,6 +1459,7 @@
                                 console.log(`🔍 シーズン正規化: "${rawSeason}" → "${season}" (選手: ${player.name || player.fullName})`);
                             }
                             
+                            // 既存のデータがある場合は上書き、ない場合は追加
                             if (!statsBySeason[season]) {
                                 statsBySeason[season] = {
                                     season: season,
@@ -1565,62 +1470,73 @@
                                     ratingSum: 0,
                                     ratingCount: 0
                                 };
+                            } else {
+                                // クラブ名が異なる場合は更新（より詳細な情報を優先）
+                                if (club !== 'Unknown' && statsBySeason[season].club === 'Unknown') {
+                                    statsBySeason[season].club = club;
+                                }
                             }
                             
-                            // 各シーズンのリーグ戦のみの合計を計算
-                            statsBySeason[season].matches += (stat.matches || stat.appearances || 0);
-                            statsBySeason[season].goals += (stat.goals || 0);
-                            statsBySeason[season].assists += (stat.assists || 0);
+                            // 各シーズンのリーグ戦のみの合計を計算（APIデータを優先）
+                            statsBySeason[season].matches = (stat.matches || stat.appearances || 0);
+                            statsBySeason[season].goals = (stat.goals || 0);
+                            statsBySeason[season].assists = (stat.assists || 0);
                             if (stat.rating) {
                                 const rating = parseFloat(stat.rating);
                                 if (!isNaN(rating)) {
-                                    statsBySeason[season].ratingSum += rating;
-                                    statsBySeason[season].ratingCount += 1;
+                                    statsBySeason[season].ratingSum = rating;
+                                    statsBySeason[season].ratingCount = 1;
                                 }
                             }
                         });
                         
-                        // シーズンでソート（新しい順）
-                        const sortedSeasons = Object.values(statsBySeason).sort((a, b) => {
-                            const seasonA = parseInt(a.season?.split('/')[0]) || 0;
-                            const seasonB = parseInt(b.season?.split('/')[0]) || 0;
-                            return seasonB - seasonA;
-                        });
+                        console.log(`📊 マージ後のシーズン数: ${Object.keys(statsBySeason).length}`);
                         
-                        sortedSeasons.forEach(stat => {
-                            const seasonDisplay = stat.season || 'Unknown';
-                            const avgRating = stat.ratingCount > 0 ? (stat.ratingSum / stat.ratingCount).toFixed(1) : 'N/A';
-                            html += `
-                                <tr>
-                                    <td>${seasonDisplay}</td>
-                                    <td>${stat.club || 'Unknown'}</td>
-                                    <td>${stat.matches}</td>
-                                    <td>${stat.goals}</td>
-                                    <td>${stat.assists}</td>
-                                    <td>${avgRating}</td>
-                                </tr>
+                        // マージ後のデータを表示
+                        if (Object.keys(statsBySeason).length > 0) {
+                            // シーズンでソート（新しい順）
+                            const sortedSeasons = Object.values(statsBySeason).sort((a, b) => {
+                                const seasonA = parseInt(a.season?.split('/')[0]) || 0;
+                                const seasonB = parseInt(b.season?.split('/')[0]) || 0;
+                                return seasonB - seasonA;
+                            });
+                            
+                            html = '';
+                            sortedSeasons.forEach(stat => {
+                                const seasonDisplay = stat.season || 'Unknown';
+                                const avgRating = stat.ratingCount > 0 ? (stat.ratingSum / stat.ratingCount).toFixed(1) : 'N/A';
+                                html += `
+                                    <tr>
+                                        <td>${seasonDisplay}</td>
+                                        <td>${stat.club || 'Unknown'}</td>
+                                        <td>${stat.matches}</td>
+                                        <td>${stat.goals}</td>
+                                        <td>${stat.assists}</td>
+                                        <td>${avgRating}</td>
+                                    </tr>
+                                `;
+                            });
+                            
+                            tbody.innerHTML = html;
+                            
+                            // データソース表示を更新
+                            const dataSourceInfo = document.createElement('div');
+                            dataSourceInfo.className = 'data-source-info';
+                            dataSourceInfo.innerHTML = `
+                                <div class="source-badge">
+                                    <span class="source-icon">🔗</span>
+                                    <span class="source-text">実際のAPIデータ (${data.sources?.join(', ') || 'API-Football + Football-data.org'})</span>
+                                </div>
                             `;
-                        });
-                        
-                        tbody.innerHTML = html;
-                        
-                        // データソース表示を更新
-                        const dataSourceInfo = document.createElement('div');
-                        dataSourceInfo.className = 'data-source-info';
-                        dataSourceInfo.innerHTML = `
-                            <div class="source-badge">
-                                <span class="source-icon">🔗</span>
-                                <span class="source-text">実際のAPIデータ (${data.sources?.join(', ') || 'API-Football + Football-data.org'})</span>
-                            </div>
-                        `;
-                        
-                        // キャリアテーブルの前にデータソース情報を挿入
-                        const careerSection = document.querySelector('.career-section');
-                        if (careerSection && !careerSection.querySelector('.data-source-info')) {
-                            careerSection.insertBefore(dataSourceInfo, careerSection.querySelector('.career-title'));
+                            
+                            // キャリアテーブルの前にデータソース情報を挿入
+                            const careerSection = document.querySelector('.career-section');
+                            if (careerSection && !careerSection.querySelector('.data-source-info')) {
+                                careerSection.insertBefore(dataSourceInfo, careerSection.querySelector('.career-title'));
+                            }
+                            
+                            return;
                         }
-                        
-                        return;
                     }
                 } else {
                     const errorData = await response.json().catch(() => ({}));
@@ -1631,98 +1547,10 @@
                 console.log('⚠️ キャリアスタッツ取得エラー:', error.message);
             }
             
-            // フォールバック: player.statsから過去のシーズンデータを取得を試みる
-            // player.statsが配列形式の場合、すべてのシーズンのデータを表示
-            if (player.stats && Array.isArray(player.stats) && player.stats.length > 0) {
+            // フォールバック: player.statsから過去のシーズンデータを取得を試みる（statsBySeasonにデータがない場合のみ）
+            if (Object.keys(statsBySeason).length === 0 && player.stats && Array.isArray(player.stats) && player.stats.length > 0) {
                 console.log('🔄 player.statsからキャリアスタッツを生成中...');
                 
-                // カップ戦と親善試合を除外するフィルタ（リーグ戦のみを合計）
-                const cupCompetitions = [
-                    'Champions League', 'Europa League', 'Conference League',
-                    'Copa del Rey', 'FA Cup', 'Coppa Italia', 'DFB-Pokal', 'Coupe de France',
-                    'Super Cup', 'Club World Cup', 'UEFA Super Cup',
-                    'Copa', 'Cup', 'Pokal', 'Coupe', 'Supercup',
-                    'J.League Cup', '天皇杯', 'ルヴァンカップ'
-                ];
-                
-                const friendlyKeywords = [
-                    'friendly', 'friendlies', '親善', 'exhibition', 'test match',
-                    'friendly clubs', 'friendlies clubs', 'club friendly'
-                ];
-                
-                const isLeagueCompetition = (stat) => {
-                    const league = stat.league || stat.competition || stat.leagueName || '';
-                    const leagueLower = league.toLowerCase();
-                    
-                    if (cupCompetitions.some(cup => leagueLower.includes(cup.toLowerCase()))) {
-                        return false;
-                    }
-                    
-                    if (friendlyKeywords.some(keyword => leagueLower.includes(keyword.toLowerCase()))) {
-                        return false;
-                    }
-                    
-                    return true;
-                };
-                
-                const normalizeSeason = (seasonStr) => {
-                    if (!seasonStr || seasonStr === 'Unknown') return 'Unknown';
-                    const season = String(seasonStr).trim();
-                    
-                    if (/^\d{4}\/\d{4}$/.test(season)) {
-                        return season;
-                    }
-                    
-                    if (/^\d{4}\/\d{2}$/.test(season)) {
-                        const [start, end] = season.split('/');
-                        const endYear = parseInt(start) + 1;
-                        return `${start}/${endYear}`;
-                    }
-                    
-                    if (/^\d{4}$/.test(season)) {
-                        const year = parseInt(season);
-                        return `${year}/${year + 1}`;
-                    }
-                    
-                    return season;
-                };
-                
-                // 現在の日付を取得して、実際に存在するシーズンのみを表示
-                const currentDate = new Date();
-                const currentYear = currentDate.getFullYear();
-                const currentMonth = currentDate.getMonth() + 1; // 0-11 → 1-12
-                
-                // シーズンが実際に存在するかチェック（過去シーズンもすべて許可）
-                const isValidSeason = (seasonStr) => {
-                    if (!seasonStr || seasonStr === 'Unknown') return false;
-                    
-                    const normalized = normalizeSeason(seasonStr);
-                    const [startYear] = normalized.split('/').map(Number);
-                    
-                    // シーズン開始年が現在の年より2年以上未来の場合は除外
-                    if (startYear > currentYear + 1) {
-                        return false;
-                    }
-                    
-                    // 過去のシーズンはすべて許可（2000年以降、現実的な範囲）
-                    if (startYear < currentYear && startYear >= 2000) {
-                        return true;
-                    }
-                    
-                    // シーズン開始年が現在の年と同じ、または1年未来の場合
-                    if (startYear === currentYear || startYear === currentYear + 1) {
-                        // シーズンは通常8月から始まるので、7月以前は前シーズンとして扱う
-                        if (startYear === currentYear + 1 && currentMonth < 8) {
-                            return false; // まだ開始されていない未来のシーズン
-                        }
-                        return true;
-                    }
-                    
-                    // その他の過去シーズンも許可（2000年以前も含む、ただし現実的な範囲）
-                    return startYear < currentYear && startYear >= 1990;
-                };
-                
-                const statsBySeason = {};
                 player.stats.forEach(stat => {
                     if (!isLeagueCompetition(stat)) {
                         return;
@@ -1738,17 +1566,21 @@
                     
                     const club = stat.teamName || stat.team || stat.club || 'Unknown';
                     
-                    if (!statsBySeason[season]) {
-                        statsBySeason[season] = {
-                            season: season,
-                            club: club,
-                            matches: 0,
-                            goals: 0,
-                            assists: 0,
-                            ratingSum: 0,
-                            ratingCount: 0
-                        };
+                    // 既に存在するシーズンの場合はスキップ（APIデータを優先）
+                    if (statsBySeason[season]) {
+                        return;
                     }
+                    
+                    // 新しいシーズンを追加
+                    statsBySeason[season] = {
+                        season: season,
+                        club: club,
+                        matches: 0,
+                        goals: 0,
+                        assists: 0,
+                        ratingSum: 0,
+                        ratingCount: 0
+                    };
                     
                     statsBySeason[season].matches += (stat.matches || stat.appearances || 0);
                     statsBySeason[season].goals += (stat.goals || 0);
@@ -1761,37 +1593,56 @@
                         }
                     }
                 });
-                
+            }
+            
+            // データが存在する場合は表示
+            if (Object.keys(statsBySeason).length > 0) {
+                // シーズンでソート（新しい順）
                 const sortedSeasons = Object.values(statsBySeason).sort((a, b) => {
                     const seasonA = parseInt(a.season?.split('/')[0]) || 0;
                     const seasonB = parseInt(b.season?.split('/')[0]) || 0;
                     return seasonB - seasonA;
                 });
                 
-                if (sortedSeasons.length > 0) {
-                    html = '';
-                    sortedSeasons.forEach(stat => {
-                        const seasonDisplay = stat.season || 'Unknown';
-                        const avgRating = stat.ratingCount > 0 ? (stat.ratingSum / stat.ratingCount).toFixed(1) : 'N/A';
-                        html += `
-                            <tr>
-                                <td>${seasonDisplay}</td>
-                                <td>${stat.club || 'Unknown'}</td>
-                                <td>${stat.matches}</td>
-                                <td>${stat.goals}</td>
-                                <td>${stat.assists}</td>
-                                <td>${avgRating}</td>
-                            </tr>
-                        `;
-                    });
-                    
-                    tbody.innerHTML = html;
-                    return;
+                html = '';
+                sortedSeasons.forEach(stat => {
+                    const seasonDisplay = stat.season || 'Unknown';
+                    const avgRating = stat.ratingCount > 0 ? (stat.ratingSum / stat.ratingCount).toFixed(1) : 'N/A';
+                    html += `
+                        <tr>
+                            <td>${seasonDisplay}</td>
+                            <td>${stat.club || 'Unknown'}</td>
+                            <td>${stat.matches}</td>
+                            <td>${stat.goals}</td>
+                            <td>${stat.assists}</td>
+                            <td>${avgRating}</td>
+                        </tr>
+                    `;
+                });
+                
+                tbody.innerHTML = html;
+                
+                // データソース表示を更新
+                const dataSourceInfo = document.createElement('div');
+                dataSourceInfo.className = 'data-source-info';
+                dataSourceInfo.innerHTML = `
+                    <div class="source-badge">
+                        <span class="source-icon">🔗</span>
+                        <span class="source-text">実際のAPIデータ (API-Football)</span>
+                    </div>
+                `;
+                
+                // キャリアテーブルの前にデータソース情報を挿入
+                const careerSection = document.querySelector('.career-section');
+                if (careerSection && !careerSection.querySelector('.data-source-info')) {
+                    careerSection.insertBefore(dataSourceInfo, careerSection.querySelector('.career-title'));
                 }
+                
+                return;
             }
             
             // データがない場合は何も表示しない（フォールバックデータは表示しない）
-            tbody.innerHTML = '';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #888; padding: 20px;">キャリアデータがありません</td></tr>';
         }
 
         // エラー表示
