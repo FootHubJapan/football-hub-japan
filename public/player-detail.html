@@ -1202,10 +1202,17 @@
             
             // シーズン値を正規化する関数
             const normalizeSeason = (seasonStr) => {
-                if (!seasonStr || seasonStr === 'Unknown') return 'Unknown';
+                if (!seasonStr || seasonStr === 'Unknown' || seasonStr === 'null' || seasonStr === null) {
+                    return 'Unknown';
+                }
                 
                 // 文字列に変換
                 const season = String(seasonStr).trim();
+                
+                // 空文字列の場合はUnknownを返す
+                if (season === '' || season === 'null') {
+                    return 'Unknown';
+                }
                 
                 // 既に "YYYY/YYYY" 形式の場合はそのまま返す
                 if (/^\d{4}\/\d{4}$/.test(season)) {
@@ -1222,7 +1229,9 @@
                 // "YYYY" 形式の場合は "YYYY/YYYY+1" に変換
                 if (/^\d{4}$/.test(season)) {
                     const year = parseInt(season);
-                    return `${year}/${year + 1}`;
+                    if (year >= 1990 && year <= 2030) {
+                        return `${year}/${year + 1}`;
+                    }
                 }
                 
                 // その他の形式はそのまま返す
@@ -1468,8 +1477,15 @@
                             
                             // シーズンを正規化
                             const rawSeason = stat.season || 'Unknown';
-                            const season = normalizeSeason(rawSeason);
+                            let season = normalizeSeason(rawSeason);
                             console.log(`  → シーズン正規化: "${rawSeason}" → "${season}"`);
+                            
+                            // APIレスポンスのシーズン形式が "2025" のような場合、正規化が失敗する可能性があるため、再試行
+                            if (season === 'Unknown' && rawSeason && /^\d{4}$/.test(String(rawSeason))) {
+                                const year = parseInt(rawSeason);
+                                season = `${year}/${year + 1}`;
+                                console.log(`  → シーズン再正規化: "${rawSeason}" → "${season}"`);
+                            }
                             
                             // 有効なシーズンのみを処理
                             const isValid = isValidSeason(season);
