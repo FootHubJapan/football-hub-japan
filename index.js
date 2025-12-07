@@ -8388,7 +8388,126 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
         
         // キャリアスタッツを構築
         const careerStats = [];
-        const seasonList = seasons.split(',');
+        let seasonList = seasons.split(',');
+        
+        // seasons=all の場合は過去10年分のシーズンを取得
+        if (seasons === 'all' || seasons === 'All' || seasons === 'ALL') {
+            const currentYear = new Date().getFullYear();
+            seasonList = [];
+            // 過去10年分のシーズンを生成（例: 2015-2025）
+            for (let year = currentYear - 10; year <= currentYear; year++) {
+                seasonList.push(String(year));
+            }
+            console.log(`📅 過去10年分のシーズンを取得: ${seasonList.join(', ')}`);
+        }
+        
+        // player.statsから過去のシーズンを取得（APIから取得できない場合のフォールバック）
+        if (player.stats && Array.isArray(player.stats) && player.stats.length > 0) {
+            console.log(`🔄 player.statsから過去のシーズンを取得中... (${player.stats.length}レコード)`);
+            
+            // カップ戦と親善試合を除外するフィルタ
+            const cupCompetitions = [
+                'Champions League', 'Europa League', 'Conference League',
+                'Copa del Rey', 'FA Cup', 'Coppa Italia', 'DFB-Pokal', 'Coupe de France',
+                'Super Cup', 'Club World Cup', 'UEFA Super Cup',
+                'Copa', 'Cup', 'Pokal', 'Coupe', 'Supercup',
+                'J.League Cup', '天皇杯', 'ルヴァンカップ'
+            ];
+            
+            const friendlyKeywords = [
+                'friendly', 'friendlies', '親善', 'exhibition', 'test match',
+                'friendly clubs', 'friendlies clubs', 'club friendly'
+            ];
+            
+            const isLeagueCompetition = (stat) => {
+                const league = stat.league || stat.competition || stat.leagueName || '';
+                const leagueLower = league.toLowerCase();
+                
+                if (cupCompetitions.some(cup => leagueLower.includes(cup.toLowerCase()))) {
+                    return false;
+                }
+                
+                if (friendlyKeywords.some(keyword => leagueLower.includes(keyword.toLowerCase()))) {
+                    return false;
+                }
+                
+                return true;
+            };
+            
+            // player.statsから過去のシーズンを抽出
+            const statsBySeason = {};
+            player.stats.forEach(stat => {
+                if (!isLeagueCompetition(stat)) {
+                    return;
+                }
+                
+                const rawSeason = stat.season || '';
+                if (!rawSeason || rawSeason === 'Unknown') {
+                    return;
+                }
+                
+                // シーズンを正規化（YYYY形式に変換）
+                let seasonYear = null;
+                if (/^\d{4}$/.test(rawSeason)) {
+                    seasonYear = parseInt(rawSeason);
+                } else if (/^\d{4}\/\d{4}$/.test(rawSeason)) {
+                    seasonYear = parseInt(rawSeason.split('/')[0]);
+                } else if (/^\d{4}\/\d{2}$/.test(rawSeason)) {
+                    seasonYear = parseInt(rawSeason.split('/')[0]);
+                }
+                
+                if (!seasonYear || seasonYear < 2010 || seasonYear > new Date().getFullYear() + 1) {
+                    return;
+                }
+                
+                // シーズンリストに追加（まだ存在しない場合）
+                if (!seasonList.includes(String(seasonYear))) {
+                    seasonList.push(String(seasonYear));
+                }
+                
+                // 既存のシーズンデータをマージ
+                if (!statsBySeason[seasonYear]) {
+                    statsBySeason[seasonYear] = {
+                        season: String(seasonYear),
+                        league: stat.leagueName || stat.league || 'Unknown',
+                        teamName: stat.teamName || stat.team || 'Unknown',
+                        matches: 0,
+                        appearances: 0,
+                        goals: 0,
+                        assists: 0,
+                        rating: null
+                    };
+                }
+                
+                statsBySeason[seasonYear].matches += (stat.matches || stat.appearances || 0);
+                statsBySeason[seasonYear].appearances += (stat.appearances || 0);
+                statsBySeason[seasonYear].goals += (stat.goals || 0);
+                statsBySeason[seasonYear].assists += (stat.assists || 0);
+                if (stat.rating) {
+                    const rating = parseFloat(stat.rating);
+                    if (!isNaN(rating)) {
+                        statsBySeason[seasonYear].rating = rating;
+                    }
+                }
+            });
+            
+            // player.statsから取得したデータをcareerStatsに追加（APIから取得できない場合のフォールバック）
+            Object.values(statsBySeason).forEach(stat => {
+                if (stat.matches > 0 || stat.appearances > 0 || stat.goals > 0 || stat.assists > 0) {
+                    careerStats.push({
+                        season: stat.season,
+                        league: stat.league,
+                        teamName: stat.teamName,
+                        matches: stat.matches || stat.appearances,
+                        appearances: stat.appearances || stat.matches,
+                        goals: stat.goals,
+                        assists: stat.assists,
+                        rating: stat.rating,
+                        source: 'player.stats'
+                    });
+                }
+            });
+        }
         
         for (const season of seasonList) {
             try {
