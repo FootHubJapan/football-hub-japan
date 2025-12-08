@@ -104,10 +104,34 @@ async function fetchWithDelay(url, options = {}) {
 }
 
 // 選手のキャリアスタッツを取得（複数シーズン）
-async function getPlayerCareerStats(playerId) {
-    const careerStats = [];
+// 既存のcareerStatsがある場合は、不足しているシーズンのみを取得
+async function getPlayerCareerStats(playerId, existingCareerStats = []) {
+    const careerStats = [...existingCareerStats]; // 既存のデータを保持
     
-    for (const season of SEASONS) {
+    // 既存のシーズンを確認（重複を避けるため）
+    const existingSeasons = new Set();
+    existingCareerStats.forEach(stat => {
+        const seasonStr = stat.season || '';
+        // "2020/2021" 形式から "2020" を抽出
+        const seasonYear = parseInt(seasonStr.split('/')[0]);
+        if (!isNaN(seasonYear)) {
+            existingSeasons.add(seasonYear);
+        }
+    });
+    
+    console.log(`  📊 既存のシーズン数: ${existingSeasons.size} (${Array.from(existingSeasons).sort((a,b)=>b-a).slice(0,5).join(', ')}...)`);
+    
+    // 不足しているシーズンのみを取得
+    const missingSeasons = SEASONS.filter(season => !existingSeasons.has(season));
+    
+    if (missingSeasons.length === 0) {
+        console.log(`  ✅ すべてのシーズンのデータが既に存在します`);
+        return careerStats;
+    }
+    
+    console.log(`  🔄 不足しているシーズン: ${missingSeasons.length}シーズン (${missingSeasons.slice(0,5).join(', ')}...)`);
+    
+    for (const season of missingSeasons) {
         try {
             const url = `https://v3.football.api-sports.io/players?season=${season}&id=${playerId}`;
             let data;
