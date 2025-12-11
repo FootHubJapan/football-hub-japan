@@ -1647,7 +1647,9 @@ app.get('/api/ranking/players', async (req, res) => {
                                     const parts = statSeason.split('/');
                                     if (parts.length === 2) {
                                         const statStartYear = parseInt(parts[0]);
-                                        const statEndYear = parseInt(parts[1]);
+                                        const statEndYearStr = parts[1];
+                                        const statEndYear = parseInt(statEndYearStr);
+                                        
                                         if (!isNaN(statStartYear) && !isNaN(statEndYear)) {
                                             // "25/26" 形式の場合
                                             if (statStartYear < 100) {
@@ -1656,6 +1658,14 @@ app.get('/api/ranking/players', async (req, res) => {
                                                     matchesSeason = true;
                                                 }
                                             } else if (statStartYear === targetSeason) {
+                                                matchesSeason = true;
+                                            }
+                                        }
+                                        
+                                        // "2025/26" 形式のマッチング（追加）
+                                        if (!matchesSeason && statStartYear === targetSeason && statEndYearStr.length === 2) {
+                                            const expectedEndYear = (targetSeason + 1) % 100;
+                                            if (statEndYear === expectedEndYear || statEndYear === (targetSeason + 1)) {
                                                 matchesSeason = true;
                                             }
                                         }
