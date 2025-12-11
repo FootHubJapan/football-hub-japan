@@ -1434,7 +1434,106 @@ app.get('/api/ranking/players', async (req, res) => {
                         let playerStats = null;
                         let matchedLeague = null;
                         
-                        if (Array.isArray(player.stats) && player.stats.length > 0) {
+                        // 優先順位1: careerStatsから指定シーズンのデータを取得（リーグ戦のみ）
+                        if (Array.isArray(player.careerStats) && player.careerStats.length > 0) {
+                            const careerStatsForSeason = player.careerStats.filter(cs => {
+                                const csSeason = String(cs.season || '');
+                                const matchesSeason = seasonPatterns.some(pattern => 
+                                    csSeason.includes(pattern) || csSeason === String(targetSeason)
+                                );
+                                
+                                // リーグ戦のみを対象とする
+                                const csLeague = String(cs.league || cs.leagueName || '').toLowerCase();
+                                const friendlyKeywords = [
+                                    'friendly', 'friendlies', '親善', 'exhibition', 'test match',
+                                    'friendly clubs', 'friendlies clubs', 'club friendly'
+                                ];
+                                const isFriendly = friendlyKeywords.some(keyword => csLeague.includes(keyword.toLowerCase()));
+                                
+                                return matchesSeason && !isFriendly;
+                            });
+                            
+                            if (careerStatsForSeason.length > 0) {
+                                // リーグフィルタリング（リーグが指定されている場合）
+                                if (league) {
+                                    const leagueMap = {
+                                        'PL': ['premier league', 'プレミアリーグ', 'premier', 'prem'],
+                                        'PD': ['la liga', 'ラ・リーガ', 'laliga', 'primera división'],
+                                        'SA': ['serie a', 'セリエa', 'serie', 'seriea'],
+                                        'BL1': ['bundesliga', 'ブンデスリーガ', 'bundes'],
+                                        'FL1': ['ligue 1', 'リーグ・アン', 'ligue', 'ligue1'],
+                                        'J1': ['j1 league', 'j1リーグ', 'j1', 'j league', 'jleague']
+                                    };
+                                    
+                                    const leagueKeywords = leagueMap[league] || [league.toLowerCase()];
+                                    const leagueFilteredCareerStats = careerStatsForSeason.filter(cs => {
+                                        const csLeague = String(cs.league || cs.leagueName || '').toLowerCase();
+                                        
+                                        if (league === 'PD') {
+                                            return csLeague === 'la liga' || csLeague === 'laliga' || csLeague.includes('la liga') ||
+                                                   csLeague.includes('primera división') ||
+                                                   (csLeague.includes('liga') && 
+                                                    !csLeague.includes('primeira') && !csLeague.includes('mx') && 
+                                                    !csLeague.includes('profesional') && !csLeague.includes('czech') && 
+                                                    !csLeague.includes('segunda') && !csLeague.includes('bundes') && 
+                                                    !csLeague.includes('argentina') && !csLeague.includes('portugal') && 
+                                                    !csLeague.includes('mexico') && !csLeague.includes('superliga') && 
+                                                    !csLeague.includes('pro league') && !csLeague.includes('major league'));
+                                        } else {
+                                            return leagueKeywords.some(keyword => csLeague.includes(keyword.toLowerCase()));
+                                        }
+                                    });
+                                    
+                                    if (leagueFilteredCareerStats.length > 0) {
+                                        // 同じシーズンの複数のcareerStatsを合計
+                                        playerStats = {
+                                            season: `${targetSeason}/${targetSeason + 1}`,
+                                            leagueName: leagueFilteredCareerStats[0].league || leagueFilteredCareerStats[0].leagueName || '',
+                                            league: leagueFilteredCareerStats[0].league || leagueFilteredCareerStats[0].leagueName || '',
+                                            teamName: leagueFilteredCareerStats[0].teamName || leagueFilteredCareerStats[0].club || player.currentTeam || player.team || '',
+                                            team: leagueFilteredCareerStats[0].teamName || leagueFilteredCareerStats[0].club || player.currentTeam || player.team || '',
+                                            appearances: leagueFilteredCareerStats.reduce((sum, cs) => sum + (cs.appearances || cs.matches || 0), 0),
+                                            matches: leagueFilteredCareerStats.reduce((sum, cs) => sum + (cs.matches || cs.appearances || 0), 0),
+                                            goals: leagueFilteredCareerStats.reduce((sum, cs) => sum + (cs.goals || 0), 0),
+                                            assists: leagueFilteredCareerStats.reduce((sum, cs) => sum + (cs.assists || 0), 0),
+                                            rating: leagueFilteredCareerStats.length > 0 && leagueFilteredCareerStats.some(cs => cs.rating) ? 
+                                                (leagueFilteredCareerStats.reduce((sum, cs) => sum + (parseFloat(cs.rating) || 0), 0) / leagueFilteredCareerStats.filter(cs => cs.rating).length).toFixed(1) : null,
+                                            minutes: leagueFilteredCareerStats.reduce((sum, cs) => sum + (cs.minutes || 0), 0)
+                                        };
+                                        matchedLeague = String(playerStats.leagueName || playerStats.league || '').toLowerCase();
+                                        
+                                        // PDの場合、チーム名も確認
+                                        if (league === 'PD') {
+                                            const teamName = String(playerStats.teamName || player.currentTeam || player.team || '').toLowerCase();
+                                            const isPeruvianTeam = peruvianTeams.some(pt => teamName.includes(pt));
+                                            if (isPeruvianTeam) {
+                                                return null;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    // リーグ指定がない場合、同じシーズンの全careerStatsを合計
+                                    playerStats = {
+                                        season: `${targetSeason}/${targetSeason + 1}`,
+                                        leagueName: careerStatsForSeason[0].league || careerStatsForSeason[0].leagueName || '',
+                                        league: careerStatsForSeason[0].league || careerStatsForSeason[0].leagueName || '',
+                                        teamName: careerStatsForSeason[0].teamName || careerStatsForSeason[0].club || player.currentTeam || player.team || '',
+                                        team: careerStatsForSeason[0].teamName || careerStatsForSeason[0].club || player.currentTeam || player.team || '',
+                                        appearances: careerStatsForSeason.reduce((sum, cs) => sum + (cs.appearances || cs.matches || 0), 0),
+                                        matches: careerStatsForSeason.reduce((sum, cs) => sum + (cs.matches || cs.appearances || 0), 0),
+                                        goals: careerStatsForSeason.reduce((sum, cs) => sum + (cs.goals || 0), 0),
+                                        assists: careerStatsForSeason.reduce((sum, cs) => sum + (cs.assists || 0), 0),
+                                        rating: careerStatsForSeason.length > 0 && careerStatsForSeason.some(cs => cs.rating) ? 
+                                            (careerStatsForSeason.reduce((sum, cs) => sum + (parseFloat(cs.rating) || 0), 0) / careerStatsForSeason.filter(cs => cs.rating).length).toFixed(1) : null,
+                                        minutes: careerStatsForSeason.reduce((sum, cs) => sum + (cs.minutes || 0), 0)
+                                    };
+                                    matchedLeague = String(playerStats.leagueName || playerStats.league || '').toLowerCase();
+                                }
+                            }
+                        }
+                        
+                        // 優先順位2: player.statsから指定シーズンのデータを取得（careerStatsがない場合）
+                        if (!playerStats && Array.isArray(player.stats) && player.stats.length > 0) {
                             // 親善試合を除外するキーワード
                             const friendlyKeywords = [
                                 'friendly', 'friendlies', '親善', 'exhibition', 'test match',
@@ -1512,10 +1611,21 @@ app.get('/api/ranking/players', async (req, res) => {
                                     });
                                     
                                     if (leagueFilteredStats.length > 0) {
-                                        // リーグマッチしたstatsから、appearancesが最も多いものを選択
-                                        playerStats = leagueFilteredStats.sort((a, b) => 
-                                            (b.appearances || 0) - (a.appearances || 0)
-                                        )[0];
+                                        // 同じシーズンの複数のstatを合計（リーグ戦のみ）
+                                        playerStats = {
+                                            season: `${targetSeason}/${targetSeason + 1}`,
+                                            leagueName: leagueFilteredStats[0].leagueName || leagueFilteredStats[0].league || '',
+                                            league: leagueFilteredStats[0].leagueName || leagueFilteredStats[0].league || '',
+                                            teamName: leagueFilteredStats[0].teamName || player.currentTeam || player.team || '',
+                                            team: leagueFilteredStats[0].teamName || player.currentTeam || player.team || '',
+                                            appearances: leagueFilteredStats.reduce((sum, stat) => sum + (stat.appearances || stat.matches || 0), 0),
+                                            matches: leagueFilteredStats.reduce((sum, stat) => sum + (stat.matches || stat.appearances || 0), 0),
+                                            goals: leagueFilteredStats.reduce((sum, stat) => sum + (stat.goals || 0), 0),
+                                            assists: leagueFilteredStats.reduce((sum, stat) => sum + (stat.assists || 0), 0),
+                                            rating: leagueFilteredStats.length > 0 ? 
+                                                (leagueFilteredStats.reduce((sum, stat) => sum + (parseFloat(stat.rating) || 0), 0) / leagueFilteredStats.filter(s => s.rating).length).toFixed(1) : null,
+                                            minutes: leagueFilteredStats.reduce((sum, stat) => sum + (stat.minutes || 0), 0)
+                                        };
                                         matchedLeague = String(playerStats.leagueName || playerStats.league || '').toLowerCase();
                                         
                                         // PDの場合、チーム名も確認（スペインのチームのみ許可）
@@ -1549,7 +1659,7 @@ app.get('/api/ranking/players', async (req, res) => {
                                         return null;
                                     }
                                 } else {
-                                    // リーグ指定がない場合、appearancesが最も多いものを選択（親善試合を除外）
+                                    // リーグ指定がない場合、同じシーズンの全statを合計（親善試合を除外）
                                     const nonFriendlyStats = seasonStats.filter(stat => {
                                         const statLeague = String(stat.leagueName || stat.league || '').toLowerCase();
                                         const friendlyKeywords = [
@@ -1560,14 +1670,37 @@ app.get('/api/ranking/players', async (req, res) => {
                                     });
                                     
                                     if (nonFriendlyStats.length > 0) {
-                                        playerStats = nonFriendlyStats.sort((a, b) => 
-                                            (b.appearances || 0) - (a.appearances || 0)
-                                        )[0];
+                                        // 同じシーズンの複数のstatを合計
+                                        playerStats = {
+                                            season: `${targetSeason}/${targetSeason + 1}`,
+                                            leagueName: nonFriendlyStats[0].leagueName || nonFriendlyStats[0].league || '',
+                                            league: nonFriendlyStats[0].leagueName || nonFriendlyStats[0].league || '',
+                                            teamName: nonFriendlyStats[0].teamName || player.currentTeam || player.team || '',
+                                            team: nonFriendlyStats[0].teamName || player.currentTeam || player.team || '',
+                                            appearances: nonFriendlyStats.reduce((sum, stat) => sum + (stat.appearances || stat.matches || 0), 0),
+                                            matches: nonFriendlyStats.reduce((sum, stat) => sum + (stat.matches || stat.appearances || 0), 0),
+                                            goals: nonFriendlyStats.reduce((sum, stat) => sum + (stat.goals || 0), 0),
+                                            assists: nonFriendlyStats.reduce((sum, stat) => sum + (stat.assists || 0), 0),
+                                            rating: nonFriendlyStats.length > 0 ? 
+                                                (nonFriendlyStats.reduce((sum, stat) => sum + (parseFloat(stat.rating) || 0), 0) / nonFriendlyStats.filter(s => s.rating).length).toFixed(1) : null,
+                                            minutes: nonFriendlyStats.reduce((sum, stat) => sum + (stat.minutes || 0), 0)
+                                        };
                                     } else {
                                         // 親善試合以外のデータがない場合は、親善試合を含むデータを使用（フォールバック）
-                                        playerStats = seasonStats.sort((a, b) => 
-                                            (b.appearances || 0) - (a.appearances || 0)
-                                        )[0];
+                                        playerStats = {
+                                            season: `${targetSeason}/${targetSeason + 1}`,
+                                            leagueName: seasonStats[0].leagueName || seasonStats[0].league || '',
+                                            league: seasonStats[0].leagueName || seasonStats[0].league || '',
+                                            teamName: seasonStats[0].teamName || player.currentTeam || player.team || '',
+                                            team: seasonStats[0].teamName || player.currentTeam || player.team || '',
+                                            appearances: seasonStats.reduce((sum, stat) => sum + (stat.appearances || stat.matches || 0), 0),
+                                            matches: seasonStats.reduce((sum, stat) => sum + (stat.matches || stat.appearances || 0), 0),
+                                            goals: seasonStats.reduce((sum, stat) => sum + (stat.goals || 0), 0),
+                                            assists: seasonStats.reduce((sum, stat) => sum + (stat.assists || 0), 0),
+                                            rating: seasonStats.length > 0 ? 
+                                                (seasonStats.reduce((sum, stat) => sum + (parseFloat(stat.rating) || 0), 0) / seasonStats.filter(s => s.rating).length).toFixed(1) : null,
+                                            minutes: seasonStats.reduce((sum, stat) => sum + (stat.minutes || 0), 0)
+                                        };
                                     }
                                     matchedLeague = String(playerStats.leagueName || playerStats.league || '').toLowerCase();
                                 }
