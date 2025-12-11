@@ -1398,12 +1398,33 @@ app.get('/api/ranking/players', async (req, res) => {
                     console.log(`✅ DatabaseManagerから${dbPlayers.length}名の最新選手データを取得`);
                     
                     // フォーマット変換（シーズンとリーグでフィルタリング）
-                    const targetSeason = parseInt(season) || 2025;
+                    // シーズン形式の正規化: "2025/2026", "2025/26", "25/26", "2025" などに対応
+                    let targetSeason = parseInt(season) || 2025;
+                    
+                    // "25/26" のような形式を "2025/2026" に変換
+                    if (season.includes('/')) {
+                        const parts = season.split('/');
+                        if (parts.length === 2) {
+                            const startYear = parseInt(parts[0]);
+                            const endYear = parseInt(parts[1]);
+                            if (startYear < 100) {
+                                // "25/26" のような形式
+                                targetSeason = 2000 + startYear;
+                            } else {
+                                // "2025/2026" のような形式
+                                targetSeason = startYear;
+                            }
+                        }
+                    }
+                    
                     const seasonPatterns = [
                         `${targetSeason}/${targetSeason + 1}`,  // "2025/2026"
+                        `${targetSeason}/${String(targetSeason + 1).slice(-2)}`,  // "2025/26"
+                        `${String(targetSeason).slice(-2)}/${String(targetSeason + 1).slice(-2)}`,  // "25/26"
                         `${targetSeason}`,                      // "2025"
                         `${targetSeason}-${targetSeason + 1}`,  // "2025-2026"
-                        `${targetSeason}-${String(targetSeason + 1).slice(-2)}` // "2025-26"
+                        `${targetSeason}-${String(targetSeason + 1).slice(-2)}`, // "2025-26"
+                        `${String(targetSeason).slice(-2)}/${String(targetSeason + 1).slice(-2)}` // "25/26" (再確認用)
                     ];
                     
                     // スペインの主要チームリスト（PDフィルタ用）
@@ -1542,11 +1563,48 @@ app.get('/api/ranking/players', async (req, res) => {
                             
                             // 指定シーズンのstatsを検索（親善試合を除外）
                             const seasonStats = player.stats.filter(stat => {
-                                const statSeason = String(stat.season || stat.seasonName || '');
-                                const matchesSeason = seasonPatterns.some(pattern => 
-                                    statSeason.includes(pattern) || 
-                                    statSeason === String(targetSeason)
-                                );
+                                const statSeason = String(stat.season || stat.seasonName || '').trim();
+                                
+                                // シーズンマッチングの改善: より柔軟なマッチング
+                                let matchesSeason = false;
+                                
+                                // パターンマッチング
+                                for (const pattern of seasonPatterns) {
+                                    if (statSeason === pattern || 
+                                        statSeason.includes(pattern) || 
+                                        pattern.includes(statSeason)) {
+                                        matchesSeason = true;
+                                        break;
+                                    }
+                                }
+                                
+                                // 数値のみのマッチング（"2025" など）
+                                if (!matchesSeason) {
+                                    const statYear = parseInt(statSeason.split('/')[0] || statSeason.split('-')[0] || statSeason);
+                                    if (!isNaN(statYear) && statYear === targetSeason) {
+                                        matchesSeason = true;
+                                    }
+                                }
+                                
+                                // "25/26" 形式のマッチング
+                                if (!matchesSeason && statSeason.includes('/')) {
+                                    const parts = statSeason.split('/');
+                                    if (parts.length === 2) {
+                                        const statStartYear = parseInt(parts[0]);
+                                        const statEndYear = parseInt(parts[1]);
+                                        if (!isNaN(statStartYear) && !isNaN(statEndYear)) {
+                                            // "25/26" 形式の場合
+                                            if (statStartYear < 100) {
+                                                const fullStartYear = 2000 + statStartYear;
+                                                if (fullStartYear === targetSeason) {
+                                                    matchesSeason = true;
+                                                }
+                                            } else if (statStartYear === targetSeason) {
+                                                matchesSeason = true;
+                                            }
+                                        }
+                                    }
+                                }
                                 
                                 if (!matchesSeason) return false;
                                 
