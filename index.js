@@ -1458,10 +1458,66 @@ app.get('/api/ranking/players', async (req, res) => {
                         // 優先順位1: careerStatsから指定シーズンのデータを取得（リーグ戦のみ）
                         if (Array.isArray(player.careerStats) && player.careerStats.length > 0) {
                             const careerStatsForSeason = player.careerStats.filter(cs => {
-                                const csSeason = String(cs.season || '');
-                                const matchesSeason = seasonPatterns.some(pattern => 
-                                    csSeason.includes(pattern) || csSeason === String(targetSeason)
-                                );
+                                const csSeason = String(cs.season || '').trim();
+                                
+                                // シーズンマッチングの改善: より柔軟なマッチング
+                                let matchesSeason = false;
+                                
+                                // パターンマッチング
+                                for (const pattern of seasonPatterns) {
+                                    if (csSeason === pattern || 
+                                        csSeason.includes(pattern) || 
+                                        pattern.includes(csSeason)) {
+                                        matchesSeason = true;
+                                        break;
+                                    }
+                                }
+                                
+                                // 数値のみのマッチング（"2025" など）
+                                if (!matchesSeason) {
+                                    const csYear = parseInt(csSeason.split('/')[0] || csSeason.split('-')[0] || csSeason);
+                                    if (!isNaN(csYear) && csYear === targetSeason) {
+                                        matchesSeason = true;
+                                    }
+                                }
+                                
+                                // "25/26" 形式のマッチング
+                                if (!matchesSeason && csSeason.includes('/')) {
+                                    const parts = csSeason.split('/');
+                                    if (parts.length === 2) {
+                                        const csStartYear = parseInt(parts[0]);
+                                        const csEndYear = parseInt(parts[1]);
+                                        if (!isNaN(csStartYear) && !isNaN(csEndYear)) {
+                                            // "25/26" 形式の場合
+                                            if (csStartYear < 100) {
+                                                const fullStartYear = 2000 + csStartYear;
+                                                if (fullStartYear === targetSeason) {
+                                                    matchesSeason = true;
+                                                }
+                                            } else if (csStartYear === targetSeason) {
+                                                matchesSeason = true;
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // "2025/26" 形式のマッチング（追加）
+                                if (!matchesSeason && csSeason.includes('/')) {
+                                    const parts = csSeason.split('/');
+                                    if (parts.length === 2) {
+                                        const csStartYear = parseInt(parts[0]);
+                                        const csEndYearStr = parts[1];
+                                        const csEndYear = parseInt(csEndYearStr);
+                                        
+                                        // "2025/26" 形式の場合
+                                        if (csStartYear === targetSeason && csEndYearStr.length === 2) {
+                                            const expectedEndYear = (targetSeason + 1) % 100;
+                                            if (csEndYear === expectedEndYear || csEndYear === (targetSeason + 1)) {
+                                                matchesSeason = true;
+                                            }
+                                        }
+                                    }
+                                }
                                 
                                 // リーグ戦のみを対象とする
                                 const csLeague = String(cs.league || cs.leagueName || '').toLowerCase();
