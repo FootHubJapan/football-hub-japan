@@ -1463,11 +1463,9 @@ app.get('/api/ranking/players', async (req, res) => {
                                 // シーズンマッチングの改善: より柔軟なマッチング
                                 let matchesSeason = false;
                                 
-                                // パターンマッチング
+                                // パターンマッチング（厳密なマッチングのみ）
                                 for (const pattern of seasonPatterns) {
-                                    if (csSeason === pattern || 
-                                        csSeason.includes(pattern) || 
-                                        pattern.includes(csSeason)) {
+                                    if (csSeason === pattern) {
                                         matchesSeason = true;
                                         break;
                                     }
@@ -1624,11 +1622,9 @@ app.get('/api/ranking/players', async (req, res) => {
                                 // シーズンマッチングの改善: より柔軟なマッチング
                                 let matchesSeason = false;
                                 
-                                // パターンマッチング
+                                // パターンマッチング（厳密なマッチングのみ）
                                 for (const pattern of seasonPatterns) {
-                                    if (statSeason === pattern || 
-                                        statSeason.includes(pattern) || 
-                                        pattern.includes(statSeason)) {
+                                    if (statSeason === pattern) {
                                         matchesSeason = true;
                                         break;
                                     }
