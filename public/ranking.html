@@ -188,6 +188,18 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        .table-header .table-row > div {
+            text-align: center;
+        }
+
+        .table-header .table-row > div:first-child {
+            text-align: left;
+        }
+
+        .table-header .table-row > div:nth-child(2) {
+            text-align: left;
+        }
+
         .table-row {
             display: grid;
             grid-template-columns: 60px 1fr 120px 120px 120px 120px;
@@ -195,6 +207,10 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             align-items: center;
             transition: all 0.3s ease;
+        }
+
+        .table-row:not(.team-ranking) > div:nth-child(n+3) {
+            text-align: center;
         }
 
         .table-row.team-ranking {
@@ -310,6 +326,19 @@
             text-align: center;
             font-weight: bold;
             color: #00ff88;
+        }
+
+        /* 選手ランキングテーブルの中央揃え */
+        .table-row:not(.team-ranking) > div:nth-child(1) {
+            text-align: left;
+        }
+
+        .table-row:not(.team-ranking) > div:nth-child(2) {
+            text-align: left;
+        }
+
+        .table-row:not(.team-ranking) > div:nth-child(n+3) {
+            text-align: center;
         }
 
 
