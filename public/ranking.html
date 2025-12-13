@@ -288,6 +288,12 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .player-info:hover {
+            opacity: 0.8;
         }
 
         .player-avatar {
@@ -1157,12 +1163,19 @@
                 const appearances = player.stats?.appearances || player.appearances || 0;
                 const rating = player.stats?.rating || player.rating || 'N/A';
                 
+                // 選手IDを取得（複数のID形式に対応）
+                const playerId = player.id || player.playerId || player.apiFootballId || player.footballDataId;
+                const playerIdStr = playerId ? String(playerId) : '';
+                
+                // クリックイベント用のonclick属性
+                const onClickHandler = playerIdStr ? `onclick="window.location.href='/player-detail.html?id=${encodeURIComponent(playerIdStr)}'"` : '';
+                
                 if (stat === 'goalsAssists') {
                     const total = goals + assists;
                     return `
                     <div class="table-row">
                         <div class="rank-number">${index + 1}</div>
-                        <div class="player-info">
+                        <div class="player-info" ${onClickHandler}>
                             <div class="player-avatar">
                                 <img src="${photoUrl}" alt="${player.name}" onerror="this.style.display='none'; this.parentElement.textContent='${player.name.charAt(0)}';">
                             </div>
@@ -1181,7 +1194,7 @@
                     return `
                     <div class="table-row">
                         <div class="rank-number">${index + 1}</div>
-                        <div class="player-info">
+                        <div class="player-info" ${onClickHandler}>
                             <div class="player-avatar">
                                 <img src="${photoUrl}" alt="${player.name}" onerror="this.style.display='none'; this.parentElement.textContent='${player.name.charAt(0)}';">
                             </div>
