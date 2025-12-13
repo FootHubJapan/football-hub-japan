@@ -410,11 +410,11 @@
                 <div class="filter-group">
                     <label class="filter-label">シーズン</label>
                     <select class="filter-select" id="seasonFilter">
-                        <option value="2025">2025/2026</option>
-                        <option value="2024">2024/2025</option>
-                        <option value="2023">2023/2024</option>
-                        <option value="2022">2022/2023</option>
-                        <option value="2021">2021/2022</option>
+                        <option value="2026">2025/2026</option>
+                        <option value="2025">2024/2025</option>
+                        <option value="2024">2023/2024</option>
+                        <option value="2023">2022/2023</option>
+                        <option value="2022">2021/2022</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -426,8 +426,9 @@
                         <option value="SA">セリエA</option>
                         <option value="BL1">ブンデスリーガ</option>
                         <option value="FL1">リーグ・アン</option>
-                        <option value="J1">J1リーグ</option>
                         <option value="CL">チャンピオンズリーグ</option>
+                        <option value="MLS">MLS</option>
+                        <option value="SPL">サウジアラビアプロリーグ</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -445,6 +446,7 @@
                     <select class="filter-select" id="statFilter">
                         <option value="goals">得点</option>
                         <option value="assists">アシスト</option>
+                        <option value="goalsAssists">ゴール＋アシスト</option>
                         <option value="appearances">出場数</option>
                         <option value="minutes">出場時間</option>
                         <option value="passes">パス成功数</option>
@@ -469,7 +471,7 @@
             </div>
             <div class="ranking-table">
                 <div class="table-header">
-                    <div class="table-row">
+                    <div class="table-row" id="playerTableHeader">
                         <div>順位</div>
                         <div>選手</div>
                         <div>得点</div>
@@ -534,8 +536,9 @@
                             <option value="SA">セリエA</option>
                             <option value="BL1">ブンデスリーガ</option>
                             <option value="FL1">リーグ・アン</option>
-                            <option value="J1">J1リーグ</option>
                             <option value="CL">チャンピオンズリーグ</option>
+                            <option value="MLS">MLS</option>
+                            <option value="SPL">サウジアラビアプロリーグ</option>
                         </select>
                     </div>
                 </div>
@@ -1063,10 +1066,33 @@
         // 選手ランキング表示
         function displayPlayerRanking(players) {
             const tbody = document.getElementById('playerTableBody');
+            const header = document.getElementById('playerTableHeader');
+            const stat = document.getElementById('statFilter').value;
             
             if (players.length === 0) {
                 tbody.innerHTML = '<div class="no-data">該当する選手が見つかりませんでした。</div>';
                 return;
+            }
+
+            // ヘッダーを統計項目に応じて更新
+            if (stat === 'goalsAssists') {
+                header.innerHTML = `
+                    <div>順位</div>
+                    <div>選手</div>
+                    <div>合計</div>
+                    <div>ゴール</div>
+                    <div>アシスト</div>
+                    <div>出場数</div>
+                `;
+            } else {
+                header.innerHTML = `
+                    <div>順位</div>
+                    <div>選手</div>
+                    <div>得点</div>
+                    <div>アシスト</div>
+                    <div>出場数</div>
+                    <div>評価</div>
+                `;
             }
 
             tbody.innerHTML = players.map((player, index) => {
@@ -1075,24 +1101,51 @@
                     ? player.photo 
                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&size=128&background=00ff88&color=0f0f23&bold=true`;
                 
-                return `
-                <div class="table-row">
-                    <div class="rank-number">${index + 1}</div>
-                    <div class="player-info">
-                        <div class="player-avatar">
-                            <img src="${photoUrl}" alt="${player.name}" onerror="this.style.display='none'; this.parentElement.textContent='${player.name.charAt(0)}';">
+                const goals = player.stats?.goals || player.goals || 0;
+                const assists = player.stats?.assists || player.assists || 0;
+                const appearances = player.stats?.appearances || player.appearances || 0;
+                const rating = player.stats?.rating || player.rating || 'N/A';
+                
+                if (stat === 'goalsAssists') {
+                    const total = goals + assists;
+                    return `
+                    <div class="table-row">
+                        <div class="rank-number">${index + 1}</div>
+                        <div class="player-info">
+                            <div class="player-avatar">
+                                <img src="${photoUrl}" alt="${player.name}" onerror="this.style.display='none'; this.parentElement.textContent='${player.name.charAt(0)}';">
+                            </div>
+                            <div class="player-details">
+                                <h4>${player.name}</h4>
+                                <p>${player.currentTeam || player.team} | ${player.detailedPosition || player.position}</p>
+                            </div>
                         </div>
-                        <div class="player-details">
-                            <h4>${player.name}</h4>
-                            <p>${player.currentTeam || player.team} | ${player.detailedPosition || player.position}</p>
-                        </div>
+                        <div class="stat-value">${total}</div>
+                        <div class="stat-value">${goals}</div>
+                        <div class="stat-value">${assists}</div>
+                        <div class="stat-value">${appearances}</div>
                     </div>
-                    <div class="stat-value">${player.stats?.goals || player.goals || 0}</div>
-                    <div class="stat-value">${player.stats?.assists || player.assists || 0}</div>
-                    <div class="stat-value">${player.stats?.appearances || player.appearances || 0}</div>
-                    <div class="stat-value">${player.stats?.rating || player.rating || 'N/A'}</div>
-                </div>
-            `;
+                `;
+                } else {
+                    return `
+                    <div class="table-row">
+                        <div class="rank-number">${index + 1}</div>
+                        <div class="player-info">
+                            <div class="player-avatar">
+                                <img src="${photoUrl}" alt="${player.name}" onerror="this.style.display='none'; this.parentElement.textContent='${player.name.charAt(0)}';">
+                            </div>
+                            <div class="player-details">
+                                <h4>${player.name}</h4>
+                                <p>${player.currentTeam || player.team} | ${player.detailedPosition || player.position}</p>
+                            </div>
+                        </div>
+                        <div class="stat-value">${goals}</div>
+                        <div class="stat-value">${assists}</div>
+                        <div class="stat-value">${appearances}</div>
+                        <div class="stat-value">${rating}</div>
+                    </div>
+                `;
+                }
             }).join('');
         }
 
