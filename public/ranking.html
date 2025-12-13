@@ -337,8 +337,30 @@
             text-align: left;
         }
 
-        .table-row:not(.team-ranking) > div:nth-child(n+3) {
+        /* 統計列（得点、アシスト、出場数、評価）を中央揃え */
+        .table-row:not(.team-ranking) > div:nth-child(3),
+        .table-row:not(.team-ranking) > div:nth-child(4),
+        .table-row:not(.team-ranking) > div:nth-child(5),
+        .table-row:not(.team-ranking) > div:nth-child(6) {
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        /* ヘッダーの統計列も中央揃え */
+        .table-header .table-row > div:nth-child(3),
+        .table-header .table-row > div:nth-child(4),
+        .table-header .table-row > div:nth-child(5),
+        .table-header .table-row > div:nth-child(6) {
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
         }
 
 
