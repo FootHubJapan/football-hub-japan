@@ -1398,13 +1398,21 @@ app.get('/api/ranking/players', async (req, res) => {
                     console.log(`✅ DatabaseManagerから${dbPlayers.length}名の最新選手データを取得`);
                     
                     // フォーマット変換（シーズンとリーグでフィルタリング）
-                    const targetSeason = parseInt(season) || 2025;
+                    // フロントエンドから送信されるシーズン値は終了年（例: 2026 = 2025/2026シーズン）
+                    const requestedSeason = parseInt(season) || 2025;
+                    const targetSeason = requestedSeason - 1; // 開始年を取得（例: 2026 → 2025）
                     const seasonPatterns = [
                         `${targetSeason}/${targetSeason + 1}`,  // "2025/2026"
+                        `${targetSeason}/${String(targetSeason + 1).slice(-2)}`,  // "2025/26"
                         `${targetSeason}`,                      // "2025"
                         `${targetSeason}-${targetSeason + 1}`,  // "2025-2026"
-                        `${targetSeason}-${String(targetSeason + 1).slice(-2)}` // "2025-26"
+                        `${targetSeason}-${String(targetSeason + 1).slice(-2)}`, // "2025-26"
+                        String(requestedSeason)  // "2026" (終了年も検索)
                     ];
+                    
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:1401',message:'Season filtering setup',data:{requestedSeason, targetSeason, seasonPatterns},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                    // #endregion
                     
                     // スペインの主要チームリスト（PDフィルタ用）
                     const spanishTeams = [
@@ -1446,8 +1454,15 @@ app.get('/api/ranking/players', async (req, res) => {
                                 const statSeason = String(stat.season || stat.seasonName || '');
                                 const matchesSeason = seasonPatterns.some(pattern => 
                                     statSeason.includes(pattern) || 
-                                    statSeason === String(targetSeason)
+                                    statSeason === String(targetSeason) ||
+                                    statSeason === String(requestedSeason)
                                 );
+                                
+                                // #region agent log
+                                if (player.name && (player.name.includes('Mbappé') || player.name.includes('Haaland'))) {
+                                    fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:1445',message:'Season match check',data:{playerName:player.name, statSeason, matchesSeason, seasonPatterns},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                                }
+                                // #endregion
                                 
                                 if (!matchesSeason) return false;
                                 
@@ -1838,12 +1853,16 @@ app.get('/api/ranking/players', async (req, res) => {
                     
                     if (localPlayers.length > 0) {
                         // ローカルデータを統一フォーマットに変換（シーズンとリーグでフィルタリング）
-                        const targetSeason = parseInt(season) || 2025;
+                        // フロントエンドから送信されるシーズン値は終了年（例: 2026 = 2025/2026シーズン）
+                        const requestedSeason = parseInt(season) || 2025;
+                        const targetSeason = requestedSeason - 1; // 開始年を取得（例: 2026 → 2025）
                         const seasonPatterns = [
-                            `${targetSeason}/${targetSeason + 1}`,
-                            `${targetSeason}`,
-                            `${targetSeason}-${targetSeason + 1}`,
-                            `${targetSeason}-${String(targetSeason + 1).slice(-2)}`
+                            `${targetSeason}/${targetSeason + 1}`,  // "2025/2026"
+                            `${targetSeason}/${String(targetSeason + 1).slice(-2)}`,  // "2025/26"
+                            `${targetSeason}`,                      // "2025"
+                            `${targetSeason}-${targetSeason + 1}`,  // "2025-2026"
+                            `${targetSeason}-${String(targetSeason + 1).slice(-2)}`, // "2025-26"
+                            String(requestedSeason)  // "2026" (終了年も検索)
                         ];
                         
                         // スペインの主要チームリスト（PDフィルタ用）
@@ -1886,7 +1905,8 @@ app.get('/api/ranking/players', async (req, res) => {
                                     const statSeason = String(stat.season || stat.seasonName || '');
                                     const matchesSeason = seasonPatterns.some(pattern => 
                                         statSeason.includes(pattern) || 
-                                        statSeason === String(targetSeason)
+                                        statSeason === String(targetSeason) ||
+                                        statSeason === String(requestedSeason)
                                     );
                                     
                                     if (!matchesSeason) return false;
@@ -2275,7 +2295,14 @@ app.get('/api/ranking/players', async (req, res) => {
                 };
                 
                 const targetLeague = league ? leagueIds[league] : null;
-                const targetSeason = parseInt(season) || 2025;
+                // フロントエンドから送信されるシーズン値は終了年（例: 2026 = 2025/2026シーズン）
+                // API-Footballには開始年を渡す必要がある
+                const requestedSeason = parseInt(season) || 2025;
+                const targetSeason = requestedSeason - 1; // 開始年を取得（例: 2026 → 2025）
+                
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:2298',message:'API-Football season setup',data:{requestedSeason, targetSeason},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                // #endregion
                 
                 console.log('🔍 Fetching player statistics from API-Football:', { league, targetLeague, season: targetSeason, stat });
                 
