@@ -12397,12 +12397,17 @@ async function updatePlayerStatsFromMatch(playerData, matchData, league, saveImm
         const beforeGoals = seasonStat.goals || 0;
         const beforeAssists = seasonStat.assists || 0;
         
-        seasonStat.appearances = (seasonStat.appearances || 0) + 1;
+        // 出場時間が0分以上の場合のみ試合数をカウント（ベンチにいただけの選手はカウントしない）
+        const playedMinutes = playerData.minutes || 0;
+        if (playedMinutes > 0) {
+            seasonStat.appearances = (seasonStat.appearances || 0) + 1;
+        }
+        
         seasonStat.goals = (seasonStat.goals || 0) + (playerData.goals || 0);
         seasonStat.assists = (seasonStat.assists || 0) + (playerData.assists || 0);
         seasonStat.yellowCards = (seasonStat.yellowCards || 0) + (playerData.yellowCards || 0);
         seasonStat.redCards = (seasonStat.redCards || 0) + (playerData.redCards || 0);
-        seasonStat.minutes = (seasonStat.minutes || 0) + (playerData.minutes || 90); // 実際の出場時間またはデフォルト90分
+        seasonStat.minutes = (seasonStat.minutes || 0) + playedMinutes; // 実際の出場時間
         
         // 最終更新日時を更新
         player.lastUpdated = new Date().toISOString();
