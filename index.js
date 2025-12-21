@@ -12036,12 +12036,23 @@ async function checkAndUpdateFinishedMatches() {
                 // #endregion
                 
                 const fixtures = response.data?.response || [];
-                console.log(`📊 ${league.name}: ${fixtures.length}件の終了試合を検出`);
+                console.log(`📊 ${league.name}: ${fixtures.length}件の終了試合を検出（APIから取得）`);
+                
+                // 過去12時間以内に終了した試合のみをフィルタリング
+                const now = new Date();
+                const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+                const recentFixtures = fixtures.filter(fixture => {
+                    const fixtureDate = fixture.fixture?.date ? new Date(fixture.fixture.date) : null;
+                    if (!fixtureDate) return false;
+                    return fixtureDate >= twelveHoursAgo && fixtureDate <= now;
+                });
+                
+                console.log(`📊 ${league.name}: ${recentFixtures.length}件の試合が過去12時間以内に終了`);
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12020',message:'Fixtures found',data:{league:league.name,fixtureCount:fixtures.length},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'C'})}).catch(()=>{});
+                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12035',message:'Fixtures filtered by 12 hours',data:{league:league.name,totalFixtures:fixtures.length,recentFixtures:recentFixtures.length,recentFixturesList:recentFixtures.slice(0,3).map(f=>({id:f.fixture?.id,date:f.fixture?.date,home:f.teams?.home?.name,away:f.teams?.away?.name}))},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'C'})}).catch(()=>{});
                 // #endregion
                 
-                for (const fixture of fixtures) {
+                for (const fixture of recentFixtures) {
                     const fixtureId = fixture.fixture?.id;
                     if (!fixtureId || processedMatches.has(fixtureId)) {
                         continue; // 既に処理済み
