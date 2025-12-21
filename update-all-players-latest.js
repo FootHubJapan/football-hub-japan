@@ -26,7 +26,15 @@ function normalizePlayerStats(stat) {
         return null;
     }
     
-    const season = stat.league?.season || 2025;
+    // API-Footballから返ってくる実際のシーズン情報を使用
+    // stat.league.seasonが存在しない場合は、リクエスト時に指定したシーズンを使用
+    // ただし、APIから返ってくるデータの実際のシーズンが重要
+    const season = stat.league?.season;
+    if (!season) {
+        // シーズン情報がない場合はnullを返してスキップ（誤データを防ぐ）
+        console.warn('⚠️ シーズン情報が見つかりません:', stat.league?.name);
+        return null;
+    }
     const seasonStr = `${season}/${String(season + 1).slice(-2)}`;
     
     return {
@@ -146,6 +154,8 @@ async function fetchLatestPlayerStats(playerId, season = 2025) {
 // 選手データを更新
 async function updatePlayer(player, dbManager, requestCount) {
     try {
+        const playerName = player.name || player.fullName || 'Unknown';
+        
         // playerIdを取得
         let playerId = player.playerId || player.id;
         
@@ -199,27 +209,25 @@ async function updatePlayer(player, dbManager, requestCount) {
             existingStats = [player.stats];
         }
 
-        // 2025/2026シーズンの統計を更新（既存のものを削除してから追加）
+        // APIから返ってくる実際のシーズン情報に基づいてフィルタリング
+        // latestData.seasonはリクエスト時に指定したシーズン（2025など）
+        // しかし、APIから返ってくるstat.league.seasonが実際のシーズン
+        
+        // 既存の2025/26シーズンの統計を削除（誤データを防ぐため）
         existingStats = existingStats.filter(s => {
             const statSeason = String(s.season || '');
             return !statSeason.includes('2025') && !statSeason.includes('2026');
         });
 
-        // 2025/2026シーズンの統計のみを追加
-        const season2025Stats = latestData.stats.filter(s => {
-            const statSeason = String(s.season || '');
-            return statSeason.includes('2025') || statSeason.includes('2026');
+        // APIから返ってくる実際のシーズン情報に基づいて追加
+        // stat.league.seasonが2024の場合は2024/25、2025の場合は2025/26として保存
+        const validStats = latestData.stats.filter(s => {
+            // seasonフィールドが正しく設定されているもののみ
+            return s.season && (s.season.includes('2024') || s.season.includes('2025') || s.season.includes('2026'));
         });
         
-        if (season2025Stats.length > 0) {
-            existingStats.push(...season2025Stats);
-        } else if (latestData.season === 2025) {
-            // シーズン情報がない場合は、2025/2026として追加
-            const statsWithSeason = latestData.stats.map(s => ({
-                ...s,
-                season: s.season || '2025/2026'
-            }));
-            existingStats.push(...statsWithSeason);
+        if (validStats.length > 0) {
+            existingStats.push(...validStats);
         }
 
         // 選手データを更新
