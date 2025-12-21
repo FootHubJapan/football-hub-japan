@@ -12006,14 +12006,17 @@ async function checkAndUpdateFinishedMatches() {
         
         for (const league of majorLeagues) {
             try {
-                // 過去7日間以内に終了した試合を取得（試合が終了してからデータが反映されるまでの時間を考慮）
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                const today = new Date();
+                // 過去12時間以内に終了した試合を取得（試合が終了してからデータが反映されるまでの時間を考慮）
+                const twelveHoursAgo = new Date();
+                twelveHoursAgo.setHours(twelveHoursAgo.getHours() - 12);
+                const now = new Date();
                 
-                console.log(`📊 ${league.name} の終了試合を取得中... (${sevenDaysAgo.toISOString().split('T')[0]} ～ ${today.toISOString().split('T')[0]})`);
+                const fromDate = twelveHoursAgo.toISOString().split('T')[0];
+                const toDate = now.toISOString().split('T')[0];
+                
+                console.log(`📊 ${league.name} の終了試合を取得中... (${fromDate} ${twelveHoursAgo.toISOString().split('T')[1].split('.')[0]} ～ ${toDate} ${now.toISOString().split('T')[1].split('.')[0]})`);
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12007',message:'Fetching fixtures',data:{league:league.name,season,from:sevenDaysAgo.toISOString().split('T')[0],to:today.toISOString().split('T')[0]},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'I'})}).catch(()=>{});
+                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12007',message:'Fetching fixtures',data:{league:league.name,season,from:fromDate,to:toDate,fromTime:twelveHoursAgo.toISOString(),toTime:now.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'I'})}).catch(()=>{});
                 // #endregion
                 
                 const response = await axios.get('https://v3.football.api-sports.io/fixtures', {
@@ -12021,15 +12024,15 @@ async function checkAndUpdateFinishedMatches() {
                         league: league.id,
                         season: season,
                         status: 'FT', // Full Time (終了)
-                        from: sevenDaysAgo.toISOString().split('T')[0],
-                        to: today.toISOString().split('T')[0]
+                        from: fromDate,
+                        to: toDate
                     },
                     headers: {
                         'x-apisports-key': API_FOOTBALL_KEY
                     }
                 });
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12027',message:'Fixtures API response',data:{league:league.name,fixtureCount:response.data?.response?.length || 0},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'I'})}).catch(()=>{});
+                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12027',message:'Fixtures API response',data:{league:league.name,fixtureCount:response.data?.response?.length || 0,fixtures:response.data?.response?.slice(0,3).map(f=>({id:f.fixture?.id,date:f.fixture?.date,home:f.teams?.home?.name,away:f.teams?.away?.name}))},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'I'})}).catch(()=>{});
                 // #endregion
                 
                 const fixtures = response.data?.response || [];
