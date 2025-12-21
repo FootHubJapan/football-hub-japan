@@ -12006,25 +12006,31 @@ async function checkAndUpdateFinishedMatches() {
         
         for (const league of majorLeagues) {
             try {
-                // 過去72時間以内に終了した試合を取得（試合が終了してからデータが反映されるまでの時間を考慮）
-                const threeDaysAgo = new Date();
-                threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+                // 過去7日間以内に終了した試合を取得（試合が終了してからデータが反映されるまでの時間を考慮）
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
                 const today = new Date();
                 
-                console.log(`📊 ${league.name} の終了試合を取得中... (${threeDaysAgo.toISOString().split('T')[0]} ～ ${today.toISOString().split('T')[0]})`);
+                console.log(`📊 ${league.name} の終了試合を取得中... (${sevenDaysAgo.toISOString().split('T')[0]} ～ ${today.toISOString().split('T')[0]})`);
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12007',message:'Fetching fixtures',data:{league:league.name,season,from:sevenDaysAgo.toISOString().split('T')[0],to:today.toISOString().split('T')[0]},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'I'})}).catch(()=>{});
+                // #endregion
                 
                 const response = await axios.get('https://v3.football.api-sports.io/fixtures', {
                     params: {
                         league: league.id,
                         season: season,
                         status: 'FT', // Full Time (終了)
-                        from: threeDaysAgo.toISOString().split('T')[0],
+                        from: sevenDaysAgo.toISOString().split('T')[0],
                         to: today.toISOString().split('T')[0]
                     },
                     headers: {
                         'x-apisports-key': API_FOOTBALL_KEY
                     }
                 });
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12027',message:'Fixtures API response',data:{league:league.name,fixtureCount:response.data?.response?.length || 0},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'I'})}).catch(()=>{});
+                // #endregion
                 
                 const fixtures = response.data?.response || [];
                 console.log(`📊 ${league.name}: ${fixtures.length}件の終了試合を検出`);
@@ -12182,70 +12188,60 @@ async function updatePlayersFromMatch(fixture, league) {
 
 // チームの選手統計を取得
 async function getTeamPlayerStats(teamId, leagueId, matchData) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12184',message:'getTeamPlayerStats started',data:{teamId,leagueId,fixtureId:matchData.fixture?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'H'})}).catch(()=>{});
+    // #endregion
     try {
         const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
-        const currentYear = new Date().getFullYear();
+        const fixtureId = matchData.fixture?.id;
         
-        // チームの選手リストを取得
-        const response = await axios.get('https://v3.football.api-sports.io/players/squads', {
+        if (!fixtureId) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12190',message:'No fixture ID',data:{teamId},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'H'})}).catch(()=>{});
+            // #endregion
+            return [];
+        }
+        
+        // 試合の選手統計を取得（fixtures/playersエンドポイントを使用）
+        const response = await axios.get('https://v3.football.api-sports.io/fixtures/players', {
             params: {
+                fixture: fixtureId,
                 team: teamId
             },
             headers: {
                 'x-apisports-key': API_FOOTBALL_KEY
-            }
+            },
+            timeout: 30000
         });
         
-        const players = response.data?.response?.[0]?.players || [];
+        const playersData = response.data?.response?.[0]?.players || [];
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12205',message:'Player stats retrieved from API',data:{teamId,fixtureId,playerCount:playersData.length},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'H'})}).catch(()=>{});
+        // #endregion
         
-        // 試合のイベントから得点・アシストを取得
-        const events = matchData.events || [];
-        const playerStatsMap = new Map();
+        // 選手統計を正規化
+        const playerStats = playersData.map(player => ({
+            id: player.player?.id,
+            name: player.player?.name,
+            goals: player.statistics?.[0]?.goals?.total || 0,
+            assists: player.statistics?.[0]?.goals?.assists || 0,
+            yellowCards: player.statistics?.[0]?.cards?.yellow || 0,
+            redCards: player.statistics?.[0]?.cards?.red || 0,
+            minutes: player.statistics?.[0]?.games?.minutes || 0,
+            teamId: teamId,
+            leagueId: leagueId
+        }));
         
-        for (const event of events) {
-            const playerId = event.player?.id;
-            if (!playerId) continue;
-            
-            if (!playerStatsMap.has(playerId)) {
-                playerStatsMap.set(playerId, {
-                    id: playerId,
-                    name: event.player?.name,
-                    goals: 0,
-                    assists: 0,
-                    yellowCards: 0,
-                    redCards: 0
-                });
-            }
-            
-            const stats = playerStatsMap.get(playerId);
-            
-            if (event.type === 'Goal') {
-                stats.goals++;
-            } else if (event.type === 'Assist') {
-                stats.assists++;
-            } else if (event.type === 'Card' && event.detail === 'Yellow Card') {
-                stats.yellowCards++;
-            } else if (event.type === 'Card' && event.detail === 'Red Card') {
-                stats.redCards++;
-            }
-        }
-        
-        // 選手統計を取得
-        const playerStats = [];
-        for (const player of players.slice(0, 30)) { // 最初の30名のみ（API制限対策）
-            const matchStats = playerStatsMap.get(player.id);
-            if (matchStats) {
-                playerStats.push({
-                    ...matchStats,
-                    teamId: teamId,
-                    leagueId: leagueId
-                });
-            }
-        }
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12220',message:'Player stats normalized',data:{teamId,playerCount:playerStats.length},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'H'})}).catch(()=>{});
+        // #endregion
         
         return playerStats;
         
     } catch (error) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12225',message:'getTeamPlayerStats error',data:{teamId,error:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'H'})}).catch(()=>{});
+        // #endregion
         console.error(`❌ チーム ${teamId} の選手統計取得エラー:`, error.message);
         return [];
     }
