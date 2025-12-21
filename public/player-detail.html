@@ -882,14 +882,36 @@
                 'プレミアリーグ', 'ラ・リーガ', 'セリエA', 'ブンデスリーガ', 'リーグ・アン'
             ];
 
-            // リーグ戦の統計のみを抽出（カップ戦や親善試合を除外）
+            // 代表チームのリーグ名（除外対象）
+            const nationalTeamLeagues = [
+                'africa cup', 'world cup', 'euro', 'copa america', 'asia cup',
+                'qualification', 'friendlies', 'nations league',
+                'アフリカ', 'ワールドカップ', 'ユーロ', 'コパ', 'アジア', '親善', '予選'
+            ];
+
+            // リーグ戦の統計のみを抽出（カップ戦、親善試合、代表戦を除外）
             const leagueStats = stats2025.filter(s => {
                 const leagueName = (s.leagueName || s.league || '').toLowerCase();
+                const teamName = (s.teamName || s.team || '').toLowerCase();
+                
+                // 代表戦を除外
+                if (nationalTeamLeagues.some(ntl => leagueName.includes(ntl))) {
+                    return false;
+                }
+                
+                // 代表チーム名を除外（Cameroon, Brazil, Argentina など）
+                const isNationalTeam = teamName === player.nationality?.toLowerCase() || 
+                                      teamName.includes('national') ||
+                                      teamName.includes('代表');
+                if (isNationalTeam) {
+                    return false;
+                }
+                
+                // カップ戦や親善試合を除外
                 return !leagueName.includes('cup') && 
                        !leagueName.includes('champions league') && 
                        !leagueName.includes('europa') &&
                        !leagueName.includes('friendly') &&
-                       !leagueName.includes('qualification') &&
                        !leagueName.includes('summer series');
             });
 
@@ -936,7 +958,12 @@
                         .sort((a, b) => (b.appearances || 0) - (a.appearances || 0))[0]
                         ?.teamName || otherLeagueStats[0]?.team;
 
-                    if (loanDestTeam && loanDestTeam !== player.currentTeam) {
+                    // 代表チーム名を除外
+                    const isNationalTeam = loanDestTeam?.toLowerCase() === player.nationality?.toLowerCase() ||
+                                          loanDestTeam?.toLowerCase().includes('national') ||
+                                          loanDestTeam?.toLowerCase().includes('代表');
+                    
+                    if (loanDestTeam && loanDestTeam !== player.currentTeam && !isNationalTeam) {
                         return {
                             currentTeam: loanDestTeam, // 現所属チーム（ローン先）
                             loanSourceTeam: player.currentTeam // ローン元チーム
