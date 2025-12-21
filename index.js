@@ -12270,20 +12270,31 @@ async function updatePlayerStatsFromMatch(playerData, matchData, league, saveImm
             }
         }
         
-        // 現在のシーズンを取得
+        // 現在のシーズンを取得（8月以降は新しいシーズン、7月以前は前シーズン）
         const currentYear = new Date().getFullYear();
-        const season = `${currentYear}/${currentYear + 1}`;
+        const currentMonth = new Date().getMonth() + 1;
+        // 8月以降は新しいシーズン、7月以前は前シーズン
+        const seasonYear = (currentMonth >= 8) ? currentYear : currentYear - 1;
+        const season = `${seasonYear}/${String(seasonYear + 1).slice(-2)}`; // "2025/26"形式
         
         // 既存のstatsを取得または初期化
         if (!Array.isArray(player.stats)) {
             player.stats = [];
         }
         
-        // 該当シーズン・リーグの統計を検索
-        let seasonStat = player.stats.find(s => 
-            (s.season === season || s.season === String(currentYear)) &&
-            (s.leagueName === league.name || s.league === league.name)
-        );
+        // 該当シーズン・リーグの統計を検索（複数のシーズン表記に対応）
+        let seasonStat = player.stats.find(s => {
+            const statSeason = String(s.season || '').toLowerCase();
+            const targetSeasonLower = season.toLowerCase();
+            const targetSeasonFull = `${seasonYear}/${seasonYear + 1}`.toLowerCase();
+            const targetSeasonShort = `${seasonYear}/${String(seasonYear + 1).slice(-2)}`.toLowerCase();
+            
+            return (statSeason === targetSeasonLower || 
+                    statSeason === targetSeasonFull || 
+                    statSeason === targetSeasonShort ||
+                    statSeason === String(seasonYear)) &&
+                   (s.leagueName === league.name || s.league === league.name);
+        });
         
         if (!seasonStat) {
             // 新しい統計エントリを作成
