@@ -12233,18 +12233,36 @@ async function getTeamPlayerStats(teamId, leagueId, matchData) {
         fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12205',message:'Player stats retrieved from API',data:{teamId,fixtureId,playerCount:playersData.length},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'H'})}).catch(()=>{});
         // #endregion
         
-        // 選手統計を正規化
-        const playerStats = playersData.map(player => ({
-            id: player.player?.id,
-            name: player.player?.name,
-            goals: player.statistics?.[0]?.goals?.total || 0,
-            assists: player.statistics?.[0]?.goals?.assists || 0,
-            yellowCards: player.statistics?.[0]?.cards?.yellow || 0,
-            redCards: player.statistics?.[0]?.cards?.red || 0,
-            minutes: player.statistics?.[0]?.games?.minutes || 0,
-            teamId: teamId,
-            leagueId: leagueId
-        }));
+        // 選手統計を正規化（出場した全選手を含む）
+        const playerStats = playersData
+            .filter(player => player.player?.id && player.player?.name) // 有効な選手データのみ
+            .map(player => {
+                const stats = player.statistics?.[0] || {};
+                const games = stats.games || {};
+                const goals = stats.goals || {};
+                const cards = stats.cards || {};
+                
+                return {
+                    id: player.player.id,
+                    name: player.player.name,
+                    goals: goals.total || 0,
+                    assists: goals.assists || 0,
+                    yellowCards: cards.yellow || 0,
+                    redCards: cards.red || 0,
+                    minutes: games.minutes || 0,
+                    teamId: teamId,
+                    leagueId: leagueId,
+                    // 出場情報
+                    position: games.position || null,
+                    rating: stats.games?.rating || null,
+                    captain: games.captain || false,
+                    substitute: games.substitute || false
+                };
+            });
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12237',message:'Player stats normalized with details',data:{teamId,playerCount:playerStats.length,playersWithMinutes:playerStats.filter(p=>p.minutes>0).length,playersWithoutMinutes:playerStats.filter(p=>p.minutes===0).length},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'J'})}).catch(()=>{});
+        // #endregion
         
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12220',message:'Player stats normalized',data:{teamId,playerCount:playerStats.length},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'H'})}).catch(()=>{});
