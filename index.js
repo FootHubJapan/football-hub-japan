@@ -11967,11 +11967,17 @@ async function updatePlayerInfo(playerName) {
 
 // 終了した試合をチェックして選手データを更新
 async function checkAndUpdateFinishedMatches() {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11969',message:'checkAndUpdateFinishedMatches started',data:{timestamp:new Date().toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     try {
         console.log('🔍 終了した試合をチェック中...');
         
         const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
         if (!API_FOOTBALL_KEY) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11975',message:'API key not found',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
             console.log('⚠️ API_FOOTBALL_KEYが設定されていません。試合ベース更新をスキップします。');
             return;
         }
@@ -11991,6 +11997,9 @@ async function checkAndUpdateFinishedMatches() {
         const currentMonth = new Date().getMonth() + 1;
         // 8月以降は新しいシーズン、7月以前は前シーズン
         const season = (currentMonth >= 8) ? currentYear : currentYear - 1;
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11993',message:'Season calculated',data:{currentYear,currentMonth,season},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         
         let totalUpdated = 0;
         const processedMatches = new Set();
@@ -12019,6 +12028,9 @@ async function checkAndUpdateFinishedMatches() {
                 
                 const fixtures = response.data?.response || [];
                 console.log(`📊 ${league.name}: ${fixtures.length}件の終了試合を検出`);
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12020',message:'Fixtures found',data:{league:league.name,fixtureCount:fixtures.length},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
                 
                 for (const fixture of fixtures) {
                     const fixtureId = fixture.fixture?.id;
@@ -12027,13 +12039,22 @@ async function checkAndUpdateFinishedMatches() {
                     }
                     
                     try {
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12030',message:'Updating players from match',data:{fixtureId,league:league.name,homeTeam:fixture.teams?.home?.name,awayTeam:fixture.teams?.away?.name},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'C'})}).catch(()=>{});
+                        // #endregion
                         await updatePlayersFromMatch(fixture, league);
                         processedMatches.add(fixtureId);
                         totalUpdated++;
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12032',message:'Match processed successfully',data:{fixtureId,totalUpdated},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'C'})}).catch(()=>{});
+                        // #endregion
                         
                         // APIレート制限対策
                         await new Promise(resolve => setTimeout(resolve, 500));
                     } catch (matchError) {
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12037',message:'Match processing error',data:{fixtureId,error:matchError.message},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'C'})}).catch(()=>{});
+                        // #endregion
                         console.error(`❌ 試合 ${fixtureId} の処理エラー:`, matchError.message);
                     }
                 }
@@ -12047,6 +12068,9 @@ async function checkAndUpdateFinishedMatches() {
         }
         
         console.log(`✅ 試合ベース更新完了: ${totalUpdated}件の試合を処理`);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12049',message:'Match update completed',data:{totalUpdated,processedMatchesCount:processedMatches.size},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         
         // 処理済み試合IDのクリーンアップ（1000件を超えたら古いものを削除）
         if (processedMatches.size > 1000) {
@@ -12055,18 +12079,27 @@ async function checkAndUpdateFinishedMatches() {
         }
         
     } catch (error) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12058',message:'Match update error',data:{error:error.message,stack:error.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         console.error('❌ 試合ベース更新エラー:', error.message);
     }
 }
 
 // 試合から選手データを更新
 async function updatePlayersFromMatch(fixture, league) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12063',message:'updatePlayersFromMatch started',data:{fixtureId:fixture.fixture?.id,league:league.name},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     try {
         const fixtureId = fixture.fixture?.id;
         const homeTeamId = fixture.teams?.home?.id;
         const awayTeamId = fixture.teams?.away?.id;
         
         if (!fixtureId || !homeTeamId || !awayTeamId) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12069',message:'Missing fixture data',data:{fixtureId,homeTeamId,awayTeamId},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'D'})}).catch(()=>{});
+            // #endregion
             return;
         }
         
@@ -12113,9 +12146,18 @@ async function updatePlayersFromMatch(fixture, league) {
         // 更新された選手を一度に保存（バッチ保存）
         if (updatedPlayers.length > 0) {
             try {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12114',message:'Saving updated players',data:{fixtureId,playerCount:updatedPlayers.length,playerNames:updatedPlayers.map(p=>p.name)},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'E'})}).catch(()=>{});
+                // #endregion
                 await cacheManager.db.saveComprehensivePlayers(updatedPlayers);
                 console.log(`✅ 試合 ${fixtureId}: ${updatedPlayers.length}名の選手データを更新（バッチ保存）`);
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12117',message:'Players saved successfully',data:{fixtureId,playerCount:updatedPlayers.length},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'E'})}).catch(()=>{});
+                // #endregion
             } catch (saveError) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12119',message:'Save error, falling back to individual save',data:{fixtureId,error:saveError.message},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'E'})}).catch(()=>{});
+                // #endregion
                 console.error(`❌ 試合 ${fixtureId} の選手データ保存エラー:`, saveError.message);
                 // 個別保存にフォールバック
                 for (const player of updatedPlayers) {
@@ -12127,6 +12169,9 @@ async function updatePlayersFromMatch(fixture, league) {
                 }
             }
         } else {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12130',message:'No players updated',data:{fixtureId},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'D'})}).catch(()=>{});
+            // #endregion
             console.log(`⚠️ 試合 ${fixtureId}: 更新された選手がありません`);
         }
         
@@ -12276,6 +12321,9 @@ async function updatePlayerStatsFromMatch(playerData, matchData, league, saveImm
         // 8月以降は新しいシーズン、7月以前は前シーズン
         const seasonYear = (currentMonth >= 8) ? currentYear : currentYear - 1;
         const season = `${seasonYear}/${String(seasonYear + 1).slice(-2)}`; // "2025/26"形式
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12275',message:'Season calculated for player update',data:{playerName,currentYear,currentMonth,seasonYear,season,league:league.name},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'F'})}).catch(()=>{});
+        // #endregion
         
         // 既存のstatsを取得または初期化
         if (!Array.isArray(player.stats)) {
@@ -12295,6 +12343,9 @@ async function updatePlayerStatsFromMatch(playerData, matchData, league, saveImm
                     statSeason === String(seasonYear)) &&
                    (s.leagueName === league.name || s.league === league.name);
         });
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12296',message:'Season stat found or created',data:{playerName,season,league:league.name,found:!!seasonStat,existingStatsCount:player.stats.length},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'F'})}).catch(()=>{});
+        // #endregion
         
         if (!seasonStat) {
             // 新しい統計エントリを作成
@@ -12314,19 +12365,32 @@ async function updatePlayerStatsFromMatch(playerData, matchData, league, saveImm
         }
         
         // 試合の統計を追加
+        const beforeAppearances = seasonStat.appearances || 0;
+        const beforeGoals = seasonStat.goals || 0;
+        const beforeAssists = seasonStat.assists || 0;
+        
         seasonStat.appearances = (seasonStat.appearances || 0) + 1;
         seasonStat.goals = (seasonStat.goals || 0) + (playerData.goals || 0);
         seasonStat.assists = (seasonStat.assists || 0) + (playerData.assists || 0);
         seasonStat.yellowCards = (seasonStat.yellowCards || 0) + (playerData.yellowCards || 0);
         seasonStat.redCards = (seasonStat.redCards || 0) + (playerData.redCards || 0);
-        seasonStat.minutes = (seasonStat.minutes || 0) + 90; // デフォルト90分
+        seasonStat.minutes = (seasonStat.minutes || 0) + (playerData.minutes || 90); // 実際の出場時間またはデフォルト90分
         
         // 最終更新日時を更新
         player.lastUpdated = new Date().toISOString();
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12306',message:'Player stats updated',data:{playerName,season,league:league.name,beforeAppearances,afterAppearances:seasonStat.appearances,beforeGoals,afterGoals:seasonStat.goals,beforeAssists,afterAssists:seasonStat.assists,lastUpdated:player.lastUpdated},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'F'})}).catch(()=>{});
+        // #endregion
         
         // 即座に保存する場合のみ保存
         if (saveImmediately) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12318',message:'Saving player immediately',data:{playerName,playerId},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'G'})}).catch(()=>{});
+            // #endregion
             await cacheManager.savePlayerData(player);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12320',message:'Player saved successfully',data:{playerName,playerId},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'G'})}).catch(()=>{});
+            // #endregion
             console.log(`  ✅ ${playerName}: ${playerData.goals || 0}G ${playerData.assists || 0}A`);
         } else {
             console.log(`  ✅ ${playerName}: ${playerData.goals || 0}G ${playerData.assists || 0}A (バッチ保存待ち)`);
