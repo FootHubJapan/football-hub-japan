@@ -11725,7 +11725,13 @@ app.get('/api/clear-cache', async (req, res) => {
 });
 
 // サーバーを起動
+// #region agent log
+fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11728',message:'Server startup attempt',data:{port:PORT,nodeEnv:process.env.NODE_ENV || 'development',memoryUsage:process.memoryUsage()},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'A'})}).catch(()=>{});
+// #endregion
 app.listen(PORT, () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11729',message:'Server started successfully',data:{port:PORT,memoryUsage:process.memoryUsage()},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     console.log(`Server is running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`Health check: http://localhost:${PORT}/health`);
@@ -11740,9 +11746,18 @@ app.listen(PORT, () => {
     });
     
     if (apiService && typeof apiService.init === 'function') {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11742',message:'APIService available, starting system init',data:{hasApiService:!!apiService},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         console.log('✅ APIService available、システム初期化を開始');
-        initializeSystem();
+        // 起動時の初期化を遅延させて、サーバーが完全に起動してから実行
+        setTimeout(() => {
+            initializeSystem();
+        }, 2000);
     } else {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11746',message:'APIService not available, forcing reinit',data:{hasApiService:!!apiService},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         console.log('⚠️ APIService not available、強制再初期化を実行中...');
         
         // APIServiceが利用できない場合、強制的に再初期化を試行
@@ -11759,26 +11774,41 @@ app.listen(PORT, () => {
             apiService = new APIService();
             console.log('✅ APIServiceインスタンス作成成功');
             
-            // 初期化を実行して完了を待つ
+                // 初期化を実行して完了を待つ
             console.log('🔄 APIService初期化を実行中...');
             apiService.init().then(() => {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11764',message:'APIService init completed',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'B'})}).catch(()=>{});
+                // #endregion
                 console.log('✅ APIService初期化完了');
-                // 初期化完了後にシステム初期化を実行
+                // 初期化完了後にシステム初期化を実行（遅延）
                 console.log('✅ APIService利用可能、システム初期化を開始');
-                initializeSystem();
+                setTimeout(() => {
+                    initializeSystem();
+                }, 2000);
             }).catch(error => {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11769',message:'APIService init error',data:{error:error.message,stack:error.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'B'})}).catch(()=>{});
+                // #endregion
                 console.error('❌ APIService初期化エラー:', error);
                 console.log('⚠️ エラーが発生しましたが、システム初期化を続行します');
-                initializeSystem();
+                setTimeout(() => {
+                    initializeSystem();
+                }, 2000);
             });
             
         } catch (error) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11775',message:'APIService reinit failed',data:{error:error.message,stack:error.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
             console.error('❌ APIService強制再初期化失敗:', error);
             console.error('詳細エラー:', error.stack);
             
-            // エラーが発生してもシステム初期化は実行
+            // エラーが発生してもシステム初期化は実行（遅延）
             console.log('⚠️ エラーが発生しましたが、システム初期化を続行します');
-            initializeSystem();
+            setTimeout(() => {
+                initializeSystem();
+            }, 2000);
         }
     }
 }).on('error', (error) => {
@@ -12301,10 +12331,16 @@ async function updatePlayerStatsFromMatch(playerData, matchData, league, saveImm
 
 // データベースの健全性チェック
 async function performDatabaseHealthCheck() {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12324',message:'performDatabaseHealthCheck started',data:{memoryUsage:process.memoryUsage()},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
     try {
         console.log('🏥 データベースの健全性チェックを実行中...');
         
         const stats = await cacheManager.getCacheStats();
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12328',message:'Cache stats retrieved',data:{totalPlayers:stats.totalPlayers,memoryUsage:process.memoryUsage()},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
         
         // データの品質チェック
         if (stats.totalPlayers < 20) {
@@ -12328,30 +12364,54 @@ async function performDatabaseHealthCheck() {
         // 古いデータのクリーンアップ
         await cacheManager.cleanupCache();
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12352',message:'Database health check completed',data:{memoryUsage:process.memoryUsage()},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
         console.log('✅ データベース健全性チェック完了');
         
     } catch (error) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12355',message:'Database health check error',data:{error:error.message,stack:error.stack,memoryUsage:process.memoryUsage()},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
         console.error('❌ 健全性チェックエラー:', error);
     }
 }
 
 // サーバー起動時の初期化
 async function initializeSystem() {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12360',message:'initializeSystem started',data:{memoryUsage:process.memoryUsage()},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     try {
         console.log('🚀 システム初期化を開始...');
         
-        // データベースの健全性チェック
-        await performDatabaseHealthCheck();
-        
-        // 自動更新システムを開始
+        // 自動更新システムを開始（軽量な処理を先に実行）
         startAutoUpdate();
+        
+        // データベースの健全性チェックは非同期で実行（重い処理を後回し）
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12365',message:'Starting database health check',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
+        // データベースチェックを非同期で実行（ブロックしない）
+        performDatabaseHealthCheck().catch(error => {
+            console.error('❌ データベース健全性チェックエラー（非同期）:', error);
+        });
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12368',message:'Database health check started async',data:{memoryUsage:process.memoryUsage()},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         
         // 1時間ごとに健全性チェック
         setInterval(performDatabaseHealthCheck, 60 * 60 * 1000);
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12373',message:'System initialization completed',data:{memoryUsage:process.memoryUsage()},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         console.log('✅ システム初期化完了');
         
     } catch (error) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12376',message:'System initialization error',data:{error:error.message,stack:error.stack,memoryUsage:process.memoryUsage()},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         console.error('❌ システム初期化エラー:', error);
     }
 }
