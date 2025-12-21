@@ -8482,7 +8482,77 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
             console.log(`📅 過去10年分のシーズンを取得: ${seasonList.join(', ')}`);
         }
         
-        // player.statsから過去のシーズンを取得（APIから取得できない場合のフォールバック）
+        // 優先順位1: player.careerStats（保存されたデータを最優先で使用）
+        if (player.careerStats && Array.isArray(player.careerStats) && player.careerStats.length > 0) {
+            console.log(`✅ 保存されたキャリアスタッツを使用: ${player.careerStats.length}レコード`);
+            
+            // カップ戦と親善試合を除外するフィルタ
+            const cupCompetitions = [
+                'Champions League', 'Europa League', 'Conference League',
+                'Copa del Rey', 'FA Cup', 'Coppa Italia', 'DFB-Pokal', 'Coupe de France',
+                'Super Cup', 'Club World Cup', 'UEFA Super Cup',
+                'Copa', 'Cup', 'Pokal', 'Coupe', 'Supercup',
+                'J.League Cup', '天皇杯', 'ルヴァンカップ'
+            ];
+            
+            const friendlyKeywords = [
+                'friendly', 'friendlies', '親善', 'exhibition', 'test match',
+                'friendly clubs', 'friendlies clubs', 'club friendly'
+            ];
+            
+            const isLeagueCompetition = (stat) => {
+                const league = stat.league || stat.competition || stat.leagueName || '';
+                const leagueLower = league.toLowerCase();
+                
+                if (cupCompetitions.some(cup => leagueLower.includes(cup.toLowerCase()))) {
+                    return false;
+                }
+                
+                if (friendlyKeywords.some(keyword => leagueLower.includes(keyword.toLowerCase()))) {
+                    return false;
+                }
+                
+                return true;
+            };
+            
+            // 保存されたキャリアスタッツを追加（リーグ戦のみ）
+            player.careerStats.forEach(stat => {
+                if (!isLeagueCompetition(stat)) {
+                    return; // カップ戦はスキップ
+                }
+                
+                const rawSeason = stat.season || '';
+                if (!rawSeason || rawSeason === 'Unknown') {
+                    return;
+                }
+                
+                // シーズンを正規化
+                let seasonStr = rawSeason;
+                if (/^\d{4}$/.test(rawSeason)) {
+                    const year = parseInt(rawSeason);
+                    seasonStr = `${year}/${String(year + 1).slice(-2)}`;
+                } else if (/^\d{4}\/\d{4}$/.test(rawSeason)) {
+                    const [startYear, endYear] = rawSeason.split('/');
+                    seasonStr = `${startYear}/${String(endYear).slice(-2)}`;
+                }
+                
+                careerStats.push({
+                    season: seasonStr,
+                    league: stat.leagueName || stat.league || 'Unknown',
+                    teamName: stat.teamName || stat.team || 'Unknown',
+                    matches: stat.matches || stat.appearances || 0,
+                    appearances: stat.appearances || stat.matches || 0,
+                    goals: stat.goals || 0,
+                    assists: stat.assists || 0,
+                    rating: stat.rating || null,
+                    source: 'saved-career-stats'
+                });
+            });
+            
+            console.log(`📊 保存されたキャリアスタッツから取得: ${careerStats.length}シーズン`);
+        }
+        
+        // 優先順位2: player.statsから過去のシーズンを取得（careerStatsにないシーズンのみ追加）
         if (player.stats && Array.isArray(player.stats) && player.stats.length > 0) {
             console.log(`🔄 player.statsから過去のシーズンを取得中... (${player.stats.length}レコード)`);
             
@@ -8572,7 +8642,7 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
                 }
             });
             
-            // player.statsから取得したデータをcareerStatsに追加（APIから取得できない場合のフォールバック）
+            // player.statsから取得したデータをcareerStatsに追加（careerStatsにないシーズンのみ追加）
             Object.values(statsBySeason).forEach(stat => {
                 if (stat.matches > 0 || stat.appearances > 0 || stat.goals > 0 || stat.assists > 0) {
                     // 既存のcareerStatsに同じシーズンのデータがあるかチェック
@@ -8583,7 +8653,7 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
                     });
                     
                     if (existingIndex < 0) {
-                        // 既存のデータがない場合のみ追加
+                        // 既存のデータがない場合のみ追加（保存されたデータを優先）
                         careerStats.push({
                             season: stat.season,
                             league: stat.league,
@@ -8600,11 +8670,25 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
             });
         }
         
-        console.log(`📊 player.statsから取得したシーズン数: ${careerStats.length}`);
+        console.log(`📊 保存データから取得したシーズン数: ${careerStats.length}`);
         
+        // 優先順位3: API-Footballから最新データを取得（保存データの補完・更新のみ）
+        // 注意: 保存されたデータを上書きしない（保存データが優先）
         for (const season of seasonList) {
             try {
-                // API-Footballからシーズン別スタッツを取得
+                // 既に保存されたデータがあるシーズンはスキップ（保存データを優先）
+                const seasonStr = String(season);
+                const hasSavedData = careerStats.some(cs => {
+                    const csSeason = String(cs.season || '').replace('/', '');
+                    return csSeason === seasonStr || csSeason.includes(seasonStr) || seasonStr.includes(csSeason);
+                });
+                
+                if (hasSavedData && cs => cs.source === 'saved-career-stats') {
+                    console.log(`⏭️ シーズン ${seasonStr} は保存データがあるためスキップ`);
+                    continue;
+                }
+                
+                // API-Footballからシーズン別スタッツを取得（保存データがないシーズンのみ）
                 let seasonStats = null;
                 
                 try {
@@ -8638,25 +8722,28 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
                     }
                 }
                 
-                // スタッツが取得できた場合のみ追加（player.statsから取得したデータと重複しないようにチェック）
+                // スタッツが取得できた場合のみ追加（保存データがないシーズンのみ）
                 if (seasonStats) {
                     // 既存のcareerStatsに同じシーズンのデータがあるかチェック
-                    const seasonStr = String(seasonStats.season || season);
                     const existingIndex = careerStats.findIndex(cs => {
                         const csSeason = String(cs.season || '').replace('/', '');
                         const statSeason = seasonStr.replace('/', '');
                         return csSeason === statSeason || csSeason.includes(statSeason) || statSeason.includes(csSeason);
                     });
                     
-                    if (existingIndex >= 0) {
-                        // 既存のデータをAPIデータで上書き（APIデータの方が正確）
-                        careerStats[existingIndex] = seasonStats;
-                        console.log(`🔄 シーズン ${seasonStr} のデータをAPIデータで上書き`);
-                    } else {
+                    if (existingIndex < 0) {
                         // 新しいデータを追加（データがある場合のみ）
                         if (seasonStats.goals > 0 || seasonStats.assists > 0 || seasonStats.appearances > 0 || seasonStats.matches > 0) {
                             careerStats.push(seasonStats);
-                            console.log(`✅ シーズン ${seasonStr} のデータを追加`);
+                            console.log(`✅ シーズン ${seasonStr} のデータを追加（APIから）`);
+                        }
+                    } else {
+                        // 既存データがある場合、保存データでない場合のみ更新
+                        if (careerStats[existingIndex].source !== 'saved-career-stats') {
+                            careerStats[existingIndex] = seasonStats;
+                            console.log(`🔄 シーズン ${seasonStr} のデータを更新（APIから）`);
+                        } else {
+                            console.log(`⏭️ シーズン ${seasonStr} は保存データがあるため更新をスキップ`);
                         }
                     }
                 }
