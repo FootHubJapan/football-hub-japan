@@ -12007,9 +12007,8 @@ async function checkAndUpdateFinishedMatches() {
         for (const league of majorLeagues) {
             try {
                 // 過去12時間以内に終了した試合を取得（試合が終了してからデータが反映されるまでの時間を考慮）
-                const twelveHoursAgo = new Date();
-                twelveHoursAgo.setHours(twelveHoursAgo.getHours() - 12);
                 const now = new Date();
+                const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
                 
                 const fromDate = twelveHoursAgo.toISOString().split('T')[0];
                 const toDate = now.toISOString().split('T')[0];
@@ -12039,8 +12038,6 @@ async function checkAndUpdateFinishedMatches() {
                 console.log(`📊 ${league.name}: ${fixtures.length}件の終了試合を検出（APIから取得）`);
                 
                 // 過去12時間以内に終了した試合のみをフィルタリング
-                const now = new Date();
-                const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
                 const recentFixtures = fixtures.filter(fixture => {
                     const fixtureDate = fixture.fixture?.date ? new Date(fixture.fixture.date) : null;
                     if (!fixtureDate) return false;
