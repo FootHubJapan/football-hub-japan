@@ -248,8 +248,8 @@ async function updatePlayer(player, dbManager, requestCount) {
             source: 'api-football-latest'
         };
 
-        // データベースに保存
-        await dbManager.saveComprehensivePlayer(updatedPlayer);
+        // データベースに保存（配列として渡す）
+        await dbManager.saveComprehensivePlayers([updatedPlayer]);
 
         return { 
             updated: true, 
