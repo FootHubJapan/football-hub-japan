@@ -8680,10 +8680,11 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
                 const seasonStr = String(season);
                 const hasSavedData = careerStats.some(cs => {
                     const csSeason = String(cs.season || '').replace('/', '');
-                    return csSeason === seasonStr || csSeason.includes(seasonStr) || seasonStr.includes(csSeason);
+                    const matches = csSeason === seasonStr || csSeason.includes(seasonStr) || seasonStr.includes(csSeason);
+                    return matches && cs.source === 'saved-career-stats';
                 });
                 
-                if (hasSavedData && cs => cs.source === 'saved-career-stats') {
+                if (hasSavedData) {
                     console.log(`⏭️ シーズン ${seasonStr} は保存データがあるためスキップ`);
                     continue;
                 }
