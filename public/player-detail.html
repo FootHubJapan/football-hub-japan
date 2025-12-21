@@ -860,10 +860,108 @@
         // フォールバック選手データを生成（削除済み - 使用しない）
         // この関数は使用されていません。フォールバックデータは表示しません。
 
+        // ローン選手のチーム情報を判定
+        function detectLoanInfo(player) {
+            if (!player.stats || !Array.isArray(player.stats)) {
+                return null;
+            }
+
+            // 2025/26シーズンの統計を取得
+            const stats2025 = player.stats.filter(s => {
+                const season = s.season || '';
+                return season.includes('2025') || season.includes('2026');
+            });
+
+            if (stats2025.length === 0) {
+                return null;
+            }
+
+            // メジャーリーグの定義
+            const majorLeagues = [
+                'Premier League', 'La Liga', 'Serie A', 'Bundesliga', 'Ligue 1',
+                'プレミアリーグ', 'ラ・リーガ', 'セリエA', 'ブンデスリーガ', 'リーグ・アン'
+            ];
+
+            // リーグ戦の統計のみを抽出（カップ戦や親善試合を除外）
+            const leagueStats = stats2025.filter(s => {
+                const leagueName = (s.leagueName || s.league || '').toLowerCase();
+                return !leagueName.includes('cup') && 
+                       !leagueName.includes('champions league') && 
+                       !leagueName.includes('europa') &&
+                       !leagueName.includes('friendly') &&
+                       !leagueName.includes('qualification') &&
+                       !leagueName.includes('summer series');
+            });
+
+            // メジャーリーグとその他のリーグを分類
+            const majorLeagueStats = leagueStats.filter(s => {
+                const leagueName = (s.leagueName || s.league || '').toLowerCase();
+                return majorLeagues.some(ml => leagueName.includes(ml.toLowerCase()));
+            });
+
+            const otherLeagueStats = leagueStats.filter(s => {
+                const leagueName = (s.leagueName || s.league || '').toLowerCase();
+                return !majorLeagues.some(ml => leagueName.includes(ml.toLowerCase())) &&
+                       (s.appearances || 0) > 0; // その他のリーグは試合数 > 0 が必要
+            });
+
+            // メジャーリーグとその他のリーグの両方でプレーしている場合、ローンと判断
+            if (majorLeagueStats.length > 0 && otherLeagueStats.length > 0) {
+                // メジャーリーグのチームをローン元と判断（試合数に関係なく）
+                const loanSourceTeam = majorLeagueStats[0]?.teamName || majorLeagueStats[0]?.team;
+                
+                // 最も出場数の多いその他のリーグのチームをローン先と判断
+                const loanDestTeam = otherLeagueStats
+                    .sort((a, b) => (b.appearances || 0) - (a.appearances || 0))[0]
+                    ?.teamName || otherLeagueStats[0]?.team;
+
+                if (loanSourceTeam && loanDestTeam && loanSourceTeam !== loanDestTeam) {
+                    return {
+                        currentTeam: loanDestTeam, // 現所属チーム（ローン先）
+                        loanSourceTeam: loanSourceTeam // ローン元チーム
+                    };
+                }
+            }
+
+            // フォールバック: player.currentTeamがメジャーリーグのチームで、
+            // 統計にその他のリーグのチーム（試合数 > 0）がある場合
+            if (player.currentTeam) {
+                const currentTeamLower = player.currentTeam.toLowerCase();
+                const isMajorLeagueTeam = majorLeagues.some(ml => 
+                    currentTeamLower.includes(ml.toLowerCase().split(' ')[0])
+                );
+
+                if (isMajorLeagueTeam && otherLeagueStats.length > 0) {
+                    const loanDestTeam = otherLeagueStats
+                        .sort((a, b) => (b.appearances || 0) - (a.appearances || 0))[0]
+                        ?.teamName || otherLeagueStats[0]?.team;
+
+                    if (loanDestTeam && loanDestTeam !== player.currentTeam) {
+                        return {
+                            currentTeam: loanDestTeam, // 現所属チーム（ローン先）
+                            loanSourceTeam: player.currentTeam // ローン元チーム
+                        };
+                    }
+                }
+            }
+
+            return null;
+        }
+
         // 選手データを表示
         async function displayPlayerData(player) {
             document.getElementById('playerName').textContent = player.name;
-            document.getElementById('playerClub').textContent = player.currentTeam;
+            
+            // ローン情報を判定
+            const loanInfo = detectLoanInfo(player);
+            if (loanInfo) {
+                // ローン選手の場合：「現所属チーム（ローン元チーム）」形式で表示
+                document.getElementById('playerClub').textContent = `${loanInfo.currentTeam}（${loanInfo.loanSourceTeam}）`;
+            } else {
+                // 通常の選手の場合
+                document.getElementById('playerClub').textContent = player.currentTeam;
+            }
+            
             document.getElementById('playerAge').textContent = player.age + '歳';
             document.getElementById('playerHeight').textContent = (player.height || 175) + 'cm';
             document.getElementById('playerPosition').textContent = player.position || player.detailedPosition || player.stats?.position || '--';
@@ -946,7 +1044,29 @@
                 // 2025/26シーズンのデータをフィルタリングして合計
                 const currentSeasonStats = player.stats.filter(stat => {
                     const season = stat.season || '';
-                    return season.includes('2025') || season.includes('2026') || season === '2025/2026' || season === '2025/26';
+                    const appearances = stat.appearances || stat.lineups || stat.matches || 0;
+                    const leagueName = stat.leagueName || stat.league || '';
+                    
+                    // 2025/26シーズンのチェック
+                    const is2025Season = season.includes('2025') || season.includes('2026') || season === '2025/2026' || season === '2025/26';
+                    if (!is2025Season) return false;
+                    
+                    // 欧州リーグで試合数が29試合以上は誤データ（2024/25シーズンのデータが間違って保存されている可能性）
+                    // 2025/26シーズンは2025年8月から開始されており、まだ途中なので十数試合が正しい
+                    const isEuropeanLeague = leagueName && (
+                        leagueName.includes('Premier League') || 
+                        leagueName.includes('La Liga') || 
+                        leagueName.includes('Serie A') || 
+                        leagueName.includes('Bundesliga') || 
+                        leagueName.includes('Ligue 1')
+                    );
+                    
+                    if (isEuropeanLeague && appearances >= 29) {
+                        console.log('⚠️ 2025/26シーズンだが試合数が29試合以上（誤データの可能性）:', { season, appearances, league: leagueName });
+                        return false;
+                    }
+                    
+                    return true;
                 });
                 
                 // すべての統計を合計
@@ -1685,22 +1805,39 @@
             if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
                 // seasonプロパティで判定（2025/26シーズン）
                 const statsSeason = player.stats.season;
-                if (statsSeason === '2025/2026' || statsSeason === '2025/26' || statsSeason === '2025') {
+                const appearances = player.stats.appearances || player.stats.lineups || player.stats.matches || 0;
+                // player.leagueも含めてリーグ名を取得
+                const leagueName = player.stats.leagueName || player.stats.league || player.league || '';
+                
+                // 2025/26シーズンで試合数が29試合以上は誤データ（2024/25シーズンのデータが間違って保存されている可能性）
+                // 2025/26シーズンは2025年8月から開始されており、まだ途中なので十数試合が正しい
+                const isEuropeanLeague = leagueName && (
+                    leagueName.includes('Premier League') || 
+                    leagueName.includes('La Liga') || 
+                    leagueName.includes('Serie A') || 
+                    leagueName.includes('Bundesliga') || 
+                    leagueName.includes('Ligue 1')
+                );
+                
+                if ((statsSeason === '2025/2026' || statsSeason === '2025/26' || statsSeason === '2025') && 
+                    !(isEuropeanLeague && appearances >= 29)) {
                     // データがあれば表示（すべて0でも表示する - 更新中かもしれない）
                     console.log('📊 Using 2025/2026 season data (object format)');
-                    const leagueName = player.stats.leagueName || player.league || player.stats.league || 'リーグ';
                     competitions = [
                         {
-                            name: leagueName,
+                            name: leagueName || 'リーグ',
                             goals: player.stats.goals || 0,
                             assists: player.stats.assists || 0,
                             yellowCards: player.stats.yellowCards || 0,
                             redCards: player.stats.redCards || 0,
                             minutes: player.stats.minutes || 0,
                             rating: player.stats.rating || 'N/A',
-                            matches: player.stats.appearances || player.stats.lineups || player.stats.matches || 0
+                            matches: appearances
                         }
                     ];
+                } else if (statsSeason === '2025/2026' || statsSeason === '2025/26' || statsSeason === '2025') {
+                    console.log('⚠️ 2025/26シーズンだが試合数が29試合以上（誤データの可能性）:', { season: statsSeason, appearances, league: leagueName, isEuropeanLeague });
+                    competitions = []; // 誤データの場合は空配列を返す
                 } else {
                     console.log('⚠️ オブジェクト形式のstatsが2025/26シーズンではありません:', statsSeason);
                 }
@@ -1709,6 +1846,9 @@
                 console.log('📊 Using array format stats');
                 const stats2025 = player.stats.filter(stat => {
                     const season = stat.season;
+                    const appearances = stat.appearances || stat.lineups || stat.matches || 0;
+                    const leagueName = stat.leagueName || stat.league || '';
+                    
                     // シーズン情報がない場合は除外（ただし、leagueNameがあれば含める）
                     if (!season || season === 'Unknown' || season === '') {
                         // シーズン情報がないが、leagueNameがある場合は2025/26シーズンとして扱う可能性を考慮
@@ -1720,6 +1860,22 @@
                     if (!isValidSeason) {
                         return false;
                     }
+                    
+                    // 欧州リーグで試合数が29試合以上は誤データ（2024/25シーズンのデータが間違って保存されている可能性）
+                    // 2025/26シーズンは2025年8月から開始されており、まだ途中なので十数試合が正しい
+                    const isEuropeanLeague = leagueName && (
+                        leagueName.includes('Premier League') || 
+                        leagueName.includes('La Liga') || 
+                        leagueName.includes('Serie A') || 
+                        leagueName.includes('Bundesliga') || 
+                        leagueName.includes('Ligue 1')
+                    );
+                    
+                    if (isEuropeanLeague && appearances >= 29) {
+                        console.log('⚠️ 2025/26シーズンだが試合数が29試合以上（誤データの可能性）:', { season, appearances, league: leagueName });
+                        return false;
+                    }
+                    
                     // データがあれば表示（すべて0でも表示する - 更新中かもしれない）
                     // ただし、明らかにフォールバックデータ（seasonがnull/Unknown/空）は除外済み
                     return true;
