@@ -36,18 +36,21 @@ if (!API_FOOTBALL_KEY || API_FOOTBALL_KEY.length < 30) {
     process.exit(1);
 }
 
-// 更新するシーズンリスト（キャリアスタッツ用：2000年から2025年まで）
+// 更新するシーズンリスト（キャリアスタッツ用：2007年から2025年まで）
+// 2000年からだとリクエスト制限に達するため、2007年からに変更
 const SEASONS = [];
-for (let year = 2000; year <= 2025; year++) {
+for (let year = 2007; year <= 2025; year++) {
     SEASONS.push(year);
 }
 const REQUEST_DELAY = 200; // 0.2秒（Pro Plan: 300リクエスト/分に対応）
 
 // MAX_PLAYERSの取得（--retry-errorsや--error-fileが指定されていない場合のみ）
+// デフォルトを10名に設定（1日のリクエスト制限7,500を考慮）
+// 1バッチ（10名）で約190リクエスト = 1日の制限の約2.5%
 let MAX_PLAYERS = 10;
 if (!RETRY_ERRORS && !ERROR_FILE_PATH) {
     const maxPlayersArg = args.find(arg => !arg.startsWith('--'));
-    MAX_PLAYERS = maxPlayersArg ? parseInt(maxPlayersArg) : 10;
+    MAX_PLAYERS = maxPlayersArg ? parseInt(maxPlayersArg) : 10; // デフォルト10名
 }
 
 // 遅延付きリクエスト
@@ -105,7 +108,7 @@ async function fetchWithDelay(url, options = {}) {
 
 // 選手のキャリアスタッツを取得（複数シーズン）
 // 既存のcareerStatsがある場合は、不足しているシーズンのみを取得
-async function getPlayerCareerStats(playerId, existingCareerStats = []) {
+async function getPlayerCareerStats(playerId, existingCareerStats = [], player = null) {
     const careerStats = [...existingCareerStats]; // 既存のデータを保持
     
     // 既存のシーズンを確認（重複を避けるため）
@@ -121,8 +124,29 @@ async function getPlayerCareerStats(playerId, existingCareerStats = []) {
     
     console.log(`  📊 既存のシーズン数: ${existingSeasons.size} (${Array.from(existingSeasons).sort((a,b)=>b-a).slice(0,5).join(', ')}...)`);
     
-    // 不足しているシーズンのみを取得
-    const missingSeasons = SEASONS.filter(season => !existingSeasons.has(season));
+    // 選手の年齢を考慮して取得可能なシーズン範囲を計算
+    let possibleSeasons = SEASONS;
+    if (player) {
+        const currentYear = new Date().getFullYear();
+        const startYear = 2007;
+        let birthYear = null;
+        if (player.age) {
+            birthYear = currentYear - player.age;
+        } else if (player.birthday || player.dateOfBirth) {
+            const birthDate = new Date(player.birthday || player.dateOfBirth);
+            birthYear = birthDate.getFullYear();
+        }
+        
+        if (birthYear) {
+            const debutYear = birthYear + 16; // プロデビュー年を推定（通常15-16歳から）
+            const possibleStartYear = Math.max(startYear, debutYear);
+            possibleSeasons = SEASONS.filter(season => season >= possibleStartYear);
+            console.log(`  📊 年齢考慮: 生年推定 ${birthYear}年 → デビュー年推定 ${debutYear}年 → 取得可能なシーズン: ${possibleStartYear}年以降`);
+        }
+    }
+    
+    // 不足しているシーズンのみを取得（取得可能なシーズン範囲内で）
+    const missingSeasons = possibleSeasons.filter(season => !existingSeasons.has(season));
     
     if (missingSeasons.length === 0) {
         console.log(`  ✅ すべてのシーズンのデータが既に存在します`);
@@ -130,6 +154,9 @@ async function getPlayerCareerStats(playerId, existingCareerStats = []) {
     }
     
     console.log(`  🔄 不足しているシーズン: ${missingSeasons.length}シーズン (${missingSeasons.slice(0,5).join(', ')}...)`);
+    
+    let consecutiveFailures = 0; // 連続してデータが取得できなかったシーズン数
+    const MAX_CONSECUTIVE_FAILURES = 5; // 5シーズン連続でデータが取得できなかった場合は、それ以降のシーズンも取得できないと判断
     
     for (const season of missingSeasons) {
         try {
@@ -144,12 +171,25 @@ async function getPlayerCareerStats(playerId, existingCareerStats = []) {
                     throw error;
                 }
                 // その他のエラーはnullを返して続行
+                consecutiveFailures++;
+                if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                    console.log(`  ⚠️ ${MAX_CONSECUTIVE_FAILURES}シーズン連続でデータが取得できなかったため、それ以降のシーズンも取得できないと判断してスキップします`);
+                    break; // それ以降のシーズンも取得できないと判断
+                }
                 continue;
             }
             
             if (!data || !data.response || data.response.length === 0) {
+                consecutiveFailures++;
+                if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                    console.log(`  ⚠️ ${MAX_CONSECUTIVE_FAILURES}シーズン連続でデータが取得できなかったため、それ以降のシーズンも取得できないと判断してスキップします`);
+                    break; // それ以降のシーズンも取得できないと判断
+                }
                 continue;
             }
+            
+            // データが取得できた場合は連続失敗カウントをリセット
+            consecutiveFailures = 0;
             
             const playerData = data.response[0];
             
@@ -248,18 +288,84 @@ async function updateAllPlayersWithCareer() {
         // 通常モード: 未更新の選手を取得
         const playersWithId = players.filter(p => p.playerId);
         
+        // 選手の年齢から取得可能なシーズン数を計算する関数
+        function getPossibleSeasonsCount(player) {
+            const currentYear = new Date().getFullYear();
+            const startYear = 2007; // スクリプトのシーズン範囲の開始年
+            
+            // 年齢から生年を推定
+            let birthYear = null;
+            if (player.age) {
+                birthYear = currentYear - player.age;
+            } else if (player.birthday || player.dateOfBirth) {
+                const birthDate = new Date(player.birthday || player.dateOfBirth);
+                birthYear = birthDate.getFullYear();
+            }
+            
+            // 生年が不明な場合は、デフォルトで全シーズン取得可能とみなす
+            if (!birthYear) {
+                return SEASONS.length;
+            }
+            
+            // プロデビュー年を推定（通常15-16歳から）
+            const debutYear = birthYear + 16;
+            
+            // 取得可能なシーズン範囲を計算
+            const possibleStartYear = Math.max(startYear, debutYear);
+            const possibleEndYear = currentYear;
+            
+            // 取得可能なシーズン数
+            const possibleSeasons = Math.max(0, possibleEndYear - possibleStartYear + 1);
+            
+            return possibleSeasons;
+        }
+        
         // 既に更新された選手をスキップ（careerStatsが存在する場合は既に更新済みとみなす）
         // ただし、careerStatsが3シーズン未満の場合は再更新する
+        // ただし、選手の年齢を考慮して、実際に取得可能なシーズン数に近い場合はスキップ
         const playersToUpdateAll = playersWithId.filter(p => {
+            // careerStatsUpdatedが存在する場合は、既に更新を試みたとみなして「更新済み」とする
+            // これは、24時間以内に更新された選手だけでなく、過去に更新を試みたすべての選手を含む
+            if (p.careerStatsUpdated) {
+                return false; // 既に更新を試みたので「更新済み」
+            }
+            
             // careerStatsが存在しない、または空の場合は未更新
             if (!p.careerStats || !Array.isArray(p.careerStats) || p.careerStats.length === 0) {
                 return true;
             }
-            // careerStatsが3シーズン未満の場合は再更新
-            if (p.careerStats.length < 3) {
-                return true;
+            
+            const existingSeasonsCount = p.careerStats.length;
+            const possibleSeasonsCount = getPossibleSeasonsCount(p);
+            
+            // 既存のシーズン数が取得可能なシーズン数の80%以上の場合、更新済みとみなす
+            // または、既存のシーズン数が3以上の場合も更新済みとみなす
+            if (existingSeasonsCount >= 3) {
+                return false; // 更新済み
             }
-            return false;
+            
+            // 取得可能なシーズン数が少ない場合（若手選手など）
+            if (possibleSeasonsCount <= 3) {
+                // 既存のシーズン数が2以上の場合、更新済みとみなす（取得可能なシーズン数の80%以上）
+                if (existingSeasonsCount >= 2) {
+                    return false; // 更新済み
+                }
+            }
+            
+            // 取得可能なシーズン数が4以下の場合、2シーズン以上取得していれば更新済みとみなす
+            if (possibleSeasonsCount <= 4) {
+                if (existingSeasonsCount >= 2) {
+                    return false; // 更新済み
+                }
+            }
+            
+            // 取得可能なシーズン数が5以上の場合、80%以上取得していれば更新済みとみなす
+            if (existingSeasonsCount >= Math.ceil(possibleSeasonsCount * 0.8)) {
+                return false; // 更新済み
+            }
+            
+            // それ以外の場合は再更新
+            return true;
         });
         
         console.log(`📊 playerIdを持つ選手: ${playersWithId.length}名`);
@@ -277,12 +383,13 @@ async function updateAllPlayersWithCareer() {
         try {
             console.log(`\n📊 [${i + 1}/${playersToUpdate.length}] ${player.name || 'Unknown'} (ID: ${player.playerId})`);
             
-            // キャリアスタッツを取得
+            // キャリアスタッツを取得（既存のデータがあれば使用）
             console.log(`  🔄 キャリアスタッツを取得中...`);
+            const existingCareerStats = player.careerStats && Array.isArray(player.careerStats) ? player.careerStats : [];
             let careerStats = [];
             
             try {
-                careerStats = await getPlayerCareerStats(player.playerId);
+                careerStats = await getPlayerCareerStats(player.playerId, existingCareerStats, player);
             } catch (error) {
                 if (error.isRequestLimit) {
                     console.error(`\n❌ APIリクエスト制限に達しました！`);
@@ -479,12 +586,56 @@ async function updateAllPlayersWithCareer() {
                         
                         updatedCount++;
                         console.log(`  ✅ 2025年統計を更新: ${apiPlayer.statistics.length}コンペティション`);
+                        
+                        // 2025年統計をキャリアスタッツに追加（まだ追加されていない場合）
+                        if (careerStats.length === 0 || !careerStats.some(s => s.season === '2025/2026')) {
+                            apiPlayer.statistics.forEach(stat => {
+                                const games = stat.games || {};
+                                const goals = stat.goals || {};
+                                
+                                // 既に存在する場合はスキップ
+                                if (careerStats.some(s => s.season === '2025/2026' && s.leagueName === (stat.league?.name || 'Unknown'))) {
+                                    return;
+                                }
+                                
+                                careerStats.push({
+                                    season: "2025/2026",
+                                    leagueName: stat.league?.name || 'Unknown',
+                                    leagueId: stat.league?.id || null,
+                                    teamName: stat.team?.name || 'Unknown',
+                                    teamId: stat.team?.id || null,
+                                    matches: games.appearences || 0,
+                                    goals: goals.total || 0,
+                                    assists: goals.assists || 0,
+                                    rating: games.rating ? parseFloat(games.rating) : null,
+                                    appearances: games.appearences || 0,
+                                    minutes: games.minutes || 0,
+                                    source: 'api-football',
+                                    lastUpdated: new Date().toISOString()
+                                });
+                            });
+                            
+                            if (careerStats.length > 0) {
+                                player.careerStats = careerStats;
+                                if (!player.careerStatsUpdated) {
+                                    player.careerStatsUpdated = new Date().toISOString();
+                                }
+                                careerUpdatedCount++;
+                                console.log(`  ✅ 2025年統計をキャリアスタッツに追加: ${careerStats.length}レコード`);
+                            }
+                        }
                     } else {
                         console.log(`  ⚠️ 2025年統計が見つかりませんでした`);
                     }
                 }
             } catch (error) {
                 console.error(`  ❌ 2025年統計取得エラー:`, error.message);
+            }
+            
+            // キャリアスタッツを取得できなかった場合でも、更新を試みたことを記録する
+            if (!player.careerStatsUpdated) {
+                player.careerStatsUpdated = new Date().toISOString();
+                console.log(`  ✅ 更新を試みたことを記録しました`);
             }
             
             player.lastUpdated = new Date().toISOString();
