@@ -414,22 +414,217 @@
             font-size: 1.2rem;
         }
 
-        @media (max-width: 768px) {
-            .table-row {
-                grid-template-columns: 40px 1fr 80px;
-                gap: 0.5rem;
+        /* モバイル用カード表示スタイル */
+        .mobile-cards-container {
+            display: none;
+        }
+
+        .mobile-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .mobile-card:active {
+            transform: scale(0.98);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .mobile-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .mobile-card-rank {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00ff88;
+            min-width: 32px;
+        }
+
+        .mobile-card-title {
+            flex: 1;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .mobile-card-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .mobile-card-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+        }
+
+        .mobile-card-stat-label {
+            color: #a0a0a0;
+            font-size: 0.85rem;
+        }
+
+        .mobile-card-stat-value {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        /* ボタンの最小タップ領域を確保 */
+        .tab-btn,
+        .nav-btn,
+        .search-btn,
+        .filter-select {
+            min-height: 44px;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+        }
+
+        .nav-btn {
+            padding: 12px 16px;
+        }
+
+        .search-btn {
+            padding: 12px 24px;
+        }
+
+        /* 320px〜430pxのスマホを最優先 */
+        @media (max-width: 430px) {
+            .main-container {
+                padding: 0 12px;
             }
 
-            .table-row .stat-value:nth-child(n+4) {
+            .header-content {
+                padding: 0 12px;
+            }
+
+            .nav-buttons {
+                display: none;
+            }
+
+            /* テーブルを非表示、カード表示に変換 */
+            .ranking-table {
+                display: none;
+            }
+
+            .table-row-mobile,
+            .mobile-card {
+                display: block;
+            }
+
+            .table-header {
+                display: none;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .page-subtitle {
+                font-size: 0.9rem;
+            }
+
+            .ranking-tabs {
+                gap: 8px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .tab-btn {
+                font-size: 0.85rem;
+                padding: 10px 12px;
+                white-space: nowrap;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .filter-group {
+                margin-bottom: 0;
+            }
+
+            .filter-select,
+            .search-btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .chart-container {
+                padding: 12px;
+            }
+
+            .chart-title {
+                font-size: 1rem;
+            }
+        }
+
+        /* 768px未満のモバイル対応 */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 0 12px;
+            }
+
+            .header-content {
+                padding: 0 12px;
+            }
+
+            .nav-buttons {
+                gap: 8px;
+            }
+
+            .nav-btn {
+                font-size: 0.85rem;
+                padding: 10px 12px;
+            }
+
+            /* テーブルを非表示、カード表示に変換 */
+            .ranking-table {
+                display: none;
+            }
+
+            .table-row-mobile,
+            .mobile-card {
+                display: block;
+            }
+
+            .table-header {
                 display: none;
             }
 
             .filters-grid {
                 grid-template-columns: 1fr;
+                gap: 12px;
             }
 
-            .main-container {
-                padding: 1rem;
+            .filter-select,
+            .search-btn {
+                padding: 12px;
+                min-height: 44px;
+            }
+
+            .chart-container {
+                padding: 12px;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .page-subtitle {
+                font-size: 1rem;
             }
         }
     </style>
@@ -541,6 +736,8 @@
                     <div class="loading">ランキングを読み込み中...</div>
                 </div>
             </div>
+            <!-- モバイル用カードコンテナ -->
+            <div id="playerMobileCards" class="mobile-cards-container"></div>
         </div>
 
         <!-- チームランキング -->
@@ -1152,6 +1349,10 @@
                 `;
             }
 
+            // モバイル用カード表示用のHTMLも生成
+            const isMobile = window.innerWidth <= 768;
+            let mobileCardsHTML = '';
+            
             tbody.innerHTML = players.map((player, index) => {
                 // 写真URLを取得（利用できない場合はプレースホルダー）
                 const photoUrl = player.photo && player.photo !== 'https://media.api-sports.io/football/players/placeholder.png' 
@@ -1169,6 +1370,66 @@
                 
                 // クリックイベント用のonclick属性
                 const onClickHandler = playerIdStr ? `onclick="window.location.href='/player-detail.html?id=${encodeURIComponent(playerIdStr)}'"` : '';
+                
+                // モバイル用カードHTMLを生成
+                if (isMobile) {
+                    if (stat === 'goalsAssists') {
+                        const total = goals + assists;
+                        mobileCardsHTML += `
+                            <div class="mobile-card" ${onClickHandler} style="cursor: pointer;">
+                                <div class="mobile-card-header">
+                                    <div class="mobile-card-rank">${index + 1}</div>
+                                    <div class="mobile-card-title">${player.name}</div>
+                                </div>
+                                <div class="mobile-card-stats">
+                                    <div class="mobile-card-stat">
+                                        <span class="mobile-card-stat-label">合計</span>
+                                        <span class="mobile-card-stat-value">${total}</span>
+                                    </div>
+                                    <div class="mobile-card-stat">
+                                        <span class="mobile-card-stat-label">ゴール</span>
+                                        <span class="mobile-card-stat-value">${goals}</span>
+                                    </div>
+                                    <div class="mobile-card-stat">
+                                        <span class="mobile-card-stat-label">アシスト</span>
+                                        <span class="mobile-card-stat-value">${assists}</span>
+                                    </div>
+                                    <div class="mobile-card-stat">
+                                        <span class="mobile-card-stat-label">出場数</span>
+                                        <span class="mobile-card-stat-value">${appearances}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        mobileCardsHTML += `
+                            <div class="mobile-card" ${onClickHandler} style="cursor: pointer;">
+                                <div class="mobile-card-header">
+                                    <div class="mobile-card-rank">${index + 1}</div>
+                                    <div class="mobile-card-title">${player.name}</div>
+                                </div>
+                                <div class="mobile-card-stats">
+                                    <div class="mobile-card-stat">
+                                        <span class="mobile-card-stat-label">${stat === 'goals' ? '得点' : stat === 'assists' ? 'アシスト' : stat === 'appearances' ? '出場数' : stat === 'rating' ? '評価' : '統計'}</span>
+                                        <span class="mobile-card-stat-value">${stat === 'goals' ? goals : stat === 'assists' ? assists : stat === 'appearances' ? appearances : stat === 'rating' ? rating : goals}</span>
+                                    </div>
+                                    <div class="mobile-card-stat">
+                                        <span class="mobile-card-stat-label">ゴール</span>
+                                        <span class="mobile-card-stat-value">${goals}</span>
+                                    </div>
+                                    <div class="mobile-card-stat">
+                                        <span class="mobile-card-stat-label">アシスト</span>
+                                        <span class="mobile-card-stat-value">${assists}</span>
+                                    </div>
+                                    <div class="mobile-card-stat">
+                                        <span class="mobile-card-stat-label">出場数</span>
+                                        <span class="mobile-card-stat-value">${appearances}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
                 
                 if (stat === 'goalsAssists') {
                     const total = goals + assists;
@@ -1211,6 +1472,25 @@
                 `;
                 }
             }).join('');
+            
+            // モバイル用カードを表示
+            if (isMobile && mobileCardsHTML) {
+                // モバイル用コンテナが存在しない場合は作成
+                let mobileContainer = document.getElementById('playerMobileCards');
+                if (!mobileContainer) {
+                    mobileContainer = document.createElement('div');
+                    mobileContainer.id = 'playerMobileCards';
+                    mobileContainer.className = 'mobile-cards-container';
+                    tbody.parentElement.parentElement.appendChild(mobileContainer);
+                }
+                mobileContainer.innerHTML = mobileCardsHTML;
+            } else {
+                // デスクトップ表示時はモバイルコンテナを非表示
+                const mobileContainer = document.getElementById('playerMobileCards');
+                if (mobileContainer) {
+                    mobileContainer.innerHTML = '';
+                }
+            }
         }
 
         // チームランキング表示
