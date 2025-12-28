@@ -1237,7 +1237,72 @@
             text-align: center;
         }
 
+        /* ボトムナビゲーション（モバイル用） */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            border-top: 2px solid #00ff88;
+            padding: 0.5rem 0;
+            z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .bottom-nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            max-width: 100%;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.5rem;
+            color: #cccccc;
+            text-decoration: none;
+            font-size: 0.7rem;
+            transition: all 0.3s;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .bottom-nav-item.active {
+            color: #00ff88;
+        }
+
+        .bottom-nav-item:hover {
+            color: #00ff88;
+        }
+
+        .bottom-nav-icon {
+            font-size: 1.2rem;
+        }
+
+        /* 右下AIボタン（モバイル調整） */
+        .ai-widget-button {
+            position: fixed;
+            bottom: 72px;
+            right: 16px;
+            z-index: 999;
+        }
+
         @media (max-width: 768px) {
+            /* ヘッダーのナビゲーションボタンを非表示 */
+            .header .nav-buttons {
+                display: none;
+            }
+
+            /* ボトムナビを表示 */
+            .bottom-nav {
+                display: block;
+            }
+
             /* ヘッダーのサイズを小さく */
             .header {
                 padding: 0.5rem 1rem;
@@ -1245,15 +1310,6 @@
 
             .logo {
                 font-size: 1.2rem;
-            }
-
-            .nav-buttons {
-                gap: 0.5rem;
-            }
-
-            .nav-btn {
-                font-size: 0.75rem;
-                padding: 0.3rem 0.6rem;
             }
 
             /* ページタイトルを小さく */
@@ -1275,48 +1331,55 @@
             
             .main-container {
                 padding: 1rem;
+                padding-bottom: 80px; /* ボトムナビのスペースを確保 */
             }
 
-            /* 選手カードグリッドを8-10列に */
+            /* 選手カードグリッドを1カラムに */
             .player-grid,
             .players-grid {
-                grid-template-columns: repeat(8, 1fr) !important;
-                gap: 0.5rem;
+                grid-template-columns: 1fr !important;
+                gap: 1rem;
             }
 
-            /* 選手カードを小さく */
+            /* 選手カードのパディングとフォントサイズを調整 */
             .player-card {
-                padding: 6px;
-                font-size: 0.7rem;
+                padding: 12px;
+                font-size: 13px;
                 min-width: auto;
             }
 
             .player-card .player-name,
             .player-name {
-                font-size: 0.7rem !important;
+                font-size: 13px !important;
                 margin: 4px 0;
             }
 
             .player-card .player-position,
             .player-position {
-                font-size: 0.65rem !important;
+                font-size: 12px !important;
             }
 
             .player-card .player-team,
             .player-team {
-                font-size: 0.6rem !important;
+                font-size: 12px !important;
             }
 
             .player-card .player-photo,
             .player-card .player-avatar img,
             .player-avatar img {
-                width: 40px !important;
-                height: 40px !important;
-                margin-bottom: 4px;
+                width: 60px !important;
+                height: 60px !important;
+                margin-bottom: 8px;
             }
 
             .player-avatar {
-                margin-bottom: 4px;
+                margin-bottom: 8px;
+            }
+
+            /* 試合カードのパディングとフォントサイズを調整 */
+            .match-card {
+                padding: 12px;
+                font-size: 13px;
             }
 
             .player-details-panel {
@@ -1357,10 +1420,25 @@
                 gap: 0.8rem;
             }
 
-            .search-select,
+            /* 検索入力欄をフル幅に */
             .search-input {
-                font-size: 0.85rem;
-                padding: 0.5rem;
+                width: 100%;
+                font-size: 13px;
+                padding: 0.6rem;
+            }
+
+            .search-select {
+                font-size: 13px;
+                padding: 0.6rem;
+                width: 100%;
+            }
+
+            /* 検索ボタンもフル幅に */
+            .search-btn,
+            .clear-btn {
+                width: 100%;
+                font-size: 13px;
+                padding: 0.6rem;
             }
         }
 
@@ -1426,6 +1504,28 @@
             <button class="nav-btn" onclick="window.location.href='/dashboard'">ダッシュボード</button>
         </div>
     </div>
+
+    <!-- ボトムナビゲーション（モバイル用） -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-items">
+            <a href="/dashboard" class="bottom-nav-item" onclick="setActiveNav(this); return true;">
+                <span class="bottom-nav-icon">📅</span>
+                <span>今日の試合</span>
+            </a>
+            <a href="/database-enhanced" class="bottom-nav-item active" onclick="setActiveNav(this); return true;">
+                <span class="bottom-nav-icon">👤</span>
+                <span>選手分析</span>
+            </a>
+            <a href="/ranking" class="bottom-nav-item" onclick="setActiveNav(this); return true;">
+                <span class="bottom-nav-icon">🏆</span>
+                <span>ランキング</span>
+            </a>
+            <a href="/ai-agent-enhanced" class="bottom-nav-item" onclick="setActiveNav(this); return true;">
+                <span class="bottom-nav-icon">🤖</span>
+                <span>AI予測</span>
+            </a>
+        </div>
+    </nav>
 
     <div class="main-container">
         <h1 class="page-title">強化データベース</h1>
@@ -3360,6 +3460,28 @@
             document.body.appendChild(errorDiv);
             setTimeout(() => errorDiv.remove(), 3000);
         }
+
+        // ボトムナビのアクティブ状態を設定
+        function setActiveNav(element) {
+            document.querySelectorAll('.bottom-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            if (element) {
+                element.classList.add('active');
+            }
+        }
+
+        // ページ読み込み時に現在のページに応じてアクティブ状態を設定
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.bottom-nav-item');
+            navItems.forEach(item => {
+                const href = item.getAttribute('href');
+                if (currentPath === href || (currentPath.includes('database') && href.includes('database'))) {
+                    setActiveNav(item);
+                }
+            });
+        });
 
         function initInfiniteList() {
             // 1ページ目を読み込み

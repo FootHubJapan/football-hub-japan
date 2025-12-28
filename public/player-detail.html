@@ -1443,9 +1443,6 @@
             if (player.careerStats && Array.isArray(player.careerStats) && player.careerStats.length > 0) {
                 console.log(`✅ キャリアスタッツをデータベースから取得: ${player.careerStats.length}レコード`);
                 
-                // まず、シーズンごとにチームごとのデータを集約
-                const seasonTeamStats = {};
-                
                 player.careerStats.forEach(stat => {
                     // リーグ戦のみを対象とする
                     if (!isLeagueCompetition(stat)) {
@@ -1470,59 +1467,64 @@
                     }
                     
                     const club = stat.teamName || stat.team || stat.club || 'Unknown';
+                    
                     const matches = stat.matches || stat.appearances || 0;
                     const goals = stat.goals || 0;
                     const assists = stat.assists || 0;
                     
-                    // シーズンとチームのキーを作成
-                    const key = `${season}_${club}`;
+                    // 試合数が0のデータは除外（誤データの可能性）
+                    if (matches === 0 && goals === 0 && assists === 0) {
+                        console.log(`  ⚠️ 試合数0のデータをスキップ: ${season} (${club})`);
+                        return;
+                    }
                     
-                    if (!seasonTeamStats[key]) {
-                        seasonTeamStats[key] = {
+                    // 既存のデータがある場合は上書き、ない場合は追加
+                    if (!statsBySeason[season]) {
+                        statsBySeason[season] = {
                             season: season,
                             club: club,
-                            matches: matches,
-                            goals: goals,
-                            assists: assists,
+                            matches: 0,
+                            goals: 0,
+                            assists: 0,
                             ratingSum: 0,
                             ratingCount: 0
                         };
+                        console.log(`  ✅ 新しいシーズンを追加: ${season} (${club})`);
                     } else {
-                        // 同じシーズン・チームのデータを合計
-                        seasonTeamStats[key].matches += matches;
-                        seasonTeamStats[key].goals += goals;
-                        seasonTeamStats[key].assists += assists;
+                        // 同じシーズンに複数のクラブデータがある場合、試合数が多い方を優先
+                        const existingMatches = statsBySeason[season].matches || 0;
+                        if (matches > existingMatches) {
+                            statsBySeason[season].club = club;
+                            statsBySeason[season].matches = 0; // リセットして再計算
+                            statsBySeason[season].goals = 0;
+                            statsBySeason[season].assists = 0;
+                            statsBySeason[season].ratingSum = 0;
+                            statsBySeason[season].ratingCount = 0;
+                            console.log(`  🔄 より多くの試合数のデータで更新: ${season} (${club}, ${matches}試合)`);
+                        } else if (matches === existingMatches && club !== statsBySeason[season].club) {
+                            // 試合数が同じ場合、より詳細な情報を優先
+                            if (club !== 'Unknown' && statsBySeason[season].club === 'Unknown') {
+                                statsBySeason[season].club = club;
+                            }
+                            console.log(`  🔄 既存のシーズンを更新: ${season} (${club})`);
+                        } else {
+                            console.log(`  ⏭️ 既存データの方が多いためスキップ: ${season} (既存: ${existingMatches}試合, 新規: ${matches}試合)`);
+                            return;
+                        }
                     }
                     
+                    // 各シーズンのリーグ戦のみの合計を計算
+                    statsBySeason[season].matches += matches;
+                    statsBySeason[season].goals += goals;
+                    statsBySeason[season].assists += assists;
                     if (stat.rating) {
                         const rating = parseFloat(stat.rating);
                         if (!isNaN(rating)) {
-                            seasonTeamStats[key].ratingSum += rating;
-                            seasonTeamStats[key].ratingCount += 1;
+                            statsBySeason[season].ratingSum += rating;
+                            statsBySeason[season].ratingCount += 1;
                         }
                     }
                 });
-                
-                // シーズンごとに最も試合数の多いチームを選択
-                Object.values(seasonTeamStats).forEach(teamStat => {
-                    const season = teamStat.season;
-                    
-                    if (!statsBySeason[season]) {
-                        statsBySeason[season] = teamStat;
-                        console.log(`  ✅ 新しいシーズンを追加: ${season} (${teamStat.club}, ${teamStat.matches}試合)`);
-                    } else {
-                        // 既存のデータと比較して、試合数の多い方を優先
-                        if (teamStat.matches > statsBySeason[season].matches) {
-                            console.log(`  🔄 シーズン ${season} のチームを更新: ${statsBySeason[season].club} (${statsBySeason[season].matches}試合) → ${teamStat.club} (${teamStat.matches}試合)`);
-                            statsBySeason[season] = teamStat;
-                        } else if (teamStat.matches === statsBySeason[season].matches && teamStat.goals > statsBySeason[season].goals) {
-                            // 試合数が同じ場合はゴール数で比較
-                            console.log(`  🔄 シーズン ${season} のチームを更新（ゴール数で判定）: ${statsBySeason[season].club} → ${teamStat.club}`);
-                            statsBySeason[season] = teamStat;
-                        }
-                    }
-                });
-                
                 console.log(`📊 保存済みキャリアスタッツマージ後のシーズン数: ${Object.keys(statsBySeason).length}`);
             }
             
@@ -1549,9 +1551,7 @@
                     });
                     
                     if (careerStats.length > 0) {
-                        // まず、シーズンごとにチームごとのデータを集約
-                        const seasonTeamStats = {};
-                        
+                        // statsBySeasonにマージ（APIデータで上書き）
                         careerStats.forEach((stat, idx) => {
                             console.log(`🔍 処理中 ${idx + 1}/${careerStats.length}: シーズン=${stat.season}, リーグ=${stat.league}, クラブ=${stat.club || stat.teamName || stat.team}`);
                             
@@ -1586,59 +1586,65 @@
                             }
                             
                             const club = stat.club || stat.teamName || stat.team || 'Unknown';
+                            
                             const matches = stat.matches || stat.appearances || 0;
                             const goals = stat.goals || 0;
                             const assists = stat.assists || 0;
                             
-                            // シーズンとチームのキーを作成
-                            const key = `${season}_${club}`;
+                            // 試合数が0のデータは除外（誤データの可能性）
+                            if (matches === 0 && goals === 0 && assists === 0) {
+                                console.log(`  ⚠️ 試合数0のデータをスキップ: ${season} (${club})`);
+                                return;
+                            }
                             
-                            if (!seasonTeamStats[key]) {
-                                seasonTeamStats[key] = {
+                            // 既存のデータがある場合は上書き、ない場合は追加
+                            if (!statsBySeason[season]) {
+                                statsBySeason[season] = {
                                     season: season,
                                     club: club,
-                                    matches: matches,
-                                    goals: goals,
-                                    assists: assists,
+                                    matches: 0,
+                                    goals: 0,
+                                    assists: 0,
                                     ratingSum: 0,
                                     ratingCount: 0
                                 };
+                                console.log(`  ✅ 新しいシーズンを追加: ${season} (${club})`);
                             } else {
-                                // 同じシーズン・チームのデータを合計
-                                seasonTeamStats[key].matches += matches;
-                                seasonTeamStats[key].goals += goals;
-                                seasonTeamStats[key].assists += assists;
+                                // 同じシーズンに複数のクラブデータがある場合、試合数が多い方を優先
+                                const existingMatches = statsBySeason[season].matches || 0;
+                                if (matches > existingMatches) {
+                                    statsBySeason[season].club = club;
+                                    statsBySeason[season].matches = 0; // リセットして再計算
+                                    statsBySeason[season].goals = 0;
+                                    statsBySeason[season].assists = 0;
+                                    statsBySeason[season].ratingSum = 0;
+                                    statsBySeason[season].ratingCount = 0;
+                                    console.log(`  🔄 より多くの試合数のデータで更新: ${season} (${club}, ${matches}試合)`);
+                                } else if (matches === existingMatches && club !== statsBySeason[season].club) {
+                                    // 試合数が同じ場合、より詳細な情報を優先
+                                    if (club !== 'Unknown' && statsBySeason[season].club === 'Unknown') {
+                                        statsBySeason[season].club = club;
+                                    }
+                                    console.log(`  🔄 既存のシーズンを更新: ${season} (${club})`);
+                                } else {
+                                    console.log(`  ⏭️ 既存データの方が多いためスキップ: ${season} (既存: ${existingMatches}試合, 新規: ${matches}試合)`);
+                                    return;
+                                }
                             }
                             
+                            // APIデータで上書き（APIデータの方が正確）
+                            statsBySeason[season].matches = matches;
+                            statsBySeason[season].goals = goals;
+                            statsBySeason[season].assists = assists;
                             if (stat.rating) {
                                 const rating = parseFloat(stat.rating);
                                 if (!isNaN(rating)) {
-                                    seasonTeamStats[key].ratingSum += rating;
-                                    seasonTeamStats[key].ratingCount += 1;
+                                    statsBySeason[season].ratingSum = rating;
+                                    statsBySeason[season].ratingCount = 1;
                                 }
                             }
+                            console.log(`  ✅ データを設定: 試合=${statsBySeason[season].matches}, ゴール=${statsBySeason[season].goals}, アシスト=${statsBySeason[season].assists}`);
                         });
-                        
-                        // シーズンごとに最も試合数の多いチームを選択（APIデータで上書き）
-                        Object.values(seasonTeamStats).forEach(teamStat => {
-                            const season = teamStat.season;
-                            
-                            if (!statsBySeason[season]) {
-                                statsBySeason[season] = teamStat;
-                                console.log(`  ✅ 新しいシーズンを追加: ${season} (${teamStat.club}, ${teamStat.matches}試合)`);
-                            } else {
-                                // 既存のデータと比較して、試合数の多い方を優先（APIデータで上書き）
-                                if (teamStat.matches > statsBySeason[season].matches) {
-                                    console.log(`  🔄 シーズン ${season} のチームを更新: ${statsBySeason[season].club} (${statsBySeason[season].matches}試合) → ${teamStat.club} (${teamStat.matches}試合)`);
-                                    statsBySeason[season] = teamStat;
-                                } else if (teamStat.matches === statsBySeason[season].matches && teamStat.goals > statsBySeason[season].goals) {
-                                    // 試合数が同じ場合はゴール数で比較
-                                    console.log(`  🔄 シーズン ${season} のチームを更新（ゴール数で判定）: ${statsBySeason[season].club} → ${teamStat.club}`);
-                                    statsBySeason[season] = teamStat;
-                                }
-                            }
-                        });
-                        
                         console.log(`📊 APIデータマージ後のシーズン数: ${Object.keys(statsBySeason).length}`);
                     } else {
                         console.log('⚠️ APIからキャリアスタッツが取得できませんでした');
