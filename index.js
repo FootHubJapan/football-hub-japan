@@ -8754,6 +8754,30 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
             }
         }
         
+        // 同じシーズンに複数のデータがある場合、試合数が多い方を優先して統合
+        const statsBySeasonMap = {};
+        careerStats.forEach(stat => {
+            const seasonKey = String(stat.season || '').replace('/', '');
+            const matches = stat.matches || stat.appearances || 0;
+            
+            if (!statsBySeasonMap[seasonKey]) {
+                statsBySeasonMap[seasonKey] = stat;
+            } else {
+                const existingMatches = statsBySeasonMap[seasonKey].matches || statsBySeasonMap[seasonKey].appearances || 0;
+                // 試合数が多い方を優先（試合数0のデータは除外）
+                if (matches > existingMatches && matches > 0) {
+                    statsBySeasonMap[seasonKey] = stat;
+                    console.log(`🔄 シーズン ${stat.season} を更新: ${existingMatches}試合 → ${matches}試合 (${stat.teamName || stat.league})`);
+                } else if (matches === 0 && existingMatches > 0) {
+                    // 試合数0のデータは無視
+                    console.log(`⏭️ シーズン ${stat.season} の試合数0データをスキップ: ${stat.teamName || stat.league}`);
+                }
+            }
+        });
+        
+        // 統合されたデータを配列に変換
+        careerStats = Object.values(statsBySeasonMap);
+        
         // シーズン順でソート（新しい順）
         careerStats.sort((a, b) => {
             const seasonA = String(a.season || '').replace('/', '');
@@ -8763,7 +8787,7 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
             return yearB - yearA;
         });
         
-        console.log(`📊 最終的なキャリアスタッツ数: ${careerStats.length}シーズン`);
+        console.log(`📊 最終的なキャリアスタッツ数: ${careerStats.length}シーズン（統合後）`);
         careerStats.forEach((stat, idx) => {
             console.log(`  ${idx + 1}. ${stat.season} - ${stat.teamName || stat.league}: ${stat.matches || stat.appearances}試合, ${stat.goals}ゴール, ${stat.assists}アシスト (source: ${stat.source || 'unknown'})`);
         });
