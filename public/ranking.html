@@ -463,19 +463,29 @@
         .mobile-card-stat {
             display: flex;
             justify-content: space-between;
-            padding: 6px;
+            align-items: center;
+            padding: 8px;
             background: rgba(255, 255, 255, 0.03);
             border-radius: 6px;
+            min-height: 40px;
         }
 
         .mobile-card-stat-label {
             color: #a0a0a0;
-            font-size: 0.85rem;
+            font-size: 12px;
+            line-height: 1.4;
         }
 
         .mobile-card-stat-value {
             color: #00ff88;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+
+        .mobile-card-title {
+            font-size: 16px;
+            line-height: 1.4;
         }
 
         /* ボタンの最小タップ領域を確保 */
@@ -559,7 +569,22 @@
             .search-btn {
                 width: 100%;
                 padding: 12px;
-                font-size: 14px;
+                font-size: 16px; /* iOSズーム防止 */
+                line-height: 1.4;
+            }
+
+            .filter-select {
+                min-height: 48px; /* タップしやすく */
+            }
+
+            .mobile-card-stat {
+                padding: 8px;
+                min-height: 44px; /* タップ領域確保 */
+            }
+
+            .mobile-card-title {
+                font-size: 16px;
+                line-height: 1.5;
             }
 
             .chart-container {
@@ -612,7 +637,19 @@
             .filter-select,
             .search-btn {
                 padding: 12px;
+                min-height: 48px; /* よりタップしやすく */
+                font-size: 16px; /* iOSズーム防止 */
+                line-height: 1.4;
+            }
+
+            .mobile-card-stat {
+                padding: 8px;
                 min-height: 44px;
+            }
+
+            .mobile-card-title {
+                font-size: 16px;
+                line-height: 1.5;
             }
 
             .chart-container {
