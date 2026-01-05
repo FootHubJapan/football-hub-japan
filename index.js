@@ -12152,14 +12152,15 @@ async function checkAndUpdateFinishedMatches() {
                 const fixtures = response.data?.response || [];
                 console.log(`📊 ${league.name}: ${fixtures.length}件の終了試合を検出（APIから取得）`);
                 
-                // 過去12時間以内に終了した試合のみをフィルタリング
+                // 過去3日間以内に終了した試合をフィルタリング（12時間では短すぎるため拡大）
                 const recentFixtures = fixtures.filter(fixture => {
                     const fixtureDate = fixture.fixture?.date ? new Date(fixture.fixture.date) : null;
                     if (!fixtureDate) return false;
-                    return fixtureDate >= twelveHoursAgo && fixtureDate <= now;
+                    // 過去3日間以内の試合を対象
+                    return fixtureDate >= threeDaysAgo && fixtureDate <= now;
                 });
                 
-                console.log(`📊 ${league.name}: ${recentFixtures.length}件の試合が過去12時間以内に終了`);
+                console.log(`📊 ${league.name}: ${recentFixtures.length}件の試合が過去3日間以内に終了`);
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:12035',message:'Fixtures filtered by 12 hours',data:{league:league.name,totalFixtures:fixtures.length,recentFixtures:recentFixtures.length,recentFixturesList:recentFixtures.slice(0,3).map(f=>({id:f.fixture?.id,date:f.fixture?.date,home:f.teams?.home?.name,away:f.teams?.away?.name}))},timestamp:Date.now(),sessionId:'debug-session',runId:'match-update-check',hypothesisId:'C'})}).catch(()=>{});
                 // #endregion
