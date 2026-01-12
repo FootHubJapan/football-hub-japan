@@ -12,6 +12,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
+        :root {
+            --background: #0d1117;
+            --foreground: #f0f6fc;
+            --card: #161b22;
+            --card-hover: #1c2128;
+            --primary: #22c55e;
+            --primary-hover: #16a34a;
+            --secondary: #21262d;
+            --muted: #8b949e;
+            --border: #30363d;
+            --border-light: rgba(48, 54, 61, 0.5);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -20,44 +33,69 @@
 
         body {
             font-family: "Noto Sans JP", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
-            background: #0a0a0a;
-            color: #ffffff;
+            background: var(--background);
+            color: var(--foreground);
             line-height: 1.6;
         }
 
         .header {
-            background: #1a1a1a;
-            padding: 1rem 2rem;
-            border-bottom: 2px solid #00ff88;
+            background: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-light);
+            padding: 0 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: 64px;
         }
 
         .logo {
-            color: #00ff88;
-            font-size: 1.5rem;
-            font-weight: bold;
+            color: var(--primary);
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo::before {
+            content: '⚡';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 8px;
+            font-size: 1rem;
         }
 
         .nav-buttons {
             display: flex;
-            gap: 1rem;
+            gap: 0.5rem;
         }
 
         .nav-btn {
-            background: #333333;
-            color: #ffffff;
-            border: 1px solid #00ff88;
+            background: var(--secondary);
+            color: var(--muted);
+            border: 1px solid var(--border);
             padding: 0.5rem 1rem;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            font-weight: 500;
         }
 
         .nav-btn:hover {
-            background: #00ff88;
-            color: #000000;
+            background: var(--primary);
+            color: var(--background);
+            border-color: var(--primary);
         }
 
         .main-container {
@@ -68,19 +106,19 @@
 
         .player-header {
             display: flex;
-            gap: 3rem;
-            margin-bottom: 3rem;
-            padding: 2rem;
-            background: #1a1a1a;
-            border-radius: 15px;
-            border: 2px solid #00ff88;
+            gap: 2.5rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
 
         .player-photo {
-            width: 200px;
-            height: 200px;
+            width: 180px;
+            height: 180px;
             border-radius: 50%;
-            border: 4px solid #00ff88;
+            border: 3px solid var(--primary);
             object-fit: cover;
         }
 
@@ -89,146 +127,143 @@
         }
 
         .player-name {
-            font-size: 2.5rem;
-            color: #00ff88;
-            margin-bottom: 1rem;
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+            font-weight: 700;
         }
 
         .player-club {
-            font-size: 1.2rem;
-            color: #cccccc;
-            margin-bottom: 0.5rem;
+            font-size: 1.0625rem;
+            color: var(--muted);
+            margin-bottom: 0.375rem;
         }
 
         .player-basics {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-top: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1.25rem;
         }
 
         .basic-item {
-            background: #333333;
-            padding: 1rem;
+            background: var(--secondary);
+            padding: 0.875rem;
             border-radius: 8px;
             text-align: center;
+            border: 1px solid var(--border);
         }
 
         .basic-value {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #00ff88;
+            font-size: 1.0625rem;
+            font-weight: 700;
+            color: var(--primary);
         }
 
         .basic-label {
-            color: #cccccc;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
+            color: var(--muted);
+            font-size: 0.8125rem;
+            margin-top: 0.375rem;
         }
 
         .stats-section {
             display: block;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
         }
 
         .stats-card {
-            background: #1a1a1a;
-            padding: 2rem;
-            border-radius: 15px;
-            border: 2px solid #333333;
+            background: var(--card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
 
         .stats-title {
-            color: #00ff88;
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid #333;
+            color: var(--primary);
+            font-size: 1.25rem;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border);
             padding-bottom: 0.5rem;
+            font-weight: 600;
         }
 
         .stats-grid {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.75rem;
         }
 
         .stat-item {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            padding: 0.75rem;
-            background: #1f1f1f;
+            gap: 0.875rem;
+            padding: 0.625rem;
+            background: var(--secondary);
             border-radius: 8px;
         }
 
         .stat-label {
-            color: #cccccc;
-            font-size: 0.9rem;
-            min-width: 120px;
+            color: var(--muted);
+            font-size: 0.8125rem;
+            min-width: 110px;
             text-align: left;
         }
 
         .stat-value {
-            font-size: 1rem;
-            font-weight: bold;
-            color: #ffffff;
-            min-width: 50px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--foreground);
+            min-width: 48px;
             text-align: right;
         }
 
         .stat-bar-container {
             flex: 1;
-            height: 12px;
-            background: #2a2a2a;
-            border-radius: 6px;
+            height: 10px;
+            background: var(--card);
+            border-radius: 5px;
             overflow: hidden;
             position: relative;
         }
 
         .stat-bar {
             height: 100%;
-            border-radius: 6px;
+            border-radius: 5px;
             transition: width 0.3s ease;
         }
 
         .stat-bar.low {
-            background: linear-gradient(90deg, #ff0080, #ff40a0);
+            background: linear-gradient(90deg, #f85149, #ff6a5c);
         }
 
         .stat-bar.medium {
-            background: linear-gradient(90deg, #ffff00, #ffff40);
+            background: linear-gradient(90deg, #d29922, #e3b341);
         }
 
         .stat-bar.high {
-            background: linear-gradient(90deg, #00ff00, #40ff40);
+            background: linear-gradient(90deg, var(--primary), #4ade80);
         }
         
         .detailed-stats-section {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
-            margin-bottom: 3rem;
-        }
-
-        .detailed-stats-section {
-            display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .career-section {
-            background: #1a1a1a;
-            padding: 2rem;
-            border-radius: 15px;
-            border: 2px solid #333333;
-            margin-bottom: 3rem;
+            background: var(--card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
         }
 
         .career-title {
-            color: #00ff88;
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-size: 1.25rem;
+            margin-bottom: 1.25rem;
+            font-weight: 600;
         }
 
         .career-table {
@@ -238,24 +273,24 @@
 
         .career-table th,
         .career-table td {
-            padding: 1rem;
+            padding: 0.875rem;
             text-align: left;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid var(--border);
         }
 
         .career-table th {
-            background: #333333;
-            color: #00ff88;
-            font-weight: bold;
+            background: var(--secondary);
+            color: var(--primary);
+            font-weight: 600;
         }
 
         .career-table tr:hover {
-            background: #2a2a2a;
+            background: var(--card-hover);
         }
 
         /* Transfermarktスタイルのコンペティション別スタッツテーブル */
         .competition-stats-table {
-            margin-top: 1rem;
+            margin-top: 0.875rem;
             width: 100%;
             overflow-x: auto;
         }
@@ -263,19 +298,19 @@
         .competition-table {
             width: 100%;
             border-collapse: collapse;
-            background: #1a1a1a;
+            background: var(--card);
             border-radius: 8px;
             overflow: hidden;
-            font-size: 0.9rem;
-            border: 2px solid #00ff88;
+            font-size: 0.875rem;
+            border: 1px solid var(--border);
         }
 
         .competition-table th,
         .competition-table td {
-            padding: 1rem 0.75rem;
+            padding: 0.875rem 0.625rem;
             text-align: center;
-            border-bottom: 1px solid #333333;
-            border-right: 1px solid #333333;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
             vertical-align: middle;
         }
 
@@ -285,26 +320,26 @@
         }
 
         .competition-header {
-            background: #00ff88;
-            color: #000000;
-            font-weight: bold;
+            background: var(--primary);
+            color: var(--background);
+            font-weight: 600;
             text-align: left;
-            padding-left: 1rem;
+            padding-left: 0.875rem;
             min-width: 120px;
         }
 
         .stat-header {
-            background: #2a2a2a;
-            color: #ffffff;
-            font-weight: bold;
+            background: var(--secondary);
+            color: var(--foreground);
+            font-weight: 600;
             text-align: center;
-            min-width: 80px;
-            padding: 0.75rem;
+            min-width: 76px;
+            padding: 0.625rem;
             white-space: nowrap;
         }
 
         .stat-icon {
-            font-size: 1.2rem;
+            font-size: 1.125rem;
         }
 
         .competition-table tbody tr {
@@ -312,69 +347,75 @@
         }
 
         .competition-table tbody tr:hover {
-            background: #2a2a2a;
+            background: var(--card-hover);
         }
 
         .competition-table tbody tr:nth-child(even) {
-            background: #1f1f1f;
+            background: var(--secondary);
         }
 
         .competition-table tbody tr:nth-child(even):hover {
-            background: #2a2a2a;
+            background: var(--card-hover);
         }
 
         .competition-name {
             text-align: left;
-            padding-left: 1rem;
+            padding-left: 0.875rem;
             font-weight: 500;
-            color: #ffffff;
+            color: var(--foreground);
         }
 
         .stat-value {
-            font-weight: bold;
-            color: #00ff88;
-            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.9375rem;
         }
 
         .stat-value.total {
-            background: #00ff88;
-            color: #000000;
-            font-weight: bold;
+            background: var(--primary);
+            color: var(--background);
+            font-weight: 700;
         }
 
         .competition-name.total {
-            background: #00ff88;
-            color: #000000;
-            font-weight: bold;
+            background: var(--primary);
+            color: var(--background);
+            font-weight: 700;
         }
 
         .no-data {
-            color: #666666;
+            color: var(--muted);
             font-style: italic;
         }
 
         .back-btn {
-            background: #00ff88;
-            color: #000000;
+            background: var(--primary);
+            color: var(--background);
             border: none;
-            padding: 1rem 2rem;
+            padding: 0.875rem 1.5rem;
             border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: bold;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
             margin-bottom: 2rem;
         }
 
         .back-btn:hover {
-            background: #00cc6a;
+            background: var(--primary-hover);
             transform: translateY(-2px);
         }
 
         @media (max-width: 768px) {
+            .header {
+                padding: 0 1rem;
+            }
+            .nav-buttons {
+                display: none;
+            }
             .player-header {
                 flex-direction: column;
-            text-align: center;
+                text-align: center;
             }
 
             .stats-section {
@@ -389,12 +430,12 @@
 </head>
 <body>
     <div class="header">
-        <div class="logo">Football Hub Japan</div>
+        <a href="/" class="logo">Football Hub Japan</a>
         <div class="nav-buttons">
             <button class="nav-btn" onclick="window.location.href='/'">ホーム</button>
-            <button class="nav-btn" onclick="window.location.href='/database-enhanced'">データベース</button>
-            <button class="nav-btn" onclick="window.location.href='/radar'">レーダーチャート</button>
-            <button class="nav-btn" onclick="window.location.href='/dashboard'">ダッシュボード</button>
+            <button class="nav-btn" onclick="window.location.href='/database-new.html'">データベース</button>
+            <button class="nav-btn" onclick="window.location.href='/radar-enhanced.html'">レーダー</button>
+            <button class="nav-btn" onclick="window.location.href='/dashboard.html'">ダッシュボード</button>
         </div>
     </div>
 
