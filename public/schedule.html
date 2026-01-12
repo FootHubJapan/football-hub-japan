@@ -12,6 +12,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --background: #0d1117;
+            --foreground: #f0f6fc;
+            --card: #161b22;
+            --card-hover: #1c2128;
+            --primary: #22c55e;
+            --primary-hover: #16a34a;
+            --secondary: #21262d;
+            --muted: #8b949e;
+            --border: #30363d;
+            --border-light: rgba(48, 54, 61, 0.5);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -20,14 +33,16 @@
 
         body {
             font-family: "Noto Sans JP", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
-            background: #0a0a0a;
-            color: #ffffff;
+            background: var(--background);
+            color: var(--foreground);
             line-height: 1.6;
         }
 
         .header {
-            background: #1a1a1a;
-            border-bottom: 2px solid #00ff88;
+            background: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-light);
             padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
@@ -38,25 +53,42 @@
         }
 
         .logo {
-            color: #00ff88;
-            font-size: 1.8rem;
+            color: var(--primary);
+            font-size: 1.5rem;
             font-weight: bold;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo::before {
+            content: '⚡';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 8px;
+            font-size: 1rem;
         }
 
         .nav-links {
             display: flex;
-            gap: 2rem;
+            gap: 1.5rem;
         }
 
         .nav-link {
-            color: #cccccc;
+            color: var(--muted);
             text-decoration: none;
-            transition: color 0.3s;
+            transition: color 0.2s;
+            font-size: 0.875rem;
+            font-weight: 500;
         }
 
         .nav-link:hover {
-            color: #00ff88;
+            color: var(--foreground);
         }
 
         .main-container {
@@ -66,29 +98,30 @@
         }
 
         .page-title {
-            color: #00ff88;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
+            color: var(--primary);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
             text-align: center;
+            font-weight: 700;
         }
 
         .page-subtitle {
-            color: #cccccc;
-            font-size: 1.2rem;
-            margin-bottom: 3rem;
+            color: var(--muted);
+            font-size: 1rem;
+            margin-bottom: 2rem;
             text-align: center;
         }
 
         .schedule-controls {
-            background: #1a1a1a;
-            border: 2px solid #333333;
-            border-radius: 15px;
-            padding: 2rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
             margin-bottom: 2rem;
             display: flex;
             flex-wrap: wrap;
             gap: 1rem;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
         }
 
@@ -99,56 +132,54 @@
         }
 
         .control-label {
-            color: #00ff88;
-            font-weight: bold;
-            font-size: 0.9rem;
+            color: var(--muted);
+            font-weight: 500;
+            font-size: 0.8125rem;
         }
 
         .control-select {
-            background: #2a2a2a;
-            border: 1px solid #444444;
-            color: #ffffff;
-            padding: 0.8rem 1rem;
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            color: var(--foreground);
+            padding: 0.75rem 1rem;
             border-radius: 8px;
-            font-size: 1rem;
-            min-width: 200px;
+            font-size: 0.875rem;
+            min-width: 180px;
         }
 
         .control-select:focus {
             outline: none;
-            border-color: #00ff88;
+            border-color: var(--primary);
         }
 
         .control-button {
-            background: #00ff88;
-            color: #000000;
-            padding: 0.8rem 2rem;
+            background: var(--primary);
+            color: var(--background);
+            padding: 0.75rem 1.5rem;
             border: none;
             border-radius: 8px;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
-            font-size: 1rem;
+            transition: all 0.2s;
+            font-size: 0.875rem;
         }
 
         .control-button:hover {
-            background: #00cc6a;
-            transform: translateY(-2px);
+            background: var(--primary-hover);
         }
 
         .schedule-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 1.5rem;
         }
 
         .match-card {
-            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-            border: 2px solid #4CAF50;
-            border-radius: 15px;
-            padding: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
             margin: 0;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             transition: all 0.3s ease;
             cursor: pointer;
             width: 100%;
@@ -156,9 +187,9 @@
         }
 
         .match-card:hover {
-            border-color: #00ff88;
+            border-color: rgba(34, 197, 94, 0.5);
+            background: var(--card-hover);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
 
         /* モーダルスタイル */
@@ -170,7 +201,7 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: rgba(0, 0, 0, 0.85);
             overflow: hidden;
         }
         
@@ -183,11 +214,11 @@
         }
 
         .modal-content {
-            background-color: #1a1a1a;
+            background-color: var(--card);
             margin: 5% auto;
             padding: 0;
-            border: 1px solid #4CAF50;
-            border-radius: 12px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
             width: 95%;
             max-width: 1400px;
             min-width: 900px;
@@ -199,7 +230,7 @@
         }
 
         .close {
-            color: #aaa;
+            color: var(--muted);
             float: right;
             font-size: 28px;
             font-weight: bold;
@@ -207,18 +238,19 @@
             position: absolute;
             top: 15px;
             right: 20px;
+            transition: color 0.2s;
         }
 
         .close:hover,
         .close:focus {
-            color: #4CAF50;
+            color: var(--primary);
         }
 
         .match-detail-header {
             text-align: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 2px solid #4CAF50;
+            border-bottom: 1px solid var(--border);
         }
 
         .match-detail-teams {
@@ -233,7 +265,7 @@
         .match-detail-score {
             font-size: 48px;
             font-weight: bold;
-            color: #4CAF50;
+            color: var(--primary);
             text-align: center;
             margin: 20px 0;
         }
@@ -246,21 +278,21 @@
         }
 
         .match-detail-item {
-            background-color: #3a3a3a;
+            background-color: var(--secondary);
             padding: 15px;
             border-radius: 10px;
-            border-left: 4px solid #4CAF50;
+            border-left: 3px solid var(--primary);
         }
 
         .match-detail-label {
             font-size: 14px;
-            color: #888;
+            color: var(--muted);
             margin-bottom: 5px;
         }
 
         .match-detail-value {
             font-size: 16px;
-            color: white;
+            color: var(--foreground);
             font-weight: bold;
         }
 
@@ -280,21 +312,20 @@
 
         /* 詳細ボタンスタイル */
         .detail-button {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            color: white;
+            background: var(--primary);
+            color: var(--background);
             border: none;
             padding: 12px 24px;
-            border-radius: 25px;
+            border-radius: 8px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            transition: all 0.2s ease;
         }
 
         .detail-button:hover {
+            background: var(--primary-hover);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
         }
 
         /* 大サイズモーダル */

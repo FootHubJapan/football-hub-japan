@@ -4,7 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ログイン - Football Hub Japan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --background: #0d1117;
+            --foreground: #f0f6fc;
+            --card: #161b22;
+            --card-hover: #1c2128;
+            --primary: #22c55e;
+            --primary-hover: #16a34a;
+            --primary-glow: rgba(34, 197, 94, 0.2);
+            --secondary: #21262d;
+            --muted: #8b949e;
+            --border: #30363d;
+            --border-light: rgba(48, 54, 61, 0.5);
+            --warning: #f59e0b;
+            --destructive: #f85149;
+            --success: #22c55e;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,356 +32,545 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0a0a0a;
-            color: #ffffff;
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background);
+            color: var(--foreground);
             line-height: 1.6;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
+        /* Header */
         .header {
-            text-align: center;
-            margin-bottom: 3rem;
+            background: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-light);
+            padding: 1rem 1.5rem;
+        }
+
+        .header-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .logo {
-            color: #00ff88;
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--foreground);
         }
 
-        .hero-message {
-            font-size: 1.2rem;
-            color: #cccccc;
-            margin-bottom: 2rem;
-            line-height: 1.8;
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
         }
 
-        .hero-message strong {
-            color: #00ff88;
+        .logo-text {
+            font-size: 1.125rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
         }
 
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--muted);
+        }
+
+        .btn-ghost:hover {
+            color: var(--foreground);
+            background: var(--secondary);
+        }
+
+        /* Main Content */
         .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 1000px;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 3rem;
-            align-items: start;
+            gap: 2rem;
         }
 
-        .login-section {
-            background: #1a1a1a;
-            border: 2px solid #00ff88;
-            border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.1);
+        /* Login Card */
+        .login-card {
+            position: relative;
+            overflow: hidden;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+        }
+
+        .login-glow {
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 200px;
+            height: 200px;
+            background: var(--primary-glow);
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+        }
+
+        .login-content {
+            position: relative;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 1rem;
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
         }
 
         .login-title {
-            color: #00ff88;
             font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
         }
 
+        .login-subtitle {
+            color: var(--muted);
+            font-size: 0.9375rem;
+        }
+
+        /* Messages */
+        .message {
+            padding: 0.875rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+            font-size: 0.875rem;
+        }
+
+        .message.error {
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid var(--destructive);
+            color: var(--destructive);
+        }
+
+        .message.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        /* Form */
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
 
-        .form-group label {
+        .form-label {
             display: block;
             margin-bottom: 0.5rem;
-            color: #ffffff;
+            font-size: 0.875rem;
             font-weight: 500;
         }
 
-        .form-group input {
+        .form-input {
             width: 100%;
-            padding: 0.8rem;
-            border: 1px solid #333333;
-            border-radius: 5px;
-            background: #2a2a2a;
-            color: #ffffff;
-            font-size: 1rem;
-            transition: border-color 0.3s;
+            padding: 0.75rem 1rem;
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--foreground);
+            font-size: 0.9375rem;
+            transition: border-color 0.2s;
         }
 
-        .form-group input:focus {
+        .form-input:focus {
             outline: none;
-            border-color: #00ff88;
+            border-color: var(--primary);
         }
 
-        .login-btn {
+        .form-input::placeholder {
+            color: var(--muted);
+        }
+
+        .form-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-lg {
+            padding: 0.875rem 1rem;
+            font-size: 0.9375rem;
             width: 100%;
-            background: #00ff88;
-            color: #000000;
-            padding: 1rem;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 1rem;
+            justify-content: center;
         }
 
-        .login-btn:hover {
-            background: #00cc6a;
-            transform: translateY(-2px);
+        .btn-primary {
+            background: var(--primary);
+            color: var(--background);
         }
 
-        .register-btn {
-            width: 100%;
-            background: #ffaa00;
-            color: #000000;
-            padding: 1rem;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 1rem;
+        .btn-primary:hover {
+            background: var(--primary-hover);
         }
 
-        .register-btn:hover {
-            background: #ff8800;
-            transform: translateY(-2px);
+        .btn-warning {
+            background: var(--warning);
+            color: var(--background);
         }
 
-        .free-start-btn {
-            width: 100%;
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-outline {
             background: transparent;
-            color: #00ff88;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: var(--background);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: var(--foreground);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--card-hover);
+        }
+
+        /* Account Info */
+        .account-info {
+            margin-top: 1.5rem;
             padding: 1rem;
-            border: 2px solid #00ff88;
-            border-radius: 5px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 1rem;
+            background: var(--secondary);
+            border-radius: 8px;
+            font-size: 0.875rem;
         }
 
-        .free-start-btn:hover {
-            background: #00ff88;
-            color: #000000;
+        .account-info-title {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--primary);
         }
 
-        .back-btn {
-            width: 100%;
-            background: #333333;
-            color: #ffffff;
-            padding: 0.8rem;
-            border: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
+        .account-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
         }
 
-        .back-btn:hover {
-            background: #444444;
+        .account-row:last-child {
+            border-bottom: none;
         }
 
-        .error-message {
-            background: #ff4444;
-            color: #ffffff;
-            padding: 0.8rem;
-            border-radius: 5px;
-            margin-bottom: 1rem;
-            display: none;
+        .account-label {
+            color: var(--muted);
         }
 
-        .success-message {
-            background: #00ff88;
-            color: #000000;
-            padding: 0.8rem;
-            border-radius: 5px;
-            margin-bottom: 1rem;
-            display: none;
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
         }
 
-        .features-section {
-            background: #1a1a1a;
-            border: 1px solid #333333;
-            border-radius: 15px;
+        .badge-owner {
+            background: var(--primary);
+            color: var(--background);
+        }
+
+        .badge-user {
+            background: var(--warning);
+            color: var(--background);
+        }
+
+        /* Features Section */
+        .features-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
             padding: 2rem;
         }
 
-        .features-title {
-            color: #00ff88;
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
+        .features-header {
             text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .features-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .features-subtitle {
+            color: var(--muted);
+            font-size: 0.875rem;
+        }
+
+        .features-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
         }
 
         .feature-item {
-            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
             padding: 1rem;
-            background: #2a2a2a;
+            background: var(--secondary);
             border-radius: 8px;
-            border-left: 3px solid #00ff88;
+            transition: all 0.2s;
+        }
+
+        .feature-item:hover {
+            background: var(--card-hover);
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            background: rgba(34, 197, 94, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+        }
+
+        .feature-content {
+            flex: 1;
         }
 
         .feature-title {
-            color: #00ff88;
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            margin-bottom: 0.25rem;
+            color: var(--foreground);
         }
 
         .feature-description {
-            color: #cccccc;
-            font-size: 0.9rem;
+            color: var(--muted);
+            font-size: 0.8125rem;
             line-height: 1.5;
         }
 
-        .account-info {
-            background: #2a2a2a;
-            border: 1px solid #333333;
-            border-radius: 5px;
-            padding: 1rem;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-        }
-
-        .account-info h4 {
-            color: #00ff88;
-            margin-bottom: 0.5rem;
-        }
-
-        .account-info p {
-            color: #cccccc;
-            margin-bottom: 0.3rem;
-        }
-
-        .owner-badge {
-            background: #00ff88;
-            color: #000000;
-            padding: 0.2rem 0.5rem;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            display: inline-block;
-            margin-left: 0.5rem;
-        }
-
-        .user-badge {
-            background: #ffaa00;
-            color: #000000;
-            padding: 0.2rem 0.5rem;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            display: inline-block;
-            margin-left: 0.5rem;
-        }
-
+        /* Responsive */
         @media (max-width: 768px) {
-            .main-content {
+            .login-container {
                 grid-template-columns: 1fr;
-                gap: 2rem;
+                max-width: 480px;
+            }
+
+            .features-card {
+                display: none;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .login-card {
+                padding: 1.5rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">⚽ Football Hub Japan</div>
-            <div class="hero-message">
-                Football Data Platform<br>
-                最先端のAI技術で日本サッカーを分析・予測<br>
-                選手パフォーマンス、戦術、移籍可能性を詳細分析
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">⚡</div>
+                <span class="logo-text">Football Hub Japan</span>
+            </a>
+            <a href="/" class="btn btn-ghost">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                戻る
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="login-container">
+            <!-- Login Card -->
+            <div class="login-card">
+                <div class="login-glow"></div>
+                <div class="login-content">
+                    <div class="login-header">
+                        <div class="login-badge">
+                            <span>🔐</span>
+                            <span>アカウント</span>
+                        </div>
+                        <h1 class="login-title">ログイン / 新規登録</h1>
+                        <p class="login-subtitle">アカウントにサインインして全機能にアクセス</p>
+                    </div>
+
+                    <div id="errorMessage" class="message error"></div>
+                    <div id="successMessage" class="message success"></div>
+
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label class="form-label" for="email">メールアドレス</label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                class="form-input"
+                                placeholder="your-email@example.com"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="password">パスワード</label>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                class="form-input"
+                                placeholder="パスワードを入力"
+                            >
+                        </div>
+
+                        <div class="form-buttons">
+                            <button type="submit" class="btn btn-lg btn-primary">
+                                ログイン
+                            </button>
+                            <button type="button" onclick="register()" class="btn btn-lg btn-warning">
+                                📝 新規登録
+                            </button>
+                            <button type="button" onclick="freeStart()" class="btn btn-lg btn-outline">
+                                無料で始める
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="account-info">
+                        <div class="account-info-title">アカウント種別</div>
+                        <div class="account-row">
+                            <span class="account-label">オーナー</span>
+                            <span class="badge badge-owner">全機能利用可</span>
+                        </div>
+                        <div class="account-row">
+                            <span class="account-label">一般ユーザー</span>
+                            <span class="badge badge-user">一部制限あり</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Card -->
+            <div class="features-card">
+                <div class="features-header">
+                    <h2 class="features-title">利用可能な機能</h2>
+                    <p class="features-subtitle">ログイン後にアクセスできる機能</p>
+                </div>
+
+                <div class="features-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-content">
+                            <div class="feature-title">サッカーデータベース</div>
+                            <div class="feature-description">世界中のリーグ、チーム、選手の詳細データ</div>
+                        </div>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">📈</div>
+                        <div class="feature-content">
+                            <div class="feature-title">レーダーチャート比較</div>
+                            <div class="feature-description">選手パフォーマンスの視覚的比較</div>
+                        </div>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">🤖</div>
+                        <div class="feature-content">
+                            <div class="feature-title">試合レビュー/プレビュー</div>
+                            <div class="feature-description">AI生成の詳細な試合分析</div>
+                        </div>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">📅</div>
+                        <div class="feature-content">
+                            <div class="feature-title">試合スケジュール</div>
+                            <div class="feature-description">お気に入りチームの試合日程</div>
+                        </div>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">🧠</div>
+                        <div class="feature-content">
+                            <div class="feature-title">AI分析エージェント</div>
+                            <div class="feature-description">機械学習による高精度な予測</div>
+                        </div>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">🏆</div>
+                        <div class="feature-content">
+                            <div class="feature-title">ランキングシステム</div>
+                            <div class="feature-description">ポジション別、リーグ別ランキング</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="main-content">
-            <div class="login-section">
-                <h2 class="login-title">ログイン / 新規登録</h2>
-                
-                <div id="errorMessage" class="error-message"></div>
-                <div id="successMessage" class="success-message"></div>
-
-                <form id="loginForm">
-                    <div class="form-group">
-                        <label for="email">メールアドレス</label>
-                        <input type="email" id="email" name="email" placeholder="your-email@example.com">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="password">パスワード</label>
-                        <input type="password" id="password" name="password" placeholder="パスワードを入力">
-                    </div>
-
-                    <button type="submit" class="login-btn">ログイン</button>
-                </form>
-
-                <button onclick="register()" class="register-btn">📝 新規登録</button>
-                <button onclick="freeStart()" class="free-start-btn">無料で始める</button>
-                <button onclick="goBack()" class="back-btn">戻る</button>
-
-                <div class="account-info">
-                    <h4>アカウント情報</h4>
-                    <p><strong>オーナーアカウント:</strong> iyuki09175407@gmail.com <span class="owner-badge">機能制限なし</span></p>
-                    <p><strong>一般ユーザー:</strong> 新規登録で作成 <span class="user-badge">機能制限あり</span></p>
-                </div>
-            </div>
-
-            <div class="features-section">
-                <h2 class="features-title">機能</h2>
-                
-                <div class="feature-item">
-                    <div class="feature-title">サッカーデータベース</div>
-                    <div class="feature-description">
-                        世界中のリーグ、チーム、選手の詳細なデータを網羅。リアルタイムで更新される統計情報にアクセスできます。
-                    </div>
-                </div>
-
-                <div class="feature-item">
-                    <div class="feature-title">レーダーチャート比較</div>
-                    <div class="feature-description">
-                        選手やチームのパフォーマンスを視覚的に比較。多角的な分析で真の実力を把握できます。
-                    </div>
-                </div>
-
-                <div class="feature-item">
-                    <div class="feature-title">試合レビュー/プレビュー</div>
-                    <div class="feature-description">
-                        AIが生成する詳細な試合分析。過去の試合レビューと今後の試合予想を提供します。
-                    </div>
-                </div>
-
-                <div class="feature-item">
-                    <div class="feature-title">試合スケジュール</div>
-                    <div class="feature-description">
-                        お気に入りのチームや選手の試合スケジュールを一覧表示。重要な試合を見逃しません。
-                    </div>
-                </div>
-
-                <div class="feature-item">
-                    <div class="feature-title">AI分析エージェント</div>
-                    <div class="feature-description">
-                        最新のAI技術で試合結果を予想。機械学習による高精度な分析をお届けします。
-                    </div>
-                </div>
-
-                <div class="feature-item">
-                    <div class="feature-title">ランキングシステム</div>
-                    <div class="feature-description">
-                        ポジション別、リーグ別の詳細なランキング。選手の市場価値や移籍情報も追跡します。
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    </main>
 
     <script>
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -370,26 +579,22 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
-            // 簡単なバリデーション
             if (!email || !password) {
                 showError('メールアドレスとパスワードを入力してください。');
                 return;
             }
 
-            // オーナーアカウントかどうかチェック
             const isOwner = email === 'iyuki09175407@gmail.com';
             
             if (isOwner) {
-                showSuccess('オーナーアカウントでログインしました！機能制限なしでご利用いただけます。');
-                setTimeout(() => {
-                    window.location.href = '/dashboard?email=' + encodeURIComponent(email);
-                }, 2000);
+                showSuccess('オーナーアカウントでログインしました！');
             } else {
-                showSuccess('一般ユーザーでログインしました！一部機能に制限があります。');
-                setTimeout(() => {
-                    window.location.href = '/dashboard?email=' + encodeURIComponent(email);
-                }, 2000);
+                showSuccess('ログインしました！');
             }
+            
+            setTimeout(() => {
+                window.location.href = '/dashboard?email=' + encodeURIComponent(email);
+            }, 1500);
         });
 
         function register() {
@@ -402,44 +607,36 @@
             }
 
             if (email === 'iyuki09175407@gmail.com') {
-                showError('このメールアドレスは既にオーナーアカウントとして登録されています。');
+                showError('このメールアドレスは既に登録されています。');
                 return;
             }
 
-            showSuccess('新規登録が完了しました！一般ユーザーとしてログインします。');
+            showSuccess('新規登録が完了しました！');
             setTimeout(() => {
                 window.location.href = '/dashboard?email=' + encodeURIComponent(email);
-            }, 2000);
+            }, 1500);
         }
 
         function freeStart() {
             showSuccess('無料プランでログインしました！');
             setTimeout(() => {
                 window.location.href = '/dashboard?email=guest@footballhub.jp';
-            }, 1500);
+            }, 1000);
         }
 
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
-            
-            const successDiv = document.getElementById('successMessage');
-            successDiv.style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
         }
 
         function showSuccess(message) {
             const successDiv = document.getElementById('successMessage');
             successDiv.textContent = message;
             successDiv.style.display = 'block';
-            
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.style.display = 'none';
-        }
-
-        function goBack() {
-            window.location.href = '/';
+            document.getElementById('errorMessage').style.display = 'none';
         }
     </script>
 </body>
-</html> 
+</html>
