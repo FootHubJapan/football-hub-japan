@@ -4,9 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ランキングシステム - Football Hub Japan</title>
-    <!-- Updated for deployment -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            --background: #0d1117;
+            --foreground: #f0f6fc;
+            --card: #161b22;
+            --card-hover: #1c2128;
+            --primary: #22c55e;
+            --primary-foreground: #0d1117;
+            --secondary: #21262d;
+            --muted: #8b949e;
+            --border: #30363d;
+            --ring: #22c55e;
+            --radius: 0.75rem;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,159 +30,377 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
-            color: #fff;
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background);
+            color: var(--foreground);
             min-height: 100vh;
+            line-height: 1.6;
         }
 
+        /* Header */
         .header {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 1rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            width: 100%;
+            border-bottom: 1px solid var(--border);
+            background: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(12px);
         }
 
         .header-content {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 2rem;
+            padding: 0 1.5rem;
+            height: 64px;
         }
 
         .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #00ff88;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--foreground);
             text-decoration: none;
+        }
+
+        .logo-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            border-radius: 8px;
+            font-size: 1.25rem;
         }
 
         .nav-buttons {
             display: flex;
-            gap: 1rem;
+            gap: 0.5rem;
         }
 
         .nav-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
+            background: transparent;
+            border: none;
+            color: var(--muted);
             padding: 0.5rem 1rem;
-            border-radius: 8px;
+            border-radius: var(--radius);
             cursor: pointer;
-            transition: all 0.3s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-family: inherit;
         }
 
         .nav-btn:hover {
-            background: rgba(0, 255, 136, 0.2);
-            border-color: #00ff88;
+            color: var(--foreground);
+            background: var(--secondary);
         }
 
+        /* Main Container */
         .main-container {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            text-align: center;
+            padding: 3rem 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: 1rem;
         }
 
         .page-title {
             font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(45deg, #00ff88, #00d4ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.025em;
         }
 
         .page-subtitle {
-            color: #a0a0a0;
-            margin-bottom: 2rem;
-            font-size: 1.1rem;
+            color: var(--muted);
+            font-size: 1.125rem;
+            max-width: 600px;
+            margin: 0 auto;
         }
 
-        .ranking-tabs {
+        /* Tabs */
+        .tabs-container {
             display: flex;
-            gap: 1rem;
+            justify-content: center;
             margin-bottom: 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tabs-list {
+            display: inline-flex;
+            background: var(--secondary);
+            border-radius: var(--radius);
+            padding: 0.25rem;
+            gap: 0.25rem;
         }
 
         .tab-btn {
-            background: none;
+            background: transparent;
             border: none;
-            color: #a0a0a0;
-            padding: 1rem 1.5rem;
+            color: var(--muted);
+            padding: 0.625rem 1.25rem;
+            border-radius: calc(var(--radius) - 4px);
             cursor: pointer;
-            font-size: 1rem;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-family: inherit;
         }
 
         .tab-btn.active {
-            color: #00ff88;
-            border-bottom-color: #00ff88;
+            background: var(--card);
+            color: var(--foreground);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
-        .tab-btn:hover {
-            color: #fff;
+        .tab-btn:hover:not(.active) {
+            color: var(--foreground);
         }
 
-        .filters-section {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
+        /* Cards */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .card-header {
             padding: 1.5rem;
-            margin-bottom: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        /* Filters */
+        .filters-card {
+            margin-bottom: 1.5rem;
         }
 
         .filters-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1rem;
-            align-items: end;
         }
 
         .filter-group {
             display: flex;
             flex-direction: column;
+            gap: 0.5rem;
         }
 
         .filter-label {
-            color: #a0a0a0;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--primary);
         }
 
+        .filter-input,
         .filter-select {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            padding: 0.75rem;
-            border-radius: 8px;
-            font-size: 1rem;
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) - 4px);
+            color: var(--foreground);
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
         }
 
+        .filter-input:focus,
         .filter-select:focus {
             outline: none;
-            border-color: #00ff88;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        }
+
+        .filter-select option {
+            background: var(--card);
+            color: var(--foreground);
         }
 
         .search-btn {
-            background: linear-gradient(45deg, #00ff88, #00d4ff);
+            background: var(--primary);
+            color: var(--primary-foreground);
             border: none;
-            color: #000;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: bold;
+            padding: 0.625rem 1.5rem;
+            border-radius: calc(var(--radius) - 4px);
+            font-size: 0.875rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s;
+            font-family: inherit;
+            margin-top: auto;
         }
 
         .search-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+            background: #1ea54c;
+            transform: translateY(-1px);
         }
 
+        /* Chart Container */
+        .chart-card {
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-container {
+            height: 320px;
+            padding: 1rem;
+        }
+
+        /* Table */
+        .table-card {
+            overflow: hidden;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ranking-table th {
+            padding: 0.875rem 1rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(34, 197, 94, 0.05);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ranking-table th:first-child {
+            text-align: center;
+            width: 60px;
+        }
+
+        .ranking-table th.stat-header {
+            text-align: center;
+            color: var(--primary);
+        }
+
+        .ranking-table td {
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        .ranking-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        .ranking-table tbody tr:hover {
+            background: var(--card-hover);
+        }
+
+        .rank-cell {
+            text-align: center;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        .player-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .player-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--secondary);
+        }
+
+        .team-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            object-fit: contain;
+            background: var(--secondary);
+        }
+
+        .player-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-name {
+            font-weight: 600;
+            color: var(--foreground);
+        }
+
+        .player-name:hover {
+            color: var(--primary);
+        }
+
+        .player-team,
+        .player-meta {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .stat-cell {
+            text-align: center;
+        }
+
+        .stat-cell.primary {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .position-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.25rem 0.5rem;
+            background: var(--secondary);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Content Sections */
         .ranking-content {
             display: none;
         }
@@ -175,748 +409,384 @@
             display: block;
         }
 
-        .ranking-table {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .table-header {
-            background: rgba(0, 255, 136, 0.1);
-            padding: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .table-header .table-row > div {
-            text-align: center;
-        }
-
-        .table-header .table-row > div:first-child {
-            text-align: left;
-        }
-
-        .table-header .table-row > div:nth-child(2) {
-            text-align: left;
-        }
-
-        .table-row {
-            display: grid;
-            grid-template-columns: 60px 1fr 120px 120px 120px 120px;
-            padding: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            align-items: center;
-            transition: all 0.3s ease;
-        }
-
-        .table-row:not(.team-ranking) > div:nth-child(n+3) {
-            text-align: center;
-        }
-
-        .table-row.team-ranking {
-            grid-template-columns: 60px 1fr 80px 80px 80px 80px 80px 80px 80px 100px !important;
-        }
-
-        .table-row.team-ranking.champions-ranking {
-            grid-template-columns: 60px 1fr 100px 80px 80px 80px 80px 80px 80px 80px 100px !important;
-        }
-
-        .table-row.team-ranking.champions-ranking .col-group {
-            text-align: center;
-        }
-
-        .table-row.team-ranking.champions-ranking .col-played {
-            text-align: left;
-            padding-left: 12px;
-        }
-
-        .table-row.team-ranking.champions-ranking .col-wins {
-            text-align: left;
-            padding-left: 15px;
-        }
-
-        .table-row.team-ranking > div {
-            text-align: center;
-        }
-
-        .table-row.team-ranking .col-rank {
-            text-align: left;
-            padding-left: 2px;
-        }
-
-        .table-row.team-ranking .col-team {
-            text-align: left;
-        }
-
-        .table-row.team-ranking .col-played,
-        .table-row.team-ranking .col-points {
-            text-align: left;
-            padding-left: 12px;
-        }
-
-        .table-row.team-ranking .col-wins {
-            text-align: left;
-            padding-left: 15px;
-        }
-
-        .table-row.team-ranking .col-draws,
-        .table-row.team-ranking .col-losses,
-        .table-row.team-ranking .col-goals-for,
-        .table-row.team-ranking .col-goals-against,
-        .table-row.team-ranking .col-goal-diff {
-            text-align: left;
-            padding-left: 12px;
-        }
-
-        .table-row:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .table-row:last-child {
-            border-bottom: none;
-        }
-
-        .rank-number {
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: #00ff88;
-            text-align: left;
-            padding-left: 2px;
-        }
-
-        .player-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            cursor: pointer;
-            transition: opacity 0.3s ease;
-        }
-
-        .player-info:hover {
-            opacity: 0.8;
-        }
-
-        .player-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #00ff88, #00d4ff);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #000;
-            object-fit: cover;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            overflow: hidden;
-        }
-
-        .player-avatar img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .player-details h4 {
-            margin-bottom: 0.25rem;
-            color: #fff;
-        }
-
-        .player-details p {
-            color: #a0a0a0;
-            font-size: 0.9rem;
-        }
-
-        .stat-value {
-            text-align: center;
-            font-weight: bold;
-            color: #00ff88;
-        }
-
-        /* 選手ランキングテーブルの中央揃え */
-        .table-row:not(.team-ranking) > div:nth-child(1) {
-            text-align: left;
-        }
-
-        .table-row:not(.team-ranking) > div:nth-child(2) {
-            text-align: left;
-        }
-
-        /* 統計列（得点、アシスト、出場数、評価）を中央揃え */
-        .table-row:not(.team-ranking) > div:nth-child(3),
-        .table-row:not(.team-ranking) > div:nth-child(4),
-        .table-row:not(.team-ranking) > div:nth-child(5),
-        .table-row:not(.team-ranking) > div:nth-child(6) {
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding-left: 0;
-            padding-right: 0;
-        }
-
-        /* ヘッダーの統計列も中央揃え */
-        .table-header .table-row > div:nth-child(3),
-        .table-header .table-row > div:nth-child(4),
-        .table-header .table-row > div:nth-child(5),
-        .table-header .table-row > div:nth-child(6) {
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding-left: 0;
-            padding-right: 0;
-        }
-
-
-        .team-logo {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #000;
-            font-size: 0.8rem;
-        }
-
-        .league-ranking {
-            display: grid;
-            grid-template-columns: 60px 1fr 100px 100px 100px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 3rem;
-            color: #a0a0a0;
-        }
-
+        /* Loading & No Data */
+        .loading,
         .no-data {
-            text-align: center;
             padding: 3rem;
-            color: #a0a0a0;
+            text-align: center;
+            color: var(--muted);
         }
 
-        .chart-container {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 0.5rem;
+            vertical-align: middle;
         }
 
-        .chart-title {
-            margin-bottom: 1rem;
-            color: #00ff88;
-            font-size: 1.2rem;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        /* モバイル用カード表示スタイル */
-        .mobile-cards-container {
-            display: none;
-        }
-
-        .mobile-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .mobile-card:active {
-            transform: scale(0.98);
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .mobile-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .mobile-card-rank {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #00ff88;
-            min-width: 32px;
-        }
-
-        .mobile-card-title {
-            flex: 1;
-            font-weight: bold;
-            margin-left: 8px;
-        }
-
-        .mobile-card-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        .mobile-card-stat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 6px;
-            min-height: 40px;
-        }
-
-        .mobile-card-stat-label {
-            color: #a0a0a0;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-
-        .mobile-card-stat-value {
-            color: #00ff88;
-            font-weight: 600;
-            font-size: 16px;
-            line-height: 1.4;
-        }
-
-        .mobile-card-title {
-            font-size: 16px;
-            line-height: 1.4;
-        }
-
-        /* ボタンの最小タップ領域を確保 */
-        .tab-btn,
-        .nav-btn,
-        .search-btn,
-        .filter-select {
-            min-height: 44px;
-        }
-
-        .tab-btn {
-            padding: 12px 16px;
-        }
-
-        .nav-btn {
-            padding: 12px 16px;
-        }
-
-        .search-btn {
-            padding: 12px 24px;
-        }
-
-        /* 320px〜430pxのスマホを最優先 */
-        @media (max-width: 430px) {
-            .main-container {
-                padding: 0 12px;
-            }
-
+        /* Responsive */
+        @media (max-width: 768px) {
             .header-content {
-                padding: 0 12px;
+                padding: 0 1rem;
             }
 
             .nav-buttons {
                 display: none;
             }
 
-            /* テーブルを非表示、カード表示に変換 */
-            .ranking-table {
-                display: none;
-            }
-
-            .table-row-mobile,
-            .mobile-card {
-                display: block;
-            }
-
-            .table-header {
-                display: none;
+            .main-container {
+                padding: 1rem;
             }
 
             .page-title {
-                font-size: 1.5rem;
+                font-size: 1.75rem;
             }
 
-            .page-subtitle {
-                font-size: 0.9rem;
-            }
-
-            .ranking-tabs {
-                gap: 8px;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
+            .tabs-list {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .tab-btn {
-                font-size: 0.85rem;
-                padding: 10px 12px;
-                white-space: nowrap;
+                padding: 0.5rem;
+                font-size: 0.75rem;
             }
 
             .filters-grid {
                 grid-template-columns: 1fr;
-                gap: 12px;
             }
 
-            .filter-group {
-                margin-bottom: 0;
+            .ranking-table th,
+            .ranking-table td {
+                padding: 0.625rem 0.5rem;
             }
 
-            .filter-select,
-            .search-btn {
-                width: 100%;
-                padding: 12px;
-                font-size: 16px; /* iOSズーム防止 */
-                line-height: 1.4;
-            }
-
-            .filter-select {
-                min-height: 48px; /* タップしやすく */
-            }
-
-            .mobile-card-stat {
-                padding: 8px;
-                min-height: 44px; /* タップ領域確保 */
-            }
-
-            .mobile-card-title {
-                font-size: 16px;
-                line-height: 1.5;
-            }
-
-            .chart-container {
-                padding: 12px;
-            }
-
-            .chart-title {
-                font-size: 1rem;
+            .player-photo {
+                width: 32px;
+                height: 32px;
             }
         }
 
-        /* 768px未満のモバイル対応 */
-        @media (max-width: 768px) {
-            .main-container {
-                padding: 0 12px;
-            }
-
-            .header-content {
-                padding: 0 12px;
-            }
-
-            .nav-buttons {
-                gap: 8px;
-            }
-
-            .nav-btn {
-                font-size: 0.85rem;
-                padding: 10px 12px;
-            }
-
-            /* テーブルを非表示、カード表示に変換 */
-            .ranking-table {
-                display: none;
-            }
-
-            .table-row-mobile,
-            .mobile-card {
-                display: block;
-            }
-
-            .table-header {
-                display: none;
-            }
-
-            .filters-grid {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-
-            .filter-select,
-            .search-btn {
-                padding: 12px;
-                min-height: 48px; /* よりタップしやすく */
-                font-size: 16px; /* iOSズーム防止 */
-                line-height: 1.4;
-            }
-
-            .mobile-card-stat {
-                padding: 8px;
-                min-height: 44px;
-            }
-
-            .mobile-card-title {
-                font-size: 16px;
-                line-height: 1.5;
-            }
-
-            .chart-container {
-                padding: 12px;
-            }
-
-            .page-title {
-                font-size: 2rem;
-            }
-
-            .page-subtitle {
-                font-size: 1rem;
-            }
+        /* League Standings specific */
+        .league-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            max-width: 500px;
         }
     </style>
 </head>
 <body>
+    <!-- Header -->
     <header class="header">
         <div class="header-content">
-            <a href="/" class="logo">⚽ Football Hub Japan</a>
-            <div class="nav-buttons">
-                <button class="nav-btn" onclick="window.location.href='/dashboard'">ダッシュボード</button>
-                <button class="nav-btn" onclick="window.location.href='/database-enhanced'">データベース</button>
-                <button class="nav-btn" onclick="window.location.href='/'">ログアウト</button>
-            </div>
+            <a href="/" class="logo">
+                <div class="logo-icon">⚡</div>
+                <span>Football Hub Japan</span>
+            </a>
+            <nav class="nav-buttons">
+                <button class="nav-btn" onclick="location.href='/'">ダッシュボード</button>
+                <button class="nav-btn" onclick="location.href='/database.html'">データベース</button>
+                <button class="nav-btn" onclick="location.href='/logout'">ログアウト</button>
+            </nav>
         </div>
     </header>
 
-    <div class="main-container">
-        <h1 class="page-title">ランキングシステム</h1>
-        <p class="page-subtitle">全選手を対象としたポジション別、リーグ別の詳細なランキング。検索で選手を絞り込めます。</p>
+    <!-- Main Content -->
+    <main class="main-container">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <span class="badge">ランキング</span>
+            <h1 class="page-title">ランキングシステム</h1>
+            <p class="page-subtitle">全選手を対象としたポジション別、リーグ別の詳細なランキング。検索で選手を絞り込めます。</p>
+        </section>
 
-        <!-- タブナビゲーション -->
-        <div class="ranking-tabs">
-            <button class="tab-btn active" onclick="switchTab('players', event)">選手ランキング</button>
-            <button class="tab-btn" onclick="switchTab('teams', event)">チームランキング</button>
-            <button class="tab-btn" onclick="switchTab('leagues', event)">リーグランキング</button>
-        </div>
-
-        <!-- フィルターセクション（選手ランキング・チームランキング用） -->
-        <div id="mainFiltersSection" class="filters-section">
-            <div class="filters-grid">
-                <div class="filter-group">
-                    <label class="filter-label">検索（選手名・チーム名）</label>
-                    <input type="text" class="filter-select" id="searchFilter" placeholder="選手名やチーム名で検索..." style="width: 100%;">
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">シーズン</label>
-                    <select class="filter-select" id="seasonFilter">
-                        <option value="2026">2025/2026</option>
-                        <option value="2025">2024/2025</option>
-                        <option value="2024">2023/2024</option>
-                        <option value="2023">2022/2023</option>
-                        <option value="2022">2021/2022</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">リーグ</label>
-                    <select class="filter-select" id="leagueFilter">
-                        <option value="">すべてのリーグ</option>
-                        <option value="PL">プレミアリーグ</option>
-                        <option value="PD">ラ・リーガ（スペインリーグのみ）</option>
-                        <option value="SA">セリエA</option>
-                        <option value="BL1">ブンデスリーガ</option>
-                        <option value="FL1">リーグ・アン</option>
-                        <option value="CL">チャンピオンズリーグ</option>
-                        <option value="MLS">MLS</option>
-                        <option value="SPL">サウジアラビアプロリーグ</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">ポジション</label>
-                    <select class="filter-select" id="positionFilter">
-                        <option value="">すべてのポジション</option>
-                        <option value="Goalkeeper">ゴールキーパー</option>
-                        <option value="Defender">ディフェンダー</option>
-                        <option value="Midfielder">ミッドフィルダー</option>
-                        <option value="Forward">フォワード</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">統計項目</label>
-                    <select class="filter-select" id="statFilter">
-                        <option value="goals">得点</option>
-                        <option value="assists">アシスト</option>
-                        <option value="goalsAssists">ゴール＋アシスト</option>
-                        <option value="appearances">出場数</option>
-                        <option value="minutes">出場時間</option>
-                        <option value="passes">パス成功数</option>
-                        <option value="tackles">タックル</option>
-                        <option value="interceptions">インターセプト</option>
-                        <option value="saves">セーブ数</option>
-                        <option value="cleanSheets">クリーンシート</option>
-                        <option value="rating">平均評価</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <button class="search-btn" onclick="loadRanking()">ランキングを表示</button>
-                </div>
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <div class="tabs-list">
+                <button class="tab-btn active" onclick="switchTab('players', event)">選手ランキング</button>
+                <button class="tab-btn" onclick="switchTab('teams', event)">チームランキング</button>
+                <button class="tab-btn" onclick="switchTab('leagues', event)">リーグランキング</button>
+                <button class="tab-btn" onclick="switchTab('champions', event)">CL順位表</button>
             </div>
         </div>
 
-        <!-- 選手ランキング -->
+        <!-- Player Ranking Content -->
         <div id="playerRanking" class="ranking-content active">
-            <div class="chart-container">
-                <h3 class="chart-title">選手ランキングトップ10</h3>
-                <canvas id="playerChart" width="400" height="200"></canvas>
-            </div>
-            <div class="ranking-table">
-                <div class="table-header">
-                    <div class="table-row" id="playerTableHeader">
-                        <div>順位</div>
-                        <div>選手</div>
-                        <div>得点</div>
-                        <div>アシスト</div>
-                        <div>出場数</div>
-                        <div>評価</div>
+            <!-- Filters -->
+            <div class="card filters-card" id="mainFiltersSection">
+                <div class="card-content">
+                    <div class="filters-grid">
+                        <div class="filter-group">
+                            <label class="filter-label">検索（選手名・チーム名）</label>
+                            <input type="text" id="searchFilter" class="filter-input" placeholder="選手名やチーム名で検索...">
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">シーズン</label>
+                            <select id="seasonFilter" class="filter-select">
+                                <option value="2025">2025/2026</option>
+                                <option value="2024">2024/2025</option>
+                                <option value="2023">2023/2024</option>
+                                <option value="2022">2022/2023</option>
+                                <option value="2021">2021/2022</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">リーグ</label>
+                            <select id="leagueFilter" class="filter-select">
+                                <option value="">すべてのリーグ</option>
+                                <option value="premier">プレミアリーグ</option>
+                                <option value="laliga">ラ・リーガ（スペインリーグのみ）</option>
+                                <option value="seriea">セリエA</option>
+                                <option value="bundesliga">ブンデスリーガ</option>
+                                <option value="ligue1">リーグ・アン</option>
+                                <option value="CL">チャンピオンズリーグ</option>
+                                <option value="MLS">MLS</option>
+                                <option value="saudi">サウジアラビアプロリーグ</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">ポジション</label>
+                            <select id="positionFilter" class="filter-select">
+                                <option value="">すべてのポジション</option>
+                                <option value="GK">ゴールキーパー</option>
+                                <option value="DF">ディフェンダー</option>
+                                <option value="MF">ミッドフィルダー</option>
+                                <option value="FW">フォワード</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">統計項目</label>
+                            <select id="statFilter" class="filter-select">
+                                <option value="goals">得点</option>
+                                <option value="assists">アシスト</option>
+                                <option value="goalAssist">ゴール＋アシスト</option>
+                                <option value="appearances">出場数</option>
+                                <option value="minutes">出場時間</option>
+                                <option value="passes">パス成功数</option>
+                                <option value="tackles">タックル</option>
+                                <option value="interceptions">インターセプト</option>
+                                <option value="saves">セーブ数</option>
+                                <option value="cleanSheets">クリーンシート</option>
+                                <option value="rating">平均評価</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <button class="search-btn" onclick="loadRanking()">ランキングを表示</button>
+                        </div>
                     </div>
                 </div>
-                <div id="playerTableBody">
-                    <div class="loading">ランキングを読み込み中...</div>
+            </div>
+
+            <!-- Chart -->
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h3 class="card-title">選手ランキングトップ10</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="playerChart"></canvas>
                 </div>
             </div>
-            <!-- モバイル用カードコンテナ -->
-            <div id="playerMobileCards" class="mobile-cards-container"></div>
+
+            <!-- Table -->
+            <div class="card table-card">
+                <div class="table-container">
+                    <table class="ranking-table">
+                        <thead>
+                            <tr>
+                                <th>順位</th>
+                                <th>選手</th>
+                                <th>得点</th>
+                                <th>アシスト</th>
+                                <th>出場数</th>
+                                <th class="stat-header">評価</th>
+                            </tr>
+                        </thead>
+                        <tbody id="playerTableBody">
+                            <tr><td colspan="6" class="loading">ランキングを読み込み中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
-        <!-- チームランキング -->
+        <!-- Team Ranking Content -->
         <div id="teamRanking" class="ranking-content">
-            <div class="chart-container">
-                <h3 class="chart-title">チームランキングトップ10</h3>
-                <canvas id="teamChart" width="400" height="200"></canvas>
-            </div>
-            <div class="ranking-table">
-                <div class="table-header">
-                    <div class="table-row team-ranking">
-                        <div class="col-rank">順位</div>
-                        <div class="col-team">チーム</div>
-                        <div class="col-played">試合</div>
-                        <div class="col-points">勝点</div>
-                        <div class="col-wins">勝</div>
-                        <div class="col-draws">分</div>
-                        <div class="col-losses">負</div>
-                        <div class="col-goals-for">得点</div>
-                        <div class="col-goals-against">失点</div>
-                        <div class="col-goal-diff">得失点差</div>
-                    </div>
+            <!-- Chart -->
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h3 class="card-title">チームランキングトップ10</h3>
                 </div>
-                <div id="teamTableBody">
-                    <div class="no-data">チームランキングを表示するには、リーグを選択してください。</div>
+                <div class="chart-container">
+                    <canvas id="teamChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="card table-card">
+                <div class="table-container">
+                    <table class="ranking-table">
+                        <thead>
+                            <tr>
+                                <th>順位</th>
+                                <th>チーム</th>
+                                <th>試合</th>
+                                <th>勝</th>
+                                <th>分</th>
+                                <th>負</th>
+                                <th class="stat-header">勝点</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teamTableBody">
+                            <tr><td colspan="7" class="no-data">リーグを選択してください</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- リーグ順位 -->
+        <!-- League Standings Content -->
         <div id="leagueRanking" class="ranking-content">
-            <div class="filters-section" style="margin-bottom: 2rem;">
-                <div class="filters-grid">
-                    <div class="filter-group">
-                        <label class="filter-label">シーズン</label>
-                        <select class="filter-select" id="leagueStandingsSeasonFilter" onchange="loadLeagueStandings()">
-                            <option value="2025">2025/2026</option>
-                            <option value="2024">2024/2025</option>
-                            <option value="2023">2023/2024</option>
-                            <option value="2022">2022/2023</option>
-                            <option value="2021">2021/2022</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">リーグを選択</label>
-                        <select class="filter-select" id="leagueStandingsFilter" onchange="loadLeagueStandings()">
-                            <option value="">リーグを選択してください</option>
-                            <option value="PL">プレミアリーグ</option>
-                            <option value="PD">ラ・リーガ</option>
-                            <option value="SA">セリエA</option>
-                            <option value="BL1">ブンデスリーガ</option>
-                            <option value="FL1">リーグ・アン</option>
-                            <option value="CL">チャンピオンズリーグ</option>
-                            <option value="MLS">MLS</option>
-                            <option value="SPL">サウジアラビアプロリーグ</option>
-                        </select>
+            <!-- Filters -->
+            <div class="card filters-card">
+                <div class="card-content">
+                    <div class="league-filters">
+                        <div class="filter-group">
+                            <label class="filter-label">シーズン</label>
+                            <select id="leagueStandingsSeasonFilter" class="filter-select" onchange="loadLeagueStandings()">
+                                <option value="2025">2025/2026</option>
+                                <option value="2024">2024/2025</option>
+                                <option value="2023">2023/2024</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">リーグを選択してください</label>
+                            <select id="leagueStandingsFilter" class="filter-select" onchange="loadLeagueStandings()">
+                                <option value="">リーグを選択</option>
+                                <option value="premier">プレミアリーグ</option>
+                                <option value="laliga">ラ・リーガ</option>
+                                <option value="seriea">セリエA</option>
+                                <option value="bundesliga">ブンデスリーガ</option>
+                                <option value="ligue1">リーグ・アン</option>
+                                <option value="CL">チャンピオンズリーグ</option>
+                                <option value="MLS">MLS</option>
+                                <option value="saudi">サウジアラビアプロリーグ</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="ranking-table">
-                <div class="table-header">
-                    <div class="table-row team-ranking">
-                        <div class="col-rank">順位</div>
-                        <div class="col-team">チーム</div>
-                        <div class="col-played">試合</div>
-                        <div class="col-points">勝点</div>
-                        <div class="col-wins">勝</div>
-                        <div class="col-draws">分</div>
-                        <div class="col-losses">負</div>
-                        <div class="col-goals-for">得点</div>
-                        <div class="col-goals-against">失点</div>
-                        <div class="col-goal-diff">得失点差</div>
-                    </div>
-                </div>
-                <div id="leagueStandingsBody">
-                    <div class="no-data">リーグを選択すると順位表が表示されます</div>
+
+            <!-- Table -->
+            <div class="card table-card">
+                <div class="table-container">
+                    <table class="ranking-table">
+                        <thead>
+                            <tr>
+                                <th>順位</th>
+                                <th>チーム</th>
+                                <th>試合</th>
+                                <th class="stat-header">勝点</th>
+                                <th>勝</th>
+                                <th>引</th>
+                                <th>負</th>
+                                <th>得点</th>
+                                <th>失点</th>
+                                <th class="stat-header">得失点差</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leagueStandingsBody">
+                            <tr><td colspan="10" class="no-data">リーグを選択すると順位表が表示されます</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- チャンピオンズリーグ -->
+        <!-- Champions League Content -->
         <div id="championsRanking" class="ranking-content">
-            <div class="filters-section" style="margin-bottom: 2rem;">
-                <div class="filters-grid">
-                    <div class="filter-group">
-                        <label class="filter-label">シーズン</label>
-                        <select class="filter-select" id="championsSeasonFilter" onchange="loadChampionsLeagueRanking()">
-                            <option value="2025">2025/2026</option>
-                            <option value="2024">2024/2025</option>
-                            <option value="2023">2023/2024</option>
-                            <option value="2022">2022/2023</option>
-                            <option value="2021">2021/2022</option>
-                        </select>
+            <!-- Filters -->
+            <div class="card filters-card">
+                <div class="card-content">
+                    <div class="league-filters">
+                        <div class="filter-group">
+                            <label class="filter-label">シーズン</label>
+                            <select id="championsSeasonFilter" class="filter-select" onchange="loadChampionsLeagueRanking()">
+                                <option value="2025">2024/2025</option>
+                                <option value="2024">2023/2024</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="chart-container">
-                <h3 class="chart-title">チャンピオンズリーグ グループステージ</h3>
-                <canvas id="championsChart" width="400" height="200"></canvas>
-            </div>
-            <div class="ranking-table">
-                <div class="table-header">
-                    <div class="table-row team-ranking champions-ranking">
-                        <div class="col-rank">順位</div>
-                        <div class="col-team">チーム</div>
-                        <div class="col-group">グループ</div>
-                        <div class="col-played">試合</div>
-                        <div class="col-points">勝点</div>
-                        <div class="col-wins">勝</div>
-                        <div class="col-draws">分</div>
-                        <div class="col-losses">負</div>
-                        <div class="col-goals-for">得点</div>
-                        <div class="col-goals-against">失点</div>
-                        <div class="col-goal-diff">得失点差</div>
-                    </div>
+
+            <!-- Chart -->
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h3 class="card-title">チャンピオンズリーグ順位表</h3>
                 </div>
-                <div id="championsTableBody">
-                    <div class="loading">チャンピオンズリーグ順位を読み込み中...</div>
+                <div class="chart-container">
+                    <canvas id="championsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="card table-card">
+                <div class="table-container">
+                    <table class="ranking-table">
+                        <thead>
+                            <tr>
+                                <th>順位</th>
+                                <th>チーム</th>
+                                <th>試合</th>
+                                <th class="stat-header">勝点</th>
+                                <th>勝</th>
+                                <th>引</th>
+                                <th>負</th>
+                                <th>得点</th>
+                                <th>失点</th>
+                                <th class="stat-header">得失点差</th>
+                            </tr>
+                        </thead>
+                        <tbody id="championsTableBody">
+                            <tr><td colspan="10" class="loading">読み込み中...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
         let currentTab = 'players';
         let playerChart = null;
         let teamChart = null;
-        let leagueChart = null;
         let championsChart = null;
 
-        // タブ切り替え
+        // Chart.js default settings
+        Chart.defaults.color = '#8b949e';
+        Chart.defaults.borderColor = '#30363d';
+
+        // Tab switching
         function switchTab(tab, evt) {
-            // タブボタンのアクティブ状態を更新
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             if (evt && evt.target) {
                 evt.target.classList.add('active');
             }
 
-            // コンテンツの表示切り替え
             document.querySelectorAll('.ranking-content').forEach(content => content.classList.remove('active'));
             
-            // タブ名を正しいID名に変換
             let tabId;
             if (tab === 'players') tabId = 'player';
             else if (tab === 'teams') tabId = 'team';
@@ -930,36 +800,29 @@
 
             currentTab = tab;
 
-            // タブに応じてデータを読み込み
-            if (tab === 'players') {
-                document.getElementById('mainFiltersSection').style.display = 'block';
-                loadPlayerRanking();
-            } else if (tab === 'teams') {
-                document.getElementById('mainFiltersSection').style.display = 'block';
-                loadTeamRanking();
-            } else if (tab === 'leagues') {
-                document.getElementById('mainFiltersSection').style.display = 'none';
-                loadLeagueStandings();
-            } else if (tab === 'champions') {
-                document.getElementById('mainFiltersSection').style.display = 'none';
-                loadChampionsLeagueRanking();
+            // Show/hide main filters
+            const mainFilters = document.getElementById('mainFiltersSection');
+            if (tab === 'players' || tab === 'teams') {
+                mainFilters.style.display = 'block';
+            } else {
+                mainFilters.style.display = 'none';
             }
+
+            // Load data
+            if (tab === 'players') loadPlayerRanking();
+            else if (tab === 'teams') loadTeamRanking();
+            else if (tab === 'leagues') loadLeagueStandings();
+            else if (tab === 'champions') loadChampionsLeagueRanking();
         }
 
-        // ランキング読み込み
         function loadRanking() {
-            if (currentTab === 'players') {
-                loadPlayerRanking();
-            } else if (currentTab === 'teams') {
-                loadTeamRanking();
-            } else if (currentTab === 'leagues') {
-                loadLeagueStandings();
-            } else if (currentTab === 'champions') {
-                loadChampionsLeagueRanking();
-            }
+            if (currentTab === 'players') loadPlayerRanking();
+            else if (currentTab === 'teams') loadTeamRanking();
+            else if (currentTab === 'leagues') loadLeagueStandings();
+            else if (currentTab === 'champions') loadChampionsLeagueRanking();
         }
 
-        // 選手ランキング読み込み
+        // Player Ranking
         async function loadPlayerRanking() {
             const season = document.getElementById('seasonFilter').value;
             const league = document.getElementById('leagueFilter').value;
@@ -967,12 +830,11 @@
             const stat = document.getElementById('statFilter').value;
             const search = document.getElementById('searchFilter').value.trim();
 
+            document.getElementById('playerTableBody').innerHTML = '<tr><td colspan="6" class="loading">ランキングを読み込み中...</td></tr>';
+
             try {
-                // APIから選手データを取得（検索パラメータを追加）
                 let url = `/api/ranking/players?season=${season}&league=${league}&position=${position}&stat=${stat}`;
-                if (search) {
-                    url += `&search=${encodeURIComponent(search)}`;
-                }
+                if (search) url += `&search=${encodeURIComponent(search)}`;
                 
                 const response = await fetch(url);
                 let players;
@@ -981,20 +843,15 @@
                     const data = await response.json();
                     players = data.players || [];
                     
-                    // クライアント側でも検索フィルタリング（追加の絞り込み）
                     if (search && players.length > 0) {
                         const searchLower = search.toLowerCase();
                         players = players.filter(p => {
                             const name = (p.name || '').toLowerCase();
                             const team = (p.currentTeam || p.team || '').toLowerCase();
-                            const leagueName = (p.league || '').toLowerCase();
-                            return name.includes(searchLower) || 
-                                   team.includes(searchLower) || 
-                                   leagueName.includes(searchLower);
+                            return name.includes(searchLower) || team.includes(searchLower);
                         });
                     }
                 } else {
-                    // フォールバックデータを使用（全選手対応）
                     players = generateFallbackPlayerData(league, position, stat, search);
                 }
 
@@ -1009,15 +866,96 @@
             }
         }
 
-        // チームランキング読み込み
+        function displayPlayerRanking(players) {
+            const tbody = document.getElementById('playerTableBody');
+            
+            if (players.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="no-data">該当する選手が見つかりませんでした</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = players.map((player, index) => {
+                const photoUrl = player.photo && player.photo !== 'https://media.api-sports.io/football/players/placeholder.png' 
+                    ? player.photo 
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&size=128&background=22c55e&color=0d1117&bold=true`;
+                
+                const goals = player.stats?.goals || player.goals || 0;
+                const assists = player.stats?.assists || player.assists || 0;
+                const appearances = player.stats?.appearances || player.appearances || 0;
+                const rating = player.stats?.rating || player.rating || '-';
+
+                return `
+                    <tr>
+                        <td class="rank-cell">${index + 1}</td>
+                        <td>
+                            <div class="player-cell">
+                                <img src="${photoUrl}" alt="${player.name}" class="player-photo" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&size=128&background=22c55e&color=0d1117&bold=true'">
+                                <div class="player-info">
+                                    <a href="/player/${player.id || player.playerId}" class="player-name">${player.name}</a>
+                                    <span class="player-team">${player.currentTeam || player.team || '-'}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="stat-cell">${goals}</td>
+                        <td class="stat-cell">${assists}</td>
+                        <td class="stat-cell">${appearances}</td>
+                        <td class="stat-cell primary">${typeof rating === 'number' ? rating.toFixed(1) : rating}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updatePlayerChart(players) {
+            const ctx = document.getElementById('playerChart').getContext('2d');
+            const stat = document.getElementById('statFilter').value;
+            
+            if (playerChart) playerChart.destroy();
+
+            const labels = players.map(p => p.name.length > 10 ? p.name.slice(0, 10) + '...' : p.name);
+            const data = players.map(p => {
+                if (stat === 'goalAssist') return (p.stats?.goals || p.goals || 0) + (p.stats?.assists || p.assists || 0);
+                return p.stats?.[stat] || p[stat] || 0;
+            });
+
+            playerChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: getStatLabel(stat),
+                        data: data,
+                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                        borderColor: '#22c55e',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { grid: { color: '#30363d' } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Team Ranking
         async function loadTeamRanking() {
             const season = document.getElementById('seasonFilter').value;
             const league = document.getElementById('leagueFilter').value;
 
             if (!league) {
-                document.getElementById('teamTableBody').innerHTML = '<div class="no-data">チームランキングを表示するには、リーグを選択してください。</div>';
+                document.getElementById('teamTableBody').innerHTML = '<tr><td colspan="7" class="no-data">リーグを選択してください</td></tr>';
                 return;
             }
+
+            document.getElementById('teamTableBody').innerHTML = '<tr><td colspan="7" class="loading">読み込み中...</td></tr>';
 
             try {
                 const response = await fetch(`/api/ranking/teams?season=${season}&league=${league}`);
@@ -1041,813 +979,317 @@
             }
         }
 
-        // リーグ順位読み込み
+        function displayTeamRanking(teams) {
+            const tbody = document.getElementById('teamTableBody');
+            
+            if (teams.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="no-data">チームデータがありません</td></tr>';
+                return;
+            }
+
+            teams.sort((a, b) => (b.points || 0) - (a.points || 0));
+
+            tbody.innerHTML = teams.map((team, index) => `
+                <tr>
+                    <td class="rank-cell">${index + 1}</td>
+                    <td>
+                        <div class="player-cell">
+                            ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : ''}
+                            <span class="player-name">${team.name}</span>
+                        </div>
+                    </td>
+                    <td class="stat-cell">${team.played || 0}</td>
+                    <td class="stat-cell">${team.wins || 0}</td>
+                    <td class="stat-cell">${team.draws || 0}</td>
+                    <td class="stat-cell">${team.losses || 0}</td>
+                    <td class="stat-cell primary">${team.points || 0}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updateTeamChart(teams) {
+            const ctx = document.getElementById('teamChart').getContext('2d');
+            
+            if (teamChart) teamChart.destroy();
+
+            const labels = teams.map(t => t.name.length > 12 ? t.name.slice(0, 12) + '...' : t.name);
+            const data = teams.map(t => t.points || 0);
+
+            teamChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '勝点',
+                        data: data,
+                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                        borderColor: '#22c55e',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: '#30363d' } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // League Standings
         async function loadLeagueStandings() {
             const season = document.getElementById('leagueStandingsSeasonFilter').value;
             const league = document.getElementById('leagueStandingsFilter').value;
         
             if (!league) {
-                document.getElementById('leagueStandingsBody').innerHTML = '<div class="no-data">リーグを選択すると順位表が表示されます</div>';
+                document.getElementById('leagueStandingsBody').innerHTML = '<tr><td colspan="10" class="no-data">リーグを選択すると順位表が表示されます</td></tr>';
                 return;
             }
+
+            document.getElementById('leagueStandingsBody').innerHTML = '<tr><td colspan="10" class="loading">読み込み中...</td></tr>';
         
             try {
-                // チャンピオンズリーグの場合は専用エンドポイントを使用
                 if (league === 'CL') {
                     const response = await fetch(`/api/ranking/champions-league?season=${season}`);
-                    let standings;
-
+                    let standings = [];
                     if (response.ok) {
                         const data = await response.json();
                         standings = data.standings || [];
-                    } else {
-                        standings = generateFallbackChampionsLeagueData();
                     }
-        
-                    // リーグ順位タブに表示するため、leagueStandingsBodyを使用
-                    displayChampionsLeagueRankingInStandings(standings);
+                    if (standings.length === 0) standings = generateFallbackChampionsLeagueData();
+                    displayLeagueStandings(standings);
                 } else {
                     const response = await fetch(`/api/ranking/teams?season=${season}&league=${league}`);
-                    let teams;
-        
+                    let teams = [];
                     if (response.ok) {
                         const data = await response.json();
                         teams = data.teams || [];
-                    } else {
-                        teams = generateFallbackTeamData(league);
                     }
-        
+                    if (teams.length === 0) teams = generateFallbackTeamData(league);
                     displayLeagueStandings(teams);
                 }
-
             } catch (error) {
                 console.error('Error loading league standings:', error);
-                if (league === 'CL') {
-                    const standings = generateFallbackChampionsLeagueData();
-                    displayChampionsLeagueRankingInStandings(standings);
-                } else {
-                    const teams = generateFallbackTeamData(league);
-                    displayLeagueStandings(teams);
-                }
+                const teams = league === 'CL' ? generateFallbackChampionsLeagueData() : generateFallbackTeamData(league);
+                displayLeagueStandings(teams);
             }
         }
 
-        // リーグ順位表示
         function displayLeagueStandings(teams) {
-            const container = document.getElementById('leagueStandingsBody');
-            if (!container) return;
-
+            const tbody = document.getElementById('leagueStandingsBody');
+            
             if (teams.length === 0) {
-                container.innerHTML = '<div class="no-data">順位データがありません</div>';
+                tbody.innerHTML = '<tr><td colspan="10" class="no-data">順位データがありません</td></tr>';
                 return;
             }
 
-            // 勝点でソート
             teams.sort((a, b) => {
-                if (b.points !== a.points) return b.points - a.points;
-                return b.goalDifference - a.goalDifference;
+                if ((b.points || 0) !== (a.points || 0)) return (b.points || 0) - (a.points || 0);
+                return (b.goalDifference || 0) - (a.goalDifference || 0);
             });
 
-            let html = '';
-            teams.forEach((team, index) => {
-                html += `
-                    <div class="table-row team-ranking">
-                        <div class="col-rank rank-number">${index + 1}</div>
-                        <div class="col-team player-info">
-                            ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : `<div class="team-logo">${team.name.charAt(0)}</div>`}
-                            <div class="player-details">
-                                <h4>${team.name}</h4>
+            tbody.innerHTML = teams.map((team, index) => {
+                const gd = team.goalDifference || ((team.goalsFor || 0) - (team.goalsAgainst || 0));
+                return `
+                    <tr>
+                        <td class="rank-cell">${index + 1}</td>
+                        <td>
+                            <div class="player-cell">
+                                ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : ''}
+                                <span class="player-name">${team.name}</span>
                             </div>
-                        </div>
-                        <div class="col-played stat-value">${team.played || 0}</div>
-                        <div class="col-points stat-value">${team.points || 0}</div>
-                        <div class="col-wins stat-value">${team.wins || 0}</div>
-                        <div class="col-draws stat-value">${team.draws || 0}</div>
-                        <div class="col-losses stat-value">${team.losses || 0}</div>
-                        <div class="col-goals-for stat-value">${team.goalsFor || 0}</div>
-                        <div class="col-goals-against stat-value">${team.goalsAgainst || 0}</div>
-                        <div class="col-goal-diff stat-value">${team.goalDifference >= 0 ? '+' : ''}${team.goalDifference || 0}</div>
-                    </div>
+                        </td>
+                        <td class="stat-cell">${team.played || 0}</td>
+                        <td class="stat-cell primary">${team.points || 0}</td>
+                        <td class="stat-cell">${team.wins || 0}</td>
+                        <td class="stat-cell">${team.draws || 0}</td>
+                        <td class="stat-cell">${team.losses || 0}</td>
+                        <td class="stat-cell">${team.goalsFor || 0}</td>
+                        <td class="stat-cell">${team.goalsAgainst || 0}</td>
+                        <td class="stat-cell primary">${gd >= 0 ? '+' : ''}${gd}</td>
+                    </tr>
                 `;
-            });
-
-            container.innerHTML = html;
-            console.log('✅ League standings displayed successfully:', html.length, 'characters');
-            
-            // 表示確認のため、最初の数チームをログ出力
-            if (teams.length > 0) {
-                console.log('📋 Sample teams:', teams.slice(0, 3).map(t => ({ name: t.name, points: t.points })));
-            }
+            }).join('');
         }
 
-        // チャンピオンズリーグ順位読み込み
+        // Champions League
         async function loadChampionsLeagueRanking() {
             const season = document.getElementById('championsSeasonFilter').value;
-            console.log('🏆 Loading Champions League ranking for season:', season);
+            
+            document.getElementById('championsTableBody').innerHTML = '<tr><td colspan="10" class="loading">読み込み中...</td></tr>';
+
             try {
                 const response = await fetch(`/api/ranking/champions-league?season=${season}`);
-                console.log('📡 Champions League API response status:', response.status);
-                
                 let standings = [];
 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('📊 Champions League API data:', data);
-                    standings = data.standings || data.standings || [];
-                    console.log('✅ Champions League standings count:', standings.length);
-                    
-                    if (standings.length === 0) {
-                        console.warn('⚠️ No standings data, using fallback');
-                        standings = generateFallbackChampionsLeagueData();
-                    }
-                } else {
-                    console.error('❌ Champions League API error:', response.status, response.statusText);
-                    standings = generateFallbackChampionsLeagueData();
+                    standings = data.standings || [];
                 }
+                
+                if (standings.length === 0) standings = generateFallbackChampionsLeagueData();
 
-                console.log('📋 Final standings to display:', standings.length);
                 displayChampionsLeagueRanking(standings);
-                updateChampionsChart(standings);
+                updateChampionsChart(standings.slice(0, 10));
 
             } catch (error) {
-                console.error('❌ Error loading Champions League ranking:', error);
+                console.error('Error loading Champions League ranking:', error);
                 const standings = generateFallbackChampionsLeagueData();
                 displayChampionsLeagueRanking(standings);
-                updateChampionsChart(standings);
+                updateChampionsChart(standings.slice(0, 10));
             }
         }
 
-        // チャンピオンズリーグ順位をリーグ順位タブに表示
-        function displayChampionsLeagueRankingInStandings(standings) {
-            const container = document.getElementById('leagueStandingsBody');
-            if (!container) {
-                console.error('❌ leagueStandingsBody element not found');
-                return;
-            }
-
-            console.log('📊 Displaying Champions League ranking in standings:', standings.length, 'teams');
-
-            if (standings.length === 0) {
-                container.innerHTML = '<div class="no-data">順位データがありません</div>';
-                return;
-            }
-
-            // グループと順位でソート
-            standings.sort((a, b) => {
-                if (a.group !== b.group) return a.group.localeCompare(b.group);
-                return a.position - b.position;
-            });
-
-            let html = '';
-            standings.forEach(team => {
-                html += `
-                    <div class="table-row team-ranking champions-ranking">
-                        <div class="col-rank rank-number">${team.position || '-'}</div>
-                        <div class="col-team player-info">
-                            ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : `<div class="team-logo">${team.name.charAt(0)}</div>`}
-                            <div class="player-details">
-                                <h4>${team.name}</h4>
-                            </div>
-                        </div>
-                        <div class="col-group stat-value">${team.group || '-'}</div>
-                        <div class="col-played stat-value">${team.played || 0}</div>
-                        <div class="col-points stat-value">${team.points || 0}</div>
-                        <div class="col-wins stat-value">${team.wins || 0}</div>
-                        <div class="col-draws stat-value">${team.draws || 0}</div>
-                        <div class="col-losses stat-value">${team.losses || 0}</div>
-                        <div class="col-goals-for stat-value">${team.goalsFor || 0}</div>
-                        <div class="col-goals-against stat-value">${team.goalsAgainst || 0}</div>
-                        <div class="col-goal-diff stat-value">${team.goalDifference >= 0 ? '+' : ''}${team.goalDifference || 0}</div>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
-            console.log('✅ Champions League ranking displayed in standings successfully');
-        }
-
-        // チャンピオンズリーグ順位表示
         function displayChampionsLeagueRanking(standings) {
-            const container = document.getElementById('championsTableBody');
-            if (!container) {
-                console.error('❌ championsTableBody element not found');
-                return;
-            }
-
-            console.log('📊 Displaying Champions League ranking:', standings.length, 'teams');
-
-            if (standings.length === 0) {
-                container.innerHTML = '<div class="no-data">順位データがありません</div>';
-                return;
-            }
-
-            // グループと順位でソート
-            standings.sort((a, b) => {
-                if (a.group !== b.group) return a.group.localeCompare(b.group);
-                return a.position - b.position;
-            });
-
-            let html = '';
-            standings.forEach(team => {
-                html += `
-                    <div class="table-row team-ranking champions-ranking">
-                        <div class="col-rank rank-number">${team.position || '-'}</div>
-                        <div class="col-team player-info">
-                            ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : `<div class="team-logo">${team.name.charAt(0)}</div>`}
-                            <div class="player-details">
-                                <h4>${team.name}</h4>
-                            </div>
-                        </div>
-                        <div class="col-group stat-value">${team.group || '-'}</div>
-                        <div class="col-played stat-value">${team.played || 0}</div>
-                        <div class="col-points stat-value">${team.points || 0}</div>
-                        <div class="col-wins stat-value">${team.wins || 0}</div>
-                        <div class="col-draws stat-value">${team.draws || 0}</div>
-                        <div class="col-losses stat-value">${team.losses || 0}</div>
-                        <div class="col-goals-for stat-value">${team.goalsFor || 0}</div>
-                        <div class="col-goals-against stat-value">${team.goalsAgainst || 0}</div>
-                        <div class="col-goal-diff stat-value">${team.goalDifference >= 0 ? '+' : ''}${team.goalDifference || 0}</div>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
-            console.log('✅ Champions League ranking displayed successfully:', html.length, 'characters');
+            const tbody = document.getElementById('championsTableBody');
             
-            // 表示確認のため、最初の数チームをログ出力
-            if (standings.length > 0) {
-                console.log('📋 Sample teams:', standings.slice(0, 3).map(t => ({ name: t.name, group: t.group, position: t.position })));
+            if (standings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="no-data">順位データがありません</td></tr>';
+                return;
             }
+
+            standings.sort((a, b) => {
+                if ((b.points || 0) !== (a.points || 0)) return (b.points || 0) - (a.points || 0);
+                return (b.goalDifference || 0) - (a.goalDifference || 0);
+            });
+
+            tbody.innerHTML = standings.map((team, index) => {
+                const gd = team.goalDifference || ((team.goalsFor || 0) - (team.goalsAgainst || 0));
+                return `
+                    <tr>
+                        <td class="rank-cell">${index + 1}</td>
+                        <td>
+                            <div class="player-cell">
+                                ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : ''}
+                                <span class="player-name">${team.name}</span>
+                            </div>
+                        </td>
+                        <td class="stat-cell">${team.played || 0}</td>
+                        <td class="stat-cell primary">${team.points || 0}</td>
+                        <td class="stat-cell">${team.wins || 0}</td>
+                        <td class="stat-cell">${team.draws || 0}</td>
+                        <td class="stat-cell">${team.losses || 0}</td>
+                        <td class="stat-cell">${team.goalsFor || 0}</td>
+                        <td class="stat-cell">${team.goalsAgainst || 0}</td>
+                        <td class="stat-cell primary">${gd >= 0 ? '+' : ''}${gd}</td>
+                    </tr>
+                `;
+            }).join('');
         }
 
-        // チャンピオンズリーグチャート更新
         function updateChampionsChart(standings) {
-            const ctx = document.getElementById('championsChart');
-            if (!ctx) return;
+            const ctx = document.getElementById('championsChart').getContext('2d');
+            
+            if (championsChart) championsChart.destroy();
 
-            // グループごとに集計
-            const groupData = {};
-            standings.forEach(team => {
-                if (!groupData[team.group]) {
-                    groupData[team.group] = [];
-                }
-                groupData[team.group].push(team);
-            });
-
-            // グループごとにソート
-            Object.keys(groupData).forEach(group => {
-                groupData[group].sort((a, b) => b.points - a.points);
-            });
-
-            if (championsChart) {
-                championsChart.destroy();
-            }
-
-            const groups = Object.keys(groupData).sort();
-            const datasets = groups.map((group, index) => {
-                const teams = groupData[group].slice(0, 4); // 上位4チーム
-                return {
-                    label: group,
-                    data: teams.map(t => t.points),
-                    backgroundColor: `hsl(${index * 60}, 70%, 50%)`,
-                    borderColor: `hsl(${index * 60}, 70%, 40%)`,
-                    borderWidth: 1
-                };
-            });
+            const labels = standings.map(t => t.name.length > 12 ? t.name.slice(0, 12) + '...' : t.name);
+            const data = standings.map(t => t.points || 0);
 
             championsChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: groups,
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: '#fff' },
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                        },
-                        x: {
-                            ticks: { color: '#fff' },
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            labels: { color: '#fff' }
-                        }
-                    }
-                }
-            });
-        }
-
-        // フォールバックデータ生成
-        function generateFallbackChampionsLeagueData() {
-            return [
-                { id: 1, name: 'Manchester City', group: 'Group A', position: 1, points: 15, wins: 5, draws: 0, losses: 0, played: 6, goalsFor: 18, goalsAgainst: 5, goalDifference: 13 },
-                { id: 2, name: 'Real Madrid', group: 'Group A', position: 2, points: 12, wins: 4, draws: 0, losses: 1, played: 6, goalsFor: 15, goalsAgainst: 8, goalDifference: 7 },
-                { id: 3, name: 'Bayern Munich', group: 'Group B', position: 1, points: 15, wins: 5, draws: 0, losses: 0, played: 6, goalsFor: 20, goalsAgainst: 4, goalDifference: 16 },
-                { id: 4, name: 'Paris Saint-Germain', group: 'Group B', position: 2, points: 10, wins: 3, draws: 1, losses: 1, played: 6, goalsFor: 12, goalsAgainst: 7, goalDifference: 5 }
-            ];
-        }
-
-        // 選手ランキング表示
-        function displayPlayerRanking(players) {
-            const tbody = document.getElementById('playerTableBody');
-            const header = document.getElementById('playerTableHeader');
-            const stat = document.getElementById('statFilter').value;
-            
-            if (players.length === 0) {
-                tbody.innerHTML = '<div class="no-data">該当する選手が見つかりませんでした。</div>';
-                return;
-            }
-
-            // ヘッダーを統計項目に応じて更新
-            if (stat === 'goalsAssists') {
-                header.innerHTML = `
-                    <div>順位</div>
-                    <div>選手</div>
-                    <div>合計</div>
-                    <div>ゴール</div>
-                    <div>アシスト</div>
-                    <div>出場数</div>
-                `;
-            } else {
-                header.innerHTML = `
-                    <div>順位</div>
-                    <div>選手</div>
-                    <div>得点</div>
-                    <div>アシスト</div>
-                    <div>出場数</div>
-                    <div>評価</div>
-                `;
-            }
-
-            // モバイル用カード表示用のHTMLも生成
-            const isMobile = window.innerWidth <= 768;
-            let mobileCardsHTML = '';
-            
-            tbody.innerHTML = players.map((player, index) => {
-                // 写真URLを取得（利用できない場合はプレースホルダー）
-                const photoUrl = player.photo && player.photo !== 'https://media.api-sports.io/football/players/placeholder.png' 
-                    ? player.photo 
-                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&size=128&background=00ff88&color=0f0f23&bold=true`;
-                
-                const goals = player.stats?.goals || player.goals || 0;
-                const assists = player.stats?.assists || player.assists || 0;
-                const appearances = player.stats?.appearances || player.appearances || 0;
-                const rating = player.stats?.rating || player.rating || 'N/A';
-                
-                // 選手IDを取得（複数のID形式に対応）
-                const playerId = player.id || player.playerId || player.apiFootballId || player.footballDataId;
-                const playerIdStr = playerId ? String(playerId) : '';
-                
-                // クリックイベント用のonclick属性
-                const onClickHandler = playerIdStr ? `onclick="window.location.href='/player-detail.html?id=${encodeURIComponent(playerIdStr)}'"` : '';
-                
-                // モバイル用カードHTMLを生成
-                if (isMobile) {
-                    if (stat === 'goalsAssists') {
-                        const total = goals + assists;
-                        mobileCardsHTML += `
-                            <div class="mobile-card" ${onClickHandler} style="cursor: pointer;">
-                                <div class="mobile-card-header">
-                                    <div class="mobile-card-rank">${index + 1}</div>
-                                    <div class="mobile-card-title">${player.name}</div>
-                                </div>
-                                <div class="mobile-card-stats">
-                                    <div class="mobile-card-stat">
-                                        <span class="mobile-card-stat-label">合計</span>
-                                        <span class="mobile-card-stat-value">${total}</span>
-                                    </div>
-                                    <div class="mobile-card-stat">
-                                        <span class="mobile-card-stat-label">ゴール</span>
-                                        <span class="mobile-card-stat-value">${goals}</span>
-                                    </div>
-                                    <div class="mobile-card-stat">
-                                        <span class="mobile-card-stat-label">アシスト</span>
-                                        <span class="mobile-card-stat-value">${assists}</span>
-                                    </div>
-                                    <div class="mobile-card-stat">
-                                        <span class="mobile-card-stat-label">出場数</span>
-                                        <span class="mobile-card-stat-value">${appearances}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        mobileCardsHTML += `
-                            <div class="mobile-card" ${onClickHandler} style="cursor: pointer;">
-                                <div class="mobile-card-header">
-                                    <div class="mobile-card-rank">${index + 1}</div>
-                                    <div class="mobile-card-title">${player.name}</div>
-                                </div>
-                                <div class="mobile-card-stats">
-                                    <div class="mobile-card-stat">
-                                        <span class="mobile-card-stat-label">${stat === 'goals' ? '得点' : stat === 'assists' ? 'アシスト' : stat === 'appearances' ? '出場数' : stat === 'rating' ? '評価' : '統計'}</span>
-                                        <span class="mobile-card-stat-value">${stat === 'goals' ? goals : stat === 'assists' ? assists : stat === 'appearances' ? appearances : stat === 'rating' ? rating : goals}</span>
-                                    </div>
-                                    <div class="mobile-card-stat">
-                                        <span class="mobile-card-stat-label">ゴール</span>
-                                        <span class="mobile-card-stat-value">${goals}</span>
-                                    </div>
-                                    <div class="mobile-card-stat">
-                                        <span class="mobile-card-stat-label">アシスト</span>
-                                        <span class="mobile-card-stat-value">${assists}</span>
-                                    </div>
-                                    <div class="mobile-card-stat">
-                                        <span class="mobile-card-stat-label">出場数</span>
-                                        <span class="mobile-card-stat-value">${appearances}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }
-                }
-                
-                if (stat === 'goalsAssists') {
-                    const total = goals + assists;
-                    return `
-                    <div class="table-row">
-                        <div class="rank-number">${index + 1}</div>
-                        <div class="player-info" ${onClickHandler}>
-                            <div class="player-avatar">
-                                <img src="${photoUrl}" alt="${player.name}" onerror="this.style.display='none'; this.parentElement.textContent='${player.name.charAt(0)}';">
-                            </div>
-                            <div class="player-details">
-                                <h4>${player.name}</h4>
-                                <p>${player.currentTeam || player.team} | ${player.detailedPosition || player.position}</p>
-                            </div>
-                        </div>
-                        <div class="stat-value">${total}</div>
-                        <div class="stat-value">${goals}</div>
-                        <div class="stat-value">${assists}</div>
-                        <div class="stat-value">${appearances}</div>
-                    </div>
-                `;
-                } else {
-                    return `
-                    <div class="table-row">
-                        <div class="rank-number">${index + 1}</div>
-                        <div class="player-info" ${onClickHandler}>
-                            <div class="player-avatar">
-                                <img src="${photoUrl}" alt="${player.name}" onerror="this.style.display='none'; this.parentElement.textContent='${player.name.charAt(0)}';">
-                            </div>
-                            <div class="player-details">
-                                <h4>${player.name}</h4>
-                                <p>${player.currentTeam || player.team} | ${player.detailedPosition || player.position}</p>
-                            </div>
-                        </div>
-                        <div class="stat-value">${goals}</div>
-                        <div class="stat-value">${assists}</div>
-                        <div class="stat-value">${appearances}</div>
-                        <div class="stat-value">${rating}</div>
-                    </div>
-                `;
-                }
-            }).join('');
-            
-            // モバイル用カードを表示
-            if (isMobile && mobileCardsHTML) {
-                // モバイル用コンテナが存在しない場合は作成
-                let mobileContainer = document.getElementById('playerMobileCards');
-                if (!mobileContainer) {
-                    mobileContainer = document.createElement('div');
-                    mobileContainer.id = 'playerMobileCards';
-                    mobileContainer.className = 'mobile-cards-container';
-                    tbody.parentElement.parentElement.appendChild(mobileContainer);
-                }
-                mobileContainer.innerHTML = mobileCardsHTML;
-            } else {
-                // デスクトップ表示時はモバイルコンテナを非表示
-                const mobileContainer = document.getElementById('playerMobileCards');
-                if (mobileContainer) {
-                    mobileContainer.innerHTML = '';
-                }
-            }
-        }
-
-        // チームランキング表示
-        function displayTeamRanking(teams) {
-            const tbody = document.getElementById('teamTableBody');
-            
-            tbody.innerHTML = teams.map((team, index) => `
-                <div class="table-row team-ranking">
-                    <div class="col-rank rank-number">${index + 1}</div>
-                    <div class="col-team player-info">
-                        <div class="team-logo">${team.name.substring(0, 2).toUpperCase()}</div>
-                        <div class="player-details">
-                            <h4>${team.name}</h4>
-                            <p>${team.league}</p>
-                        </div>
-                    </div>
-                    <div class="col-played stat-value">${team.played || 0}</div>
-                    <div class="col-points stat-value">${team.points}</div>
-                    <div class="col-wins stat-value">${team.wins}</div>
-                    <div class="col-draws stat-value">${team.draws}</div>
-                    <div class="col-losses stat-value">${team.losses}</div>
-                    <div class="col-goals-for stat-value">${team.goalsFor || 0}</div>
-                    <div class="col-goals-against stat-value">${team.goalsAgainst || 0}</div>
-                    <div class="col-goal-diff stat-value">${team.goalDifference >= 0 ? '+' : ''}${team.goalDifference || 0}</div>
-                </div>
-            `).join('');
-        }
-
-        // リーグランキング表示
-        function displayLeagueRanking(leagues) {
-            const tbody = document.getElementById('leagueTableBody');
-            
-            tbody.innerHTML = leagues.map((league, index) => `
-                <div class="table-row league-ranking">
-                    <div class="rank-number">${index + 1}</div>
-                    <div class="player-details">
-                        <h4>${league.name}</h4>
-                        <p>${league.country}</p>
-                    </div>
-                    <div class="stat-value">${league.avgGoals}</div>
-                    <div class="stat-value">${league.avgAttendance}</div>
-                    <div class="stat-value">${league.rating}</div>
-                </div>
-            `).join('');
-        }
-
-        // 選手チャート更新
-        function updatePlayerChart(players) {
-            const ctx = document.getElementById('playerChart').getContext('2d');
-            
-            if (playerChart) {
-                playerChart.destroy();
-            }
-
-            playerChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: players.map(p => p.name),
-                    datasets: [{
-                        label: '得点',
-                        data: players.map(p => p.goals || 0),
-                        backgroundColor: 'rgba(0, 255, 136, 0.8)',
-                        borderColor: '#00ff88',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#fff'
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                color: '#fff'
-                            },
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                color: '#fff'
-                            },
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // チームチャート更新
-        function updateTeamChart(teams) {
-            const ctx = document.getElementById('teamChart').getContext('2d');
-            
-            if (teamChart) {
-                teamChart.destroy();
-            }
-
-            teamChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: teams.map(t => t.name),
+                    labels: labels,
                     datasets: [{
                         label: '勝点',
-                        data: teams.map(t => t.points),
-                        borderColor: '#00ff88',
-                        backgroundColor: 'rgba(0, 255, 136, 0.2)',
-                        borderWidth: 2,
-                        fill: true
+                        data: data,
+                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                        borderColor: '#22c55e',
+                        borderWidth: 1,
+                        borderRadius: 4
                     }]
                 },
                 options: {
+                    indexAxis: 'y',
                     responsive: true,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#fff'
-                            }
-                        }
-                    },
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                color: '#fff'
-                            },
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                color: '#fff'
-                            },
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            }
-                        }
+                        x: { grid: { color: '#30363d' } },
+                        y: { grid: { display: false } }
                     }
                 }
             });
         }
 
-        // リーグチャート更新
-        function updateLeagueChart(leagues) {
-            const ctx = document.getElementById('leagueChart').getContext('2d');
-            
-            if (leagueChart) {
-                leagueChart.destroy();
-            }
-
-            leagueChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: leagues.map(l => l.name),
-                    datasets: [{
-                        data: leagues.map(l => l.avgGoals),
-                        backgroundColor: [
-                            '#00ff88',
-                            '#00d4ff',
-                            '#ff6b6b',
-                            '#ffd93d',
-                            '#ff9ff3'
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#1a1a2e'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: '#fff'
-                            }
-                        }
-                    }
-                }
-            });
+        // Helper functions
+        function getStatLabel(stat) {
+            const labels = {
+                goals: '得点',
+                assists: 'アシスト',
+                goalAssist: 'ゴール+アシスト',
+                appearances: '出場数',
+                minutes: '出場時間',
+                passes: 'パス成功数',
+                tackles: 'タックル',
+                interceptions: 'インターセプト',
+                saves: 'セーブ数',
+                cleanSheets: 'クリーンシート',
+                rating: '平均評価'
+            };
+            return labels[stat] || stat;
         }
 
-        // フォールバック選手データ生成（全選手対応）
+        // Fallback data generators
         function generateFallbackPlayerData(league, position, stat, search) {
-            // フォールバックデータは最小限（実際のデータはAPIから取得）
-            const players = [];
+            const players = [
+                { name: 'アーリング・ハーランド', team: 'マンチェスター・シティ', position: 'FW', goals: 18, assists: 5, appearances: 19, rating: 8.5 },
+                { name: 'モハメド・サラー', team: 'リバプール', position: 'FW', goals: 16, assists: 12, appearances: 19, rating: 8.4 },
+                { name: 'コール・パーマー', team: 'チェルシー', position: 'MF', goals: 14, assists: 8, appearances: 18, rating: 8.2 },
+                { name: '三笘 薫', team: 'ブライトン', position: 'MF', goals: 6, assists: 9, appearances: 18, rating: 8.2 },
+                { name: '久保 建英', team: 'レアル・ソシエダ', position: 'MF', goals: 7, assists: 6, appearances: 19, rating: 7.9 },
+                { name: '遠藤 航', team: 'リバプール', position: 'MF', goals: 2, assists: 3, appearances: 16, rating: 7.8 },
+                { name: 'ハリー・ケイン', team: 'バイエルン', position: 'FW', goals: 20, assists: 8, appearances: 17, rating: 8.6 },
+                { name: 'キリアン・エムバペ', team: 'レアル・マドリード', position: 'FW', goals: 12, assists: 3, appearances: 18, rating: 8.1 },
+                { name: 'ヴィニシウス・Jr', team: 'レアル・マドリード', position: 'FW', goals: 11, assists: 7, appearances: 17, rating: 8.3 },
+                { name: 'ブカヨ・サカ', team: 'アーセナル', position: 'MF', goals: 8, assists: 10, appearances: 18, rating: 8.1 }
+            ];
 
-            // 検索フィルタリング
+            let filtered = players;
+            if (position) filtered = filtered.filter(p => p.position === position);
             if (search) {
-                const searchLower = search.toLowerCase();
-                return players.filter(p => {
-                    const name = (p.name || '').toLowerCase();
-                    const team = (p.team || p.currentTeam || '').toLowerCase();
-                    return name.includes(searchLower) || team.includes(searchLower);
-                });
+                const s = search.toLowerCase();
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(s) || p.team.toLowerCase().includes(s));
             }
 
-            // リーグフィルタリング
-            if (league) {
-                return players.filter(p => {
-                    const leagueTeams = {
-                        'PL': ['brighton', 'liverpool', 'arsenal', 'manchester city', 'chelsea'],
-                        'PD': ['real sociedad', 'real madrid', 'barcelona', 'atletico madrid'],
-                        'SA': ['monaco', 'inter milan', 'ac milan', 'juventus'],
-                        'BL1': ['freiburg', 'fortuna düsseldorf', 'stuttgart', 'bochum'],
-                        'FL1': ['monaco', 'psg', 'marseille'],
-                        'J1': []
-                    };
-                    const team = (p.team || p.currentTeam || '').toLowerCase();
-                    return leagueTeams[league]?.some(t => team.includes(t));
-                });
-            }
-
-            // ポジションフィルタリング
-            if (position) {
-                return players.filter(p => p.position === position);
-            }
-
-            return players;
+            return filtered.sort((a, b) => (b[stat] || b.goals) - (a[stat] || a.goals));
         }
-        
-        // 検索フィールドのイベントリスナー追加
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('searchFilter');
-            if (searchInput) {
-                // Enterキーで検索
-                searchInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        loadRanking();
-                    }
-                });
-                
-                // リアルタイム検索（オプション：入力後500ms待機）
-                let searchTimeout;
-                searchInput.addEventListener('input', function() {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        if (currentTab === 'players') {
-                            loadPlayerRanking();
-                        }
-                    }, 500);
-                });
-            }
-        });
 
-        // フォールバックチームデータ生成
         function generateFallbackTeamData(league) {
-            const teamData = {
-                'PL': [
-                    { name: 'Arsenal', points: 84, wins: 26, draws: 6, losses: 6, played: 38, goalsFor: 91, goalsAgainst: 29, goalDifference: 62 },
-                    { name: 'Manchester City', points: 82, wins: 25, draws: 7, losses: 6, played: 38, goalsFor: 89, goalsAgainst: 31, goalDifference: 58 },
-                    { name: 'Liverpool', points: 78, wins: 24, draws: 6, losses: 8, played: 38, goalsFor: 86, goalsAgainst: 41, goalDifference: 45 },
-                    { name: 'Chelsea', points: 70, wins: 21, draws: 7, losses: 10, played: 38, goalsFor: 76, goalsAgainst: 51, goalDifference: 25 },
-                    { name: 'Tottenham', points: 68, wins: 20, draws: 8, losses: 10, played: 38, goalsFor: 74, goalsAgainst: 61, goalDifference: 13 }
+            const teamsMap = {
+                premier: [
+                    { name: 'リバプール', played: 19, wins: 14, draws: 4, losses: 1, goalsFor: 45, goalsAgainst: 18, points: 46 },
+                    { name: 'アーセナル', played: 19, wins: 11, draws: 6, losses: 2, goalsFor: 38, goalsAgainst: 16, points: 39 },
+                    { name: 'チェルシー', played: 19, wins: 10, draws: 5, losses: 4, goalsFor: 38, goalsAgainst: 24, points: 35 },
+                    { name: 'マンチェスター・シティ', played: 19, wins: 10, draws: 4, losses: 5, goalsFor: 36, goalsAgainst: 24, points: 34 },
+                    { name: 'ブライトン', played: 19, wins: 8, draws: 8, losses: 3, goalsFor: 32, goalsAgainst: 24, points: 32 }
                 ],
-                'PD': [
-                    { name: 'Real Madrid', points: 95, wins: 30, draws: 5, losses: 3, played: 38, goalsFor: 87, goalsAgainst: 26, goalDifference: 61 },
-                    { name: 'Barcelona', points: 88, wins: 28, draws: 4, losses: 6, played: 38, goalsFor: 83, goalsAgainst: 33, goalDifference: 50 },
-                    { name: 'Atletico Madrid', points: 76, wins: 24, draws: 4, losses: 10, played: 38, goalsFor: 70, goalsAgainst: 43, goalDifference: 27 },
-                    { name: 'Real Sociedad', points: 71, wins: 22, draws: 5, losses: 11, played: 38, goalsFor: 65, goalsAgainst: 48, goalDifference: 17 },
-                    { name: 'Villarreal', points: 68, wins: 21, draws: 5, losses: 12, played: 38, goalsFor: 63, goalsAgainst: 52, goalDifference: 11 }
-                ],
-                'SA': [
-                    { name: 'Inter Milan', points: 89, wins: 28, draws: 5, losses: 5, played: 38, goalsFor: 89, goalsAgainst: 28, goalDifference: 61 },
-                    { name: 'AC Milan', points: 82, wins: 25, draws: 7, losses: 6, played: 38, goalsFor: 81, goalsAgainst: 35, goalDifference: 46 },
-                    { name: 'Juventus', points: 76, wins: 23, draws: 7, losses: 8, played: 38, goalsFor: 75, goalsAgainst: 42, goalDifference: 33 },
-                    { name: 'Napoli', points: 71, wins: 22, draws: 5, losses: 11, played: 38, goalsFor: 72, goalsAgainst: 49, goalDifference: 23 },
-                    { name: 'Roma', points: 68, wins: 21, draws: 5, losses: 12, played: 38, goalsFor: 69, goalsAgainst: 51, goalDifference: 18 }
-                ],
-                'BL1': [
-                    { name: 'Bayern Munich', points: 71, wins: 22, draws: 5, losses: 7, played: 34, goalsFor: 92, goalsAgainst: 38, goalDifference: 54 },
-                    { name: 'Borussia Dortmund', points: 68, wins: 21, draws: 5, losses: 8, played: 34, goalsFor: 88, goalsAgainst: 42, goalDifference: 46 },
-                    { name: 'RB Leipzig', points: 65, wins: 20, draws: 5, losses: 9, played: 34, goalsFor: 85, goalsAgainst: 45, goalDifference: 40 },
-                    { name: 'Bayer Leverkusen', points: 62, wins: 19, draws: 5, losses: 10, played: 34, goalsFor: 82, goalsAgainst: 48, goalDifference: 34 },
-                    { name: 'Eintracht Frankfurt', points: 59, wins: 18, draws: 5, losses: 11, played: 34, goalsFor: 79, goalsAgainst: 51, goalDifference: 28 }
-                ],
-                'FL1': [
-                    { name: 'Paris Saint-Germain', points: 85, wins: 27, draws: 4, losses: 7, played: 38, goalsFor: 89, goalsAgainst: 32, goalDifference: 57 },
-                    { name: 'Lens', points: 78, wins: 24, draws: 6, losses: 8, played: 38, goalsFor: 82, goalsAgainst: 38, goalDifference: 44 },
-                    { name: 'Marseille', points: 75, wins: 23, draws: 6, losses: 9, played: 38, goalsFor: 80, goalsAgainst: 41, goalDifference: 39 },
-                    { name: 'Monaco', points: 72, wins: 22, draws: 6, losses: 10, played: 38, goalsFor: 78, goalsAgainst: 44, goalDifference: 34 },
-                    { name: 'Rennes', points: 69, wins: 21, draws: 6, losses: 11, played: 38, goalsFor: 76, goalsAgainst: 47, goalDifference: 29 }
-                ],
-                'J1': [
-                    { name: '横浜F・マリノス', points: 68, wins: 21, draws: 5, losses: 8, played: 34, goalsFor: 65, goalsAgainst: 38, goalDifference: 27 },
-                    { name: '川崎フロンターレ', points: 65, wins: 20, draws: 5, losses: 9, played: 34, goalsFor: 63, goalsAgainst: 40, goalDifference: 23 },
-                    { name: '浦和レッズ', points: 62, wins: 19, draws: 5, losses: 10, played: 34, goalsFor: 61, goalsAgainst: 42, goalDifference: 19 },
-                    { name: 'FC東京', points: 59, wins: 18, draws: 5, losses: 11, played: 34, goalsFor: 59, goalsAgainst: 44, goalDifference: 15 },
-                    { name: 'セレッソ大阪', points: 56, wins: 17, draws: 5, losses: 12, played: 34, goalsFor: 57, goalsAgainst: 46, goalDifference: 11 }
+                laliga: [
+                    { name: 'バルセロナ', played: 19, wins: 16, draws: 1, losses: 2, goalsFor: 53, goalsAgainst: 20, points: 49 },
+                    { name: 'レアル・マドリード', played: 19, wins: 14, draws: 3, losses: 2, goalsFor: 41, goalsAgainst: 17, points: 45 },
+                    { name: 'アトレティコ・マドリード', played: 19, wins: 11, draws: 5, losses: 3, goalsFor: 34, goalsAgainst: 17, points: 38 },
+                    { name: 'レアル・ソシエダ', played: 19, wins: 8, draws: 6, losses: 5, goalsFor: 24, goalsAgainst: 18, points: 30 }
                 ]
             };
-
-            return (teamData[league] || []).map((team, index) => ({
-                ...team,
-                league: league,
-                rank: index + 1
-            }));
+            return teamsMap[league] || teamsMap.premier;
         }
 
-        // フォールバックリーグデータ生成
-        function generateFallbackLeagueData() {
+        function generateFallbackChampionsLeagueData() {
             return [
-                { name: 'Premier League', country: 'England', avgGoals: 2.8, avgAttendance: 40000, rating: 8.5 },
-                { name: 'La Liga', country: 'Spain', avgGoals: 2.6, avgAttendance: 28000, rating: 8.2 },
-                { name: 'Serie A', country: 'Italy', avgGoals: 2.7, avgAttendance: 25000, rating: 8.0 },
-                { name: 'Bundesliga', country: 'Germany', avgGoals: 3.1, avgAttendance: 45000, rating: 8.3 },
-                { name: 'Ligue 1', country: 'France', avgGoals: 2.5, avgAttendance: 22000, rating: 7.8 }
+                { name: 'リバプール', played: 6, wins: 6, draws: 0, losses: 0, goalsFor: 15, goalsAgainst: 3, points: 18, goalDifference: 12 },
+                { name: 'バルセロナ', played: 6, wins: 5, draws: 0, losses: 1, goalsFor: 18, goalsAgainst: 8, points: 15, goalDifference: 10 },
+                { name: 'アーセナル', played: 6, wins: 4, draws: 1, losses: 1, goalsFor: 11, goalsAgainst: 3, points: 13, goalDifference: 8 },
+                { name: 'インテル', played: 6, wins: 4, draws: 1, losses: 1, goalsFor: 7, goalsAgainst: 2, points: 13, goalDifference: 5 },
+                { name: 'レバークーゼン', played: 6, wins: 4, draws: 1, losses: 1, goalsFor: 12, goalsAgainst: 6, points: 13, goalDifference: 6 }
             ];
         }
 
-        // 初期化
-        document.addEventListener('DOMContentLoaded', function() {
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
             loadPlayerRanking();
         });
     </script>
