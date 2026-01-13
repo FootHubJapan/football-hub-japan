@@ -8477,7 +8477,7 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
         }
         
         // キャリアスタッツを構築
-        const careerStats = [];
+        let careerStats = [];
         let seasonList = seasons.split(',');
         
         // seasons=all の場合は過去10年分のシーズンを取得

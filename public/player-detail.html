@@ -1930,6 +1930,7 @@
 
         // エラー表示
         // コンペティション別スタッツを表示
+        // 2025/26シーズン統計表示関数（更新: 2026-01-14）
         async function displayCompetitionStats(player) {
             console.log('🔄 displayCompetitionStats called for:', player.name);
             const tbody = document.getElementById('competitionStatsBody');
@@ -1940,16 +1941,16 @@
                 return;
             }
 
-            console.log('✅ Generating competition stats...');
+            console.log('✅ Generating competition stats (v2526)...');
 
             // 実際の選手データを使用（更新中でも既存データを表示）
             let competitions = [];
             
             // デバッグ: playerオブジェクトの構造を確認
-            console.log('📊 player.careerStats exists:', !!player.careerStats);
-            console.log('📊 player.careerStats is array:', Array.isArray(player.careerStats));
-            console.log('📊 player.careerStats length:', player.careerStats?.length || 0);
-            console.log('📊 player.season:', player.season);
+            console.log('📊 v2526 - player.careerStats exists:', !!player.careerStats);
+            console.log('📊 v2526 - player.careerStats is array:', Array.isArray(player.careerStats));
+            console.log('📊 v2526 - player.careerStats length:', player.careerStats?.length || 0);
+            console.log('📊 v2526 - player.season:', player.season);
             
             // 優先: careerStatsから2025/26シーズンのデータを取得
             if (player.careerStats && Array.isArray(player.careerStats) && player.careerStats.length > 0) {
