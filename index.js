@@ -10282,8 +10282,8 @@ app.get('/api/fotmob/init', async (req, res) => {
 
 app.get('/api/fotmob/players', async (req, res) => {
     try {
-        const { page = 1, limit = 20, league, position } = req.query;
-        console.log('Players API called with:', { page, limit, league, position });
+        const { page = 1, limit = 20, league, position, search } = req.query;
+        console.log('Players API called with:', { page, limit, league, position, search });
         
         // APIServiceが利用可能な場合は、包括的データベースから直接データを取得
         if (apiService && apiService.dbManager) {
@@ -10294,6 +10294,17 @@ app.get('/api/fotmob/players', async (req, res) => {
                 if (comprehensivePlayers && comprehensivePlayers.length > 0) {
                     // フィルタリングとページネーション
                     let filteredPlayers = comprehensivePlayers;
+                    
+                    // 検索フィルター
+                    if (search && search.trim()) {
+                        const searchLower = search.toLowerCase().trim();
+                        filteredPlayers = filteredPlayers.filter(p => 
+                            (p.name && p.name.toLowerCase().includes(searchLower)) ||
+                            (p.fullName && p.fullName.toLowerCase().includes(searchLower)) ||
+                            (p.currentTeam && p.currentTeam.toLowerCase().includes(searchLower)) ||
+                            (p.nationality && p.nationality.toLowerCase().includes(searchLower))
+                        );
+                    }
                     
                     if (league) {
                         filteredPlayers = filteredPlayers.filter(p => p.league === league);
