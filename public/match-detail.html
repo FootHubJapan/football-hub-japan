@@ -101,6 +101,310 @@
             color: var(--background);
         }
 
+        .nav-btn-primary {
+            background: var(--primary);
+            color: var(--background);
+            border-color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-link {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--foreground);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--foreground);
+        }
+
+        .league-badge {
+            display: inline-block;
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--primary);
+            padding: 0.375rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .match-teams-v0 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .team-v0 {
+            text-align: center;
+        }
+
+        .team-v0 h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--foreground);
+            margin-bottom: 0.25rem;
+        }
+
+        .team-label {
+            color: var(--muted);
+            font-size: 0.875rem;
+        }
+
+        .match-vs {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .match-meta {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--muted);
+            font-size: 0.875rem;
+        }
+
+        .prediction-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ai-prediction-card,
+        .recent-form-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-icon {
+            font-size: 1.25rem;
+        }
+
+        .card-header h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--foreground);
+        }
+
+        .card-subtitle {
+            color: var(--muted);
+            font-size: 0.8125rem;
+            margin-bottom: 1rem;
+        }
+
+        .prediction-content {
+            background: var(--secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .prediction-winner {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-label {
+            display: block;
+            color: var(--muted);
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .prediction-team {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .prediction-score {
+            color: var(--muted);
+            font-size: 0.875rem;
+        }
+
+        .confidence-badge {
+            display: inline-block;
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .probability-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .prob-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .prob-label {
+            min-width: 100px;
+            font-size: 0.8125rem;
+            color: var(--muted);
+        }
+
+        .prob-bar {
+            flex: 1;
+            height: 8px;
+            background: var(--secondary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .prob-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .prob-fill.draw {
+            background: #8b949e;
+        }
+
+        .prob-fill.away {
+            background: #3b82f6;
+        }
+
+        .prob-value {
+            min-width: 40px;
+            text-align: right;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--foreground);
+        }
+
+        .recent-form-card h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--foreground);
+            margin-bottom: 1rem;
+        }
+
+        .form-teams {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-team {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-team-name {
+            font-weight: 500;
+            color: var(--foreground);
+        }
+
+        .form-badges {
+            display: flex;
+            gap: 0.375rem;
+        }
+
+        .form-badge {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .form-badge.win {
+            background: var(--primary);
+            color: var(--background);
+        }
+
+        .form-badge.draw {
+            background: #8b949e;
+            color: var(--background);
+        }
+
+        .form-badge.loss {
+            background: #f85149;
+            color: white;
+        }
+
+        .h2h-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .h2h-section h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--foreground);
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .header { padding: 0 1rem; }
+            .nav-links { display: none; }
+            .nav-buttons { gap: 0.5rem; }
+            .prediction-form-grid { grid-template-columns: 1fr; }
+            .match-teams-v0 { flex-direction: column; gap: 1rem; }
+            .team-v0 h2 { font-size: 1.5rem; }
+            .match-meta { flex-direction: column; gap: 0.5rem; }
+        }
+
         .main-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -958,45 +1262,140 @@
 <body>
     <header class="header">
         <div class="header-content">
-            <a href="/" class="logo">⚽ Football Hub Japan</a>
+            <a href="/" class="logo">Football Hub</a>
+            <nav class="nav-links">
+                <a href="/database" class="nav-link">データベース</a>
+                <a href="/radar" class="nav-link">レーダーチャート</a>
+                <a href="/advanced-stats.html" class="nav-link">試合分析</a>
+                <a href="/schedule.html" class="nav-link">スケジュール</a>
+                <a href="/ai-agent" class="nav-link">AI分析</a>
+                <a href="/ranking.html" class="nav-link">ランキング</a>
+            </nav>
             <div class="nav-buttons">
-                <button class="nav-btn" onclick="window.location.href='/dashboard'">ダッシュボード</button>
-                <button class="nav-btn" onclick="window.location.href='/schedule'">スケジュール</button>
-                <button class="nav-btn" onclick="window.history.back()">戻る</button>
+                <a href="/login.html" class="nav-btn">ログイン</a>
+                <a href="/dashboard.html" class="nav-btn nav-btn-primary">無料で始める</a>
             </div>
         </div>
     </header>
 
     <div class="main-container">
+        <!-- 戻るリンク -->
+        <a href="/schedule.html" class="back-link">← スケジュールに戻る</a>
+        
         <!-- 試合ヘッダー -->
         <div class="match-header">
-            <div class="match-teams">
-                <div class="team home">
-                    <div class="team-logo" id="homeTeamLogo">M</div>
-                    <div class="team-info">
-                        <h3 id="homeTeamName">Manchester United</h3>
-                        <p id="homeTeamLeague">Premier League</p>
-                    </div>
+            <div class="league-badge" id="leagueBadge">プレミアリーグ</div>
+            
+            <div class="match-teams-v0">
+                <div class="team-v0 home-team">
+                    <h2 id="homeTeamName">リバプール</h2>
+                    <span class="team-label">ホーム</span>
                 </div>
                 
-                <div class="match-score" id="matchScore">2 - 1</div>
+                <div class="match-vs">vs</div>
                 
-                <div class="team away">
-                    <div class="team-logo" id="awayTeamLogo">T</div>
-                    <div class="team-info">
-                        <h3 id="awayTeamName">Tottenham</h3>
-                        <p id="awayTeamLeague">Premier League</p>
+                <div class="team-v0 away-team">
+                    <h2 id="awayTeamName">チェルシー</h2>
+                    <span class="team-label">アウェイ</span>
+                </div>
+            </div>
+            
+            <div class="match-meta">
+                <div class="meta-item">
+                    <span class="meta-icon">📅</span>
+                    <span id="matchDate">2025年1月18日</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-icon">🕐</span>
+                    <span id="matchTime">21:30 (JST)</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-icon">📍</span>
+                    <span id="matchVenue">アンフィールド</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-icon">👥</span>
+                    <span id="matchCapacity">54,074人</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AI予測 & フォームセクション -->
+        <div class="prediction-form-grid">
+            <div class="ai-prediction-card">
+                <div class="card-header">
+                    <span class="card-icon">📈</span>
+                    <h3>AI試合予測</h3>
+                </div>
+                <p class="card-subtitle">機械学習モデルによる予測</p>
+                
+                <div class="prediction-content">
+                    <div class="prediction-winner">
+                        <span class="prediction-label">予測勝者</span>
+                        <span class="prediction-team" id="predictedWinner">リバプール</span>
+                        <span class="prediction-score">予測スコア: <span id="predictedScore">2-1</span></span>
+                    </div>
+                    <div class="confidence-badge" id="confidenceBadge">信頼度 72%</div>
+                </div>
+                
+                <div class="probability-bars">
+                    <div class="prob-item">
+                        <span class="prob-label" id="homeTeamProb">リバプール勝利</span>
+                        <div class="prob-bar">
+                            <div class="prob-fill" id="homeWinProb" style="width: 55%;"></div>
+                        </div>
+                        <span class="prob-value">55%</span>
+                    </div>
+                    <div class="prob-item">
+                        <span class="prob-label">引き分け</span>
+                        <div class="prob-bar">
+                            <div class="prob-fill draw" id="drawProb" style="width: 25%;"></div>
+                        </div>
+                        <span class="prob-value">25%</span>
+                    </div>
+                    <div class="prob-item">
+                        <span class="prob-label" id="awayTeamProb">チェルシー勝利</span>
+                        <div class="prob-bar">
+                            <div class="prob-fill away" id="awayWinProb" style="width: 20%;"></div>
+                        </div>
+                        <span class="prob-value">20%</span>
                     </div>
                 </div>
             </div>
             
-            <div class="match-info">
-                <p><strong>日時:</strong> <span id="matchDate">2024年12月15日 15:00</span></p>
-                <p><strong>会場:</strong> <span id="matchVenue">Old Trafford</span></p>
-                <p><strong>審判:</strong> <span id="matchReferee">Michael Oliver</span></p>
+            <div class="recent-form-card">
+                <h3>直近のフォーム</h3>
+                <div class="form-teams">
+                    <div class="form-team">
+                        <span class="form-team-name" id="homeFormTeam">リバプール</span>
+                        <div class="form-badges" id="homeFormBadges">
+                            <span class="form-badge win">W</span>
+                            <span class="form-badge win">W</span>
+                            <span class="form-badge draw">D</span>
+                            <span class="form-badge win">W</span>
+                            <span class="form-badge loss">L</span>
+                        </div>
+                    </div>
+                    <div class="form-team">
+                        <span class="form-team-name" id="awayFormTeam">チェルシー</span>
+                        <div class="form-badges" id="awayFormBadges">
+                            <span class="form-badge loss">L</span>
+                            <span class="form-badge win">W</span>
+                            <span class="form-badge win">W</span>
+                            <span class="form-badge draw">D</span>
+                            <span class="form-badge win">W</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="match-status finished" id="matchStatus">試合終了</div>
+        </div>
+        
+        <!-- 過去の対戦 -->
+        <div class="h2h-section">
+            <h3>過去の対戦</h3>
+            <div id="h2hStats" class="h2h-content">
+                <div class="no-data">対戦データを読み込み中...</div>
+            </div>
         </div>
 
         <!-- タブナビゲーション -->

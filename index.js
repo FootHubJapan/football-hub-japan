@@ -335,6 +335,11 @@ app.get('/match-detail', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'match-detail.html'));
 });
 
+// 試合詳細ページ（動的ルート）
+app.get('/match/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'match-detail.html'));
+});
+
 // AIウィジェットファイルを提供
 app.get('/ai-widget.js', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'ai-widget.js'));
