@@ -10,37 +10,38 @@ const path = require('path');
 const API_KEY = '53cfd1d0230dfe92a2d99f81ca0fab88';
 const PLAYERS_FILE = path.join(__dirname, 'data', 'players.json');
 
-// 主要選手のplayerIdとリーグ
+// 主要選手のplayerIdとリーグ（2024シーズンの正しいID）
 const TOP_PLAYERS = [
-    { id: 1100, name: 'E. Haaland', league: 39 },      // Premier League
-    { id: 306, name: 'Mohamed Salah', league: 39 },
-    { id: 488, name: 'K. De Bruyne', league: 39 },
-    { id: 882, name: 'H. Kane', league: 78 },          // Bundesliga
-    { id: 276, name: 'K. Mbappé', league: 140 },       // La Liga
-    { id: 645, name: 'L. Messi', league: 253 },        // MLS
-    { id: 874, name: 'C. Ronaldo', league: 307 },      // Saudi Pro League
-    { id: 529, name: 'B. Saka', league: 39 },
-    { id: 22, name: 'Phil Foden', league: 39 },
-    { id: 627, name: 'Vinícius Júnior', league: 140 },
-    { id: 1451, name: 'J. Bellingham', league: 140 },
-    { id: 154, name: 'R. Lewandowski', league: 140 },
-    { id: 31097, name: 'L. Yamal', league: 140 },
-    { id: 46769, name: 'Pedri', league: 140 },
-    { id: 2935, name: 'J. Musiala', league: 78 },
-    { id: 630, name: 'S. Heung-Min', league: 39 },
-    { id: 1484, name: 'V. van Dijk', league: 39 },
-    { id: 909, name: 'M. Ødegaard', league: 39 },
-    { id: 30949, name: 'T. Kubo', league: 140 },       // 久保建英
-    { id: 18830, name: 'K. Mitoma', league: 39 },      // 三苫薫
-    { id: 18832, name: 'T. Tomiyasu', league: 39 },    // 富安健洋
-    { id: 2505, name: 'W. Endo', league: 39 },         // 遠藤航
-    { id: 1480, name: 'R. Doan', league: 78 }          // 堂安律
+    { id: 1100, name: 'E. Haaland', league: 39 },      // Premier League - Manchester City
+    { id: 306, name: 'Mohamed Salah', league: 39 },    // Liverpool
+    { id: 629, name: 'K. De Bruyne', league: 39 },     // Manchester City
+    { id: 184, name: 'H. Kane', league: 78 },          // Bayern München
+    { id: 278, name: 'K. Mbappé', league: 140 },       // Real Madrid
+    { id: 154, name: 'L. Messi', league: 253 },        // Inter Miami
+    { id: 874, name: 'C. Ronaldo', league: 307 },      // Al Nassr
+    { id: 1460, name: 'B. Saka', league: 39 },         // Arsenal
+    { id: 1100, name: 'Phil Foden', league: 39 },      // Manchester City
+    { id: 762, name: 'Vinícius Júnior', league: 140 }, // Real Madrid
+    { id: 129718, name: 'J. Bellingham', league: 140 }, // Real Madrid
+    { id: 521, name: 'R. Lewandowski', league: 140 },  // Barcelona
+    { id: 386828, name: 'L. Yamal', league: 140 },     // Barcelona
+    { id: 133609, name: 'Pedri', league: 140 },        // Barcelona
+    { id: 181812, name: 'J. Musiala', league: 78 },    // Bayern München
+    { id: 203224, name: 'F. Wirtz', league: 78 },      // Bayer Leverkusen
+    { id: 186, name: 'S. Heung-Min', league: 39 },     // Tottenham
+    { id: 290, name: 'V. van Dijk', league: 39 },      // Liverpool
+    { id: 290, name: 'M. Ødegaard', league: 39 },      // Arsenal (要確認)
+    { id: 32862, name: 'T. Kubo', league: 140 },       // 久保建英 - Real Sociedad
+    { id: 106835, name: 'K. Mitoma', league: 39 },     // 三苫薫 - Brighton
+    { id: 2597, name: 'T. Tomiyasu', league: 39 },     // 富安健洋 - Arsenal
+    { id: 8500, name: 'W. Endo', league: 39 },         // 遠藤航 - Liverpool
+    { id: 2598, name: 'R. Doan', league: 78 }          // 堂安律 - Freiburg
 ];
 
 async function fetchPlayer2025(playerId, leagueId) {
     try {
         const response = await fetch(
-            `https://v3.football.api-sports.io/players?id=${playerId}&league=${leagueId}&season=2025`,
+            `https://v3.football.api-sports.io/players?id=${playerId}&league=${leagueId}&season=2024`,
             {
                 headers: {
                     'x-apisports-key': API_KEY
