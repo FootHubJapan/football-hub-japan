@@ -3,23 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FotMobスタイル データベース - Football Hub Japan</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>サッカーデータベース - Football Hub Japan</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --background: #0d1117;
-            --foreground: #f0f6fc;
-            --card: #161b22;
-            --card-hover: #1c2128;
+            --background: #0a0a0a;
+            --foreground: #fafafa;
+            --card: #171717;
+            --card-hover: #1f1f1f;
             --primary: #22c55e;
             --primary-hover: #16a34a;
-            --secondary: #21262d;
-            --muted: #8b949e;
-            --border: #30363d;
-            --border-light: rgba(48, 54, 61, 0.5);
+            --secondary: #262626;
+            --muted: #a1a1aa;
+            --border: #27272a;
         }
 
         * {
@@ -33,13 +31,14 @@
             background: var(--background);
             color: var(--foreground);
             line-height: 1.6;
+            min-height: 100vh;
         }
 
+        /* Header */
         .header {
-            background: rgba(13, 17, 23, 0.8);
+            background: rgba(10, 10, 10, 0.8);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border);
             padding: 0 2rem;
             display: flex;
             justify-content: space-between;
@@ -51,7 +50,7 @@
         }
 
         .logo {
-            color: var(--primary);
+            color: var(--foreground);
             font-size: 1.25rem;
             font-weight: 700;
             display: flex;
@@ -60,8 +59,7 @@
             text-decoration: none;
         }
 
-        .logo::before {
-            content: '⚡';
+        .logo-icon {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -72,722 +70,954 @@
             font-size: 1rem;
         }
 
-        .nav-buttons {
+        .nav-links {
             display: flex;
-            gap: 0.5rem;
+            gap: 2rem;
         }
 
-        .nav-btn {
-            background: var(--secondary);
+        .nav-link {
             color: var(--muted);
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            cursor: pointer;
+            text-decoration: none;
             font-size: 0.875rem;
             font-weight: 500;
-            transition: all 0.2s;
+            transition: color 0.2s;
         }
 
-        .nav-btn:hover {
+        .nav-link:hover, .nav-link.active {
+            color: var(--foreground);
+        }
+
+        .nav-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .login-btn {
+            color: var(--foreground);
+            background: transparent;
+            border: none;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .cta-btn {
             background: var(--primary);
-            color: var(--background);
+            color: #000;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .cta-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: radial-gradient(ellipse at top, rgba(34, 197, 94, 0.1), transparent 50%);
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--primary);
+            padding: 0.375rem 1rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero p {
+            color: var(--muted);
+            font-size: 1.125rem;
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+        }
+
+        /* Search Box */
+        .search-container {
+            max-width: 700px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .search-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 1.25rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--foreground);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
             border-color: var(--primary);
         }
 
-        .main-container {
-            max-width: 1600px;
+        .search-input::placeholder {
+            color: var(--muted);
+        }
+
+        .search-btn {
+            background: var(--primary);
+            color: #000;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
         }
 
-        .page-title {
-            color: var(--primary);
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            text-align: center;
-            font-weight: 700;
-        }
-
-        .page-subtitle {
-            color: var(--muted);
-            font-size: 1rem;
+        /* Tabs */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 0;
             margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        /* FotMob-style layout */
-        .fotmob-layout {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 1.5rem;
-            height: calc(100vh - 200px);
-        }
-
-        .sidebar {
-            background: var(--card);
-            border: 1px solid var(--border);
+            background: var(--secondary);
             border-radius: 12px;
-            padding: 1.5rem;
-            overflow-y: auto;
+            padding: 0.25rem;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        .main-content {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            overflow-y: auto;
-        }
-
-        .filter-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .filter-title {
-            color: var(--primary);
-            font-size: 1rem;
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-
-        .filter-group {
-            margin-bottom: 1rem;
-        }
-
-        .filter-label {
+        .tab {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
             color: var(--muted);
-            font-size: 0.8125rem;
-            margin-bottom: 0.5rem;
-            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--card);
+            color: var(--foreground);
+        }
+
+        .tab:hover:not(.active) {
+            color: var(--foreground);
+        }
+
+        /* Filter Input */
+        .filter-container {
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .filter-input-wrapper {
+            position: relative;
         }
 
         .filter-input {
             width: 100%;
-            padding: 0.75rem;
-            background: var(--secondary);
+            padding: 0.875rem 1rem 0.875rem 3rem;
+            background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 10px;
             color: var(--foreground);
             font-size: 0.875rem;
+            outline: none;
         }
 
         .filter-input:focus {
-            outline: none;
             border-color: var(--primary);
         }
 
-        .filter-select {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--secondary);
+        .filter-input::placeholder {
+            color: var(--muted);
+        }
+
+        .filter-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* League Card */
+        .league-card {
+            background: var(--card);
             border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .league-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .league-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .league-flag {
+            width: 48px;
+            height: 48px;
             border-radius: 8px;
-            color: var(--foreground);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            background: var(--secondary);
+        }
+
+        .league-info h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .league-info p {
+            color: var(--muted);
             font-size: 0.875rem;
         }
 
-        .filter-select:focus {
-            outline: none;
-            border-color: var(--primary);
+        .league-stats {
+            display: flex;
+            gap: 1.5rem;
+            color: var(--muted);
+            font-size: 0.875rem;
         }
 
-        .players-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
+        .league-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .player-card {
-            background: var(--secondary);
-            border-radius: 12px;
-            padding: 1.25rem;
-            transition: all 0.3s;
-            cursor: pointer;
+        /* Team Card */
+        .team-card {
+            background: var(--card);
             border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .team-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .team-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .team-logo {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: var(--secondary);
+            overflow: hidden;
+        }
+
+        .team-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .team-info h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .team-info p {
+            color: var(--muted);
+            font-size: 0.875rem;
+        }
+
+        .team-stats {
+            display: flex;
+            gap: 1.5rem;
+            color: var(--muted);
+            font-size: 0.875rem;
+        }
+
+        /* Player Card */
+        .player-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
         .player-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(34, 197, 94, 0.5);
-            background: var(--card-hover);
+            border-color: var(--primary);
+            transform: translateY(-2px);
         }
 
         .player-header {
             display: flex;
             align-items: center;
+            gap: 1rem;
             margin-bottom: 1rem;
         }
 
         .player-avatar {
             width: 56px;
             height: 56px;
-            background: var(--primary);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.25rem;
-            font-weight: bold;
-            color: var(--background);
-            margin-right: 1rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary), #059669);
+            color: #000;
+            overflow: hidden;
         }
 
-        .player-info {
-            flex: 1;
+        .player-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        .player-name {
-            color: var(--foreground);
-            font-size: 1.0625rem;
+        .player-info h3 {
+            font-size: 1.125rem;
             font-weight: 600;
             margin-bottom: 0.25rem;
         }
 
-        .player-team {
-            color: var(--primary);
+        .player-info p {
+            color: var(--muted);
             font-size: 0.875rem;
         }
 
-        .player-position {
-            color: var(--muted);
-            font-size: 0.75rem;
-        }
-
         .player-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-            margin-top: 1rem;
-        }
-
-        .player-actions {
             display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-            justify-content: center;
-        }
-
-        .action-btn {
-            background: var(--secondary);
-            color: var(--foreground);
-            border: 1px solid var(--border);
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .action-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .plan-btn:hover {
-            background: var(--primary);
-            color: var(--background);
-            border-color: var(--primary);
-        }
-
-        .radar-btn:hover {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-
-        .stat-item {
-            text-align: center;
-            padding: 0.625rem;
-            background: var(--card);
-            border-radius: 8px;
-        }
-
-        .stat-value {
-            color: var(--primary);
-            font-weight: 700;
-            font-size: 1rem;
-        }
-
-        .stat-label {
+            gap: 1.5rem;
             color: var(--muted);
-            font-size: 0.6875rem;
+            font-size: 0.875rem;
         }
 
+        .player-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .player-stat-value {
+            color: var(--foreground);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .player-stat-label {
+            font-size: 0.75rem;
+        }
+
+        /* Position Badge */
+        .position-badge {
+            display: inline-block;
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--muted);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Pagination */
         .pagination {
             display: flex;
             justify-content: center;
             gap: 0.5rem;
-            margin-top: 1.5rem;
+            margin-top: 2rem;
         }
 
         .page-btn {
-            background: var(--secondary);
-            color: var(--foreground);
             padding: 0.5rem 1rem;
+            background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: 8px;
+            color: var(--foreground);
             cursor: pointer;
             transition: all 0.2s;
         }
 
         .page-btn:hover {
-            background: var(--primary);
-            color: var(--background);
             border-color: var(--primary);
         }
 
         .page-btn.active {
             background: var(--primary);
-            color: var(--background);
+            color: #000;
             border-color: var(--primary);
         }
 
-        .loading {
+        /* No Results */
+        .no-results {
             text-align: center;
-            padding: 2rem;
-            color: var(--primary);
-        }
-
-        .error {
-            text-align: center;
-            padding: 2rem;
-            color: #f85149;
-        }
-
-        .stats-overview {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-card {
-            background: var(--card);
-            padding: 1.25rem;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid var(--border);
-        }
-
-        .stat-card-value {
-            color: var(--primary);
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-card-label {
+            padding: 3rem;
             color: var(--muted);
-            font-size: 0.875rem;
         }
 
+        /* Responsive */
         @media (max-width: 768px) {
             .header {
                 padding: 0 1rem;
             }
 
-            .nav-buttons {
+            .nav-links {
                 display: none;
             }
 
-            .fotmob-layout {
-                grid-template-columns: 1fr;
+            .hero h1 {
+                font-size: 2rem;
             }
-            
-            .players-grid {
-                grid-template-columns: 1fr;
+
+            .hero p {
+                font-size: 1rem;
             }
-            
-            .stats-overview {
-                grid-template-columns: repeat(2, 1fr);
+
+            .search-container {
+                flex-direction: column;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
     <header class="header">
-        <a href="/" class="logo">Football Hub Japan</a>
-        <div class="nav-buttons">
-            <button class="nav-btn" onclick="window.location.href='/dashboard.html'">ダッシュボード</button>
-            <button class="nav-btn" onclick="window.location.href='/radar-enhanced.html'">レーダーチャート</button>
-            <button class="nav-btn" onclick="window.location.href='/ranking.html'">ランキング</button>
-            <button class="nav-btn" onclick="window.location.href='/ai-agent-enhanced.html'">AI分析</button>
-            <button class="nav-btn" onclick="window.location.href='/'">ログアウト</button>
+        <a href="/" class="logo">
+            <span class="logo-icon">⚡</span>
+            Football Hub
+        </a>
+        <nav class="nav-links">
+            <a href="/database" class="nav-link active">データベース</a>
+            <a href="/radar" class="nav-link">レーダーチャート</a>
+            <a href="/schedule" class="nav-link">試合分析</a>
+            <a href="/schedule" class="nav-link">スケジュール</a>
+            <a href="/ai-agent" class="nav-link">AI分析</a>
+            <a href="/ranking" class="nav-link">ランキング</a>
+        </nav>
+        <div class="nav-right">
+            <button class="login-btn" onclick="window.location.href='/login'">ログイン</button>
+            <button class="cta-btn" onclick="window.location.href='/login'">無料で始める</button>
         </div>
     </header>
 
-    <div class="main-container">
-        <h1 class="page-title">FotMobスタイル データベース</h1>
-        <p class="page-subtitle">常時表示される選手データベース</p>
-
-        <div class="stats-overview">
-            <div class="stat-card">
-                <div class="stat-card-value" id="totalPlayers">-</div>
-                <div class="stat-card-label">総選手数</div>
+    <section class="hero">
+        <span class="badge">データベース</span>
+        <h1>サッカーデータベース</h1>
+        <p>世界中のリーグ、チーム、選手の詳細なデータを網羅。リアルタイムで更新される統計情報にアクセス。</p>
+        <div class="search-container">
+            <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="globalSearch" class="search-input" placeholder="チーム名、選手名、リーグ名で検索...">
             </div>
-            <div class="stat-card">
-                <div class="stat-card-value" id="totalTeams">-</div>
-                <div class="stat-card-label">総チーム数</div>
+            <button class="search-btn" onclick="performGlobalSearch()">検索</button>
         </div>
-            <div class="stat-card">
-                <div class="stat-card-value" id="totalLeagues">-</div>
-                <div class="stat-card-label">総リーグ数</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-card-value" id="lastUpdate">-</div>
-                <div class="stat-card-label">最終更新</div>
-            </div>
+    </section>
+
+    <main class="main-content">
+        <div class="tabs">
+            <button class="tab active" data-tab="leagues">リーグ</button>
+            <button class="tab" data-tab="teams">チーム</button>
+            <button class="tab" data-tab="players">選手</button>
         </div>
 
-        <div class="fotmob-layout">
-            <div class="sidebar">
-                <div class="filter-section">
-                    <h3 class="filter-title">🔍 フィルター</h3>
-                    
-                    <div class="filter-group">
-                        <label class="filter-label">検索</label>
-                        <input type="text" id="searchInput" class="filter-input" placeholder="選手名、チーム名、国籍...">
+        <!-- Leagues Tab -->
+        <div id="leagues-content" class="tab-content active">
+            <div class="filter-container">
+                <div class="filter-input-wrapper">
+                    <span class="filter-icon">🔍</span>
+                    <input type="text" id="leagueFilter" class="filter-input" placeholder="リーグ名、国名で検索...">
                 </div>
-                
-                    <div class="filter-group">
-                        <label class="filter-label">リーグ</label>
-                        <select id="leagueSelect" class="filter-select">
-                            <option value="">すべてのリーグ</option>
-                    </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label class="filter-label">ポジション</label>
-                        <select id="positionSelect" class="filter-select">
-                        <option value="">すべてのポジション</option>
-                        <option value="Forward">フォワード</option>
-                            <option value="Midfielder">ミッドフィルダー</option>
-                            <option value="Defender">ディフェンダー</option>
-                            <option value="Goalkeeper">ゴールキーパー</option>
-                    </select>
+            </div>
+            <div id="leaguesGrid" class="cards-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>リーグデータを読み込み中...</p>
                 </div>
             </div>
         </div>
 
-            <div class="main-content">
-                <div id="playersContainer" class="players-grid">
-                    <div class="loading">データを読み込み中...</div>
+        <!-- Teams Tab -->
+        <div id="teams-content" class="tab-content">
+            <div class="filter-container">
+                <div class="filter-input-wrapper">
+                    <span class="filter-icon">🔍</span>
+                    <input type="text" id="teamFilter" class="filter-input" placeholder="チーム名、リーグ名で検索...">
+                </div>
+            </div>
+            <div id="teamsGrid" class="cards-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>チームデータを読み込み中...</p>
+                </div>
+            </div>
         </div>
 
-                <div id="pagination" class="pagination"></div>
+        <!-- Players Tab -->
+        <div id="players-content" class="tab-content">
+            <div class="filter-container">
+                <div class="filter-input-wrapper">
+                    <span class="filter-icon">🔍</span>
+                    <input type="text" id="playerFilter" class="filter-input" placeholder="選手名、チーム名、国籍で検索...">
+                </div>
             </div>
+            <div id="playersGrid" class="cards-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>選手データを読み込み中...</p>
+                </div>
+            </div>
+            <div id="playersPagination" class="pagination"></div>
         </div>
-            </div>
+    </main>
 
     <script src="/ai-widget.js"></script>
     <script>
+        // Data
+        let leagues = [];
+        let teams = [];
+        let players = [];
         let currentPage = 1;
-        let currentFilters = {};
-        let totalPlayers = 0;
-        let totalPages = 0;
-        let allPlayers = []; // 全選手データを保持
+        const playersPerPage = 20;
 
-        // Initialize the page
+        // League data with flags
+        const leagueData = [
+            { id: 'j1', name: 'Jリーグ', country: '日本', flag: '🇯🇵', teams: 20, players: 560 },
+            { id: 'pl', name: 'プレミアリーグ', country: 'イングランド', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', teams: 20, players: 520 },
+            { id: 'laliga', name: 'ラ・リーガ', country: 'スペイン', flag: '🇪🇸', teams: 20, players: 500 },
+            { id: 'seriea', name: 'セリエA', country: 'イタリア', flag: '🇮🇹', teams: 20, players: 520 },
+            { id: 'bundesliga', name: 'ブンデスリーガ', country: 'ドイツ', flag: '🇩🇪', teams: 18, players: 480 },
+            { id: 'ligue1', name: 'リーグ・アン', country: 'フランス', flag: '🇫🇷', teams: 18, players: 460 }
+        ];
+
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            initializeData();
-            setupEventListeners();
-            getPlayerFromUrl(); // URLパラメータから選手情報を取得
+            setupTabs();
+            setupFilters();
+            loadData();
         });
 
-        async function initializeData() {
-            try {
-                // Initialize FotMob service
-                const initResponse = await fetch('/api/fotmob/init');
-                const initData = await initResponse.json();
-                console.log('FotMob service initialized:', initData);
-
-                // Load initial data
-                await loadPlayers();
-                await loadStats();
-                await loadLeagues();
-            } catch (error) {
-                console.error('Error initializing data:', error);
-                // Even if initialization fails, try to load fallback data
-                await loadFallbackData();
-            }
-        }
-
-        async function loadFallbackData() {
-            try {
-                console.log('Loading fallback data...');
-                
-                // Load fallback players
-                const playersResponse = await fetch('/api/fotmob/players');
-                const playersData = await playersResponse.json();
-                
-                if (playersData.players && playersData.players.length > 0) {
-                    displayPlayers(playersData.players);
-                    totalPlayers = playersData.total;
-                    totalPages = playersData.totalPages;
-                    updatePagination();
-                }
-
-                // Load fallback stats
-                await loadStats();
-                
-                // Load fallback leagues
-                await loadLeagues();
-                
-                console.log('Fallback data loaded successfully');
-            } catch (error) {
-                console.error('Error loading fallback data:', error);
-                showError('データの読み込みに失敗しました。ページを再読み込みしてください。');
-            }
-        }
-
-        async function loadPlayers() {
-            try {
-                const params = new URLSearchParams({
-                    page: currentPage,
-                    limit: 20,
-                    ...currentFilters
+        // Setup tabs
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(`${tab.dataset.tab}-content`).classList.add('active');
                 });
-
-                const response = await fetch(`/api/fotmob/players?${params}`);
-                const data = await response.json();
-
-                if (data.players) {
-                    displayPlayers(data.players);
-                    totalPlayers = data.total;
-                    totalPages = data.totalPages;
-                    updatePagination();
-            } else {
-                    showError('選手データの取得に失敗しました');
-                }
-            } catch (error) {
-                console.error('Error loading players:', error);
-                showError('選手データの読み込みに失敗しました');
-            }
+            });
         }
 
-        async function loadStats() {
-            try {
-                const [playersResponse, teamsResponse, leaguesResponse] = await Promise.all([
-                    fetch('/api/fotmob/players'),
-                    fetch('/api/fotmob/teams'),
-                    fetch('/api/fotmob/leagues')
-                ]);
-
-                const playersData = await playersResponse.json();
-                const teamsData = await teamsResponse.json();
-                const leaguesData = await leaguesResponse.json();
-
-                document.getElementById('totalPlayers').textContent = playersData.total || 0;
-                document.getElementById('totalTeams').textContent = teamsData.length || 0;
-                document.getElementById('totalLeagues').textContent = leaguesData.length || 0;
-                document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('ja-JP');
-                    } catch (error) {
-                console.error('Error loading stats:', error);
-            }
-        }
-
-        async function loadLeagues() {
-            try {
-                const response = await fetch('/api/fotmob/leagues');
-                const leagues = await response.json();
-
-                const leagueSelect = document.getElementById('leagueSelect');
-                leagueSelect.innerHTML = '<option value="">すべてのリーグ</option>';
-
-                leagues.forEach(league => {
-                    const option = document.createElement('option');
-                    option.value = league.id;
-                    option.textContent = `${league.name} (${league.country})`;
-                    leagueSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error loading leagues:', error);
-            }
-        }
-
-        function displayPlayers(players) {
-            const container = document.getElementById('playersContainer');
-            allPlayers = players; // グローバル変数に保存
+        // Setup filters
+        function setupFilters() {
+            document.getElementById('leagueFilter').addEventListener('input', filterLeagues);
+            document.getElementById('teamFilter').addEventListener('input', filterTeams);
             
-            if (players.length === 0) {
-                container.innerHTML = '<div class="error">選手が見つかりませんでした</div>';
-                                    return;
+            let playerTimeout;
+            document.getElementById('playerFilter').addEventListener('input', (e) => {
+                clearTimeout(playerTimeout);
+                playerTimeout = setTimeout(() => {
+                    currentPage = 1;
+                    loadPlayers(e.target.value);
+                }, 300);
+            });
+
+            document.getElementById('globalSearch').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') performGlobalSearch();
+            });
+        }
+
+        // Load all data
+        async function loadData() {
+            displayLeagues(leagueData);
+            await loadTeams();
+            await loadPlayers();
+        }
+
+        // Display leagues
+        function displayLeagues(data) {
+            const grid = document.getElementById('leaguesGrid');
+            
+            if (data.length === 0) {
+                grid.innerHTML = '<div class="no-results">リーグが見つかりませんでした</div>';
+                return;
             }
 
-            container.innerHTML = players.map(player => `
-                <div class="player-card" onclick="navigateToPlayerDetail(${player.id})" style="cursor: pointer;">
-                    <div class="player-header">
-                        <div class="player-avatar">
-                            ${player.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+            grid.innerHTML = data.map(league => `
+                <div class="league-card" onclick="selectLeague('${league.id}')">
+                    <div class="league-header">
+                        <div class="league-flag">${league.flag}</div>
+                        <div class="league-info">
+                            <h3>${league.name}</h3>
+                            <p>${league.country}</p>
                         </div>
-                                <div class="player-info">
-                            <div class="player-name">${player.name}</div>
-                            <div class="player-team">${player.teamName || 'Unknown Team'}</div>
-                            <div class="player-position">${player.position || 'Unknown Position'}</div>
-                                </div>
-                            </div>
-                    <div class="player-stats">
-                            <div class="stat-item">
-                            <div class="stat-value">${player.nationality || 'N/A'}</div>
-                            <div class="stat-label">国籍</div>
-                            </div>
-                            <div class="stat-item">
-                            <div class="stat-value">${player.shirtNumber || 'N/A'}</div>
-                            <div class="stat-label">背番号</div>
-                            </div>
-                            <div class="stat-item">
-                            <div class="stat-value">${player.dateOfBirth ? new Date(player.dateOfBirth).getFullYear() : 'N/A'}</div>
-                            <div class="stat-label">生年</div>
-                            </div>
-                            </div>
-                    <div class="player-actions">
-                        <button class="action-btn plan-btn" onclick="createPlayerPlan(${player.id})" title="プラン作成">
-                            📋 プラン作成
-                        </button>
-                        <button class="action-btn radar-btn" onclick="viewPlayerRadar(${player.id})" title="レーダーチャート">
-                            📈 レーダー
-                        </button>
-                            </div>
-                            </div>
+                    </div>
+                    <div class="league-stats">
+                        <div class="league-stat">
+                            <span>⚽</span>
+                            <span>${league.teams} チーム</span>
+                        </div>
+                        <div class="league-stat">
+                            <span>👤</span>
+                            <span>${league.players} 選手</span>
+                        </div>
+                    </div>
+                </div>
             `).join('');
         }
 
-        function updatePagination() {
-            const pagination = document.getElementById('pagination');
-            pagination.innerHTML = '';
+        // Filter leagues
+        function filterLeagues() {
+            const query = document.getElementById('leagueFilter').value.toLowerCase();
+            const filtered = leagueData.filter(l => 
+                l.name.toLowerCase().includes(query) || 
+                l.country.toLowerCase().includes(query)
+            );
+            displayLeagues(filtered);
+        }
 
-            if (totalPages <= 1) return;
-
-            // Previous button
-            if (currentPage > 1) {
-                const prevBtn = document.createElement('button');
-                prevBtn.className = 'page-btn';
-                prevBtn.textContent = '前へ';
-                prevBtn.onclick = () => changePage(currentPage - 1);
-                pagination.appendChild(prevBtn);
-            }
-
-            // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-                    const pageBtn = document.createElement('button');
-                    pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
-                    pageBtn.textContent = i;
-                    pageBtn.onclick = () => changePage(i);
-                    pagination.appendChild(pageBtn);
-                } else if (i === currentPage - 3 || i === currentPage + 3) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.textContent = '...';
-                    ellipsis.style.color = '#888888';
-                    ellipsis.style.padding = '0.5rem';
-                    pagination.appendChild(ellipsis);
-                }
-            }
-
-            // Next button
-            if (currentPage < totalPages) {
-                const nextBtn = document.createElement('button');
-                nextBtn.className = 'page-btn';
-                nextBtn.textContent = '次へ';
-                nextBtn.onclick = () => changePage(currentPage + 1);
-                pagination.appendChild(nextBtn);
+        // Load teams
+        async function loadTeams() {
+            try {
+                const response = await fetch('/api/fotmob/teams');
+                const data = await response.json();
+                teams = data.teams || [];
+                displayTeams(teams);
+            } catch (error) {
+                console.error('Error loading teams:', error);
+                document.getElementById('teamsGrid').innerHTML = 
+                    '<div class="no-results">チームデータの読み込みに失敗しました</div>';
             }
         }
 
+        // Display teams
+        function displayTeams(data) {
+            const grid = document.getElementById('teamsGrid');
+            
+            if (!data || data.length === 0) {
+                grid.innerHTML = '<div class="no-results">チームが見つかりませんでした</div>';
+                return;
+            }
+
+            grid.innerHTML = data.slice(0, 30).map(team => `
+                <div class="team-card" onclick="selectTeam(${team.id})">
+                    <div class="team-header">
+                        <div class="team-logo">
+                            ${team.logo ? `<img src="${team.logo}" alt="${team.name}" onerror="this.parentElement.innerHTML='⚽'">` : '⚽'}
+                        </div>
+                        <div class="team-info">
+                            <h3>${team.name}</h3>
+                            <p>${team.league || team.country || 'Unknown'}</p>
+                        </div>
+                    </div>
+                    <div class="team-stats">
+                        <div class="league-stat">
+                            <span>👤</span>
+                            <span>${team.playerCount || 25} 選手</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filter teams
+        function filterTeams() {
+            const query = document.getElementById('teamFilter').value.toLowerCase();
+            const filtered = teams.filter(t => 
+                t.name.toLowerCase().includes(query) || 
+                (t.league && t.league.toLowerCase().includes(query))
+            );
+            displayTeams(filtered);
+        }
+
+        // Load players
+        async function loadPlayers(search = '') {
+            const grid = document.getElementById('playersGrid');
+            grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>選手データを読み込み中...</p></div>';
+
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    limit: playersPerPage,
+                    search: search
+                });
+                
+                const response = await fetch(`/api/fotmob/players?${params}`);
+                const data = await response.json();
+                
+                players = data.players || [];
+                displayPlayers(players);
+                updatePagination(data.totalPages || 1, data.total || 0);
+            } catch (error) {
+                console.error('Error loading players:', error);
+                grid.innerHTML = '<div class="no-results">選手データの読み込みに失敗しました</div>';
+            }
+        }
+
+        // Display players
+        function displayPlayers(data) {
+            const grid = document.getElementById('playersGrid');
+            
+            if (!data || data.length === 0) {
+                grid.innerHTML = '<div class="no-results">選手が見つかりませんでした</div>';
+                return;
+            }
+
+            grid.innerHTML = data.map(player => `
+                <div class="player-card" onclick="selectPlayer(${player.id})">
+                    <div class="player-header">
+                        <div class="player-avatar">
+                            ${player.photo ? 
+                                `<img src="${player.photo}" alt="${player.name}" onerror="this.parentElement.innerHTML='${getInitials(player.name)}'">` : 
+                                getInitials(player.name)}
+                        </div>
+                        <div class="player-info">
+                            <h3>${player.name}</h3>
+                            <p>${player.currentTeam || player.teamName || 'Unknown Team'}</p>
+                            <span class="position-badge">${translatePosition(player.position)}</span>
+                        </div>
+                    </div>
+                    <div class="player-stats">
+                        <div class="player-stat">
+                            <span class="player-stat-value">${getPlayerGoals(player)}</span>
+                            <span class="player-stat-label">ゴール</span>
+                        </div>
+                        <div class="player-stat">
+                            <span class="player-stat-value">${getPlayerAssists(player)}</span>
+                            <span class="player-stat-label">アシスト</span>
+                        </div>
+                        <div class="player-stat">
+                            <span class="player-stat-value">${getPlayerAppearances(player)}</span>
+                            <span class="player-stat-label">出場</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get player initials
+        function getInitials(name) {
+            if (!name) return '?';
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        // Translate position
+        function translatePosition(pos) {
+            if (!pos) return 'Unknown';
+            const positions = {
+                'Goalkeeper': 'GK',
+                'Defender': 'DF',
+                'Midfielder': 'MF',
+                'Attacker': 'FW',
+                'Forward': 'FW',
+                'GK': 'GK',
+                'DF': 'DF',
+                'MF': 'MF',
+                'FW': 'FW'
+            };
+            return positions[pos] || pos;
+        }
+
+        // Get player stats
+        function getPlayerGoals(player) {
+            if (player.stats && player.stats.length > 0) {
+                return player.stats.reduce((sum, s) => sum + (s.goals || 0), 0);
+            }
+            return player.goals || 0;
+        }
+
+        function getPlayerAssists(player) {
+            if (player.stats && player.stats.length > 0) {
+                return player.stats.reduce((sum, s) => sum + (s.assists || 0), 0);
+            }
+            return player.assists || 0;
+        }
+
+        function getPlayerAppearances(player) {
+            if (player.stats && player.stats.length > 0) {
+                return player.stats.reduce((sum, s) => sum + (s.appearances || 0), 0);
+            }
+            return player.appearances || 0;
+        }
+
+        // Update pagination
+        function updatePagination(totalPages, totalPlayers) {
+            const pagination = document.getElementById('playersPagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            
+            if (currentPage > 1) {
+                html += `<button class="page-btn" onclick="changePage(${currentPage - 1})">前へ</button>`;
+            }
+
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+
+            if (currentPage < totalPages) {
+                html += `<button class="page-btn" onclick="changePage(${currentPage + 1})">次へ</button>`;
+            }
+
+            pagination.innerHTML = html;
+        }
+
+        // Change page
         function changePage(page) {
             currentPage = page;
-            loadPlayers();
+            const search = document.getElementById('playerFilter').value;
+            loadPlayers(search);
         }
 
-        function setupEventListeners() {
-            // Search input
-            const searchInput = document.getElementById('searchInput');
-            let searchTimeout;
-            searchInput.addEventListener('input', (e) => {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    currentFilters.search = e.target.value;
-                    currentPage = 1;
-                    loadPlayers();
-                }, 500);
-            });
-
-            // League select
-            const leagueSelect = document.getElementById('leagueSelect');
-            leagueSelect.addEventListener('change', (e) => {
-                currentFilters.league = e.target.value;
-                currentPage = 1;
-                loadPlayers();
-            });
-
-            // Position select
-            const positionSelect = document.getElementById('positionSelect');
-            positionSelect.addEventListener('change', (e) => {
-                currentFilters.position = e.target.value;
-            currentPage = 1;
-                loadPlayers();
-            });
+        // Navigation functions
+        function selectLeague(leagueId) {
+            // Switch to teams tab and filter by league
+            document.querySelector('[data-tab="teams"]').click();
+            // TODO: Filter teams by league
         }
 
-        function showPlayerDetails(playerId) {
-            // プランページで選手の詳細プランを作成
-            const player = allPlayers.find(p => p.id === playerId || p.id === String(playerId));
-            if (player) {
-                const url = `plans.html?player=${playerId}&name=${encodeURIComponent(player.name)}&action=create-plan`;
-                window.open(url, '_blank');
-            }
+        function selectTeam(teamId) {
+            // Navigate to team detail or filter players
+            document.querySelector('[data-tab="players"]').click();
         }
 
-        function navigateToPlayerDetail(playerId) {
-            // 選手詳細ページに遷移
+        function selectPlayer(playerId) {
             window.location.href = `/player/${playerId}`;
         }
 
-        // プランページとの連携機能
-        function createPlayerPlan(playerId) {
-            const player = players.find(p => p.id === playerId);
-            if (player) {
-                const url = `plans.html?player=${playerId}&name=${encodeURIComponent(player.name)}&action=create-plan`;
-                window.open(url, '_blank');
-            }
-        }
+        // Global search
+        function performGlobalSearch() {
+            const query = document.getElementById('globalSearch').value.trim();
+            if (!query) return;
 
-        function viewPlayerRadar(playerId) {
-            const player = players.find(p => p.id === playerId);
-            if (player) {
-                const url = `radar.html?player=${playerId}&name=${encodeURIComponent(player.name)}`;
-                window.open(url, '_blank');
-            }
-        }
-
-        // URLパラメータから選手情報を取得
-        function getPlayerFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const playerId = urlParams.get('player');
-            const playerName = urlParams.get('name');
-            
-            if (playerId && playerName) {
-                // 該当選手を検索して表示
-                currentFilters.search = playerName;
-                loadPlayers();
-                
-                // 選手が見つかった場合、詳細表示
-                setTimeout(() => {
-                    const player = allPlayers.find(p => p.id == playerId);
-                    if (player) {
-                        showPlayerDetails(playerId);
-                    }
-                }, 1000);
-            }
-        }
-
-        function showError(message) {
-            const container = document.getElementById('playersContainer');
-            container.innerHTML = `<div class="error">${message}</div>`;
+            // Search in players tab
+            document.querySelector('[data-tab="players"]').click();
+            document.getElementById('playerFilter').value = query;
+            currentPage = 1;
+            loadPlayers(query);
         }
     </script>
 </body>
-</html> 
+</html>
