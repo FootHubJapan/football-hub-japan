@@ -935,21 +935,36 @@
 
         // Get player stats
         function getPlayerGoals(player) {
-            if (player.stats && player.stats.length > 0) {
+            // stats がオブジェクトの場合
+            if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
+                return player.stats.goals || 0;
+            }
+            // stats が配列の場合
+            if (player.stats && Array.isArray(player.stats) && player.stats.length > 0) {
                 return player.stats.reduce((sum, s) => sum + (s.goals || 0), 0);
             }
             return player.goals || 0;
         }
 
         function getPlayerAssists(player) {
-            if (player.stats && player.stats.length > 0) {
+            // stats がオブジェクトの場合
+            if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
+                return player.stats.assists || 0;
+            }
+            // stats が配列の場合
+            if (player.stats && Array.isArray(player.stats) && player.stats.length > 0) {
                 return player.stats.reduce((sum, s) => sum + (s.assists || 0), 0);
             }
             return player.assists || 0;
         }
 
         function getPlayerAppearances(player) {
-            if (player.stats && player.stats.length > 0) {
+            // stats がオブジェクトの場合
+            if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
+                return player.stats.appearances || 0;
+            }
+            // stats が配列の場合
+            if (player.stats && Array.isArray(player.stats) && player.stats.length > 0) {
                 return player.stats.reduce((sum, s) => sum + (s.appearances || 0), 0);
             }
             return player.appearances || 0;
