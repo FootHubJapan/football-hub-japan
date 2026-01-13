@@ -1981,6 +1981,7 @@
             if (competitions.length === 0 && player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
                 // seasonプロパティで判定（player.seasonを優先チェック）
                 const statsSeason = player.season || player.stats.season;
+                console.log('📊 statsSeason (from player.season or player.stats.season):', statsSeason);
                 const appearances = player.stats.appearances || player.stats.lineups || player.stats.matches || 0;
                 // player.leagueも含めてリーグ名を取得
                 const leagueName = player.stats.leagueName || player.stats.league || player.league || '';
