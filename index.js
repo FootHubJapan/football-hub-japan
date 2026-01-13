@@ -614,6 +614,10 @@ app.get('/player-detail', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'player-detail.html'));
 });
 
+app.get('/player/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'player-detail.html'));
+});
+
 // Firebase configuration endpoint
 app.get('/api/firebase-config', (req, res) => {
     // Check if Firebase is configured in environment variables

@@ -639,6 +639,12 @@
     <script>
         // URLパラメータから選手IDを取得
         function getPlayerIdFromUrl() {
+            // /player/:id 形式をチェック
+            const pathMatch = window.location.pathname.match(/\/player\/(\d+)/);
+            if (pathMatch) {
+                return pathMatch[1];
+            }
+            // ?id=xxx 形式をチェック
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('id');
         }
