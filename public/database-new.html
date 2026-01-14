@@ -792,11 +792,14 @@
         }
 
         // Load teams
-        async function loadTeams() {
+        async function loadTeams(searchQuery = '') {
             try {
-                const response = await fetch('/api/fotmob/teams');
+                const url = searchQuery 
+                    ? `/api/fotmob/teams?query=${encodeURIComponent(searchQuery)}`
+                    : '/api/fotmob/teams';
+                const response = await fetch(url);
                 const data = await response.json();
-                teams = data.teams || [];
+                teams = data.teams || data || [];
                 displayTeams(teams);
             } catch (error) {
                 console.error('Error loading teams:', error);
@@ -814,7 +817,7 @@
                 return;
             }
 
-            grid.innerHTML = data.slice(0, 30).map(team => `
+            grid.innerHTML = data.slice(0, 100).map(team => `
                 <div class="team-card" onclick="selectTeam(${team.id})">
                     <div class="team-header">
                         <div class="team-logo">
@@ -822,13 +825,13 @@
                         </div>
                         <div class="team-info">
                             <h3>${team.name}</h3>
-                            <p>${team.league || team.country || 'Unknown'}</p>
+                            <p>${team.leagueName || team.league || team.country || 'Unknown'}</p>
                         </div>
                     </div>
                     <div class="team-stats">
                         <div class="league-stat">
-                            <span>👤</span>
-                            <span>${team.playerCount || 25} 選手</span>
+                            <span>🏟️</span>
+                            <span>${team.venue || team.venueCity || 'Unknown'}</span>
                         </div>
                     </div>
                 </div>
@@ -837,12 +840,14 @@
 
         // Filter teams
         function filterTeams() {
-            const query = document.getElementById('teamFilter').value.toLowerCase();
-            const filtered = teams.filter(t => 
-                t.name.toLowerCase().includes(query) || 
-                (t.league && t.league.toLowerCase().includes(query))
-            );
-            displayTeams(filtered);
+            const query = document.getElementById('teamFilter').value.trim();
+            if (query) {
+                // APIで検索
+                loadTeams(query);
+            } else {
+                // クエリがない場合は全チームを表示
+                loadTeams();
+            }
         }
 
         // Load players

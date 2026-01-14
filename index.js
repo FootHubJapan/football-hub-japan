@@ -9626,11 +9626,27 @@ app.get('/api/integrated/players', async (req, res) => {
                     player.position
                 ].filter(Boolean);
                 
-                // 通常の検索
-                let matches = searchFields.some(field => 
-                    field && field.toLowerCase().includes(searchQuery) ||
-                    field && field.toLowerCase().includes(normalizedQuery)
-                );
+                // 通常の検索（複数語対応）
+                // 検索クエリを単語に分割
+                const queryWords = searchQuery.split(' ').filter(w => w.length > 0);
+                const normalizedWords = normalizedQuery.split(' ').filter(w => w.length > 0);
+                
+                // すべての検索フィールドを結合してテキストを作成
+                const allFieldsText = searchFields.join(' ').toLowerCase();
+                
+                // すべての単語が含まれているかチェック
+                let matches = false;
+                if (queryWords.length > 1) {
+                    // 複数語の場合は、すべての単語が含まれている必要がある
+                    matches = queryWords.every(word => allFieldsText.includes(word)) ||
+                             normalizedWords.every(word => allFieldsText.includes(word));
+                } else {
+                    // 単一語の場合は、従来通り
+                    matches = searchFields.some(field => 
+                        field && field.toLowerCase().includes(searchQuery) ||
+                        field && field.toLowerCase().includes(normalizedQuery)
+                    );
+                }
                 
                 // 特殊ケース: CarrerasとHuijsenの検索強化（最優先）
                 if (!matches) {
@@ -9650,6 +9666,32 @@ app.get('/api/integrated/players', async (req, res) => {
             });
             
             console.log(`🔍 検索結果: ${beforeFilterCount}名 → ${players.length}名 (クエリ: "${query}")`);
+            
+            // 検索結果をソート（主要リーグの選手を優先）
+            if (players.length > 0) {
+                const majorLeagues = [39, 140, 135, 78, 61]; // Premier League, La Liga, Serie A, Bundesliga, Ligue 1
+                players.sort((a, b) => {
+                    // 主要リーグの選手を優先
+                    const aIsMajor = majorLeagues.includes(a.leagueId);
+                    const bIsMajor = majorLeagues.includes(b.leagueId);
+                    if (aIsMajor && !bIsMajor) return -1;
+                    if (!aIsMajor && bIsMajor) return 1;
+                    
+                    // fullNameに検索クエリが含まれている選手を優先
+                    const aFullNameMatch = a.fullName && a.fullName.toLowerCase().includes(searchQuery.toLowerCase());
+                    const bFullNameMatch = b.fullName && b.fullName.toLowerCase().includes(searchQuery.toLowerCase());
+                    if (aFullNameMatch && !bFullNameMatch) return -1;
+                    if (!aFullNameMatch && bFullNameMatch) return 1;
+                    
+                    // nameに検索クエリが含まれている選手を優先
+                    const aNameMatch = a.name && a.name.toLowerCase().includes(searchQuery.toLowerCase());
+                    const bNameMatch = b.name && b.name.toLowerCase().includes(searchQuery.toLowerCase());
+                    if (aNameMatch && !bNameMatch) return -1;
+                    if (!aNameMatch && bNameMatch) return 1;
+                    
+                    return 0;
+                });
+            }
             
             // デバッグ: CarrerasとHuijsenが検索結果に含まれているか確認
             if (searchQuery.includes('carreras') || searchQuery.includes('careras')) {
@@ -10440,11 +10482,50 @@ app.get('/api/fotmob/players', async (req, res) => {
 
 app.get('/api/fotmob/teams', async (req, res) => {
     try {
-        const fallbackTeams = generateFallbackTeams();
-        res.json(fallbackTeams);
+        const { query, league } = req.query;
+        const fs = require('fs');
+        const teamsFile = path.join(__dirname, 'data', 'teams.json');
+        
+        let teams = [];
+        if (fs.existsSync(teamsFile)) {
+            try {
+                const data = await fs.promises.readFile(teamsFile, 'utf8');
+                teams = JSON.parse(data);
+                console.log(`✅ ${teams.length}チームを読み込みました`);
+            } catch (readError) {
+                console.error('❌ teams.json読み込みエラー:', readError.message);
+            }
+        }
+        
+        // 検索クエリがある場合はフィルタリング
+        if (query) {
+            const searchQuery = query.toLowerCase().trim();
+            teams = teams.filter(team => {
+                const searchFields = [
+                    team.name,
+                    team.leagueName,
+                    team.country,
+                    team.venue
+                ].filter(Boolean);
+                return searchFields.some(field => field.toLowerCase().includes(searchQuery));
+            });
+        }
+        
+        // リーグでフィルタリング
+        if (league) {
+            teams = teams.filter(team => team.leagueId === parseInt(league) || team.leagueName?.toLowerCase().includes(league.toLowerCase()));
+        }
+        
+        // レスポンス形式を統一
+        res.json({
+            teams: teams,
+            total: teams.length
+        });
     } catch (error) {
         console.error('Teams API error:', error);
-        res.status(500).json({ error: 'チームデータの取得に失敗しました' });
+        // エラー時はフォールバックデータを返す
+        const fallbackTeams = generateFallbackTeams();
+        res.json(fallbackTeams);
     }
 });
 
