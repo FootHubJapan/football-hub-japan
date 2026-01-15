@@ -246,6 +246,691 @@
             color: var(--primary);
         }
 
+        /* 新デザイン用スタイル */
+        .modern-match-detail {
+            background: var(--card);
+            color: var(--foreground);
+        }
+        
+        /* スコアボードヘッダー */
+        .scoreboard-header {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .scoreboard-live-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(244, 67, 54, 0.15);
+            color: #f44336;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #f44336;
+            border-radius: 50%;
+        }
+        
+        .scoreboard-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+        
+        @media (min-width: 768px) {
+            .scoreboard-content {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+        }
+        
+        .scoreboard-team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+            text-align: center;
+        }
+        
+        .team-logo-container {
+            width: 96px;
+            height: 96px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .team-logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .team-logo-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+        
+        .team-name-large {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0;
+        }
+        
+        .team-label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            font-weight: 500;
+            margin: 0;
+        }
+        
+        .scoreboard-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .matchday-label {
+            font-size: 0.875rem;
+            font-weight: bold;
+            color: var(--primary);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin: 0;
+        }
+        
+        .score-display-large {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        
+        .score-number {
+            font-size: 3.75rem;
+            font-weight: bold;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .score-separator-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .score-separator-large {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--muted);
+        }
+        
+        .match-minute {
+            margin-top: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        .venue-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--muted);
+            margin-top: 0.5rem;
+        }
+        
+        .material-icon {
+            font-size: 1rem;
+        }
+        
+        /* タブナビゲーション（新デザイン） */
+        .tab-navigation-modern {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .tab-button-modern {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 3px solid transparent;
+            color: var(--muted);
+            padding-bottom: 0.75rem;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab-button-modern:hover {
+            color: var(--foreground);
+        }
+        
+        .tab-button-modern.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+        }
+        
+        .tab-label {
+            font-size: 0.875rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0;
+        }
+        
+        /* タブコンテンツ（新デザイン） */
+        .tab-content-modern {
+            min-height: 400px;
+        }
+        
+        .tab-pane-modern {
+            display: none;
+        }
+        
+        .tab-pane-modern.active {
+            display: block;
+        }
+        
+        /* ラインアップコンテンツグリッド */
+        .lineup-content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        
+        @media (min-width: 1024px) {
+            .lineup-content-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+        
+        /* タクティカルピッチセクション */
+        .tactical-pitch-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .tactical-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 0.5rem;
+        }
+        
+        .tactical-title {
+            font-size: 1.125rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0;
+        }
+        
+        .formation-badge {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+        }
+        
+        /* ピッチコンテナ */
+        .pitch-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            background: repeating-linear-gradient(
+                to bottom,
+                #1a2e2f 0%,
+                #1a2e2f 10%,
+                #162829 10%,
+                #162829 20%
+            );
+            border-radius: 0.75rem;
+            overflow: hidden;
+            border: 4px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        @media (min-width: 768px) {
+            .pitch-container {
+                aspect-ratio: 4 / 3;
+            }
+        }
+        
+        .pitch-pattern {
+            background-image: repeating-linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.03) 0px,
+                rgba(255, 255, 255, 0.03) 1px,
+                transparent 1px,
+                transparent 10%
+            );
+        }
+        
+        /* ピッチの線 */
+        .pitch-lines {
+            position: absolute;
+            inset: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.125rem;
+        }
+        
+        .pitch-center-line {
+            position: absolute;
+            top: 1rem;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .pitch-center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .pitch-goal-area-top {
+            position: absolute;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 192px;
+            height: 64px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-bottom: none;
+        }
+        
+        .pitch-goal-area-bottom {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 192px;
+            height: 64px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top: none;
+        }
+        
+        /* プレイヤーマーカー（新デザイン） */
+        .player-marker-modern {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .player-marker-modern:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            z-index: 20;
+        }
+        
+        .player-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.875rem;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .player-circle.home {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .player-circle.away {
+            background: white;
+            color: var(--background);
+        }
+        
+        .player-name-label {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 0.25rem;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            white-space: nowrap;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.125rem;
+        }
+        
+        /* スタメンリスト */
+        .lineup-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .xi-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+        
+        .xi-card-header {
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .xi-card-header.home-header {
+            background: rgba(34, 197, 94, 0.1);
+            border-bottom-color: rgba(34, 197, 94, 0.2);
+        }
+        
+        .xi-card-header.away-header {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .xi-team-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .xi-team-logo {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+        
+        .xi-team-name {
+            font-size: 0.875rem;
+            font-weight: bold;
+            letter-spacing: 0.05em;
+            margin: 0;
+        }
+        
+        .xi-badge {
+            font-size: 10px;
+            font-weight: bold;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            text-transform: uppercase;
+        }
+        
+        .xi-badge.home-badge {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .xi-badge.away-badge {
+            background: var(--muted);
+            color: white;
+        }
+        
+        .xi-player-list {
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .xi-player-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+        
+        .xi-player-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .xi-player-row.captain {
+            border-left: 2px solid var(--primary);
+        }
+        
+        .xi-player-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .xi-player-number {
+            width: 24px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--muted);
+            text-align: center;
+        }
+        
+        .xi-player-number.captain {
+            color: var(--primary);
+        }
+        
+        .xi-player-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .xi-player-name.captain {
+            font-weight: bold;
+        }
+        
+        .xi-player-position {
+            font-size: 10px;
+            color: var(--primary);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.125rem;
+            text-transform: uppercase;
+        }
+        
+        .xi-player-position.other {
+            color: var(--muted);
+            border-color: rgba(139, 148, 158, 0.3);
+        }
+        
+        .xi-player-icon {
+            font-size: 1.125rem;
+            color: var(--muted);
+        }
+        
+        .xi-player-icon.goal {
+            color: #ff6b4a;
+        }
+        
+        .xi-player-icon.card {
+            color: #ffc107;
+        }
+        
+        .xi-player-icon.captain {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--muted);
+        }
+        
+        /* サブスティテュート */
+        .substitutes-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .subs-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            border-radius: 0.75rem;
+        }
+        
+        .subs-title {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 0.75rem 0;
+        }
+        
+        .subs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .subs-item {
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .subs-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+        }
+        
+        .subs-dot.home {
+            background: var(--primary);
+        }
+        
+        .subs-dot.away {
+            background: var(--muted);
+        }
+        
+        /* マッチ情報サイドバー */
+        .match-info-sidebar {
+            background: var(--background);
+            color: white;
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+        }
+        
+        .sidebar-title {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin: 0 0 1rem 0;
+        }
+        
+        .highlights-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .highlight-item {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .highlight-minute {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--primary);
+            width: 32px;
+            flex-shrink: 0;
+        }
+        
+        .highlight-content {
+            flex: 1;
+        }
+        
+        .highlight-title {
+            font-size: 0.875rem;
+            font-weight: bold;
+            margin: 0 0 0.25rem 0;
+        }
+        
+        .highlight-detail {
+            font-size: 11px;
+            color: var(--muted);
+            margin: 0;
+        }
+        
+        .watch-live-button {
+            width: 100%;
+            margin-top: 1.5rem;
+            padding: 0.5rem;
+            background: var(--primary);
+            color: var(--background);
+            font-weight: bold;
+            font-size: 0.875rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .watch-live-button:hover {
+            background: var(--primary-hover);
+        }
+        
         .match-detail-header {
             text-align: center;
             margin-bottom: 30px;
@@ -3246,48 +3931,157 @@
                 <div class="loading">試合データを読み込み中...</div>
             </div>
 
-    <!-- 試合詳細モーダル（拡張版） -->
+    <!-- 試合詳細モーダル（新デザイン） -->
     <div id="matchDetailsModal" class="modal">
-        <div class="modal-content large-modal">
+        <div class="modal-content large-modal modern-match-detail">
             <span class="close">&times;</span>
-            <div class="match-detail-header">
-                <h2 id="modalTitle">試合詳細</h2>
+            
+            <!-- スコアボードヘッダー -->
+            <div class="scoreboard-header" id="scoreboardHeader">
+                <div class="scoreboard-live-badge" id="liveBadge" style="display: none;">
+                    <span class="live-dot"></span>
+                    LIVE
+                </div>
+                <div class="scoreboard-content">
+                    <!-- ホームチーム -->
+                    <div class="scoreboard-team home-team">
+                        <div class="team-logo-container">
+                            <img id="homeTeamLogo" class="team-logo-img" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="team-logo-fallback" style="display: none;">🏟️</div>
+                        </div>
+                        <div class="team-info">
+                            <h2 id="homeTeamName" class="team-name-large">-</h2>
+                            <p class="team-label">HOME</p>
+                        </div>
+                    </div>
+                    
+                    <!-- スコア & ステータス -->
+                    <div class="scoreboard-center">
+                        <p class="matchday-label" id="matchdayLabel">Matchday</p>
+                        <div class="score-display-large">
+                            <span id="homeScoreLarge" class="score-number">-</span>
+                            <div class="score-separator-group">
+                                <span class="score-separator-large">:</span>
+                                <div id="matchMinute" class="match-minute" style="display: none;">0'</div>
+                            </div>
+                            <span id="awayScoreLarge" class="score-number">-</span>
+                        </div>
+                        <div class="venue-info">
+                            <span class="material-icon">📍</span>
+                            <span id="venueName">-</span>
+                        </div>
+                    </div>
+                    
+                    <!-- アウェイチーム -->
+                    <div class="scoreboard-team away-team">
+                        <div class="team-logo-container">
+                            <img id="awayTeamLogo" class="team-logo-img" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="team-logo-fallback" style="display: none;">🏟️</div>
+                        </div>
+                        <div class="team-info">
+                            <h2 id="awayTeamName" class="team-name-large">-</h2>
+                            <p class="team-label">AWAY</p>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- タブナビゲーション -->
-            <div class="tab-navigation">
-                <button class="tab-button active" data-tab="overview">基本情報</button>
-                <button class="tab-button" data-tab="stats">試合統計</button>
-                <button class="tab-button" data-tab="events">試合イベント</button>
-                <button class="tab-button" data-tab="lineup">ラインアップ</button>
+            <div class="tab-navigation-modern">
+                <button class="tab-button-modern active" data-tab="lineup">
+                    <p class="tab-label">Lineup</p>
+                </button>
+                <button class="tab-button-modern" data-tab="stats">
+                    <p class="tab-label">Stats</p>
+                </button>
+                <button class="tab-button-modern" data-tab="events">
+                    <p class="tab-label">Timeline</p>
+                </button>
+                <button class="tab-button-modern" data-tab="overview">
+                    <p class="tab-label">Info</p>
+                </button>
             </div>
             
             <!-- タブコンテンツ -->
-            <div class="tab-content">
-                <!-- 基本情報タブ -->
-                <div id="overview" class="tab-pane active">
-                    <div class="match-detail-teams">
-                        <div class="team">
-                            <div class="team-logo">🏟️</div>
-                            <div class="team-name" id="homeTeamName">-</div>
+            <div class="tab-content-modern">
+                <!-- ラインアップタブ（デフォルト） -->
+                <div id="lineup" class="tab-pane-modern active">
+                    <div class="lineup-content-grid">
+                        <!-- タクティカルピッチ -->
+                        <div class="tactical-pitch-section">
+                            <div class="tactical-header">
+                                <h3 class="tactical-title">
+                                    <span class="material-icon">⚙️</span>
+                                    Tactical Overview
+                                </h3>
+                                <div class="formation-badge" id="formationBadge">4-4-2 vs 4-3-3</div>
+                            </div>
+                            <div class="pitch-container" id="pitchContainer">
+                                <!-- ピッチとプレイヤーがここに動的に挿入される -->
+                            </div>
                         </div>
-                        <div class="match-detail-score" id="modalScore">-</div>
-                        <div class="team">
-                            <div class="team-logo">🏟️</div>
-                            <div class="team-name" id="awayTeamName">-</div>
+                        
+                        <!-- スタメンリスト & サイドバー -->
+                        <div class="lineup-sidebar">
+                            <!-- ホームチーム XI -->
+                            <div class="xi-card home-xi">
+                                <div class="xi-card-header home-header">
+                                    <div class="xi-team-info">
+                                        <img id="homeTeamLogoSmall" class="xi-team-logo" src="" alt="" onerror="this.style.display='none';">
+                                        <h4 id="homeTeamNameSmall" class="xi-team-name">HOME TEAM</h4>
+                                    </div>
+                                    <span class="xi-badge home-badge">STARTING XI</span>
+                                </div>
+                                <div class="xi-player-list" id="homeStartingXI">
+                                    <!-- プレイヤーがここに動的に挿入される -->
+                                </div>
+                            </div>
+                            
+                            <!-- アウェイチーム XI -->
+                            <div class="xi-card away-xi">
+                                <div class="xi-card-header away-header">
+                                    <div class="xi-team-info">
+                                        <img id="awayTeamLogoSmall" class="xi-team-logo" src="" alt="" onerror="this.style.display='none';">
+                                        <h4 id="awayTeamNameSmall" class="xi-team-name">AWAY TEAM</h4>
+                                    </div>
+                                    <span class="xi-badge away-badge">STARTING XI</span>
+                                </div>
+                                <div class="xi-player-list" id="awayStartingXI">
+                                    <!-- プレイヤーがここに動的に挿入される -->
+                                </div>
+                            </div>
+                            
+                            <!-- サブスティテュート -->
+                            <div class="substitutes-grid">
+                                <div class="subs-card home-subs">
+                                    <h5 class="subs-title">Home Subs</h5>
+                                    <ul class="subs-list" id="homeSubstitutes">
+                                        <!-- サブがここに動的に挿入される -->
+                                    </ul>
+                                </div>
+                                <div class="subs-card away-subs">
+                                    <h5 class="subs-title">Away Subs</h5>
+                                    <ul class="subs-list" id="awaySubstitutes">
+                                        <!-- サブがここに動的に挿入される -->
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- マッチ情報サイドバー -->
+                            <div class="match-info-sidebar" id="matchInfoSidebar">
+                                <h5 class="sidebar-title">Match Highlights</h5>
+                                <div class="highlights-list" id="highlightsList">
+                                    <!-- ハイライトがここに動的に挿入される -->
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="match-detail-info" id="basicInfo">
-                        <!-- 基本情報がここに挿入される -->
                     </div>
                 </div>
                 
                 <!-- 試合統計タブ -->
-                <div id="stats" class="tab-pane">
+                <div id="stats" class="tab-pane-modern">
                     <div class="stats-scroll-container">
-                        <!-- 詳細統計 -->
                         <div class="stats-categories">
-                            <!-- API-Football詳細統計（ポゼッションを含む） -->
                             <div class="stats-category">
                                 <h4 class="category-title">詳細統計</h4>
                                 <div id="detailedStats" class="category-stats">
@@ -3295,8 +4089,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 過去の対戦成績 -->
                         <div class="h2h-section">
                             <h3 class="section-title">過去の対戦成績</h3>
                             <div id="h2hStats" class="h2h-container">
@@ -3307,16 +4099,16 @@
                 </div>
                 
                 <!-- 試合イベントタブ -->
-                <div id="events" class="tab-pane">
+                <div id="events" class="tab-pane-modern">
                     <div class="events-container" id="eventsContainer">
                         <!-- イベントデータがここに挿入される -->
                     </div>
                 </div>
                 
-                <!-- ラインアップタブ -->
-                <div id="lineup" class="tab-pane">
-                    <div class="lineup-container" id="lineupContainer">
-                        <!-- ラインアップデータがここに挿入される -->
+                <!-- 基本情報タブ -->
+                <div id="overview" class="tab-pane-modern">
+                    <div class="match-detail-info" id="basicInfo">
+                        <!-- 基本情報がここに挿入される -->
                     </div>
                 </div>
             </div>
@@ -3331,28 +4123,19 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Setting up tab functionality...');
             
-            // タブボタンにイベントリスナーを追加
+            // タブボタンにイベントリスナーを追加（新デザイン対応）
+            const tabButtonsModern = document.querySelectorAll('.tab-button-modern');
+            const tabPanesModern = document.querySelectorAll('.tab-pane-modern');
+            
+            console.log('Found modern tab buttons:', tabButtonsModern.length);
+            console.log('Found modern tab panes:', tabPanesModern.length);
+            
+            // 旧デザインのタブボタンも取得（後方互換性）
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabPanes = document.querySelectorAll('.tab-pane');
             
-            console.log('Found tab buttons:', tabButtons.length);
-            console.log('Found tab panes:', tabPanes.length);
-            
-            // デバッグ用：タブペインの詳細情報をログ出力
-            tabPanes.forEach((pane, index) => {
-                console.log(`Tab pane ${index}:`, {
-                    id: pane.id,
-                    classes: pane.className,
-                    display: pane.style.display,
-                    computedDisplay: window.getComputedStyle(pane).display,
-                    offsetHeight: pane.offsetHeight,
-                    offsetWidth: pane.offsetWidth,
-                    innerHTML: pane.innerHTML.substring(0, 100) + '...'
-                });
-            });
-            
             // スクロールイベントの伝播を防ぐ
-            const scrollableContainers = document.querySelectorAll('.basic-info.fotmob-style, .stats-scroll-container, .stats-container, .events-container, .lineup-container, .formation-display, .lineup-players.fotmob-grid');
+            const scrollableContainers = document.querySelectorAll('.basic-info.fotmob-style, .stats-scroll-container, .stats-container, .events-container, .lineup-container, .formation-display, .lineup-players.fotmob-grid, .pitch-container');
             scrollableContainers.forEach(container => {
                 container.addEventListener('wheel', function(e) {
                     e.stopPropagation();
@@ -3367,6 +4150,16 @@
                 });
             });
             
+            // 新デザインのタブボタンにイベントリスナーを追加
+            tabButtonsModern.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    console.log('Modern tab clicked:', targetTab);
+                    switchTab(targetTab);
+                });
+            });
+            
+            // 旧デザインのタブボタンにもイベントリスナーを追加（後方互換性）
             tabButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const targetTab = this.getAttribute('data-tab');
@@ -3379,22 +4172,14 @@
                     // タブペインを更新
                     tabPanes.forEach(pane => {
                         pane.classList.remove('active');
-                        console.log('Removing active class from:', pane.id);
                     });
                     
                     const targetPane = document.getElementById(targetTab);
                     if (targetPane) {
                         targetPane.classList.add('active');
-                        console.log('Added active class to:', targetPane.id);
                         
                         // スクロール位置をリセット
                         targetPane.scrollTop = 0;
-                        
-                        // タブコンテンツの表示状態を確認
-                        console.log('Target pane display style before:', targetPane.style.display);
-                        console.log('Target pane classes:', targetPane.className);
-                        console.log('Target pane computed display:', window.getComputedStyle(targetPane).display);
-                        console.log('Target pane offset dimensions:', targetPane.offsetWidth, 'x', targetPane.offsetHeight);
                         
                         // モーダル全体の寸法を強制制御
                         const modalContent = targetPane.closest('.modal-content');
@@ -5966,14 +6751,21 @@
             }
         }
 
-        // ラインアップタブを更新する関数
+        // ラインアップタブを更新する関数（新デザイン対応）
         function updateLineupTab(matchData) {
             console.log('updateLineupTab called with:', matchData);
             
             try {
-                const lineupContainer = document.getElementById('lineup');
-                if (!lineupContainer) {
-                    console.error('Lineup container not found');
+                const pitchContainer = document.getElementById('pitchContainer');
+                const homeStartingXI = document.getElementById('homeStartingXI');
+                const awayStartingXI = document.getElementById('awayStartingXI');
+                const homeSubstitutes = document.getElementById('homeSubstitutes');
+                const awaySubstitutes = document.getElementById('awaySubstitutes');
+                const formationBadge = document.getElementById('formationBadge');
+                const highlightsList = document.getElementById('highlightsList');
+                
+                if (!pitchContainer || !homeStartingXI || !awayStartingXI) {
+                    console.error('Lineup containers not found');
                     return;
                 }
 
@@ -5987,16 +6779,14 @@
                 
                 // 予定の試合でスタメンデータがない場合
                 if (isScheduled && (!matchData.lineups?.home?.startXI || !matchData.lineups?.away?.startXI)) {
-                    lineupContainer.innerHTML = `
-                        <div class="lineup-container">
-                            <h3>ラインアップ</h3>
-                            <div style="text-align: center; padding: 40px 20px; color: #cccccc; font-size: 16px;">
-                                <p style="margin-bottom: 20px;">📋 スタメンは試合前に発表されます</p>
-                                <p style="color: #888; font-size: 14px;">スタメン情報が利用可能になり次第、こちらに表示されます。</p>
-                            </div>
+                    pitchContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px; color: var(--muted); font-size: 16px;">
+                            <p style="margin-bottom: 20px;">📋 スタメンは試合前に発表されます</p>
+                            <p style="color: var(--muted); font-size: 14px;">スタメン情報が利用可能になり次第、こちらに表示されます。</p>
                         </div>
                     `;
-                    console.log('Match is scheduled, showing message instead of lineup');
+                    homeStartingXI.innerHTML = '<div class="no-data">スタメン未発表</div>';
+                    awayStartingXI.innerHTML = '<div class="no-data">スタメン未発表</div>';
                     return;
                 }
 
@@ -6004,110 +6794,199 @@
                 let homeLineup, awayLineup, homeFormation, awayFormation;
                 
                 if (matchData.lineups?.home?.startXI && matchData.lineups?.away?.startXI) {
-                    // APIデータがある場合
                     homeLineup = matchData.lineups.home.startXI;
                     awayLineup = matchData.lineups.away.startXI;
                     homeFormation = matchData.lineups.home.formation || '4-2-3-1';
                     awayFormation = matchData.lineups.away.formation || '4-1-4-1';
                 } else {
-                    // データがない場合は、クリックした試合の情報を使ってメッセージを表示
                     const homeTeam = matchData.homeTeam || matchData.home || 'ホームチーム';
                     const awayTeam = matchData.awayTeam || matchData.away || 'アウェイチーム';
                     
                     if (isScheduled) {
-                        // 予定の試合でデータがない場合はメッセージを表示
-                        lineupContainer.innerHTML = `
-                            <div class="lineup-container">
-                                <h3>ラインアップ</h3>
-                                <div style="text-align: center; padding: 40px 20px; color: #cccccc; font-size: 16px;">
-                                    <p style="margin-bottom: 20px;">📋 スタメンは試合前に発表されます</p>
-                                    <p style="color: #888; font-size: 14px;">${homeTeam} vs ${awayTeam}のスタメン情報が利用可能になり次第、こちらに表示されます。</p>
-                                </div>
+                        pitchContainer.innerHTML = `
+                            <div style="text-align: center; padding: 40px 20px; color: var(--muted); font-size: 16px;">
+                                <p style="margin-bottom: 20px;">📋 スタメンは試合前に発表されます</p>
+                                <p style="color: var(--muted); font-size: 14px;">${homeTeam} vs ${awayTeam}のスタメン情報が利用可能になり次第、こちらに表示されます。</p>
                             </div>
                         `;
+                        homeStartingXI.innerHTML = '<div class="no-data">スタメン未発表</div>';
+                        awayStartingXI.innerHTML = '<div class="no-data">スタメン未発表</div>';
                         return;
                     } else {
-                        // 試合が終了しているがデータがない場合
-                        lineupContainer.innerHTML = `
-                            <div class="lineup-container">
-                                <h3>ラインアップ</h3>
-                                <div style="text-align: center; padding: 40px 20px; color: #cccccc; font-size: 16px;">
-                                    <p style="margin-bottom: 20px;">📋 ラインアップ情報が利用できません</p>
-                                    <p style="color: #888; font-size: 14px;">${homeTeam} vs ${awayTeam}のラインアップデータが見つかりませんでした。</p>
-                                </div>
+                        pitchContainer.innerHTML = `
+                            <div style="text-align: center; padding: 40px 20px; color: var(--muted); font-size: 16px;">
+                                <p style="margin-bottom: 20px;">📋 ラインアップ情報が利用できません</p>
+                                <p style="color: var(--muted); font-size: 14px;">${homeTeam} vs ${awayTeam}のラインアップデータが見つかりませんでした。</p>
                             </div>
                         `;
+                        homeStartingXI.innerHTML = '<div class="no-data">データなし</div>';
+                        awayStartingXI.innerHTML = '<div class="no-data">データなし</div>';
                         return;
                     }
                 }
 
-                console.log('Home lineup:', homeLineup);
-                console.log('Away lineup:', awayLineup);
-                console.log('Home formation:', homeFormation);
-                console.log('Away formation:', awayFormation);
+                // フォーメーションバッジを更新
+                if (formationBadge) {
+                    formationBadge.textContent = `${homeFormation} vs ${awayFormation}`;
+                }
 
                 // プレイヤーデータを処理
                 const homePlayers = processPlayerData(homeLineup, 'home');
                 const awayPlayers = processPlayerData(awayLineup, 'away');
 
-                console.log('Processed home players:', homePlayers);
-                console.log('Processed away players:', awayPlayers);
+                // タクティカルピッチを生成
+                const pitchHTML = generateModernPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation);
+                pitchContainer.innerHTML = pitchHTML;
 
-                // 統合ピッチのHTMLを生成
-                const unifiedPitchHTML = generateUnifiedPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation, matchData.homeTeam, matchData.awayTeam);
-                console.log('Generated unified pitch HTML:', unifiedPitchHTML);
+                // スタメンリストを生成
+                homeStartingXI.innerHTML = generateStartingXIList(homePlayers, 'home');
+                awayStartingXI.innerHTML = generateStartingXIList(awayPlayers, 'away');
 
+                // サブスティテュートを生成
+                const homeSubs = matchData.lineups?.home?.substitutes || [];
+                const awaySubs = matchData.lineups?.away?.substitutes || [];
+                if (homeSubstitutes) {
+                    homeSubstitutes.innerHTML = generateSubstitutesList(homeSubs, 'home');
+                }
+                if (awaySubstitutes) {
+                    awaySubstitutes.innerHTML = generateSubstitutesList(awaySubs, 'away');
+                }
 
-
-                lineupContainer.innerHTML = `
-                    <div class="lineup-container">
-                        <h3>ラインアップ</h3>
-                        
-
-                        
-                        <div class="unified-pitch-display">
-                            ${unifiedPitchHTML}
-                        </div>
-                        
-                        <!-- ベンチメンバーセクション -->
-                        <div class="bench-players fotmob-style">
-                            <h3 class="bench-title">ベンチメンバー</h3>
-                            <div class="bench-teams">
-                                <div class="bench-team">
-                                    <h4 class="team-name">${matchData.homeTeam}</h4>
-                                    <div class="bench-players-list" id="home-bench-players"></div>
-                                </div>
-                                <div class="bench-team">
-                                    <h4 class="team-name">${matchData.awayTeam}</h4>
-                                    <div class="bench-players-list" id="away-bench-players"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-
-                        
-
-                    </div>
-                `;
-
-                // ベンチメンバーを表示
-                displayBenchPlayers(matchData);
+                // ハイライトを生成
+                if (highlightsList && matchData.events && matchData.events.length > 0) {
+                    highlightsList.innerHTML = generateHighlightsList(matchData.events);
+                } else if (highlightsList) {
+                    highlightsList.innerHTML = '<div class="no-data">ハイライト情報がありません</div>';
+                }
 
                 console.log('Lineup tab updated successfully');
                 
-
-                
             } catch (error) {
                 console.error('Error updating lineup tab:', error);
-                const lineupContainer = document.getElementById('lineup');
-                if (lineupContainer) {
-                    lineupContainer.innerHTML = `
+                const pitchContainer = document.getElementById('pitchContainer');
+                if (pitchContainer) {
+                    pitchContainer.innerHTML = `
                         <div class="error-message">
                             <p>ラインアップの表示中にエラーが発生しました: ${error.message}</p>
                         </div>
                     `;
                 }
             }
+        }
+        
+        // モダンなピッチHTMLを生成
+        function generateModernPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation) {
+            const homePositions = getFormationPositions(homeFormation);
+            const awayPositions = getFormationPositions(awayFormation);
+            
+            let html = `
+                <div class="pitch-lines"></div>
+                <div class="pitch-center-line"></div>
+                <div class="pitch-center-circle"></div>
+                <div class="pitch-goal-area-top"></div>
+                <div class="pitch-goal-area-bottom"></div>
+            `;
+            
+            // ホームチームのプレイヤー（下側）
+            homePlayers.forEach((player, index) => {
+                const pos = homePositions[index] || { left: 50, top: 50 };
+                const bottom = 100 - pos.top; // 下側なので反転
+                html += `
+                    <div class="player-marker-modern" style="left: ${pos.left}%; bottom: ${bottom}%;" title="${player.name}">
+                        <div class="player-circle home">${player.number}</div>
+                        <span class="player-name-label">${player.name.split(' ').pop()}</span>
+                    </div>
+                `;
+            });
+            
+            // アウェイチームのプレイヤー（上側）
+            awayPlayers.forEach((player, index) => {
+                const pos = awayPositions[index] || { left: 50, top: 50 };
+                const top = pos.top; // 上側なのでそのまま
+                const left = 100 - pos.left; // 左右反転
+                html += `
+                    <div class="player-marker-modern" style="left: ${left}%; top: ${top}%;" title="${player.name}">
+                        <div class="player-circle away">${player.number}</div>
+                        <span class="player-name-label">${player.name.split(' ').pop()}</span>
+                    </div>
+                `;
+            });
+            
+            return html;
+        }
+        
+        // スタメンリストを生成
+        function generateStartingXIList(players, teamType) {
+            return players.map((player, index) => {
+                const isCaptain = index === 0; // 最初のプレイヤーをキャプテンと仮定（実際のデータがあればそれを使用）
+                const position = getPositionLabel(player.position);
+                const positionClass = position === 'GK' ? 'primary' : 'other';
+                
+                return `
+                    <div class="xi-player-row ${isCaptain ? 'captain' : ''}">
+                        <div class="xi-player-info">
+                            <span class="xi-player-number ${isCaptain ? 'captain' : ''}">${player.number}</span>
+                            <span class="xi-player-name ${isCaptain ? 'captain' : ''}">${player.name}</span>
+                            <span class="xi-player-position ${positionClass}">${position}</span>
+                        </div>
+                        ${isCaptain ? '<span class="xi-player-icon captain">C</span>' : '<span class="xi-player-icon">ℹ️</span>'}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // サブスティテュートリストを生成
+        function generateSubstitutesList(subs, teamType) {
+            if (!subs || subs.length === 0) {
+                return '<li class="subs-item"><span class="subs-dot ' + teamType + '"></span> サブなし</li>';
+            }
+            return subs.slice(0, 5).map(sub => {
+                const playerName = sub.player?.name || sub.name || 'Unknown';
+                const playerNumber = sub.player?.number || sub.number || '';
+                return `
+                    <li class="subs-item">
+                        <span class="subs-dot ${teamType}"></span>
+                        ${playerNumber ? playerNumber + '. ' : ''}${playerName}
+                    </li>
+                `;
+            }).join('');
+        }
+        
+        // ハイライトリストを生成
+        function generateHighlightsList(events) {
+            const highlights = events.filter(e => 
+                e.type === 'Goal' || e.type === 'Card' || e.type === 'subst'
+            ).slice(0, 5);
+            
+            if (highlights.length === 0) {
+                return '<div class="no-data">ハイライト情報がありません</div>';
+            }
+            
+            return highlights.map(event => {
+                const minute = event.time?.elapsed || event.minute || event.time || '?';
+                const type = event.type || 'Unknown';
+                const player = event.player?.name || event.player || 'Unknown';
+                const detail = event.detail || type;
+                
+                let title = '';
+                if (type === 'Goal') {
+                    title = `GOAL! (${event.team?.name || ''})`;
+                } else if (type === 'subst') {
+                    title = 'SUBSTITUTION';
+                } else {
+                    title = detail.toUpperCase();
+                }
+                
+                return `
+                    <div class="highlight-item">
+                        <span class="highlight-minute">${minute}'</span>
+                        <div class="highlight-content">
+                            <p class="highlight-title">${title}</p>
+                            <p class="highlight-detail">${player}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // ベンチメンバーを表示する関数
@@ -6232,22 +7111,22 @@
             }
         }
 
-        // タブ切り替え処理
+        // タブ切り替え処理（新デザイン対応）
         function switchTab(tabName) {
             console.log('Switching to tab:', tabName);
             
             // すべてのタブボタンからアクティブクラスを削除
-            document.querySelectorAll('.tab-button').forEach(button => {
+            document.querySelectorAll('.tab-button-modern').forEach(button => {
                 button.classList.remove('active');
             });
             
             // すべてのタブペインを非表示
-            document.querySelectorAll('.tab-pane').forEach(pane => {
+            document.querySelectorAll('.tab-pane-modern').forEach(pane => {
                 pane.classList.remove('active');
             });
             
             // クリックされたタブボタンをアクティブに
-            const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
+            const activeButton = document.querySelector(`.tab-button-modern[data-tab="${tabName}"]`);
             if (activeButton) {
                 activeButton.classList.add('active');
             }
@@ -6258,7 +7137,7 @@
                 targetPane.classList.add('active');
                 
                 // スクロール位置をリセット
-                const scrollableContainers = targetPane.querySelectorAll('.basic-info.fotmob-style, .stats-container, .events-container, .lineup-container, .formation-display, .lineup-players.fotmob-grid');
+                const scrollableContainers = targetPane.querySelectorAll('.stats-scroll-container, .events-container, .pitch-container');
                 scrollableContainers.forEach(container => {
                     if (container.scrollTop !== undefined) {
                         container.scrollTop = 0;
@@ -6273,7 +7152,17 @@
 
         // ページ読み込み時の初期化
         document.addEventListener('DOMContentLoaded', function() {
-            // タブボタンにイベントリスナーを追加
+            // タブボタンにイベントリスナーを追加（新デザイン対応）
+            document.querySelectorAll('.tab-button-modern').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    if (tabName) {
+                        switchTab(tabName);
+                    }
+                });
+            });
+            
+            // 旧デザインのタブボタンにも対応（後方互換性）
             document.querySelectorAll('.tab-button').forEach(button => {
                 button.addEventListener('click', function() {
                     const tabName = this.getAttribute('data-tab');
@@ -6405,79 +7294,107 @@
             console.log('Displaying detailed match info:', matchData);
             
             try {
-                // モーダルヘッダーのチーム名とスコアを更新
+                const homeTeam = matchData.homeTeam || matchData.home || '-';
+                const awayTeam = matchData.awayTeam || matchData.away || '-';
+                const isFinishedOrLive = matchData.status === 'Finished' || matchData.status === 'FT' || matchData.status === 'LIVE' || matchData.status === 'HT' || matchData.status === '試合中' || matchData.status === '終了';
+                const homeScore = isFinishedOrLive 
+                    ? (matchData.homeScore !== undefined && matchData.homeScore !== null ? matchData.homeScore : 0)
+                    : (matchData.homeScore !== undefined && matchData.homeScore !== null ? matchData.homeScore : '-');
+                const awayScore = isFinishedOrLive
+                    ? (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : 0)
+                    : (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : '-');
+                
+                // スコアボードヘッダーを更新
                 const homeTeamNameEl = document.getElementById('homeTeamName');
                 const awayTeamNameEl = document.getElementById('awayTeamName');
-                const modalScoreEl = document.getElementById('modalScore');
+                const homeScoreEl = document.getElementById('homeScoreLarge');
+                const awayScoreEl = document.getElementById('awayScoreLarge');
+                const venueEl = document.getElementById('venueName');
+                const liveBadge = document.getElementById('liveBadge');
+                const matchMinuteEl = document.getElementById('matchMinute');
                 
-                if (homeTeamNameEl) {
-                    homeTeamNameEl.textContent = matchData.homeTeam || matchData.home || '-';
+                if (homeTeamNameEl) homeTeamNameEl.textContent = homeTeam.toUpperCase();
+                if (awayTeamNameEl) awayTeamNameEl.textContent = awayTeam.toUpperCase();
+                if (homeScoreEl) homeScoreEl.textContent = homeScore;
+                if (awayScoreEl) awayScoreEl.textContent = awayScore;
+                if (venueEl) venueEl.textContent = matchData.venue || matchData.footballData?.venue || '-';
+                
+                // LIVEバッジの表示
+                if (liveBadge && (matchData.status === 'LIVE' || matchData.status === 'HT' || matchData.status === '試合中')) {
+                    liveBadge.style.display = 'flex';
+                    if (matchMinuteEl && matchData.fixture?.status?.elapsed) {
+                        matchMinuteEl.textContent = matchData.fixture.status.elapsed + "'";
+                        matchMinuteEl.style.display = 'block';
+                    }
+                } else {
+                    if (liveBadge) liveBadge.style.display = 'none';
+                    if (matchMinuteEl) matchMinuteEl.style.display = 'none';
                 }
-                if (awayTeamNameEl) {
-                    awayTeamNameEl.textContent = matchData.awayTeam || matchData.away || '-';
+                
+                // チームロゴを更新
+                const homeTeamId = getTeamId(homeTeam);
+                const awayTeamId = getTeamId(awayTeam);
+                const homeTeamLogoEl = document.getElementById('homeTeamLogo');
+                const awayTeamLogoEl = document.getElementById('awayTeamLogo');
+                const homeTeamLogoSmallEl = document.getElementById('homeTeamLogoSmall');
+                const awayTeamLogoSmallEl = document.getElementById('awayTeamLogoSmall');
+                
+                if (homeTeamLogoEl) {
+                    homeTeamLogoEl.src = `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
+                    homeTeamLogoEl.alt = homeTeam;
                 }
-                if (modalScoreEl) {
-                    const isFinishedOrLive = matchData.status === 'Finished' || matchData.status === 'FT' || matchData.status === 'LIVE' || matchData.status === 'HT' || matchData.status === '試合中' || matchData.status === '終了';
-                    const homeScore = isFinishedOrLive 
-                        ? (matchData.homeScore !== undefined && matchData.homeScore !== null ? matchData.homeScore : 0)
-                        : (matchData.homeScore !== undefined && matchData.homeScore !== null ? matchData.homeScore : '-');
-                    const awayScore = isFinishedOrLive
-                        ? (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : 0)
-                        : (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : '-');
-                    modalScoreEl.textContent = `${homeScore} - ${awayScore}`;
+                if (awayTeamLogoEl) {
+                    awayTeamLogoEl.src = `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
+                    awayTeamLogoEl.alt = awayTeam;
                 }
+                if (homeTeamLogoSmallEl) {
+                    homeTeamLogoSmallEl.src = `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
+                    homeTeamLogoSmallEl.alt = homeTeam;
+                }
+                if (awayTeamLogoSmallEl) {
+                    awayTeamLogoSmallEl.src = `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
+                    awayTeamLogoSmallEl.alt = awayTeam;
+                }
+                
+                // チーム名（小）を更新
+                const homeTeamNameSmallEl = document.getElementById('homeTeamNameSmall');
+                const awayTeamNameSmallEl = document.getElementById('awayTeamNameSmall');
+                if (homeTeamNameSmallEl) homeTeamNameSmallEl.textContent = homeTeam.toUpperCase();
+                if (awayTeamNameSmallEl) awayTeamNameSmallEl.textContent = awayTeam.toUpperCase();
                 
                 // 基本情報タブを更新
                 updateBasicInfo(matchData);
                 
-                // 統計タブを更新（データがない場合も空のコンテナをクリア）
+                // 統計タブを更新
                 updateStatsTab(matchData.stats || null, matchData);
                 
-                // イベントタブを更新（データがない場合も更新）
+                // イベントタブを更新
                 updateEventsTab(matchData.events || []);
                 
-                // ラインアップタブを更新（データがない場合も更新）
-                    updateLineupTab(matchData);
+                // ラインアップタブを更新
+                updateLineupTab(matchData);
                 
-                // 最初のタブをアクティブにして表示
-                const firstTab = document.querySelector('.tab-button');
-                const firstPane = document.querySelector('.tab-pane');
+                // 最初のタブ（Lineup）をアクティブにして表示
+                const firstTab = document.querySelector('.tab-button-modern[data-tab="lineup"]');
+                const firstPane = document.getElementById('lineup');
                 
                 if (firstTab && firstPane) {
+                    // すべてのタブを非アクティブに
+                    document.querySelectorAll('.tab-button-modern').forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-pane-modern').forEach(pane => pane.classList.remove('active'));
+                    
+                    // 最初のタブをアクティブに
                     firstTab.classList.add('active');
                     firstPane.classList.add('active');
                     
-                    // 強制的に表示
-                    firstPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: visible !important;';
-                    
-                    console.log('First tab activated and displayed with force');
-                    console.log('First tab dimensions:', firstPane.offsetWidth, 'x', firstPane.offsetHeight);
-                    
-                    const tabContent = firstPane.closest('.tab-content');
-                    if (tabContent) {
-                        console.log('Parent tab-content dimensions:', tabContent.offsetWidth, 'x', tabContent.offsetHeight);
-                    }
-                    
-                    // タブコンテンツの表示を強制
-                    const tabContentElement = firstPane.querySelector('.tab-content');
-                    if (tabContentElement) {
-                        tabContentElement.style.cssText = 'display: flex !important; flex-direction: column !important; height: auto !important; min-height: 400px !important;';
-                    }
-                    
-                    // 基本情報コンテンツの表示を強制
-                    const basicInfo = firstPane.querySelector('.basic-info.fotmob-style');
-                    if (basicInfo) {
-                        basicInfo.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; min-height: 300px !important;';
-                    }
-                    
+                    console.log('Lineup tab activated');
                 } else {
-                    console.error('First tab or pane not found');
+                    console.error('Lineup tab or pane not found');
                 }
                 
             } catch (error) {
                 console.error('Error in displayDetailedMatchInfo:', error);
                 
-                // エラーが発生した場合のフォールバック表示
                 const overviewTab = document.getElementById('overview');
                 if (overviewTab) {
                     overviewTab.innerHTML = `
