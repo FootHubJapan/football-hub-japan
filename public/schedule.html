@@ -298,9 +298,18 @@
         .gap-2 { gap: 0.5rem; }
         .flex-1 { flex: 1 1 0%; }
         .text-center { text-align: center; }
+        .size-32 { width: 8rem; height: 8rem; }
         .size-24 { width: 6rem; height: 6rem; }
+        .size-7 { width: 1.75rem; height: 1.75rem; }
         .size-6 { width: 1.5rem; height: 1.5rem; }
         .size-2 { width: 0.5rem; height: 0.5rem; }
+        .size-1 { width: 0.25rem; height: 0.25rem; }
+        .h-0\.5 { height: 0.125rem; }
+        .w-48 { width: 12rem; }
+        .w-24 { width: 6rem; }
+        .h-12 { height: 3rem; }
+        .h-5 { height: 1.25rem; }
+        .pitch-line { border-color: rgba(255, 255, 255, 0.2); }
         .rounded-2xl { border-radius: 1rem; }
         .rounded-full { border-radius: 9999px; }
         .rounded-lg { border-radius: 0.5rem; }
@@ -7369,36 +7378,45 @@
             const homePositions = getFormationPositions(homeFormation);
             const awayPositions = getFormationPositions(awayFormation);
             
+            // 縦向きピッチのHTMLを生成（提供されたデザインに合わせて）
             let html = `
-                <div class="pitch-lines"></div>
-                <div class="pitch-center-line"></div>
-                <div class="pitch-center-circle"></div>
-                <div class="pitch-goal-area-top"></div>
-                <div class="pitch-goal-area-bottom"></div>
+                <div class="absolute inset-4 border-2 pitch-line rounded-sm pitch-pattern"></div>
+                <div class="absolute inset-x-4 top-1/2 -translate-y-1/2 h-0.5 bg-white/20"></div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-32 rounded-full border-2 pitch-line"></div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-1 bg-white rounded-full"></div>
+                <div class="absolute top-4 left-1/2 -translate-x-1/2 w-48 h-12 border-2 border-t-0 pitch-line"></div>
+                <div class="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-5 border-2 border-t-0 pitch-line opacity-50"></div>
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-48 h-12 border-2 border-b-0 pitch-line"></div>
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-24 h-5 border-2 border-b-0 pitch-line opacity-50"></div>
             `;
             
-            // ホームチームのプレイヤー（下側）
+            // ホームチームのプレイヤー（上側 - 白い背景の円）
             homePlayers.forEach((player, index) => {
                 const pos = homePositions[index] || { left: 50, top: 50 };
-                const bottom = 100 - pos.top; // 下側なので反転
+                // 縦向きピッチの場合、top位置をそのまま使用（上から下へ）
+                // left位置は50%を中心に左右に配置
+                const topPercent = Math.max(8, Math.min(48, pos.top)); // 上側8-48%の範囲
+                const leftPercent = 50 + (pos.left - 50); // 50%を中心に左右に配置
+                
                 html += `
-                    <div class="player-marker-modern" style="left: ${pos.left}%; bottom: ${bottom}%;" title="${player.name}">
-                        <div class="player-circle home">${player.number}</div>
-                        <span class="player-name-label">${player.name.split(' ').pop()}</span>
-                        </div>
+                    <div class="absolute top-[${topPercent}%] left-1/2 -translate-x-1/2 flex flex-col items-center" style="left: ${leftPercent}%; transform: translateX(-50%);">
+                        <div class="size-7 bg-white text-background-dark rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-primary">${player.number || (index + 1)}</div>
+                    </div>
                 `;
             });
             
-            // アウェイチームのプレイヤー（上側）
+            // アウェイチームのプレイヤー（下側 - primary色の円）
             awayPlayers.forEach((player, index) => {
                 const pos = awayPositions[index] || { left: 50, top: 50 };
-                const top = pos.top; // 上側なのでそのまま
-                const left = 100 - pos.left; // 左右反転
+                // 縦向きピッチの場合、bottom位置を使用（下から上へ）
+                // left位置は50%を中心に左右に配置
+                const bottomPercent = Math.max(8, Math.min(48, 100 - pos.top)); // 下側8-48%の範囲
+                const leftPercent = 50 + (pos.left - 50); // 50%を中心に左右に配置
+                
                 html += `
-                    <div class="player-marker-modern" style="left: ${left}%; top: ${top}%;" title="${player.name}">
-                        <div class="player-circle away">${player.number}</div>
-                        <span class="player-name-label">${player.name.split(' ').pop()}</span>
-                                </div>
+                    <div class="absolute bottom-[${bottomPercent}%] left-1/2 -translate-x-1/2 flex flex-col items-center" style="left: ${leftPercent}%; transform: translateX(-50%);">
+                        <div class="size-7 bg-primary text-white rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white">${player.number || (index + 1)}</div>
+                    </div>
                 `;
             });
             
