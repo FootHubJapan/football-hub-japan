@@ -704,17 +704,23 @@
         .pitch-container {
             position: relative;
             width: 100%;
-            height: 100%;
-            min-height: 0;
+            aspect-ratio: 3 / 4;
+            background: repeating-linear-gradient(
+                to bottom,
+                #1a2e2f 0%,
+                #1a2e2f 10%,
+                #162829 10%,
+                #162829 20%
+            );
+            border-radius: 0.75rem;
+            overflow: hidden;
+            border: 4px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
         
-        .aspect-2-3 {
-            aspect-ratio: 2 / 3;
-        }
-        
-        @media (max-width: 1024px) {
-            .aspect-2-3 {
-                aspect-ratio: 3 / 4;
+        @media (min-width: 768px) {
+            .pitch-container {
+                aspect-ratio: 4 / 3;
             }
         }
         
@@ -4260,7 +4266,15 @@
                                     4-4-2 VS 4-3-3
                                 </div>
                             </div>
-                            <div class="relative w-full max-w-md aspect-2-3 grass-stripes rounded-2xl overflow-hidden border-8 border-white/5 shadow-2xl">
+                            <div class="relative w-full max-w-md aspect-[2/3] grass-stripes rounded-2xl overflow-hidden border-8 border-white/5 shadow-2xl">
+                                <div class="absolute inset-4 border-2 pitch-line rounded-sm pitch-pattern"></div>
+                                <div class="absolute inset-x-4 top-1/2 -translate-y-1/2 h-0.5 bg-white/20"></div>
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-32 rounded-full border-2 pitch-line"></div>
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-1 bg-white rounded-full"></div>
+                                <div class="absolute top-4 left-1/2 -translate-x-1/2 w-48 h-12 border-2 border-t-0 pitch-line"></div>
+                                <div class="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-5 border-2 border-t-0 pitch-line opacity-50"></div>
+                                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-48 h-12 border-2 border-b-0 pitch-line"></div>
+                                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-24 h-5 border-2 border-b-0 pitch-line opacity-50"></div>
                                 <div class="pitch-container" id="pitchContainer">
                                     <!-- ピッチとプレイヤーがここに動的に挿入される -->
                                 </div>
@@ -7359,101 +7373,24 @@
             }
         }
         
-        // 縦向きピッチ用のフォーメーション位置を取得
-        function getVerticalFormationPositions(formation) {
-            const positions = [];
+        // 横向きピッチの位置を縦向きピッチの位置に変換する関数
+        function convertToVerticalPosition(horizontalPos) {
+            // 横向きピッチ: left (0-50%) = 左右の位置, top (0-100%) = 上下の位置
+            // 縦向きピッチ: left (0-100%) = 左右の位置, top (8-48%) = 上下の位置
+            // 変換: 横向きのtopを縦向きのleftに、横向きのleftを縦向きのtopに変換
+            const verticalLeft = horizontalPos.top; // 横向きの上下位置を縦向きの左右位置に
+            const verticalTop = 8 + (horizontalPos.left / 50) * 40; // 横向きの左右位置(0-50%)を縦向きの上下位置(8-48%)に変換
             
-            // 縦向きピッチ用の位置（left: 左右位置、top: 上下位置）
-            // ホームチームは上側（top: 8-48%）、アウェイチームは下側（bottom: 8-48%）
-            switch (formation) {
-                case '4-2-3-1':
-                    positions.push({ left: 50, top: 8 }); // GK
-                    positions.push({ left: 20, top: 20 }); // LB
-                    positions.push({ left: 40, top: 20 }); // LCB
-                    positions.push({ left: 60, top: 20 }); // RCB
-                    positions.push({ left: 80, top: 20 }); // RB
-                    positions.push({ left: 35, top: 30 }); // LCM
-                    positions.push({ left: 65, top: 30 }); // RCM
-                    positions.push({ left: 20, top: 38 }); // LW
-                    positions.push({ left: 50, top: 38 }); // AM
-                    positions.push({ left: 80, top: 38 }); // RW
-                    positions.push({ left: 50, top: 46 }); // ST
-                    break;
-                case '4-1-4-1':
-                    positions.push({ left: 50, top: 8 }); // GK
-                    positions.push({ left: 20, top: 20 }); // LB
-                    positions.push({ left: 40, top: 20 }); // LCB
-                    positions.push({ left: 60, top: 20 }); // RCB
-                    positions.push({ left: 80, top: 20 }); // RB
-                    positions.push({ left: 50, top: 28 }); // CDM
-                    positions.push({ left: 15, top: 36 }); // LM
-                    positions.push({ left: 35, top: 36 }); // LCM
-                    positions.push({ left: 65, top: 36 }); // RCM
-                    positions.push({ left: 85, top: 36 }); // RM
-                    positions.push({ left: 50, top: 44 }); // ST
-                    break;
-                case '4-4-2':
-                    positions.push({ left: 50, top: 8 }); // GK
-                    positions.push({ left: 20, top: 20 }); // LB
-                    positions.push({ left: 40, top: 20 }); // LCB
-                    positions.push({ left: 60, top: 20 }); // RCB
-                    positions.push({ left: 80, top: 20 }); // RB
-                    positions.push({ left: 20, top: 30 }); // LM
-                    positions.push({ left: 40, top: 30 }); // LCM
-                    positions.push({ left: 60, top: 30 }); // RCM
-                    positions.push({ left: 80, top: 30 }); // RM
-                    positions.push({ left: 40, top: 40 }); // LS
-                    positions.push({ left: 60, top: 40 }); // RS
-                    break;
-                case '3-5-2':
-                    positions.push({ left: 50, top: 8 }); // GK
-                    positions.push({ left: 30, top: 20 }); // LCB
-                    positions.push({ left: 50, top: 20 }); // CB
-                    positions.push({ left: 70, top: 20 }); // RCB
-                    positions.push({ left: 15, top: 28 }); // LWB
-                    positions.push({ left: 35, top: 28 }); // LCM
-                    positions.push({ left: 50, top: 28 }); // CM
-                    positions.push({ left: 65, top: 28 }); // RCM
-                    positions.push({ left: 85, top: 28 }); // RWB
-                    positions.push({ left: 40, top: 38 }); // LS
-                    positions.push({ left: 60, top: 38 }); // RS
-                    break;
-                case '4-3-3':
-                    positions.push({ left: 50, top: 8 }); // GK
-                    positions.push({ left: 20, top: 20 }); // LB
-                    positions.push({ left: 40, top: 20 }); // LCB
-                    positions.push({ left: 60, top: 20 }); // RCB
-                    positions.push({ left: 80, top: 20 }); // RB
-                    positions.push({ left: 40, top: 30 }); // LCM
-                    positions.push({ left: 50, top: 30 }); // CM
-                    positions.push({ left: 60, top: 30 }); // RCM
-                    positions.push({ left: 20, top: 40 }); // LW
-                    positions.push({ left: 50, top: 40 }); // ST
-                    positions.push({ left: 80, top: 40 }); // RW
-                    break;
-                default:
-                    // デフォルトの4-4-2
-                    positions.push({ left: 50, top: 8 }); // GK
-                    positions.push({ left: 20, top: 20 }); // LB
-                    positions.push({ left: 40, top: 20 }); // LCB
-                    positions.push({ left: 60, top: 20 }); // RCB
-                    positions.push({ left: 80, top: 20 }); // RB
-                    positions.push({ left: 20, top: 30 }); // LM
-                    positions.push({ left: 40, top: 30 }); // LCM
-                    positions.push({ left: 60, top: 30 }); // RCM
-                    positions.push({ left: 80, top: 30 }); // RM
-                    positions.push({ left: 40, top: 40 }); // LS
-                    positions.push({ left: 60, top: 40 }); // RS
-                    break;
-            }
-            
-            return positions;
+            return {
+                left: Math.max(10, Math.min(90, verticalLeft)), // 左右10-90%の範囲
+                top: Math.max(8, Math.min(48, verticalTop)) // 上下8-48%の範囲
+            };
         }
         
-        // モダンなピッチHTMLを生成（縦向きピッチ用）
+        // モダンなピッチHTMLを生成
         function generateModernPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation) {
-            const homePositions = getVerticalFormationPositions(homeFormation);
-            const awayPositions = getVerticalFormationPositions(awayFormation);
+            const homePositions = getFormationPositions(homeFormation);
+            const awayPositions = getFormationPositions(awayFormation);
             
             // 縦向きピッチのHTMLを生成（提供されたデザインに合わせて）
             let html = `
@@ -7469,31 +7406,27 @@
             
             // ホームチームのプレイヤー（上側 - 白い背景の円）
             homePlayers.forEach((player, index) => {
-                const pos = homePositions[index] || { left: 50, top: 25 };
-                // 縦向きピッチの場合、top位置をそのまま使用（上から下へ）
-                // left位置はそのまま使用（左右の位置）
-                const topPercent = Math.max(8, Math.min(48, pos.top)); // 上側8-48%の範囲
-                const leftPercent = Math.max(10, Math.min(90, pos.left)); // 左右10-90%の範囲
+                const horizontalPos = homePositions[index] || { left: 8, top: 50 };
+                const verticalPos = convertToVerticalPosition(horizontalPos);
                 
                 html += `
-                    <div class="absolute flex flex-col items-center" style="top: ${topPercent}%; left: ${leftPercent}%; transform: translateX(-50%);">
+                    <div class="absolute flex flex-col items-center" style="top: ${verticalPos.top}%; left: ${verticalPos.left}%; transform: translateX(-50%);">
                         <div class="size-7 bg-white text-background-dark rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-primary">${player.number || (index + 1)}</div>
-                        </div>
+                    </div>
                 `;
             });
             
             // アウェイチームのプレイヤー（下側 - primary色の円）
             awayPlayers.forEach((player, index) => {
-                const pos = awayPositions[index] || { left: 50, top: 25 };
-                // 縦向きピッチの場合、bottom位置を使用（下から上へ）
-                // left位置はそのまま使用（左右の位置）
-                const bottomPercent = Math.max(8, Math.min(48, pos.top)); // 下側8-48%の範囲（top位置をそのまま使用）
-                const leftPercent = Math.max(10, Math.min(90, pos.left)); // 左右10-90%の範囲
+                const horizontalPos = awayPositions[index] || { left: 8, top: 50 };
+                const verticalPos = convertToVerticalPosition(horizontalPos);
+                // アウェイチームは下側に配置するため、top位置をbottom位置に変換
+                const bottomPercent = 100 - verticalPos.top; // 上下を反転
                 
                 html += `
-                    <div class="absolute flex flex-col items-center" style="bottom: ${bottomPercent}%; left: ${leftPercent}%; transform: translateX(-50%);">
+                    <div class="absolute flex flex-col items-center" style="bottom: ${bottomPercent}%; left: ${verticalPos.left}%; transform: translateX(-50%);">
                         <div class="size-7 bg-primary text-white rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white">${player.number || (index + 1)}</div>
-                                </div>
+                    </div>
                 `;
             });
             
