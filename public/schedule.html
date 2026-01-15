@@ -7304,8 +7304,20 @@
                 }
 
                 // プレイヤーデータを処理
+                console.log('Processing player data:', {
+                    homeLineup: homeLineup?.length || 0,
+                    awayLineup: awayLineup?.length || 0,
+                    homeFormation,
+                    awayFormation
+                });
+                
                 const homePlayers = processPlayerData(homeLineup, 'home');
                 const awayPlayers = processPlayerData(awayLineup, 'away');
+                
+                console.log('Processed players:', {
+                    homePlayers: homePlayers?.length || 0,
+                    awayPlayers: awayPlayers?.length || 0
+                });
 
                 // タクティカルピッチを生成
                 const pitchHTML = generateModernPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation);
@@ -7359,6 +7371,13 @@
         
         // モダンなピッチHTMLを生成
         function generateModernPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation) {
+            console.log('generateModernPitchHTML called with:', {
+                homePlayers: homePlayers?.length || 0,
+                awayPlayers: awayPlayers?.length || 0,
+                homeFormation,
+                awayFormation
+            });
+            
             const homePositions = getFormationPositions(homeFormation);
             const awayPositions = getFormationPositions(awayFormation);
             
@@ -7375,30 +7394,38 @@
             `;
             
             // ホームチームのプレイヤー（上側 - 白い背景の円）
-            homePlayers.forEach((player, index) => {
-                const horizontalPos = homePositions[index] || { left: 8, top: 50 };
-                const verticalPos = convertToVerticalPosition(horizontalPos);
-                
-                html += `
-                    <div class="absolute flex flex-col items-center" style="top: ${verticalPos.top}%; left: ${verticalPos.left}%; transform: translateX(-50%);">
-                        <div class="size-7 bg-white text-background-dark rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-primary">${player.number || (index + 1)}</div>
-                    </div>
-                `;
-            });
+            if (homePlayers && homePlayers.length > 0) {
+                homePlayers.forEach((player, index) => {
+                    const horizontalPos = homePositions[index] || { left: 8, top: 50 };
+                    const verticalPos = convertToVerticalPosition(horizontalPos);
+                    
+                    html += `
+                        <div class="absolute flex flex-col items-center" style="top: ${verticalPos.top}%; left: ${verticalPos.left}%; transform: translate(-50%, -50%);">
+                            <div class="size-7 bg-white text-background-dark rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-primary">${player.number || (index + 1)}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                console.warn('No home players provided to generateModernPitchHTML');
+            }
             
             // アウェイチームのプレイヤー（下側 - primary色の円）
-            awayPlayers.forEach((player, index) => {
-                const horizontalPos = awayPositions[index] || { left: 8, top: 50 };
-                const verticalPos = convertToVerticalPosition(horizontalPos);
-                // アウェイチームは下側に配置するため、top位置をbottom位置に変換
-                const bottomPercent = 100 - verticalPos.top; // 上下を反転
-                
-                html += `
-                    <div class="absolute flex flex-col items-center" style="bottom: ${bottomPercent}%; left: ${verticalPos.left}%; transform: translateX(-50%);">
-                        <div class="size-7 bg-primary text-white rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white">${player.number || (index + 1)}</div>
-                    </div>
-                `;
-            });
+            if (awayPlayers && awayPlayers.length > 0) {
+                awayPlayers.forEach((player, index) => {
+                    const horizontalPos = awayPositions[index] || { left: 8, top: 50 };
+                    const verticalPos = convertToVerticalPosition(horizontalPos);
+                    // アウェイチームは下側に配置するため、top位置をbottom位置に変換
+                    const bottomPercent = 100 - verticalPos.top; // 上下を反転
+                    
+                    html += `
+                        <div class="absolute flex flex-col items-center" style="bottom: ${bottomPercent}%; left: ${verticalPos.left}%; transform: translate(-50%, 50%);">
+                            <div class="size-7 bg-primary text-white rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white">${player.number || (index + 1)}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                console.warn('No away players provided to generateModernPitchHTML');
+            }
             
             return html;
         }
