@@ -4048,13 +4048,18 @@
                             <h2 id="homeTeamName" class="text-xl font-bold uppercase tracking-tight">-</h2>
                             <p class="text-[10px] text-gray-400 font-bold tracking-widest">HOME</p>
                         </div>
-                        <span id="homeScoreLarge" class="text-5xl font-bold tabular-nums">-</span>
                     </div>
                     
                     <!-- スコア & ステータス（中央） -->
                     <div class="flex flex-col items-center gap-2">
-                        <span class="text-2xl font-bold text-gray-300">:</span>
-                        <div id="matchMinute" class="px-3 py-1 bg-gray-100 dark:bg-white/10 rounded text-xs font-bold" style="display: none;">0'</div>
+                        <div class="flex items-center gap-8">
+                            <span id="homeScoreLarge" class="text-5xl font-bold tabular-nums">-</span>
+                            <div class="flex flex-col items-center">
+                                <span class="text-2xl font-bold text-gray-300">:</span>
+                                <div id="matchMinute" class="mt-1 px-3 py-1 bg-gray-100 dark:bg-white/10 rounded text-xs font-bold" style="display: none;">0'</div>
+                            </div>
+                            <span id="awayScoreLarge" class="text-5xl font-bold tabular-nums">-</span>
+                        </div>
                     </div>
                     
                     <!-- アウェイチーム -->
@@ -4067,7 +4072,6 @@
                             <h2 id="awayTeamName" class="text-xl font-bold uppercase tracking-tight">-</h2>
                             <p class="text-[10px] text-gray-400 font-bold tracking-widest">AWAY</p>
                         </div>
-                        <span id="awayScoreLarge" class="text-5xl font-bold tabular-nums">-</span>
                     </div>
                 </div>
             </div>
@@ -7007,48 +7011,31 @@
             return html;
         }
         
-        // スタメンリストを生成（画像デザインに合わせて - 顔写真付き）
+        // スタメンリストを生成（提供されたHTMLデザインに合わせて - 顔写真なし）
         function generateStartingXIList(players, teamType) {
             return players.map((player, index) => {
                 const isCaptain = index === 0; // 最初のプレイヤーをキャプテンと仮定（実際のデータがあればそれを使用）
                 const position = getPositionLabel(player.position || player.pos);
-                const playerPhoto = player.photo || null;
                 const playerName = player.name || 'Unknown';
                 const playerNumber = player.number || (index + 1);
                 
-                // ホームチーム用のHTML（左揃え: 背番号、顔写真、名前、ポジション）
+                // ホームチーム用のHTML（左揃え: 背番号、名前、ポジション）
                 if (teamType === 'home') {
                     return `
                         <div class="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors ${isCaptain ? 'bg-primary/5 border-l-2 border-primary' : ''}">
                             <div class="flex items-center gap-3">
                                 <span class="w-5 text-xs font-bold ${isCaptain ? 'text-primary' : 'text-gray-400'}">${playerNumber}</span>
-                                ${playerPhoto ? `
-                                    <div class="size-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 dark:bg-gray-700">
-                                        <img src="${playerPhoto}" alt="${playerName}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                        <div class="w-full h-full bg-primary text-white flex items-center justify-center text-xs font-bold" style="display: none;">${playerName.charAt(0)}</div>
-                                    </div>
-                                ` : `
-                                    <div class="size-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold flex-shrink-0">${playerName.charAt(0)}</div>
-                                `}
                                 <span class="text-sm ${isCaptain ? 'font-bold' : 'font-medium'}">${playerName}</span>
                             </div>
                             ${isCaptain ? '<span class="text-[10px] font-bold text-primary">C</span>' : `<span class="text-[9px] ${position === 'GK' ? 'text-primary border border-primary/30 px-1 rounded font-bold' : 'text-gray-400 font-bold'}">${position}</span>`}
                         </div>
                     `;
                 } else {
-                    // アウェイチーム用のHTML（右揃え: ポジション、顔写真、名前、背番号）
+                    // アウェイチーム用のHTML（右揃え: ポジション、名前、背番号）
                     return `
                         <div class="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors ${isCaptain ? 'bg-gray-50 dark:bg-white/10 border-r-2 border-gray-400' : ''}">
                             ${isCaptain ? '<span class="text-[10px] font-bold text-gray-400">C</span>' : `<span class="text-[9px] text-gray-400 font-bold">${position}</span>`}
                             <div class="flex items-center gap-3">
-                                ${playerPhoto ? `
-                                    <div class="size-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 dark:bg-gray-700">
-                                        <img src="${playerPhoto}" alt="${playerName}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                        <div class="w-full h-full bg-primary text-white flex items-center justify-center text-xs font-bold" style="display: none;">${playerName.charAt(0)}</div>
-                                    </div>
-                                ` : `
-                                    <div class="size-8 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold flex-shrink-0">${playerName.charAt(0)}</div>
-                                `}
                                 <span class="text-sm ${isCaptain ? 'font-bold' : 'font-medium'}">${playerName}</span>
                                 <span class="w-5 text-xs font-bold ${isCaptain ? 'text-gray-600 dark:text-gray-300' : 'text-gray-400'} text-right">${playerNumber}</span>
                             </div>
