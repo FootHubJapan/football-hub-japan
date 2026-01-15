@@ -755,15 +755,48 @@
             font-weight: bold;
             color: var(--muted);
             text-align: center;
+            flex-shrink: 0;
         }
         
         .xi-player-number.captain {
             color: var(--primary);
         }
         
+        .xi-player-photo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .xi-player-photo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .xi-player-photo-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
         .xi-player-name {
             font-size: 0.875rem;
             font-weight: 500;
+            flex: 1;
+            min-width: 0;
         }
         
         .xi-player-name.captain {
@@ -930,7 +963,7 @@
         .watch-live-button:hover {
             background: var(--primary-hover);
         }
-        
+
         .match-detail-header {
             text-align: center;
             margin-bottom: 30px;
@@ -4015,11 +4048,11 @@
                                     Tactical Overview
                                 </h3>
                                 <div class="formation-badge" id="formationBadge">4-4-2 vs 4-3-3</div>
-                            </div>
+                        </div>
                             <div class="pitch-container" id="pitchContainer">
                                 <!-- ピッチとプレイヤーがここに動的に挿入される -->
-                            </div>
                         </div>
+                    </div>
                         
                         <!-- スタメンリスト & サイドバー -->
                         <div class="lineup-sidebar">
@@ -6781,7 +6814,7 @@
                 if (isScheduled && (!matchData.lineups?.home?.startXI || !matchData.lineups?.away?.startXI)) {
                     pitchContainer.innerHTML = `
                         <div style="text-align: center; padding: 40px 20px; color: var(--muted); font-size: 16px;">
-                            <p style="margin-bottom: 20px;">📋 スタメンは試合前に発表されます</p>
+                                <p style="margin-bottom: 20px;">📋 スタメンは試合前に発表されます</p>
                             <p style="color: var(--muted); font-size: 14px;">スタメン情報が利用可能になり次第、こちらに表示されます。</p>
                         </div>
                     `;
@@ -6805,7 +6838,7 @@
                     if (isScheduled) {
                         pitchContainer.innerHTML = `
                             <div style="text-align: center; padding: 40px 20px; color: var(--muted); font-size: 16px;">
-                                <p style="margin-bottom: 20px;">📋 スタメンは試合前に発表されます</p>
+                                    <p style="margin-bottom: 20px;">📋 スタメンは試合前に発表されます</p>
                                 <p style="color: var(--muted); font-size: 14px;">${homeTeam} vs ${awayTeam}のスタメン情報が利用可能になり次第、こちらに表示されます。</p>
                             </div>
                         `;
@@ -6815,7 +6848,7 @@
                     } else {
                         pitchContainer.innerHTML = `
                             <div style="text-align: center; padding: 40px 20px; color: var(--muted); font-size: 16px;">
-                                <p style="margin-bottom: 20px;">📋 ラインアップ情報が利用できません</p>
+                                    <p style="margin-bottom: 20px;">📋 ラインアップ情報が利用できません</p>
                                 <p style="color: var(--muted); font-size: 14px;">${homeTeam} vs ${awayTeam}のラインアップデータが見つかりませんでした。</p>
                             </div>
                         `;
@@ -6895,7 +6928,7 @@
                     <div class="player-marker-modern" style="left: ${pos.left}%; bottom: ${bottom}%;" title="${player.name}">
                         <div class="player-circle home">${player.number}</div>
                         <span class="player-name-label">${player.name.split(' ').pop()}</span>
-                    </div>
+                        </div>
                 `;
             });
             
@@ -6908,25 +6941,37 @@
                     <div class="player-marker-modern" style="left: ${left}%; top: ${top}%;" title="${player.name}">
                         <div class="player-circle away">${player.number}</div>
                         <span class="player-name-label">${player.name.split(' ').pop()}</span>
-                    </div>
+                                </div>
                 `;
             });
             
             return html;
         }
         
-        // スタメンリストを生成
+        // スタメンリストを生成（顔写真付き）
         function generateStartingXIList(players, teamType) {
             return players.map((player, index) => {
                 const isCaptain = index === 0; // 最初のプレイヤーをキャプテンと仮定（実際のデータがあればそれを使用）
                 const position = getPositionLabel(player.position);
                 const positionClass = position === 'GK' ? 'primary' : 'other';
+                const playerPhoto = player.photo || null;
+                const playerName = player.name || 'Unknown';
                 
                 return `
                     <div class="xi-player-row ${isCaptain ? 'captain' : ''}">
                         <div class="xi-player-info">
                             <span class="xi-player-number ${isCaptain ? 'captain' : ''}">${player.number}</span>
-                            <span class="xi-player-name ${isCaptain ? 'captain' : ''}">${player.name}</span>
+                            ${playerPhoto ? `
+                                <div class="xi-player-photo">
+                                    <img src="${playerPhoto}" alt="${playerName}" class="xi-player-photo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="xi-player-photo-fallback" style="display: none;">${playerName.charAt(0)}</div>
+                                </div>
+                            ` : `
+                                <div class="xi-player-photo">
+                                    <div class="xi-player-photo-fallback">${playerName.charAt(0)}</div>
+                                </div>
+                            `}
+                            <span class="xi-player-name ${isCaptain ? 'captain' : ''}">${playerName}</span>
                             <span class="xi-player-position ${positionClass}">${position}</span>
                         </div>
                         ${isCaptain ? '<span class="xi-player-icon captain">C</span>' : '<span class="xi-player-icon">ℹ️</span>'}
@@ -6984,8 +7029,8 @@
                             <p class="highlight-title">${title}</p>
                             <p class="highlight-detail">${player}</p>
                         </div>
-                    </div>
-                `;
+                        </div>
+                    `;
             }).join('');
         }
 
@@ -7296,13 +7341,13 @@
             try {
                 const homeTeam = matchData.homeTeam || matchData.home || '-';
                 const awayTeam = matchData.awayTeam || matchData.away || '-';
-                const isFinishedOrLive = matchData.status === 'Finished' || matchData.status === 'FT' || matchData.status === 'LIVE' || matchData.status === 'HT' || matchData.status === '試合中' || matchData.status === '終了';
-                const homeScore = isFinishedOrLive 
-                    ? (matchData.homeScore !== undefined && matchData.homeScore !== null ? matchData.homeScore : 0)
-                    : (matchData.homeScore !== undefined && matchData.homeScore !== null ? matchData.homeScore : '-');
-                const awayScore = isFinishedOrLive
-                    ? (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : 0)
-                    : (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : '-');
+                    const isFinishedOrLive = matchData.status === 'Finished' || matchData.status === 'FT' || matchData.status === 'LIVE' || matchData.status === 'HT' || matchData.status === '試合中' || matchData.status === '終了';
+                    const homeScore = isFinishedOrLive 
+                        ? (matchData.homeScore !== undefined && matchData.homeScore !== null ? matchData.homeScore : 0)
+                        : (matchData.homeScore !== undefined && matchData.homeScore !== null ? matchData.homeScore : '-');
+                    const awayScore = isFinishedOrLive
+                        ? (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : 0)
+                        : (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : '-');
                 
                 // スコアボードヘッダーを更新
                 const homeTeamNameEl = document.getElementById('homeTeamName');
@@ -7372,7 +7417,7 @@
                 updateEventsTab(matchData.events || []);
                 
                 // ラインアップタブを更新
-                updateLineupTab(matchData);
+                    updateLineupTab(matchData);
                 
                 // 最初のタブ（Lineup）をアクティブにして表示
                 const firstTab = document.querySelector('.tab-button-modern[data-tab="lineup"]');
