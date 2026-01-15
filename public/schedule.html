@@ -21,6 +21,8 @@
                 extend: {
                     colors: {
                         "primary": "#00bdc7",
+                        "marinos-blue": "#003399",
+                        "frontale-green": "#00A960",
                         "background-light": "#f5f8f8",
                         "background-dark": "#0f2223",
                         "pitch-green": "#1a2e2f",
@@ -44,13 +46,7 @@
     <!-- Tailwind CSS Custom Styles -->
     <style type="text/tailwindcss">
         .pitch-pattern {
-            background-image: repeating-linear-gradient(
-                0deg,
-                rgba(255, 255, 255, 0.03) 0px,
-                rgba(255, 255, 255, 0.03) 1px,
-                transparent 1px,
-                transparent 5%
-            );
+            background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
         }
         .grass-stripes {
             background: repeating-linear-gradient(
@@ -63,6 +59,12 @@
         }
         .pitch-line {
             @apply border-white/20;
+        }
+        .heatmap-overlay {
+            background: radial-gradient(circle at 75% 30%, rgba(255, 107, 74, 0.6) 0%, transparent 20%),
+                        radial-gradient(circle at 25% 70%, rgba(0, 189, 199, 0.5) 0%, transparent 25%),
+                        radial-gradient(circle at 80% 60%, rgba(255, 107, 74, 0.4) 0%, transparent 15%),
+                        radial-gradient(circle at 40% 40%, rgba(0, 189, 199, 0.3) 0%, transparent 30%);
         }
     </style>
     
@@ -4040,37 +4042,42 @@
                 <div class="flex flex-col md:flex-row items-center justify-between gap-8 max-w-4xl mx-auto">
                     <!-- ホームチーム -->
                     <div class="flex flex-col items-center gap-4 flex-1 text-center">
-                        <div class="size-20 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center p-4 shadow-inner">
+                        <div class="size-24 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center p-4 shadow-inner">
                             <img id="homeTeamLogo" class="w-full" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="team-logo-fallback" style="display: none;">🏟️</div>
                         </div>
                         <div>
-                            <h2 id="homeTeamName" class="text-xl font-bold uppercase tracking-tight">-</h2>
-                            <p class="text-[10px] text-gray-400 font-bold tracking-widest">HOME</p>
+                            <h2 id="homeTeamName" class="text-2xl font-bold uppercase tracking-tight">-</h2>
+                            <p class="text-xs text-gray-400 font-medium">HOME</p>
                         </div>
                     </div>
                     
                     <!-- スコア & ステータス（中央） -->
                     <div class="flex flex-col items-center gap-2">
+                        <p class="text-sm font-bold text-primary tracking-widest uppercase" id="matchdayLabel">Matchday</p>
                         <div class="flex items-center gap-8">
-                            <span id="homeScoreLarge" class="text-5xl font-bold tabular-nums">-</span>
+                            <span id="homeScoreLarge" class="text-6xl font-bold tabular-nums">-</span>
                             <div class="flex flex-col items-center">
                                 <span class="text-2xl font-bold text-gray-300">:</span>
                                 <div id="matchMinute" class="mt-1 px-3 py-1 bg-gray-100 dark:bg-white/10 rounded text-xs font-bold" style="display: none;">0'</div>
                             </div>
-                            <span id="awayScoreLarge" class="text-5xl font-bold tabular-nums">-</span>
+                            <span id="awayScoreLarge" class="text-6xl font-bold tabular-nums">-</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm text-gray-500 mt-2">
+                            <span class="material-symbols-outlined text-base">location_on</span>
+                            <span id="venueName">-</span>
                         </div>
                     </div>
                     
                     <!-- アウェイチーム -->
                     <div class="flex flex-col items-center gap-4 flex-1 text-center">
-                        <div class="size-20 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center p-4 shadow-inner">
+                        <div class="size-24 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center p-4 shadow-inner">
                             <img id="awayTeamLogo" class="w-full" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="team-logo-fallback" style="display: none;">🏟️</div>
                         </div>
                         <div>
-                            <h2 id="awayTeamName" class="text-xl font-bold uppercase tracking-tight">-</h2>
-                            <p class="text-[10px] text-gray-400 font-bold tracking-widest">AWAY</p>
+                            <h2 id="awayTeamName" class="text-2xl font-bold uppercase tracking-tight">-</h2>
+                            <p class="text-xs text-gray-400 font-medium">AWAY</p>
                         </div>
                     </div>
                 </div>
@@ -4078,21 +4085,24 @@
             
             <!-- タブナビゲーション（新デザイン） -->
             <div class="flex border-b border-[#dae6e7] dark:border-white/10 gap-8 mb-8">
-                <a class="flex flex-col items-center justify-center border-b-[3px] border-primary text-primary pb-3 transition-all tab-button-modern active" data-tab="lineup" href="#">
+                <a class="flex flex-col items-center justify-center border-b-[3px] border-transparent text-gray-400 pb-3 hover:text-gray-600 dark:hover:text-gray-200 transition-all tab-button-modern" data-tab="lineup" href="#">
                     <p class="text-sm font-bold uppercase tracking-wider">Lineup</p>
                 </a>
-                <a class="flex flex-col items-center justify-center border-b-[3px] border-transparent text-gray-400 pb-3 hover:text-gray-600 dark:hover:text-gray-200 transition-all tab-button-modern" data-tab="stats" href="#">
+                <a class="flex flex-col items-center justify-center border-b-[3px] border-primary text-primary pb-3 transition-all tab-button-modern active" data-tab="stats" href="#">
                     <p class="text-sm font-bold uppercase tracking-wider">Stats</p>
                 </a>
                 <a class="flex flex-col items-center justify-center border-b-[3px] border-transparent text-gray-400 pb-3 hover:text-gray-600 dark:hover:text-gray-200 transition-all tab-button-modern" data-tab="events" href="#">
                     <p class="text-sm font-bold uppercase tracking-wider">Timeline</p>
+                </a>
+                <a class="flex flex-col items-center justify-center border-b-[3px] border-transparent text-gray-400 pb-3 hover:text-gray-600 dark:hover:text-gray-200 transition-all tab-button-modern" data-tab="news" href="#">
+                    <p class="text-sm font-bold uppercase tracking-wider">News</p>
                 </a>
             </div>
             
             <!-- タブコンテンツ -->
             <div class="tab-content-modern">
                 <!-- ラインアップタブ（新デザイン - 3カラムレイアウト） -->
-                <div id="lineup" class="tab-pane-modern active">
+                <div id="lineup" class="tab-pane-modern">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                         <!-- 左カラム: ホームチーム -->
                         <div class="lg:col-span-3 space-y-6">
@@ -4174,21 +4184,73 @@
                     </div>
                 </div>
                 
-                <!-- 試合統計タブ -->
-                <div id="stats" class="tab-pane-modern">
-                    <div class="stats-scroll-container">
-                        <div class="stats-categories">
-                            <div class="stats-category">
-                                <h4 class="category-title">詳細統計</h4>
-                                <div id="detailedStats" class="category-stats">
-                                    <div class="no-data">詳細統計データを読み込み中...</div>
+                <!-- 試合統計タブ（新デザイン） -->
+                <div id="stats" class="tab-pane-modern active">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <!-- 左カラム: 統計比較 -->
+                        <div class="lg:col-span-8 flex flex-col gap-6">
+                            <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl p-6 shadow-sm">
+                                <div class="flex items-center justify-between mb-8">
+                                    <div class="flex items-center gap-2">
+                                        <img id="homeTeamLogoSmallStats" class="size-6" src="" alt="" onerror="this.style.display='none';">
+                                        <span id="homeTeamNameSmallStats" class="text-sm font-bold uppercase">HOME</span>
+                                    </div>
+                                    <h3 class="text-base font-bold text-gray-400 uppercase tracking-widest">Match Statistics</h3>
+                                    <div class="flex items-center gap-2 text-right">
+                                        <span id="awayTeamNameSmallStats" class="text-sm font-bold uppercase">AWAY</span>
+                                        <img id="awayTeamLogoSmallStats" class="size-6" src="" alt="" onerror="this.style.display='none';">
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-8" id="statsComparison">
+                                    <!-- 統計データがここに動的に挿入される -->
+                                    <div class="no-data">統計データを読み込み中...</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="h2h-section">
-                            <h3 class="section-title">過去の対戦成績</h3>
-                            <div id="h2hStats" class="h2h-container">
-                                <div class="no-data">過去の対戦データを読み込み中...</div>
+                        
+                        <!-- 右カラム: ヒートマップとキーファクター -->
+                        <div class="lg:col-span-4 flex flex-col gap-6">
+                            <!-- Attack Heatmap -->
+                            <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
+                                <div class="p-4 border-b border-[#dae6e7] dark:border-white/10 flex items-center justify-between">
+                                    <h4 class="font-bold text-sm tracking-wide">ATTACK HEATMAP</h4>
+                                    <span class="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded">LIVE DATA</span>
+                                </div>
+                                <div class="p-4">
+                                    <div class="relative w-full aspect-[4/5] grass-stripes rounded-lg overflow-hidden border-2 border-white/10">
+                                        <div class="absolute inset-2 border border-white/20 rounded-sm"></div>
+                                        <div class="absolute top-1/2 left-2 right-2 h-px bg-white/20"></div>
+                                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-20 rounded-full border border-white/20"></div>
+                                        <div class="absolute top-2 left-1/2 -translate-x-1/2 w-32 h-12 border border-t-0 border-white/20"></div>
+                                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-12 border border-b-0 border-white/20"></div>
+                                        <div class="absolute inset-0 heatmap-overlay opacity-80"></div>
+                                        <div class="absolute top-4 left-4 text-[10px] font-bold text-white/40 uppercase" id="awayTeamAttackLabel">Away Attack</div>
+                                        <div class="absolute bottom-4 right-4 text-[10px] font-bold text-white/40 uppercase" id="homeTeamAttackLabel">Home Attack</div>
+                                    </div>
+                                    <div class="mt-4 flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase">
+                                        <div class="flex items-center gap-1">
+                                            <span class="size-2 bg-marinos-blue rounded-full"></span>
+                                            <span id="homeTeamActivityLabel">Home Activity</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <span class="size-2 bg-frontale-green rounded-full"></span>
+                                            <span id="awayTeamActivityLabel">Away Activity</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Key Match Factors -->
+                            <div class="bg-background-dark text-white p-5 rounded-xl">
+                                <h5 class="text-xs font-bold text-primary mb-4 uppercase tracking-widest">Key Match Factors</h5>
+                                <div class="space-y-4" id="keyMatchFactors">
+                                    <!-- キーファクターがここに動的に挿入される -->
+                                    <div class="text-sm text-gray-400">キーファクターを読み込み中...</div>
+                                </div>
+                                <button class="w-full mt-6 py-2 bg-primary text-background-dark font-bold text-sm rounded-lg hover:bg-primary/90 transition-all flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined text-lg">analytics</span>
+                                    FULL STATS REPORT
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -6190,42 +6252,258 @@
         function updateStatsTab(statsData, matchData = null) {
             console.log('Updating stats tab with data:', statsData);
             
+            const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
+            const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
+            
+            // チームロゴと名前を更新
+            const homeTeamId = getTeamId(homeTeam);
+            const awayTeamId = getTeamId(awayTeam);
+            const homeTeamLogoSmallStats = document.getElementById('homeTeamLogoSmallStats');
+            const awayTeamLogoSmallStats = document.getElementById('awayTeamLogoSmallStats');
+            const homeTeamNameSmallStats = document.getElementById('homeTeamNameSmallStats');
+            const awayTeamNameSmallStats = document.getElementById('awayTeamNameSmallStats');
+            
+            if (homeTeamLogoSmallStats) {
+                homeTeamLogoSmallStats.src = `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
+                homeTeamLogoSmallStats.alt = homeTeam;
+            }
+            if (awayTeamLogoSmallStats) {
+                awayTeamLogoSmallStats.src = `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
+                awayTeamLogoSmallStats.alt = awayTeam;
+            }
+            if (homeTeamNameSmallStats) homeTeamNameSmallStats.textContent = homeTeam.toUpperCase();
+            if (awayTeamNameSmallStats) awayTeamNameSmallStats.textContent = awayTeam.toUpperCase();
+            
+            // ヒートマップラベルを更新
+            const homeTeamAttackLabel = document.getElementById('homeTeamAttackLabel');
+            const awayTeamAttackLabel = document.getElementById('awayTeamAttackLabel');
+            const homeTeamActivityLabel = document.getElementById('homeTeamActivityLabel');
+            const awayTeamActivityLabel = document.getElementById('awayTeamActivityLabel');
+            if (homeTeamAttackLabel) homeTeamAttackLabel.textContent = homeTeam + ' Attack';
+            if (awayTeamAttackLabel) awayTeamAttackLabel.textContent = awayTeam + ' Attack';
+            if (homeTeamActivityLabel) homeTeamActivityLabel.textContent = homeTeam + ' Activity';
+            if (awayTeamActivityLabel) awayTeamActivityLabel.textContent = awayTeam + ' Activity';
+            
+            // 統計比較を更新
+            const statsComparison = document.getElementById('statsComparison');
+            if (statsComparison) {
+                statsComparison.innerHTML = generateStatsComparisonHTML(statsData, matchData);
+            }
+            
+            // キーマッチファクターを更新
+            const keyMatchFactors = document.getElementById('keyMatchFactors');
+            if (keyMatchFactors) {
+                keyMatchFactors.innerHTML = generateKeyMatchFactorsHTML(statsData, matchData);
+            }
+        }
+        
+        // 統計比較HTMLを生成
+        function generateStatsComparisonHTML(statsData, matchData) {
             if (!statsData || Object.keys(statsData).length === 0) {
-                const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
-                const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
-                const possessionBar = document.getElementById('possessionBar');
-                if (possessionBar) {
-                    possessionBar.innerHTML = `<div class="no-data">統計データが利用できません</div>`;
+                return '<div class="no-data">統計データが利用できません</div>';
+            }
+            
+            const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
+            const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
+            
+            // 統計データを取得
+            const possession = statsData.possession || { home: 50, away: 50 };
+            const totalShots = statsData.shots || statsData.totalShots || { home: 0, away: 0 };
+            const shotsOnTarget = statsData.shotsOnTarget || { home: 0, away: 0 };
+            const cornerKicks = statsData.cornerKicks || statsData.corners || { home: 0, away: 0 };
+            const fouls = statsData.fouls || { home: 0, away: 0 };
+            const yellowCards = statsData.yellowCards || { home: 0, away: 0 };
+            const redCards = statsData.redCards || { home: 0, away: 0 };
+            
+            // パーセンテージを計算
+            const possessionHome = Math.round(possession.home || 50);
+            const possessionAway = Math.round(possession.away || 50);
+            const totalShotsHome = totalShots.home || 0;
+            const totalShotsAway = totalShots.away || 0;
+            const totalShotsSum = totalShotsHome + totalShotsAway || 1;
+            const shotsOnTargetHome = shotsOnTarget.home || 0;
+            const shotsOnTargetAway = shotsOnTarget.away || 0;
+            const shotsOnTargetSum = shotsOnTargetHome + shotsOnTargetAway || 1;
+            const cornerKicksHome = cornerKicks.home || 0;
+            const cornerKicksAway = cornerKicks.away || 0;
+            const cornerKicksSum = cornerKicksHome + cornerKicksAway || 1;
+            const foulsHome = fouls.home || 0;
+            const foulsAway = fouls.away || 0;
+            const foulsSum = foulsHome + foulsAway || 1;
+            
+            let html = '';
+            
+            // Possession
+            html += `
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm font-bold mb-1">
+                        <span>${possessionHome}%</span>
+                        <span class="text-gray-400 uppercase text-xs tracking-tighter">Possession</span>
+                        <span>${possessionAway}%</span>
+                    </div>
+                    <div class="h-2.5 w-full bg-gray-100 dark:bg-white/10 rounded-full flex overflow-hidden">
+                        <div class="h-full bg-marinos-blue" style="width: ${possessionHome}%"></div>
+                        <div class="h-full bg-frontale-green" style="width: ${possessionAway}%"></div>
+                    </div>
+                </div>
+            `;
+            
+            // Total Shots
+            html += `
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm font-bold mb-1">
+                        <span>${totalShotsHome}</span>
+                        <span class="text-gray-400 uppercase text-xs tracking-tighter">Total Shots</span>
+                        <span>${totalShotsAway}</span>
+                    </div>
+                    <div class="h-2.5 w-full bg-gray-100 dark:bg-white/10 rounded-full flex overflow-hidden">
+                        <div class="h-full bg-marinos-blue" style="width: ${(totalShotsHome / totalShotsSum) * 100}%"></div>
+                        <div class="h-full bg-frontale-green" style="width: ${(totalShotsAway / totalShotsSum) * 100}%"></div>
+                    </div>
+                </div>
+            `;
+            
+            // Shots on Target
+            html += `
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm font-bold mb-1">
+                        <span>${shotsOnTargetHome}</span>
+                        <span class="text-gray-400 uppercase text-xs tracking-tighter">Shots on Target</span>
+                        <span>${shotsOnTargetAway}</span>
+                    </div>
+                    <div class="h-2.5 w-full bg-gray-100 dark:bg-white/10 rounded-full flex overflow-hidden">
+                        <div class="h-full bg-marinos-blue" style="width: ${(shotsOnTargetHome / shotsOnTargetSum) * 100}%"></div>
+                        <div class="h-full bg-frontale-green" style="width: ${(shotsOnTargetAway / shotsOnTargetSum) * 100}%"></div>
+                    </div>
+                </div>
+            `;
+            
+            // Corner Kicks
+            html += `
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm font-bold mb-1">
+                        <span>${cornerKicksHome}</span>
+                        <span class="text-gray-400 uppercase text-xs tracking-tighter">Corner Kicks</span>
+                        <span>${cornerKicksAway}</span>
+                    </div>
+                    <div class="h-2.5 w-full bg-gray-100 dark:bg-white/10 rounded-full flex overflow-hidden">
+                        <div class="h-full bg-marinos-blue" style="width: ${(cornerKicksHome / cornerKicksSum) * 100}%"></div>
+                        <div class="h-full bg-frontale-green" style="width: ${(cornerKicksAway / cornerKicksSum) * 100}%"></div>
+                    </div>
+                </div>
+            `;
+            
+            // Fouls
+            html += `
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm font-bold mb-1">
+                        <span>${foulsHome}</span>
+                        <span class="text-gray-400 uppercase text-xs tracking-tighter">Fouls</span>
+                        <span>${foulsAway}</span>
+                    </div>
+                    <div class="h-2.5 w-full bg-gray-100 dark:bg-white/10 rounded-full flex overflow-hidden">
+                        <div class="h-full bg-marinos-blue" style="width: ${(foulsHome / foulsSum) * 100}%"></div>
+                        <div class="h-full bg-frontale-green" style="width: ${(foulsAway / foulsSum) * 100}%"></div>
+                    </div>
+                </div>
+            `;
+            
+            // Yellow Cards & Red Cards
+            html += `
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-xl">
+                        <div class="flex gap-2">
+                            <div class="w-4 h-6 bg-yellow-400 rounded-sm"></div>
+                            <span class="text-xl font-bold">${yellowCards.home || 0}</span>
+                        </div>
+                        <span class="text-xs font-bold text-gray-400 uppercase">Yellow Cards</span>
+                        <div class="flex gap-2">
+                            <span class="text-xl font-bold">${yellowCards.away || 0}</span>
+                            <div class="w-4 h-6 bg-yellow-400 rounded-sm"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-xl">
+                        <div class="flex gap-2">
+                            <div class="w-4 h-6 bg-red-500 rounded-sm"></div>
+                            <span class="text-xl font-bold">${redCards.home || 0}</span>
+                        </div>
+                        <span class="text-xs font-bold text-gray-400 uppercase">Red Cards</span>
+                        <div class="flex gap-2">
+                            <span class="text-xl font-bold">${redCards.away || 0}</span>
+                            <div class="w-4 h-6 bg-red-500 rounded-sm"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return html;
+        }
+        
+        // キーマッチファクターHTMLを生成
+        function generateKeyMatchFactorsHTML(statsData, matchData) {
+            const factors = [];
+            
+            // ポゼッションが高い場合
+            if (statsData.possession) {
+                const possessionHome = statsData.possession.home || 50;
+                const possessionAway = statsData.possession.away || 50;
+                if (possessionHome > 60) {
+                    factors.push({
+                        icon: 'trending_up',
+                        iconColor: 'text-primary',
+                        title: 'High Press Intensity',
+                        description: `${matchData?.homeTeam || 'Home'} forcing turnovers in final third.`
+                    });
+                } else if (possessionAway > 60) {
+                    factors.push({
+                        icon: 'trending_up',
+                        iconColor: 'text-primary',
+                        title: 'High Press Intensity',
+                        description: `${matchData?.awayTeam || 'Away'} forcing turnovers in final third.`
+                    });
                 }
-                return;
-            }
-
-            // ポゼッション表示
-            updatePossession(statsData.possession);
-            
-            // トップ統計表示
-            updateTopStats(statsData, matchData);
-            
-            // カテゴリ別統計表示
-            updateCategoryStats(statsData);
-            
-            // Football-data.orgの詳細統計を表示
-            if (matchData && matchData.footballData && matchData.footballData.statistics) {
-                updateDetailedStats(matchData.footballData.statistics, matchData);
             }
             
-            // API-Football詳細統計を取得・表示
-            if (matchData) {
-                const fixtureId = matchData.fixtureId || matchData.id || matchData.fixture?.id || matchData.matchId;
-                if (fixtureId) {
-                    loadDetailedStatistics(fixtureId, matchData);
+            // コーナーキックが多い場合
+            if (statsData.cornerKicks || statsData.corners) {
+                const cornersHome = statsData.cornerKicks?.home || statsData.corners?.home || 0;
+                const cornersAway = statsData.cornerKicks?.away || statsData.corners?.away || 0;
+                if (cornersAway > 5) {
+                    factors.push({
+                        icon: 'warning',
+                        iconColor: 'text-accent-orange',
+                        title: 'Set Piece Vulnerability',
+                        description: `${matchData?.homeTeam || 'Home'} conceded ${cornersAway} shots from corners.`
+                    });
+                } else if (cornersHome > 5) {
+                    factors.push({
+                        icon: 'warning',
+                        iconColor: 'text-accent-orange',
+                        title: 'Set Piece Vulnerability',
+                        description: `${matchData?.awayTeam || 'Away'} conceded ${cornersHome} shots from corners.`
+                    });
                 }
             }
             
-            // 過去の対戦成績を取得
-            if (matchData) {
-                loadHeadToHead(matchData);
+            // デフォルトファクター
+            if (factors.length === 0) {
+                factors.push({
+                    icon: 'analytics',
+                    iconColor: 'text-primary',
+                    title: 'Match Analysis',
+                    description: 'Detailed match analysis will be available after the match.'
+                });
             }
+            
+            return factors.map(factor => `
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined ${factor.iconColor} text-xl">${factor.icon}</span>
+                    <div>
+                        <p class="text-sm font-bold">${factor.title}</p>
+                        <p class="text-[11px] text-gray-400">${factor.description}</p>
+                    </div>
+                </div>
+            `).join('');
         }
 
         // API-Football詳細統計を取得
@@ -7496,9 +7774,9 @@
                 // ラインアップタブを更新
                     updateLineupTab(matchData);
                 
-                // 最初のタブ（Lineup）をアクティブにして表示
-                const firstTab = document.querySelector('.tab-button-modern[data-tab="lineup"]');
-                const firstPane = document.getElementById('lineup');
+                // 最初のタブ（Stats）をアクティブにして表示
+                const firstTab = document.querySelector('.tab-button-modern[data-tab="stats"]');
+                const firstPane = document.getElementById('stats');
                 
                 if (firstTab && firstPane) {
                     // すべてのタブを非アクティブに
@@ -7509,9 +7787,9 @@
                     firstTab.classList.add('active');
                     firstPane.classList.add('active');
                     
-                    console.log('Lineup tab activated');
+                    console.log('Stats tab activated');
                 } else {
-                    console.error('Lineup tab or pane not found');
+                    console.error('Stats tab or pane not found');
                 }
                 
             } catch (error) {
