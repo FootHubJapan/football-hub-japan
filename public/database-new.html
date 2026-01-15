@@ -874,32 +874,59 @@
         }
 
         // Load players
-        async function loadPlayers(search = '', teamId = null) {
+        async function loadPlayers(search = '', teamId = null, teamName = null) {
             const grid = document.getElementById('playersGrid');
             grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>選手データを読み込み中...</p></div>';
 
             try {
+                // チームIDがある場合は、チーム名も取得（teams配列から）
+                let filterTeamName = teamName;
+                if (teamId && !filterTeamName && teams && teams.length > 0) {
+                    const team = teams.find(t => t.id === parseInt(teamId) || t.teamId === parseInt(teamId));
+                    if (team) {
+                        filterTeamName = team.name;
+                    }
+                }
+                
+                if (teamId) {
+                    console.log(`🔍 チームでフィルタリング: ${filterTeamName || 'Unknown'} (ID: ${teamId})`);
+                }
+                
                 const params = new URLSearchParams({
-                    page: currentPage,
-                    limit: playersPerPage
+                    limit: 10000 // 全選手を取得してからフィルタリング
                 });
                 
                 if (search) {
-                    params.append('search', search);
+                    params.append('query', search);
                 }
                 
                 const response = await fetch(`/api/integrated/players?${params}`);
                 const data = await response.json();
                 
                 let allPlayers = Array.isArray(data) ? data : (data.players || data.results || []);
+                console.log(`📊 取得した選手数: ${allPlayers.length}名`);
                 
                 // チームIDでフィルタリング
                 if (teamId) {
                     const teamIdNum = parseInt(teamId);
-                    allPlayers = allPlayers.filter(player => 
-                        player.teamId === teamIdNum || 
-                        player.currentTeamId === teamIdNum
-                    );
+                    const beforeFilter = allPlayers.length;
+                    allPlayers = allPlayers.filter(player => {
+                        const matchesId = player.teamId === teamIdNum || 
+                                         player.currentTeamId === teamIdNum ||
+                                         player.team?.id === teamIdNum;
+                        const matchesName = filterTeamName && (
+                            (player.currentTeam && player.currentTeam.toLowerCase() === filterTeamName.toLowerCase()) ||
+                            (player.teamName && player.teamName.toLowerCase() === filterTeamName.toLowerCase()) ||
+                            (player.team && player.team.name && player.team.name.toLowerCase() === filterTeamName.toLowerCase())
+                        );
+                        return matchesId || matchesName;
+                    });
+                    console.log(`✅ フィルタリング後: ${allPlayers.length}名 (${beforeFilter} → ${allPlayers.length})`);
+                    if (allPlayers.length > 0) {
+                        console.log(`   サンプル: ${allPlayers[0].name} (teamId: ${allPlayers[0].teamId}, currentTeam: ${allPlayers[0].currentTeam})`);
+                    } else {
+                        console.warn(`⚠️ フィルタリング結果が0件です。teamId: ${teamIdNum}, teamName: ${filterTeamName}`);
+                    }
                 }
                 
                 players = allPlayers;
@@ -1053,7 +1080,15 @@
         function changePage(page) {
             currentPage = page;
             const search = document.getElementById('playerFilter').value;
-            loadPlayers(search, selectedTeamId);
+            // チーム名を取得
+            let teamName = null;
+            if (selectedTeamId && teams && teams.length > 0) {
+                const team = teams.find(t => t.id === selectedTeamId || t.teamId === selectedTeamId);
+                if (team) {
+                    teamName = team.name;
+                }
+            }
+            loadPlayers(search, selectedTeamId, teamName);
         }
 
         // Navigation functions
@@ -1076,14 +1111,26 @@
         }
 
         function selectTeam(teamId) {
-            selectedTeamId = teamId;
+            const teamIdNum = parseInt(teamId);
+            selectedTeamId = teamIdNum;
+            
+            // チーム名を取得
+            let teamName = null;
+            if (teams && teams.length > 0) {
+                const team = teams.find(t => t.id === teamIdNum || t.teamId === teamIdNum);
+                if (team) {
+                    teamName = team.name;
+                }
+            }
+            
+            console.log(`🏆 チーム選択: ID=${teamIdNum}, Name=${teamName || 'Unknown'}`);
             
             // 選手タブに切り替え
             document.querySelector('[data-tab="players"]').click();
             
             // チームでフィルタリングして選手を表示
             currentPage = 1;
-            loadPlayers('', selectedTeamId);
+            loadPlayers('', selectedTeamId, teamName);
             
             // 選手フィルターをクリア
             document.getElementById('playerFilter').value = '';
