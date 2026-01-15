@@ -7362,34 +7362,35 @@
             switch (formation) {
                 case '4-4-2':
                     // ホームチーム（上側）の位置: top (%), left (%)
-                    // 画像に基づく正確な位置
-                    positions.push({ top: 8, left: 50 });   // GK
-                    positions.push({ top: 20, left: 10 });  // LB
-                    positions.push({ top: 22, left: 35 });  // LCB
-                    positions.push({ top: 22, left: 65 });  // RCB
-                    positions.push({ top: 20, left: 90 });  // RB
-                    positions.push({ top: 35, left: 12 });  // LM
-                    positions.push({ top: 38, left: 38 });  // LCM
-                    positions.push({ top: 38, left: 62 });  // RCM
-                    positions.push({ top: 35, left: 88 });  // RM
-                    positions.push({ top: 46, left: 15 });  // LS
-                    positions.push({ top: 46, left: 85 });  // RS
+                    // 提供されたHTMLに基づく正確な位置（実際には4-3-3のように見えるが、HTMLに従う）
+                    positions.push({ top: 8, left: 50 });   // GK (21)
+                    positions.push({ top: 20, left: 10 });  // LB (2)
+                    positions.push({ top: 22, left: 35 });  // LCB (5)
+                    positions.push({ top: 22, left: 65 });  // RCB (13)
+                    positions.push({ top: 20, left: 90 });  // RB (4)
+                    positions.push({ top: 35, left: 25 });  // LM (8)
+                    positions.push({ top: 38, left: 50 });  // CM (6)
+                    positions.push({ top: 35, left: 75 });  // RM (10)
+                    positions.push({ top: 46, left: 15 });  // LW (7)
+                    positions.push({ top: 48, left: 50 });  // ST (9)
+                    positions.push({ top: 46, left: 85 });  // RW (11)
                     break;
                     
                 case '4-3-3':
-                    // アウェイチーム（下側）の位置（画像に基づく）
-                    positions.push({ top: 8, left: 50 });   // GK
-                    positions.push({ top: 20, left: 10 });  // LB
-                    positions.push({ top: 22, left: 35 });  // LCB
-                    positions.push({ top: 22, left: 65 });  // RCB
-                    positions.push({ top: 20, left: 90 });  // RB
-                    positions.push({ top: 34, left: 12 });  // LCM
-                    positions.push({ top: 36, left: 38 });  // CM
-                    positions.push({ top: 36, left: 62 });  // RCM
-                    positions.push({ top: 34, left: 88 });  // RCM (右側)
-                    positions.push({ top: 46, left: 15 });  // LW
-                    positions.push({ top: 48, left: 50 });  // ST
-                    positions.push({ top: 46, left: 85 });  // RW
+                    // アウェイチーム（下側）の位置（提供されたHTMLに基づく）
+                    // bottom位置をtop位置に変換: top = 100 - bottom
+                    // 提供されたHTMLでは4-4-2のように見えるが、バッジには4-3-3と表示
+                    positions.push({ top: 92, left: 50 });   // GK (1) bottom-[8%]
+                    positions.push({ top: 80, left: 10 });  // LB (2) bottom-[20%]
+                    positions.push({ top: 78, left: 35 });  // LCB (4) bottom-[22%]
+                    positions.push({ top: 78, left: 65 });  // RCB (5) bottom-[22%]
+                    positions.push({ top: 80, left: 90 });  // RB (3) bottom-[20%]
+                    positions.push({ top: 66, left: 12 });  // LCM (7) bottom-[34%]
+                    positions.push({ top: 64, left: 38 });  // CM (6) bottom-[36%]
+                    positions.push({ top: 64, left: 62 });  // RCM (8) bottom-[36%]
+                    positions.push({ top: 66, left: 88 });  // RM (10) bottom-[34%]
+                    positions.push({ top: 54, left: 30 });  // LW (11) bottom-[46%]
+                    positions.push({ top: 54, left: 70 });  // ST (9) bottom-[46%]
                     break;
                     
                 case '4-2-3-1':
@@ -7454,10 +7455,11 @@
                 homePlayers.forEach((player, index) => {
                     const pos = homePositions[index] || { top: 8, left: 50 };
                     const leftPercent = pos.left || pos.right ? (pos.right ? 100 - pos.right : pos.left) : 50;
+                    const isCenter = leftPercent === 50;
                     
                     html += `
-                        <div class="absolute flex flex-col items-center" style="top: ${pos.top}%; left: ${leftPercent}%; transform: translate(-50%, -50%);">
-                            <div class="size-7 bg-white text-background-dark rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-primary">${player.number || (index + 1)}</div>
+                        <div class="absolute flex flex-col items-center" style="top: ${pos.top}%; ${isCenter ? 'left: 50%; transform: translate(-50%, -50%);' : `left: ${leftPercent}%; transform: translate(-50%, -50%);`}">
+                            <div class="size-7 bg-white text-background-dark rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-primary shadow-lg">${player.number || (index + 1)}</div>
                         </div>
                     `;
                 });
@@ -7468,14 +7470,15 @@
             // アウェイチームのプレイヤー（下側 - primary色の円）
             if (awayPlayers && awayPlayers.length > 0) {
                 awayPlayers.forEach((player, index) => {
-                    const pos = awayPositions[index] || { top: 8, left: 50 };
+                    const pos = awayPositions[index] || { top: 92, left: 50 };
                     const leftPercent = pos.left || pos.right ? (pos.right ? 100 - pos.right : pos.left) : 50;
                     // アウェイチームは下側に配置するため、top位置をbottom位置に変換
                     const bottomPercent = 100 - pos.top;
+                    const isCenter = leftPercent === 50;
                     
                     html += `
-                        <div class="absolute flex flex-col items-center" style="bottom: ${bottomPercent}%; left: ${leftPercent}%; transform: translate(-50%, 50%);">
-                            <div class="size-7 bg-primary text-white rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white">${player.number || (index + 1)}</div>
+                        <div class="absolute flex flex-col items-center" style="bottom: ${bottomPercent}%; ${isCenter ? 'left: 50%; transform: translate(-50%, 50%);' : `left: ${leftPercent}%; transform: translate(-50%, 50%);`}">
+                            <div class="size-7 bg-primary text-white rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-lg">${player.number || (index + 1)}</div>
                         </div>
                     `;
                 });
