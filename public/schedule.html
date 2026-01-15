@@ -4230,20 +4230,11 @@
                 <div id="lineup" class="tab-pane-modern">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                         <!-- 左カラム: ホームチーム -->
-                        <div class="lg:col-span-3 space-y-6">
+                        <div class="lg:col-span-3 space-y-4">
                             <div class="flex items-center gap-3 mb-2 px-2">
                                 <img id="homeTeamLogoSmall" class="size-6" src="" alt="" onerror="this.style.display='none';">
                                 <h4 id="homeTeamNameSmall" class="font-bold text-sm tracking-wide uppercase">HOME TEAM</h4>
                         </div>
-                            <!-- ホームチーム スタメン -->
-                            <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
-                                <div class="bg-primary/10 px-4 py-2 border-b border-primary/20">
-                                    <span class="text-[10px] font-bold text-primary uppercase tracking-widest">Starting XI</span>
-                        </div>
-                                <div class="p-2 space-y-0.5" id="homeStartingXI">
-                                    <!-- プレイヤーがここに動的に挿入される -->
-                    </div>
-                            </div>
                             <!-- ホームチーム サブスティテュート -->
                             <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
                                 <div class="bg-gray-50 dark:bg-white/5 px-4 py-2 border-b dark:border-white/10">
@@ -4282,19 +4273,10 @@
                         </div>
 
                         <!-- 右カラム: アウェイチーム -->
-                        <div class="lg:col-span-3 space-y-6">
+                        <div class="lg:col-span-3 space-y-4">
                             <div class="flex items-center gap-3 mb-2 px-2 justify-end text-right">
                                 <h4 id="awayTeamNameSmall" class="font-bold text-sm tracking-wide uppercase">AWAY TEAM</h4>
                                 <img id="awayTeamLogoSmall" class="size-6" src="" alt="" onerror="this.style.display='none';">
-                            </div>
-                            <!-- アウェイチーム スタメン -->
-                            <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
-                                <div class="bg-gray-100 dark:bg-white/10 px-4 py-2 border-b dark:border-white/10 text-right">
-                                    <span class="text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-widest">Starting XI</span>
-                                </div>
-                                <div class="p-2 space-y-0.5" id="awayStartingXI">
-                                    <!-- プレイヤーがここに動的に挿入される -->
-                                </div>
                             </div>
                             <!-- アウェイチーム サブスティテュート -->
                             <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
@@ -7470,7 +7452,7 @@
         // サブスティテュートリストを生成（新デザイン）
         function generateSubstitutesList(subs, teamType) {
             if (!subs || subs.length === 0) {
-                return '<div class="flex items-center gap-3 p-2 text-sm text-gray-500">サブなし</div>';
+                return '<div class="flex items-center gap-3 p-2 text-sm text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors">サブなし</div>';
             }
             return subs.slice(0, 5).map(sub => {
                 const playerName = sub.player?.name || sub.name || 'Unknown';
@@ -7479,17 +7461,17 @@
                 // ホームチーム用のHTML（左揃え）
                 if (teamType === 'home') {
                     return `
-                        <div class="flex items-center gap-3 p-2 text-sm text-gray-500">
-                            <span class="w-5 font-bold">${playerNumber}</span>
-                            <span>${playerName}</span>
-                    </div>
-                `;
+                        <div class="flex items-center gap-3 p-2 text-sm text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors">
+                            <span class="w-5 font-bold text-xs">${playerNumber}</span>
+                            <span class="font-medium">${playerName}</span>
+                        </div>
+                    `;
                 } else {
                     // アウェイチーム用のHTML（右揃え）
                     return `
-                        <div class="flex items-center gap-3 p-2 text-sm text-gray-500 justify-end">
-                            <span>${playerName}</span>
-                            <span class="w-5 font-bold text-right">${playerNumber}</span>
+                        <div class="flex items-center gap-3 p-2 text-sm text-gray-500 justify-end hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors">
+                            <span class="font-medium">${playerName}</span>
+                            <span class="w-5 font-bold text-right text-xs">${playerNumber}</span>
                         </div>
                     `;
                 }
