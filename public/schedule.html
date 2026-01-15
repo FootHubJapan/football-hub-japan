@@ -4266,15 +4266,7 @@
                                     4-4-2 VS 4-3-3
                                 </div>
                             </div>
-                            <div class="relative w-full max-w-md aspect-[2/3] grass-stripes rounded-2xl overflow-hidden border-8 border-white/5 shadow-2xl">
-                                <div class="absolute inset-4 border-2 pitch-line rounded-sm pitch-pattern"></div>
-                                <div class="absolute inset-x-4 top-1/2 -translate-y-1/2 h-0.5 bg-white/20"></div>
-                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-32 rounded-full border-2 pitch-line"></div>
-                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-1 bg-white rounded-full"></div>
-                                <div class="absolute top-4 left-1/2 -translate-x-1/2 w-48 h-12 border-2 border-t-0 pitch-line"></div>
-                                <div class="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-5 border-2 border-t-0 pitch-line opacity-50"></div>
-                                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-48 h-12 border-2 border-b-0 pitch-line"></div>
-                                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-24 h-5 border-2 border-b-0 pitch-line opacity-50"></div>
+                            <div class="relative w-full max-w-md aspect-2-3 grass-stripes rounded-2xl overflow-hidden border-8 border-white/5 shadow-2xl">
                                 <div class="pitch-container" id="pitchContainer">
                                     <!-- ピッチとプレイヤーがここに動的に挿入される -->
                                 </div>
@@ -7492,7 +7484,7 @@
                 html += `
                     <div class="absolute flex flex-col items-center" style="top: ${topPercent}%; left: ${leftPercent}%; transform: translateX(-50%);">
                         <div class="size-7 bg-white text-background-dark rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-primary">${player.number || (index + 1)}</div>
-                    </div>
+                        </div>
                 `;
             });
             
@@ -7507,7 +7499,7 @@
                 html += `
                     <div class="absolute flex flex-col items-center" style="bottom: ${bottomPercent}%; left: ${leftPercent}%; transform: translateX(-50%);">
                         <div class="size-7 bg-primary text-white rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white">${player.number || (index + 1)}</div>
-                    </div>
+                                </div>
                 `;
             });
             
