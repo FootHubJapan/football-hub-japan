@@ -4175,8 +4175,8 @@
                             <h2 id="homeTeamName" class="text-2xl font-bold uppercase tracking-tight">-</h2>
                             <p class="text-xs text-gray-400 font-medium">HOME</p>
                         </div>
-                    </div>
-                    
+            </div>
+            
                     <!-- スコア & ステータス（中央） -->
                     <div class="flex flex-col items-center gap-2">
                         <p class="text-sm font-bold text-primary tracking-widest uppercase" id="matchdayLabel">Matchday</p>
@@ -4234,15 +4234,15 @@
                             <div class="flex items-center gap-3 mb-2 px-2">
                                 <img id="homeTeamLogoSmall" class="size-6" src="" alt="" onerror="this.style.display='none';">
                                 <h4 id="homeTeamNameSmall" class="font-bold text-sm tracking-wide uppercase">HOME TEAM</h4>
-                            </div>
+                        </div>
                             <!-- ホームチーム スタメン -->
                             <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
                                 <div class="bg-primary/10 px-4 py-2 border-b border-primary/20">
                                     <span class="text-[10px] font-bold text-primary uppercase tracking-widest">Starting XI</span>
-                                </div>
+                        </div>
                                 <div class="p-2 space-y-0.5" id="homeStartingXI">
                                     <!-- プレイヤーがここに動的に挿入される -->
-                                </div>
+                    </div>
                             </div>
                             <!-- ホームチーム サブスティテュート -->
                             <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
@@ -4252,9 +4252,9 @@
                                 <div class="p-2 space-y-0.5" id="homeSubstitutes">
                                     <!-- サブがここに動的に挿入される -->
                                 </div>
-                            </div>
-                        </div>
-                        
+                    </div>
+                </div>
+                
                         <!-- 中央カラム: タクティカルピッチ -->
                         <div class="lg:col-span-6 flex flex-col items-center">
                             <div class="w-full flex justify-between items-center mb-4 px-2">
@@ -4280,7 +4280,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- 右カラム: アウェイチーム -->
                         <div class="lg:col-span-3 space-y-6">
                             <div class="flex items-center gap-3 mb-2 px-2 justify-end text-right">
@@ -6377,8 +6377,8 @@
         function updateStatsTab(statsData, matchData = null) {
             console.log('Updating stats tab with data:', statsData);
             
-            const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
-            const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
+                const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
+                const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
             
             // チームロゴと名前を更新
             const homeTeamId = getTeamId(homeTeam);
@@ -7399,9 +7399,9 @@
                 const leftPercent = 50 + (pos.left - 50); // 50%を中心に左右に配置
                 
                 html += `
-                    <div class="absolute top-[${topPercent}%] left-1/2 -translate-x-1/2 flex flex-col items-center" style="left: ${leftPercent}%; transform: translateX(-50%);">
+                    <div class="absolute flex flex-col items-center" style="top: ${topPercent}%; left: ${leftPercent}%; transform: translateX(-50%);">
                         <div class="size-7 bg-white text-background-dark rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-primary">${player.number || (index + 1)}</div>
-                    </div>
+                        </div>
                 `;
             });
             
@@ -7414,9 +7414,9 @@
                 const leftPercent = 50 + (pos.left - 50); // 50%を中心に左右に配置
                 
                 html += `
-                    <div class="absolute bottom-[${bottomPercent}%] left-1/2 -translate-x-1/2 flex flex-col items-center" style="left: ${leftPercent}%; transform: translateX(-50%);">
+                    <div class="absolute flex flex-col items-center" style="bottom: ${bottomPercent}%; left: ${leftPercent}%; transform: translateX(-50%);">
                         <div class="size-7 bg-primary text-white rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white">${player.number || (index + 1)}</div>
-                    </div>
+                                </div>
                 `;
             });
             
@@ -7438,9 +7438,9 @@
                             <div class="flex items-center gap-3">
                                 <span class="w-5 text-xs font-bold ${isCaptain ? 'text-primary' : 'text-gray-400'}">${playerNumber}</span>
                                 <span class="text-sm ${isCaptain ? 'font-bold' : 'font-medium'}">${playerName}</span>
-                            </div>
+                                </div>
                             ${isCaptain ? '<span class="text-[10px] font-bold text-primary">C</span>' : `<span class="text-[9px] ${position === 'GK' ? 'text-primary border border-primary/30 px-1 rounded font-bold' : 'text-gray-400 font-bold'}">${position}</span>`}
-                        </div>
+                            </div>
                     `;
                 } else {
                     // アウェイチーム用のHTML（右揃え: ポジション、名前、背番号）
@@ -7450,7 +7450,7 @@
                             <div class="flex items-center gap-3">
                                 <span class="text-sm ${isCaptain ? 'font-bold' : 'font-medium'}">${playerName}</span>
                                 <span class="w-5 text-xs font-bold ${isCaptain ? 'text-gray-600 dark:text-gray-300' : 'text-gray-400'} text-right">${playerNumber}</span>
-                            </div>
+                        </div>
                         </div>
                     `;
                 }
@@ -7472,8 +7472,8 @@
                         <div class="flex items-center gap-3 p-2 text-sm text-gray-500">
                             <span class="w-5 font-bold">${playerNumber}</span>
                             <span>${playerName}</span>
-                        </div>
-                    `;
+                    </div>
+                `;
                 } else {
                     // アウェイチーム用のHTML（右揃え）
                     return `
