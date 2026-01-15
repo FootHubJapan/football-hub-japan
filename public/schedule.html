@@ -7238,15 +7238,13 @@
             
             try {
                 const pitchContainer = document.getElementById('pitchContainer');
-                const homeStartingXI = document.getElementById('homeStartingXI');
-                const awayStartingXI = document.getElementById('awayStartingXI');
                 const homeSubstitutes = document.getElementById('homeSubstitutes');
                 const awaySubstitutes = document.getElementById('awaySubstitutes');
                 const formationBadge = document.getElementById('formationBadge');
                 const highlightsList = document.getElementById('highlightsList');
                 
-                if (!pitchContainer || !homeStartingXI || !awayStartingXI) {
-                    console.error('Lineup containers not found');
+                if (!pitchContainer) {
+                    console.error('Pitch container not found');
                     return;
                 }
 
@@ -7266,8 +7264,6 @@
                             <p style="color: var(--muted); font-size: 14px;">スタメン情報が利用可能になり次第、こちらに表示されます。</p>
                         </div>
                     `;
-                    homeStartingXI.innerHTML = '<div class="no-data">スタメン未発表</div>';
-                    awayStartingXI.innerHTML = '<div class="no-data">スタメン未発表</div>';
                     return;
                 }
 
@@ -7290,8 +7286,6 @@
                                 <p style="color: var(--muted); font-size: 14px;">${homeTeam} vs ${awayTeam}のスタメン情報が利用可能になり次第、こちらに表示されます。</p>
                             </div>
                         `;
-                        homeStartingXI.innerHTML = '<div class="no-data">スタメン未発表</div>';
-                        awayStartingXI.innerHTML = '<div class="no-data">スタメン未発表</div>';
                         return;
                     } else {
                         pitchContainer.innerHTML = `
@@ -7300,8 +7294,6 @@
                                 <p style="color: var(--muted); font-size: 14px;">${homeTeam} vs ${awayTeam}のラインアップデータが見つかりませんでした。</p>
                             </div>
                         `;
-                        homeStartingXI.innerHTML = '<div class="no-data">データなし</div>';
-                        awayStartingXI.innerHTML = '<div class="no-data">データなし</div>';
                         return;
                     }
                 }
@@ -7318,10 +7310,6 @@
                 // タクティカルピッチを生成
                 const pitchHTML = generateModernPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation);
                 pitchContainer.innerHTML = pitchHTML;
-
-                // スタメンリストを生成
-                homeStartingXI.innerHTML = generateStartingXIList(homePlayers, 'home');
-                awayStartingXI.innerHTML = generateStartingXIList(awayPlayers, 'away');
 
                 // サブスティテュートを生成
                 const homeSubs = matchData.lineups?.home?.substitutes || [];
