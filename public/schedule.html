@@ -7362,33 +7362,34 @@
             switch (formation) {
                 case '4-4-2':
                     // ホームチーム（上側）の位置: top (%), left (%)
-                    positions.push({ top: 8, left: 50 });   // GK (21)
-                    positions.push({ top: 20, left: 10 });  // LB (2)
-                    positions.push({ top: 22, left: 35 });  // LCB (5)
-                    positions.push({ top: 22, left: 65 });  // RCB (13)
-                    positions.push({ top: 20, left: 90 }); // RB (4)
-                    positions.push({ top: 35, left: 12 }); // LM (8)
-                    positions.push({ top: 38, left: 38 });  // LCM (6)
-                    positions.push({ top: 38, left: 62 });  // RCM (10)
+                    // 画像に基づく正確な位置
+                    positions.push({ top: 8, left: 50 });   // GK
+                    positions.push({ top: 20, left: 10 });  // LB
+                    positions.push({ top: 22, left: 35 });  // LCB
+                    positions.push({ top: 22, left: 65 });  // RCB
+                    positions.push({ top: 20, left: 90 });  // RB
+                    positions.push({ top: 35, left: 12 });  // LM
+                    positions.push({ top: 38, left: 38 });  // LCM
+                    positions.push({ top: 38, left: 62 });  // RCM
                     positions.push({ top: 35, left: 88 });  // RM
-                    positions.push({ top: 46, left: 30 });  // LS (7)
-                    positions.push({ top: 46, left: 70 });  // RS (9 or 11)
+                    positions.push({ top: 46, left: 15 });  // LS
+                    positions.push({ top: 46, left: 85 });  // RS
                     break;
                     
                 case '4-3-3':
                     // アウェイチーム（下側）の位置（画像に基づく）
-                    positions.push({ top: 8, left: 50 });   // GK (1)
-                    positions.push({ top: 20, left: 10 });  // LB (2)
-                    positions.push({ top: 22, left: 35 });  // LCB (4)
-                    positions.push({ top: 22, left: 65 });  // RCB (5)
-                    positions.push({ top: 20, left: 90 });  // RB (3)
-                    positions.push({ top: 34, left: 12 });  // LCM (7)
-                    positions.push({ top: 36, left: 38 });  // CM (6)
-                    positions.push({ top: 36, left: 62 });  // RCM (8)
-                    positions.push({ top: 34, left: 88 });  // RCM (10)
-                    positions.push({ top: 46, left: 30 });  // LW (11)
-                    positions.push({ top: 46, left: 70 });  // ST (9)
-                    positions.push({ top: 46, left: 50 });  // RW (中央、見えていない可能性)
+                    positions.push({ top: 8, left: 50 });   // GK
+                    positions.push({ top: 20, left: 10 });  // LB
+                    positions.push({ top: 22, left: 35 });  // LCB
+                    positions.push({ top: 22, left: 65 });  // RCB
+                    positions.push({ top: 20, left: 90 });  // RB
+                    positions.push({ top: 34, left: 12 });  // LCM
+                    positions.push({ top: 36, left: 38 });  // CM
+                    positions.push({ top: 36, left: 62 });  // RCM
+                    positions.push({ top: 34, left: 88 });  // RCM (右側)
+                    positions.push({ top: 46, left: 15 });  // LW
+                    positions.push({ top: 48, left: 50 });  // ST
+                    positions.push({ top: 46, left: 85 });  // RW
                     break;
                     
                 case '4-2-3-1':
