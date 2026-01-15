@@ -689,15 +689,17 @@
         let players = [];
         let currentPage = 1;
         const playersPerPage = 20;
+        let selectedLeagueId = null; // 選択中のリーグID
+        let selectedTeamId = null; // 選択中のチームID
 
-        // League data with flags
+        // League data with flags and API league IDs
         const leagueData = [
-            { id: 'j1', name: 'Jリーグ', country: '日本', flag: '🇯🇵', teams: 20, players: 560 },
-            { id: 'pl', name: 'プレミアリーグ', country: 'イングランド', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', teams: 20, players: 520 },
-            { id: 'laliga', name: 'ラ・リーガ', country: 'スペイン', flag: '🇪🇸', teams: 20, players: 500 },
-            { id: 'seriea', name: 'セリエA', country: 'イタリア', flag: '🇮🇹', teams: 20, players: 520 },
-            { id: 'bundesliga', name: 'ブンデスリーガ', country: 'ドイツ', flag: '🇩🇪', teams: 18, players: 480 },
-            { id: 'ligue1', name: 'リーグ・アン', country: 'フランス', flag: '🇫🇷', teams: 18, players: 460 }
+            { id: 'j1', name: 'Jリーグ', country: '日本', flag: '🇯🇵', teams: 20, players: 560, leagueId: 98 },
+            { id: 'pl', name: 'プレミアリーグ', country: 'イングランド', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', teams: 20, players: 520, leagueId: 39 },
+            { id: 'laliga', name: 'ラ・リーガ', country: 'スペイン', flag: '🇪🇸', teams: 20, players: 500, leagueId: 140 },
+            { id: 'seriea', name: 'セリエA', country: 'イタリア', flag: '🇮🇹', teams: 20, players: 520, leagueId: 135 },
+            { id: 'bundesliga', name: 'ブンデスリーガ', country: 'ドイツ', flag: '🇩🇪', teams: 18, players: 480, leagueId: 78 },
+            { id: 'ligue1', name: 'リーグ・アン', country: 'フランス', flag: '🇫🇷', teams: 18, players: 460, leagueId: 61 }
         ];
 
         // Initialize
@@ -719,6 +721,13 @@
                         content.classList.remove('active');
                     });
                     document.getElementById(`${tab.dataset.tab}-content`).classList.add('active');
+                    
+                    // タブ切り替え時に選択状態をリセット（オプション）
+                    // コメントアウトしているので、選択状態は保持されます
+                    // if (tab.dataset.tab === 'leagues') {
+                    //     selectedLeagueId = null;
+                    //     selectedTeamId = null;
+                    // }
                 });
             });
         }
@@ -792,14 +801,33 @@
         }
 
         // Load teams
-        async function loadTeams(searchQuery = '') {
+        async function loadTeams(searchQuery = '', leagueId = null) {
             try {
-                const url = searchQuery 
-                    ? `/api/fotmob/teams?query=${encodeURIComponent(searchQuery)}`
-                    : '/api/fotmob/teams';
+                let url = '/api/fotmob/teams';
+                const params = new URLSearchParams();
+                
+                if (searchQuery) {
+                    params.append('query', searchQuery);
+                }
+                if (leagueId) {
+                    params.append('league', leagueId);
+                }
+                
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+                
                 const response = await fetch(url);
                 const data = await response.json();
-                teams = data.teams || data || [];
+                const allTeams = data.teams || data || [];
+                
+                // リーグIDでフィルタリング
+                if (leagueId) {
+                    teams = allTeams.filter(team => team.leagueId === leagueId);
+                } else {
+                    teams = allTeams;
+                }
+                
                 displayTeams(teams);
             } catch (error) {
                 console.error('Error loading teams:', error);
@@ -818,7 +846,7 @@
             }
 
             grid.innerHTML = data.slice(0, 100).map(team => `
-                <div class="team-card" onclick="selectTeam(${team.id})">
+                <div class="team-card" onclick="selectTeam(${team.id || team.teamId || 0})">
                     <div class="team-header">
                         <div class="team-logo">
                             ${team.logo ? `<img src="${team.logo}" alt="${team.name}" onerror="this.parentElement.innerHTML='⚽'">` : '⚽'}
@@ -841,33 +869,45 @@
         // Filter teams
         function filterTeams() {
             const query = document.getElementById('teamFilter').value.trim();
-            if (query) {
-                // APIで検索
-                loadTeams(query);
-            } else {
-                // クエリがない場合は全チームを表示
-                loadTeams();
-            }
+            // 選択中のリーグIDも考慮してフィルタリング
+            loadTeams(query, selectedLeagueId);
         }
 
         // Load players
-        async function loadPlayers(search = '') {
+        async function loadPlayers(search = '', teamId = null) {
             const grid = document.getElementById('playersGrid');
             grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>選手データを読み込み中...</p></div>';
 
             try {
                 const params = new URLSearchParams({
                     page: currentPage,
-                    limit: playersPerPage,
-                    search: search
+                    limit: playersPerPage
                 });
                 
-                const response = await fetch(`/api/fotmob/players?${params}`);
+                if (search) {
+                    params.append('search', search);
+                }
+                
+                const response = await fetch(`/api/integrated/players?${params}`);
                 const data = await response.json();
                 
-                players = data.players || [];
+                let allPlayers = Array.isArray(data) ? data : (data.players || data.results || []);
+                
+                // チームIDでフィルタリング
+                if (teamId) {
+                    const teamIdNum = parseInt(teamId);
+                    allPlayers = allPlayers.filter(player => 
+                        player.teamId === teamIdNum || 
+                        player.currentTeamId === teamIdNum
+                    );
+                }
+                
+                players = allPlayers;
                 displayPlayers(players);
-                updatePagination(data.totalPages || 1, data.total || 0);
+                
+                // ページネーションは全件数ベースで計算
+                const totalPages = Math.ceil(players.length / playersPerPage);
+                updatePagination(totalPages, players.length);
             } catch (error) {
                 console.error('Error loading players:', error);
                 grid.innerHTML = '<div class="no-results">選手データの読み込みに失敗しました</div>';
@@ -883,8 +923,13 @@
                 return;
             }
 
-            grid.innerHTML = data.map(player => `
-                <div class="player-card" onclick="selectPlayer(${player.id})">
+            // ページネーション対応: 現在のページの選手のみを表示
+            const startIndex = (currentPage - 1) * playersPerPage;
+            const endIndex = startIndex + playersPerPage;
+            const paginatedData = data.slice(startIndex, endIndex);
+            
+            grid.innerHTML = paginatedData.map(player => `
+                <div class="player-card" onclick="selectPlayer(${player.playerId || player.id || 0})">
                     <div class="player-header">
                         <div class="player-avatar">
                             ${player.photo ? 
@@ -1008,19 +1053,40 @@
         function changePage(page) {
             currentPage = page;
             const search = document.getElementById('playerFilter').value;
-            loadPlayers(search);
+            loadPlayers(search, selectedTeamId);
         }
 
         // Navigation functions
         function selectLeague(leagueId) {
-            // Switch to teams tab and filter by league
+            // リーグIDを取得
+            const league = leagueData.find(l => l.id === leagueId);
+            if (!league) return;
+            
+            selectedLeagueId = league.leagueId;
+            selectedTeamId = null; // チーム選択をリセット
+            
+            // チームタブに切り替え
             document.querySelector('[data-tab="teams"]').click();
-            // TODO: Filter teams by league
+            
+            // リーグでフィルタリングしてチームを表示
+            loadTeams('', selectedLeagueId);
+            
+            // チームフィルターをクリア
+            document.getElementById('teamFilter').value = '';
         }
 
         function selectTeam(teamId) {
-            // Navigate to team detail or filter players
+            selectedTeamId = teamId;
+            
+            // 選手タブに切り替え
             document.querySelector('[data-tab="players"]').click();
+            
+            // チームでフィルタリングして選手を表示
+            currentPage = 1;
+            loadPlayers('', selectedTeamId);
+            
+            // 選手フィルターをクリア
+            document.getElementById('playerFilter').value = '';
         }
 
         function selectPlayer(playerId) {
