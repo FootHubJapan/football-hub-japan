@@ -4237,10 +4237,10 @@
                         </div>
                             <!-- ホームチーム サブスティテュート -->
                             <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
-                                <div class="bg-gray-50 dark:bg-white/5 px-4 py-2 border-b dark:border-white/10">
-                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Substitutes</span>
+                                <div class="bg-gray-50 dark:bg-white/5 px-4 py-2.5 border-b dark:border-white/10">
+                                    <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Substitutes</span>
                         </div>
-                                <div class="p-2 space-y-0.5" id="homeSubstitutes">
+                                <div class="p-3 space-y-1" id="homeSubstitutes">
                                     <!-- サブがここに動的に挿入される -->
                     </div>
                     </div>
@@ -4257,7 +4257,7 @@
                                     4-4-2 VS 4-3-3
                                 </div>
                             </div>
-                            <div class="relative w-full max-w-3xl aspect-[2/3] grass-stripes rounded-2xl overflow-hidden border-8 border-white/5 shadow-2xl">
+                            <div class="relative w-full max-w-full lg:max-w-4xl xl:max-w-5xl aspect-[2/3] grass-stripes rounded-2xl overflow-hidden border-8 border-white/5 shadow-2xl">
                                 <div class="absolute inset-4 border-2 pitch-line rounded-sm pitch-pattern"></div>
                                 <div class="absolute inset-x-4 top-1/2 -translate-y-1/2 h-0.5 bg-white/20"></div>
                                 <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-32 rounded-full border-2 pitch-line"></div>
@@ -4280,10 +4280,10 @@
                             </div>
                             <!-- アウェイチーム サブスティテュート -->
                             <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
-                                <div class="bg-gray-50 dark:bg-white/5 px-4 py-2 border-b dark:border-white/10 text-right">
-                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Substitutes</span>
+                                <div class="bg-gray-50 dark:bg-white/5 px-4 py-2.5 border-b dark:border-white/10 text-right">
+                                    <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Substitutes</span>
                                 </div>
-                                <div class="p-2 space-y-0.5" id="awaySubstitutes">
+                                <div class="p-3 space-y-1" id="awaySubstitutes">
                                     <!-- サブがここに動的に挿入される -->
                                 </div>
                             </div>
@@ -7525,26 +7525,26 @@
         // サブスティテュートリストを生成（新デザイン）
         function generateSubstitutesList(subs, teamType) {
             if (!subs || subs.length === 0) {
-                return '<div class="flex items-center gap-3 p-2 text-sm text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors">サブなし</div>';
+                return '<div class="flex items-center gap-3 p-2 text-base text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors">サブなし</div>';
             }
-            return subs.slice(0, 5).map(sub => {
+            return subs.slice(0, 7).map(sub => {
                 const playerName = sub.player?.name || sub.name || 'Unknown';
                 const playerNumber = sub.player?.number || sub.number || '';
                 
                 // ホームチーム用のHTML（左揃え）
                 if (teamType === 'home') {
                     return `
-                        <div class="flex items-center gap-3 p-2 text-sm text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors">
-                            <span class="w-5 font-bold text-xs">${playerNumber}</span>
-                            <span class="font-medium">${playerName}</span>
+                        <div class="flex items-center gap-3 p-2.5 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors">
+                            <span class="w-6 font-bold text-sm">${playerNumber}</span>
+                            <span class="font-medium text-sm">${playerName}</span>
                     </div>
                 `;
                 } else {
                     // アウェイチーム用のHTML（右揃え）
                     return `
-                        <div class="flex items-center gap-3 p-2 text-sm text-gray-500 justify-end hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors">
-                            <span class="font-medium">${playerName}</span>
-                            <span class="w-5 font-bold text-right text-xs">${playerNumber}</span>
+                        <div class="flex items-center gap-3 p-2.5 text-base text-gray-700 dark:text-gray-300 justify-end hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors">
+                            <span class="font-medium text-sm">${playerName}</span>
+                            <span class="w-6 font-bold text-right text-sm">${playerNumber}</span>
                         </div>
                     `;
                 }
