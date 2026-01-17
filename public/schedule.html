@@ -6977,6 +6977,7 @@
             console.log('MatchData:', matchData);
             const matchView = document.getElementById('matchView');
             console.log('MatchView exists:', !!matchView);
+            const tabContent = matchView ? matchView.querySelector('.tab-content-modern') : null;
             if (matchView) {
                 const allPanels = matchView.querySelectorAll('[data-panel]');
                 console.log('All panels in matchView (count):', allPanels.length);
@@ -6991,7 +6992,6 @@
                 });
                 
                 // tab-content-modern内のパネルも確認
-                const tabContent = matchView.querySelector('.tab-content-modern');
                 console.log('tab-content-modern exists:', !!tabContent);
                 if (tabContent) {
                     const panelsInTabContent = tabContent.querySelectorAll('[data-panel]');
