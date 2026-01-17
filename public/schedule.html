@@ -664,6 +664,23 @@
             min-height: 400px;
         }
         
+        /* Lineupタブのレイアウト（PC標準サイズ1280px対応） */
+        .lineup-container-pc {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        
+        .substitute-list-fixed {
+            width: 280px;
+            flex-shrink: 0;
+        }
+        
+        @media (max-width: 1024px) {
+            .substitute-list-fixed {
+                width: 100%;
+            }
+        }
+        
         .tab-pane-modern {
             display: none;
         }
@@ -4237,9 +4254,9 @@
             <div class="tab-content-modern px-2">
                 <!-- ラインアップタブ（新デザイン - 3カラムレイアウト） -->
                 <div id="lineup" class="tab-pane-modern">
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
+                    <div class="flex flex-col lg:flex-row gap-6 items-start justify-center w-full lineup-container-pc">
                         <!-- 左カラム: ホームチーム -->
-                        <div class="lg:col-span-3 space-y-8 sticky top-24">
+                        <div class="w-full substitute-list-fixed space-y-8 sticky top-24">
                             <div class="flex flex-col items-center gap-6 text-center">
                                 <div class="size-24 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center p-4 shadow-sm border-b-4 border-marinos-blue">
                                     <img id="homeTeamLogoSmall" class="w-full" src="" alt="" onerror="this.style.display='none';">
@@ -4258,7 +4275,7 @@
                 </div>
                 
                         <!-- 中央カラム: タクティカルピッチ -->
-                        <div class="lg:col-span-6 flex flex-col items-center">
+                        <div class="flex-1 flex flex-col items-center min-w-0 max-w-[720px]">
                             <div class="w-full flex justify-between items-center mb-8 px-6 bg-white dark:bg-white/5 py-4 rounded-xl border border-[#dae6e7] dark:border-white/10">
                                 <div class="flex items-center gap-3">
                                     <span class="material-symbols-outlined text-primary text-2xl">stadium</span>
@@ -4269,7 +4286,7 @@
                                     <div class="text-xs font-bold text-frontale-green bg-frontale-green/10 px-4 py-2 rounded">4-4-2 (AWAY)</div>
                                 </div>
                             </div>
-                            <div class="relative w-full aspect-[2/3] grass-stripes rounded-3xl overflow-hidden border-[16px] border-white/5 shadow-2xl">
+                            <div class="relative w-full max-w-[700px] grass-stripes rounded-3xl overflow-hidden border-[16px] border-white/5 shadow-2xl" style="aspect-ratio: 2/3; max-height: 800px;">
                                 <div class="absolute inset-6 border-2 pitch-line rounded-sm pitch-pattern"></div>
                                 <div class="absolute inset-x-6 top-1/2 -translate-y-1/2 h-0.5 bg-white/20"></div>
                                 <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-48 rounded-full border-2 pitch-line"></div>
@@ -4285,7 +4302,7 @@
                         </div>
 
                         <!-- 右カラム: アウェイチーム -->
-                        <div class="lg:col-span-3 space-y-8 sticky top-24">
+                        <div class="w-full substitute-list-fixed space-y-8 sticky top-24">
                             <div class="flex flex-col items-center gap-6 text-center">
                                 <div class="size-24 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center p-4 shadow-sm border-b-4 border-frontale-green">
                                     <img id="awayTeamLogoSmall" class="w-full" src="" alt="" onerror="this.style.display='none';">
