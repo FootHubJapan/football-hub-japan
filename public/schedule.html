@@ -4421,7 +4421,7 @@
             
             <!-- 戻るボタン -->
             <div style="margin-bottom: 1rem;">
-                <button onclick="location.hash='';" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(51, 255, 255, 0.2); color: var(--primary); border-radius: 0.5rem; border: none; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(51,255,255,0.3)'" onmouseout="this.style.background='rgba(51,255,255,0.2)'">
+                <button onclick="(function(){const url=new URL(location.href);url.searchParams.delete('match');location.href=url.pathname+url.search;})()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(51, 255, 255, 0.2); color: var(--primary); border-radius: 0.5rem; border: none; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(51,255,255,0.3)'" onmouseout="this.style.background='rgba(51,255,255,0.2)'">
                     <span class="material-symbols-outlined">arrow_back</span>
                     <span>試合一覧に戻る</span>
                 </button>
@@ -6005,8 +6005,10 @@
                 }
                 
                 if (matchId) {
-                    // ハッシュに遷移（ルーティング機能が処理する）
-                    location.hash = `match=${matchId}`;
+                    // クエリパラメータに遷移（ルーティング機能が処理する）
+                    const url = new URL(location.href);
+                    url.searchParams.set('match', matchId);
+                    location.href = url.pathname + url.search;
                 } else {
                     console.error('No valid match ID found');
                     alert('試合IDが見つかりませんでした');
@@ -6030,89 +6032,119 @@
             }
         }
 
-        function parseHash() {
-            // #match=12345 を読む
+        function getMatchId() {
+            // クエリパラメータを優先、なければハッシュから取得
+            const url = new URL(location.href);
+            const queryMatch = url.searchParams.get("match");
+            if (queryMatch) return queryMatch;
+            
+            // ハッシュから取得（後方互換性）
             const h = location.hash.replace("#", "");
-            if (!h) return { view: "schedule" };
+            if (!h) return null;
             const [k, v] = h.split("=");
-            if (k === "match" && v) return { view: "match", id: v };
-            return { view: "schedule" };
+            if (k === "match" && v) return v;
+            return null;
+        }
+
+        function showMatchView() {
+            const scheduleView = document.getElementById("scheduleView");
+            const matchView = document.getElementById("matchView");
+            if (scheduleView) scheduleView.classList.add("hidden");
+            if (matchView) {
+                matchView.classList.remove("hidden");
+                matchView.style.display = "";
+            }
+        }
+
+        function showScheduleView() {
+            const scheduleView = document.getElementById("scheduleView");
+            const matchView = document.getElementById("matchView");
+            if (scheduleView) {
+                scheduleView.classList.remove("hidden");
+                scheduleView.style.display = "";
+            }
+            if (matchView) matchView.classList.add("hidden");
         }
 
         async function route() {
-            const scheduleView = document.getElementById("scheduleView");
-            const matchView = document.getElementById("matchView");
-            const r = parseHash();
-
-            if (r.view === "match") {
-                hide(scheduleView);
-                show(matchView);
-                // 初期タブ：lineup に固定（UI一致）
-                setActiveTab("lineup");
-                // ここでデータ反映
-                await loadMatchIntoView(r.id);
-                // スクロールも合わせる（UX）
-                window.scrollTo({ top: 0, behavior: "instant" });
+            const matchId = getMatchId();
+            if (!matchId) {
+                showScheduleView();
                 return;
             }
-
-            show(scheduleView);
-            hide(matchView);
+            showMatchView();
+            setActiveTab("lineup");
+            await loadMatchIntoView(matchId);
+            window.scrollTo({ top: 0, behavior: "instant" });
         }
 
         window.addEventListener("hashchange", route);
         window.addEventListener("DOMContentLoaded", route);
+        // クエリパラメータの変更も監視（popstateイベント）
+        window.addEventListener("popstate", route);
 
-        // タブ切り替え機能（MatchDetail内）
+        // タブ切り替え機能（MatchDetail内）- #matchViewに完全スコープ
         function setActiveTab(tab) {
-            const tabs = document.querySelectorAll("#matchView [data-tab]");
-            const panels = document.querySelectorAll("#matchView [data-panel]");
+            const root = document.getElementById("matchView");
+            if (!root) {
+                console.error("matchView not found");
+                return;
+            }
+
+            const tabs = root.querySelector("#matchTabs");
+            if (!tabs) {
+                console.error("matchTabs not found");
+                return;
+            }
+
+            const btns = Array.from(tabs.querySelectorAll("[data-tab]"));
+            const panels = Array.from(root.querySelectorAll("[data-panel]"));
+
+            // 存在しないタブが来たらlineupにフォールバック
+            const exists = panels.some(p => p.getAttribute("data-panel") === tab);
+            const activeTab = exists ? tab : "lineup";
 
             panels.forEach(p => {
-                if (p) {
-                    const isActive = p.getAttribute("data-panel") === tab;
-                    if (isActive) {
-                        p.classList.remove("hidden");
-                        // STATSタブの場合はflex、それ以外はblock
-                        if (tab === "stats") {
-                            p.style.display = "flex";
-                            p.style.flexDirection = "column";
-                            p.style.gap = "2rem";
-                        } else {
-                            p.style.display = "";
-                        }
+                const isActive = p.getAttribute("data-panel") === activeTab;
+                if (isActive) {
+                    p.classList.remove("hidden");
+                    // STATSタブの場合はflex、それ以外はblock
+                    if (activeTab === "stats") {
+                        p.style.display = "flex";
+                        p.style.flexDirection = "column";
+                        p.style.gap = "2rem";
                     } else {
-                        p.classList.add("hidden");
-                        p.style.display = "none";
+                        p.style.display = "";
                     }
+                } else {
+                    p.classList.add("hidden");
+                    p.style.display = "none";
                 }
             });
 
-            tabs.forEach(b => {
-                if (b) {
-                    const active = b.getAttribute("data-tab") === tab;
-                    if (active) {
-                        b.classList.add("active");
-                        b.style.backgroundColor = "#00bdc7";
-                        b.style.color = "white";
-                        b.style.fontWeight = "700";
-                        b.style.boxShadow = "0 0 10px rgba(0, 189, 199, 0.3)";
+            btns.forEach(b => {
+                const active = b.getAttribute("data-tab") === activeTab;
+                if (active) {
+                    b.classList.add("active");
+                    b.style.backgroundColor = "#00bdc7";
+                    b.style.color = "white";
+                    b.style.fontWeight = "700";
+                    b.style.boxShadow = "0 0 10px rgba(0, 189, 199, 0.3)";
                 } else {
-                        b.classList.remove("active");
-                        b.style.backgroundColor = "transparent";
-                        b.style.color = "#9ab0bc";
-                        b.style.fontWeight = "600";
-                        b.style.boxShadow = "none";
-                    }
+                    b.classList.remove("active");
+                    b.style.backgroundColor = "transparent";
+                    b.style.color = "#9ab0bc";
+                    b.style.fontWeight = "600";
+                    b.style.boxShadow = "none";
                 }
             });
             
-            console.log('Tab switched to:', tab);
+            console.log('Tab switched to:', activeTab);
         }
 
-        // タブボタンのクリックイベント
+        // タブボタンのクリックイベント - #matchViewに完全スコープ
         document.addEventListener("click", (e) => {
-            const btn = e.target.closest("#matchView [data-tab]");
+            const btn = e.target.closest("#matchView #matchTabs [data-tab]");
             if (!btn) return;
             e.preventDefault();
             const tabName = btn.getAttribute("data-tab");
@@ -6120,6 +6152,9 @@
                 setActiveTab(tabName);
             }
         });
+
+        // グローバルに公開（他の関数から呼び出し可能にする）
+        window.setActiveTab = setActiveTab;
 
         // 試合データをMatchViewに読み込む関数
         async function loadMatchIntoView(matchId) {
