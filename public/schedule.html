@@ -4605,16 +4605,10 @@
             
             // モーダルの初期化確認
             const modal = document.getElementById('matchDetailsModal');
-            const modalTitle = document.getElementById('modalTitle');
             if (modal) {
                 console.log('Modal found:', modal.id);
             } else {
                 console.error('Modal not found');
-            }
-            if (modalTitle) {
-                console.log('Modal title found:', modalTitle.id);
-            } else {
-                console.error('Modal title not found');
             }
             
             // モーダルクローズ処理
@@ -7503,7 +7497,7 @@
                         <div class="absolute flex flex-col items-center" style="bottom: ${bottomPercent}%; ${isCenter ? 'left: 50%; transform: translate(-50%, 50%);' : `left: ${leftPercent}%; transform: translate(-50%, 50%);`}">
                             <div class="size-11 player-node-frontale rounded-full flex items-center justify-center text-sm font-bold">${playerNumber}</div>
                             <span class="mt-1.5 text-[10px] font-bold uppercase tracking-tight text-white drop-shadow-md">${shortName}</span>
-                        </div>
+                                </div>
                     `;
                 });
             } else {
