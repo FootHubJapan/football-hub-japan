@@ -4235,6 +4235,15 @@
                                 <img id="homeTeamLogoSmall" class="size-6" src="" alt="" onerror="this.style.display='none';">
                                 <h4 id="homeTeamNameSmall" class="font-bold text-sm tracking-wide uppercase">HOME TEAM</h4>
                         </div>
+                            <!-- ホームチーム スターティングXI -->
+                            <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm mb-4">
+                                <div class="bg-gray-50 dark:bg-white/5 px-4 py-2 border-b dark:border-white/10">
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Starting XI</span>
+                        </div>
+                                <div class="p-2 space-y-0.5" id="homeStartingXI">
+                                    <!-- スタメンがここに動的に挿入される -->
+                    </div>
+                    </div>
                             <!-- ホームチーム サブスティテュート -->
                             <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
                                 <div class="bg-gray-50 dark:bg-white/5 px-4 py-2 border-b dark:border-white/10">
@@ -4277,6 +4286,15 @@
                             <div class="flex items-center gap-3 mb-2 px-2 justify-end text-right">
                                 <h4 id="awayTeamNameSmall" class="font-bold text-sm tracking-wide uppercase">AWAY TEAM</h4>
                                 <img id="awayTeamLogoSmall" class="size-6" src="" alt="" onerror="this.style.display='none';">
+                            </div>
+                            <!-- アウェイチーム スターティングXI -->
+                            <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm mb-4">
+                                <div class="bg-gray-50 dark:bg-white/5 px-4 py-2 border-b dark:border-white/10 text-right">
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Starting XI</span>
+                                </div>
+                                <div class="p-2 space-y-0.5" id="awayStartingXI">
+                                    <!-- スタメンがここに動的に挿入される -->
+                                </div>
                             </div>
                             <!-- アウェイチーム サブスティテュート -->
                             <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
@@ -7238,6 +7256,8 @@
             
             try {
                 const pitchContainer = document.getElementById('pitchContainer');
+                const homeStartingXI = document.getElementById('homeStartingXI');
+                const awayStartingXI = document.getElementById('awayStartingXI');
                 const homeSubstitutes = document.getElementById('homeSubstitutes');
                 const awaySubstitutes = document.getElementById('awaySubstitutes');
                 const formationBadge = document.getElementById('formationBadge');
@@ -7322,6 +7342,14 @@
                 // タクティカルピッチを生成
                 const pitchHTML = generateModernPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation);
                 pitchContainer.innerHTML = pitchHTML;
+
+                // スターティングXIを生成
+                if (homeStartingXI) {
+                    homeStartingXI.innerHTML = generateStartingXIList(homePlayers, 'home');
+                }
+                if (awayStartingXI) {
+                    awayStartingXI.innerHTML = generateStartingXIList(awayPlayers, 'away');
+                }
 
                 // サブスティテュートを生成
                 const homeSubs = matchData.lineups?.home?.substitutes || [];
