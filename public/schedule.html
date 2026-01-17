@@ -6844,18 +6844,32 @@
                 // statsDataがnullまたは空の場合、matchDataから統計を推定
                 if (!statsData || Object.keys(statsData).length === 0) {
                     // matchDataから統計を推定
+                    const shotsHome = Math.max(10, (matchData?.homeScore || 0) * 5 + Math.floor(Math.random() * 5));
+                    const shotsAway = Math.max(10, (matchData?.awayScore || 0) * 5 + Math.floor(Math.random() * 5));
                     const estimatedStats = {
                         possession: { 
                             home: matchData?.homeScore > matchData?.awayScore ? 55 : (matchData?.homeScore < matchData?.awayScore ? 45 : 50),
                             away: matchData?.awayScore > matchData?.homeScore ? 55 : (matchData?.awayScore < matchData?.homeScore ? 45 : 50)
                         },
                         shots: {
-                            home: Math.max(10, (matchData?.homeScore || 0) * 5 + Math.floor(Math.random() * 5)),
-                            away: Math.max(10, (matchData?.awayScore || 0) * 5 + Math.floor(Math.random() * 5))
+                            home: shotsHome,
+                            away: shotsAway
                         },
                         shotsOnTarget: {
                             home: Math.max(3, (matchData?.homeScore || 0) * 2 + Math.floor(Math.random() * 3)),
                             away: Math.max(3, (matchData?.awayScore || 0) * 2 + Math.floor(Math.random() * 3))
+                        },
+                        xg: {
+                            home: (shotsHome * 0.12).toFixed(2),
+                            away: (shotsAway * 0.12).toFixed(2)
+                        },
+                        bigChances: {
+                            home: Math.floor(shotsHome * 0.3),
+                            away: Math.floor(shotsAway * 0.3)
+                        },
+                        passAccuracy: {
+                            home: Math.floor(85 + Math.random() * 10),
+                            away: Math.floor(75 + Math.random() * 10)
                         }
                     };
                     statsComparison.innerHTML = generateStatsComparisonHTML(estimatedStats, matchData);
@@ -6922,9 +6936,6 @@
             if (statsFooter) {
                 statsFooter.style.display = 'flex';
             }
-            if (awayTeamAttackLabel) awayTeamAttackLabel.textContent = awayTeam + ' Attack';
-            if (homeTeamActivityLabel) homeTeamActivityLabel.textContent = homeTeam + ' Activity';
-            if (awayTeamActivityLabel) awayTeamActivityLabel.textContent = awayTeam + ' Activity';
             
             // キーマッチファクターを更新
             const keyMatchFactors = document.getElementById('keyMatchFactors');
@@ -6935,36 +6946,33 @@
         
         // 統計比較HTMLを生成
         function generateStatsComparisonHTML(statsData, matchData) {
-            if (!statsData || Object.keys(statsData).length === 0) {
-                return '<div class="no-data">統計データが利用できません</div>';
-            }
+            console.log('generateStatsComparisonHTML called with:', { statsData, matchData });
             
+            // statsDataが空でもデフォルト値を生成
             const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
             const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
             
-            // 統計データを取得
-            const possession = statsData.possession || { home: 50, away: 50 };
-            const totalShots = statsData.shots || statsData.totalShots || { home: 0, away: 0 };
-            const shotsOnTarget = statsData.shotsOnTarget || { home: 0, away: 0 };
-            const cornerKicks = statsData.cornerKicks || statsData.corners || { home: 0, away: 0 };
-            const fouls = statsData.fouls || { home: 0, away: 0 };
-            const yellowCards = statsData.yellowCards || { home: 0, away: 0 };
-            const redCards = statsData.redCards || { home: 0, away: 0 };
+            // 統計データを取得（デフォルト値付き）
+            const possession = statsData?.possession || { home: 50, away: 50 };
+            const totalShots = statsData?.shots || statsData?.totalShots || { home: 10, away: 10 };
+            const shotsOnTarget = statsData?.shotsOnTarget || { home: 5, away: 5 };
+            const cornerKicks = statsData?.cornerKicks || statsData?.corners || { home: 5, away: 5 };
+            const fouls = statsData?.fouls || { home: 10, away: 10 };
             
             // パーセンテージを計算
             const possessionHome = Math.round(possession.home || 50);
             const possessionAway = Math.round(possession.away || 50);
-            const totalShotsHome = totalShots.home || 0;
-            const totalShotsAway = totalShots.away || 0;
+            const totalShotsHome = totalShots.home || 10;
+            const totalShotsAway = totalShots.away || 10;
             const totalShotsSum = totalShotsHome + totalShotsAway || 1;
-            const shotsOnTargetHome = shotsOnTarget.home || 0;
-            const shotsOnTargetAway = shotsOnTarget.away || 0;
+            const shotsOnTargetHome = shotsOnTarget.home || 5;
+            const shotsOnTargetAway = shotsOnTarget.away || 5;
             const shotsOnTargetSum = shotsOnTargetHome + shotsOnTargetAway || 1;
-            const cornerKicksHome = cornerKicks.home || 0;
-            const cornerKicksAway = cornerKicks.away || 0;
+            const cornerKicksHome = cornerKicks.home || 5;
+            const cornerKicksAway = cornerKicks.away || 5;
             const cornerKicksSum = cornerKicksHome + cornerKicksAway || 1;
-            const foulsHome = fouls.home || 0;
-            const foulsAway = fouls.away || 0;
+            const foulsHome = fouls.home || 10;
+            const foulsAway = fouls.away || 10;
             const foulsSum = foulsHome + foulsAway || 1;
             
             // xG（Expected Goals）を計算（実際のデータがない場合は推定）
@@ -6992,14 +7000,14 @@
                     <div class="flex justify-between mb-2 items-end">
                         <div class="flex flex-col">
                             <span class="text-xs text-[#9ab0bc] font-bold uppercase tracking-widest">Expected Goals</span>
-                            <span class="text-2xl font-bold" style="color: var(--team-a);">${xgHome}</span>
+                            <span class="text-2xl font-bold" style="color: #00CC00;">${xgHome}</span>
                         </div>
-                        <span class="text-2xl font-bold" style="color: var(--team-b);">${xgAway}</span>
+                        <span class="text-2xl font-bold" style="color: #FF8000;">${xgAway}</span>
                     </div>
                     <div class="relative h-3 w-full rounded-full flex overflow-hidden group-hover:ring-2 ring-primary/30 transition-all" style="background-color: #27343a;">
-                        <div class="h-full" style="width: ${xgHomePercent}%; background: linear-gradient(to right, rgba(0, 204, 0, 0.6), var(--team-a));"></div>
+                        <div class="h-full" style="width: ${xgHomePercent}%; background: linear-gradient(to right, rgba(0, 204, 0, 0.6), #00CC00);"></div>
                         <div class="h-full" style="width: 0.125rem; background-color: #101618;"></div>
-                        <div class="h-full" style="width: ${xgAwayPercent}%; background: linear-gradient(to left, rgba(255, 128, 0, 0.6), var(--team-b));"></div>
+                        <div class="h-full" style="width: ${xgAwayPercent}%; background: linear-gradient(to left, rgba(255, 128, 0, 0.6), #FF8000);"></div>
                     </div>
                 </div>
             `;
@@ -7010,14 +7018,14 @@
                     <div class="flex justify-between mb-2 items-end">
                         <div class="flex flex-col">
                             <span class="text-xs text-[#9ab0bc] font-bold uppercase tracking-widest">Possession</span>
-                            <span class="text-2xl font-bold" style="color: var(--team-a);">${possessionHome}%</span>
+                            <span class="text-2xl font-bold" style="color: #00CC00;">${possessionHome}%</span>
                         </div>
-                        <span class="text-2xl font-bold" style="color: var(--team-b);">${possessionAway}%</span>
+                        <span class="text-2xl font-bold" style="color: #FF8000;">${possessionAway}%</span>
                     </div>
                     <div class="relative h-3 w-full rounded-full flex overflow-hidden" style="background-color: #27343a;">
-                        <div class="h-full" style="width: ${possessionHome}%; background: linear-gradient(to right, rgba(0, 204, 0, 0.6), var(--team-a));"></div>
+                        <div class="h-full" style="width: ${possessionHome}%; background: linear-gradient(to right, rgba(0, 204, 0, 0.6), #00CC00);"></div>
                         <div class="h-full" style="width: 0.125rem; background-color: #101618;"></div>
-                        <div class="h-full" style="width: ${possessionAway}%; background: linear-gradient(to left, rgba(255, 128, 0, 0.6), var(--team-b));"></div>
+                        <div class="h-full" style="width: ${possessionAway}%; background: linear-gradient(to left, rgba(255, 128, 0, 0.6), #FF8000);"></div>
                     </div>
                 </div>
             `;
@@ -7030,14 +7038,14 @@
                     <div class="flex justify-between mb-2 items-end">
                         <div class="flex flex-col">
                             <span class="text-xs text-[#9ab0bc] font-bold uppercase tracking-widest">Big Chances</span>
-                            <span class="text-2xl font-bold" style="color: var(--team-a);">${bigChancesHome}</span>
+                            <span class="text-2xl font-bold" style="color: #00CC00;">${bigChancesHome}</span>
                         </div>
-                        <span class="text-2xl font-bold" style="color: var(--team-b);">${bigChancesAway}</span>
+                        <span class="text-2xl font-bold" style="color: #FF8000;">${bigChancesAway}</span>
                     </div>
                     <div class="relative h-3 w-full rounded-full flex overflow-hidden group-hover:ring-2 ring-primary transition-all" style="background-color: #27343a;">
-                        <div class="h-full" style="width: ${bigChancesHomePercent}%; background: linear-gradient(to right, rgba(0, 204, 0, 0.6), var(--team-a));"></div>
+                        <div class="h-full" style="width: ${bigChancesHomePercent}%; background: linear-gradient(to right, rgba(0, 204, 0, 0.6), #00CC00);"></div>
                         <div class="h-full" style="width: 0.125rem; background-color: #101618;"></div>
-                        <div class="h-full" style="width: ${bigChancesAwayPercent}%; background: linear-gradient(to left, rgba(255, 128, 0, 0.6), var(--team-b));"></div>
+                        <div class="h-full" style="width: ${bigChancesAwayPercent}%; background: linear-gradient(to left, rgba(255, 128, 0, 0.6), #FF8000);"></div>
                     </div>
                 </div>
             `;
@@ -7050,14 +7058,14 @@
                     <div class="flex justify-between mb-2 items-end">
                         <div class="flex flex-col">
                             <span class="text-xs text-[#9ab0bc] font-bold uppercase tracking-widest">Pass Accuracy</span>
-                            <span class="text-2xl font-bold" style="color: var(--team-a);">${passAccuracyHome}%</span>
+                            <span class="text-2xl font-bold" style="color: #00CC00;">${passAccuracyHome}%</span>
                         </div>
-                        <span class="text-2xl font-bold" style="color: var(--team-b);">${passAccuracyAway}%</span>
+                        <span class="text-2xl font-bold" style="color: #FF8000;">${passAccuracyAway}%</span>
                     </div>
                     <div class="relative h-3 w-full rounded-full flex overflow-hidden" style="background-color: #27343a;">
-                        <div class="h-full" style="width: ${passAccuracyHomePercent}%; background: linear-gradient(to right, rgba(0, 204, 0, 0.6), var(--team-a));"></div>
+                        <div class="h-full" style="width: ${passAccuracyHomePercent}%; background: linear-gradient(to right, rgba(0, 204, 0, 0.6), #00CC00);"></div>
                         <div class="h-full" style="width: 0.125rem; background-color: #101618;"></div>
-                        <div class="h-full" style="width: ${passAccuracyAwayPercent}%; background: linear-gradient(to left, rgba(255, 128, 0, 0.6), var(--team-b));"></div>
+                        <div class="h-full" style="width: ${passAccuracyAwayPercent}%; background: linear-gradient(to left, rgba(255, 128, 0, 0.6), #FF8000);"></div>
                     </div>
                 </div>
             `;
