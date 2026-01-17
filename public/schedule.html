@@ -4580,7 +4580,7 @@
                                     <span class="text-xs bg-team-b/20 text-team-b px-3 py-1 rounded font-bold">4 - 2 - 3 - 1</span>
                     </div>
                 </div>
-                            <div class="relative w-full h-[800px] rounded-xl border border-white/5 overflow-hidden pitch-pattern" id="pitchContainer" style="background: linear-gradient(135deg, #1a4d3a 0%, #0f3d2a 50%, #1a4d3a 100%);">
+                            <div class="relative w-full rounded-xl border border-white/5 overflow-hidden pitch-pattern" id="pitchContainer" style="background: linear-gradient(135deg, #1a4d3a 0%, #0f3d2a 50%, #1a4d3a 100%); height: 800px; min-height: 800px;">
                                 <!-- Pitch Markings -->
                                 <div class="absolute inset-4 border border-white/10"></div>
                                 <div class="absolute inset-x-4 top-1/2 border-t border-white/30 z-10 shadow-[0_0_15px_rgba(255,255,255,0.05)]"></div>
@@ -8326,11 +8326,25 @@
             });
             
             if (playersContainer) {
+                // pitchContainerの高さを確認して設定
+                const pitchContainer = playersContainer.parentElement;
+                if (pitchContainer && pitchContainer.id === 'pitchContainer') {
+                    const pitchHeight = window.getComputedStyle(pitchContainer).height;
+                    console.log('🔍 Pitch container height before fix:', pitchHeight);
+                    if (pitchHeight === '0px' || pitchHeight === '2px' || !pitchHeight || pitchHeight === 'auto') {
+                        pitchContainer.style.height = '800px';
+                        pitchContainer.style.minHeight = '800px';
+                        console.log('✅ Fixed pitchContainer height to 800px');
+                    }
+                }
+                
                 // playersContainerのスタイルを明示的に設定（z-indexを確実に適用）
                 playersContainer.style.position = 'absolute';
                 playersContainer.style.inset = '0';
                 playersContainer.style.zIndex = '30';
                 playersContainer.style.pointerEvents = 'none';
+                playersContainer.style.width = '100%';
+                playersContainer.style.height = '100%';
                 
                 // playersContainerが存在する場合は、そこにプレイヤーノードを追加
                 const htmlToSet = `
