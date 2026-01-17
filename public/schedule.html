@@ -226,14 +226,14 @@
 
         .modal-content {
             background-color: var(--card);
-            margin: 2% auto;
+            margin: 1% auto;
             padding: 0;
             border: 1px solid var(--border);
             border-radius: 16px;
-            width: 98%;
-            max-width: 1800px;
+            width: 99%;
+            max-width: 100%;
             min-width: 1200px;
-            max-height: 95vh;
+            max-height: 96vh;
             overflow: hidden;
             position: relative;
             display: flex;
@@ -1252,10 +1252,10 @@
 
         /* 大サイズモーダル */
         .large-modal {
-            width: 98%;
-            max-width: 1800px;
+            width: 99%;
+            max-width: 100%;
             min-width: 1200px;
-            max-height: 95vh;
+            max-height: 96vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -4171,11 +4171,11 @@
 
     <!-- 試合詳細モーダル（新デザイン） -->
     <div id="matchDetailsModal" class="modal">
-        <div class="modal-content large-modal modern-match-detail bg-background-light dark:bg-background-dark">
+        <div class="modal-content large-modal modern-match-detail bg-background-light dark:bg-background-dark px-6 py-4">
             <span class="close">&times;</span>
             
             <!-- スコアボードヘッダー（新デザイン） -->
-            <div class="relative overflow-hidden rounded-xl bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 p-10 mb-10 shadow-sm w-full" id="scoreboardHeader">
+            <div class="relative overflow-hidden rounded-xl bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 p-8 mb-8 shadow-sm w-full" id="scoreboardHeader">
                 <div class="absolute top-6 right-8" id="liveBadge" style="display: none;">
                     <div class="flex items-center gap-2 px-4 py-2 bg-accent-orange/10 text-accent-orange rounded-full text-sm font-bold">
                         <span class="size-2.5 bg-accent-orange rounded-full animate-pulse"></span>
@@ -4183,7 +4183,7 @@
                         <span id="matchMinute" style="display: none;"> • 0'</span>
                     </div>
                 </div>
-                <div class="flex items-center justify-between gap-16 max-w-7xl mx-auto">
+                <div class="flex items-center justify-between gap-16 w-full px-4">
                     <!-- ホームチーム -->
                     <div class="flex items-center gap-8 flex-1 justify-end">
                         <div class="text-right">
@@ -4234,10 +4234,10 @@
             </div>
             
             <!-- タブコンテンツ -->
-            <div class="tab-content-modern">
+            <div class="tab-content-modern px-2">
                 <!-- ラインアップタブ（新デザイン - 3カラムレイアウト） -->
                 <div id="lineup" class="tab-pane-modern">
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
                         <!-- 左カラム: ホームチーム -->
                         <div class="lg:col-span-3 space-y-8 sticky top-24">
                             <div class="flex flex-col items-center gap-6 text-center">
