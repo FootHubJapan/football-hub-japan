@@ -4418,48 +4418,55 @@
                 </button>
             </div>
             
-            <!-- スコアボードヘッダー（新デザイン） -->
-            <div class="relative overflow-hidden rounded-xl bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 p-8 mb-8 shadow-sm w-full" id="scoreboardHeader">
-                <div class="absolute top-6 right-8" id="liveBadge" style="display: none;">
-                    <div class="flex items-center gap-2 px-4 py-2 bg-accent-orange/10 text-accent-orange rounded-full text-sm font-bold">
-                        <span class="size-2.5 bg-accent-orange rounded-full animate-pulse"></span>
-                        <span id="liveText">LIVE</span>
-                        <span id="matchMinute" style="display: none;"> • 0'</span>
-                    </div>
+            <!-- Match Hero (Scoreboard) - ProFootball構造 -->
+            <section id="matchHero" class="relative w-full h-[320px] flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#16181d] mb-8">
+              <!-- glow background -->
+              <div class="absolute inset-0 flex">
+                <div class="w-1/2 h-full opacity-30 blur-[100px]" style="background: radial-gradient(circle at 20% 50%, #1A86F0 0%, transparent 70%);"></div>
+                <div class="w-1/2 h-full opacity-30 blur-[100px]" style="background: radial-gradient(circle at 80% 50%, #30D44F 0%, transparent 70%);"></div>
+              </div>
+
+              <div class="relative z-10 flex items-center justify-between w-full max-w-[1100px] px-8">
+                <!-- Home -->
+                <div class="flex flex-col items-center gap-4 text-center">
+                  <div class="size-32 bg-[#23262b] rounded-2xl flex items-center justify-center p-6 border border-white/10 shadow-2xl">
+                    <img id="homeLogo" class="w-full h-full object-contain" alt="Home Logo" src="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="team-logo-fallback" style="display: none; font-size: 2rem;">🏟️</div>
+                  </div>
+                  <div>
+                    <h2 id="homeName" class="text-3xl font-bold tracking-tight uppercase text-white">HOME</h2>
+                    <p class="text-white/50 text-sm font-medium mt-1">HOME</p>
+                  </div>
                 </div>
-                <div class="flex items-center justify-between gap-16 w-full px-4" style="display: flex; align-items: center; justify-content: space-between; gap: 4rem; width: 100%; padding: 0 1rem;">
-                    <!-- ホームチーム -->
-                    <div class="flex items-center gap-8 flex-1 justify-end" style="display: flex; align-items: center; gap: 2rem; flex: 1; justify-content: flex-end;">
-                        <div class="text-right">
-                            <h2 id="homeTeamName" class="text-4xl font-bold uppercase tracking-tight" style="font-size: 2.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: -0.025em;">-</h2>
-                            <p class="text-xs text-gray-400 font-bold tracking-widest mt-2" style="font-size: 0.75rem; color: #9ca3af; font-weight: 700; letter-spacing: 0.1em; margin-top: 0.5rem;">HOME TEAM</p>
-                        </div>
-                        <div class="size-28 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center p-5 shadow-inner border-2 border-marinos-blue/20" style="width: 5rem; height: 5rem; background-color: rgba(255, 255, 255, 0.1); border-radius: 1rem; display: flex; align-items: center; justify-content: center; padding: 1.25rem; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1); border: 2px solid rgba(0, 189, 199, 0.2);">
-                            <img id="homeTeamLogo" class="w-20 h-20 object-contain" src="" alt="" style="width: 5rem; height: 5rem; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="team-logo-fallback" style="display: none; font-size: 2rem;">🏟️</div>
-                        </div>
-                    </div>
-            
-                    <!-- スコア（中央） -->
-                    <div class="flex items-baseline gap-4" style="display: flex; align-items: baseline; gap: 1rem;">
-                        <span id="homeScoreLarge" class="font-display font-black tabular-nums text-[96px] leading-[0.9]" style="font-family: 'Space Grotesk', sans-serif; font-weight: 900; font-variant-numeric: tabular-nums; font-size: 96px; line-height: 0.9; color: white;">-</span>
-                        <span class="font-light text-white/20 text-[72px] leading-[0.9]" style="font-weight: 300; color: rgba(255, 255, 255, 0.2); font-size: 72px; line-height: 0.9;">-</span>
-                        <span id="awayScoreLarge" class="font-display font-black tabular-nums text-[96px] leading-[0.9]" style="font-family: 'Space Grotesk', sans-serif; font-weight: 900; font-variant-numeric: tabular-nums; font-size: 96px; line-height: 0.9; color: white;">-</span>
-                    </div>
-                    
-                    <!-- アウェイチーム -->
-                    <div class="flex items-center gap-8 flex-1 justify-start" style="display: flex; align-items: center; gap: 2rem; flex: 1; justify-content: flex-start;">
-                        <div class="size-28 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center p-5 shadow-inner border-2 border-frontale-green/20" style="width: 5rem; height: 5rem; background-color: rgba(255, 255, 255, 0.1); border-radius: 1rem; display: flex; align-items: center; justify-content: center; padding: 1.25rem; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1); border: 2px solid rgba(0, 189, 199, 0.2);">
-                            <img id="awayTeamLogo" class="w-20 h-20 object-contain" src="" alt="" style="width: 5rem; height: 5rem; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="team-logo-fallback" style="display: none; font-size: 2rem;">🏟️</div>
-                        </div>
-                        <div>
-                            <h2 id="awayTeamName" class="text-4xl font-bold uppercase tracking-tight" style="font-size: 2.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: -0.025em;">-</h2>
-                            <p class="text-xs text-gray-400 font-bold tracking-widest mt-2" style="font-size: 0.75rem; color: #9ca3af; font-weight: 700; letter-spacing: 0.1em; margin-top: 0.5rem;">AWAY TEAM</p>
-                        </div>
-                    </div>
+
+                <!-- Score -->
+                <div class="flex flex-col items-center gap-2">
+                  <div class="flex items-center gap-8">
+                    <span id="homeScore" class="text-8xl font-bold tracking-tighter text-white" style="font-family: 'Space Grotesk', system-ui;">-</span>
+                    <span class="text-4xl text-white/20 font-light">:</span>
+                    <span id="awayScore" class="text-8xl font-bold tracking-tighter text-white" style="font-family: 'Space Grotesk', system-ui;">-</span>
+                  </div>
+
+                  <div id="matchBadge" class="px-4 py-1.5 rounded-full bg-[#00bdc7]/20 border border-[#00bdc7]/50 text-[#00bdc7] font-bold text-sm tracking-widest uppercase">
+                    Loading...
+                  </div>
+
+                  <p id="matchMeta" class="text-white/40 text-xs mt-4 uppercase tracking-[0.2em]">—</p>
                 </div>
-            </div>
+
+                <!-- Away -->
+                <div class="flex flex-col items-center gap-4 text-center">
+                  <div class="size-32 bg-[#23262b] rounded-2xl flex items-center justify-center p-6 border border-white/10 shadow-2xl">
+                    <img id="awayLogo" class="w-full h-full object-contain" alt="Away Logo" src="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="team-logo-fallback" style="display: none; font-size: 2rem;">🏟️</div>
+                  </div>
+                  <div>
+                    <h2 id="awayName" class="text-3xl font-bold tracking-tight uppercase text-white">AWAY</h2>
+                    <p class="text-white/50 text-sm font-medium mt-1">AWAY</p>
+                  </div>
+                </div>
+              </div>
+            </section>
             
             <!-- タブナビゲーション（新デザイン） -->
             <div id="matchTabs" class="flex border-b border-[#27343a] gap-8 mb-8" style="background-color: #16252d; padding: 0.5rem 1rem; border-radius: 0.5rem 0.5rem 0 0;">
@@ -4490,25 +4497,25 @@
                         </div>
                 </section>
                 
-                <!-- ラインアップタブ（新デザイン - 3カラムレイアウト：左SUB、中央ピッチ、右SUB） -->
+                <!-- ラインアップタブ（ProFootball構造 - 3カラムレイアウト：左SUB、中央ピッチ、右SUB） -->
                 <section data-panel="lineup" class="tab-pane-modern">
-                    <div class="grid grid-cols-12 gap-6">
+                    <div class="flex justify-center gap-8 px-8 py-12 max-w-[1440px] mx-auto">
                         <!-- Left Column: Home Substitutes -->
-                        <div class="col-span-2 bg-card-dark border border-[#27343a] rounded-xl p-6">
-                            <div class="mb-4">
-                                <h4 class="text-sm font-bold uppercase tracking-widest text-white mb-2">Substitutes</h4>
-                                <div class="text-[10px] font-bold text-[#00bdc7] uppercase tracking-widest" id="homeTeamSubLabelLineup">HOME</div>
-                        </div>
+                        <aside class="w-[250px] flex-shrink-0">
+                            <div class="flex items-center justify-between mb-6 px-2">
+                                <h3 class="font-bold text-lg tracking-tight text-white">Substitutes</h3>
+                                <span class="text-[#1A86F0] font-bold text-xs uppercase tracking-wider" id="homeTeamSubLabelLineup">Home</span>
+                            </div>
                             <div class="space-y-2" id="homeSubstitutesLineup">
                                 <!-- Substitutes will be dynamically inserted here -->
                                 <div class="text-xs text-[#9ab0bc]">サブスティテュートを読み込み中...</div>
-                    </div>
-                    </div>
-                        
+                            </div>
+                        </aside>
+
                         <!-- Center Column: Tactical Pitch -->
-                        <div class="col-span-8 bg-card-dark border border-[#27343a] rounded-xl p-8">
+                        <main class="flex-1 max-w-[800px]">
                             <div class="flex justify-between items-center mb-6">
-                                <h4 class="text-lg font-bold">Tactical Formations</h4>
+                                <h4 class="text-lg font-bold text-white">Tactical Formations</h4>
                                 <div class="flex gap-4" id="formationBadge">
                                     <span class="text-xs bg-team-a/20 text-team-a px-3 py-1 rounded font-bold">4 - 3 - 3</span>
                                     <span class="text-xs bg-team-b/20 text-team-b px-3 py-1 rounded font-bold">4 - 2 - 3 - 1</span>
@@ -4523,22 +4530,21 @@
                                 <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-80 h-32 border border-white/10 border-b-0"></div>
                                 <!-- Players will be dynamically inserted here -->
                                 <div id="playersContainer" class="absolute inset-0 z-20"></div>
-                    </div>
-                </div>
-                
+                            </div>
+                        </main>
+
                         <!-- Right Column: Away Substitutes -->
-                        <div class="col-span-2 bg-card-dark border border-[#27343a] rounded-xl p-6">
-                            <div class="mb-4">
-                                <h4 class="text-sm font-bold uppercase tracking-widest text-white mb-2">Substitutes</h4>
-                                <div class="text-[10px] font-bold text-[#00bdc7] uppercase tracking-widest" id="awayTeamSubLabelLineup">AWAY</div>
-                                </div>
+                        <aside class="w-[250px] flex-shrink-0">
+                            <div class="flex items-center justify-between mb-6 px-2">
+                                <span class="text-[#30D44F] font-bold text-xs uppercase tracking-wider" id="awayTeamSubLabelLineup">Away</span>
+                                <h3 class="font-bold text-lg tracking-tight text-white">Substitutes</h3>
+                            </div>
                             <div class="space-y-2" id="awaySubstitutesLineup">
                                 <!-- Substitutes will be dynamically inserted here -->
                                 <div class="text-xs text-[#9ab0bc]">サブスティテュートを読み込み中...</div>
                             </div>
-                        </div>
-                            </div>
-                        </div>
+                        </aside>
+                    </div>
                 </section>
 
                 <!-- 試合統計タブ（ProFooty Analyticsスタイル） -->
@@ -8454,11 +8460,13 @@
                 const homeTeamSubLabelLineup = document.getElementById('homeTeamSubLabelLineup');
                 const awayTeamSubLabelLineup = document.getElementById('awayTeamSubLabelLineup');
                 
+                // ProFootball構造では"Home"と"Away"のまま（変更不要）
+                // 必要に応じてチーム名の最初の3文字に変更可能
                 if (homeTeamSubLabelLineup) {
-                    homeTeamSubLabelLineup.textContent = (homeTeam.substring(0, 3).toUpperCase() || 'HOME');
+                    homeTeamSubLabelLineup.textContent = 'Home';
                 }
                 if (awayTeamSubLabelLineup) {
-                    awayTeamSubLabelLineup.textContent = (awayTeam.substring(0, 3).toUpperCase() || 'AWAY');
+                    awayTeamSubLabelLineup.textContent = 'Away';
                 }
                 
                 // ホームチームのSUBリスト
@@ -9012,45 +9020,49 @@
             return html;
         }
 
-        // スコアボードヘッダーを統一更新する関数
+        // スコアボードヘッダーを統一更新する関数（ProFootball構造対応）
         function updateScoreboardHeader(matchData) {
+            const home = matchData?.teams?.home || {};
+            const away = matchData?.teams?.away || {};
+            
             // データの取得（複数の形式に対応）
-            const homeName = matchData?.teams?.home?.name || matchData?.homeTeam || matchData?.home || "HOME";
-            const awayName = matchData?.teams?.away?.name || matchData?.awayTeam || matchData?.away || "AWAY";
-            const homeLogo = matchData?.teams?.home?.logo || matchData?.homeLogo || "";
-            const awayLogo = matchData?.teams?.away?.logo || matchData?.awayLogo || "";
+            const homeName = home?.name || matchData?.homeTeam || matchData?.home || "HOME";
+            const awayName = away?.name || matchData?.awayTeam || matchData?.away || "AWAY";
+            const homeLogo = home?.logo || matchData?.homeLogo || "";
+            const awayLogo = away?.logo || matchData?.awayLogo || "";
             
             const isFinishedOrLive = matchData?.status === 'Finished' || matchData?.status === 'FT' || matchData?.status === 'LIVE' || matchData?.status === 'HT' || matchData?.status === '試合中' || matchData?.status === '終了';
+            const goals = matchData?.goals || {};
             const homeScore = isFinishedOrLive 
-                ? (matchData?.goals?.home ?? matchData?.homeScore ?? 0)
-                : (matchData?.goals?.home ?? matchData?.homeScore ?? '-');
+                ? (goals.home ?? matchData?.homeScore ?? 0)
+                : (goals.home ?? matchData?.homeScore ?? '-');
             const awayScore = isFinishedOrLive
-                ? (matchData?.goals?.away ?? matchData?.awayScore ?? 0)
-                : (matchData?.goals?.away ?? matchData?.awayScore ?? '-');
+                ? (goals.away ?? matchData?.awayScore ?? 0)
+                : (goals.away ?? matchData?.awayScore ?? '-');
             
-            const statusShort = matchData?.fixture?.status?.short || matchData?.status || "";
-            const statusText = statusShort || (matchData?.fixture?.status?.long || "FT");
-
             // チームIDを取得（ロゴがない場合のフォールバック）
-            const homeTeamId = matchData?.teams?.home?.id || getTeamId(homeName);
-            const awayTeamId = matchData?.teams?.away?.id || getTeamId(awayName);
+            const homeTeamId = home?.id || matchData?.teams?.home?.id || getTeamId(homeName);
+            const awayTeamId = away?.id || matchData?.teams?.away?.id || getTeamId(awayName);
             
             // ロゴURLを生成（API-Football形式）
             const homeLogoUrl = homeLogo || `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
             const awayLogoUrl = awayLogo || `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
 
-            // ✅ 1) 上部の大きいスコアボード
-            const homeTeamNameEl = document.getElementById("homeTeamName");
-            const awayTeamNameEl = document.getElementById("awayTeamName");
-            const homeScoreEl = document.getElementById("homeScoreLarge");
-            const awayScoreEl = document.getElementById("awayScoreLarge");
-            const homeLogoEl = document.getElementById("homeTeamLogo");
-            const awayLogoEl = document.getElementById("awayTeamLogo");
+            // ✅ ProFootball構造のスコアボード更新
+            const homeNameEl = document.getElementById("homeName");
+            const awayNameEl = document.getElementById("awayName");
+            const homeScoreEl = document.getElementById("homeScore");
+            const awayScoreEl = document.getElementById("awayScore");
+            const homeLogoEl = document.getElementById("homeLogo");
+            const awayLogoEl = document.getElementById("awayLogo");
+            const matchBadgeEl = document.getElementById("matchBadge");
+            const matchMetaEl = document.getElementById("matchMeta");
 
-            if (homeTeamNameEl) homeTeamNameEl.textContent = homeName.toUpperCase();
-            if (awayTeamNameEl) awayTeamNameEl.textContent = awayName.toUpperCase();
+            if (homeNameEl) homeNameEl.textContent = homeName.toUpperCase();
+            if (awayNameEl) awayNameEl.textContent = awayName.toUpperCase();
             if (homeScoreEl) homeScoreEl.textContent = homeScore;
             if (awayScoreEl) awayScoreEl.textContent = awayScore;
+            
             if (homeLogoEl && homeLogoUrl) {
                 homeLogoEl.src = homeLogoUrl;
                 homeLogoEl.alt = homeName;
@@ -9070,7 +9082,19 @@
                 }
             }
 
-            // ✅ 2) STATSヘッダー（小さい方）も同じ値で更新
+            // Badge (status)
+            const status = matchData?.fixture?.status?.short || matchData?.status || "—";
+            const elapsed = matchData?.fixture?.status?.elapsed;
+            const badgeText = elapsed ? `${elapsed}' ${status}` : status;
+            if (matchBadgeEl) matchBadgeEl.textContent = badgeText;
+
+            // Meta (venue/league)
+            const venue = matchData?.fixture?.venue?.name;
+            const league = matchData?.league?.name;
+            const meta = [venue, league].filter(Boolean).join(" • ") || "—";
+            if (matchMetaEl) matchMetaEl.textContent = meta;
+
+            // ✅ STATSヘッダー（小さい方）も同じ値で更新（後方互換性のため）
             const homeTeamNameStats = document.getElementById("homeTeamNameStats");
             const awayTeamNameStats = document.getElementById("awayTeamNameStats");
             const matchScoreStats = document.getElementById("matchScoreStats");
@@ -9081,7 +9105,7 @@
             if (homeTeamNameStats) homeTeamNameStats.textContent = homeName;
             if (awayTeamNameStats) awayTeamNameStats.textContent = awayName;
             if (matchScoreStats) matchScoreStats.textContent = `${homeScore} - ${awayScore}`;
-            if (matchStatusBadgeStats) matchStatusBadgeStats.textContent = statusText;
+            if (matchStatusBadgeStats) matchStatusBadgeStats.textContent = badgeText;
             if (homeLogoStats && homeLogoUrl) {
                 homeLogoStats.src = homeLogoUrl;
                 homeLogoStats.alt = homeName;
