@@ -4815,14 +4815,8 @@
                 });
             });
             
-            // 新デザインのタブボタンにイベントリスナーを追加
-            tabButtonsModern.forEach(button => {
-                button.addEventListener('click', function() {
-                    const targetTab = this.getAttribute('data-tab');
-                    console.log('Modern tab clicked:', targetTab);
-                    switchTab(targetTab);
-                });
-            });
+            // #matchView内のタブボタンは既にsetActiveTabで処理されているのでスキップ
+            // （6126行目で設定済み）
             
             // 旧デザインのタブボタンにもイベントリスナーを追加（後方互換性）
             tabButtons.forEach(button => {
@@ -4989,35 +4983,11 @@
                 });
             });
             
-            // モーダルの初期化確認
-            const modal = document.getElementById('matchDetailsModal');
-            if (modal) {
-                console.log('Modal found:', modal.id);
-            } else {
-                console.error('Modal not found');
-            }
-            
-            // モーダルクローズ処理
-            const closeBtn = modal.querySelector('.close');
-            if (closeBtn) {
-                closeBtn.onclick = function() {
-                    modal.style.display = 'none';
-                    // モーダルが閉じた時、背景のスクロールを有効化
-                    document.body.style.overflow = '';
-                };
-            }
-            
-            // モーダル外クリックで閉じる
-            window.onclick = function(event) {
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                    // モーダルが閉じた時、背景のスクロールを有効化
-                    document.body.style.overflow = '';
-                }
-            };
-            
-            // モーダル内のスクロールイベントが背景に伝播しないようにする
-            modal.addEventListener('wheel', function(e) {
+            // モーダル関連のコードは削除（#matchViewに統一）
+            // モーダル内のスクロールイベントが背景に伝播しないようにする（#matchView用）
+            const matchView = document.getElementById('matchView');
+            if (matchView) {
+                matchView.addEventListener('wheel', function(e) {
                 const statsTab = modal.querySelector('#stats');
                 if (statsTab && statsTab.classList.contains('active')) {
                     // 試合統計タブがアクティブな場合、スクロールイベントを処理
@@ -5040,23 +5010,25 @@
                 }
             }, { passive: false });
             
-            // モーダル内のタッチイベントも処理
-            modal.addEventListener('touchmove', function(e) {
-                const statsTab = modal.querySelector('#stats');
-                if (statsTab && statsTab.classList.contains('active')) {
-                    const canScrollUp = statsTab.scrollTop > 0;
-                    const canScrollDown = statsTab.scrollTop < (statsTab.scrollHeight - statsTab.clientHeight - 1);
-                    
-                    if (canScrollUp || canScrollDown) {
+            // #matchView内のタッチイベントも処理
+            if (matchView) {
+                matchView.addEventListener('touchmove', function(e) {
+                    const statsTab = matchView.querySelector('[data-panel="stats"]');
+                    if (statsTab && !statsTab.classList.contains('hidden')) {
+                        const canScrollUp = statsTab.scrollTop > 0;
+                        const canScrollDown = statsTab.scrollTop < (statsTab.scrollHeight - statsTab.clientHeight - 1);
+                        
+                        if (canScrollUp || canScrollDown) {
+                            e.stopPropagation();
+                        }
+                    } else {
                         e.stopPropagation();
                     }
-                } else {
-                    e.stopPropagation();
-                }
-            }, { passive: false });
+                }, { passive: false });
+            }
             
             // 試合統計タブ内のスクロールイベントを確実に処理
-            const statsTab = modal.querySelector('#stats');
+            const statsTab = matchView ? matchView.querySelector('[data-panel="stats"]') : null;
             if (statsTab) {
                 statsTab.addEventListener('wheel', function(e) {
                     e.stopPropagation();
@@ -8574,74 +8546,7 @@
         }
 
         // タブ切り替え処理（新デザイン対応）
-        function switchTab(tabName) {
-            console.log('Switching to tab:', tabName);
-            
-            // すべてのタブボタンからアクティブクラスとスタイルを削除
-            document.querySelectorAll('.tab-button-modern').forEach(button => {
-                button.classList.remove('active');
-                button.style.backgroundColor = 'transparent';
-                button.style.color = '#9ab0bc';
-                button.style.fontWeight = '600';
-                button.style.boxShadow = 'none';
-            });
-            
-            // すべてのタブペインを非表示
-            document.querySelectorAll('.tab-pane-modern').forEach(pane => {
-                pane.classList.remove('active');
-            });
-            
-            // クリックされたタブボタンをアクティブに（シアン色の背景）
-            const activeButton = document.querySelector(`.tab-button-modern[data-tab="${tabName}"]`);
-            if (activeButton) {
-                activeButton.classList.add('active');
-                activeButton.style.backgroundColor = '#00bdc7';
-                activeButton.style.color = 'white';
-                activeButton.style.fontWeight = '700';
-                activeButton.style.boxShadow = '0 0 10px rgba(0, 189, 199, 0.3)';
-            }
-            
-            // 対応するタブペインを表示
-            const targetPane = document.getElementById(tabName);
-            if (targetPane) {
-                targetPane.classList.add('active');
-                
-                // スクロール位置をリセット
-                const scrollableContainers = targetPane.querySelectorAll('.stats-scroll-container, .events-container, .pitch-container');
-                scrollableContainers.forEach(container => {
-                    if (container.scrollTop !== undefined) {
-                        container.scrollTop = 0;
-                    }
-                });
-                
-                console.log('Tab switched successfully:', tabName);
-            } else {
-                console.error('Target pane not found:', tabName);
-            }
-        }
-
-        // ページ読み込み時の初期化
-        document.addEventListener('DOMContentLoaded', function() {
-            // タブボタンにイベントリスナーを追加（新デザイン対応）
-            document.querySelectorAll('.tab-button-modern').forEach(button => {
-                button.addEventListener('click', function() {
-                    const tabName = this.getAttribute('data-tab');
-                    if (tabName) {
-                        switchTab(tabName);
-                    }
-                });
-            });
-            
-            // 旧デザインのタブボタンにも対応（後方互換性）
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.addEventListener('click', function() {
-                    const tabName = this.getAttribute('data-tab');
-                    if (tabName) {
-                        switchTab(tabName);
-                    }
-                });
-            });
-        });
+        // 古いswitchTab関数は削除（setActiveTab関数に統一）
 
         // モーダルの閉じるボタンのイベントリスナーは削除（ハッシュルーティングで処理）
 
