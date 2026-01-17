@@ -6912,11 +6912,19 @@
         // 統計タブを更新（FotMob風UI）
         function updateStatsTab(statsData, matchData = null) {
             console.log('Updating stats tab with data:', statsData);
+            console.log('MatchData:', matchData);
             console.log('MatchView exists:', !!document.getElementById('matchView'));
             console.log('Stats panel exists:', !!document.querySelector('#matchView [data-panel="stats"]'));
             
-                const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
-                const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
+            if (!matchData) {
+                console.error('matchData is null or undefined');
+                return;
+            }
+            
+            const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
+            const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
+            
+            console.log('Home team:', homeTeam, 'Away team:', awayTeam);
             
             // マッチスコアカードを更新
             const homeTeamNameStats = document.getElementById('homeTeamNameStats');
@@ -6926,22 +6934,57 @@
             const homeTeamAbbrStats = document.getElementById('homeTeamAbbrStats');
             const awayTeamAbbrStats = document.getElementById('awayTeamAbbrStats');
             
-            if (homeTeamNameStats) homeTeamNameStats.textContent = homeTeam;
-            if (awayTeamNameStats) awayTeamNameStats.textContent = awayTeam;
-            if (homeTeamAbbrStats) homeTeamAbbrStats.textContent = homeTeam.substring(0, 3).toUpperCase();
-            if (awayTeamAbbrStats) awayTeamAbbrStats.textContent = awayTeam.substring(0, 3).toUpperCase();
+            console.log('Elements found:', {
+                homeTeamNameStats: !!homeTeamNameStats,
+                awayTeamNameStats: !!awayTeamNameStats,
+                matchScoreStats: !!matchScoreStats,
+                matchStatusBadgeStats: !!matchStatusBadgeStats,
+                homeTeamAbbrStats: !!homeTeamAbbrStats,
+                awayTeamAbbrStats: !!awayTeamAbbrStats
+            });
+            
+            if (homeTeamNameStats) {
+                homeTeamNameStats.textContent = homeTeam;
+                console.log('Updated homeTeamNameStats:', homeTeam);
+            } else {
+                console.error('homeTeamNameStats element not found');
+            }
+            if (awayTeamNameStats) {
+                awayTeamNameStats.textContent = awayTeam;
+                console.log('Updated awayTeamNameStats:', awayTeam);
+            } else {
+                console.error('awayTeamNameStats element not found');
+            }
+            if (homeTeamAbbrStats) {
+                homeTeamAbbrStats.textContent = homeTeam.substring(0, 3).toUpperCase();
+            }
+            if (awayTeamAbbrStats) {
+                awayTeamAbbrStats.textContent = awayTeam.substring(0, 3).toUpperCase();
+            }
             
             // スコアとステータスを更新
             const isFinished = matchData?.status === 'Finished' || matchData?.status === 'FT';
             const isLive = matchData?.status === 'LIVE' || matchData?.status === 'HT';
-            const homeScore = matchData?.homeScore || matchData?.score?.fullTime?.home || 0;
-            const awayScore = matchData?.awayScore || matchData?.score?.fullTime?.away || 0;
+            const homeScore = matchData?.homeScore !== undefined && matchData?.homeScore !== null 
+                ? matchData.homeScore 
+                : (matchData?.score?.fullTime?.home !== undefined ? matchData.score.fullTime.home : 0);
+            const awayScore = matchData?.awayScore !== undefined && matchData?.awayScore !== null 
+                ? matchData.awayScore 
+                : (matchData?.score?.fullTime?.away !== undefined ? matchData.score.fullTime.away : 0);
+            
+            console.log('Scores:', { homeScore, awayScore, isFinished, isLive });
             
             if (matchScoreStats) {
                 matchScoreStats.textContent = `${homeScore} - ${awayScore}`;
+                console.log('Updated matchScoreStats:', `${homeScore} - ${awayScore}`);
+            } else {
+                console.error('matchScoreStats element not found');
             }
             if (matchStatusBadgeStats) {
                 matchStatusBadgeStats.textContent = isLive ? 'LIVE' : (isFinished ? 'FT' : 'UPCOMING');
+                console.log('Updated matchStatusBadgeStats:', matchStatusBadgeStats.textContent);
+            } else {
+                console.error('matchStatusBadgeStats element not found');
             }
             
             // ヒートマップラベルを更新
@@ -8741,6 +8784,14 @@
                 updateBasicInfo(matchData);
                 
                 // 統計タブを更新
+                console.log('Calling updateStatsTab with:', {
+                    stats: matchData.stats,
+                    matchData: matchData,
+                    homeTeam: matchData.homeTeam || matchData.home,
+                    awayTeam: matchData.awayTeam || matchData.away,
+                    homeScore: matchData.homeScore,
+                    awayScore: matchData.awayScore
+                });
                 updateStatsTab(matchData.stats || null, matchData);
                 
                 // イベントタブを更新
