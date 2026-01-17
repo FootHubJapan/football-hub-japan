@@ -6097,8 +6097,19 @@
 
             panels.forEach(p => {
                 if (p) {
-                    p.classList.toggle("hidden", p.getAttribute("data-panel") !== tab);
-                    p.style.display = p.getAttribute("data-panel") === tab ? "" : "none";
+                    const isActive = p.getAttribute("data-panel") === tab;
+                    if (isActive) {
+                        p.classList.remove("hidden");
+                        // STATSタブの場合はflex、それ以外はblock
+                        if (tab === "stats") {
+                            p.style.display = "flex";
+                        } else {
+                            p.style.display = "";
+                        }
+                    } else {
+                        p.classList.add("hidden");
+                        p.style.display = "none";
+                    }
                 }
             });
 
@@ -6120,6 +6131,8 @@
                     }
                 }
             });
+            
+            console.log('Tab switched to:', tab);
         }
 
         // タブボタンのクリックイベント
@@ -8823,35 +8836,10 @@
                 updateEventsTab(matchData.events || []);
                 
                 // ラインアップタブを更新
-                    updateLineupTab(matchData);
+                updateLineupTab(matchData);
                 
-                // 最初のタブ（Lineup）をアクティブにして表示
-                const firstTab = document.querySelector('.tab-button-modern[data-tab="lineup"]');
-                const firstPane = document.getElementById('lineup');
-                
-                if (firstTab && firstPane) {
-                    // すべてのタブを非アクティブに
-                    document.querySelectorAll('.tab-button-modern').forEach(btn => {
-                        btn.classList.remove('active');
-                        btn.style.backgroundColor = 'transparent';
-                        btn.style.color = '#9ab0bc';
-                        btn.style.fontWeight = '600';
-                        btn.style.boxShadow = 'none';
-                    });
-                    document.querySelectorAll('.tab-pane-modern').forEach(pane => pane.classList.remove('active'));
-                    
-                    // 最初のタブをアクティブに（シアン色の背景）
-                    firstTab.classList.add('active');
-                    firstTab.style.backgroundColor = '#00bdc7';
-                    firstTab.style.color = 'white';
-                    firstTab.style.fontWeight = '700';
-                    firstTab.style.boxShadow = '0 0 10px rgba(0, 189, 199, 0.3)';
-                    firstPane.classList.add('active');
-                    
-                    console.log('Lineup tab activated');
-                } else {
-                    console.error('Lineup tab or pane not found');
-                }
+                // 最初のタブ（Lineup）をアクティブにして表示（setActiveTab関数を使用）
+                setActiveTab('lineup');
                 
             } catch (error) {
                 console.error('Error in displayDetailedMatchInfo:', error);
