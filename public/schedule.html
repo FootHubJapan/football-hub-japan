@@ -8307,10 +8307,22 @@
             console.log('🔍 playersContainer check:', {
                 exists: !!playersContainer,
                 parent: playersContainer?.parentElement?.id,
-                currentHTML: playersContainer?.innerHTML?.substring(0, 100)
+                parentDisplay: playersContainer?.parentElement ? window.getComputedStyle(playersContainer.parentElement).display : 'N/A',
+                parentPosition: playersContainer?.parentElement ? window.getComputedStyle(playersContainer.parentElement).position : 'N/A',
+                containerDisplay: playersContainer ? window.getComputedStyle(playersContainer).display : 'N/A',
+                containerPosition: playersContainer ? window.getComputedStyle(playersContainer).position : 'N/A',
+                containerZIndex: playersContainer ? window.getComputedStyle(playersContainer).zIndex : 'N/A',
+                containerWidth: playersContainer ? window.getComputedStyle(playersContainer).width : 'N/A',
+                containerHeight: playersContainer ? window.getComputedStyle(playersContainer).height : 'N/A'
             });
             
             if (playersContainer) {
+                // playersContainerのスタイルを明示的に設定（z-indexを確実に適用）
+                playersContainer.style.position = 'absolute';
+                playersContainer.style.inset = '0';
+                playersContainer.style.zIndex = '30';
+                playersContainer.style.pointerEvents = 'none';
+                
                 // playersContainerが存在する場合は、そこにプレイヤーノードを追加
                 const htmlToSet = `
                     ${fallback}
@@ -8320,6 +8332,28 @@
                 console.log('📝 HTML preview:', htmlToSet.substring(0, 300));
                 playersContainer.innerHTML = htmlToSet;
                 console.log('✅ playersContainer.innerHTML set, children count:', playersContainer.children.length);
+                
+                // 最初のプレイヤーノードのスタイルを確認
+                setTimeout(() => {
+                    const firstPlayerNode = playersContainer.querySelector('.player-node');
+                    if (firstPlayerNode) {
+                        const computedStyle = window.getComputedStyle(firstPlayerNode);
+                        console.log('🎯 First player node styles:', {
+                            display: computedStyle.display,
+                            position: computedStyle.position,
+                            left: computedStyle.left,
+                            top: computedStyle.top,
+                            zIndex: computedStyle.zIndex,
+                            visibility: computedStyle.visibility,
+                            opacity: computedStyle.opacity,
+                            width: computedStyle.width,
+                            height: computedStyle.height,
+                            transform: computedStyle.transform
+                        });
+                    } else {
+                        console.warn('⚠️ No player-node found in playersContainer');
+                    }
+                }, 100);
             } else {
                 // playersContainerが存在しない場合は、pitchContainerに直接追加
                 el.innerHTML = `
