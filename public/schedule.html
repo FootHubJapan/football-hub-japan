@@ -4427,35 +4427,35 @@
                         <span id="matchMinute" style="display: none;"> • 0'</span>
                     </div>
                 </div>
-                <div class="flex items-center justify-between gap-16 w-full px-4">
+                <div class="flex items-center justify-between gap-16 w-full px-4" style="display: flex; align-items: center; justify-content: space-between; gap: 4rem; width: 100%; padding: 0 1rem;">
                     <!-- ホームチーム -->
-                    <div class="flex items-center gap-8 flex-1 justify-end">
+                    <div class="flex items-center gap-8 flex-1 justify-end" style="display: flex; align-items: center; gap: 2rem; flex: 1; justify-content: flex-end;">
                         <div class="text-right">
-                            <h2 id="homeTeamName" class="text-4xl font-bold uppercase tracking-tight">-</h2>
-                            <p class="text-xs text-gray-400 font-bold tracking-widest mt-2">HOME TEAM</p>
+                            <h2 id="homeTeamName" class="text-4xl font-bold uppercase tracking-tight" style="font-size: 2.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: -0.025em;">-</h2>
+                            <p class="text-xs text-gray-400 font-bold tracking-widest mt-2" style="font-size: 0.75rem; color: #9ca3af; font-weight: 700; letter-spacing: 0.1em; margin-top: 0.5rem;">HOME TEAM</p>
                         </div>
-                        <div class="size-28 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center p-5 shadow-inner border-2 border-marinos-blue/20">
-                            <img id="homeTeamLogo" class="w-full" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="team-logo-fallback" style="display: none;">🏟️</div>
+                        <div class="size-28 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center p-5 shadow-inner border-2 border-marinos-blue/20" style="width: 5rem; height: 5rem; background-color: rgba(255, 255, 255, 0.1); border-radius: 1rem; display: flex; align-items: center; justify-content: center; padding: 1.25rem; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1); border: 2px solid rgba(0, 189, 199, 0.2);">
+                            <img id="homeTeamLogo" class="w-20 h-20 object-contain" src="" alt="" style="width: 5rem; height: 5rem; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="team-logo-fallback" style="display: none; font-size: 2rem;">🏟️</div>
                         </div>
-            </div>
+                    </div>
             
                     <!-- スコア（中央） -->
-                    <div class="flex items-center gap-10">
-                        <span id="homeScoreLarge" class="text-7xl font-black tabular-nums" style="line-height: 1;">-</span>
-                        <span class="text-6xl font-light text-gray-300" style="line-height: 1;">-</span>
-                        <span id="awayScoreLarge" class="text-7xl font-black tabular-nums" style="line-height: 1;">-</span>
+                    <div class="flex items-baseline gap-4" style="display: flex; align-items: baseline; gap: 1rem;">
+                        <span id="homeScoreLarge" class="font-display font-black tabular-nums text-[96px] leading-[0.9]" style="font-family: 'Space Grotesk', sans-serif; font-weight: 900; font-variant-numeric: tabular-nums; font-size: 96px; line-height: 0.9; color: white;">-</span>
+                        <span class="font-light text-white/20 text-[72px] leading-[0.9]" style="font-weight: 300; color: rgba(255, 255, 255, 0.2); font-size: 72px; line-height: 0.9;">-</span>
+                        <span id="awayScoreLarge" class="font-display font-black tabular-nums text-[96px] leading-[0.9]" style="font-family: 'Space Grotesk', sans-serif; font-weight: 900; font-variant-numeric: tabular-nums; font-size: 96px; line-height: 0.9; color: white;">-</span>
                     </div>
                     
                     <!-- アウェイチーム -->
-                    <div class="flex items-center gap-8 flex-1 justify-start">
-                        <div class="size-28 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center p-5 shadow-inner border-2 border-frontale-green/20">
-                            <img id="awayTeamLogo" class="w-full" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="team-logo-fallback" style="display: none;">🏟️</div>
+                    <div class="flex items-center gap-8 flex-1 justify-start" style="display: flex; align-items: center; gap: 2rem; flex: 1; justify-content: flex-start;">
+                        <div class="size-28 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center p-5 shadow-inner border-2 border-frontale-green/20" style="width: 5rem; height: 5rem; background-color: rgba(255, 255, 255, 0.1); border-radius: 1rem; display: flex; align-items: center; justify-content: center; padding: 1.25rem; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1); border: 2px solid rgba(0, 189, 199, 0.2);">
+                            <img id="awayTeamLogo" class="w-20 h-20 object-contain" src="" alt="" style="width: 5rem; height: 5rem; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="team-logo-fallback" style="display: none; font-size: 2rem;">🏟️</div>
                         </div>
                         <div>
-                            <h2 id="awayTeamName" class="text-4xl font-bold uppercase tracking-tight">-</h2>
-                            <p class="text-xs text-gray-400 font-bold tracking-widest mt-2">AWAY TEAM</p>
+                            <h2 id="awayTeamName" class="text-4xl font-bold uppercase tracking-tight" style="font-size: 2.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: -0.025em;">-</h2>
+                            <p class="text-xs text-gray-400 font-bold tracking-widest mt-2" style="font-size: 0.75rem; color: #9ca3af; font-weight: 700; letter-spacing: 0.1em; margin-top: 0.5rem;">AWAY TEAM</p>
                         </div>
                     </div>
                 </div>
@@ -4543,33 +4543,41 @@
                 <!-- 試合統計タブ（ProFooty Analyticsスタイル） -->
                 <section data-panel="stats" class="hidden" style="display: none; flex-direction: column; gap: 2rem;">
                     <!-- Match Scorecard -->
-                    <div class="bg-card-dark rounded-xl border border-dark p-6 flex items-center justify-between" id="matchScorecard">
-                        <div class="flex items-center gap-6 flex-1">
-                            <div class="flex items-center gap-4">
-                                <div class="size-14 rounded-full bg-team-a/10 flex items-center justify-center border border-team-a/20" id="homeTeamIconStats">
-                                    <span class="material-symbols-outlined text-team-a text-3xl">shield</span>
+                    <div class="bg-[#17252b] border border-white/10 rounded-2xl p-8 flex items-center justify-between" id="matchScorecard" style="background-color: #17252b; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1rem; padding: 2rem; display: flex; align-items: center; justify-content: space-between;">
+                        <!-- LEFT: Home -->
+                        <div class="flex items-center gap-4" style="display: flex; align-items: center; gap: 1rem; min-width: 260px;">
+                            <div class="size-12 rounded-full bg-black/20 border border-white/10 flex items-center justify-center overflow-hidden" style="width: 3rem; height: 3rem; border-radius: 9999px; background-color: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                <img id="homeTeamLogoStats" class="w-10 h-10 object-contain" alt="home logo" style="width: 2.5rem; height: 2.5rem; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="team-logo-fallback" style="display: none; font-size: 1.5rem;">🏟️</div>
                             </div>
-                                <div>
-                                    <h3 class="text-xl font-bold" id="homeTeamNameStats">Home Team</h3>
-                                    <p class="text-[#9ab0bc] text-xs uppercase tracking-widest">Home Team</p>
-                                </div>
+                            <div>
+                                <div id="homeTeamNameStats" class="text-white font-semibold text-lg leading-tight" style="color: white; font-weight: 600; font-size: 1.125rem; line-height: 1.25;">Home</div>
+                                <div class="text-white/40 text-xs tracking-widest uppercase font-bold mt-1" style="color: rgba(255, 255, 255, 0.4); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; margin-top: 0.25rem;">HOME TEAM</div>
                             </div>
                         </div>
-                        <div class="flex flex-col items-center gap-2 px-12 border-x border-dark">
-                            <div class="text-7xl font-black tracking-tighter tabular-nums" id="matchScoreStats" style="line-height: 1;">- -</div>
-                            <div class="bg-primary/20 text-primary text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider" id="matchStatusBadgeStats">FT</div>
+
+                        <!-- CENTER: Score -->
+                        <div class="flex flex-col items-center flex-1" style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                            <div id="matchScoreStats" class="font-display font-bold tracking-tighter text-[84px] leading-[0.95] text-white" style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.05em; font-size: 84px; line-height: 0.95; color: white;">
+                                0 - 0
+                            </div>
+                            <div id="matchStatusBadgeStats" class="mt-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/40 text-primary text-xs font-bold tracking-widest uppercase" style="margin-top: 0.5rem; padding: 0.25rem 0.75rem; border-radius: 9999px; background-color: rgba(0, 189, 199, 0.2); border: 1px solid rgba(0, 189, 199, 0.4); color: #00bdc7; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;">
+                                FT
+                            </div>
                         </div>
-                        <div class="flex items-center gap-6 flex-1 justify-end">
+
+                        <!-- RIGHT: Away -->
+                        <div class="flex items-center gap-4 justify-end" style="display: flex; align-items: center; gap: 1rem; justify-content: flex-end; min-width: 260px;">
                             <div class="text-right">
-                                <h3 class="text-xl font-bold" id="awayTeamNameStats">Away Team</h3>
-                                <p class="text-[#9ab0bc] text-xs uppercase tracking-widest">Away Team</p>
+                                <div id="awayTeamNameStats" class="text-white font-semibold text-lg leading-tight" style="color: white; font-weight: 600; font-size: 1.125rem; line-height: 1.25;">Away</div>
+                                <div class="text-white/40 text-xs tracking-widest uppercase font-bold mt-1" style="color: rgba(255, 255, 255, 0.4); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; margin-top: 0.25rem;">AWAY TEAM</div>
                             </div>
-                            <div class="size-14 rounded-full bg-team-b/10 flex items-center justify-center border border-team-b/20" id="awayTeamIconStats">
-                                <span class="material-symbols-outlined text-team-b text-3xl">sports_soccer</span>
+                            <div class="size-12 rounded-full bg-black/20 border border-white/10 flex items-center justify-center overflow-hidden" style="width: 3rem; height: 3rem; border-radius: 9999px; background-color: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                <img id="awayTeamLogoStats" class="w-10 h-10 object-contain" alt="away logo" style="width: 2.5rem; height: 2.5rem; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="team-logo-fallback" style="display: none; font-size: 1.5rem;">🏟️</div>
                             </div>
                         </div>
                     </div>
-                </div>
                 
                 <!-- Bento Grid Advanced Stats -->
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -7113,48 +7121,21 @@
                 return;
             }
             
-                const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
-                const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
+            // スコアボードヘッダーを統一更新
+            updateScoreboardHeader(matchData);
+            
+            const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
+            const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
             
             console.log('Home team:', homeTeam, 'Away team:', awayTeam);
             
-            // マッチスコアカードを更新
-            const homeTeamNameStats = document.getElementById('homeTeamNameStats');
-            const awayTeamNameStats = document.getElementById('awayTeamNameStats');
-            const matchScoreStats = document.getElementById('matchScoreStats');
-            const matchStatusBadgeStats = document.getElementById('matchStatusBadgeStats');
+            // チーム略称を更新
             const homeTeamAbbrStats = document.getElementById('homeTeamAbbrStats');
             const awayTeamAbbrStats = document.getElementById('awayTeamAbbrStats');
+            if (homeTeamAbbrStats) homeTeamAbbrStats.textContent = homeTeam.substring(0, 3).toUpperCase();
+            if (awayTeamAbbrStats) awayTeamAbbrStats.textContent = awayTeam.substring(0, 3).toUpperCase();
             
-            console.log('Elements found:', {
-                homeTeamNameStats: !!homeTeamNameStats,
-                awayTeamNameStats: !!awayTeamNameStats,
-                matchScoreStats: !!matchScoreStats,
-                matchStatusBadgeStats: !!matchStatusBadgeStats,
-                homeTeamAbbrStats: !!homeTeamAbbrStats,
-                awayTeamAbbrStats: !!awayTeamAbbrStats
-            });
-            
-            if (homeTeamNameStats) {
-                homeTeamNameStats.textContent = homeTeam;
-                console.log('Updated homeTeamNameStats:', homeTeam);
-            } else {
-                console.error('homeTeamNameStats element not found');
-            }
-            if (awayTeamNameStats) {
-                awayTeamNameStats.textContent = awayTeam;
-                console.log('Updated awayTeamNameStats:', awayTeam);
-            } else {
-                console.error('awayTeamNameStats element not found');
-            }
-            if (homeTeamAbbrStats) {
-                homeTeamAbbrStats.textContent = homeTeam.substring(0, 3).toUpperCase();
-            }
-            if (awayTeamAbbrStats) {
-                awayTeamAbbrStats.textContent = awayTeam.substring(0, 3).toUpperCase();
-            }
-            
-            // スコアとステータスを更新
+            // スコアとステータスを更新（既にupdateScoreboardHeaderで更新済み）
             const isFinished = matchData?.status === 'Finished' || matchData?.status === 'FT';
             const isLive = matchData?.status === 'LIVE' || matchData?.status === 'HT';
             const homeScore = matchData?.homeScore !== undefined && matchData?.homeScore !== null 
@@ -8894,64 +8875,99 @@
             return html;
         }
 
+        // スコアボードヘッダーを統一更新する関数
+        function updateScoreboardHeader(matchData) {
+            // データの取得（複数の形式に対応）
+            const homeName = matchData?.teams?.home?.name || matchData?.homeTeam || matchData?.home || "HOME";
+            const awayName = matchData?.teams?.away?.name || matchData?.awayTeam || matchData?.away || "AWAY";
+            const homeLogo = matchData?.teams?.home?.logo || matchData?.homeLogo || "";
+            const awayLogo = matchData?.teams?.away?.logo || matchData?.awayLogo || "";
+            
+            const isFinishedOrLive = matchData?.status === 'Finished' || matchData?.status === 'FT' || matchData?.status === 'LIVE' || matchData?.status === 'HT' || matchData?.status === '試合中' || matchData?.status === '終了';
+            const homeScore = isFinishedOrLive 
+                ? (matchData?.goals?.home ?? matchData?.homeScore ?? 0)
+                : (matchData?.goals?.home ?? matchData?.homeScore ?? '-');
+            const awayScore = isFinishedOrLive
+                ? (matchData?.goals?.away ?? matchData?.awayScore ?? 0)
+                : (matchData?.goals?.away ?? matchData?.awayScore ?? '-');
+            
+            const statusShort = matchData?.fixture?.status?.short || matchData?.status || "";
+            const statusText = statusShort || (matchData?.fixture?.status?.long || "FT");
+
+            // チームIDを取得（ロゴがない場合のフォールバック）
+            const homeTeamId = matchData?.teams?.home?.id || getTeamId(homeName);
+            const awayTeamId = matchData?.teams?.away?.id || getTeamId(awayName);
+            
+            // ロゴURLを生成（API-Football形式）
+            const homeLogoUrl = homeLogo || `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
+            const awayLogoUrl = awayLogo || `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
+
+            // ✅ 1) 上部の大きいスコアボード
+            const homeTeamNameEl = document.getElementById("homeTeamName");
+            const awayTeamNameEl = document.getElementById("awayTeamName");
+            const homeScoreEl = document.getElementById("homeScoreLarge");
+            const awayScoreEl = document.getElementById("awayScoreLarge");
+            const homeLogoEl = document.getElementById("homeTeamLogo");
+            const awayLogoEl = document.getElementById("awayTeamLogo");
+
+            if (homeTeamNameEl) homeTeamNameEl.textContent = homeName.toUpperCase();
+            if (awayTeamNameEl) awayTeamNameEl.textContent = awayName.toUpperCase();
+            if (homeScoreEl) homeScoreEl.textContent = homeScore;
+            if (awayScoreEl) awayScoreEl.textContent = awayScore;
+            if (homeLogoEl && homeLogoUrl) {
+                homeLogoEl.src = homeLogoUrl;
+                homeLogoEl.alt = homeName;
+                homeLogoEl.style.display = "";
+                const fallback = homeLogoEl.nextElementSibling;
+                if (fallback && fallback.classList.contains('team-logo-fallback')) {
+                    fallback.style.display = "none";
+                }
+            }
+            if (awayLogoEl && awayLogoUrl) {
+                awayLogoEl.src = awayLogoUrl;
+                awayLogoEl.alt = awayName;
+                awayLogoEl.style.display = "";
+                const fallback = awayLogoEl.nextElementSibling;
+                if (fallback && fallback.classList.contains('team-logo-fallback')) {
+                    fallback.style.display = "none";
+                }
+            }
+
+            // ✅ 2) STATSヘッダー（小さい方）も同じ値で更新
+            const homeTeamNameStats = document.getElementById("homeTeamNameStats");
+            const awayTeamNameStats = document.getElementById("awayTeamNameStats");
+            const matchScoreStats = document.getElementById("matchScoreStats");
+            const matchStatusBadgeStats = document.getElementById("matchStatusBadgeStats");
+            const homeLogoStats = document.getElementById("homeTeamLogoStats");
+            const awayLogoStats = document.getElementById("awayTeamLogoStats");
+
+            if (homeTeamNameStats) homeTeamNameStats.textContent = homeName;
+            if (awayTeamNameStats) awayTeamNameStats.textContent = awayName;
+            if (matchScoreStats) matchScoreStats.textContent = `${homeScore} - ${awayScore}`;
+            if (matchStatusBadgeStats) matchStatusBadgeStats.textContent = statusText;
+            if (homeLogoStats && homeLogoUrl) {
+                homeLogoStats.src = homeLogoUrl;
+                homeLogoStats.alt = homeName;
+            }
+            if (awayLogoStats && awayLogoUrl) {
+                awayLogoStats.src = awayLogoUrl;
+                awayLogoStats.alt = awayName;
+            }
+        }
+
         // 詳細な試合情報を表示
         function displayDetailedMatchInfo(matchData) {
             console.log('Displaying detailed match info:', matchData);
             
             try {
-                const homeTeam = matchData.homeTeam || matchData.home || '-';
-                const awayTeam = matchData.awayTeam || matchData.away || '-';
-                    const isFinishedOrLive = matchData.status === 'Finished' || matchData.status === 'FT' || matchData.status === 'LIVE' || matchData.status === 'HT' || matchData.status === '試合中' || matchData.status === '終了';
-                    const homeScore = isFinishedOrLive 
-                        ? (matchData.homeScore !== undefined && matchData.homeScore !== null ? matchData.homeScore : 0)
-                        : (matchData.homeScore !== undefined && matchData.homeScore !== null ? matchData.homeScore : '-');
-                    const awayScore = isFinishedOrLive
-                        ? (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : 0)
-                        : (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : '-');
+                // スコアボードヘッダーを統一更新
+                updateScoreboardHeader(matchData);
                 
-                // スコアボードヘッダーを更新
-                console.log('Updating scoreboard header:', { homeTeam, awayTeam, homeScore, awayScore });
-                const homeTeamNameEl = document.getElementById('homeTeamName');
-                const awayTeamNameEl = document.getElementById('awayTeamName');
-                const homeScoreEl = document.getElementById('homeScoreLarge');
-                const awayScoreEl = document.getElementById('awayScoreLarge');
+                // その他の情報を更新
                 const venueEl = document.getElementById('venueName');
                 const liveBadge = document.getElementById('liveBadge');
                 const matchMinuteEl = document.getElementById('matchMinute');
                 
-                console.log('Scoreboard elements found:', {
-                    homeTeamNameEl: !!homeTeamNameEl,
-                    awayTeamNameEl: !!awayTeamNameEl,
-                    homeScoreEl: !!homeScoreEl,
-                    awayScoreEl: !!awayScoreEl,
-                    venueEl: !!venueEl,
-                    liveBadge: !!liveBadge
-                });
-                
-                if (homeTeamNameEl) {
-                    homeTeamNameEl.textContent = homeTeam.toUpperCase();
-                    console.log('Updated homeTeamNameEl:', homeTeam.toUpperCase());
-                } else {
-                    console.error('homeTeamNameEl not found');
-                }
-                if (awayTeamNameEl) {
-                    awayTeamNameEl.textContent = awayTeam.toUpperCase();
-                    console.log('Updated awayTeamNameEl:', awayTeam.toUpperCase());
-                } else {
-                    console.error('awayTeamNameEl not found');
-                }
-                if (homeScoreEl) {
-                    homeScoreEl.textContent = homeScore;
-                    console.log('Updated homeScoreEl:', homeScore);
-                } else {
-                    console.error('homeScoreEl not found');
-                }
-                if (awayScoreEl) {
-                    awayScoreEl.textContent = awayScore;
-                    console.log('Updated awayScoreEl:', awayScore);
-                } else {
-                    console.error('awayScoreEl not found');
-                }
                 if (venueEl) venueEl.textContent = matchData.venue || matchData.footballData?.venue || '-';
                 
                 // LIVEバッジの表示
@@ -8971,32 +8987,9 @@
                     if (matchMinuteEl) matchMinuteEl.style.display = 'none';
                 }
                 
-                // チームロゴを更新
-                const homeTeamId = getTeamId(homeTeam);
-                const awayTeamId = getTeamId(awayTeam);
-                const homeTeamLogoEl = document.getElementById('homeTeamLogo');
-                const awayTeamLogoEl = document.getElementById('awayTeamLogo');
-                const homeTeamLogoSmallEl = document.getElementById('homeTeamLogoSmall');
-                const awayTeamLogoSmallEl = document.getElementById('awayTeamLogoSmall');
-                
-                if (homeTeamLogoEl) {
-                    homeTeamLogoEl.src = `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
-                    homeTeamLogoEl.alt = homeTeam;
-                }
-                if (awayTeamLogoEl) {
-                    awayTeamLogoEl.src = `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
-                    awayTeamLogoEl.alt = awayTeam;
-                }
-                if (homeTeamLogoSmallEl) {
-                    homeTeamLogoSmallEl.src = `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
-                    homeTeamLogoSmallEl.alt = homeTeam;
-                }
-                if (awayTeamLogoSmallEl) {
-                    awayTeamLogoSmallEl.src = `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
-                    awayTeamLogoSmallEl.alt = awayTeam;
-                }
-                
                 // チーム名（小）を更新
+                const homeTeam = matchData.homeTeam || matchData.home || '-';
+                const awayTeam = matchData.awayTeam || matchData.away || '-';
                 const homeTeamNameSmallEl = document.getElementById('homeTeamNameSmall');
                 const awayTeamNameSmallEl = document.getElementById('awayTeamNameSmall');
                 if (homeTeamNameSmallEl) homeTeamNameSmallEl.textContent = homeTeam.toUpperCase();
