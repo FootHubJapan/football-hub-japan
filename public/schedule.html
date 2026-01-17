@@ -4729,7 +4729,7 @@
                 <span class="material-symbols-outlined" style="font-size: 1.875rem; font-weight: bold;">smart_toy</span>
                 <div style="position: absolute; top: -0.25rem; right: -0.25rem; width: 1rem; height: 1rem; background: #ef4444; border: 2px solid rgb(15, 23, 42); border-radius: 9999px;"></div>
             </button>
-        </div>
+    </div>
 
     <script src="/ai-widget.js"></script>
     <script>
@@ -7022,7 +7022,24 @@
                 console.log('Stats panel found globally:', !!statsPanelGlobal);
                 if (statsPanelGlobal) {
                     console.log('Stats panel parent:', statsPanelGlobal.parentElement?.className);
+                    console.log('Stats panel parent tagName:', statsPanelGlobal.parentElement?.tagName);
+                    console.log('Stats panel parent id:', statsPanelGlobal.parentElement?.id);
                     console.log('Stats panel is in matchView:', matchView?.contains(statsPanelGlobal));
+                    console.log('Stats panel is in tab-content-modern:', tabContent?.contains(statsPanelGlobal));
+                    // 親要素を遡って確認
+                    let current = statsPanelGlobal.parentElement;
+                    let depth = 0;
+                    while (current && depth < 10) {
+                        console.log(`Parent ${depth}:`, {
+                            tagName: current.tagName,
+                            className: current.className,
+                            id: current.id,
+                            isMatchView: current.id === 'matchView',
+                            isTabContent: current.classList?.contains('tab-content-modern')
+                        });
+                        current = current.parentElement;
+                        depth++;
+                    }
                 }
             }
             
