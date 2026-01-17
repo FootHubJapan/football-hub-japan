@@ -8198,6 +8198,23 @@
             }
         }
 
+        // XIの並び順を正規化する関数（GK → DF → MF → FWの順）
+        window.FHJ.normalizeXI = function(xi) {
+            const posRank = (p) => {
+                const pos = (p?.player?.pos || p?.player?.position || p?.position || "").toUpperCase();
+                if (pos.startsWith("G")) return 0; // GK
+                if (pos.startsWith("D")) return 1; // DF
+                if (pos.startsWith("M")) return 2; // MF
+                if (pos.startsWith("F") || pos.startsWith("A") || pos.includes("ST") || pos.includes("FW")) return 3; // FW/ATT
+                return 9;
+            };
+            // 安定ソート（同順位は元順）
+            return xi.map((p, i) => ({ p, i }))
+                     .sort((a, b) => (posRank(a.p) - posRank(b.p)) || (a.i - b.i))
+                     .map(x => x.p)
+                     .slice(0, 11);
+        };
+
         // Formationベースの座標生成関数
         window.FHJ.parseFormation = function(form) {
             // "4-2-3-1" -> [4,2,3,1]
@@ -8396,14 +8413,39 @@
                           lineups[1];
 
             // startXIのみを使用（substitutesは除外）
-            const homeXI = (homeLU?.startXI || matchData?.lineups?.home?.startXI || []).slice(0, 11);
-            const awayXI = (awayLU?.startXI || matchData?.lineups?.away?.startXI || []).slice(0, 11);
+            // 既に正規化されたXIが渡されている場合はそれを使用
+            let rawHomeXI, rawAwayXI;
+            if (matchData.normalizedHomeXI && matchData.normalizedAwayXI) {
+                rawHomeXI = matchData.normalizedHomeXI;
+                rawAwayXI = matchData.normalizedAwayXI;
+                console.log('✅ Using pre-normalized XI from matchData');
+            } else {
+                rawHomeXI = (homeLU?.startXI || matchData?.lineups?.home?.startXI || []).slice(0, 11);
+                rawAwayXI = (awayLU?.startXI || matchData?.lineups?.away?.startXI || []).slice(0, 11);
+            }
+
+            // 同一参照事故を避けるため、深いコピーを作成
+            const homeXI = JSON.parse(JSON.stringify(rawHomeXI));
+            const awayXI = JSON.parse(JSON.stringify(rawAwayXI));
+
+            // チーム名を取得してデバッグログ
+            const homeTeamName = matchData?.teams?.home?.name || matchData?.homeTeam || 'HOME';
+            const awayTeamName = matchData?.teams?.away?.name || matchData?.awayTeam || 'AWAY';
+            const homeFirstPlayerName = homeXI?.[0]?.player?.name || homeXI?.[0]?.name || 'Unknown';
+            const awayFirstPlayerName = awayXI?.[0]?.player?.name || awayXI?.[0]?.name || 'Unknown';
+            
+            console.log('🏠 HOME team:', homeTeamName, 'XI[0]:', homeFirstPlayerName);
+            console.log('✈️ AWAY team:', awayTeamName, 'XI[0]:', awayFirstPlayerName);
+
+            // XIの並び順を正規化（GK → DF → MF → FWの順）
+            const normalizedHomeXI = window.FHJ.normalizeXI ? window.FHJ.normalizeXI(homeXI) : homeXI;
+            const normalizedAwayXI = window.FHJ.normalizeXI ? window.FHJ.normalizeXI(awayXI) : awayXI;
 
             console.log('📊 Lineup data:', {
-                homeXICount: homeXI.length,
-                awayXICount: awayXI.length,
-                homeXISample: homeXI[0],
-                awayXISample: awayXI[0]
+                homeXICount: normalizedHomeXI.length,
+                awayXICount: normalizedAwayXI.length,
+                homeXISample: normalizedHomeXI[0],
+                awayXISample: normalizedAwayXI[0]
             });
 
             // formation取得
@@ -8426,7 +8468,7 @@
             let awayNodesCount = 0;
 
             // Home players（下側に配置）
-            homeXI.slice(0, 11).forEach((p, idx) => {
+            normalizedHomeXI.slice(0, 11).forEach((p, idx) => {
                 const player = p?.player || p;
                 const playerName = player?.name || p?.name || 'Unknown';
                 const playerNumber = player?.number || p?.number || '';
@@ -8450,7 +8492,7 @@
             });
 
             // Away players（上側に配置）
-            awayXI.slice(0, 11).forEach((p, idx) => {
+            normalizedAwayXI.slice(0, 11).forEach((p, idx) => {
                 const player = p?.player || p;
                 const playerName = player?.name || p?.name || 'Unknown';
                 const playerNumber = player?.number || p?.number || '';
@@ -8654,23 +8696,28 @@
                 // フォールバックデータを使用
                 let homeLineup, awayLineup, homeFormation, awayFormation;
                 
+                // チーム名を取得
+                const homeTeamName = matchData?.teams?.home?.name || matchData?.homeTeam || matchData?.home || 'HOME';
+                const awayTeamName = matchData?.teams?.away?.name || matchData?.awayTeam || matchData?.away || 'AWAY';
+
                 // 複数のデータ構造に対応
+                let rawHomeXI, rawAwayXI;
                 if (matchData.lineups?.home?.startXI && matchData.lineups?.away?.startXI) {
                     console.log('✅ Using lineups.home.startXI and lineups.away.startXI');
-                    homeLineup = matchData.lineups.home.startXI;
-                    awayLineup = matchData.lineups.away.startXI;
+                    rawHomeXI = matchData.lineups.home.startXI;
+                    rawAwayXI = matchData.lineups.away.startXI;
                     homeFormation = matchData.lineups.home.formation || '4-2-3-1';
                     awayFormation = matchData.lineups.away.formation || '4-1-4-1';
                 } else if (matchData.footballData?.lineups?.home?.startXI && matchData.footballData?.lineups?.away?.startXI) {
                     console.log('✅ Using footballData.lineups.home.startXI and footballData.lineups.away.startXI');
-                    homeLineup = matchData.footballData.lineups.home.startXI;
-                    awayLineup = matchData.footballData.lineups.away.startXI;
+                    rawHomeXI = matchData.footballData.lineups.home.startXI;
+                    rawAwayXI = matchData.footballData.lineups.away.startXI;
                     homeFormation = matchData.footballData.lineups.home.formation || '4-2-3-1';
                     awayFormation = matchData.footballData.lineups.away.formation || '4-1-4-1';
                 } else if (matchData.fixture?.lineups?.home?.startXI && matchData.fixture?.lineups?.away?.startXI) {
                     console.log('✅ Using fixture.lineups.home.startXI and fixture.lineups.away.startXI');
-                    homeLineup = matchData.fixture.lineups.home.startXI;
-                    awayLineup = matchData.fixture.lineups.away.startXI;
+                    rawHomeXI = matchData.fixture.lineups.home.startXI;
+                    rawAwayXI = matchData.fixture.lineups.away.startXI;
                     homeFormation = matchData.fixture.lineups.home.formation || '4-2-3-1';
                     awayFormation = matchData.fixture.lineups.away.formation || '4-1-4-1';
                 } else {
@@ -8696,20 +8743,20 @@
                         // ラインアップデータがない場合でも、ダミーデータを生成して表示
                         console.log('⚠️ No lineup data found, generating dummy data');
                         const dummyFormation = '4-3-3';
-                        homeLineup = Array.from({ length: 11 }, (_, i) => ({
+                        rawHomeXI = Array.from({ length: 11 }, (_, i) => ({
                             player: {
                                 id: i + 1,
-                                name: `Player ${i + 1}`,
+                                name: `${homeTeamName} Player ${i + 1}`,
                                 number: i + 1,
                                 pos: i === 0 ? 'GK' : i <= 4 ? 'D' : i <= 7 ? 'M' : 'F'
                             },
                             position: i === 0 ? 'GK' : i <= 4 ? 'D' : i <= 7 ? 'M' : 'F',
                             number: i + 1
                         }));
-                        awayLineup = Array.from({ length: 11 }, (_, i) => ({
+                        rawAwayXI = Array.from({ length: 11 }, (_, i) => ({
                             player: {
                                 id: i + 1,
-                                name: `Player ${i + 1}`,
+                                name: `${awayTeamName} Player ${i + 1}`,
                                 number: i + 1,
                                 pos: i === 0 ? 'GK' : i <= 4 ? 'D' : i <= 7 ? 'M' : 'F'
                             },
@@ -8721,6 +8768,36 @@
                         console.log('✅ Generated dummy lineup data');
                     }
                 }
+
+                // 同一参照事故を避けるため、深いコピーを作成
+                const homeXI = JSON.parse(JSON.stringify(rawHomeXI || []));
+                const awayXI = JSON.parse(JSON.stringify(rawAwayXI || []));
+
+                // デバッグログ：home/awayのteam.nameとXIの先頭選手名を確認
+                const homeFirstPlayerName = homeXI?.[0]?.player?.name || homeXI?.[0]?.name || 'Unknown';
+                const awayFirstPlayerName = awayXI?.[0]?.player?.name || awayXI?.[0]?.name || 'Unknown';
+                console.log('🏠 HOME team:', homeTeamName, 'XI[0]:', homeFirstPlayerName);
+                console.log('✈️ AWAY team:', awayTeamName, 'XI[0]:', awayFirstPlayerName);
+                
+                if (homeFirstPlayerName === awayFirstPlayerName && homeXI.length > 0 && awayXI.length > 0) {
+                    console.error('❌ WARNING: HOME and AWAY XI[0] have the same player name! This indicates a data structure issue.');
+                }
+
+                // XIの並び順を正規化（GK → DF → MF → FWの順）
+                const normalizedHomeXI = window.FHJ.normalizeXI ? window.FHJ.normalizeXI(homeXI) : homeXI;
+                const normalizedAwayXI = window.FHJ.normalizeXI ? window.FHJ.normalizeXI(awayXI) : awayXI;
+
+                // 正規化後のログ
+                console.log('📊 Normalized XI:', {
+                    homeCount: normalizedHomeXI.length,
+                    awayCount: normalizedAwayXI.length,
+                    homeFirst: normalizedHomeXI?.[0]?.player?.name || normalizedHomeXI?.[0]?.name,
+                    awayFirst: normalizedAwayXI?.[0]?.player?.name || normalizedAwayXI?.[0]?.name
+                });
+
+                // 正規化されたXIを使用
+                homeLineup = normalizedHomeXI;
+                awayLineup = normalizedAwayXI;
 
                 // フォーメーションテキストを設定
                 setFormationText(matchData);
@@ -8766,17 +8843,17 @@
                             <div class="flex justify-between text-[10px] font-bold text-[#9ab0bc] mb-2 uppercase tracking-tighter">
                                 <span>Expected Goals</span>
                                 <span>${xgHome} vs ${xgAway}</span>
-                            </div>
+                                </div>
                             <div class="h-2 w-full bg-[#27343a] rounded-full overflow-hidden flex">
                                 <div class="h-full bg-team-a" style="width: ${(parseFloat(xgHome) / xgSum * 100)}%"></div>
                                 <div class="h-full bg-team-b" style="width: ${(parseFloat(xgAway) / xgSum * 100)}%"></div>
+                                </div>
                             </div>
-                        </div>
                         <div>
                             <div class="flex justify-between text-[10px] font-bold text-[#9ab0bc] mb-2 uppercase tracking-tighter">
                                 <span>Possession</span>
                                 <span>${possessionHome}% vs ${possessionAway}%</span>
-                            </div>
+                        </div>
                             <div class="h-2 w-full bg-[#27343a] rounded-full overflow-hidden flex">
                                 <div class="h-full bg-team-a" style="width: ${possessionHome}%"></div>
                                 <div class="h-full bg-team-b" style="width: ${possessionAway}%"></div>
@@ -8835,8 +8912,8 @@
                         </div>
                                 </div>
                                 <span class="material-symbols-outlined text-team-a text-lg">trending_up</span>
-                            </div>
-                        `;
+                    </div>
+                `;
                     }
                     
                     if (awayFW) {
@@ -8911,11 +8988,14 @@
                 // ピッチを描画（formationベースのProFootball風描画）
                 console.log('🎯 Rendering pitch with formation-based positioning');
                 if (window.FHJ && window.FHJ.renderPitch) {
-                    // matchDataにformationを追加して渡す
+                    // matchDataにformationと正規化されたXIを追加して渡す
                     const matchDataWithFormation = {
                         ...matchData,
                         homeFormation,
-                        awayFormation
+                        awayFormation,
+                        // 正規化されたXIを明示的に渡す（renderPitch内で再度正規化されるが、念のため）
+                        normalizedHomeXI: homeLineup,
+                        normalizedAwayXI: awayLineup
                     };
                     window.FHJ.renderPitch(matchDataWithFormation);
                 } else {
@@ -8938,7 +9018,7 @@
                     playersContainer.innerHTML = `
                         <div class="error-message" style="text-align: center; padding: 40px 20px; color: var(--muted); font-size: 16px;">
                             <p>ラインアップの表示中にエラーが発生しました: ${error.message}</p>
-                            </div>
+                        </div>
                     `;
                 }
             }
