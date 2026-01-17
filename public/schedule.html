@@ -4410,15 +4410,6 @@
             
             <!-- Match Detail View (initially hidden) -->
             <section id="matchView" class="hidden" style="display: none;">
-
-        <!-- AI Agent Button -->
-        <div style="position: fixed; bottom: 2rem; right: 2rem; z-index: 50;">
-            <button style="width: 3.5rem; height: 3.5rem; background: var(--primary); color: rgb(15, 23, 42); border-radius: 1rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 25px 50px -12px rgba(51, 255, 255, 0.3); border: none; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-                <span class="material-symbols-outlined" style="font-size: 1.875rem; font-weight: bold;">smart_toy</span>
-                <div style="position: absolute; top: -0.25rem; right: -0.25rem; width: 1rem; height: 1rem; background: #ef4444; border: 2px solid rgb(15, 23, 42); border-radius: 9999px;"></div>
-            </button>
-            </div>
-            
             <!-- 戻るボタン -->
             <div style="margin-bottom: 1rem;">
                 <button onclick="(function(){const url=new URL(location.href);url.searchParams.delete('match');location.href=url.pathname+url.search;})()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(51, 255, 255, 0.2); color: var(--primary); border-radius: 0.5rem; border: none; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(51,255,255,0.3)'" onmouseout="this.style.background='rgba(51,255,255,0.2)'">
@@ -4732,6 +4723,14 @@
             </div>
         </div>
             </section>
+
+        <!-- AI Agent Button (全ページ共通) -->
+        <div style="position: fixed; bottom: 2rem; right: 2rem; z-index: 50;">
+            <button style="width: 3.5rem; height: 3.5rem; background: var(--primary); color: rgb(15, 23, 42); border-radius: 1rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 25px 50px -12px rgba(51, 255, 255, 0.3); border: none; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                <span class="material-symbols-outlined" style="font-size: 1.875rem; font-weight: bold;">smart_toy</span>
+                <div style="position: absolute; top: -0.25rem; right: -0.25rem; width: 1rem; height: 1rem; background: #ef4444; border: 2px solid rgb(15, 23, 42); border-radius: 9999px;"></div>
+            </button>
+        </div>
 
     <script src="/ai-widget.js"></script>
     <script>
@@ -6977,7 +6976,17 @@
         function updateStatsTab(statsData, matchData = null) {
             console.log('Updating stats tab with data:', statsData);
             console.log('MatchData:', matchData);
-            console.log('MatchView exists:', !!document.getElementById('matchView'));
+            const matchView = document.getElementById('matchView');
+            console.log('MatchView exists:', !!matchView);
+            if (matchView) {
+                const allPanels = matchView.querySelectorAll('[data-panel]');
+                console.log('All panels in matchView:', Array.from(allPanels).map(p => ({
+                    panel: p.getAttribute('data-panel'),
+                    exists: !!p,
+                    hidden: p.classList.contains('hidden'),
+                    display: window.getComputedStyle(p).display
+                })));
+            }
             console.log('Stats panel exists:', !!document.querySelector('#matchView [data-panel="stats"]'));
             
             if (!matchData) {
