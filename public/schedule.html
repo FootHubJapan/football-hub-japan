@@ -4399,7 +4399,7 @@
                     <input type="text" id="searchInput" class="control-select" placeholder="チーム名や選手名で検索..." />
                 </div>
 
-                <button class="control-button" onclick="loadMatches()">試合を表示</button>
+                <button class="control-button" id="loadMatchesButton">試合を表示</button>
             </div>
 
             <div id="scheduleContent">
@@ -4831,6 +4831,18 @@
             // リーグフィルターを生成
             generateLeagueFilters();
             
+            // 試合を表示ボタンにイベントリスナーを追加
+            const loadMatchesButton = document.getElementById('loadMatchesButton');
+            if (loadMatchesButton) {
+                loadMatchesButton.addEventListener('click', function() {
+                    if (typeof loadMatches === 'function') {
+                        loadMatches();
+                    } else {
+                        console.error('loadMatches function is not defined');
+                    }
+                });
+            }
+            
             // タブボタンにイベントリスナーを追加（新デザイン対応）
             const matchView = document.getElementById('matchView');
             const tabButtonsModern = matchView ? matchView.querySelectorAll('.tab-button-modern') : document.querySelectorAll('.tab-button-modern');
@@ -5029,7 +5041,7 @@
             
             // モーダル関連のコードは削除（#matchViewに統一）
             // モーダル内のスクロールイベントが背景に伝播しないようにする（#matchView用）
-            const matchView = document.getElementById('matchView');
+            // matchViewは既に4835行目で宣言されているので、再宣言しない
             if (matchView) {
                 matchView.addEventListener('wheel', function(e) {
                 const statsTab = matchView.querySelector('[data-panel="stats"]');
