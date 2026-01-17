@@ -6980,14 +6980,52 @@
             console.log('MatchView exists:', !!matchView);
             if (matchView) {
                 const allPanels = matchView.querySelectorAll('[data-panel]');
-                console.log('All panels in matchView:', Array.from(allPanels).map(p => ({
-                    panel: p.getAttribute('data-panel'),
-                    exists: !!p,
-                    hidden: p.classList.contains('hidden'),
-                    display: window.getComputedStyle(p).display
-                })));
+                console.log('All panels in matchView (count):', allPanels.length);
+                allPanels.forEach((p, index) => {
+                    console.log(`Panel ${index + 1}:`, {
+                        panel: p.getAttribute('data-panel'),
+                        exists: !!p,
+                        hidden: p.classList.contains('hidden'),
+                        display: window.getComputedStyle(p).display,
+                        element: p
+                    });
+                });
+                
+                // tab-content-modern内のパネルも確認
+                const tabContent = matchView.querySelector('.tab-content-modern');
+                console.log('tab-content-modern exists:', !!tabContent);
+                if (tabContent) {
+                    const panelsInTabContent = tabContent.querySelectorAll('[data-panel]');
+                    console.log('Panels in tab-content-modern (count):', panelsInTabContent.length);
+                    panelsInTabContent.forEach((p, index) => {
+                        console.log(`TabContent Panel ${index + 1}:`, {
+                            panel: p.getAttribute('data-panel'),
+                            exists: !!p,
+                            hidden: p.classList.contains('hidden'),
+                            display: window.getComputedStyle(p).display
+                        });
+                    });
+                }
             }
-            console.log('Stats panel exists:', !!document.querySelector('#matchView [data-panel="stats"]'));
+            const statsPanel = document.querySelector('#matchView [data-panel="stats"]');
+            console.log('Stats panel exists:', !!statsPanel);
+            if (statsPanel) {
+                console.log('Stats panel details:', {
+                    exists: !!statsPanel,
+                    hidden: statsPanel.classList.contains('hidden'),
+                    display: window.getComputedStyle(statsPanel).display,
+                    parent: statsPanel.parentElement?.className
+                });
+            } else {
+                console.error('Stats panel NOT FOUND in #matchView');
+                // 全体から検索してみる
+                const statsPanelGlobal = document.querySelector('[data-panel="stats"]');
+                console.log('Stats panel found globally:', !!statsPanelGlobal);
+                if (statsPanelGlobal) {
+                    console.log('Stats panel parent:', statsPanelGlobal.parentElement?.className);
+                    console.log('Stats panel is in matchView:', matchView?.contains(statsPanelGlobal));
+                }
+            }
             
             if (!matchData) {
                 console.error('matchData is null or undefined');
