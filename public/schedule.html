@@ -4988,8 +4988,8 @@
             const matchView = document.getElementById('matchView');
             if (matchView) {
                 matchView.addEventListener('wheel', function(e) {
-                const statsTab = modal.querySelector('#stats');
-                if (statsTab && statsTab.classList.contains('active')) {
+                const statsTab = matchView.querySelector('[data-panel="stats"]');
+                if (statsTab && !statsTab.classList.contains('hidden')) {
                     // 試合統計タブがアクティブな場合、スクロールイベントを処理
                     const canScrollUp = statsTab.scrollTop > 0;
                     const canScrollDown = statsTab.scrollTop < (statsTab.scrollHeight - statsTab.clientHeight - 1);
@@ -5009,6 +5009,7 @@
                     e.stopPropagation();
                 }
             }, { passive: false });
+            }
             
             // #matchView内のタッチイベントも処理
             if (matchView) {
