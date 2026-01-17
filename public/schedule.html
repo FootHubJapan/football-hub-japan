@@ -122,6 +122,20 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(51, 255, 255, 0.3); }
+        
+        /* Hidden class for view switching */
+        .hidden {
+            display: none !important;
+        }
+        
+        /* MatchView scoping */
+        #matchView {
+            padding: 2rem 1.5rem;
+        }
+        
+        #scheduleView {
+            width: 100%;
+        }
 
         * {
             margin: 0;
@@ -4286,6 +4300,8 @@
         </header>
 
         <div class="main-container" style="max-width: 1440px; margin: 0 auto; padding: 2rem 1.5rem;">
+            <!-- Schedule View -->
+            <section id="scheduleView">
             <!-- Filter & Header Section -->
             <div style="display: flex; flex-direction: column; gap: 2rem; margin-bottom: 2.5rem;">
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -4390,6 +4406,10 @@
                 <div class="loading">試合データを読み込み中...</div>
             </div>
             </div>
+            </section>
+            
+            <!-- Match Detail View (initially hidden) -->
+            <section id="matchView" class="hidden" style="display: none;">
 
         <!-- AI Agent Button -->
         <div style="position: fixed; bottom: 2rem; right: 2rem; z-index: 50;">
@@ -4399,10 +4419,13 @@
             </button>
         </div>
 
-    <!-- 試合詳細モーダル（新デザイン） -->
-    <div id="matchDetailsModal" class="modal">
-        <div class="modal-content large-modal modern-match-detail bg-background-light dark:bg-background-dark px-6 py-4">
-            <span class="close">&times;</span>
+            <!-- 戻るボタン -->
+            <div style="margin-bottom: 1rem;">
+                <button onclick="location.hash='';" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(51, 255, 255, 0.2); color: var(--primary); border-radius: 0.5rem; border: none; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(51,255,255,0.3)'" onmouseout="this.style.background='rgba(51,255,255,0.2)'">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    <span>試合一覧に戻る</span>
+                </button>
+            </div>
             
             <!-- スコアボードヘッダー（新デザイン） -->
             <div class="relative overflow-hidden rounded-xl bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 p-8 mb-8 shadow-sm w-full" id="scoreboardHeader">
@@ -4448,28 +4471,36 @@
             </div>
             
             <!-- タブナビゲーション（新デザイン） -->
-            <div class="flex border-b border-[#27343a] gap-8 mb-8" style="background-color: #16252d; padding: 0.5rem 1rem; border-radius: 0.5rem 0.5rem 0 0;">
-                <a class="tab-button-modern" data-tab="overview" href="#" style="padding: 0.75rem 1.5rem; color: #9ab0bc; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; transition: all 0.2s;">
+            <div id="matchTabs" class="flex border-b border-[#27343a] gap-8 mb-8" style="background-color: #16252d; padding: 0.5rem 1rem; border-radius: 0.5rem 0.5rem 0 0;">
+                <button class="tab-button-modern" data-tab="overview" style="padding: 0.75rem 1.5rem; color: #9ab0bc; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; transition: all 0.2s; background: transparent; border: none; cursor: pointer;">
                     OVERVIEW
-                </a>
-                <a class="tab-button-modern active" data-tab="lineup" href="#" style="padding: 0.75rem 1.5rem; background-color: #00bdc7; color: white; font-weight: 700; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; box-shadow: 0 0 10px rgba(0, 189, 199, 0.3); transition: all 0.2s;">
+                </button>
+                <button class="tab-button-modern active" data-tab="lineup" style="padding: 0.75rem 1.5rem; background-color: #00bdc7; color: white; font-weight: 700; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; box-shadow: 0 0 10px rgba(0, 189, 199, 0.3); transition: all 0.2s; border: none; cursor: pointer;">
                     LINEUP
-                </a>
-                <a class="tab-button-modern" data-tab="stats" href="#" style="padding: 0.75rem 1.5rem; color: #9ab0bc; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; transition: all 0.2s;">
+                </button>
+                <button class="tab-button-modern" data-tab="stats" style="padding: 0.75rem 1.5rem; color: #9ab0bc; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; transition: all 0.2s; background: transparent; border: none; cursor: pointer;">
                     STATS
-                </a>
-                <a class="tab-button-modern" data-tab="h2h" href="#" style="padding: 0.75rem 1.5rem; color: #9ab0bc; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; transition: all 0.2s;">
+                </button>
+                <button class="tab-button-modern" data-tab="h2h" style="padding: 0.75rem 1.5rem; color: #9ab0bc; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; transition: all 0.2s; background: transparent; border: none; cursor: pointer;">
                     H2H
-                </a>
-                <a class="tab-button-modern" data-tab="events" href="#" style="padding: 0.75rem 1.5rem; color: #9ab0bc; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; transition: all 0.2s;">
+                </button>
+                <button class="tab-button-modern" data-tab="timeline" style="padding: 0.75rem 1.5rem; color: #9ab0bc; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; transition: all 0.2s; background: transparent; border: none; cursor: pointer;">
                     TIMELINE
-                </a>
+                </button>
             </div>
             
             <!-- タブコンテンツ -->
             <div class="tab-content-modern px-2">
+                <!-- Overview Tab -->
+                <section data-panel="overview" class="hidden" style="display: none;">
+                    <div class="bg-card-dark border border-[#27343a] rounded-xl p-6">
+                        <h4 class="text-lg font-bold mb-4">Match Overview</h4>
+                        <p class="text-[#9ab0bc]">試合概要情報を読み込み中...</p>
+                    </div>
+                </section>
+                
                 <!-- ラインアップタブ（新デザイン - 3カラムレイアウト：左SUB、中央ピッチ、右SUB） -->
-                <div id="lineup" class="tab-pane-modern">
+                <section data-panel="lineup" class="tab-pane-modern">
                     <div class="grid grid-cols-12 gap-6">
                         <!-- Left Column: Home Substitutes -->
                         <div class="col-span-2 bg-card-dark border border-[#27343a] rounded-xl p-6">
@@ -4516,9 +4547,10 @@
                                 </div>
                             </div>
                         </div>
+                </section>
 
                 <!-- 試合統計タブ（ProFooty Analyticsスタイル） -->
-                <div id="stats" class="tab-pane-modern active" style="display: flex; flex-direction: column; gap: 2rem;">
+                <section data-panel="stats" class="hidden" style="display: none; flex-direction: column; gap: 2rem;">
                     <!-- Match Scorecard -->
                     <div class="bg-card-dark rounded-xl border border-dark p-6 flex items-center justify-between" id="matchScorecard">
                         <div class="flex items-center gap-6 flex-1">
@@ -4681,24 +4713,25 @@
                             </button>
                         </div>
                     </footer>
-                </div>
+                </section>
                 
-                <!-- 試合イベントタブ -->
-                <div id="events" class="tab-pane-modern">
+                <!-- H2H Tab -->
+                <section data-panel="h2h" class="hidden" style="display: none;">
+                    <div class="bg-card-dark border border-[#27343a] rounded-xl p-6">
+                        <h4 class="text-lg font-bold mb-4">Head to Head</h4>
+                        <p class="text-[#9ab0bc]">対戦成績を読み込み中...</p>
+                    </div>
+                </section>
+                
+                <!-- Timeline Tab -->
+                <section data-panel="timeline" class="hidden" style="display: none;">
                     <div class="events-container" id="eventsContainer">
                         <!-- イベントデータがここに挿入される -->
                     </div>
-                </div>
-                
-                <!-- Newsタブ -->
-                <div id="news" class="tab-pane-modern">
-                    <div class="news-container p-6">
-                        <div class="no-data">ニュース情報がありません</div>
-                    </div>
-                </div>
+                </section>
             </div>
         </div>
-    </div>
+            </section>
 
     <script src="/ai-widget.js"></script>
     <script>
@@ -5989,31 +6022,146 @@
                 });
                 
                 // API-Football IDが存在する場合はそれを使用（優先）
+                let matchId = '';
                 if (apiFootballId && apiFootballId !== 'undefined' && apiFootballId !== 'null' && apiFootballId !== '') {
+                    matchId = apiFootballId;
                     console.log('✅ Using API-Football fixture ID:', apiFootballId);
-                    await showDetailedMatchInfoV2({
-                        source: 'api_football',
-                        fixtureId: apiFootballId,
-                        leagueKey,
-                        kickoffUtc,
-                        home,
-                        away
-                    });
+                } else if (fotmobId && fotmobId !== 'undefined' && fotmobId !== 'null' && fotmobId !== '') {
+                    matchId = `fotmob_${fotmobId}`;
+                    console.log('⚠️ Using FotMob ID:', fotmobId);
+                }
+                
+                if (matchId) {
+                    // ハッシュに遷移（ルーティング機能が処理する）
+                    location.hash = `match=${matchId}`;
                 } else {
-                    // API-Football IDがない場合は、FotMob IDから解決を試みる
-                    const fotmobId = cardElement.dataset.fotmobId || '';
-                    console.log('⚠️ No API-Football ID found, resolving from FotMob ID:', fotmobId);
-                    await showDetailedMatchInfoV2({
-                        source: 'fotmob',
-                        fotmobId,
-                        leagueKey,
-                        kickoffUtc,
-                        home,
-                        away
-                    });
+                    console.error('No valid match ID found');
+                    alert('試合IDが見つかりませんでした');
                 }
             } catch (error) {
                 console.error('Error in showDetailedMatchInfoFromCard:', error);
+            }
+        }
+
+        // ルーティング機能（ハッシュ運用）
+        function show(el) { 
+            if (el) {
+                el.classList.remove("hidden");
+                el.style.display = "";
+            }
+        }
+        function hide(el) { 
+            if (el) {
+                el.classList.add("hidden");
+                el.style.display = "none";
+            }
+        }
+
+        function parseHash() {
+            // #match=12345 を読む
+            const h = location.hash.replace("#", "");
+            if (!h) return { view: "schedule" };
+            const [k, v] = h.split("=");
+            if (k === "match" && v) return { view: "match", id: v };
+            return { view: "schedule" };
+        }
+
+        async function route() {
+            const scheduleView = document.getElementById("scheduleView");
+            const matchView = document.getElementById("matchView");
+            const r = parseHash();
+
+            if (r.view === "match") {
+                hide(scheduleView);
+                show(matchView);
+                // 初期タブ：lineup に固定（UI一致）
+                setActiveTab("lineup");
+                // ここでデータ反映
+                await loadMatchIntoView(r.id);
+                // スクロールも合わせる（UX）
+                window.scrollTo({ top: 0, behavior: "instant" });
+                return;
+            }
+
+            show(scheduleView);
+            hide(matchView);
+        }
+
+        window.addEventListener("hashchange", route);
+        window.addEventListener("DOMContentLoaded", route);
+
+        // タブ切り替え機能（MatchDetail内）
+        function setActiveTab(tab) {
+            const tabs = document.querySelectorAll("#matchView [data-tab]");
+            const panels = document.querySelectorAll("#matchView [data-panel]");
+
+            panels.forEach(p => {
+                if (p) {
+                    p.classList.toggle("hidden", p.getAttribute("data-panel") !== tab);
+                    p.style.display = p.getAttribute("data-panel") === tab ? "" : "none";
+                }
+            });
+
+            tabs.forEach(b => {
+                if (b) {
+                    const active = b.getAttribute("data-tab") === tab;
+                    if (active) {
+                        b.classList.add("active");
+                        b.style.backgroundColor = "#00bdc7";
+                        b.style.color = "white";
+                        b.style.fontWeight = "700";
+                        b.style.boxShadow = "0 0 10px rgba(0, 189, 199, 0.3)";
+                    } else {
+                        b.classList.remove("active");
+                        b.style.backgroundColor = "transparent";
+                        b.style.color = "#9ab0bc";
+                        b.style.fontWeight = "600";
+                        b.style.boxShadow = "none";
+                    }
+                }
+            });
+        }
+
+        // タブボタンのクリックイベント
+        document.addEventListener("click", (e) => {
+            const btn = e.target.closest("#matchView [data-tab]");
+            if (!btn) return;
+            e.preventDefault();
+            const tabName = btn.getAttribute("data-tab");
+            if (tabName) {
+                setActiveTab(tabName);
+            }
+        });
+
+        // 試合データをMatchViewに読み込む関数
+        async function loadMatchIntoView(matchId) {
+            try {
+                console.log('Loading match into view:', matchId);
+                
+                // matchIdからfixtureIdとfotmobIdを判定
+                let fixtureId = '';
+                let fotmobId = '';
+                let source = 'api_football';
+                
+                if (matchId.startsWith('fotmob_')) {
+                    fotmobId = matchId.replace('fotmob_', '');
+                    source = 'fotmob';
+                } else {
+                    fixtureId = matchId;
+                }
+                
+                // 既存のshowDetailedMatchInfoV2関数を使用
+                await showDetailedMatchInfoV2({
+                    source,
+                    fixtureId,
+                    fotmobId,
+                    leagueKey: '',
+                    kickoffUtc: '',
+                    home: '',
+                    away: ''
+                });
+            } catch (error) {
+                console.error('Error loading match into view:', error);
             }
         }
 
@@ -6022,13 +6170,7 @@
             try {
                 console.log('🔍 showDetailedMatchInfoV2 called:', { source, fixtureId, fotmobId, leagueKey, kickoffUtc, home, away });
                 
-                const detailedModal = document.getElementById('matchDetailsModal');
-                if (!detailedModal) {
-                    console.error('Detailed modal not found');
-                    return;
-                }
-                
-                detailedModal.style.display = 'block';
+                // matchViewは既に表示されている（route関数で処理済み）
                 
                 // モーダルタイトルを更新
                 const modalTitle = document.getElementById('modalTitle');
@@ -8488,18 +8630,7 @@
             });
         });
 
-        // モーダルを閉じる関数
-        document.getElementById('matchDetailsModal').addEventListener('click', function(event) {
-            const modal = this;
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-
-        // モーダルの閉じるボタンをクリックしたとき
-        document.querySelector('.close').addEventListener('click', function() {
-            document.getElementById('matchDetailsModal').style.display = 'none';
-        });
+        // モーダルの閉じるボタンのイベントリスナーは削除（ハッシュルーティングで処理）
 
         // フォーメーション配置の生成関数
         function generateFormationPositions(formation, players, team) {
