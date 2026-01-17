@@ -4522,6 +4522,7 @@
                                 <div class="absolute top-4 left-1/2 -translate-x-1/2 w-80 h-32 border border-white/10 border-t-0"></div>
                                 <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-80 h-32 border border-white/10 border-b-0"></div>
                                 <!-- Players will be dynamically inserted here -->
+                                <div id="playersContainer" class="absolute inset-0 z-20"></div>
                     </div>
                 </div>
                 
@@ -4553,7 +4554,7 @@
                             <div>
                                 <div id="homeTeamNameStats" class="text-white font-semibold text-lg leading-tight" style="color: white; font-weight: 600; font-size: 1.125rem; line-height: 1.25;">Home</div>
                                 <div class="text-white/40 text-xs tracking-widest uppercase font-bold mt-1" style="color: rgba(255, 255, 255, 0.4); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; margin-top: 0.25rem;">HOME TEAM</div>
-                            </div>
+                        </div>
                         </div>
 
                         <!-- CENTER: Score -->
@@ -4563,9 +4564,9 @@
                             </div>
                             <div id="matchStatusBadgeStats" class="mt-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/40 text-primary text-xs font-bold tracking-widest uppercase" style="margin-top: 0.5rem; padding: 0.25rem 0.75rem; border-radius: 9999px; background-color: rgba(0, 189, 199, 0.2); border: 1px solid rgba(0, 189, 199, 0.4); color: #00bdc7; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;">
                                 FT
-                            </div>
-                        </div>
-
+                    </div>
+                </div>
+                
                         <!-- RIGHT: Away -->
                         <div class="flex items-center gap-4 justify-end" style="display: flex; align-items: center; gap: 1rem; justify-content: flex-end; min-width: 260px;">
                             <div class="text-right">
@@ -4576,8 +4577,8 @@
                                 <img id="awayTeamLogoStats" class="w-10 h-10 object-contain" alt="away logo" style="width: 2.5rem; height: 2.5rem; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 <div class="team-logo-fallback" style="display: none; font-size: 1.5rem;">🏟️</div>
                             </div>
-                        </div>
                     </div>
+                </div>
                 
                 <!-- Bento Grid Advanced Stats -->
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -4591,13 +4592,13 @@
                                         <div class="flex items-center gap-2">
                                             <div class="size-2 rounded-full bg-team-a"></div>
                                             <span class="text-xs text-[#9ab0bc]" id="homeTeamAbbrStats">HOME</span>
-                                        </div>
+                    </div>
                                         <div class="flex items-center gap-2">
                                             <div class="size-2 rounded-full bg-team-b"></div>
                                             <span class="text-xs text-[#9ab0bc]" id="awayTeamAbbrStats">AWAY</span>
-                                        </div>
-                                    </div>
-                                </div>
+                </div>
+            </div>
+        </div>
                                 <div class="flex flex-col gap-10" id="statsComparison">
                                     <!-- 統計データがここに動的に挿入される -->
                                     <div class="no-data">統計データを読み込み中...</div>
@@ -6176,7 +6177,7 @@
         // DOMContentLoadedが既に発火済みの場合は即座にroute()を呼ぶ
         if (document.readyState === 'loading') {
             window.addEventListener("DOMContentLoaded", route);
-        } else {
+                } else {
             // DOMContentLoadedが既に発火済みの場合は即座に実行
             route();
         }
@@ -7132,8 +7133,8 @@
             // スコアボードヘッダーを統一更新
             updateScoreboardHeader(matchData);
             
-            const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
-            const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
+                const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
+                const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
             
             console.log('Home team:', homeTeam, 'Away team:', awayTeam);
             
@@ -8134,7 +8135,14 @@
                 // 予定の試合でスタメンデータがない場合
                 if (isScheduled && (!matchData.lineups?.home?.startXI || !matchData.lineups?.away?.startXI)) {
                     console.log('📋 Scheduled match without lineup data');
-                    pitchContainer.innerHTML = `
+                    let playersContainer = document.getElementById('playersContainer');
+                    if (!playersContainer) {
+                        playersContainer = document.createElement('div');
+                        playersContainer.id = 'playersContainer';
+                        playersContainer.className = 'absolute inset-0 z-20';
+                        pitchContainer.appendChild(playersContainer);
+                    }
+                    playersContainer.innerHTML = `
                         <div style="text-align: center; padding: 40px 20px; color: var(--muted); font-size: 16px;">
                                 <p style="margin-bottom: 20px;">📋 スタメンは試合前に発表されます</p>
                             <p style="color: var(--muted); font-size: 14px;">スタメン情報が利用可能になり次第、こちらに表示されます。</p>
@@ -8170,7 +8178,14 @@
                     const awayTeam = matchData.awayTeam || matchData.away || 'アウェイチーム';
                     
                     if (isScheduled) {
-                        pitchContainer.innerHTML = `
+                        let playersContainer = document.getElementById('playersContainer');
+                        if (!playersContainer) {
+                            playersContainer = document.createElement('div');
+                            playersContainer.id = 'playersContainer';
+                            playersContainer.className = 'absolute inset-0 z-20';
+                            pitchContainer.appendChild(playersContainer);
+                        }
+                        playersContainer.innerHTML = `
                             <div style="text-align: center; padding: 40px 20px; color: var(--muted); font-size: 16px;">
                                     <p style="margin-bottom: 20px;">📋 スタメンは試合前に発表されます</p>
                                 <p style="color: var(--muted); font-size: 14px;">${homeTeam} vs ${awayTeam}のスタメン情報が利用可能になり次第、こちらに表示されます。</p>
@@ -8280,9 +8295,9 @@
                             <div class="h-2 w-full bg-[#27343a] rounded-full overflow-hidden flex">
                                 <div class="h-full bg-team-a" style="width: ${((bigChancesHome / bigChancesSum) * 100)}%"></div>
                                 <div class="h-full bg-team-b" style="width: ${((bigChancesAway / bigChancesSum) * 100)}%"></div>
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
                 }
                 
                 // 平均ポジションを更新
@@ -8322,7 +8337,7 @@
                                     <div>
                                         <p class="text-sm font-bold">${shortName}</p>
                                         <p class="text-[10px] text-[#9ab0bc]">Midfield Depth: ${(64.2 + Math.random() * 5).toFixed(1)}m</p>
-                                </div>
+                        </div>
                                 </div>
                                 <span class="material-symbols-outlined text-team-a text-lg">trending_up</span>
                             </div>
@@ -8340,7 +8355,7 @@
                                     <div>
                                         <p class="text-sm font-bold">${shortName}</p>
                                         <p class="text-[10px] text-[#9ab0bc]">Attack Width: ${(42.1 + Math.random() * 5).toFixed(1)}m</p>
-                        </div>
+                                </div>
                                 </div>
                                 <span class="material-symbols-outlined text-team-b text-lg">location_on</span>
                             </div>
@@ -8371,7 +8386,14 @@
                         homeLineupLength: homeLineup?.length || 0,
                         awayLineupLength: awayLineup?.length || 0
                     });
-                    pitchContainer.innerHTML = `
+                    let playersContainer = document.getElementById('playersContainer');
+                    if (!playersContainer) {
+                        playersContainer = document.createElement('div');
+                        playersContainer.id = 'playersContainer';
+                        playersContainer.className = 'absolute inset-0 z-20';
+                        pitchContainer.appendChild(playersContainer);
+                    }
+                    playersContainer.innerHTML = `
                         <div style="text-align: center; padding: 40px 20px; color: var(--muted); font-size: 16px;">
                             <p style="margin-bottom: 20px;">📋 ラインアップ情報が利用できません</p>
                             <p style="color: var(--muted); font-size: 14px;">ラインアップデータが見つかりませんでした。</p>
@@ -8389,9 +8411,30 @@
                 });
 
                 // タクティカルピッチを生成
+                console.log('🎯 Generating pitch HTML with:', {
+                    homePlayersCount: homePlayers?.length || 0,
+                    awayPlayersCount: awayPlayers?.length || 0,
+                    homeFormation,
+                    awayFormation,
+                    homePlayersSample: homePlayers?.[0],
+                    awayPlayersSample: awayPlayers?.[0]
+                });
                 const pitchHTML = generateModernPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation);
                 console.log('📊 Pitch HTML generated, length:', pitchHTML.length);
-                pitchContainer.innerHTML = pitchHTML;
+                console.log('📊 Pitch HTML preview:', pitchHTML.substring(0, 500));
+                
+                // プレイヤーコンテナを取得または作成
+                let playersContainer = document.getElementById('playersContainer');
+                if (!playersContainer) {
+                    // コンテナが存在しない場合は作成
+                    playersContainer = document.createElement('div');
+                    playersContainer.id = 'playersContainer';
+                    playersContainer.className = 'absolute inset-0 z-20';
+                    pitchContainer.appendChild(playersContainer);
+                    console.log('✅ Created playersContainer');
+                }
+                playersContainer.innerHTML = pitchHTML;
+                console.log('✅ Players container updated, children count:', playersContainer.children.length);
                 
                 // pitchContainerが正しく表示されているか確認
                 console.log('🔍 Pitch container after update:', {
@@ -8433,7 +8476,7 @@
                                     <div style="flex: 1;">
                                         <div style="font-weight: 600; font-size: 0.875rem; color: white; margin-bottom: 0.125rem;">${playerName}</div>
                                         <div style="font-size: 0.625rem; color: #9ab0bc; text-transform: uppercase; letter-spacing: 0.05em;">${positionLabel}</div>
-                                    </div>
+                        </div>
                     </div>
                 `;
                         }).join('');
@@ -8457,7 +8500,7 @@
                                     <div style="flex: 1; text-align: right;">
                                         <div style="font-weight: 600; font-size: 0.875rem; color: white; margin-bottom: 0.125rem;">${playerName}</div>
                                         <div style="font-size: 0.625rem; color: #9ab0bc; text-transform: uppercase; letter-spacing: 0.05em;">${positionLabel}</div>
-                                    </div>
+                                </div>
                                 </div>
                             `;
                         }).join('');
@@ -8472,10 +8515,17 @@
                 console.error('Error updating lineup tab:', error);
                 const pitchContainer = document.getElementById('pitchContainer');
                 if (pitchContainer) {
-                    pitchContainer.innerHTML = `
-                        <div class="error-message">
+                    let playersContainer = document.getElementById('playersContainer');
+                    if (!playersContainer) {
+                        playersContainer = document.createElement('div');
+                        playersContainer.id = 'playersContainer';
+                        playersContainer.className = 'absolute inset-0 z-20';
+                        pitchContainer.appendChild(playersContainer);
+                    }
+                    playersContainer.innerHTML = `
+                        <div class="error-message" style="text-align: center; padding: 40px 20px; color: var(--muted); font-size: 16px;">
                             <p>ラインアップの表示中にエラーが発生しました: ${error.message}</p>
-                        </div>
+                            </div>
                     `;
                 }
             }
@@ -8585,8 +8635,8 @@
                             <div style="width: 3rem; height: 3rem; border-radius: 9999px; background-color: #00CC00; border: 2px solid rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: bold; color: white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);">${playerNumber}</div>
                             <span style="font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; color: white; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); white-space: nowrap;">${shortName}</span>
                             ${rating ? `<div style="padding: 0.125rem 0.375rem; background-color: rgba(0, 0, 0, 0.7); font-size: 0.625rem; border-radius: 0.25rem; color: #00CC00; font-weight: bold; margin-top: 0.125rem;">${rating}</div>` : ''}
-                        </div>
-                    `;
+                    </div>
+                `;
                 });
                 html += '</div>';
             } else {
