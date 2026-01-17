@@ -4417,8 +4417,8 @@
                 <span class="material-symbols-outlined" style="font-size: 1.875rem; font-weight: bold;">smart_toy</span>
                 <div style="position: absolute; top: -0.25rem; right: -0.25rem; width: 1rem; height: 1rem; background: #ef4444; border: 2px solid rgb(15, 23, 42); border-radius: 9999px;"></div>
             </button>
-        </div>
-
+            </div>
+            
             <!-- 戻るボタン -->
             <div style="margin-bottom: 1rem;">
                 <button onclick="location.hash='';" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(51, 255, 255, 0.2); color: var(--primary); border-radius: 0.5rem; border: none; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(51,255,255,0.3)'" onmouseout="this.style.background='rgba(51,255,255,0.2)'">
@@ -4496,7 +4496,7 @@
                     <div class="bg-card-dark border border-[#27343a] rounded-xl p-6">
                         <h4 class="text-lg font-bold mb-4">Match Overview</h4>
                         <p class="text-[#9ab0bc]">試合概要情報を読み込み中...</p>
-                    </div>
+                        </div>
                 </section>
                 
                 <!-- ラインアップタブ（新デザイン - 3カラムレイアウト：左SUB、中央ピッチ、右SUB） -->
@@ -4511,7 +4511,7 @@
                             <div class="space-y-2" id="homeSubstitutesLineup">
                                 <!-- Substitutes will be dynamically inserted here -->
                                 <div class="text-xs text-[#9ab0bc]">サブスティテュートを読み込み中...</div>
-                        </div>
+                    </div>
                     </div>
                         
                         <!-- Center Column: Tactical Pitch -->
@@ -4539,12 +4539,12 @@
                             <div class="mb-4">
                                 <h4 class="text-sm font-bold uppercase tracking-widest text-white mb-2">Substitutes</h4>
                                 <div class="text-[10px] font-bold text-[#00bdc7] uppercase tracking-widest" id="awayTeamSubLabelLineup">AWAY</div>
-                            </div>
+                                </div>
                             <div class="space-y-2" id="awaySubstitutesLineup">
                                 <!-- Substitutes will be dynamically inserted here -->
                                 <div class="text-xs text-[#9ab0bc]">サブスティテュートを読み込み中...</div>
                             </div>
-                                </div>
+                        </div>
                             </div>
                         </div>
                 </section>
@@ -4577,8 +4577,8 @@
                                 <span class="material-symbols-outlined text-team-b text-3xl">sports_soccer</span>
                         </div>
                     </div>
-                    </div>
-                    
+                </div>
+                
                     <!-- Bento Grid Advanced Stats -->
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                         <!-- Left Column: Metrics Visualization -->
@@ -4601,9 +4601,9 @@
                                 <div class="flex flex-col gap-10" id="statsComparison">
                                     <!-- 統計データがここに動的に挿入される -->
                                     <div class="no-data">統計データを読み込み中...</div>
-                                </div>
-                            </div>
-                            
+                    </div>
+                </div>
+                
                             <!-- Mini Pitch Event Visualization -->
                             <div class="bg-card-dark border border-dark rounded-xl p-6">
                                 <div class="flex justify-between items-center mb-6">
@@ -4612,8 +4612,8 @@
                                         <button class="px-3 py-1 bg-primary text-[10px] font-bold rounded uppercase">Shots</button>
                                         <button class="px-3 py-1 bg-[#27343a] text-[#9ab0bc] text-[10px] font-bold rounded uppercase">Fouls</button>
                                         <button class="px-3 py-1 bg-[#27343a] text-[#9ab0bc] text-[10px] font-bold rounded uppercase">Corners</button>
-                                    </div>
-                                </div>
+                    </div>
+                </div>
                                 <div class="relative w-full aspect-[16/9] rounded-lg overflow-hidden border border-white/10 pitch-pattern" id="eventDistributionPitch">
                                     <!-- Pitch Markings -->
                                     <div class="absolute inset-4 border border-white/20"></div>
@@ -4622,10 +4622,10 @@
                                     <div class="absolute top-1/2 left-4 -translate-y-1/2 w-16 h-32 border border-white/20"></div>
                                     <div class="absolute top-1/2 right-4 -translate-y-1/2 w-16 h-32 border border-white/20"></div>
                                     <!-- Event markers will be dynamically inserted here -->
-                                </div>
+            </div>
                                 <p class="mt-4 text-xs text-[#9ab0bc] text-center italic">Hover over specific metrics above to highlight match events on the pitch.</p>
-                            </div>
-                        </div>
+        </div>
+    </div>
                         
                         <!-- Right Column: Spatial Data Sidebar -->
                         <div class="lg:col-span-4 flex flex-col gap-6">
@@ -5016,16 +5016,16 @@
                 matchView.addEventListener('touchmove', function(e) {
                     const statsTab = matchView.querySelector('[data-panel="stats"]');
                     if (statsTab && !statsTab.classList.contains('hidden')) {
-                        const canScrollUp = statsTab.scrollTop > 0;
-                        const canScrollDown = statsTab.scrollTop < (statsTab.scrollHeight - statsTab.clientHeight - 1);
-                        
-                        if (canScrollUp || canScrollDown) {
-                            e.stopPropagation();
-                        }
-                    } else {
+                    const canScrollUp = statsTab.scrollTop > 0;
+                    const canScrollDown = statsTab.scrollTop < (statsTab.scrollHeight - statsTab.clientHeight - 1);
+                    
+                    if (canScrollUp || canScrollDown) {
                         e.stopPropagation();
                     }
-                }, { passive: false });
+                } else {
+                    e.stopPropagation();
+                }
+            }, { passive: false });
             }
             
             // 試合統計タブ内のスクロールイベントを確実に処理
@@ -6076,6 +6076,8 @@
                         // STATSタブの場合はflex、それ以外はblock
                         if (tab === "stats") {
                             p.style.display = "flex";
+                            p.style.flexDirection = "column";
+                            p.style.gap = "2rem";
                         } else {
                             p.style.display = "";
                         }
@@ -6095,7 +6097,7 @@
                         b.style.color = "white";
                         b.style.fontWeight = "700";
                         b.style.boxShadow = "0 0 10px rgba(0, 189, 199, 0.3)";
-                    } else {
+                } else {
                         b.classList.remove("active");
                         b.style.backgroundColor = "transparent";
                         b.style.color = "#9ab0bc";
@@ -6137,10 +6139,10 @@
                 }
                 
                 // 既存のshowDetailedMatchInfoV2関数を使用
-                await showDetailedMatchInfoV2({
+                    await showDetailedMatchInfoV2({
                     source,
                     fixtureId,
-                    fotmobId,
+                        fotmobId,
                     leagueKey: '',
                     kickoffUtc: '',
                     home: '',
@@ -6910,6 +6912,8 @@
         // 統計タブを更新（FotMob風UI）
         function updateStatsTab(statsData, matchData = null) {
             console.log('Updating stats tab with data:', statsData);
+            console.log('MatchView exists:', !!document.getElementById('matchView'));
+            console.log('Stats panel exists:', !!document.querySelector('#matchView [data-panel="stats"]'));
             
                 const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
                 const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
@@ -6948,6 +6952,7 @@
             
             // 統計比較を更新（statsDataがnullの場合でもデフォルトデータを表示）
             const statsComparison = document.getElementById('statsComparison');
+            console.log('statsComparison element:', statsComparison);
             if (statsComparison) {
                 // statsDataがnullまたは空の場合、matchDataから統計を推定
                 if (!statsData || Object.keys(statsData).length === 0) {
@@ -8742,7 +8747,7 @@
                 updateEventsTab(matchData.events || []);
                 
                 // ラインアップタブを更新
-                updateLineupTab(matchData);
+                    updateLineupTab(matchData);
                 
                 // 最初のタブ（Lineup）をアクティブにして表示（setActiveTab関数を使用）
                 setActiveTab('lineup');
