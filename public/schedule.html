@@ -43,7 +43,7 @@
         
         /* ProFooty Analytics Styles */
         .pitch-pattern {
-            background-image: repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(255,255,255,0.05) 50px);
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(255,255,255,0.03) 50px);
             background-color: #1a2a33;
         }
         
@@ -53,6 +53,24 @@
         
         .heatmap-gradient-b {
             background: radial-gradient(circle, rgba(255,128,0,0.4) 0%, transparent 70%);
+        }
+        
+        .player-node-a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            filter: drop-shadow(0 0 8px rgba(0, 204, 0, 0.4));
+        }
+        
+        .player-node-b {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            filter: drop-shadow(0 0 8px rgba(255, 128, 0, 0.4));
         }
         
         .bg-card-dark {
@@ -164,7 +182,7 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
-        
+
         .logo-icon {
             padding: 0.5rem;
             background: rgba(51, 255, 255, 0.1);
@@ -205,7 +223,7 @@
             font-size: 0.875rem;
             font-weight: 500;
         }
-        
+
         .nav-link:hover {
             color: var(--foreground);
         }
@@ -4249,12 +4267,12 @@
                     </div>
                     <span class="logo-text">Footy<span class="primary">Metrics</span></span>
                 </a>
-                <nav class="nav-links">
+            <nav class="nav-links">
                     <a href="/dashboard" class="nav-link active">Dashboard</a>
                     <a href="/database-enhanced" class="nav-link">Database</a>
                     <a href="/radar" class="nav-link">Analysis</a>
                     <a href="/ai-agent" class="nav-link">AI Agent</a>
-                </nav>
+            </nav>
             </div>
             <div style="display: flex; align-items: center; gap: 1.5rem;">
                 <div style="position: relative; display: none;" class="search-container" id="searchContainer">
@@ -4370,8 +4388,8 @@
             <div id="scheduleContent">
                 <div class="loading">試合データを読み込み中...</div>
             </div>
-        </div>
-        
+            </div>
+
         <!-- AI Agent Button -->
         <div style="position: fixed; bottom: 2rem; right: 2rem; z-index: 50;">
             <button style="width: 3.5rem; height: 3.5rem; background: var(--primary); color: rgb(15, 23, 42); border-radius: 1rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 25px 50px -12px rgba(51, 255, 255, 0.3); border: none; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
@@ -4448,74 +4466,76 @@
             <div class="tab-content-modern px-2">
                 <!-- ラインアップタブ（新デザイン - 3カラムレイアウト） -->
                 <div id="lineup" class="tab-pane-modern">
-                    <div class="flex flex-col lg:flex-row gap-6 items-start justify-center w-full lineup-container-pc">
-                        <!-- 左カラム: ホームチーム -->
-                        <div class="w-full substitute-list-fixed space-y-8 sticky top-24">
-                            <div class="flex flex-col items-center gap-6 text-center">
-                                <div class="size-24 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center p-4 shadow-sm border-b-4 border-marinos-blue">
-                                    <img id="homeTeamLogoSmall" class="w-full" src="" alt="" onerror="this.style.display='none';">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- Left Column: Tactical Formations -->
+                        <div class="lg:col-span-8 bg-card-dark border border-dark rounded-xl p-8">
+                            <div class="flex justify-between items-center mb-6">
+                                <h4 class="text-lg font-bold">Tactical Formations</h4>
+                                <div class="flex gap-4" id="formationBadge">
+                                    <span class="text-xs bg-team-a/20 text-team-a px-3 py-1 rounded font-bold">4 - 3 - 3</span>
+                                    <span class="text-xs bg-team-b/20 text-team-b px-3 py-1 rounded font-bold">4 - 2 - 3 - 1</span>
                         </div>
-                                <div>
-                                    <h4 id="homeTeamNameSmall" class="font-bold text-lg tracking-widest uppercase">HOME TEAM</h4>
-                                    <span class="text-xs text-marinos-blue font-bold tracking-widest uppercase">Substitutes</span>
                         </div>
+                            <div class="relative w-full h-[800px] bg-background-dark rounded-xl border border-white/5 overflow-hidden pitch-pattern" id="pitchContainer">
+                                <!-- Pitch Markings -->
+                                <div class="absolute inset-4 border border-white/10"></div>
+                                <div class="absolute inset-x-4 top-1/2 border-t border-white/30 z-10 shadow-[0_0_15px_rgba(255,255,255,0.05)]"></div>
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-40 border border-white/30 rounded-full z-10"></div>
+                                <div class="absolute top-4 left-1/2 -translate-x-1/2 w-80 h-32 border border-white/10 border-t-0"></div>
+                                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-80 h-32 border border-white/10 border-b-0"></div>
+                                <!-- Players will be dynamically inserted here -->
                     </div>
-                            <!-- ホームチーム サブスティテュート -->
-                            <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
-                                <div class="p-4 space-y-2" id="homeSubstitutes">
-                                    <!-- サブがここに動的に挿入される -->
-                                </div>
+                        </div>
+                        
+                        <!-- Right Column: Sidebar -->
+                        <div class="lg:col-span-4 flex flex-col gap-6">
+                            <!-- Touch Intensity Heatmap -->
+                            <div class="bg-card-dark border border-dark rounded-xl p-6">
+                                <h4 class="text-sm font-bold uppercase tracking-widest text-[#9ab0bc] mb-6">Touch Intensity (Heatmap)</h4>
+                                <div class="grid grid-cols-2 gap-4 h-64">
+                                    <div class="relative border border-white/5 rounded-lg pitch-pattern overflow-hidden">
+                                        <div class="absolute inset-0 heatmap-gradient-a" style="clip-path: circle(30% at 70% 80%);"></div>
+                                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-team-a uppercase" id="homeTeamHeatmapLabelLineup">HOME</div>
+                                    </div>
+                                    <div class="relative border border-white/5 rounded-lg pitch-pattern overflow-hidden">
+                                        <div class="absolute inset-0 heatmap-gradient-b" style="clip-path: circle(25% at 20% 20%);"></div>
+                                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-team-b uppercase" id="awayTeamHeatmapLabelLineup">AWAY</div>
+                                    </div>
                     </div>
                 </div>
                 
-                        <!-- 中央カラム: タクティカルピッチ -->
-                        <div class="flex-1 flex flex-col items-center min-w-0 max-w-[720px]">
-                            <div class="w-full flex justify-between items-center mb-8 px-6 bg-white dark:bg-white/5 py-4 rounded-xl border border-[#dae6e7] dark:border-white/10">
-                                <div class="flex items-center gap-3">
-                                    <span class="material-symbols-outlined text-primary text-2xl">stadium</span>
-                                    <span class="text-sm font-bold uppercase tracking-widest text-gray-400">Tactical Formation</span>
-                                </div>
-                                <div class="flex gap-5" id="formationBadge">
-                                    <div class="text-xs font-bold text-marinos-blue bg-marinos-blue/10 px-4 py-2 rounded">4-3-3 (HOME)</div>
-                                    <div class="text-xs font-bold text-frontale-green bg-frontale-green/10 px-4 py-2 rounded">4-4-2 (AWAY)</div>
+                            <!-- Comparative Metrics -->
+                            <div class="bg-card-dark border border-dark rounded-xl p-6">
+                                <h4 class="text-sm font-bold uppercase tracking-widest text-[#9ab0bc] mb-6">Comparative Metrics</h4>
+                                <div class="space-y-6" id="comparativeMetricsLineup">
+                                    <!-- Comparative metrics will be dynamically inserted here -->
+                                    <div class="text-xs text-[#9ab0bc]">比較メトリクスを読み込み中...</div>
                                 </div>
                             </div>
-                            <div class="relative w-full max-w-[700px] grass-stripes rounded-3xl overflow-hidden border-[16px] border-white/5 shadow-2xl" style="aspect-ratio: 2/3; max-height: 800px;">
-                                <div class="absolute inset-6 border-2 pitch-line rounded-sm pitch-pattern"></div>
-                                <div class="absolute inset-x-6 top-1/2 -translate-y-1/2 h-0.5 bg-white/20"></div>
-                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-48 rounded-full border-2 pitch-line"></div>
-                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-1.5 bg-white rounded-full"></div>
-                                <div class="absolute top-6 left-1/2 -translate-x-1/2 w-64 h-24 border-2 border-t-0 pitch-line"></div>
-                                <div class="absolute top-6 left-1/2 -translate-x-1/2 w-32 h-10 border-2 border-t-0 pitch-line opacity-50"></div>
-                                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-64 h-24 border-2 border-b-0 pitch-line"></div>
-                                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-32 h-10 border-2 border-b-0 pitch-line opacity-50"></div>
-                                <div class="pitch-container" id="pitchContainer">
-                                    <!-- ピッチとプレイヤーがここに動的に挿入される -->
+                            
+                            <!-- Momentum Flow -->
+                            <div class="bg-card-dark border border-dark rounded-xl p-6">
+                                <h4 class="text-sm font-bold uppercase tracking-widest text-[#9ab0bc] mb-4">Momentum Flow</h4>
+                                <div class="h-24 w-full flex items-end gap-1" id="momentumFlowLineup">
+                                    <!-- Momentum bars will be dynamically inserted here -->
+                                    <div class="w-2 bg-team-a h-[40%] rounded-t-sm"></div>
+                                    <div class="w-2 bg-team-a h-[60%] rounded-t-sm"></div>
+                                    <div class="w-2 bg-team-a h-[80%] rounded-t-sm"></div>
+                                    <div class="w-2 bg-team-b h-[30%] rounded-t-sm"></div>
+                                    <div class="w-2 bg-team-b h-[70%] rounded-t-sm"></div>
+                                    <div class="w-2 bg-team-a h-[90%] rounded-t-sm"></div>
+                                    <div class="w-2 bg-team-b h-[20%] rounded-t-sm"></div>
+                                </div>
+                                <div class="flex justify-between mt-2 text-[10px] text-[#9ab0bc] font-bold">
+                                    <span>0'</span>
+                                    <span>HT</span>
+                                    <span>90'</span>
+                                </div>
+                            </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 右カラム: アウェイチーム -->
-                        <div class="w-full substitute-list-fixed space-y-8 sticky top-24">
-                            <div class="flex flex-col items-center gap-6 text-center">
-                                <div class="size-24 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center p-4 shadow-sm border-b-4 border-frontale-green">
-                                    <img id="awayTeamLogoSmall" class="w-full" src="" alt="" onerror="this.style.display='none';">
-                            </div>
-                                <div>
-                                    <h4 id="awayTeamNameSmall" class="font-bold text-lg tracking-widest uppercase">AWAY TEAM</h4>
-                                    <span class="text-xs text-frontale-green font-bold tracking-widest uppercase">Substitutes</span>
-                                </div>
-                            </div>
-                            <!-- アウェイチーム サブスティテュート -->
-                            <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
-                                <div class="p-4 space-y-2" id="awaySubstitutes">
-                                    <!-- サブがここに動的に挿入される -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
                 <!-- 試合統計タブ（ProFooty Analyticsスタイル） -->
                 <div id="stats" class="tab-pane-modern active" style="display: flex; flex-direction: column; gap: 2rem;">
                     <!-- Match Scorecard -->
@@ -4524,7 +4544,7 @@
                             <div class="flex items-center gap-4">
                                 <div class="size-14 rounded-full bg-team-a/10 flex items-center justify-center border border-team-a/20" id="homeTeamIconStats">
                                     <span class="material-symbols-outlined text-team-a text-3xl">shield</span>
-                                </div>
+                            </div>
                                 <div>
                                     <h3 class="text-xl font-bold" id="homeTeamNameStats">Home Team</h3>
                                     <p class="text-[#9ab0bc] text-xs uppercase tracking-widest">Home Team</p>
@@ -4542,8 +4562,8 @@
                             </div>
                             <div class="size-14 rounded-full bg-team-b/10 flex items-center justify-center border border-team-b/20" id="awayTeamIconStats">
                                 <span class="material-symbols-outlined text-team-b text-3xl">sports_soccer</span>
-                            </div>
                         </div>
+                    </div>
                     </div>
                     
                     <!-- Bento Grid Advanced Stats -->
@@ -5386,13 +5406,13 @@
                                             footerInfo = `<div style="display: flex; gap: 0.25rem; align-items: center;">
                                                 <span class="material-symbols-outlined" style="color: rgba(100, 116, 139, 0.8); font-size: 0.75rem;">history</span>
                                                 <span style="font-size: 0.625rem; color: rgba(100, 116, 139, 0.8); text-transform: uppercase; font-weight: bold;">Historical data archived</span>
-                                            </div>
+                                        </div>
                                             <button style="font-size: 0.75rem; font-weight: bold; color: var(--primary); background: none; border: none; cursor: pointer; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Analysis</button>`;
                                         } else {
                                             footerInfo = `<div style="display: flex; gap: 0.25rem; align-items: center;">
                                                 <span class="material-symbols-outlined" style="color: var(--primary); font-size: 0.75rem;">auto_awesome</span>
                                                 <span style="font-size: 0.625rem; color: rgba(148, 163, 184, 0.8); text-transform: uppercase; font-weight: bold;">AI Win Prob: ${Math.floor(Math.random() * 40 + 50)}%</span>
-                                            </div>
+                                        </div>
                                             <button style="font-size: 0.75rem; font-weight: bold; color: var(--primary); background: none; border: none; cursor: pointer; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Predictions</button>`;
                                         }
                                         
@@ -5403,13 +5423,13 @@
                                                     <div style="width: 4rem; height: 4rem; border-radius: 0.75rem; background: rgba(30, 41, 59, 0.5); display: flex; align-items: center; justify-content: center; padding: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                                                         <img src="https://media.api-sports.io/football/teams/${homeTeamId}.png" alt="${homeTeamName}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                                         <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 1.5rem;">${homeTeamName.charAt(0)}</div>
-                                                    </div>
+                                            </div>
                                                     <span style="font-weight: bold; text-align: center; font-size: 0.875rem;">${homeTeamName}</span>
-                                                </div>
+                                        </div>
                                                 <div style="display: flex; flex-direction: column; align-items: center; width: 33.333%;">
                                                     ${scoreDisplay}
                                                     ${scoreLabel}
-                                                </div>
+                                    </div>
                                                 <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem; width: 33.333%;">
                                                     <div style="width: 4rem; height: 4rem; border-radius: 0.75rem; background: rgba(30, 41, 59, 0.5); display: flex; align-items: center; justify-content: center; padding: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                                                         <img src="https://media.api-sports.io/football/teams/${awayTeamId}.png" alt="${awayTeamName}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -6782,8 +6802,8 @@
         function updateStatsTab(statsData, matchData = null) {
             console.log('Updating stats tab with data:', statsData);
             
-            const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
-            const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
+                const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
+                const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
             
             // マッチスコアカードを更新
             const homeTeamNameStats = document.getElementById('homeTeamNameStats');
@@ -7663,10 +7683,7 @@
             
             try {
                 const pitchContainer = document.getElementById('pitchContainer');
-                const homeSubstitutes = document.getElementById('homeSubstitutes');
-                const awaySubstitutes = document.getElementById('awaySubstitutes');
                 const formationBadge = document.getElementById('formationBadge');
-                const highlightsList = document.getElementById('highlightsList');
                 
                 if (!pitchContainer) {
                     console.error('Pitch container not found');
@@ -7723,11 +7740,68 @@
                     }
                 }
 
-                // フォーメーションバッジを更新
+                // フォーメーションバッジを更新（ProFooty Analyticsスタイル）
                 if (formationBadge) {
                     formationBadge.innerHTML = `
-                        <div class="text-xs font-bold text-marinos-blue bg-marinos-blue/10 px-4 py-2 rounded">${homeFormation} (HOME)</div>
-                        <div class="text-xs font-bold text-frontale-green bg-frontale-green/10 px-4 py-2 rounded">${awayFormation} (AWAY)</div>
+                        <span class="text-xs bg-team-a/20 text-team-a px-3 py-1 rounded font-bold">${homeFormation}</span>
+                        <span class="text-xs bg-team-b/20 text-team-b px-3 py-1 rounded font-bold">${awayFormation}</span>
+                    `;
+                }
+                
+                // ヒートマップラベルを更新
+                const homeTeamHeatmapLabelLineup = document.getElementById('homeTeamHeatmapLabelLineup');
+                const awayTeamHeatmapLabelLineup = document.getElementById('awayTeamHeatmapLabelLineup');
+                const homeTeam = matchData?.homeTeam || matchData?.home || 'HOME';
+                const awayTeam = matchData?.awayTeam || matchData?.away || 'AWAY';
+                if (homeTeamHeatmapLabelLineup) {
+                    homeTeamHeatmapLabelLineup.textContent = homeTeam.substring(0, 3).toUpperCase();
+                }
+                if (awayTeamHeatmapLabelLineup) {
+                    awayTeamHeatmapLabelLineup.textContent = awayTeam.substring(0, 3).toUpperCase();
+                }
+                
+                // 比較メトリクスを更新
+                const comparativeMetricsLineup = document.getElementById('comparativeMetricsLineup');
+                if (comparativeMetricsLineup && matchData.stats) {
+                    const stats = matchData.stats;
+                    const xgHome = stats.xg?.home || (stats.shots?.home * 0.12).toFixed(2);
+                    const xgAway = stats.xg?.away || (stats.shots?.away * 0.12).toFixed(2);
+                    const possessionHome = stats.possession?.home || 50;
+                    const possessionAway = stats.possession?.away || 50;
+                    const bigChancesHome = stats.bigChances?.home || Math.floor(stats.shots?.home * 0.3 || 0);
+                    const bigChancesAway = stats.bigChances?.away || Math.floor(stats.shots?.away * 0.3 || 0);
+                    
+                    comparativeMetricsLineup.innerHTML = `
+                        <div>
+                            <div class="flex justify-between text-[10px] font-bold text-[#9ab0bc] mb-2 uppercase tracking-tighter">
+                                <span>Expected Goals</span>
+                                <span>${xgHome} vs ${xgAway}</span>
+                            </div>
+                            <div class="h-2 w-full bg-[#27343a] rounded-full overflow-hidden flex">
+                                <div class="h-full bg-team-a" style="width: ${(parseFloat(xgHome) / (parseFloat(xgHome) + parseFloat(xgAway)) * 100)}%"></div>
+                                <div class="h-full bg-team-b" style="width: ${(parseFloat(xgAway) / (parseFloat(xgHome) + parseFloat(xgAway)) * 100)}%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] font-bold text-[#9ab0bc] mb-2 uppercase tracking-tighter">
+                                <span>Possession</span>
+                                <span>${possessionHome}% vs ${possessionAway}%</span>
+                            </div>
+                            <div class="h-2 w-full bg-[#27343a] rounded-full overflow-hidden flex">
+                                <div class="h-full bg-team-a" style="width: ${possessionHome}%"></div>
+                                <div class="h-full bg-team-b" style="width: ${possessionAway}%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] font-bold text-[#9ab0bc] mb-2 uppercase tracking-tighter">
+                                <span>Big Chances</span>
+                                <span>${bigChancesHome} vs ${bigChancesAway}</span>
+                            </div>
+                            <div class="h-2 w-full bg-[#27343a] rounded-full overflow-hidden flex">
+                                <div class="h-full bg-team-a" style="width: ${((bigChancesHome / (bigChancesHome + bigChancesAway || 1)) * 100)}%"></div>
+                                <div class="h-full bg-team-b" style="width: ${((bigChancesAway / (bigChancesHome + bigChancesAway || 1)) * 100)}%"></div>
+                            </div>
+                        </div>
                     `;
                 }
 
@@ -7750,23 +7824,6 @@
                 // タクティカルピッチを生成
                 const pitchHTML = generateModernPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation);
                 pitchContainer.innerHTML = pitchHTML;
-
-                // サブスティテュートを生成
-                const homeSubs = matchData.lineups?.home?.substitutes || [];
-                const awaySubs = matchData.lineups?.away?.substitutes || [];
-                if (homeSubstitutes) {
-                    homeSubstitutes.innerHTML = generateSubstitutesList(homeSubs, 'home');
-                }
-                if (awaySubstitutes) {
-                    awaySubstitutes.innerHTML = generateSubstitutesList(awaySubs, 'away');
-                }
-
-                // ハイライトを生成
-                if (highlightsList && matchData.events && matchData.events.length > 0) {
-                    highlightsList.innerHTML = generateHighlightsList(matchData.events);
-                } else if (highlightsList) {
-                    highlightsList.innerHTML = '<div class="no-data">ハイライト情報がありません</div>';
-                }
 
                 console.log('Lineup tab updated successfully');
                 
@@ -7865,58 +7922,61 @@
             const homePositions = getVerticalFormationPositions(homeFormation);
             const awayPositions = getVerticalFormationPositions(awayFormation);
             
-            // 縦向きピッチのHTMLを生成（提供されたデザインに合わせて）
-            let html = `
-                <div class="absolute inset-6 border-2 pitch-line rounded-sm pitch-pattern"></div>
-                <div class="absolute inset-x-6 top-1/2 -translate-y-1/2 h-0.5 bg-white/20"></div>
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-48 rounded-full border-2 pitch-line"></div>
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-1.5 bg-white rounded-full"></div>
-                <div class="absolute top-6 left-1/2 -translate-x-1/2 w-64 h-24 border-2 border-t-0 pitch-line"></div>
-                <div class="absolute top-6 left-1/2 -translate-x-1/2 w-32 h-10 border-2 border-t-0 pitch-line opacity-50"></div>
-                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-64 h-24 border-2 border-b-0 pitch-line"></div>
-                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-32 h-10 border-2 border-b-0 pitch-line opacity-50"></div>
-            `;
+            // ProFooty AnalyticsスタイルのピッチHTMLを生成
+            let html = '';
             
-            // ホームチームのプレイヤー（上側 - marinos-blue色の円）
+            // ホームチームのプレイヤー（下側 - team-a色）
             if (homePlayers && homePlayers.length > 0) {
+                html += '<div class="absolute inset-0">';
                 homePlayers.forEach((player, index) => {
-                    const pos = homePositions[index] || { top: 8, left: 50 };
+                    const pos = homePositions[index] || { top: 92, left: 50 };
                     const leftPercent = pos.left || pos.right ? (pos.right ? 100 - pos.right : pos.left) : 50;
+                    const topPercent = pos.top || 92;
                     const isCenter = leftPercent === 50;
                     const playerName = player.name || player.player?.name || 'Unknown';
-                    const shortName = playerName.split(' ').pop() || playerName; // 姓のみを表示
+                    const shortName = playerName.split(' ').pop() || playerName;
                     const playerNumber = player.number || player.player?.number || (index + 1);
+                    const rating = player.rating || player.player?.rating || null;
+                    const isGK = index === 0 || player.position === 'GK' || player.player?.position === 'GK';
+                    const isStriker = index === homePlayers.length - 1 || player.position === 'FW' || player.player?.position === 'FW';
                     
                     html += `
-                        <div class="absolute flex flex-col items-center" style="top: ${pos.top}%; ${isCenter ? 'left: 50%; transform: translate(-50%, -50%);' : `left: ${leftPercent}%; transform: translate(-50%, -50%);`}">
-                            <div class="size-11 player-node-marinos rounded-full flex items-center justify-center text-sm font-bold">${playerNumber}</div>
-                            <span class="mt-1.5 text-[10px] font-bold uppercase tracking-tight text-white drop-shadow-md">${shortName}</span>
+                        <div class="player-node-a absolute" style="top: ${topPercent}%; ${isCenter ? 'left: 50%; transform: translate(-50%, -50%);' : `left: ${leftPercent}%; transform: translate(-50%, -50%);`}">
+                            <div class="size-8 rounded-full bg-team-a border-2 border-white/80 flex items-center justify-center text-[10px] font-bold text-black">${playerNumber}</div>
+                            <span class="text-[10px] font-bold uppercase tracking-tighter text-white">${shortName}</span>
+                            ${rating ? `<div class="px-1.5 py-0.5 bg-black/50 text-[8px] rounded text-team-a">${rating}</div>` : ''}
                         </div>
                     `;
                 });
+                html += '</div>';
             } else {
                 console.warn('No home players provided to generateModernPitchHTML');
             }
             
-            // アウェイチームのプレイヤー（下側 - frontale-green色の円）
+            // アウェイチームのプレイヤー（上側 - team-b色）
             if (awayPlayers && awayPlayers.length > 0) {
+                html += '<div class="absolute inset-0">';
                 awayPlayers.forEach((player, index) => {
-                    const pos = awayPositions[index] || { top: 92, left: 50 };
+                    const pos = awayPositions[index] || { top: 8, left: 50 };
                     const leftPercent = pos.left || pos.right ? (pos.right ? 100 - pos.right : pos.left) : 50;
-                    // アウェイチームは下側に配置するため、top位置をbottom位置に変換
-                    const bottomPercent = 100 - pos.top;
+                    const topPercent = pos.top || 8;
                     const isCenter = leftPercent === 50;
                     const playerName = player.name || player.player?.name || 'Unknown';
-                    const shortName = playerName.split(' ').pop() || playerName; // 姓のみを表示
+                    const shortName = playerName.split(' ').pop() || playerName;
                     const playerNumber = player.number || player.player?.number || (index + 1);
+                    const rating = player.rating || player.player?.rating || null;
+                    const isGK = index === 0 || player.position === 'GK' || player.player?.position === 'GK';
+                    const isStriker = index === awayPlayers.length - 1 || player.position === 'FW' || player.player?.position === 'FW';
                     
                     html += `
-                        <div class="absolute flex flex-col items-center" style="bottom: ${bottomPercent}%; ${isCenter ? 'left: 50%; transform: translate(-50%, 50%);' : `left: ${leftPercent}%; transform: translate(-50%, 50%);`}">
-                            <div class="size-11 player-node-frontale rounded-full flex items-center justify-center text-sm font-bold">${playerNumber}</div>
-                            <span class="mt-1.5 text-[10px] font-bold uppercase tracking-tight text-white drop-shadow-md">${shortName}</span>
+                        <div class="player-node-b absolute" style="top: ${topPercent}%; ${isCenter ? 'left: 50%; transform: translate(-50%, -50%);' : `left: ${leftPercent}%; transform: translate(-50%, -50%);`}">
+                            <div class="size-8 rounded-full bg-team-b border-2 border-white/80 flex items-center justify-center text-[10px] font-bold">${playerNumber}</div>
+                            <span class="text-[10px] font-bold uppercase tracking-tighter">${shortName}</span>
+                            ${rating ? `<div class="px-1.5 py-0.5 bg-black/50 text-[8px] rounded text-team-b">${rating}</div>` : ''}
                                 </div>
                     `;
                 });
+                html += '</div>';
             } else {
                 console.warn('No away players provided to generateModernPitchHTML');
             }
