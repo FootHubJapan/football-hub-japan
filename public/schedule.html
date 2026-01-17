@@ -4467,16 +4467,16 @@
             <div class="tab-content-modern px-2">
                 <!-- ラインアップタブ（新デザイン - 3カラムレイアウト） -->
                 <div id="lineup" class="tab-pane-modern">
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="grid grid-cols-12 gap-6">
                         <!-- Left Column: Tactical Formations -->
-                        <div class="lg:col-span-8 bg-card-dark border border-dark rounded-xl p-8">
+                        <div class="col-span-8 bg-card-dark border border-[#27343a] rounded-xl p-8">
                             <div class="flex justify-between items-center mb-6">
                                 <h4 class="text-lg font-bold">Tactical Formations</h4>
                                 <div class="flex gap-4" id="formationBadge">
                                     <span class="text-xs bg-team-a/20 text-team-a px-3 py-1 rounded font-bold">4 - 3 - 3</span>
                                     <span class="text-xs bg-team-b/20 text-team-b px-3 py-1 rounded font-bold">4 - 2 - 3 - 1</span>
-                        </div>
-                        </div>
+                                </div>
+                            </div>
                             <div class="relative w-full h-[800px] bg-background-dark rounded-xl border border-white/5 overflow-hidden pitch-pattern" id="pitchContainer">
                                 <!-- Pitch Markings -->
                                 <div class="absolute inset-4 border border-white/10"></div>
@@ -4485,28 +4485,28 @@
                                 <div class="absolute top-4 left-1/2 -translate-x-1/2 w-80 h-32 border border-white/10 border-t-0"></div>
                                 <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-80 h-32 border border-white/10 border-b-0"></div>
                                 <!-- Players will be dynamically inserted here -->
-                    </div>
+                            </div>
                         </div>
                         
                         <!-- Right Column: Sidebar -->
-                        <div class="lg:col-span-4 flex flex-col gap-6">
+                        <div class="col-span-4 flex flex-col gap-6">
                             <!-- Touch Intensity Heatmap -->
-                            <div class="bg-card-dark border border-dark rounded-xl p-6">
+                            <div class="bg-card-dark border border-[#27343a] rounded-xl p-6">
                                 <h4 class="text-sm font-bold uppercase tracking-widest text-[#9ab0bc] mb-6">Touch Intensity (Heatmap)</h4>
                                 <div class="grid grid-cols-2 gap-4 h-64">
                                     <div class="relative border border-white/5 rounded-lg pitch-pattern overflow-hidden">
                                         <div class="absolute inset-0 heatmap-gradient-a" style="clip-path: circle(30% at 70% 80%);"></div>
-                                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-team-a uppercase" id="homeTeamHeatmapLabelLineup">HOME</div>
+                                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-team-a uppercase" id="homeTeamHeatmapLabelLineup">MCY</div>
                                     </div>
                                     <div class="relative border border-white/5 rounded-lg pitch-pattern overflow-hidden">
                                         <div class="absolute inset-0 heatmap-gradient-b" style="clip-path: circle(25% at 20% 20%);"></div>
-                                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-team-b uppercase" id="awayTeamHeatmapLabelLineup">AWAY</div>
+                                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-team-b uppercase" id="awayTeamHeatmapLabelLineup">LIV</div>
                                     </div>
-                    </div>
-                </div>
-                
+                                </div>
+                            </div>
+                            
                             <!-- Comparative Metrics -->
-                            <div class="bg-card-dark border border-dark rounded-xl p-6">
+                            <div class="bg-card-dark border border-[#27343a] rounded-xl p-6">
                                 <h4 class="text-sm font-bold uppercase tracking-widest text-[#9ab0bc] mb-6">Comparative Metrics</h4>
                                 <div class="space-y-6" id="comparativeMetricsLineup">
                                     <!-- Comparative metrics will be dynamically inserted here -->
@@ -4515,7 +4515,7 @@
                             </div>
                             
                             <!-- Momentum Flow -->
-                            <div class="bg-card-dark border border-dark rounded-xl p-6">
+                            <div class="bg-card-dark border border-[#27343a] rounded-xl p-6">
                                 <h4 class="text-sm font-bold uppercase tracking-widest text-[#9ab0bc] mb-4">Momentum Flow</h4>
                                 <div class="h-24 w-full flex items-end gap-1" id="momentumFlowLineup">
                                     <!-- Momentum bars will be dynamically inserted here -->
@@ -4533,9 +4533,9 @@
                                     <span>90'</span>
                                 </div>
                             </div>
-                                </div>
-                            </div>
                         </div>
+                    </div>
+                </div>
 
                 <!-- 試合統計タブ（ProFooty Analyticsスタイル） -->
                 <div id="stats" class="tab-pane-modern active" style="display: flex; flex-direction: column; gap: 2rem;">
@@ -8009,65 +8009,66 @@
             const positions = [];
             
             switch (formation) {
-                case '4-4-2':
-                    // ホームチーム（上側）の位置: top (%), left (%)
-                    // 画像の説明に基づく正確な4-4-2フォーメーション
-                    positions.push({ top: 8, left: 50 });   // GK (21)
-                    positions.push({ top: 20, left: 10 });  // LB (2)
-                    positions.push({ top: 22, left: 35 });  // LCB (5)
-                    positions.push({ top: 22, left: 65 });  // RCB (13)
-                    positions.push({ top: 20, left: 90 });  // RB (4)
-                    positions.push({ top: 35, left: 12 });  // LM (8)
-                    positions.push({ top: 38, left: 38 });  // LCM (6)
-                    positions.push({ top: 38, left: 62 });  // RCM (10)
-                    positions.push({ top: 35, left: 88 });  // RM (19)
-                    positions.push({ top: 46, left: 30 });  // LS (7)
-                    positions.push({ top: 46, left: 70 });  // RS (9)
+                case '4-2-3-1':
+                    // アウェイチーム（上側）の位置: top (%), left (%)
+                    // 提供されたHTMLコードに基づく正確な4-2-3-1フォーメーション（Liverpool）
+                    positions.push({ top: 6, left: 50 });   // GK (1)
+                    positions.push({ top: 18, left: 15 });  // LB (26)
+                    positions.push({ top: 15, left: 38 });  // LCB (4)
+                    positions.push({ top: 15, left: 62 });  // RCB (5)
+                    positions.push({ top: 18, left: 85 });  // RB (66)
+                    positions.push({ top: 28, left: 35 });  // CM (10)
+                    positions.push({ top: 28, left: 65 });  // CM (8)
+                    positions.push({ top: 38, left: 20 });  // LW (7)
+                    positions.push({ top: 36, left: 50 });  // AM (18)
+                    positions.push({ top: 38, left: 80 });  // RW (11)
+                    positions.push({ top: 44, left: 50 });  // ST (9)
                     break;
                     
                 case '4-3-3':
-                    // アウェイチーム（下側）の位置（画像の説明に基づく）
-                    // bottom位置をtop位置に変換: top = 100 - bottom
-                    positions.push({ top: 92, left: 50 });   // GK (1) bottom-[8%]
-                    positions.push({ top: 80, left: 10 });  // LB (2) bottom-[20%]
-                    positions.push({ top: 78, left: 35 });  // LCB (4) bottom-[22%]
-                    positions.push({ top: 78, left: 65 });  // RCB (5) bottom-[22%]
-                    positions.push({ top: 80, left: 90 });  // RB (3) bottom-[20%]
-                    positions.push({ top: 66, left: 12 });  // LCM (7) bottom-[34%]
-                    positions.push({ top: 64, left: 38 });  // CM (6) bottom-[36%]
-                    positions.push({ top: 64, left: 62 });  // RCM (8) bottom-[36%]
-                    positions.push({ top: 54, left: 30 });  // LW (11) bottom-[46%]
-                    positions.push({ top: 54, left: 50 });  // ST (9) bottom-[46%]
-                    positions.push({ top: 54, left: 70 });  // RW (10) bottom-[46%]
+                    // ホームチーム（下側）の位置: top (%), left (%)
+                    // 提供されたHTMLコードに基づく正確な4-3-3フォーメーション（Manchester City）
+                    positions.push({ top: 92, left: 50 });   // GK (31)
+                    positions.push({ top: 82, left: 15 });  // LB (24)
+                    positions.push({ top: 84, left: 38 });  // LCB (3)
+                    positions.push({ top: 84, left: 62 });  // RCB (25)
+                    positions.push({ top: 82, left: 85 });  // RB (2)
+                    positions.push({ top: 68, left: 25 });  // LCM (17)
+                    positions.push({ top: 72, left: 50 });  // CM (16)
+                    positions.push({ top: 68, left: 75 });  // RCM (20)
+                    positions.push({ top: 56, left: 20 });  // LW (10)
+                    positions.push({ top: 55, left: 50 });  // ST (9)
+                    positions.push({ top: 56, left: 80 });  // RW (47)
                     break;
                     
-                case '4-2-3-1':
+                case '4-4-2':
+                    // ホームチーム（上側）の位置: top (%), left (%)
                     positions.push({ top: 8, left: 50 });   // GK
                     positions.push({ top: 20, left: 10 });  // LB
                     positions.push({ top: 22, left: 35 });  // LCB
                     positions.push({ top: 22, left: 65 });  // RCB
                     positions.push({ top: 20, left: 90 });  // RB
-                    positions.push({ top: 35, left: 32 });  // LCM
-                    positions.push({ top: 35, left: 68 });  // RCM
-                    positions.push({ top: 46, left: 15 });  // LW
-                    positions.push({ top: 48, left: 50 });  // AM
-                    positions.push({ top: 46, left: 85 });  // RW
-                    positions.push({ top: 48, left: 50 }); // ST
-                    break;
-                    
-                default:
-                    // デフォルトは4-4-2
-                    positions.push({ top: 8, left: 50 });   // GK
-                    positions.push({ top: 20, left: 10 });  // LB
-                    positions.push({ top: 22, left: 35 });  // LCB
-                    positions.push({ top: 22, left: 65 });  // RCB
-                    positions.push({ top: 20, left: 90 }); // RB
-                    positions.push({ top: 35, left: 12 }); // LM
+                    positions.push({ top: 35, left: 12 });  // LM
                     positions.push({ top: 38, left: 38 });  // LCM
                     positions.push({ top: 38, left: 62 });  // RCM
                     positions.push({ top: 35, left: 88 });  // RM
                     positions.push({ top: 46, left: 30 });  // LS
                     positions.push({ top: 46, left: 70 });  // RS
+                    break;
+                    
+                default:
+                    // デフォルトは4-3-3（ホームチーム下側）
+                    positions.push({ top: 92, left: 50 });   // GK
+                    positions.push({ top: 82, left: 15 });  // LB
+                    positions.push({ top: 84, left: 38 });  // LCB
+                    positions.push({ top: 84, left: 62 });  // RCB
+                    positions.push({ top: 82, left: 85 });  // RB
+                    positions.push({ top: 68, left: 25 });  // LCM
+                    positions.push({ top: 72, left: 50 });  // CM
+                    positions.push({ top: 68, left: 75 });  // RCM
+                    positions.push({ top: 56, left: 20 });  // LW
+                    positions.push({ top: 55, left: 50 });  // ST
+                    positions.push({ top: 56, left: 80 });  // RW
                     break;
             }
             
@@ -8089,51 +8090,21 @@
             // ProFooty AnalyticsスタイルのピッチHTMLを生成
             let html = '';
             
-            // ホームチームのプレイヤー（下側 - team-a色）
-            if (homePlayers && homePlayers.length > 0) {
-                html += '<div class="absolute inset-0">';
-                homePlayers.forEach((player, index) => {
-                    const pos = homePositions[index] || { top: 92, left: 50 };
-                    const leftPercent = pos.left || pos.right ? (pos.right ? 100 - pos.right : pos.left) : 50;
-                    const topPercent = pos.top || 92;
-                    const isCenter = leftPercent === 50;
-                    const playerName = player.name || player.player?.name || 'Unknown';
-                    const shortName = playerName.split(' ').pop() || playerName;
-                    const playerNumber = player.number || player.player?.number || (index + 1);
-                    const rating = player.rating || player.player?.rating || null;
-                    const isGK = index === 0 || player.position === 'GK' || player.player?.position === 'GK';
-                    const isStriker = index === homePlayers.length - 1 || player.position === 'FW' || player.player?.position === 'FW';
-                    
-                    html += `
-                        <div class="player-node-a absolute" style="top: ${topPercent}%; ${isCenter ? 'left: 50%; transform: translate(-50%, -50%);' : `left: ${leftPercent}%; transform: translate(-50%, -50%);`}">
-                            <div style="width: 2rem; height: 2rem; border-radius: 9999px; background-color: var(--team-a); border: 2px solid rgba(255, 255, 255, 0.8); display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: bold; color: black;">${playerNumber}</div>
-                            <span style="font-size: 0.625rem; font-weight: bold; text-transform: uppercase; letter-spacing: -0.025em; color: white;">${shortName}</span>
-                            ${rating ? `<div style="padding: 0.125rem 0.375rem; background-color: rgba(0, 0, 0, 0.5); font-size: 0.5rem; border-radius: 0.25rem; color: var(--team-a);">${rating}</div>` : ''}
-                        </div>
-                    `;
-                });
-                html += '</div>';
-            } else {
-                console.warn('No home players provided to generateModernPitchHTML');
-            }
-            
             // アウェイチームのプレイヤー（上側 - team-b色）
             if (awayPlayers && awayPlayers.length > 0) {
                 html += '<div class="absolute inset-0">';
                 awayPlayers.forEach((player, index) => {
-                    const pos = awayPositions[index] || { top: 8, left: 50 };
+                    const pos = awayPositions[index] || { top: 6, left: 50 };
                     const leftPercent = pos.left || pos.right ? (pos.right ? 100 - pos.right : pos.left) : 50;
-                    const topPercent = pos.top || 8;
-                    const isCenter = leftPercent === 50;
+                    const topPercent = pos.top || 6;
+                    const isCenter = Math.abs(leftPercent - 50) < 1;
                     const playerName = player.name || player.player?.name || 'Unknown';
                     const shortName = playerName.split(' ').pop() || playerName;
                     const playerNumber = player.number || player.player?.number || (index + 1);
                     const rating = player.rating || player.player?.rating || null;
-                    const isGK = index === 0 || player.position === 'GK' || player.player?.position === 'GK';
-                    const isStriker = index === awayPlayers.length - 1 || player.position === 'FW' || player.player?.position === 'FW';
                     
                     html += `
-                        <div class="player-node-b absolute" style="top: ${topPercent}%; ${isCenter ? 'left: 50%; transform: translate(-50%, -50%);' : `left: ${leftPercent}%; transform: translate(-50%, -50%);`}">
+                        <div class="player-node-b absolute" style="top: ${topPercent}%; ${isCenter ? 'left: 50%; transform: translate(-50%, 0);' : `left: ${leftPercent}%;`}">
                             <div style="width: 2rem; height: 2rem; border-radius: 9999px; background-color: var(--team-b); border: 2px solid rgba(255, 255, 255, 0.8); display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: bold; color: white;">${playerNumber}</div>
                             <span style="font-size: 0.625rem; font-weight: bold; text-transform: uppercase; letter-spacing: -0.025em; color: white;">${shortName}</span>
                             ${rating ? `<div style="padding: 0.125rem 0.375rem; background-color: rgba(0, 0, 0, 0.5); font-size: 0.5rem; border-radius: 0.25rem; color: var(--team-b);">${rating}</div>` : ''}
@@ -8143,6 +8114,32 @@
                 html += '</div>';
             } else {
                 console.warn('No away players provided to generateModernPitchHTML');
+            }
+            
+            // ホームチームのプレイヤー（下側 - team-a色）
+            if (homePlayers && homePlayers.length > 0) {
+                html += '<div class="absolute inset-0">';
+                homePlayers.forEach((player, index) => {
+                    const pos = homePositions[index] || { top: 92, left: 50 };
+                    const leftPercent = pos.left || pos.right ? (pos.right ? 100 - pos.right : pos.left) : 50;
+                    const topPercent = pos.top || 92;
+                    const isCenter = Math.abs(leftPercent - 50) < 1;
+                    const playerName = player.name || player.player?.name || 'Unknown';
+                    const shortName = playerName.split(' ').pop() || playerName;
+                    const playerNumber = player.number || player.player?.number || (index + 1);
+                    const rating = player.rating || player.player?.rating || null;
+                    
+                    html += `
+                        <div class="player-node-a absolute" style="top: ${topPercent}%; ${isCenter ? 'left: 50%; transform: translate(-50%, 0);' : `left: ${leftPercent}%;`}">
+                            <div style="width: 2rem; height: 2rem; border-radius: 9999px; background-color: var(--team-a); border: 2px solid rgba(255, 255, 255, 0.8); display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: bold; color: black;">${playerNumber}</div>
+                            <span style="font-size: 0.625rem; font-weight: bold; text-transform: uppercase; letter-spacing: -0.025em; color: white;">${shortName}</span>
+                            ${rating ? `<div style="padding: 0.125rem 0.375rem; background-color: rgba(0, 0, 0, 0.5); font-size: 0.5rem; border-radius: 0.25rem; color: var(--team-a);">${rating}</div>` : ''}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            } else {
+                console.warn('No home players provided to generateModernPitchHTML');
             }
             
             return html;
