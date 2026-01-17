@@ -4781,6 +4781,50 @@
             });
         }
         
+        // STATSパネルを#matchView内に移動する関数
+        function moveStatsPanelIntoMatchView() {
+            const matchView = document.getElementById("matchView");
+            if (!matchView) return;
+
+            const tabContent = matchView.querySelector(".tab-content-modern") || matchView;
+
+            // matchView内にstatsが既にあるなら何もしない
+            const inside = tabContent.querySelector('[data-panel="stats"]') || matchView.querySelector('[data-panel="stats"]');
+            if (inside) return;
+
+            // 外にあるstatsを探して移動
+            const global = document.querySelector('body [data-panel="stats"]');
+            if (global && !matchView.contains(global)) {
+                console.warn("[fix] moving stats panel into matchView");
+                tabContent.appendChild(global); // ✅ これでBODY直下→matchView配下へ移る
+            }
+        }
+
+        // すべてのパネルが存在することを確認する関数
+        function ensureAllPanels() {
+            const matchView = document.getElementById("matchView");
+            if (!matchView) return;
+
+            const tabContent = matchView.querySelector(".tab-content-modern") || matchView;
+
+            const tabs = ["overview", "lineup", "stats", "h2h", "timeline"];
+            for (const t of tabs) {
+                let panel = tabContent.querySelector(`[data-panel="${t}"]`);
+                if (!panel) {
+                    panel = document.createElement("section");
+                    panel.setAttribute("data-panel", t);
+                    panel.className = "hidden";
+                    panel.style.display = "none";
+                    if (t === "stats") {
+                        panel.style.flexDirection = "column";
+                        panel.style.gap = "2rem";
+                    }
+                    tabContent.appendChild(panel);
+                    console.log(`[fix] Created missing panel: ${t}`);
+                }
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Setting up tab functionality...');
             
@@ -4788,8 +4832,9 @@
             generateLeagueFilters();
             
             // タブボタンにイベントリスナーを追加（新デザイン対応）
-            const tabButtonsModern = document.querySelectorAll('.tab-button-modern');
-            const tabPanesModern = document.querySelectorAll('.tab-pane-modern');
+            const matchView = document.getElementById('matchView');
+            const tabButtonsModern = matchView ? matchView.querySelectorAll('.tab-button-modern') : document.querySelectorAll('.tab-button-modern');
+            const tabPanesModern = matchView ? matchView.querySelectorAll('.tab-pane-modern') : document.querySelectorAll('.tab-pane-modern');
             
             console.log('Found modern tab buttons:', tabButtonsModern.length);
             console.log('Found modern tab panes:', tabPanesModern.length);
@@ -6076,23 +6121,38 @@
             if (matchView) matchView.classList.add("hidden");
         }
 
+        let routedOnce = false;
         async function route() {
+            if (routedOnce) return;
+            routedOnce = true;
+            
             console.log('route() called');
             const matchId = getMatchId();
             console.log('route() - matchId:', matchId);
             if (!matchId) {
                 console.log('route() - no matchId, showing schedule view');
                 showScheduleView();
+                routedOnce = false; // リセット
                 return;
             }
             console.log('route() - matchId found, showing match view');
             showMatchView();
+            
+            // ✅ 先にDOM構造を治す
+            moveStatsPanelIntoMatchView();
+            ensureAllPanels();
+            
             setActiveTab("lineup");
             await loadMatchIntoView(matchId);
             window.scrollTo({ top: 0, behavior: "instant" });
+            
+            routedOnce = false; // リセット
         }
 
-        window.addEventListener("hashchange", route);
+        window.addEventListener("hashchange", function() {
+            routedOnce = false; // リセット
+            route();
+        });
         // DOMContentLoadedが既に発火済みの場合は即座にroute()を呼ぶ
         if (document.readyState === 'loading') {
             window.addEventListener("DOMContentLoaded", route);
@@ -6101,7 +6161,10 @@
             route();
         }
         // クエリパラメータの変更も監視（popstateイベント）
-        window.addEventListener("popstate", route);
+        window.addEventListener("popstate", function() {
+            routedOnce = false; // リセット
+            route();
+        });
 
         // タブ切り替え機能（MatchDetail内）- #matchViewに完全スコープ
         function setActiveTab(tab) {
@@ -6118,17 +6181,8 @@
             }
 
             const btns = Array.from(tabs.querySelectorAll("[data-tab]"));
-            // #matchView内のパネルを検索、見つからない場合はグローバル検索
-            let panels = Array.from(root.querySelectorAll("[data-panel]"));
-            
-            // STATSパネルが#matchViewの外にある場合のフォールバック
-            if (tab === "stats" && !panels.some(p => p.getAttribute("data-panel") === "stats")) {
-                const statsPanelGlobal = document.querySelector('[data-panel="stats"]');
-                if (statsPanelGlobal) {
-                    console.warn('Stats panel found outside #matchView, adding to panels array');
-                    panels.push(statsPanelGlobal);
-                }
-            }
+            // #matchView内のパネルのみを検索（グローバル検索は削除）
+            const panels = Array.from(root.querySelectorAll("[data-panel]"));
 
             // 存在しないタブが来たらlineupにフォールバック
             const exists = panels.some(p => p.getAttribute("data-panel") === tab);
