@@ -6202,10 +6202,10 @@
                 });
                 
                 // 既存のshowDetailedMatchInfoV2関数を使用
-                await showDetailedMatchInfoV2({
+                    await showDetailedMatchInfoV2({
                     source,
                     fixtureId,
-                    fotmobId,
+                        fotmobId,
                     leagueKey: '',
                     kickoffUtc: '',
                     home: '',
@@ -8782,6 +8782,7 @@
                         : (matchData.awayScore !== undefined && matchData.awayScore !== null ? matchData.awayScore : '-');
                 
                 // スコアボードヘッダーを更新
+                console.log('Updating scoreboard header:', { homeTeam, awayTeam, homeScore, awayScore });
                 const homeTeamNameEl = document.getElementById('homeTeamName');
                 const awayTeamNameEl = document.getElementById('awayTeamName');
                 const homeScoreEl = document.getElementById('homeScoreLarge');
@@ -8790,10 +8791,39 @@
                 const liveBadge = document.getElementById('liveBadge');
                 const matchMinuteEl = document.getElementById('matchMinute');
                 
-                if (homeTeamNameEl) homeTeamNameEl.textContent = homeTeam.toUpperCase();
-                if (awayTeamNameEl) awayTeamNameEl.textContent = awayTeam.toUpperCase();
-                if (homeScoreEl) homeScoreEl.textContent = homeScore;
-                if (awayScoreEl) awayScoreEl.textContent = awayScore;
+                console.log('Scoreboard elements found:', {
+                    homeTeamNameEl: !!homeTeamNameEl,
+                    awayTeamNameEl: !!awayTeamNameEl,
+                    homeScoreEl: !!homeScoreEl,
+                    awayScoreEl: !!awayScoreEl,
+                    venueEl: !!venueEl,
+                    liveBadge: !!liveBadge
+                });
+                
+                if (homeTeamNameEl) {
+                    homeTeamNameEl.textContent = homeTeam.toUpperCase();
+                    console.log('Updated homeTeamNameEl:', homeTeam.toUpperCase());
+                } else {
+                    console.error('homeTeamNameEl not found');
+                }
+                if (awayTeamNameEl) {
+                    awayTeamNameEl.textContent = awayTeam.toUpperCase();
+                    console.log('Updated awayTeamNameEl:', awayTeam.toUpperCase());
+                } else {
+                    console.error('awayTeamNameEl not found');
+                }
+                if (homeScoreEl) {
+                    homeScoreEl.textContent = homeScore;
+                    console.log('Updated homeScoreEl:', homeScore);
+                } else {
+                    console.error('homeScoreEl not found');
+                }
+                if (awayScoreEl) {
+                    awayScoreEl.textContent = awayScore;
+                    console.log('Updated awayScoreEl:', awayScore);
+                } else {
+                    console.error('awayScoreEl not found');
+                }
                 if (venueEl) venueEl.textContent = matchData.venue || matchData.footballData?.venue || '-';
                 
                 // LIVEバッジの表示
@@ -9736,6 +9766,15 @@
             
             // デフォルトは1（API-Footballのデフォルト）
             return '1';
+        }
+
+        // ページ読み込み時に確実にroute()を実行
+        // DOMContentLoadedが既に発火済みの場合も含めて、即座に実行
+        if (typeof route === 'function') {
+            console.log('Initial route() call - readyState:', document.readyState);
+            route();
+        } else {
+            console.error('route() function not defined');
         }
 
     </script>
