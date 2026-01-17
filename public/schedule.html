@@ -8287,12 +8287,15 @@
             }
 
             console.log(`✅ Rendered ${homeNodesCount} home players and ${awayNodesCount} away players`);
+            console.log('📊 nodesHtml length:', nodesHtml.length);
+            console.log('📊 nodesHtml sample:', nodesHtml[0]?.substring(0, 200));
 
             // gridが無い試合もあるので、その場合はメッセージを出す（崩れ防止）
             const hasAnyGrid = [...homeXI, ...awayXI].some(p => {
                 const player = p?.player || p;
                 return player?.grid || p?.grid;
             });
+            console.log('🔍 hasAnyGrid:', hasAnyGrid);
             const fallback = hasAnyGrid ? "" : `
                 <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,.7); font-weight:700; z-index:25;">
                     Formation data (grid) not available for this match
@@ -8301,12 +8304,22 @@
 
             // 既存のピッチマーキングを保持しつつ、プレイヤーノードを追加
             const playersContainer = document.getElementById('playersContainer');
+            console.log('🔍 playersContainer check:', {
+                exists: !!playersContainer,
+                parent: playersContainer?.parentElement?.id,
+                currentHTML: playersContainer?.innerHTML?.substring(0, 100)
+            });
+            
             if (playersContainer) {
                 // playersContainerが存在する場合は、そこにプレイヤーノードを追加
-                playersContainer.innerHTML = `
+                const htmlToSet = `
                     ${fallback}
                     ${nodesHtml.join("")}
                 `;
+                console.log('📝 Setting playersContainer.innerHTML, length:', htmlToSet.length);
+                console.log('📝 HTML preview:', htmlToSet.substring(0, 300));
+                playersContainer.innerHTML = htmlToSet;
+                console.log('✅ playersContainer.innerHTML set, children count:', playersContainer.children.length);
             } else {
                 // playersContainerが存在しない場合は、pitchContainerに直接追加
                 el.innerHTML = `
