@@ -4580,7 +4580,7 @@
                                     <span class="text-xs bg-team-b/20 text-team-b px-3 py-1 rounded font-bold">4 - 2 - 3 - 1</span>
                     </div>
                 </div>
-                            <div class="relative w-full rounded-xl border border-white/5 overflow-hidden pitch-pattern" id="pitchContainer" style="background: linear-gradient(135deg, #1a4d3a 0%, #0f3d2a 50%, #1a4d3a 100%); height: 800px; min-height: 800px;">
+                            <div class="relative w-full rounded-2xl border border-white/10 overflow-hidden" id="pitchContainer" style="background: #1a2e24; aspect-ratio: 2 / 3; min-height: 700px; height: 800px;">
                                 <!-- Pitch Markings -->
                                 <div class="absolute inset-4 border border-white/10"></div>
                                 <div class="absolute inset-x-4 top-1/2 border-t border-white/30 z-10 shadow-[0_0_15px_rgba(255,255,255,0.05)]"></div>
@@ -8165,6 +8165,36 @@
         // ProFootball風ピッチ描画用のユーティリティ関数
         window.FHJ = window.FHJ || {};
 
+        // playersContainerの重複を防ぐ関数
+        function getSinglePlayersContainer() {
+            const containers = document.querySelectorAll('#playersContainer');
+            if (containers.length === 0) {
+                const pitchContainer = document.getElementById('pitchContainer');
+                if (!pitchContainer) return null;
+                const container = document.createElement('div');
+                container.id = 'playersContainer';
+                container.className = 'absolute inset-0 z-20';
+                container.style.position = 'absolute';
+                container.style.inset = '0';
+                container.style.zIndex = '30';
+                container.style.pointerEvents = 'none';
+                container.style.width = '100%';
+                container.style.height = '100%';
+                pitchContainer.appendChild(container);
+                console.log('✅ Created new playersContainer');
+                return container;
+            } else if (containers.length === 1) {
+                return containers[0];
+            } else {
+                // 複数存在する場合は、最初の1つ以外を非表示にする
+                console.warn(`⚠️ Found ${containers.length} playersContainer elements, hiding duplicates`);
+                for (let i = 1; i < containers.length; i++) {
+                    containers[i].style.display = 'none';
+                }
+                return containers[0];
+            }
+        }
+
         window.FHJ.gridToXY = function(gridStr, isAway){
             // grid例: "1:1", "2:3" など（API-FootballのstartXIに入ってることが多い）
             // 横 = col(1..5), 縦 = row(1..6) みたいな扱いにして、ざっくり整列
@@ -8197,12 +8227,104 @@
             return result;
         };
 
+        // フォーメーションテキストを設定する関数
+        function setFormationText(matchData) {
+            const formationBadge = document.getElementById('formationBadge');
+            if (!formationBadge) return;
+
+            const homeForm = matchData?.lineups?.home?.formation || 
+                           matchData?.footballData?.lineups?.home?.formation ||
+                           matchData?.fixture?.lineups?.home?.formation || 
+                           '-';
+            const awayForm = matchData?.lineups?.away?.formation || 
+                           matchData?.footballData?.lineups?.away?.formation ||
+                           matchData?.fixture?.lineups?.away?.formation || 
+                           '-';
+
+            formationBadge.innerHTML = `
+                <span class="text-xs bg-[#1A86F0]/20 text-[#1A86F0] px-3 py-1 rounded font-bold">${homeForm}</span>
+                <span class="text-xs bg-[#30D44F]/20 text-[#30D44F] px-3 py-1 rounded font-bold">${awayForm}</span>
+            `;
+        }
+
+        // サブスティテュートを描画する関数
+        function renderSubstitutes(matchData) {
+            const homeSubsEl = document.getElementById('homeSubstitutesLineup');
+            const awaySubsEl = document.getElementById('awaySubstitutesLineup');
+
+            // Home substitutes
+            if (homeSubsEl) {
+                const homeSubs = matchData?.lineups?.home?.substitutes || 
+                               matchData?.footballData?.lineups?.home?.substitutes ||
+                               matchData?.fixture?.lineups?.home?.substitutes || [];
+                
+                if (homeSubs.length > 0) {
+                    homeSubsEl.innerHTML = homeSubs.map(sub => {
+                        const player = sub?.player || sub;
+                        const playerName = player?.name || sub?.name || 'Unknown';
+                        const playerNumber = player?.number || sub?.number || '';
+                        const playerPosition = player?.pos || sub?.position || sub?.pos || 'Unknown';
+                        const positionLabel = getPositionLabel(playerPosition);
+                        return `
+                            <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background-color: #16252d; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+                                <div style="width: 2rem; height: 2rem; background-color: #1A86F0; border-radius: 0.25rem; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.875rem; color: white;">${playerNumber}</div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; font-size: 0.875rem; color: white; margin-bottom: 0.125rem;">${playerName}</div>
+                                    <div style="font-size: 0.625rem; color: #9ab0bc; text-transform: uppercase; letter-spacing: 0.05em;">${positionLabel}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    homeSubsEl.innerHTML = '<div style="font-size: 0.75rem; color: #9ab0bc; padding: 0.75rem;">サブなし</div>';
+                }
+            }
+
+            // Away substitutes
+            if (awaySubsEl) {
+                const awaySubs = matchData?.lineups?.away?.substitutes || 
+                               matchData?.footballData?.lineups?.away?.substitutes ||
+                               matchData?.fixture?.lineups?.away?.substitutes || [];
+                
+                if (awaySubs.length > 0) {
+                    awaySubsEl.innerHTML = awaySubs.map(sub => {
+                        const player = sub?.player || sub;
+                        const playerName = player?.name || sub?.name || 'Unknown';
+                        const playerNumber = player?.number || sub?.number || '';
+                        const playerPosition = player?.pos || sub?.position || sub?.pos || 'Unknown';
+                        const positionLabel = getPositionLabel(playerPosition);
+                        return `
+                            <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background-color: #16252d; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.05); flex-direction: row-reverse;">
+                                <div style="width: 2rem; height: 2rem; background-color: #30D44F; border-radius: 0.25rem; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.875rem; color: white;">${playerNumber}</div>
+                                <div style="flex: 1; text-align: right;">
+                                    <div style="font-weight: 600; font-size: 0.875rem; color: white; margin-bottom: 0.125rem;">${playerName}</div>
+                                    <div style="font-size: 0.625rem; color: #9ab0bc; text-transform: uppercase; letter-spacing: 0.05em;">${positionLabel}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    awaySubsEl.innerHTML = '<div style="font-size: 0.75rem; color: #9ab0bc; padding: 0.75rem; text-align: right;">サブなし</div>';
+                }
+            }
+        }
+
         window.FHJ.renderPitch = function(matchData){
             console.log('🎯 renderPitch called with matchData:', matchData);
-            const el = document.getElementById("pitchContainer");
-            if(!el) {
+            
+            // pitchContainerの高さを確実に設定
+            const pitchContainer = document.getElementById("pitchContainer");
+            if(!pitchContainer) {
                 console.warn('pitchContainer not found');
                 return;
+            }
+
+            // pitchContainerの高さを固定
+            const pitchHeight = window.getComputedStyle(pitchContainer).height;
+            if (pitchHeight === '0px' || pitchHeight === '2px' || !pitchHeight || pitchHeight === 'auto') {
+                pitchContainer.style.height = '800px';
+                pitchContainer.style.minHeight = '800px';
+                console.log('✅ Fixed pitchContainer height to 800px');
             }
 
             // 複数のデータ構造に対応
@@ -8251,45 +8373,55 @@
             let homeNodesCount = 0;
             let awayNodesCount = 0;
 
-            // Home
+            // Home players (isAway = false で固定)
             for(const p of homeXI){
                 const player = p?.player || p;
                 const grid = player?.grid || p?.grid;
-                const xy = window.FHJ.gridToXY(grid, false);
+                const xy = window.FHJ.gridToXY(grid, false); // isAway = false で固定
                 if(!xy) {
                     console.log('⚠️ No grid for home player:', player?.name || p?.name);
                     continue;
                 }
                 const playerName = player?.name || p?.name || 'Unknown';
                 const playerNumber = player?.number || p?.number || '';
+                const rating = player?.rating || p?.rating || null;
+                
                 nodesHtml.push(`
                     <div class="player-node" style="left:${xy.x}%; top:${xy.y}%;">
                         <div class="player-badge" style="background: rgba(26,134,240,0.9); box-shadow:0 0 14px rgba(26,134,240,0.45);">
                             ${playerNumber}
                         </div>
-                        <div class="player-label">${playerName}</div>
+                        <div class="player-label">
+                            ${playerName}
+                            ${rating ? `<span style="margin-left: 4px; font-size: 9px; opacity: 0.8;">${rating}</span>` : ''}
+                        </div>
                     </div>
                 `);
                 homeNodesCount++;
             }
 
-            // Away
+            // Away players (isAway = true で固定)
             for(const p of awayXI){
                 const player = p?.player || p;
                 const grid = player?.grid || p?.grid;
-                const xy = window.FHJ.gridToXY(grid, true);
+                const xy = window.FHJ.gridToXY(grid, true); // isAway = true で固定
                 if(!xy) {
                     console.log('⚠️ No grid for away player:', player?.name || p?.name);
                     continue;
                 }
                 const playerName = player?.name || p?.name || 'Unknown';
                 const playerNumber = player?.number || p?.number || '';
+                const rating = player?.rating || p?.rating || null;
+                
                 nodesHtml.push(`
                     <div class="player-node" style="left:${xy.x}%; top:${xy.y}%;">
                         <div class="player-badge" style="background: rgba(48,212,79,0.9); box-shadow:0 0 14px rgba(48,212,79,0.45);">
                             ${playerNumber}
                         </div>
-                        <div class="player-label">${playerName}</div>
+                        <div class="player-label">
+                            ${playerName}
+                            ${rating ? `<span style="margin-left: 4px; font-size: 9px; opacity: 0.8;">${rating}</span>` : ''}
+                        </div>
                     </div>
                 `);
                 awayNodesCount++;
@@ -8311,50 +8443,39 @@
                 </div>
             `;
 
-            // 既存のピッチマーキングを保持しつつ、プレイヤーノードを追加
-            const playersContainer = document.getElementById('playersContainer');
-            console.log('🔍 playersContainer check:', {
-                exists: !!playersContainer,
-                parent: playersContainer?.parentElement?.id,
-                parentDisplay: playersContainer?.parentElement ? window.getComputedStyle(playersContainer.parentElement).display : 'N/A',
-                parentPosition: playersContainer?.parentElement ? window.getComputedStyle(playersContainer.parentElement).position : 'N/A',
-                containerDisplay: playersContainer ? window.getComputedStyle(playersContainer).display : 'N/A',
-                containerPosition: playersContainer ? window.getComputedStyle(playersContainer).position : 'N/A',
-                containerZIndex: playersContainer ? window.getComputedStyle(playersContainer).zIndex : 'N/A',
-                containerWidth: playersContainer ? window.getComputedStyle(playersContainer).width : 'N/A',
-                containerHeight: playersContainer ? window.getComputedStyle(playersContainer).height : 'N/A'
-            });
+            // playersContainerを取得（重複を防ぐ）
+            const playersContainer = getSinglePlayersContainer();
+            if (!playersContainer) {
+                console.error('❌ Failed to get or create playersContainer');
+                return;
+            }
+
+            // playersContainerのスタイルを明示的に設定
+            playersContainer.style.position = 'absolute';
+            playersContainer.style.inset = '0';
+            playersContainer.style.zIndex = '30';
+            playersContainer.style.pointerEvents = 'none';
+            playersContainer.style.width = '100%';
+            playersContainer.style.height = '100%';
+            playersContainer.style.display = 'block'; // 確実に表示
+
+            // 既存の内容をクリアしてから新しい内容を設定（重複を防ぐ）
+            playersContainer.innerHTML = '';
             
-            if (playersContainer) {
-                // pitchContainerの高さを確認して設定
-                const pitchContainer = playersContainer.parentElement;
-                if (pitchContainer && pitchContainer.id === 'pitchContainer') {
-                    const pitchHeight = window.getComputedStyle(pitchContainer).height;
-                    console.log('🔍 Pitch container height before fix:', pitchHeight);
-                    if (pitchHeight === '0px' || pitchHeight === '2px' || !pitchHeight || pitchHeight === 'auto') {
-                        pitchContainer.style.height = '800px';
-                        pitchContainer.style.minHeight = '800px';
-                        console.log('✅ Fixed pitchContainer height to 800px');
-                    }
-                }
-                
-                // playersContainerのスタイルを明示的に設定（z-indexを確実に適用）
-                playersContainer.style.position = 'absolute';
-                playersContainer.style.inset = '0';
-                playersContainer.style.zIndex = '30';
-                playersContainer.style.pointerEvents = 'none';
-                playersContainer.style.width = '100%';
-                playersContainer.style.height = '100%';
-                
-                // playersContainerが存在する場合は、そこにプレイヤーノードを追加
-                const htmlToSet = `
-                    ${fallback}
-                    ${nodesHtml.join("")}
-                `;
-                console.log('📝 Setting playersContainer.innerHTML, length:', htmlToSet.length);
-                console.log('📝 HTML preview:', htmlToSet.substring(0, 300));
-                playersContainer.innerHTML = htmlToSet;
-                console.log('✅ playersContainer.innerHTML set, children count:', playersContainer.children.length);
+            // プレイヤーノードを追加
+            const htmlToSet = `
+                ${fallback}
+                ${nodesHtml.join("")}
+            `;
+            console.log('📝 Setting playersContainer.innerHTML, length:', htmlToSet.length);
+            playersContainer.innerHTML = htmlToSet;
+            
+            // 最終確認：children数が22（11+11）になっているか確認
+            const finalCount = playersContainer.children.length;
+            console.log(`✅ playersContainer.innerHTML set, children count: ${finalCount} (expected: 22)`);
+            if (finalCount !== 22) {
+                console.warn(`⚠️ Expected 22 children but got ${finalCount}`);
+            }
                 
                 // 最初のプレイヤーノードのスタイルを確認
                 setTimeout(() => {
@@ -8582,13 +8703,8 @@
                     }
                 }
 
-                // フォーメーションバッジを更新（ProFooty Analyticsスタイル）
-                if (formationBadge) {
-                    formationBadge.innerHTML = `
-                        <span class="text-xs bg-team-a/20 text-team-a px-3 py-1 rounded font-bold">${homeFormation}</span>
-                        <span class="text-xs bg-team-b/20 text-team-b px-3 py-1 rounded font-bold">${awayFormation}</span>
-                    `;
-                }
+                // フォーメーションテキストを設定
+                setFormationText(matchData);
                 
                 // ヒートマップラベルを更新
                 const homeTeamHeatmapLabelLineup = document.getElementById('homeTeamHeatmapLabelLineup');
@@ -8770,103 +8886,18 @@
                     awayPlayers: awayPlayers?.length || 0
                 });
 
-                // タクティカルピッチを生成（gridベースのProFootball風描画を使用）
-                // 既存のgenerateModernPitchHTMLは、gridデータがない場合のフォールバックとして使用可能
+                // サブスティテュートを描画
+                renderSubstitutes(matchData);
+
+                // ピッチを描画（gridベースのProFootball風描画）
                 console.log('🎯 Rendering pitch with grid-based positioning');
-                
-                // ProFootball風ピッチ描画（gridベース）
                 if (window.FHJ && window.FHJ.renderPitch) {
                     window.FHJ.renderPitch(matchData);
                 } else {
-                    // フォールバック：既存のgenerateModernPitchHTMLを使用
-                    console.log('⚠️ renderPitch not available, using fallback');
-                    const pitchHTML = generateModernPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation);
-                    let playersContainer = document.getElementById('playersContainer');
-                    if (!playersContainer) {
-                        playersContainer = document.createElement('div');
-                        playersContainer.id = 'playersContainer';
-                        playersContainer.className = 'absolute inset-0 z-20';
-                        pitchContainer.appendChild(playersContainer);
-                    }
-                    playersContainer.innerHTML = pitchHTML;
-                }
-                
-                // pitchContainerが正しく表示されているか確認
-                console.log('🔍 Pitch container after update:', {
-                    exists: !!pitchContainer,
-                    innerHTML: pitchContainer.innerHTML.substring(0, 200),
-                    display: window.getComputedStyle(pitchContainer).display,
-                    visibility: window.getComputedStyle(pitchContainer).visibility,
-                    opacity: window.getComputedStyle(pitchContainer).opacity,
-                    parent: pitchContainer.parentElement?.tagName,
-                    parentDisplay: pitchContainer.parentElement ? window.getComputedStyle(pitchContainer.parentElement).display : 'N/A',
-                    parentHidden: pitchContainer.parentElement?.classList.contains('hidden')
-                });
-
-                // SUBリストを更新
-                const homeSubstitutesLineup = document.getElementById('homeSubstitutesLineup');
-                const awaySubstitutesLineup = document.getElementById('awaySubstitutesLineup');
-                const homeTeamSubLabelLineup = document.getElementById('homeTeamSubLabelLineup');
-                const awayTeamSubLabelLineup = document.getElementById('awayTeamSubLabelLineup');
-                
-                // ProFootball構造では"Home"と"Away"のまま（変更不要）
-                // 必要に応じてチーム名の最初の3文字に変更可能
-                if (homeTeamSubLabelLineup) {
-                    homeTeamSubLabelLineup.textContent = 'Home';
-                }
-                if (awayTeamSubLabelLineup) {
-                    awayTeamSubLabelLineup.textContent = 'Away';
-                }
-                
-                // ホームチームのSUBリスト
-                if (homeSubstitutesLineup) {
-                    const homeSubs = matchData.lineups?.home?.substitutes || [];
-                    if (homeSubs.length > 0) {
-                        homeSubstitutesLineup.innerHTML = homeSubs.map(sub => {
-                            const playerName = sub.player?.name || sub.name || 'Unknown';
-                            const playerNumber = sub.player?.number || sub.number || '';
-                            const playerPosition = sub.player?.pos || sub.position || sub.pos || 'Unknown';
-                            const positionLabel = getPositionLabel(playerPosition);
-                            return `
-                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background-color: #16252d; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.05);">
-                                    <div style="width: 2rem; height: 2rem; background-color: #0099e6; border-radius: 0.25rem; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.875rem; color: white;">${playerNumber}</div>
-                                    <div style="flex: 1;">
-                                        <div style="font-weight: 600; font-size: 0.875rem; color: white; margin-bottom: 0.125rem;">${playerName}</div>
-                                        <div style="font-size: 0.625rem; color: #9ab0bc; text-transform: uppercase; letter-spacing: 0.05em;">${positionLabel}</div>
-                        </div>
-                    </div>
-                `;
-                        }).join('');
-                    } else {
-                        homeSubstitutesLineup.innerHTML = '<div style="font-size: 0.75rem; color: #9ab0bc; padding: 0.75rem;">サブなし</div>';
-                    }
-                }
-                
-                // アウェイチームのSUBリスト
-                if (awaySubstitutesLineup) {
-                    const awaySubs = matchData.lineups?.away?.substitutes || [];
-                    if (awaySubs.length > 0) {
-                        awaySubstitutesLineup.innerHTML = awaySubs.map(sub => {
-                            const playerName = sub.player?.name || sub.name || 'Unknown';
-                            const playerNumber = sub.player?.number || sub.number || '';
-                            const playerPosition = sub.player?.pos || sub.position || sub.pos || 'Unknown';
-                            const positionLabel = getPositionLabel(playerPosition);
-                            return `
-                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background-color: #16252d; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.05); flex-direction: row-reverse;">
-                                    <div style="width: 2rem; height: 2rem; background-color: #00CC00; border-radius: 0.25rem; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.875rem; color: white;">${playerNumber}</div>
-                                    <div style="flex: 1; text-align: right;">
-                                        <div style="font-weight: 600; font-size: 0.875rem; color: white; margin-bottom: 0.125rem;">${playerName}</div>
-                                        <div style="font-size: 0.625rem; color: #9ab0bc; text-transform: uppercase; letter-spacing: 0.05em;">${positionLabel}</div>
-                                </div>
-                                </div>
-                            `;
-                        }).join('');
-                    } else {
-                        awaySubstitutesLineup.innerHTML = '<div style="font-size: 0.75rem; color: #9ab0bc; padding: 0.75rem; text-align: right;">サブなし</div>';
-                    }
+                    console.error('❌ renderPitch function not available');
                 }
 
-                console.log('Lineup tab updated successfully');
+                console.log('✅ Lineup tab updated successfully');
                 
             } catch (error) {
                 console.error('Error updating lineup tab:', error);
