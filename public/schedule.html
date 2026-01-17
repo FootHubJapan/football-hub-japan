@@ -8563,22 +8563,6 @@
                         })));
                     }
                 }, 100);
-            } else {
-                // playersContainerが存在しない場合は、pitchContainerに直接追加
-                el.innerHTML = `
-                    <!-- Pitch Markings -->
-                    <div class="absolute inset-4 border border-white/10"></div>
-                    <div class="absolute inset-x-4 top-1/2 border-t border-white/30 z-10 shadow-[0_0_15px_rgba(255,255,255,0.05)]"></div>
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-40 border border-white/30 rounded-full z-10"></div>
-                    <div class="absolute top-4 left-1/2 -translate-x-1/2 w-80 h-32 border border-white/10 border-t-0"></div>
-                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-80 h-32 border border-white/10 border-b-0"></div>
-                    <!-- Players -->
-                    <div id="playersContainer" class="absolute inset-0 z-20">
-                        ${fallback}
-                        ${nodesHtml.join("")}
-                    </div>
-                `;
-            }
         };
 
         // ラインアップタブを更新する関数（新デザイン対応）
