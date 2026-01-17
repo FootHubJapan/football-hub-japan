@@ -4564,11 +4564,11 @@
                             <div class="flex items-center justify-between mb-6 px-2">
                                 <h3 class="font-bold text-lg tracking-tight text-white">Substitutes</h3>
                                 <span class="text-[#1A86F0] font-bold text-xs uppercase tracking-wider" id="homeTeamSubLabelLineup">Home</span>
-                            </div>
+                        </div>
                             <div class="space-y-2" id="homeSubstitutesLineup">
                                 <!-- Substitutes will be dynamically inserted here -->
                                 <div class="text-xs text-[#9ab0bc]">サブスティテュートを読み込み中...</div>
-                            </div>
+                    </div>
                         </aside>
 
                         <!-- Center Column: Tactical Pitch -->
@@ -4578,8 +4578,8 @@
                                 <div class="flex gap-4" id="formationBadge">
                                     <span class="text-xs bg-team-a/20 text-team-a px-3 py-1 rounded font-bold">4 - 3 - 3</span>
                                     <span class="text-xs bg-team-b/20 text-team-b px-3 py-1 rounded font-bold">4 - 2 - 3 - 1</span>
-                                </div>
-                            </div>
+                    </div>
+                </div>
                             <div class="relative w-full h-[800px] rounded-xl border border-white/5 overflow-hidden pitch-pattern" id="pitchContainer" style="background: linear-gradient(135deg, #1a4d3a 0%, #0f3d2a 50%, #1a4d3a 100%);">
                                 <!-- Pitch Markings -->
                                 <div class="absolute inset-4 border border-white/10"></div>
@@ -4597,13 +4597,13 @@
                             <div class="flex items-center justify-between mb-6 px-2">
                                 <span class="text-[#30D44F] font-bold text-xs uppercase tracking-wider" id="awayTeamSubLabelLineup">Away</span>
                                 <h3 class="font-bold text-lg tracking-tight text-white">Substitutes</h3>
-                            </div>
+                                </div>
                             <div class="space-y-2" id="awaySubstitutesLineup">
                                 <!-- Substitutes will be dynamically inserted here -->
                                 <div class="text-xs text-[#9ab0bc]">サブスティテュートを読み込み中...</div>
                             </div>
                         </aside>
-                    </div>
+                        </div>
                 </section>
 
                 <!-- 試合統計タブ（ProFooty Analyticsスタイル） -->
@@ -8348,7 +8348,7 @@
                     const containerStyle = window.getComputedStyle(playersContainer);
                     const pitchStyle = playersContainer.parentElement ? window.getComputedStyle(playersContainer.parentElement) : null;
                     
-                    console.log('🔍 Container styles:', {
+                    const containerInfo = {
                         display: containerStyle.display,
                         position: containerStyle.position,
                         zIndex: containerStyle.zIndex,
@@ -8358,21 +8358,23 @@
                         left: containerStyle.left,
                         right: containerStyle.right,
                         bottom: containerStyle.bottom
-                    });
+                    };
+                    console.log('🔍 Container styles:', JSON.stringify(containerInfo, null, 2));
                     
                     if (pitchStyle) {
-                        console.log('🔍 Pitch container styles:', {
+                        const pitchInfo = {
                             display: pitchStyle.display,
                             position: pitchStyle.position,
                             width: pitchStyle.width,
                             height: pitchStyle.height,
                             overflow: pitchStyle.overflow
-                        });
+                        };
+                        console.log('🔍 Pitch container styles:', JSON.stringify(pitchInfo, null, 2));
                     }
                     
                     if (firstPlayerNode) {
                         const computedStyle = window.getComputedStyle(firstPlayerNode);
-                        console.log('🎯 First player node styles:', {
+                        const nodeInfo = {
                             display: computedStyle.display,
                             position: computedStyle.position,
                             left: computedStyle.left,
@@ -8385,11 +8387,12 @@
                             transform: computedStyle.transform,
                             parent: firstPlayerNode.parentElement?.id,
                             offsetParent: firstPlayerNode.offsetParent?.id
-                        });
+                        };
+                        console.log('🎯 First player node styles:', JSON.stringify(nodeInfo, null, 2));
                         
                         // 実際の位置を確認
                         const rect = firstPlayerNode.getBoundingClientRect();
-                        console.log('📍 First player node bounding rect:', {
+                        const rectInfo = {
                             x: rect.x,
                             y: rect.y,
                             width: rect.width,
@@ -8397,7 +8400,22 @@
                             top: rect.top,
                             left: rect.left,
                             visible: rect.width > 0 && rect.height > 0
-                        });
+                        };
+                        console.log('📍 First player node bounding rect:', JSON.stringify(rectInfo, null, 2));
+                        
+                        // プレイヤーノードが表示されない原因を特定
+                        if (rect.width === 0 || rect.height === 0) {
+                            console.error('❌ Player node has zero size!');
+                        }
+                        if (computedStyle.display === 'none') {
+                            console.error('❌ Player node display is none!');
+                        }
+                        if (computedStyle.opacity === '0') {
+                            console.error('❌ Player node opacity is 0!');
+                        }
+                        if (computedStyle.visibility === 'hidden') {
+                            console.error('❌ Player node visibility is hidden!');
+                        }
                     } else {
                         console.warn('⚠️ No player-node found in playersContainer');
                         console.log('📋 playersContainer children:', Array.from(playersContainer.children).map(c => ({
@@ -9350,10 +9368,10 @@
             
             const isFinishedOrLive = matchData?.status === 'Finished' || matchData?.status === 'FT' || matchData?.status === 'LIVE' || matchData?.status === 'HT' || matchData?.status === '試合中' || matchData?.status === '終了';
             const goals = matchData?.goals || {};
-            const homeScore = isFinishedOrLive 
+                    const homeScore = isFinishedOrLive 
                 ? (goals.home ?? matchData?.homeScore ?? 0)
                 : (goals.home ?? matchData?.homeScore ?? '-');
-            const awayScore = isFinishedOrLive
+                    const awayScore = isFinishedOrLive
                 ? (goals.away ?? matchData?.awayScore ?? 0)
                 : (goals.away ?? matchData?.awayScore ?? '-');
             
