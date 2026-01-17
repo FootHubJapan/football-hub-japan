@@ -6217,9 +6217,17 @@
                         p.style.display = "flex";
                         p.style.flexDirection = "column";
                         p.style.gap = "2rem";
+                    } else if (activeTab === "lineup") {
+                        // LINEUPタブの場合はblockを明示的に設定
+                        p.style.display = "block";
                     } else {
-                        p.style.display = "";
+                        p.style.display = "block";
                     }
+                    console.log(`✅ Panel "${activeTab}" displayed:`, {
+                        element: p,
+                        display: window.getComputedStyle(p).display,
+                        hidden: p.classList.contains('hidden')
+                    });
                 } else {
                     p.classList.add("hidden");
                     p.style.display = "none";
@@ -8382,7 +8390,20 @@
 
                 // タクティカルピッチを生成
                 const pitchHTML = generateModernPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation);
+                console.log('📊 Pitch HTML generated, length:', pitchHTML.length);
                 pitchContainer.innerHTML = pitchHTML;
+                
+                // pitchContainerが正しく表示されているか確認
+                console.log('🔍 Pitch container after update:', {
+                    exists: !!pitchContainer,
+                    innerHTML: pitchContainer.innerHTML.substring(0, 200),
+                    display: window.getComputedStyle(pitchContainer).display,
+                    visibility: window.getComputedStyle(pitchContainer).visibility,
+                    opacity: window.getComputedStyle(pitchContainer).opacity,
+                    parent: pitchContainer.parentElement?.tagName,
+                    parentDisplay: pitchContainer.parentElement ? window.getComputedStyle(pitchContainer.parentElement).display : 'N/A',
+                    parentHidden: pitchContainer.parentElement?.classList.contains('hidden')
+                });
 
                 // SUBリストを更新
                 const homeSubstitutesLineup = document.getElementById('homeSubstitutesLineup');
