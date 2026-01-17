@@ -298,8 +298,10 @@
         .gap-2 { gap: 0.5rem; }
         .flex-1 { flex: 1 1 0%; }
         .text-center { text-align: center; }
+        .size-48 { width: 12rem; height: 12rem; }
         .size-32 { width: 8rem; height: 8rem; }
         .size-24 { width: 6rem; height: 6rem; }
+        .size-9 { width: 2.25rem; height: 2.25rem; }
         .size-7 { width: 1.75rem; height: 1.75rem; }
         .size-6 { width: 1.5rem; height: 1.5rem; }
         .size-2 { width: 0.5rem; height: 0.5rem; }
@@ -309,7 +311,19 @@
         .w-24 { width: 6rem; }
         .h-12 { height: 3rem; }
         .h-5 { height: 1.25rem; }
-        .pitch-line { border-color: rgba(255, 255, 255, 0.2); }
+        .pitch-line { border-color: rgba(255, 255, 255, 0.3); }
+        .player-node-marinos {
+            background-color: var(--marinos-blue);
+            color: white;
+            border: 2px solid white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .player-node-frontale {
+            background-color: var(--frontale-green);
+            color: white;
+            border: 2px solid white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
         .rounded-2xl { border-radius: 1rem; }
         .rounded-full { border-radius: 9999px; }
         .rounded-lg { border-radius: 0.5rem; }
@@ -432,10 +446,10 @@
         .grass-stripes {
             background: repeating-linear-gradient(
                 to bottom,
-                #1a2e2f 0%,
-                #1a2e2f 10%,
-                #162829 10%,
-                #162829 20%
+                #1e3a3b 0%,
+                #1e3a3b 10%,
+                #1a3334 10%,
+                #1a3334 20%
             );
         }
         
@@ -4157,52 +4171,43 @@
             <span class="close">&times;</span>
             
             <!-- スコアボードヘッダー（新デザイン） -->
-            <div class="relative overflow-hidden rounded-xl bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 p-8 mb-8 shadow-sm" id="scoreboardHeader">
-                <div class="absolute top-0 right-0 p-4" id="liveBadge" style="display: none;">
-                    <div class="flex items-center gap-2 px-3 py-1 bg-accent-orange/10 text-accent-orange rounded-full text-xs font-bold animate-pulse">
-                        <span class="size-2 bg-accent-orange rounded-full"></span>
-                        LIVE
+            <div class="relative overflow-hidden rounded-xl bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 p-8 mb-8 shadow-sm w-full" id="scoreboardHeader">
+                <div class="absolute top-4 right-6" id="liveBadge" style="display: none;">
+                    <div class="flex items-center gap-2 px-3 py-1 bg-accent-orange/10 text-accent-orange rounded-full text-xs font-bold">
+                        <span class="size-2 bg-accent-orange rounded-full animate-pulse"></span>
+                        <span id="liveText">LIVE</span>
+                        <span id="matchMinute" style="display: none;"> • 0'</span>
                     </div>
                 </div>
-                <div class="flex flex-col md:flex-row items-center justify-between gap-8 max-w-4xl mx-auto">
+                <div class="flex items-center justify-between gap-12 max-w-6xl mx-auto">
                     <!-- ホームチーム -->
-                    <div class="flex flex-col items-center gap-4 flex-1 text-center">
-                        <div class="size-24 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center p-4 shadow-inner">
+                    <div class="flex items-center gap-6 flex-1 justify-end">
+                        <div class="text-right">
+                            <h2 id="homeTeamName" class="text-3xl font-bold uppercase tracking-tight">-</h2>
+                            <p class="text-[10px] text-gray-400 font-bold tracking-widest mt-1">HOME TEAM</p>
+                        </div>
+                        <div class="size-20 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center p-4 shadow-inner border border-marinos-blue/20">
                             <img id="homeTeamLogo" class="w-full" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="team-logo-fallback" style="display: none;">🏟️</div>
                         </div>
-                        <div>
-                            <h2 id="homeTeamName" class="text-2xl font-bold uppercase tracking-tight">-</h2>
-                            <p class="text-xs text-gray-400 font-medium">HOME</p>
-                        </div>
-            </div>
-            
-                    <!-- スコア & ステータス（中央） -->
-                    <div class="flex flex-col items-center gap-2">
-                        <p class="text-sm font-bold text-primary tracking-widest uppercase" id="matchdayLabel">Matchday</p>
-                        <div class="flex items-center gap-8">
-                            <span id="homeScoreLarge" class="text-6xl font-bold tabular-nums">-</span>
-                            <div class="flex flex-col items-center">
-                                <span class="text-2xl font-bold text-gray-300">:</span>
-                                <div id="matchMinute" class="mt-1 px-3 py-1 bg-gray-100 dark:bg-white/10 rounded text-xs font-bold" style="display: none;">0'</div>
-                            </div>
-                            <span id="awayScoreLarge" class="text-6xl font-bold tabular-nums">-</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-sm text-gray-500 mt-2">
-                            <span class="material-symbols-outlined text-base">location_on</span>
-                            <span id="venueName">-</span>
-                        </div>
+                    </div>
+                    
+                    <!-- スコア（中央） -->
+                    <div class="flex items-center gap-8">
+                        <span id="homeScoreLarge" class="text-6xl font-black tabular-nums">-</span>
+                        <span class="text-4xl font-light text-gray-300">-</span>
+                        <span id="awayScoreLarge" class="text-6xl font-black tabular-nums">-</span>
                     </div>
                     
                     <!-- アウェイチーム -->
-                    <div class="flex flex-col items-center gap-4 flex-1 text-center">
-                        <div class="size-24 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center p-4 shadow-inner">
+                    <div class="flex items-center gap-6 flex-1 justify-start">
+                        <div class="size-20 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center p-4 shadow-inner border border-frontale-green/20">
                             <img id="awayTeamLogo" class="w-full" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="team-logo-fallback" style="display: none;">🏟️</div>
                         </div>
                         <div>
-                            <h2 id="awayTeamName" class="text-2xl font-bold uppercase tracking-tight">-</h2>
-                            <p class="text-xs text-gray-400 font-medium">AWAY</p>
+                            <h2 id="awayTeamName" class="text-3xl font-bold uppercase tracking-tight">-</h2>
+                            <p class="text-[10px] text-gray-400 font-bold tracking-widest mt-1">AWAY TEAM</p>
                         </div>
                     </div>
                 </div>
@@ -4230,42 +4235,45 @@
                 <div id="lineup" class="tab-pane-modern">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                         <!-- 左カラム: ホームチーム -->
-                        <div class="lg:col-span-2 space-y-4">
-                            <div class="flex items-center gap-3 mb-2 px-2">
-                                <img id="homeTeamLogoSmall" class="size-6" src="" alt="" onerror="this.style.display='none';">
-                                <h4 id="homeTeamNameSmall" class="font-bold text-sm tracking-wide uppercase">HOME TEAM</h4>
-                        </div>
-                            <!-- ホームチーム サブスティテュート -->
-                            <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
-                                <div class="bg-gray-50 dark:bg-white/5 px-4 py-2.5 border-b dark:border-white/10">
-                                    <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Substitutes</span>
-                        </div>
-                                <div class="p-3 space-y-1" id="homeSubstitutes">
-                                    <!-- サブがここに動的に挿入される -->
-                    </div>
-                    </div>
-                </div>
-                
-                        <!-- 中央カラム: タクティカルピッチ -->
-                        <div class="lg:col-span-8 flex flex-col items-center">
-                            <div class="w-full flex justify-between items-center mb-4 px-2">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-primary text-xl">stadium</span>
-                                    <span class="text-xs font-bold uppercase tracking-widest text-gray-400">Vertical View</span>
+                        <div class="lg:col-span-3 space-y-6 sticky top-24">
+                            <div class="flex flex-col items-center gap-4 text-center">
+                                <div class="size-16 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center p-3 shadow-sm border-b-4 border-marinos-blue">
+                                    <img id="homeTeamLogoSmall" class="w-full" src="" alt="" onerror="this.style.display='none';">
                                 </div>
-                                <div class="text-[10px] font-bold text-gray-500 bg-gray-100 dark:bg-white/10 px-3 py-1 rounded" id="formationBadge">
-                                    4-4-2 VS 4-3-3
+                                <div>
+                                    <h4 id="homeTeamNameSmall" class="font-bold text-sm tracking-widest uppercase">HOME TEAM</h4>
+                                    <span class="text-[10px] text-marinos-blue font-bold tracking-widest uppercase">Substitutes</span>
                                 </div>
                             </div>
-                            <div class="relative w-full max-w-full lg:max-w-4xl xl:max-w-5xl aspect-[2/3] grass-stripes rounded-2xl overflow-hidden border-8 border-white/5 shadow-2xl">
-                                <div class="absolute inset-4 border-2 pitch-line rounded-sm pitch-pattern"></div>
-                                <div class="absolute inset-x-4 top-1/2 -translate-y-1/2 h-0.5 bg-white/20"></div>
-                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-32 rounded-full border-2 pitch-line"></div>
-                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-1 bg-white rounded-full"></div>
-                                <div class="absolute top-4 left-1/2 -translate-x-1/2 w-48 h-12 border-2 border-t-0 pitch-line"></div>
-                                <div class="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-5 border-2 border-t-0 pitch-line opacity-50"></div>
-                                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-48 h-12 border-2 border-b-0 pitch-line"></div>
-                                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-24 h-5 border-2 border-b-0 pitch-line opacity-50"></div>
+                            <!-- ホームチーム サブスティテュート -->
+                            <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
+                                <div class="p-3 space-y-1" id="homeSubstitutes">
+                                    <!-- サブがここに動的に挿入される -->
+                                </div>
+                            </div>
+                        </div>
+                
+                        <!-- 中央カラム: タクティカルピッチ -->
+                        <div class="lg:col-span-6 flex flex-col items-center">
+                            <div class="w-full flex justify-between items-center mb-6 px-4 bg-white dark:bg-white/5 py-3 rounded-xl border border-[#dae6e7] dark:border-white/10">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">stadium</span>
+                                    <span class="text-xs font-bold uppercase tracking-widest text-gray-400">Tactical Formation</span>
+                                </div>
+                                <div class="flex gap-4" id="formationBadge">
+                                    <div class="text-[10px] font-bold text-marinos-blue bg-marinos-blue/10 px-3 py-1 rounded">4-3-3 (HOME)</div>
+                                    <div class="text-[10px] font-bold text-frontale-green bg-frontale-green/10 px-3 py-1 rounded">4-4-2 (AWAY)</div>
+                                </div>
+                            </div>
+                            <div class="relative w-full aspect-[2/3] grass-stripes rounded-3xl overflow-hidden border-[12px] border-white/5 shadow-2xl">
+                                <div class="absolute inset-6 border-2 pitch-line rounded-sm pitch-pattern"></div>
+                                <div class="absolute inset-x-6 top-1/2 -translate-y-1/2 h-0.5 bg-white/20"></div>
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-48 rounded-full border-2 pitch-line"></div>
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-1.5 bg-white rounded-full"></div>
+                                <div class="absolute top-6 left-1/2 -translate-x-1/2 w-64 h-24 border-2 border-t-0 pitch-line"></div>
+                                <div class="absolute top-6 left-1/2 -translate-x-1/2 w-32 h-10 border-2 border-t-0 pitch-line opacity-50"></div>
+                                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-64 h-24 border-2 border-b-0 pitch-line"></div>
+                                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-32 h-10 border-2 border-b-0 pitch-line opacity-50"></div>
                                 <div class="pitch-container" id="pitchContainer">
                                     <!-- ピッチとプレイヤーがここに動的に挿入される -->
                                 </div>
@@ -4273,16 +4281,18 @@
                         </div>
 
                         <!-- 右カラム: アウェイチーム -->
-                        <div class="lg:col-span-2 space-y-4">
-                            <div class="flex items-center gap-3 mb-2 px-2 justify-end text-right">
-                                <h4 id="awayTeamNameSmall" class="font-bold text-sm tracking-wide uppercase">AWAY TEAM</h4>
-                                <img id="awayTeamLogoSmall" class="size-6" src="" alt="" onerror="this.style.display='none';">
+                        <div class="lg:col-span-3 space-y-6 sticky top-24">
+                            <div class="flex flex-col items-center gap-4 text-center">
+                                <div class="size-16 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center p-3 shadow-sm border-b-4 border-frontale-green">
+                                    <img id="awayTeamLogoSmall" class="w-full" src="" alt="" onerror="this.style.display='none';">
+                                </div>
+                                <div>
+                                    <h4 id="awayTeamNameSmall" class="font-bold text-sm tracking-widest uppercase">AWAY TEAM</h4>
+                                    <span class="text-[10px] text-frontale-green font-bold tracking-widest uppercase">Substitutes</span>
+                                </div>
                             </div>
                             <!-- アウェイチーム サブスティテュート -->
                             <div class="bg-white dark:bg-white/5 border border-[#dae6e7] dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
-                                <div class="bg-gray-50 dark:bg-white/5 px-4 py-2.5 border-b dark:border-white/10 text-right">
-                                    <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Substitutes</span>
-                                </div>
                                 <div class="p-3 space-y-1" id="awaySubstitutes">
                                     <!-- サブがここに動的に挿入される -->
                                 </div>
@@ -7300,7 +7310,10 @@
 
                 // フォーメーションバッジを更新
                 if (formationBadge) {
-                    formationBadge.textContent = `${homeFormation} vs ${awayFormation}`;
+                    formationBadge.innerHTML = `
+                        <div class="text-[10px] font-bold text-marinos-blue bg-marinos-blue/10 px-3 py-1 rounded">${homeFormation} (HOME)</div>
+                        <div class="text-[10px] font-bold text-frontale-green bg-frontale-green/10 px-3 py-1 rounded">${awayFormation} (AWAY)</div>
+                    `;
                 }
 
                 // プレイヤーデータを処理
@@ -7439,26 +7452,30 @@
             
             // 縦向きピッチのHTMLを生成（提供されたデザインに合わせて）
             let html = `
-                <div class="absolute inset-4 border-2 pitch-line rounded-sm pitch-pattern"></div>
-                <div class="absolute inset-x-4 top-1/2 -translate-y-1/2 h-0.5 bg-white/20"></div>
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-32 rounded-full border-2 pitch-line"></div>
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-1 bg-white rounded-full"></div>
-                <div class="absolute top-4 left-1/2 -translate-x-1/2 w-48 h-12 border-2 border-t-0 pitch-line"></div>
-                <div class="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-5 border-2 border-t-0 pitch-line opacity-50"></div>
-                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-48 h-12 border-2 border-b-0 pitch-line"></div>
-                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-24 h-5 border-2 border-b-0 pitch-line opacity-50"></div>
+                <div class="absolute inset-6 border-2 pitch-line rounded-sm pitch-pattern"></div>
+                <div class="absolute inset-x-6 top-1/2 -translate-y-1/2 h-0.5 bg-white/20"></div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-48 rounded-full border-2 pitch-line"></div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-1.5 bg-white rounded-full"></div>
+                <div class="absolute top-6 left-1/2 -translate-x-1/2 w-64 h-24 border-2 border-t-0 pitch-line"></div>
+                <div class="absolute top-6 left-1/2 -translate-x-1/2 w-32 h-10 border-2 border-t-0 pitch-line opacity-50"></div>
+                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-64 h-24 border-2 border-b-0 pitch-line"></div>
+                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-32 h-10 border-2 border-b-0 pitch-line opacity-50"></div>
             `;
             
-            // ホームチームのプレイヤー（上側 - 白い背景の円）
+            // ホームチームのプレイヤー（上側 - marinos-blue色の円）
             if (homePlayers && homePlayers.length > 0) {
                 homePlayers.forEach((player, index) => {
                     const pos = homePositions[index] || { top: 8, left: 50 };
                     const leftPercent = pos.left || pos.right ? (pos.right ? 100 - pos.right : pos.left) : 50;
                     const isCenter = leftPercent === 50;
+                    const playerName = player.name || player.player?.name || 'Unknown';
+                    const shortName = playerName.split(' ').pop() || playerName; // 姓のみを表示
+                    const playerNumber = player.number || player.player?.number || (index + 1);
                     
                     html += `
                         <div class="absolute flex flex-col items-center" style="top: ${pos.top}%; ${isCenter ? 'left: 50%; transform: translate(-50%, -50%);' : `left: ${leftPercent}%; transform: translate(-50%, -50%);`}">
-                            <div class="size-7 bg-white text-background-dark rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-primary shadow-lg">${player.number || (index + 1)}</div>
+                            <div class="size-9 player-node-marinos rounded-full flex items-center justify-center text-xs font-bold">${playerNumber}</div>
+                            <span class="mt-1 text-[9px] font-bold uppercase tracking-tight text-white drop-shadow-md">${shortName}</span>
                         </div>
                     `;
                 });
@@ -7466,7 +7483,7 @@
                 console.warn('No home players provided to generateModernPitchHTML');
             }
             
-            // アウェイチームのプレイヤー（下側 - primary色の円）
+            // アウェイチームのプレイヤー（下側 - frontale-green色の円）
             if (awayPlayers && awayPlayers.length > 0) {
                 awayPlayers.forEach((player, index) => {
                     const pos = awayPositions[index] || { top: 92, left: 50 };
@@ -7474,11 +7491,15 @@
                     // アウェイチームは下側に配置するため、top位置をbottom位置に変換
                     const bottomPercent = 100 - pos.top;
                     const isCenter = leftPercent === 50;
+                    const playerName = player.name || player.player?.name || 'Unknown';
+                    const shortName = playerName.split(' ').pop() || playerName; // 姓のみを表示
+                    const playerNumber = player.number || player.player?.number || (index + 1);
                     
                     html += `
                         <div class="absolute flex flex-col items-center" style="bottom: ${bottomPercent}%; ${isCenter ? 'left: 50%; transform: translate(-50%, 50%);' : `left: ${leftPercent}%; transform: translate(-50%, 50%);`}">
-                            <div class="size-7 bg-primary text-white rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-lg">${player.number || (index + 1)}</div>
-                                </div>
+                            <div class="size-9 player-node-frontale rounded-full flex items-center justify-center text-xs font-bold">${playerNumber}</div>
+                            <span class="mt-1 text-[9px] font-bold uppercase tracking-tight text-white drop-shadow-md">${shortName}</span>
+                        </div>
                     `;
                 });
             } else {
@@ -7525,26 +7546,36 @@
         // サブスティテュートリストを生成（新デザイン）
         function generateSubstitutesList(subs, teamType) {
             if (!subs || subs.length === 0) {
-                return '<div class="flex items-center gap-3 p-2 text-base text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors">サブなし</div>';
+                return '<div class="flex items-center gap-3 p-3 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg">サブなし</div>';
             }
             return subs.slice(0, 7).map(sub => {
                 const playerName = sub.player?.name || sub.name || 'Unknown';
                 const playerNumber = sub.player?.number || sub.number || '';
+                const playerPosition = sub.player?.pos || sub.position || sub.pos || 'Unknown';
+                const positionLabel = getPositionLabel(playerPosition);
+                const teamColor = teamType === 'home' ? 'marinos-blue' : 'frontale-green';
+                const borderSide = teamType === 'home' ? 'border-l-2' : 'border-r-2';
                 
                 // ホームチーム用のHTML（左揃え）
                 if (teamType === 'home') {
                     return `
-                        <div class="flex items-center gap-3 p-2.5 text-base text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors">
-                            <span class="w-6 font-bold text-sm">${playerNumber}</span>
-                            <span class="font-medium text-sm">${playerName}</span>
-                    </div>
-                `;
+                        <div class="flex items-center gap-4 p-3 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg ${borderSide} border-transparent hover:border-${teamColor} transition-all">
+                            <span class="w-6 font-bold text-${teamColor}">${playerNumber}</span>
+                            <div class="flex flex-col">
+                                <span class="font-bold">${playerName}</span>
+                                <span class="text-[10px] uppercase text-gray-400">${positionLabel}</span>
+                            </div>
+                        </div>
+                    `;
                 } else {
                     // アウェイチーム用のHTML（右揃え）
                     return `
-                        <div class="flex items-center gap-3 p-2.5 text-base text-gray-700 dark:text-gray-300 justify-end hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors">
-                            <span class="font-medium text-sm">${playerName}</span>
-                            <span class="w-6 font-bold text-right text-sm">${playerNumber}</span>
+                        <div class="flex items-center gap-4 p-3 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg ${borderSide} border-transparent hover:border-${teamColor} transition-all flex-row-reverse text-right">
+                            <span class="w-6 font-bold text-${teamColor}">${playerNumber}</span>
+                            <div class="flex flex-col">
+                                <span class="font-bold">${playerName}</span>
+                                <span class="text-[10px] uppercase text-gray-400">${positionLabel}</span>
+                            </div>
                         </div>
                     `;
                 }
@@ -7921,9 +7952,14 @@
                 // LIVEバッジの表示
                 if (liveBadge && (matchData.status === 'LIVE' || matchData.status === 'HT' || matchData.status === '試合中')) {
                     liveBadge.style.display = 'flex';
-                    if (matchMinuteEl && matchData.fixture?.status?.elapsed) {
-                        matchMinuteEl.textContent = matchData.fixture.status.elapsed + "'";
-                        matchMinuteEl.style.display = 'block';
+                    const liveTextEl = document.getElementById('liveText');
+                    if (matchData.fixture?.status?.elapsed && liveTextEl) {
+                        liveTextEl.textContent = `LIVE • ${matchData.fixture.status.elapsed}'`;
+                    } else if (liveTextEl) {
+                        liveTextEl.textContent = 'LIVE';
+                    }
+                    if (matchMinuteEl) {
+                        matchMinuteEl.style.display = 'none';
                     }
                 } else {
                     if (liveBadge) liveBadge.style.display = 'none';
@@ -8245,14 +8281,15 @@
                                typeof parseFloat(playerRating) === 'number' && parseFloat(playerRating) >= 6 ? 'medium' : 'low');
                 
                 // 新デザインのプレイヤーマーカー（縦向きピッチ用）
-                const bgClass = teamType === 'home' ? 'bg-white text-background-dark' : 'bg-primary text-white';
-                const borderClass = teamType === 'home' ? 'border-2 border-primary' : 'border-2 border-white';
+                const nodeClass = teamType === 'home' ? 'player-node-marinos' : 'player-node-frontale';
+                const shortName = playerName.split(' ').pop() || playerName; // 姓のみを表示
                 
                 return `
                     <div class="absolute flex flex-col items-center" style="left: ${left}%; top: ${top}%; transform: translate(-50%, -50%);" onclick="showPlayerDetails('${playerName}', '${teamType === 'home' ? homeTeam : awayTeam}')">
-                        <div class="size-7 ${bgClass} rounded-full flex items-center justify-center text-[10px] font-bold ${borderClass}">
+                        <div class="size-9 ${nodeClass} rounded-full flex items-center justify-center text-xs font-bold">
                             ${playerNumber}
                         </div>
+                        <span class="mt-1 text-[9px] font-bold uppercase tracking-tight text-white drop-shadow-md">${shortName}</span>
                     </div>
                 `;
         }
