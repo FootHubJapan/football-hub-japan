@@ -4533,6 +4533,29 @@
                                     <span>90'</span>
                                 </div>
                             </div>
+                            
+                            <!-- Substitutes -->
+                            <div class="bg-card-dark border border-[#27343a] rounded-xl p-6">
+                                <h4 class="text-sm font-bold uppercase tracking-widest text-[#9ab0bc] mb-4">Substitutes</h4>
+                                <div class="space-y-4">
+                                    <!-- Home Team Substitutes -->
+                                    <div>
+                                        <div class="text-[10px] font-bold text-[#9ab0bc] uppercase tracking-widest mb-2" id="homeTeamSubLabelLineup">HOME</div>
+                                        <div class="space-y-1" id="homeSubstitutesLineup">
+                                            <!-- Substitutes will be dynamically inserted here -->
+                                            <div class="text-xs text-[#9ab0bc]">サブスティテュートを読み込み中...</div>
+                                        </div>
+                                    </div>
+                                    <!-- Away Team Substitutes -->
+                                    <div>
+                                        <div class="text-[10px] font-bold text-[#9ab0bc] uppercase tracking-widest mb-2" id="awayTeamSubLabelLineup">AWAY</div>
+                                        <div class="space-y-1" id="awaySubstitutesLineup">
+                                            <!-- Substitutes will be dynamically inserted here -->
+                                            <div class="text-xs text-[#9ab0bc]">サブスティテュートを読み込み中...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -7988,6 +8011,57 @@
                 // タクティカルピッチを生成
                 const pitchHTML = generateModernPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation);
                 pitchContainer.innerHTML = pitchHTML;
+
+                // SUBリストを更新
+                const homeSubstitutesLineup = document.getElementById('homeSubstitutesLineup');
+                const awaySubstitutesLineup = document.getElementById('awaySubstitutesLineup');
+                const homeTeamSubLabelLineup = document.getElementById('homeTeamSubLabelLineup');
+                const awayTeamSubLabelLineup = document.getElementById('awayTeamSubLabelLineup');
+                
+                if (homeTeamSubLabelLineup) {
+                    homeTeamSubLabelLineup.textContent = (homeTeam.substring(0, 3).toUpperCase() || 'HOME');
+                }
+                if (awayTeamSubLabelLineup) {
+                    awayTeamSubLabelLineup.textContent = (awayTeam.substring(0, 3).toUpperCase() || 'AWAY');
+                }
+                
+                // ホームチームのSUBリスト
+                if (homeSubstitutesLineup) {
+                    const homeSubs = matchData.lineups?.home?.substitutes || [];
+                    if (homeSubs.length > 0) {
+                        homeSubstitutesLineup.innerHTML = homeSubs.map(sub => {
+                            const playerName = sub.player?.name || sub.name || 'Unknown';
+                            const playerNumber = sub.player?.number || sub.number || '';
+                            return `
+                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; font-size: 0.75rem; color: #9ab0bc;">
+                                    <span style="width: 1.25rem; font-weight: bold; font-size: 0.625rem; color: var(--team-a);">${playerNumber}</span>
+                                    <span style="font-weight: 500; color: white;">${playerName}</span>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        homeSubstitutesLineup.innerHTML = '<div style="font-size: 0.75rem; color: #9ab0bc;">サブなし</div>';
+                    }
+                }
+                
+                // アウェイチームのSUBリスト
+                if (awaySubstitutesLineup) {
+                    const awaySubs = matchData.lineups?.away?.substitutes || [];
+                    if (awaySubs.length > 0) {
+                        awaySubstitutesLineup.innerHTML = awaySubs.map(sub => {
+                            const playerName = sub.player?.name || sub.name || 'Unknown';
+                            const playerNumber = sub.player?.number || sub.number || '';
+                            return `
+                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; font-size: 0.75rem; color: #9ab0bc; justify-content: flex-end; text-align: right;">
+                                    <span style="font-weight: 500; color: white;">${playerName}</span>
+                                    <span style="width: 1.25rem; font-weight: bold; font-size: 0.625rem; color: var(--team-b); text-align: right;">${playerNumber}</span>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        awaySubstitutesLineup.innerHTML = '<div style="font-size: 0.75rem; color: #9ab0bc; text-align: right;">サブなし</div>';
+                    }
+                }
 
                 console.log('Lineup tab updated successfully');
                 
