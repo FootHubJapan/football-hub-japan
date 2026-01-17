@@ -6036,13 +6036,24 @@
             // クエリパラメータを優先、なければハッシュから取得
             const url = new URL(location.href);
             const queryMatch = url.searchParams.get("match");
-            if (queryMatch) return queryMatch;
+            console.log('getMatchId - queryMatch:', queryMatch, 'URL:', location.href);
+            if (queryMatch) {
+                console.log('getMatchId - returning queryMatch:', queryMatch);
+                return queryMatch;
+            }
             
             // ハッシュから取得（後方互換性）
             const h = location.hash.replace("#", "");
-            if (!h) return null;
+            if (!h) {
+                console.log('getMatchId - no hash, returning null');
+                return null;
+            }
             const [k, v] = h.split("=");
-            if (k === "match" && v) return v;
+            if (k === "match" && v) {
+                console.log('getMatchId - returning hash match:', v);
+                return v;
+            }
+            console.log('getMatchId - no match found, returning null');
             return null;
         }
 
@@ -6067,11 +6078,15 @@
         }
 
         async function route() {
+            console.log('route() called');
             const matchId = getMatchId();
+            console.log('route() - matchId:', matchId);
             if (!matchId) {
+                console.log('route() - no matchId, showing schedule view');
                 showScheduleView();
                 return;
             }
+            console.log('route() - matchId found, showing match view');
             showMatchView();
             setActiveTab("lineup");
             await loadMatchIntoView(matchId);
@@ -6079,7 +6094,13 @@
         }
 
         window.addEventListener("hashchange", route);
-        window.addEventListener("DOMContentLoaded", route);
+        // DOMContentLoadedが既に発火済みの場合は即座にroute()を呼ぶ
+        if (document.readyState === 'loading') {
+            window.addEventListener("DOMContentLoaded", route);
+        } else {
+            // DOMContentLoadedが既に発火済みの場合は即座に実行
+            route();
+        }
         // クエリパラメータの変更も監視（popstateイベント）
         window.addEventListener("popstate", route);
 
@@ -6160,6 +6181,7 @@
         async function loadMatchIntoView(matchId) {
             try {
                 console.log('Loading match into view:', matchId);
+                console.log('MatchView exists:', !!document.getElementById('matchView'));
                 
                 // matchIdからfixtureIdとfotmobIdを判定
                 let fixtureId = '';
@@ -6173,11 +6195,17 @@
                     fixtureId = matchId;
                 }
                 
-                // 既存のshowDetailedMatchInfoV2関数を使用
-                    await showDetailedMatchInfoV2({
+                console.log('Calling showDetailedMatchInfoV2 with:', {
                     source,
                     fixtureId,
-                        fotmobId,
+                    fotmobId
+                });
+                
+                // 既存のshowDetailedMatchInfoV2関数を使用
+                await showDetailedMatchInfoV2({
+                    source,
+                    fixtureId,
+                    fotmobId,
                     leagueKey: '',
                     kickoffUtc: '',
                     home: '',
@@ -6185,6 +6213,7 @@
                 });
             } catch (error) {
                 console.error('Error loading match into view:', error);
+                alert(`試合データの読み込み中にエラーが発生しました: ${error.message}`);
             }
         }
 
@@ -6956,8 +6985,8 @@
                 return;
             }
             
-            const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
-            const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
+                const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
+                const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
             
             console.log('Home team:', homeTeam, 'Away team:', awayTeam);
             
