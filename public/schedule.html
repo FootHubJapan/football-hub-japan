@@ -4448,27 +4448,42 @@
             </div>
             
             <!-- タブナビゲーション（新デザイン） -->
-            <div class="flex border-b border-[#dae6e7] dark:border-white/10 gap-12 mb-10">
-                <a class="flex flex-col items-center justify-center border-b-[4px] border-transparent text-gray-400 pb-4 hover:text-gray-600 dark:hover:text-gray-200 transition-all tab-button-modern" data-tab="lineup" href="#">
-                    <p class="text-base font-bold uppercase tracking-wider">Lineup</p>
+            <div class="flex border-b border-[#27343a] gap-8 mb-8" style="background-color: #16252d; padding: 0.5rem 1rem; border-radius: 0.5rem 0.5rem 0 0;">
+                <a class="tab-button-modern" data-tab="overview" href="#" style="padding: 0.75rem 1.5rem; color: #9ab0bc; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; transition: all 0.2s;">
+                    OVERVIEW
                 </a>
-                <a class="flex flex-col items-center justify-center border-b-[4px] border-primary text-primary pb-4 transition-all tab-button-modern active" data-tab="stats" href="#">
-                    <p class="text-base font-bold uppercase tracking-wider">Stats</p>
+                <a class="tab-button-modern active" data-tab="lineup" href="#" style="padding: 0.75rem 1.5rem; background-color: #00bdc7; color: white; font-weight: 700; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; box-shadow: 0 0 10px rgba(0, 189, 199, 0.3); transition: all 0.2s;">
+                    LINEUP
                 </a>
-                <a class="flex flex-col items-center justify-center border-b-[4px] border-transparent text-gray-400 pb-4 hover:text-gray-600 dark:hover:text-gray-200 transition-all tab-button-modern" data-tab="events" href="#">
-                    <p class="text-base font-bold uppercase tracking-wider">Timeline</p>
+                <a class="tab-button-modern" data-tab="stats" href="#" style="padding: 0.75rem 1.5rem; color: #9ab0bc; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; transition: all 0.2s;">
+                    STATS
                 </a>
-                <a class="flex flex-col items-center justify-center border-b-[4px] border-transparent text-gray-400 pb-4 hover:text-gray-600 dark:hover:text-gray-200 transition-all tab-button-modern" data-tab="news" href="#">
-                    <p class="text-base font-bold uppercase tracking-wider">News</p>
+                <a class="tab-button-modern" data-tab="h2h" href="#" style="padding: 0.75rem 1.5rem; color: #9ab0bc; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; transition: all 0.2s;">
+                    H2H
+                </a>
+                <a class="tab-button-modern" data-tab="events" href="#" style="padding: 0.75rem 1.5rem; color: #9ab0bc; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; transition: all 0.2s;">
+                    TIMELINE
                 </a>
             </div>
             
             <!-- タブコンテンツ -->
             <div class="tab-content-modern px-2">
-                <!-- ラインアップタブ（新デザイン - 3カラムレイアウト） -->
+                <!-- ラインアップタブ（新デザイン - 3カラムレイアウト：左SUB、中央ピッチ、右SUB） -->
                 <div id="lineup" class="tab-pane-modern">
                     <div class="grid grid-cols-12 gap-6">
-                        <!-- Left Column: Tactical Formations -->
+                        <!-- Left Column: Home Substitutes -->
+                        <div class="col-span-2 bg-card-dark border border-[#27343a] rounded-xl p-6">
+                            <div class="mb-4">
+                                <h4 class="text-sm font-bold uppercase tracking-widest text-white mb-2">Substitutes</h4>
+                                <div class="text-[10px] font-bold text-[#00bdc7] uppercase tracking-widest" id="homeTeamSubLabelLineup">HOME</div>
+                        </div>
+                            <div class="space-y-2" id="homeSubstitutesLineup">
+                                <!-- Substitutes will be dynamically inserted here -->
+                                <div class="text-xs text-[#9ab0bc]">サブスティテュートを読み込み中...</div>
+                        </div>
+                    </div>
+                        
+                        <!-- Center Column: Tactical Pitch -->
                         <div class="col-span-8 bg-card-dark border border-[#27343a] rounded-xl p-8">
                             <div class="flex justify-between items-center mb-6">
                                 <h4 class="text-lg font-bold">Tactical Formations</h4>
@@ -4485,80 +4500,22 @@
                                 <div class="absolute top-4 left-1/2 -translate-x-1/2 w-80 h-32 border border-white/10 border-t-0"></div>
                                 <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-80 h-32 border border-white/10 border-b-0"></div>
                                 <!-- Players will be dynamically inserted here -->
-                            </div>
-                        </div>
-                        
-                        <!-- Right Column: Sidebar -->
-                        <div class="col-span-4 flex flex-col gap-6">
-                            <!-- Touch Intensity Heatmap -->
-                            <div class="bg-card-dark border border-[#27343a] rounded-xl p-6">
-                                <h4 class="text-sm font-bold uppercase tracking-widest text-[#9ab0bc] mb-6">Touch Intensity (Heatmap)</h4>
-                                <div class="grid grid-cols-2 gap-4 h-64">
-                                    <div class="relative border border-white/5 rounded-lg pitch-pattern overflow-hidden">
-                                        <div class="absolute inset-0 heatmap-gradient-a" style="clip-path: circle(30% at 70% 80%);"></div>
-                                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-team-a uppercase" id="homeTeamHeatmapLabelLineup">MCY</div>
-                                    </div>
-                                    <div class="relative border border-white/5 rounded-lg pitch-pattern overflow-hidden">
-                                        <div class="absolute inset-0 heatmap-gradient-b" style="clip-path: circle(25% at 20% 20%);"></div>
-                                        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-team-b uppercase" id="awayTeamHeatmapLabelLineup">LIV</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Comparative Metrics -->
-                            <div class="bg-card-dark border border-[#27343a] rounded-xl p-6">
-                                <h4 class="text-sm font-bold uppercase tracking-widest text-[#9ab0bc] mb-6">Comparative Metrics</h4>
-                                <div class="space-y-6" id="comparativeMetricsLineup">
-                                    <!-- Comparative metrics will be dynamically inserted here -->
-                                    <div class="text-xs text-[#9ab0bc]">比較メトリクスを読み込み中...</div>
-                                </div>
-                            </div>
-                            
-                            <!-- Momentum Flow -->
-                            <div class="bg-card-dark border border-[#27343a] rounded-xl p-6">
-                                <h4 class="text-sm font-bold uppercase tracking-widest text-[#9ab0bc] mb-4">Momentum Flow</h4>
-                                <div class="h-24 w-full flex items-end gap-1" id="momentumFlowLineup">
-                                    <!-- Momentum bars will be dynamically inserted here -->
-                                    <div class="w-2 bg-team-a h-[40%] rounded-t-sm"></div>
-                                    <div class="w-2 bg-team-a h-[60%] rounded-t-sm"></div>
-                                    <div class="w-2 bg-team-a h-[80%] rounded-t-sm"></div>
-                                    <div class="w-2 bg-team-b h-[30%] rounded-t-sm"></div>
-                                    <div class="w-2 bg-team-b h-[70%] rounded-t-sm"></div>
-                                    <div class="w-2 bg-team-a h-[90%] rounded-t-sm"></div>
-                                    <div class="w-2 bg-team-b h-[20%] rounded-t-sm"></div>
-                                </div>
-                                <div class="flex justify-between mt-2 text-[10px] text-[#9ab0bc] font-bold">
-                                    <span>0'</span>
-                                    <span>HT</span>
-                                    <span>90'</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Substitutes -->
-                            <div class="bg-card-dark border border-[#27343a] rounded-xl p-6">
-                                <h4 class="text-sm font-bold uppercase tracking-widest text-[#9ab0bc] mb-4">Substitutes</h4>
-                                <div class="space-y-4">
-                                    <!-- Home Team Substitutes -->
-                                    <div>
-                                        <div class="text-[10px] font-bold text-[#9ab0bc] uppercase tracking-widest mb-2" id="homeTeamSubLabelLineup">HOME</div>
-                                        <div class="space-y-1" id="homeSubstitutesLineup">
-                                            <!-- Substitutes will be dynamically inserted here -->
-                                            <div class="text-xs text-[#9ab0bc]">サブスティテュートを読み込み中...</div>
-                                        </div>
-                                    </div>
-                                    <!-- Away Team Substitutes -->
-                                    <div>
-                                        <div class="text-[10px] font-bold text-[#9ab0bc] uppercase tracking-widest mb-2" id="awayTeamSubLabelLineup">AWAY</div>
-                                        <div class="space-y-1" id="awaySubstitutesLineup">
-                                            <!-- Substitutes will be dynamically inserted here -->
-                                            <div class="text-xs text-[#9ab0bc]">サブスティテュートを読み込み中...</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
+                
+                        <!-- Right Column: Away Substitutes -->
+                        <div class="col-span-2 bg-card-dark border border-[#27343a] rounded-xl p-6">
+                            <div class="mb-4">
+                                <h4 class="text-sm font-bold uppercase tracking-widest text-white mb-2">Substitutes</h4>
+                                <div class="text-[10px] font-bold text-[#00bdc7] uppercase tracking-widest" id="awayTeamSubLabelLineup">AWAY</div>
+                            </div>
+                            <div class="space-y-2" id="awaySubstitutesLineup">
+                                <!-- Substitutes will be dynamically inserted here -->
+                                <div class="text-xs text-[#9ab0bc]">サブスティテュートを読み込み中...</div>
+                            </div>
+                                </div>
+                            </div>
+                        </div>
 
                 <!-- 試合統計タブ（ProFooty Analyticsスタイル） -->
                 <div id="stats" class="tab-pane-modern active" style="display: flex; flex-direction: column; gap: 2rem;">
@@ -6826,8 +6783,8 @@
         function updateStatsTab(statsData, matchData = null) {
             console.log('Updating stats tab with data:', statsData);
             
-            const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
-            const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
+                const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
+                const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
             
             // マッチスコアカードを更新
             const homeTeamNameStats = document.getElementById('homeTeamNameStats');
@@ -7960,7 +7917,7 @@
                                     <div>
                                         <p class="text-sm font-bold">${shortName}</p>
                                         <p class="text-[10px] text-[#9ab0bc]">Midfield Depth: ${(64.2 + Math.random() * 5).toFixed(1)}m</p>
-                                    </div>
+                                </div>
                                 </div>
                                 <span class="material-symbols-outlined text-team-a text-lg">trending_up</span>
                             </div>
@@ -7978,7 +7935,7 @@
                                     <div>
                                         <p class="text-sm font-bold">${shortName}</p>
                                         <p class="text-[10px] text-[#9ab0bc]">Attack Width: ${(42.1 + Math.random() * 5).toFixed(1)}m</p>
-                                    </div>
+                        </div>
                                 </div>
                                 <span class="material-symbols-outlined text-team-b text-lg">location_on</span>
                             </div>
@@ -8032,15 +7989,20 @@
                         homeSubstitutesLineup.innerHTML = homeSubs.map(sub => {
                             const playerName = sub.player?.name || sub.name || 'Unknown';
                             const playerNumber = sub.player?.number || sub.number || '';
+                            const playerPosition = sub.player?.pos || sub.position || sub.pos || 'Unknown';
+                            const positionLabel = getPositionLabel(playerPosition);
                             return `
-                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; font-size: 0.75rem; color: #9ab0bc;">
-                                    <span style="width: 1.25rem; font-weight: bold; font-size: 0.625rem; color: var(--team-a);">${playerNumber}</span>
-                                    <span style="font-weight: 500; color: white;">${playerName}</span>
-                                </div>
-                            `;
+                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background-color: #16252d; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+                                    <div style="width: 2rem; height: 2rem; background-color: #0099e6; border-radius: 0.25rem; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.875rem; color: white;">${playerNumber}</div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; font-size: 0.875rem; color: white; margin-bottom: 0.125rem;">${playerName}</div>
+                                        <div style="font-size: 0.625rem; color: #9ab0bc; text-transform: uppercase; letter-spacing: 0.05em;">${positionLabel}</div>
+                                    </div>
+                    </div>
+                `;
                         }).join('');
                     } else {
-                        homeSubstitutesLineup.innerHTML = '<div style="font-size: 0.75rem; color: #9ab0bc;">サブなし</div>';
+                        homeSubstitutesLineup.innerHTML = '<div style="font-size: 0.75rem; color: #9ab0bc; padding: 0.75rem;">サブなし</div>';
                     }
                 }
                 
@@ -8051,15 +8013,20 @@
                         awaySubstitutesLineup.innerHTML = awaySubs.map(sub => {
                             const playerName = sub.player?.name || sub.name || 'Unknown';
                             const playerNumber = sub.player?.number || sub.number || '';
+                            const playerPosition = sub.player?.pos || sub.position || sub.pos || 'Unknown';
+                            const positionLabel = getPositionLabel(playerPosition);
                             return `
-                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; font-size: 0.75rem; color: #9ab0bc; justify-content: flex-end; text-align: right;">
-                                    <span style="font-weight: 500; color: white;">${playerName}</span>
-                                    <span style="width: 1.25rem; font-weight: bold; font-size: 0.625rem; color: var(--team-b); text-align: right;">${playerNumber}</span>
+                                <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background-color: #16252d; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.05); flex-direction: row-reverse;">
+                                    <div style="width: 2rem; height: 2rem; background-color: #00CC00; border-radius: 0.25rem; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.875rem; color: white;">${playerNumber}</div>
+                                    <div style="flex: 1; text-align: right;">
+                                        <div style="font-weight: 600; font-size: 0.875rem; color: white; margin-bottom: 0.125rem;">${playerName}</div>
+                                        <div style="font-size: 0.625rem; color: #9ab0bc; text-transform: uppercase; letter-spacing: 0.05em;">${positionLabel}</div>
+                                    </div>
                                 </div>
                             `;
                         }).join('');
                     } else {
-                        awaySubstitutesLineup.innerHTML = '<div style="font-size: 0.75rem; color: #9ab0bc; text-align: right;">サブなし</div>';
+                        awaySubstitutesLineup.innerHTML = '<div style="font-size: 0.75rem; color: #9ab0bc; padding: 0.75rem; text-align: right;">サブなし</div>';
                     }
                 }
 
@@ -8455,9 +8422,13 @@
         function switchTab(tabName) {
             console.log('Switching to tab:', tabName);
             
-            // すべてのタブボタンからアクティブクラスを削除
+            // すべてのタブボタンからアクティブクラスとスタイルを削除
             document.querySelectorAll('.tab-button-modern').forEach(button => {
                 button.classList.remove('active');
+                button.style.backgroundColor = 'transparent';
+                button.style.color = '#9ab0bc';
+                button.style.fontWeight = '600';
+                button.style.boxShadow = 'none';
             });
             
             // すべてのタブペインを非表示
@@ -8465,10 +8436,14 @@
                 pane.classList.remove('active');
             });
             
-            // クリックされたタブボタンをアクティブに
+            // クリックされたタブボタンをアクティブに（シアン色の背景）
             const activeButton = document.querySelector(`.tab-button-modern[data-tab="${tabName}"]`);
             if (activeButton) {
                 activeButton.classList.add('active');
+                activeButton.style.backgroundColor = '#00bdc7';
+                activeButton.style.color = 'white';
+                activeButton.style.fontWeight = '700';
+                activeButton.style.boxShadow = '0 0 10px rgba(0, 189, 199, 0.3)';
             }
             
             // 対応するタブペインを表示
@@ -8719,22 +8694,32 @@
                 // ラインアップタブを更新
                     updateLineupTab(matchData);
                 
-                // 最初のタブ（Stats）をアクティブにして表示
-                const firstTab = document.querySelector('.tab-button-modern[data-tab="stats"]');
-                const firstPane = document.getElementById('stats');
+                // 最初のタブ（Lineup）をアクティブにして表示
+                const firstTab = document.querySelector('.tab-button-modern[data-tab="lineup"]');
+                const firstPane = document.getElementById('lineup');
                 
                 if (firstTab && firstPane) {
                     // すべてのタブを非アクティブに
-                    document.querySelectorAll('.tab-button-modern').forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-button-modern').forEach(btn => {
+                        btn.classList.remove('active');
+                        btn.style.backgroundColor = 'transparent';
+                        btn.style.color = '#9ab0bc';
+                        btn.style.fontWeight = '600';
+                        btn.style.boxShadow = 'none';
+                    });
                     document.querySelectorAll('.tab-pane-modern').forEach(pane => pane.classList.remove('active'));
                     
-                    // 最初のタブをアクティブに
+                    // 最初のタブをアクティブに（シアン色の背景）
                     firstTab.classList.add('active');
+                    firstTab.style.backgroundColor = '#00bdc7';
+                    firstTab.style.color = 'white';
+                    firstTab.style.fontWeight = '700';
+                    firstTab.style.boxShadow = '0 0 10px rgba(0, 189, 199, 0.3)';
                     firstPane.classList.add('active');
                     
-                    console.log('Stats tab activated');
+                    console.log('Lineup tab activated');
                 } else {
-                    console.error('Stats tab or pane not found');
+                    console.error('Lineup tab or pane not found');
                 }
                 
             } catch (error) {
