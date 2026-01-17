@@ -6117,7 +6117,17 @@
             }
 
             const btns = Array.from(tabs.querySelectorAll("[data-tab]"));
-            const panels = Array.from(root.querySelectorAll("[data-panel]"));
+            // #matchView内のパネルを検索、見つからない場合はグローバル検索
+            let panels = Array.from(root.querySelectorAll("[data-panel]"));
+            
+            // STATSパネルが#matchViewの外にある場合のフォールバック
+            if (tab === "stats" && !panels.some(p => p.getAttribute("data-panel") === "stats")) {
+                const statsPanelGlobal = document.querySelector('[data-panel="stats"]');
+                if (statsPanelGlobal) {
+                    console.warn('Stats panel found outside #matchView, adding to panels array');
+                    panels.push(statsPanelGlobal);
+                }
+            }
 
             // 存在しないタブが来たらlineupにフォールバック
             const exists = panels.some(p => p.getAttribute("data-panel") === tab);
@@ -7006,42 +7016,30 @@
                     });
                 }
             }
-            const statsPanel = document.querySelector('#matchView [data-panel="stats"]');
-            console.log('Stats panel exists:', !!statsPanel);
-            if (statsPanel) {
-                console.log('Stats panel details:', {
-                    exists: !!statsPanel,
-                    hidden: statsPanel.classList.contains('hidden'),
-                    display: window.getComputedStyle(statsPanel).display,
-                    parent: statsPanel.parentElement?.className
-                });
-            } else {
-                console.error('Stats panel NOT FOUND in #matchView');
-                // 全体から検索してみる
-                const statsPanelGlobal = document.querySelector('[data-panel="stats"]');
-                console.log('Stats panel found globally:', !!statsPanelGlobal);
-                if (statsPanelGlobal) {
-                    console.log('Stats panel parent:', statsPanelGlobal.parentElement?.className);
-                    console.log('Stats panel parent tagName:', statsPanelGlobal.parentElement?.tagName);
-                    console.log('Stats panel parent id:', statsPanelGlobal.parentElement?.id);
-                    console.log('Stats panel is in matchView:', matchView?.contains(statsPanelGlobal));
-                    console.log('Stats panel is in tab-content-modern:', tabContent?.contains(statsPanelGlobal));
-                    // 親要素を遡って確認
-                    let current = statsPanelGlobal.parentElement;
-                    let depth = 0;
-                    while (current && depth < 10) {
-                        console.log(`Parent ${depth}:`, {
-                            tagName: current.tagName,
-                            className: current.className,
-                            id: current.id,
-                            isMatchView: current.id === 'matchView',
-                            isTabContent: current.classList?.contains('tab-content-modern')
-                        });
-                        current = current.parentElement;
-                        depth++;
-                    }
+            // STATSパネルを検索（#matchView内を優先、見つからない場合はグローバル検索）
+            let statsPanel = document.querySelector('#matchView [data-panel="stats"]');
+            if (!statsPanel) {
+                console.warn('Stats panel NOT FOUND in #matchView, searching globally...');
+                statsPanel = document.querySelector('[data-panel="stats"]');
+                if (statsPanel) {
+                    console.log('Stats panel found globally:', {
+                        parent: statsPanel.parentElement?.tagName,
+                        parentId: statsPanel.parentElement?.id,
+                        parentClass: statsPanel.parentElement?.className,
+                        isInMatchView: matchView?.contains(statsPanel)
+                    });
+                } else {
+                    console.error('Stats panel NOT FOUND anywhere in DOM');
+                    return; // STATSパネルが見つからない場合は処理を中断
                 }
             }
+            
+            console.log('Stats panel found:', {
+                exists: !!statsPanel,
+                hidden: statsPanel.classList.contains('hidden'),
+                display: window.getComputedStyle(statsPanel).display,
+                parent: statsPanel.parentElement?.className
+            });
             
             if (!matchData) {
                 console.error('matchData is null or undefined');
