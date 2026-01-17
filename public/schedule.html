@@ -8168,11 +8168,17 @@
         window.FHJ.gridToXY = function(gridStr, isAway){
             // grid例: "1:1", "2:3" など（API-FootballのstartXIに入ってることが多い）
             // 横 = col(1..5), 縦 = row(1..6) みたいな扱いにして、ざっくり整列
-            if(!gridStr || !gridStr.includes(":")) return null;
+            if(!gridStr || !gridStr.includes(":")) {
+                console.log('⚠️ gridToXY: Invalid grid string:', gridStr);
+                return null;
+            }
             const [rowS, colS] = gridStr.split(":");
             const row = parseInt(rowS, 10);
             const col = parseInt(colS, 10);
-            if(Number.isNaN(row) || Number.isNaN(col)) return null;
+            if(Number.isNaN(row) || Number.isNaN(col)) {
+                console.log('⚠️ gridToXY: Invalid row/col:', rowS, colS);
+                return null;
+            }
 
             // だいたい「横5列・縦6段」くらいでマッピング
             const cols = 5, rows = 6;
@@ -8185,7 +8191,10 @@
             // ピッチ内の余白
             const px = 10 + x * 80; // %
             const py = 8 + y * 84;  // %
-            return { x: px, y: py };
+            
+            const result = { x: px, y: py };
+            console.log(`📍 gridToXY: "${gridStr}" (isAway: ${isAway}) ->`, result);
+            return result;
         };
 
         window.FHJ.renderPitch = function(matchData){
@@ -8336,6 +8345,31 @@
                 // 最初のプレイヤーノードのスタイルを確認
                 setTimeout(() => {
                     const firstPlayerNode = playersContainer.querySelector('.player-node');
+                    const containerStyle = window.getComputedStyle(playersContainer);
+                    const pitchStyle = playersContainer.parentElement ? window.getComputedStyle(playersContainer.parentElement) : null;
+                    
+                    console.log('🔍 Container styles:', {
+                        display: containerStyle.display,
+                        position: containerStyle.position,
+                        zIndex: containerStyle.zIndex,
+                        width: containerStyle.width,
+                        height: containerStyle.height,
+                        top: containerStyle.top,
+                        left: containerStyle.left,
+                        right: containerStyle.right,
+                        bottom: containerStyle.bottom
+                    });
+                    
+                    if (pitchStyle) {
+                        console.log('🔍 Pitch container styles:', {
+                            display: pitchStyle.display,
+                            position: pitchStyle.position,
+                            width: pitchStyle.width,
+                            height: pitchStyle.height,
+                            overflow: pitchStyle.overflow
+                        });
+                    }
+                    
                     if (firstPlayerNode) {
                         const computedStyle = window.getComputedStyle(firstPlayerNode);
                         console.log('🎯 First player node styles:', {
@@ -8348,10 +8382,29 @@
                             opacity: computedStyle.opacity,
                             width: computedStyle.width,
                             height: computedStyle.height,
-                            transform: computedStyle.transform
+                            transform: computedStyle.transform,
+                            parent: firstPlayerNode.parentElement?.id,
+                            offsetParent: firstPlayerNode.offsetParent?.id
+                        });
+                        
+                        // 実際の位置を確認
+                        const rect = firstPlayerNode.getBoundingClientRect();
+                        console.log('📍 First player node bounding rect:', {
+                            x: rect.x,
+                            y: rect.y,
+                            width: rect.width,
+                            height: rect.height,
+                            top: rect.top,
+                            left: rect.left,
+                            visible: rect.width > 0 && rect.height > 0
                         });
                     } else {
                         console.warn('⚠️ No player-node found in playersContainer');
+                        console.log('📋 playersContainer children:', Array.from(playersContainer.children).map(c => ({
+                            tagName: c.tagName,
+                            className: c.className,
+                            id: c.id
+                        })));
                     }
                 }, 100);
             } else {
