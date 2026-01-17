@@ -8198,6 +8198,43 @@
             }
         }
 
+        // Formationベースの座標生成関数
+        window.FHJ.parseFormation = function(form) {
+            // "4-2-3-1" -> [4,2,3,1]
+            const nums = String(form || "").split("-").map(n => parseInt(n, 10)).filter(Boolean);
+            return nums.length ? nums : [4,3,3];
+        };
+
+        window.FHJ.formationToSlots = function(formation, isAway) {
+            const lines = window.FHJ.parseFormation(formation);
+
+            // 上から: GK + DF/MF/FW...
+            // "それっぽく"見える固定Y（%）
+            // awayは上側（8-70%）、homeは下側（30-92%）
+            const yGK = isAway ? 8 : 92; // awayは上、homeは下
+            const yLinesAway = [18, 34, 52, 70]; // away用（上から）
+            const yLinesHome = [86, 70, 52, 34]; // home用（下から）
+
+            const slots = [];
+            const yLines = isAway ? yLinesAway : yLinesHome;
+
+            // GK slot（最初の1つ）
+            slots.push({ x: 50, y: yGK });
+
+            // Lines（フォーメーションの各ライン）
+            // 例: "4-2-3-1" -> [4,2,3,1] -> GK + 4人(DF) + 2人(MF) + 3人(MF) + 1人(FW)
+            lines.forEach((count, i) => {
+                const y = yLines[i] ?? (isAway ? 18 + i * 16 : 86 - i * 16);
+                for (let k = 0; k < count; k++) {
+                    const x = ((k + 1) * 100) / (count + 1); // 均等割り
+                    slots.push({ x, y });
+                }
+            });
+
+            return slots.slice(0, 11); // 最大11人
+        };
+
+        // 旧gridToXY関数（後方互換性のため残す）
         window.FHJ.gridToXY = function(gridStr, isAway){
             // grid例: "1:1", "2:3" など（API-FootballのstartXIに入ってることが多い）
             // 横 = col(1..5), 縦 = row(1..6) みたいな扱いにして、ざっくり整列
@@ -8358,8 +8395,9 @@
                           (matchData?.lineups?.away ? { ...matchData.lineups.away, team: matchData.teams?.away } : null) ||
                           lineups[1];
 
-            const homeXI = homeLU?.startXI || matchData?.lineups?.home?.startXI || [];
-            const awayXI = awayLU?.startXI || matchData?.lineups?.away?.startXI || [];
+            // startXIのみを使用（substitutesは除外）
+            const homeXI = (homeLU?.startXI || matchData?.lineups?.home?.startXI || []).slice(0, 11);
+            const awayXI = (awayLU?.startXI || matchData?.lineups?.away?.startXI || []).slice(0, 11);
 
             console.log('📊 Lineup data:', {
                 homeXICount: homeXI.length,
@@ -8368,29 +8406,37 @@
                 awayXISample: awayXI[0]
             });
 
-            // formation表示
-            const homeForm = homeLU?.formation || matchData?.lineups?.home?.formation || "";
-            const awayForm = awayLU?.formation || matchData?.lineups?.away?.formation || "";
+            // formation取得
+            const homeForm = homeLU?.formation || matchData?.lineups?.home?.formation || matchData?.homeFormation || "4-3-3";
+            const awayForm = awayLU?.formation || matchData?.lineups?.away?.formation || matchData?.awayFormation || "4-3-3";
+
+            console.log('📊 Formations:', { homeForm, awayForm });
+
+            // formationベースの座標生成
+            const homeSlots = window.FHJ.formationToSlots(homeForm, false);
+            const awaySlots = window.FHJ.formationToSlots(awayForm, true);
+
+            console.log('📊 Slots generated:', {
+                homeSlots: homeSlots.length,
+                awaySlots: awaySlots.length
+            });
 
             const nodesHtml = [];
             let homeNodesCount = 0;
             let awayNodesCount = 0;
 
-            // Home players (isAway = false で固定)
-            for(const p of homeXI){
+            // Home players（下側に配置）
+            homeXI.slice(0, 11).forEach((p, idx) => {
                 const player = p?.player || p;
-                const grid = player?.grid || p?.grid;
-                const xy = window.FHJ.gridToXY(grid, false); // isAway = false で固定
-                if(!xy) {
-                    console.log('⚠️ No grid for home player:', player?.name || p?.name);
-                    continue;
-                }
                 const playerName = player?.name || p?.name || 'Unknown';
                 const playerNumber = player?.number || p?.number || '';
                 const rating = player?.rating || p?.rating || null;
                 
+                // formationベースの座標を使用
+                const slot = homeSlots[idx] || { x: 50, y: 92 };
+                
                 nodesHtml.push(`
-                    <div class="player-node" style="left:${xy.x}%; top:${xy.y}%;">
+                    <div class="player-node" style="left:${slot.x}%; top:${slot.y}%;">
                         <div class="player-badge" style="background: rgba(26,134,240,0.9); box-shadow:0 0 14px rgba(26,134,240,0.45);">
                             ${playerNumber}
                         </div>
@@ -8401,23 +8447,20 @@
                     </div>
                 `);
                 homeNodesCount++;
-            }
+            });
 
-            // Away players (isAway = true で固定)
-            for(const p of awayXI){
+            // Away players（上側に配置）
+            awayXI.slice(0, 11).forEach((p, idx) => {
                 const player = p?.player || p;
-                const grid = player?.grid || p?.grid;
-                const xy = window.FHJ.gridToXY(grid, true); // isAway = true で固定
-                if(!xy) {
-                    console.log('⚠️ No grid for away player:', player?.name || p?.name);
-                    continue;
-                }
                 const playerName = player?.name || p?.name || 'Unknown';
                 const playerNumber = player?.number || p?.number || '';
                 const rating = player?.rating || p?.rating || null;
                 
+                // formationベースの座標を使用
+                const slot = awaySlots[idx] || { x: 50, y: 8 };
+                
                 nodesHtml.push(`
-                    <div class="player-node" style="left:${xy.x}%; top:${xy.y}%;">
+                    <div class="player-node" style="left:${slot.x}%; top:${slot.y}%;">
                         <div class="player-badge" style="background: rgba(48,212,79,0.9); box-shadow:0 0 14px rgba(48,212,79,0.45);">
                             ${playerNumber}
                         </div>
@@ -8428,23 +8471,12 @@
                     </div>
                 `);
                 awayNodesCount++;
-            }
+            });
 
             console.log(`✅ Rendered ${homeNodesCount} home players and ${awayNodesCount} away players`);
             console.log('📊 nodesHtml length:', nodesHtml.length);
-            console.log('📊 nodesHtml sample:', nodesHtml[0]?.substring(0, 200));
 
-            // gridが無い試合もあるので、その場合はメッセージを出す（崩れ防止）
-            const hasAnyGrid = [...homeXI, ...awayXI].some(p => {
-                const player = p?.player || p;
-                return player?.grid || p?.grid;
-            });
-            console.log('🔍 hasAnyGrid:', hasAnyGrid);
-            const fallback = hasAnyGrid ? "" : `
-                <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,.7); font-weight:700; z-index:25;">
-                    Formation data (grid) not available for this match
-                </div>
-            `;
+            const fallback = "";
 
             // playersContainerを取得（重複を防ぐ）
             const playersContainer = getSinglePlayersContainer();
@@ -8876,10 +8908,16 @@
                 // サブスティテュートを描画
                 renderSubstitutes(matchData);
 
-                // ピッチを描画（gridベースのProFootball風描画）
-                console.log('🎯 Rendering pitch with grid-based positioning');
+                // ピッチを描画（formationベースのProFootball風描画）
+                console.log('🎯 Rendering pitch with formation-based positioning');
                 if (window.FHJ && window.FHJ.renderPitch) {
-                    window.FHJ.renderPitch(matchData);
+                    // matchDataにformationを追加して渡す
+                    const matchDataWithFormation = {
+                        ...matchData,
+                        homeFormation,
+                        awayFormation
+                    };
+                    window.FHJ.renderPitch(matchDataWithFormation);
                 } else {
                     console.error('❌ renderPitch function not available');
                 }
@@ -9010,7 +9048,7 @@
                             <div style="width: 3rem; height: 3rem; border-radius: 9999px; background-color: #00CC00; border: 2px solid rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: bold; color: white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);">${playerNumber}</div>
                             <span style="font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; color: white; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); white-space: nowrap;">${shortName}</span>
                             ${rating ? `<div style="padding: 0.125rem 0.375rem; background-color: rgba(0, 0, 0, 0.7); font-size: 0.625rem; border-radius: 0.25rem; color: #00CC00; font-weight: bold; margin-top: 0.125rem;">${rating}</div>` : ''}
-                    </div>
+                        </div>
                 `;
                 });
                 html += '</div>';
@@ -9036,7 +9074,7 @@
                             <div style="width: 3rem; height: 3rem; border-radius: 9999px; background-color: #0099e6; border: 2px solid rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: bold; color: white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);">${playerNumber}</div>
                             <span style="font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; color: white; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); white-space: nowrap;">${shortName}</span>
                             ${rating ? `<div style="padding: 0.125rem 0.375rem; background-color: rgba(0, 0, 0, 0.7); font-size: 0.625rem; border-radius: 0.25rem; color: #0099e6; font-weight: bold; margin-top: 0.125rem;">${rating}</div>` : ''}
-                        </div>
+                                </div>
                     `;
                 });
                 html += '</div>';
