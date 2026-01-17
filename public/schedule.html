@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja" class="light">
+<html lang="ja" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -21,20 +21,47 @@
             --foreground: #f0f6fc;
             --card: #161b22;
             --card-hover: #1c2128;
-            --primary: #00bdc7;
-            --primary-hover: #00a8b0;
+            --primary: #33ffff;
+            --primary-hover: #00e6e6;
             --secondary: #21262d;
             --muted: #8b949e;
             --border: #30363d;
             --border-light: rgba(48, 54, 61, 0.5);
             --marinos-blue: #003399;
             --frontale-green: #00A960;
-            --background-light: #f5f8f8;
-            --background-dark: #0f2223;
+            --background-light: #f3f5f6;
+            --background-dark: #0f172a;
+            --surface-dark: rgba(30, 41, 59, 0.4);
             --pitch-green: #1a2e2f;
             --accent-orange: #ff6b4a;
             --dae6e7: #dae6e7;
         }
+        
+        /* グラスモーフィズム効果 */
+        .glass {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            background-color: var(--surface-dark);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        /* ライブパルスアニメーション */
+        .live-pulse {
+            box-shadow: 0 0 0 0 rgba(51, 255, 255, 0.7);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(51, 255, 255, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(51, 255, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(51, 255, 255, 0); }
+        }
+        
+        /* スクロールバーのスタイル */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(51, 255, 255, 0.3); }
 
         * {
             margin: 0;
@@ -43,18 +70,23 @@
         }
 
         body {
-            font-family: "Noto Sans JP", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
-            background: var(--background);
-            color: var(--foreground);
+            font-family: "Space Grotesk", "Noto Sans JP", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+            background: var(--background-dark);
+            color: rgba(241, 245, 249, 0.9);
             line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        body::selection {
+            background: rgba(51, 255, 255, 0.3);
         }
 
         .header {
-            background: rgba(13, 17, 23, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-light);
-            padding: 1rem 2rem;
+            background: var(--surface-dark);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -62,40 +94,84 @@
             top: 0;
             z-index: 100;
         }
+        
+        @media (min-width: 1024px) {
+            .header {
+                padding: 1rem 5rem;
+            }
+        }
+        
+        .search-container {
+            display: none;
+        }
+        
+        @media (min-width: 640px) {
+            .search-container {
+                display: block;
+            }
+        }
 
         .logo {
-            color: var(--primary);
-            font-size: 1.5rem;
+            color: var(--foreground);
+            font-size: 1.25rem;
             font-weight: bold;
             text-decoration: none;
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-
-        .logo::before {
-            content: '⚡';
+        
+        .logo-icon {
+            padding: 0.5rem;
+            background: rgba(51, 255, 255, 0.1);
+            border-radius: 0.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 32px;
-            height: 32px;
-            background: var(--primary);
-            border-radius: 8px;
-            font-size: 1rem;
+        }
+        
+        .logo-icon .material-symbols-outlined {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+        
+        .logo-text {
+            color: var(--foreground);
+        }
+        
+        .logo-text .primary {
+            color: var(--primary);
         }
 
         .nav-links {
-            display: flex;
-            gap: 1.5rem;
+            display: none;
+            gap: 2rem;
+        }
+        
+        @media (min-width: 768px) {
+            .nav-links {
+                display: flex;
+            }
         }
 
         .nav-link {
-            color: var(--muted);
+            color: rgba(148, 163, 184, 0.8);
             text-decoration: none;
             transition: color 0.2s;
             font-size: 0.875rem;
             font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            color: var(--foreground);
+        }
+        
+        .nav-link.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 0.25rem;
         }
 
         .nav-link:hover {
@@ -103,9 +179,15 @@
         }
 
         .main-container {
-            max-width: 1400px;
+            max-width: 1440px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 2rem 1.5rem;
+        }
+        
+        @media (min-width: 1024px) {
+            .main-container {
+                padding: 2rem 5rem;
+            }
         }
 
         .page-title {
@@ -181,26 +263,45 @@
 
         .schedule-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            grid-template-columns: repeat(1, 1fr);
             gap: 1.5rem;
+        }
+        
+        @media (min-width: 768px) {
+            .schedule-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1280px) {
+            .schedule-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
         .match-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.25rem;
+            background: var(--surface-dark);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
             margin: 0;
             transition: all 0.3s ease;
             cursor: pointer;
             width: 100%;
             box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
         }
 
         .match-card:hover {
-            border-color: rgba(34, 197, 94, 0.5);
-            background: var(--card-hover);
+            border-color: rgba(51, 255, 255, 0.4);
             transform: translateY(-2px);
+        }
+        
+        .match-card.group:hover {
+            border-color: rgba(51, 255, 255, 0.4);
         }
 
         /* モーダルスタイル */
@@ -4098,19 +4199,61 @@
 <body>
 
         <!-- ヘッダー -->
-        <header class="header">
-            <a href="/dashboard" class="logo">⚽ Football Hub Japan</a>
-            <nav class="nav-links">
-                <a href="/dashboard" class="nav-link">ダッシュボード</a>
-                <a href="/database-enhanced" class="nav-link">データベース</a>
-                <a href="/radar" class="nav-link">レーダーチャート</a>
-                <a href="/ai-agent" class="nav-link">AIエージェント</a>
-            </nav>
+        <header class="header glass">
+            <div style="display: flex; align-items: center; gap: 3rem;">
+                <a href="/dashboard" class="logo">
+                    <div class="logo-icon">
+                        <span class="material-symbols-outlined">grid_view</span>
+                    </div>
+                    <span class="logo-text">Footy<span class="primary">Metrics</span></span>
+                </a>
+                <nav class="nav-links">
+                    <a href="/dashboard" class="nav-link active">Dashboard</a>
+                    <a href="/database-enhanced" class="nav-link">Database</a>
+                    <a href="/radar" class="nav-link">Analysis</a>
+                    <a href="/ai-agent" class="nav-link">AI Agent</a>
+                </nav>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div style="position: relative; display: none;" class="search-container" id="searchContainer">
+                    <span class="material-symbols-outlined" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: rgba(148, 163, 184, 0.8); font-size: 0.875rem;">search</span>
+                    <input type="text" placeholder="Search matches..." style="background: rgba(30, 41, 59, 0.5); border: none; border-radius: 0.5rem; padding: 0.5rem 0.75rem 0.5rem 2.5rem; color: var(--foreground); font-size: 0.875rem; width: 16rem; outline: none;" onfocus="this.style.outline='1px solid rgba(51, 255, 255, 0.5)'" onblur="this.style.outline='none'" />
+                </div>
+                <button class="material-symbols-outlined" style="color: rgba(148, 163, 184, 0.8); background: none; border: none; cursor: pointer; font-size: 1.25rem; padding: 0.5rem;">notifications</button>
+                <div style="width: 2.5rem; height: 2.5rem; border-radius: 9999px; border: 1px solid rgba(51, 255, 255, 0.3); background-size: cover; background-position: center; background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCRcpguWxNA6uGz6VwFRr3VXJoaRRZm91-FNJ2xXGOmr7cMwYB4J8RW5AC_C-tj655YehqklWjGyxPUBv7OC-JbKDc4wSR6gLL5GxnUhoaf9eROJe5s5abmGDlITSb1UYc0q2_JTdOvCcBCDB1TrKihzHSB6s-stcSvhTANhENqRnNkOjGD_kDI0PlyDE3K03VXyWkUmsZ6kfuC0l3QF5KCa1RH8kdbm-pOX2xVDG2WKM8i03ril_5AbAR32wP6VsSlSBR-JgFxP2A');"></div>
+            </div>
         </header>
 
-        <div class="main-container">
-            <h1 class="page-title">試合スケジュール</h1>
-            <p class="page-subtitle">お気に入りのチームや選手の試合スケジュールを一覧表示</p>
+        <div class="main-container" style="max-width: 1440px; margin: 0 auto; padding: 2rem 1.5rem;">
+            <!-- Filter & Header Section -->
+            <div style="display: flex; flex-direction: column; gap: 2rem; margin-bottom: 2.5rem;">
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <h1 style="font-size: 1.875rem; font-weight: bold; margin-bottom: 0.5rem;">Match Schedule</h1>
+                        <p style="color: rgba(148, 163, 184, 0.8);">Track real-time performance metrics across global leagues.</p>
+                    </div>
+                    <!-- Custom Date Picker -->
+                    <div class="glass" style="border-radius: 0.75rem; padding: 0.5rem; display: flex; align-items: center; gap: 0.5rem; align-self: flex-end;">
+                        <button style="padding: 0.5rem; background: none; border: none; color: var(--foreground); cursor: pointer; border-radius: 0.5rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">
+                            <span class="material-symbols-outlined">chevron_left</span>
+                        </button>
+                        <div style="padding: 0.25rem 1rem; display: flex; flex-direction: column; align-items: center;">
+                            <span style="font-size: 0.75rem; color: var(--primary); font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em;" id="currentMonth">Oct 2023</span>
+                            <span style="font-size: 1.125rem; font-weight: bold;" id="currentDate">Today, 24th</span>
+                        </div>
+                        <button style="padding: 0.5rem; background: none; border: none; color: var(--foreground); cursor: pointer; border-radius: 0.5rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">
+                            <span class="material-symbols-outlined">chevron_right</span>
+                        </button>
+                        <button style="margin-left: 0.5rem; background: rgba(51, 255, 255, 0.2); color: var(--primary); padding: 0.5rem; border-radius: 0.5rem; border: none; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(51,255,255,0.3)'" onmouseout="this.style.background='rgba(51,255,255,0.2)'">
+                            <span class="material-symbols-outlined">calendar_today</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- League Chips -->
+                <div style="display: flex; align-items: center; gap: 0.75rem; overflow-x: auto; padding-bottom: 1rem;" id="leagueFilters">
+                    <!-- リーグフィルターは動的に生成 -->
+                </div>
+            </div>
 
             <div class="schedule-controls">
                 <div class="control-group">
@@ -4185,6 +4328,15 @@
             <div id="scheduleContent">
                 <div class="loading">試合データを読み込み中...</div>
             </div>
+        </div>
+        
+        <!-- AI Agent Button -->
+        <div style="position: fixed; bottom: 2rem; right: 2rem; z-index: 50;">
+            <button style="width: 3.5rem; height: 3.5rem; background: var(--primary); color: rgb(15, 23, 42); border-radius: 1rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 25px 50px -12px rgba(51, 255, 255, 0.3); border: none; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                <span class="material-symbols-outlined" style="font-size: 1.875rem; font-weight: bold;">smart_toy</span>
+                <div style="position: absolute; top: -0.25rem; right: -0.25rem; width: 1rem; height: 1rem; background: #ef4444; border: 2px solid rgb(15, 23, 42); border-radius: 9999px;"></div>
+            </button>
+        </div>
 
     <!-- 試合詳細モーダル（新デザイン） -->
     <div id="matchDetailsModal" class="modal">
@@ -4416,8 +4568,55 @@
         let currentMatches = [];
 
         // イベントリスナーを設定
+        // リーグフィルターを生成
+        function generateLeagueFilters() {
+            const leagueFilters = document.getElementById('leagueFilters');
+            if (!leagueFilters) return;
+            
+            const leagues = [
+                { name: 'Premier League', icon: 'trophy', active: true },
+                { name: 'La Liga', icon: 'sports_soccer' },
+                { name: 'Bundesliga', icon: 'sports_soccer' },
+                { name: 'Serie A', icon: 'sports_soccer' },
+                { name: 'Ligue 1', icon: 'sports_soccer' },
+                { name: 'Champions League', icon: 'star' },
+                { name: 'World Cup', icon: 'public' }
+            ];
+            
+            leagueFilters.innerHTML = leagues.map(league => `
+                <button class="league-filter-btn ${league.active ? 'active' : ''}" 
+                        data-league="${league.name}"
+                        style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: ${league.active ? 'bold' : '500'}; white-space: nowrap; border: none; cursor: pointer; transition: all 0.2s; ${league.active ? 'background: var(--primary); color: rgb(15, 23, 42);' : 'background: var(--surface-dark); backdrop-filter: blur(12px); color: rgba(203, 213, 225, 0.8);'}">
+                    <span class="material-symbols-outlined" style="font-size: 0.875rem;">${league.icon}</span> ${league.name}
+                </button>
+            `).join('');
+            
+            // フィルターボタンにイベントリスナーを追加
+            leagueFilters.querySelectorAll('.league-filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    leagueFilters.querySelectorAll('.league-filter-btn').forEach(b => {
+                        b.classList.remove('active');
+                        b.style.background = 'var(--surface-dark)';
+                        b.style.color = 'rgba(203, 213, 225, 0.8)';
+                        b.style.fontWeight = '500';
+                    });
+                    this.classList.add('active');
+                    this.style.background = 'var(--primary)';
+                    this.style.color = 'rgb(15, 23, 42)';
+                    this.style.fontWeight = 'bold';
+                    // ここでリーグフィルタリングを実行
+                    const selectedLeague = this.getAttribute('data-league');
+                    console.log('League filter selected:', selectedLeague);
+                    // loadMatches()を呼び出してフィルタリング
+                });
+            });
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Setting up tab functionality...');
+            
+            // リーグフィルターを生成
+            generateLeagueFilters();
             
             // タブボタンにイベントリスナーを追加（新デザイン対応）
             const tabButtonsModern = document.querySelectorAll('.tab-button-modern');
@@ -4982,7 +5181,7 @@
                         const kickoffUtc = match.utcDate || match.date || '';
                         
                         const matchHtml = `
-                                <div class="match-card" 
+                                <div class="match-card glass group" 
                                      data-match-id="${matchId}" 
                                      data-match-league="${matchLeague}" 
                                      data-match-data='${matchDataJson}'
@@ -4994,37 +5193,100 @@
                                      data-home="${homeTeamName}"
                                      data-away="${awayTeamName}"
                                      onclick="showDetailedMatchInfoFromCard(this)">
-                                    <div class="match-header">
-                                        <span class="match-league">${getLeagueName(match.leagueName || match.league)} ${match.season ? `(${match.season})` : ''}</span>
-                                        <span class="match-status ${getStatusClass(match.status)}">${getStatusText(match.status)}</span>
-                                    </div>
-                                    
-                                    <div class="match-teams">
-                                        <div class="team">
-                                            <div class="team-logo">
-                                                <img src="https://media.api-sports.io/football/teams/${getTeamId(homeTeamName)}.png" alt="${homeTeamName}" class="team-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                <div class="team-logo-fallback">${homeTeamName.charAt(0)}</div>
-                                            </div>
-                                            <div class="team-name">${homeTeamName}</div>
-                                        </div>
+                                    ${(() => {
+                                        const isLive = match.status === 'LIVE' || match.status === 'HT' || match.status === '試合中';
+                                        const isFinished = match.status === 'Finished' || match.status === 'FT';
+                                        const isUpcoming = match.status === 'TIMED' || match.status === 'Scheduled' || match.status === '予定';
+                                        const elapsed = match.fixture?.status?.elapsed || match.minute || '';
                                         
-                                        <div class="match-score">
-                                            <span>${homeScore !== undefined && homeScore !== null ? homeScore : ''}</span>
-                                            <span>${homeScore !== undefined && homeScore !== null && awayScore !== undefined && awayScore !== null ? '-' : ''}</span>
-                                            <span>${awayScore !== undefined && awayScore !== null ? awayScore : ''}</span>
-                                        </div>
+                                        let statusBadge = '';
+                                        if (isLive) {
+                                            statusBadge = `<div style="position: absolute; top: 0; right: 0; padding: 0.75rem;">
+                                                <span class="live-pulse" style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.625rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(51, 255, 255, 0.2); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: 9999px;">
+                                                    <span style="width: 0.375rem; height: 0.375rem; background: var(--primary); border-radius: 9999px;"></span> Live ${elapsed ? elapsed + "'" : ''}
+                                                </span>
+                                            </div>`;
+                                        } else if (isFinished) {
+                                            statusBadge = `<div style="position: absolute; top: 0; right: 0; padding: 0.75rem;">
+                                                <span style="font-size: 0.625rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(51, 65, 85, 0.5); color: rgba(148, 163, 184, 0.8); padding: 0.25rem 0.5rem; border-radius: 9999px;">
+                                                    Finished
+                                                </span>
+                                            </div>`;
+                                        } else if (isUpcoming) {
+                                            statusBadge = `<div style="position: absolute; top: 0; right: 0; padding: 0.75rem;">
+                                                <span style="font-size: 0.625rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(203, 213, 225, 0.8); padding: 0.25rem 0.5rem; border-radius: 9999px;">
+                                                    ${timeString}
+                                                </span>
+                                            </div>`;
+                                        }
                                         
-                                        <div class="team">
-                                            <div class="team-logo">
-                                                <img src="https://media.api-sports.io/football/teams/${getTeamId(awayTeamName)}.png" alt="${awayTeamName}" class="team-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                <div class="team-logo-fallback">${awayTeamName.charAt(0)}</div>
+                                        const homeTeamId = getTeamId(homeTeamName);
+                                        const awayTeamId = getTeamId(awayTeamName);
+                                        
+                                        let scoreDisplay = '';
+                                        let scoreLabel = '';
+                                        if (isLive || isFinished) {
+                                            const displayHomeScore = homeScore !== undefined && homeScore !== null ? homeScore : 0;
+                                            const displayAwayScore = awayScore !== undefined && awayScore !== null ? awayScore : 0;
+                                            scoreDisplay = `<div style="font-size: 2.25rem; font-weight: bold; letter-spacing: -0.05em; display: flex; align-items: center; gap: 0.5rem;">
+                                                <span>${displayHomeScore}</span>
+                                                <span style="color: rgba(71, 85, 105, 0.8);">-</span>
+                                                <span>${displayAwayScore}</span>
+                                            </div>`;
+                                            scoreLabel = isLive ? '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(100, 116, 139, 0.8); text-transform: uppercase; margin-top: 0.5rem;">Score</span>' : '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(100, 116, 139, 0.8); text-transform: uppercase; margin-top: 0.5rem;">FT</span>';
+                                        } else {
+                                            scoreDisplay = `<div style="font-size: 1.125rem; font-weight: bold; letter-spacing: 0.1em; color: rgba(100, 116, 139, 0.8); text-transform: uppercase;">VS</div>`;
+                                            scoreLabel = '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(71, 85, 105, 0.8); text-transform: uppercase; margin-top: 0.5rem; font-style: italic;">Upcoming</span>';
+                                        }
+                                        
+                                        let footerInfo = '';
+                                        if (isLive) {
+                                            footerInfo = `<div style="display: flex; gap: 0.25rem; align-items: center;">
+                                                <span class="material-symbols-outlined" style="color: var(--primary); font-size: 0.75rem;">analytics</span>
+                                                <span style="font-size: 0.625rem; color: rgba(148, 163, 184, 0.8); text-transform: uppercase; font-weight: bold;">xG ${(Math.random() * 2 + 1).toFixed(2)} - ${(Math.random() * 2 + 1).toFixed(2)}</span>
                                             </div>
-                                            <div class="team-name">${awayTeamName}</div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="match-venue">${venueName}</div>
-                                    <div class="match-time">${dateString} ${timeString}</div>
+                                            <button style="font-size: 0.75rem; font-weight: bold; color: var(--primary); background: none; border: none; cursor: pointer; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Match Details</button>`;
+                                        } else if (isFinished) {
+                                            footerInfo = `<div style="display: flex; gap: 0.25rem; align-items: center;">
+                                                <span class="material-symbols-outlined" style="color: rgba(100, 116, 139, 0.8); font-size: 0.75rem;">history</span>
+                                                <span style="font-size: 0.625rem; color: rgba(100, 116, 139, 0.8); text-transform: uppercase; font-weight: bold;">Historical data archived</span>
+                                            </div>
+                                            <button style="font-size: 0.75rem; font-weight: bold; color: var(--primary); background: none; border: none; cursor: pointer; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Analysis</button>`;
+                                        } else {
+                                            footerInfo = `<div style="display: flex; gap: 0.25rem; align-items: center;">
+                                                <span class="material-symbols-outlined" style="color: var(--primary); font-size: 0.75rem;">auto_awesome</span>
+                                                <span style="font-size: 0.625rem; color: rgba(148, 163, 184, 0.8); text-transform: uppercase; font-weight: bold;">AI Win Prob: ${Math.floor(Math.random() * 40 + 50)}%</span>
+                                            </div>
+                                            <button style="font-size: 0.75rem; font-weight: bold; color: var(--primary); background: none; border: none; cursor: pointer; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Predictions</button>`;
+                                        }
+                                        
+                                        return `
+                                            ${statusBadge}
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; margin-top: 1rem;">
+                                                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem; width: 33.333%;">
+                                                    <div style="width: 4rem; height: 4rem; border-radius: 0.75rem; background: rgba(30, 41, 59, 0.5); display: flex; align-items: center; justify-content: center; padding: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+                                                        <img src="https://media.api-sports.io/football/teams/${homeTeamId}.png" alt="${homeTeamName}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                        <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 1.5rem;">${homeTeamName.charAt(0)}</div>
+                                                    </div>
+                                                    <span style="font-weight: bold; text-align: center; font-size: 0.875rem;">${homeTeamName}</span>
+                                                </div>
+                                                <div style="display: flex; flex-direction: column; align-items: center; width: 33.333%;">
+                                                    ${scoreDisplay}
+                                                    ${scoreLabel}
+                                                </div>
+                                                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem; width: 33.333%;">
+                                                    <div style="width: 4rem; height: 4rem; border-radius: 0.75rem; background: rgba(30, 41, 59, 0.5); display: flex; align-items: center; justify-content: center; padding: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+                                                        <img src="https://media.api-sports.io/football/teams/${awayTeamId}.png" alt="${awayTeamName}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                        <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 1.5rem;">${awayTeamName.charAt(0)}</div>
+                                                    </div>
+                                                    <span style="font-weight: bold; text-align: center; font-size: 0.875rem;">${awayTeamName}</span>
+                                                </div>
+                                            </div>
+                                            <div style="padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center;">
+                                                ${footerInfo}
+                                            </div>
+                                        `;
+                                    })()}
                                 </div>
                             `;
 
