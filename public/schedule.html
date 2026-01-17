@@ -5988,33 +5988,32 @@
                     away
                 });
                 
-                // match.htmlに遷移（API-Football IDを優先、なければFotMob ID）
-                let matchId = '';
+                // API-Football IDが存在する場合はそれを使用（優先）
                 if (apiFootballId && apiFootballId !== 'undefined' && apiFootballId !== 'null' && apiFootballId !== '') {
-                    matchId = apiFootballId;
                     console.log('✅ Using API-Football fixture ID:', apiFootballId);
-                } else if (fotmobId && fotmobId !== 'undefined' && fotmobId !== 'null' && fotmobId !== '') {
-                    matchId = `fotmob_${fotmobId}`;
-                    console.log('⚠️ Using FotMob ID:', fotmobId);
-                }
-                
-                if (matchId) {
-                    // 追加パラメータをURLに含める
-                    const params = new URLSearchParams({
-                        id: matchId,
-                        source: source,
-                        league: leagueKey || '',
-                        home: home || '',
-                        away: away || ''
+                    await showDetailedMatchInfoV2({
+                        source: 'api_football',
+                        fixtureId: apiFootballId,
+                        leagueKey,
+                        kickoffUtc,
+                        home,
+                        away
                     });
-                    window.location.href = `match.html?${params.toString()}`;
                 } else {
-                    console.error('No valid match ID found');
-                    alert('試合IDが見つかりませんでした');
+                    // API-Football IDがない場合は、FotMob IDから解決を試みる
+                    const fotmobId = cardElement.dataset.fotmobId || '';
+                    console.log('⚠️ No API-Football ID found, resolving from FotMob ID:', fotmobId);
+                    await showDetailedMatchInfoV2({
+                        source: 'fotmob',
+                        fotmobId,
+                        leagueKey,
+                        kickoffUtc,
+                        home,
+                        away
+                    });
                 }
             } catch (error) {
                 console.error('Error in showDetailedMatchInfoFromCard:', error);
-                alert(`試合詳細ページへの遷移中にエラーが発生しました: ${error.message}`);
             }
         }
 
