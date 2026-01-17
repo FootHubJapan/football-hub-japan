@@ -43,8 +43,11 @@
         
         /* ProFooty Analytics Styles */
         .pitch-pattern {
-            background-image: repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(255,255,255,0.03) 50px);
-            background-color: #1a2a33;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+            background-size: 44px 44px;
+            background-color: #1a2e24;
         }
         
         .heatmap-gradient-a {
@@ -4580,7 +4583,7 @@
                                     <span class="text-xs bg-team-b/20 text-team-b px-3 py-1 rounded font-bold">4 - 2 - 3 - 1</span>
                     </div>
                 </div>
-                            <div class="relative w-full rounded-2xl border border-white/10 overflow-hidden" id="pitchContainer" style="background: #1a2e24; aspect-ratio: 2 / 3; min-height: 700px; height: 800px;">
+                            <div class="relative w-full rounded-2xl border border-white/10 overflow-hidden pitch-pattern" id="pitchContainer" style="background: #1a2e24; aspect-ratio: 2 / 3; min-height: 700px; height: 800px;">
                                 <!-- Pitch Markings -->
                                 <div class="absolute inset-4 border border-white/10"></div>
                                 <div class="absolute inset-x-4 top-1/2 border-t border-white/30 z-10 shadow-[0_0_15px_rgba(255,255,255,0.05)]"></div>
