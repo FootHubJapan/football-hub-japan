@@ -6992,14 +6992,14 @@
                     <div class="flex justify-between mb-2 items-end">
                         <div class="flex flex-col">
                             <span class="text-xs text-[#9ab0bc] font-bold uppercase tracking-widest">Expected Goals</span>
-                            <span class="text-2xl font-bold text-team-a">${xgHome}</span>
+                            <span class="text-2xl font-bold" style="color: var(--team-a);">${xgHome}</span>
                         </div>
-                        <span class="text-2xl font-bold text-team-b">${xgAway}</span>
+                        <span class="text-2xl font-bold" style="color: var(--team-b);">${xgAway}</span>
                     </div>
-                    <div class="relative h-3 w-full bg-[#27343a] rounded-full flex overflow-hidden group-hover:ring-2 ring-primary/30 transition-all">
-                        <div class="h-full bg-gradient-to-r from-team-a/60 to-team-a" style="width: ${xgHomePercent}%;"></div>
-                        <div class="h-full bg-[#101618] w-0.5"></div>
-                        <div class="h-full bg-gradient-to-l from-team-b/60 to-team-b" style="width: ${xgAwayPercent}%;"></div>
+                    <div class="relative h-3 w-full rounded-full flex overflow-hidden group-hover:ring-2 ring-primary/30 transition-all" style="background-color: #27343a;">
+                        <div class="h-full" style="width: ${xgHomePercent}%; background: linear-gradient(to right, rgba(0, 204, 0, 0.6), var(--team-a));"></div>
+                        <div class="h-full" style="width: 0.125rem; background-color: #101618;"></div>
+                        <div class="h-full" style="width: ${xgAwayPercent}%; background: linear-gradient(to left, rgba(255, 128, 0, 0.6), var(--team-b));"></div>
                     </div>
                 </div>
             `;
@@ -7010,14 +7010,14 @@
                     <div class="flex justify-between mb-2 items-end">
                         <div class="flex flex-col">
                             <span class="text-xs text-[#9ab0bc] font-bold uppercase tracking-widest">Possession</span>
-                            <span class="text-2xl font-bold text-team-a">${possessionHome}%</span>
+                            <span class="text-2xl font-bold" style="color: var(--team-a);">${possessionHome}%</span>
                         </div>
-                        <span class="text-2xl font-bold text-team-b">${possessionAway}%</span>
+                        <span class="text-2xl font-bold" style="color: var(--team-b);">${possessionAway}%</span>
                     </div>
-                    <div class="relative h-3 w-full bg-[#27343a] rounded-full flex overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-team-a/60 to-team-a" style="width: ${possessionHome}%;"></div>
-                        <div class="h-full bg-[#101618] w-0.5"></div>
-                        <div class="h-full bg-gradient-to-l from-team-b/60 to-team-b" style="width: ${possessionAway}%;"></div>
+                    <div class="relative h-3 w-full rounded-full flex overflow-hidden" style="background-color: #27343a;">
+                        <div class="h-full" style="width: ${possessionHome}%; background: linear-gradient(to right, rgba(0, 204, 0, 0.6), var(--team-a));"></div>
+                        <div class="h-full" style="width: 0.125rem; background-color: #101618;"></div>
+                        <div class="h-full" style="width: ${possessionAway}%; background: linear-gradient(to left, rgba(255, 128, 0, 0.6), var(--team-b));"></div>
                     </div>
                 </div>
             `;
@@ -7030,14 +7030,14 @@
                     <div class="flex justify-between mb-2 items-end">
                         <div class="flex flex-col">
                             <span class="text-xs text-[#9ab0bc] font-bold uppercase tracking-widest">Big Chances</span>
-                            <span class="text-2xl font-bold text-team-a">${bigChancesHome}</span>
+                            <span class="text-2xl font-bold" style="color: var(--team-a);">${bigChancesHome}</span>
                         </div>
-                        <span class="text-2xl font-bold text-team-b">${bigChancesAway}</span>
+                        <span class="text-2xl font-bold" style="color: var(--team-b);">${bigChancesAway}</span>
                     </div>
-                    <div class="relative h-3 w-full bg-[#27343a] rounded-full flex overflow-hidden group-hover:ring-2 ring-primary transition-all">
-                        <div class="h-full bg-gradient-to-r from-team-a/60 to-team-a" style="width: ${bigChancesHomePercent}%;"></div>
-                        <div class="h-full bg-[#101618] w-0.5"></div>
-                        <div class="h-full bg-gradient-to-l from-team-b/60 to-team-b" style="width: ${bigChancesAwayPercent}%;"></div>
+                    <div class="relative h-3 w-full rounded-full flex overflow-hidden group-hover:ring-2 ring-primary transition-all" style="background-color: #27343a;">
+                        <div class="h-full" style="width: ${bigChancesHomePercent}%; background: linear-gradient(to right, rgba(0, 204, 0, 0.6), var(--team-a));"></div>
+                        <div class="h-full" style="width: 0.125rem; background-color: #101618;"></div>
+                        <div class="h-full" style="width: ${bigChancesAwayPercent}%; background: linear-gradient(to left, rgba(255, 128, 0, 0.6), var(--team-b));"></div>
                     </div>
                 </div>
             `;
@@ -7050,14 +7050,14 @@
                     <div class="flex justify-between mb-2 items-end">
                         <div class="flex flex-col">
                             <span class="text-xs text-[#9ab0bc] font-bold uppercase tracking-widest">Pass Accuracy</span>
-                            <span class="text-2xl font-bold text-team-a">${passAccuracyHome}%</span>
+                            <span class="text-2xl font-bold" style="color: var(--team-a);">${passAccuracyHome}%</span>
                         </div>
-                        <span class="text-2xl font-bold text-team-b">${passAccuracyAway}%</span>
+                        <span class="text-2xl font-bold" style="color: var(--team-b);">${passAccuracyAway}%</span>
                     </div>
-                    <div class="relative h-3 w-full bg-[#27343a] rounded-full flex overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-team-a/60 to-team-a" style="width: ${passAccuracyHomePercent}%;"></div>
-                        <div class="h-full bg-[#101618] w-0.5"></div>
-                        <div class="h-full bg-gradient-to-l from-team-b/60 to-team-b" style="width: ${passAccuracyAwayPercent}%;"></div>
+                    <div class="relative h-3 w-full rounded-full flex overflow-hidden" style="background-color: #27343a;">
+                        <div class="h-full" style="width: ${passAccuracyHomePercent}%; background: linear-gradient(to right, rgba(0, 204, 0, 0.6), var(--team-a));"></div>
+                        <div class="h-full" style="width: 0.125rem; background-color: #101618;"></div>
+                        <div class="h-full" style="width: ${passAccuracyAwayPercent}%; background: linear-gradient(to left, rgba(255, 128, 0, 0.6), var(--team-b));"></div>
                     </div>
                 </div>
             `;
