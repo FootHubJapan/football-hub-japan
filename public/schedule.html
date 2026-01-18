@@ -12,6 +12,32 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00bdc7",
+                        "dark-pro": "#0f172a",
+                        "slate-900": "#0f172a",
+                        "slate-800": "#1e293b",
+                        "var-blue": "#3b82f6",
+                        "goal-gold": "#fbbf24",
+                        "card-yellow": "#fbbf24",
+                        "card-red": "#ef4444",
+                        "sub-in": "#22c55e",
+                        "sub-out": "#ef4444"
+                    },
+                    fontFamily: {
+                        "sans": ["Inter", "Noto Sans", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
 
     <style>
         :root {
@@ -4720,11 +4746,6 @@
                     </div>
                 </section>
                 <!-- Timeline Tab -->
-                <section data-panel="timeline" class="hidden" style="display: none;">
-                    <div class="events-container" id="eventsContainer">
-                        <!-- イベントデータがここに挿入される -->
-                    </div>
-                </section>
             </div>
             </section>
 
