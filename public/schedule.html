@@ -5,11 +5,9 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>試合スケジュール - Football Hub Japan</title>
-    
     <!-- フォント -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-    
     <!-- 日本語フォントの"豆腐"対策 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +38,6 @@
             --dae6e7: #dae6e7;
             --border-dark: #27343a;
         }
-        
         /* ProFooty Analytics Styles */
         .pitch-pattern {
             background-image: 
@@ -49,15 +46,12 @@
             background-size: 44px 44px;
             background-color: #1a2e24;
         }
-        
         .heatmap-gradient-a {
             background: radial-gradient(circle, rgba(0,204,0,0.4) 0%, transparent 70%);
         }
-        
         .heatmap-gradient-b {
             background: radial-gradient(circle, rgba(255,128,0,0.4) 0%, transparent 70%);
         }
-        
         .player-node-a {
             display: flex;
             flex-direction: column;
@@ -66,7 +60,6 @@
             gap: 0.25rem;
             filter: drop-shadow(0 0 8px rgba(0, 204, 0, 0.4));
         }
-        
         .player-node-b {
             display: flex;
             flex-direction: column;
@@ -75,31 +68,24 @@
             gap: 0.25rem;
             filter: drop-shadow(0 0 8px rgba(255, 128, 0, 0.4));
         }
-        
         .bg-card-dark {
             background-color: var(--card-dark);
         }
-        
         .bg-team-a {
             background-color: var(--team-a);
         }
-        
         .bg-team-b {
             background-color: var(--team-b);
         }
-        
         .text-team-a {
             color: var(--team-a);
         }
-        
         .text-team-b {
             color: var(--team-b);
         }
-        
         .border-dark {
             border-color: var(--border-dark);
         }
-        
         /* グラスモーフィズム効果 */
         .glass {
             backdrop-filter: blur(12px);
@@ -107,35 +93,29 @@
             background-color: var(--surface-dark);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        
         /* ライブパルスアニメーション */
         .live-pulse {
             box-shadow: 0 0 0 0 rgba(51, 255, 255, 0.7);
             animation: pulse 2s infinite;
         }
-        
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(51, 255, 255, 0.4); }
             70% { box-shadow: 0 0 0 10px rgba(51, 255, 255, 0); }
             100% { box-shadow: 0 0 0 0 rgba(51, 255, 255, 0); }
         }
-        
         /* スクロールバーのスタイル */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(51, 255, 255, 0.3); }
-        
         /* Hidden class for view switching */
         .hidden {
             display: none !important;
         }
-        
         /* MatchView scoping */
         #matchView {
             padding: 2rem 1.5rem;
         }
-        
         #scheduleView {
             width: 100%;
         }
@@ -153,7 +133,6 @@
             line-height: 1.6;
             min-height: 100vh;
         }
-        
         body::selection {
             background: rgba(51, 255, 255, 0.3);
         }
@@ -171,17 +150,14 @@
             top: 0;
             z-index: 100;
         }
-        
         @media (min-width: 1024px) {
             .header {
                 padding: 1rem 5rem;
             }
         }
-        
         .search-container {
             display: none;
         }
-        
         @media (min-width: 640px) {
             .search-container {
                 display: block;
@@ -208,16 +184,13 @@
             align-items: center;
             justify-content: center;
         }
-        
         .logo-icon .material-symbols-outlined {
             color: var(--primary);
             font-size: 1.5rem;
         }
-        
         .logo-text {
             color: var(--foreground);
         }
-        
         .logo-text .primary {
             color: var(--primary);
         }
@@ -226,7 +199,6 @@
             display: none;
             gap: 2rem;
         }
-        
         @media (min-width: 768px) {
             .nav-links {
                 display: flex;
@@ -244,7 +216,6 @@
         .nav-link:hover {
             color: var(--foreground);
         }
-        
         .nav-link.active {
             color: var(--primary);
             border-bottom: 2px solid var(--primary);
@@ -260,7 +231,6 @@
             margin: 0 auto;
             padding: 2rem 1.5rem;
         }
-        
         @media (min-width: 1024px) {
             .main-container {
                 padding: 2rem 5rem;
@@ -343,13 +313,11 @@
             grid-template-columns: repeat(1, 1fr);
             gap: 1.5rem;
         }
-        
         @media (min-width: 768px) {
             .schedule-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-        
         @media (min-width: 1280px) {
             .schedule-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -376,7 +344,6 @@
             border-color: rgba(51, 255, 255, 0.4);
             transform: translateY(-2px);
         }
-        
         .match-card.group:hover {
             border-color: rgba(51, 255, 255, 0.4);
         }
@@ -393,7 +360,6 @@
             background-color: rgba(0, 0, 0, 0.85);
             overflow: hidden;
         }
-        
         /* モーダルが開いている時、背景のスクロールを無効化 */
         body.modal-open {
             overflow: hidden !important;
@@ -440,7 +406,6 @@
             background: var(--card);
             color: var(--foreground);
         }
-        
         /* スコアボードヘッダー */
         .scoreboard-header {
             position: relative;
@@ -452,7 +417,6 @@
             margin-bottom: 2rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
-        
         /* Tailwindクラスの代替スタイル */
         .relative { position: relative; }
         .overflow-hidden { overflow: hidden; }
@@ -613,17 +577,14 @@
         .transition-colors { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
         .overflow-hidden { overflow: hidden; }
         .text-right { text-align: right; }
-        
         @media (min-width: 768px) {
             .md\:flex-row { flex-direction: row; }
         }
-        
         @media (min-width: 1024px) {
             .lg\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
             .lg\:col-span-8 { grid-column: span 8 / span 8; }
             .lg\:col-span-4 { grid-column: span 4 / span 4; }
         }
-        
         /* ヒートマップとグラスストライプ */
         .grass-stripes {
             background: repeating-linear-gradient(
@@ -634,19 +595,16 @@
                 #1a3334 20%
             );
         }
-        
         .heatmap-overlay {
             background: radial-gradient(circle at 75% 30%, rgba(255, 107, 74, 0.6) 0%, transparent 20%),
                         radial-gradient(circle at 25% 70%, rgba(0, 189, 199, 0.5) 0%, transparent 25%),
                         radial-gradient(circle at 80% 60%, rgba(255, 107, 74, 0.4) 0%, transparent 15%),
                         radial-gradient(circle at 40% 40%, rgba(0, 189, 199, 0.3) 0%, transparent 30%);
         }
-        
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: .5; }
         }
-        
         .scoreboard-live-badge {
             position: absolute;
             top: 1rem;
@@ -662,28 +620,24 @@
             font-weight: bold;
             animation: pulse 2s infinite;
         }
-        
         .live-dot {
             width: 8px;
             height: 8px;
             background: #f44336;
             border-radius: 50%;
         }
-        
         .scoreboard-content {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 2rem;
         }
-        
         @media (min-width: 768px) {
             .scoreboard-content {
                 flex-direction: row;
                 justify-content: space-between;
             }
         }
-        
         .scoreboard-team {
             display: flex;
             flex-direction: column;
@@ -692,7 +646,6 @@
             flex: 1;
             text-align: center;
         }
-        
         .team-logo-container {
             width: 96px;
             height: 96px;
@@ -704,13 +657,11 @@
             padding: 1rem;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-        
         .team-logo-img {
             width: 100%;
             height: 100%;
             object-fit: contain;
         }
-        
         .team-logo-fallback {
             width: 100%;
             height: 100%;
@@ -719,7 +670,6 @@
             justify-content: center;
             font-size: 2rem;
         }
-        
         .team-name-large {
             font-size: 1.5rem;
             font-weight: bold;
@@ -727,21 +677,18 @@
             letter-spacing: 0.05em;
             margin: 0;
         }
-        
         .team-label {
             font-size: 0.75rem;
             color: var(--muted);
             font-weight: 500;
             margin: 0;
         }
-        
         .scoreboard-center {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 0.5rem;
         }
-        
         .matchday-label {
             font-size: 0.875rem;
             font-weight: bold;
@@ -750,31 +697,26 @@
             text-transform: uppercase;
             margin: 0;
         }
-        
         .score-display-large {
             display: flex;
             align-items: center;
             gap: 2rem;
         }
-        
         .score-number {
             font-size: 3.75rem;
             font-weight: bold;
             font-variant-numeric: tabular-nums;
         }
-        
         .score-separator-group {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        
         .score-separator-large {
             font-size: 1.5rem;
             font-weight: bold;
             color: var(--muted);
         }
-        
         .match-minute {
             margin-top: 0.25rem;
             padding: 0.25rem 0.75rem;
@@ -783,7 +725,6 @@
             font-size: 0.75rem;
             font-weight: bold;
         }
-        
         .venue-info {
             display: flex;
             align-items: center;
@@ -792,11 +733,9 @@
             color: var(--muted);
             margin-top: 0.5rem;
         }
-        
         .material-icon {
             font-size: 1rem;
         }
-        
         /* タブナビゲーション（新デザイン） */
         .tab-navigation-modern {
             display: flex;
@@ -804,7 +743,6 @@
             gap: 2rem;
             margin-bottom: 2rem;
         }
-        
         .tab-button-modern {
             display: flex;
             flex-direction: column;
@@ -820,16 +758,13 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        
         .tab-button-modern:hover {
             color: var(--foreground);
         }
-        
         .tab-button-modern.active {
             border-bottom-color: var(--primary);
             color: var(--primary);
         }
-        
         .tab-label {
             font-size: 0.875rem;
             font-weight: bold;
@@ -837,64 +772,53 @@
             letter-spacing: 0.05em;
             margin: 0;
         }
-        
         /* タブコンテンツ（新デザイン） */
         .tab-content-modern {
             min-height: 400px;
         }
-        
         /* Lineupタブのレイアウト（PC標準サイズ1280px対応） */
         .lineup-container-pc {
             max-width: 1280px;
             margin: 0 auto;
         }
-        
         .substitute-list-fixed {
             width: 280px;
             flex-shrink: 0;
         }
-        
         @media (max-width: 1024px) {
             .substitute-list-fixed {
                 width: 100%;
             }
         }
-        
         .tab-pane-modern {
             display: none;
         }
-        
         .tab-pane-modern.active {
             display: block;
         }
-        
         /* ラインアップコンテンツグリッド */
         .lineup-content-grid {
             display: grid;
             grid-template-columns: 1fr;
             gap: 2rem;
         }
-        
         @media (min-width: 1024px) {
             .lineup-content-grid {
                 grid-template-columns: 2fr 1fr;
             }
         }
-        
         /* タクティカルピッチセクション */
         .tactical-pitch-section {
             display: flex;
             flex-direction: column;
             gap: 1rem;
         }
-        
         .tactical-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 0.5rem;
         }
-        
         .tactical-title {
             font-size: 1.125rem;
             font-weight: bold;
@@ -903,7 +827,6 @@
             gap: 0.5rem;
             margin: 0;
         }
-        
         .formation-badge {
             font-size: 0.75rem;
             font-weight: bold;
@@ -912,7 +835,6 @@
             padding: 0.25rem 0.75rem;
             border-radius: 0.25rem;
         }
-        
         /* ピッチコンテナ */
         .pitch-container {
             position: relative;
@@ -930,13 +852,11 @@
             border: 4px solid rgba(255, 255, 255, 0.05);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
-        
         @media (min-width: 768px) {
             .pitch-container {
                 aspect-ratio: 4 / 3;
             }
         }
-        
         .pitch-pattern {
             background-image: repeating-linear-gradient(
                 90deg,
@@ -946,7 +866,6 @@
                 transparent 10%
             );
         }
-        
         /* ピッチの線 */
         .pitch-lines {
             position: absolute;
@@ -954,7 +873,6 @@
             border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 0.125rem;
         }
-        
         .pitch-center-line {
             position: absolute;
             top: 1rem;
@@ -964,7 +882,6 @@
             width: 2px;
             background: rgba(255, 255, 255, 0.2);
         }
-        
         .pitch-center-circle {
             position: absolute;
             top: 50%;
@@ -975,7 +892,6 @@
             border-radius: 50%;
             border: 2px solid rgba(255, 255, 255, 0.2);
         }
-        
         .pitch-goal-area-top {
             position: absolute;
             top: 1rem;
@@ -986,7 +902,6 @@
             border: 2px solid rgba(255, 255, 255, 0.2);
             border-bottom: none;
         }
-        
         .pitch-goal-area-bottom {
             position: absolute;
             bottom: 1rem;
@@ -997,7 +912,6 @@
             border: 2px solid rgba(255, 255, 255, 0.2);
             border-top: none;
         }
-        
         /* プレイヤーマーカー（新デザイン） */
         .player-marker-modern {
             position: absolute;
@@ -1006,12 +920,10 @@
             transition: all 0.3s;
             z-index: 10;
         }
-        
         .player-marker-modern:hover {
             transform: translate(-50%, -50%) scale(1.1);
             z-index: 20;
         }
-        
         .player-circle {
             width: 32px;
             height: 32px;
@@ -1024,17 +936,14 @@
             border: 2px solid white;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
-        
         .player-circle.home {
             background: var(--primary);
             color: white;
         }
-        
         .player-circle.away {
             background: white;
             color: var(--background);
         }
-        
         .player-name-label {
             position: absolute;
             top: 100%;
@@ -1049,21 +958,18 @@
             padding: 0.125rem 0.25rem;
             border-radius: 0.125rem;
         }
-        
         /* スタメンリスト */
         .lineup-sidebar {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
         }
-        
         .xi-card {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 0.75rem;
             overflow: hidden;
         }
-        
         .xi-card-header {
             padding: 0.75rem 1rem;
             display: flex;
@@ -1071,35 +977,29 @@
             justify-content: space-between;
             border-bottom: 1px solid var(--border);
         }
-        
         .xi-card-header.home-header {
             background: rgba(34, 197, 94, 0.1);
             border-bottom-color: rgba(34, 197, 94, 0.2);
         }
-        
         .xi-card-header.away-header {
             background: rgba(255, 255, 255, 0.05);
         }
-        
         .xi-team-info {
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
-        
         .xi-team-logo {
             width: 20px;
             height: 20px;
             object-fit: contain;
         }
-        
         .xi-team-name {
             font-size: 0.875rem;
             font-weight: bold;
             letter-spacing: 0.05em;
             margin: 0;
         }
-        
         .xi-badge {
             font-size: 10px;
             font-weight: bold;
@@ -1107,24 +1007,20 @@
             border-radius: 0.25rem;
             text-transform: uppercase;
         }
-        
         .xi-badge.home-badge {
             background: var(--primary);
             color: white;
         }
-        
         .xi-badge.away-badge {
             background: var(--muted);
             color: white;
         }
-        
         .xi-player-list {
             padding: 0.5rem;
             display: flex;
             flex-direction: column;
             gap: 0.25rem;
         }
-        
         .xi-player-row {
             display: flex;
             align-items: center;
@@ -1134,21 +1030,17 @@
             transition: background 0.2s;
             cursor: pointer;
         }
-        
         .xi-player-row:hover {
             background: rgba(255, 255, 255, 0.05);
         }
-        
         .xi-player-row.captain {
             border-left: 2px solid var(--primary);
         }
-        
         .xi-player-info {
             display: flex;
             align-items: center;
             gap: 0.75rem;
         }
-        
         .xi-player-number {
             width: 24px;
             font-size: 0.75rem;
@@ -1157,11 +1049,9 @@
             text-align: center;
             flex-shrink: 0;
         }
-        
         .xi-player-number.captain {
             color: var(--primary);
         }
-        
         .xi-player-photo {
             width: 32px;
             height: 32px;
@@ -1173,13 +1063,11 @@
             align-items: center;
             justify-content: center;
         }
-        
         .xi-player-photo-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        
         .xi-player-photo-fallback {
             width: 100%;
             height: 100%;
@@ -1191,18 +1079,15 @@
             font-size: 0.75rem;
             font-weight: bold;
         }
-        
         .xi-player-name {
             font-size: 0.875rem;
             font-weight: 500;
             flex: 1;
             min-width: 0;
         }
-        
         .xi-player-name.captain {
             font-weight: bold;
         }
-        
         .xi-player-position {
             font-size: 10px;
             color: var(--primary);
@@ -1211,45 +1096,37 @@
             border-radius: 0.125rem;
             text-transform: uppercase;
         }
-        
         .xi-player-position.other {
             color: var(--muted);
             border-color: rgba(139, 148, 158, 0.3);
         }
-        
         .xi-player-icon {
             font-size: 1.125rem;
             color: var(--muted);
         }
-        
         .xi-player-icon.goal {
             color: #ff6b4a;
         }
-        
         .xi-player-icon.card {
             color: #ffc107;
         }
-        
         .xi-player-icon.captain {
             font-size: 0.75rem;
             font-weight: bold;
             color: var(--muted);
         }
-        
         /* サブスティテュート */
         .substitutes-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
         }
-        
         .subs-card {
             background: var(--card);
             border: 1px solid var(--border);
             padding: 1rem;
             border-radius: 0.75rem;
         }
-        
         .subs-title {
             font-size: 10px;
             font-weight: bold;
@@ -1258,7 +1135,6 @@
             letter-spacing: 0.05em;
             margin: 0 0 0.75rem 0;
         }
-        
         .subs-list {
             display: flex;
             flex-direction: column;
@@ -1267,7 +1143,6 @@
             padding: 0;
             margin: 0;
         }
-        
         .subs-item {
             font-size: 0.75rem;
             font-weight: 500;
@@ -1275,21 +1150,17 @@
             align-items: center;
             gap: 0.5rem;
         }
-        
         .subs-dot {
             width: 4px;
             height: 4px;
             border-radius: 50%;
         }
-        
         .subs-dot.home {
             background: var(--primary);
         }
-        
         .subs-dot.away {
             background: var(--muted);
         }
-        
         /* マッチ情報サイドバー */
         .match-info-sidebar {
             background: var(--background);
@@ -1297,7 +1168,6 @@
             padding: 1.25rem;
             border-radius: 0.75rem;
         }
-        
         .sidebar-title {
             font-size: 0.75rem;
             font-weight: bold;
@@ -1306,18 +1176,15 @@
             letter-spacing: 0.1em;
             margin: 0 0 1rem 0;
         }
-        
         .highlights-list {
             display: flex;
             flex-direction: column;
             gap: 1rem;
         }
-        
         .highlight-item {
             display: flex;
             gap: 1rem;
         }
-        
         .highlight-minute {
             font-size: 0.75rem;
             font-weight: bold;
@@ -1325,23 +1192,19 @@
             width: 32px;
             flex-shrink: 0;
         }
-        
         .highlight-content {
             flex: 1;
         }
-        
         .highlight-title {
             font-size: 0.875rem;
             font-weight: bold;
             margin: 0 0 0.25rem 0;
         }
-        
         .highlight-detail {
             font-size: 11px;
             color: var(--muted);
             margin: 0;
         }
-        
         .watch-live-button {
             width: 100%;
             margin-top: 1.5rem;
@@ -1359,7 +1222,6 @@
             justify-content: center;
             gap: 0.5rem;
         }
-        
         .watch-live-button:hover {
             background: var(--primary-hover);
         }
@@ -1507,7 +1369,6 @@
             height: 100% !important;
             max-height: 100% !important;
         }
-        
         /* 試合統計タブの強制表示スタイル（最優先） */
         .modal-content .tab-pane#stats[style*="display: block"],
         .modal-content .tab-pane#stats[style*="display: flex"],
@@ -1550,32 +1411,26 @@
             background: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
         }
-        
         /* 試合統計タブのスクロールバー（基本情報と同じスタイル） */
         .stats-scroll-container::-webkit-scrollbar {
             width: 8px;
         }
-        
         .stats-scroll-container::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 4px;
         }
-        
         .stats-scroll-container::-webkit-scrollbar-thumb {
             background: rgba(76, 175, 80, 0.6);
             border-radius: 4px;
         }
-        
         .stats-scroll-container::-webkit-scrollbar-thumb:hover {
             background: rgba(76, 175, 80, 0.8);
         }
-        
         /* Firefox用のスクロールバー */
         .stats-scroll-container {
             scrollbar-width: thin;
             scrollbar-color: rgba(76, 175, 80, 0.6) rgba(255, 255, 255, 0.1);
         }
-        
         /* 試合統計タブ内のコンテンツ */
         .modal-content .tab-pane#stats .possession-section,
         .modal-content .tab-pane#stats .top-stats-section,
@@ -3513,20 +3368,17 @@
             grid-template-columns: 1fr 1fr;
             gap: 30px;
         }
-        
         .team-scorers-assists-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 30px;
         }
-        
         .team-scorers-assists {
             padding: 15px;
             background: rgba(255, 255, 255, 0.03);
             border-radius: 8px;
             border: 1px solid rgba(76, 175, 80, 0.2);
         }
-        
         .team-title {
             color: #4CAF50;
             font-size: 16px;
@@ -3543,7 +3395,6 @@
             margin-bottom: 15px;
             text-align: center;
         }
-        
         .scorers-section h5,
         .assists-section h5 {
             color: white;
@@ -4323,9 +4174,7 @@
             background-position: center;
         }
         .player-badge-number{
-            position: relative;
-            z-index: 2;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            display: none; /* 顔写真上には表示しない */
         }
         .player-badge-photo{
             position: absolute;
@@ -4521,7 +4370,6 @@
             </div>
             </div>
             </section>
-            
             <!-- Match Detail View (initially hidden) -->
             <section id="matchView" class="hidden" style="display: none;">
             <!-- 戻るボタン -->
@@ -4531,7 +4379,6 @@
                     <span>試合一覧に戻る</span>
                 </button>
             </div>
-            
             <!-- Match Hero (Scoreboard) - ProFootball構造 -->
             <section id="matchHero" class="relative w-full h-[320px] flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#16181d] mb-8">
               <!-- glow background -->
@@ -4581,7 +4428,6 @@
                 </div>
               </div>
             </section>
-            
             <!-- タブナビゲーション（新デザイン） -->
             <div id="matchTabs" class="flex border-b border-[#27343a] gap-8 mb-8" style="background-color: #16252d; padding: 0.5rem 1rem; border-radius: 0.5rem 0.5rem 0 0;">
                 <button class="tab-button-modern" data-tab="overview" style="padding: 0.75rem 1.5rem; color: #9ab0bc; font-weight: 600; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em; border-radius: 0.5rem 0.5rem 0 0; transition: all 0.2s; background: transparent; border: none; cursor: pointer;">
@@ -4600,7 +4446,6 @@
                     TIMELINE
                 </button>
             </div>
-            
             <!-- タブコンテンツ -->
             <div class="tab-content-modern px-2">
                 <!-- Overview Tab -->
@@ -4610,7 +4455,6 @@
                         <p class="text-[#9ab0bc]">試合概要情報を読み込み中...</p>
                         </div>
                 </section>
-                
                 <!-- ラインアップタブ（ProFootball構造 - 3カラムレイアウト：左SUB、中央ピッチ、右SUB） -->
                 <section data-panel="lineup" class="tab-pane-modern">
                     <div class="flex justify-center gap-8 px-8 py-12 max-w-[1440px] mx-auto">
@@ -4686,7 +4530,6 @@
                                 FT
                     </div>
                 </div>
-                
                         <!-- RIGHT: Away -->
                         <div class="flex items-center gap-4 justify-end" style="display: flex; align-items: center; gap: 1rem; justify-content: flex-end; min-width: 260px;">
                             <div class="text-right">
@@ -4699,7 +4542,6 @@
                             </div>
                     </div>
                 </div>
-                
                 <!-- Bento Grid Advanced Stats -->
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                         <!-- Left Column: Metrics Visualization -->
@@ -4724,7 +4566,6 @@
                                     <div class="no-data">統計データを読み込み中...</div>
                     </div>
                 </div>
-                
                             <!-- Mini Pitch Event Visualization -->
                             <div class="bg-card-dark border border-dark rounded-xl p-6">
                                 <div class="flex justify-between items-center mb-6">
@@ -4747,7 +4588,6 @@
                                 <p class="mt-4 text-xs text-[#9ab0bc] text-center italic">Hover over specific metrics above to highlight match events on the pitch.</p>
         </div>
     </div>
-                        
                         <!-- Right Column: Spatial Data Sidebar -->
                         <div class="lg:col-span-4 flex flex-col gap-6">
                             <!-- Heatmap Module -->
@@ -4770,7 +4610,6 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <!-- Average Positions -->
                             <div class="bg-card-dark border border-dark rounded-xl p-6">
                                 <h4 class="text-sm font-bold uppercase tracking-widest text-[#9ab0bc] mb-6">Average Positions</h4>
@@ -4782,7 +4621,6 @@
                                     VIEW ALL PLAYER NODES
                                 </button>
                             </div>
-                            
                             <!-- Match Momentum -->
                             <div class="bg-card-dark border border-dark rounded-xl p-6">
                                 <h4 class="text-sm font-bold uppercase tracking-widest text-[#9ab0bc] mb-4">Momentum Flow</h4>
@@ -4810,7 +4648,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <!-- Bottom Stats Bar (Sticky) -->
                     <footer class="sticky bottom-0 w-full bg-[#101618]/90 backdrop-blur-md border-t border-dark px-10 py-4 flex items-center justify-between z-50" id="statsFooter" style="display: none;">
                         <div class="flex gap-10">
@@ -4835,7 +4672,6 @@
                         </div>
                     </footer>
                 </section>
-                
                 <!-- H2H Tab -->
                 <section data-panel="h2h" class="hidden" style="display: none;">
                     <div class="bg-card-dark border border-[#27343a] rounded-xl p-6">
@@ -4843,7 +4679,6 @@
                         <p class="text-[#9ab0bc]">対戦成績を読み込み中...</p>
                     </div>
                 </section>
-                
                 <!-- Timeline Tab -->
                 <section data-panel="timeline" class="hidden" style="display: none;">
                     <div class="events-container" id="eventsContainer">
@@ -4870,7 +4705,6 @@
         function generateLeagueFilters() {
             const leagueFilters = document.getElementById('leagueFilters');
             if (!leagueFilters) return;
-            
             const leagues = [
                 { name: 'Premier League', icon: 'trophy', active: true },
                 { name: 'La Liga', icon: 'sports_soccer' },
@@ -4880,7 +4714,6 @@
                 { name: 'Champions League', icon: 'star' },
                 { name: 'World Cup', icon: 'public' }
             ];
-            
             leagueFilters.innerHTML = leagues.map(league => `
                 <button class="league-filter-btn ${league.active ? 'active' : ''}" 
                         data-league="${league.name}"
@@ -4888,7 +4721,6 @@
                     <span class="material-symbols-outlined" style="font-size: 0.875rem;">${league.icon}</span> ${league.name}
                 </button>
             `).join('');
-            
             // フィルターボタンにイベントリスナーを追加
             leagueFilters.querySelectorAll('.league-filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -4909,7 +4741,6 @@
                 });
             });
         }
-        
         // STATSパネルを#matchView内に移動する関数
         function moveStatsPanelIntoMatchView() {
             const matchView = document.getElementById("matchView");
@@ -4953,13 +4784,10 @@
                 }
             }
         }
-        
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Setting up tab functionality...');
-            
             // リーグフィルターを生成
             generateLeagueFilters();
-            
             // 試合を表示ボタンにイベントリスナーを追加
             const loadMatchesButton = document.getElementById('loadMatchesButton');
             if (loadMatchesButton) {
@@ -4971,66 +4799,52 @@
                     }
                 });
             }
-            
             // タブボタンにイベントリスナーを追加（新デザイン対応）
             const matchView = document.getElementById('matchView');
             const tabButtonsModern = matchView ? matchView.querySelectorAll('.tab-button-modern') : document.querySelectorAll('.tab-button-modern');
             const tabPanesModern = matchView ? matchView.querySelectorAll('.tab-pane-modern') : document.querySelectorAll('.tab-pane-modern');
-            
             console.log('Found modern tab buttons:', tabButtonsModern.length);
             console.log('Found modern tab panes:', tabPanesModern.length);
-            
             // 旧デザインのタブボタンも取得（後方互換性）
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabPanes = document.querySelectorAll('.tab-pane');
-            
             // スクロールイベントの伝播を防ぐ
             const scrollableContainers = document.querySelectorAll('.basic-info.fotmob-style, .stats-scroll-container, .stats-container, .events-container, .lineup-container, .formation-display, .lineup-players.fotmob-grid, .pitch-container');
             scrollableContainers.forEach(container => {
                 container.addEventListener('wheel', function(e) {
                     e.stopPropagation();
                 });
-                
                 container.addEventListener('touchstart', function(e) {
                     e.stopPropagation();
                 });
-                
                 container.addEventListener('touchmove', function(e) {
                     e.stopPropagation();
                 });
             });
-            
             // #matchView内のタブボタンは既にsetActiveTabで処理されているのでスキップ
             // （6126行目で設定済み）
-            
             // 旧デザインのタブボタンにもイベントリスナーを追加（後方互換性）
             tabButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const targetTab = this.getAttribute('data-tab');
                     console.log('Tab clicked:', targetTab);
-                    
                     // アクティブなタブボタンを更新
                     tabButtons.forEach(btn => btn.classList.remove('active'));
                     this.classList.add('active');
-                    
                     // タブペインを更新
                     tabPanes.forEach(pane => {
                         pane.classList.remove('active');
                     });
-                    
                     const targetPane = document.getElementById(targetTab);
                     if (targetPane) {
                         targetPane.classList.add('active');
-                        
                         // スクロール位置をリセット
                         targetPane.scrollTop = 0;
-                        
                         // モーダル全体の寸法を強制制御
                         const modalContent = targetPane.closest('.modal-content');
                         if (modalContent) {
                             modalContent.style.cssText = 'width: 90% !important; max-width: none !important; min-width: 800px !important; overflow: visible !important; position: relative !important;';
                         }
-                        
                         // 強力に表示（CSSの優先度を上書き）
                         // 試合統計タブの場合はスクロールコンテナを設定
                         if (targetTab === 'stats') {
@@ -5043,52 +4857,43 @@
                         } else {
                             targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: hidden !important;';
                         }
-                        
                         // タブペイン内のコンテナも強制表示
                         const containers = targetPane.querySelectorAll('.stats-container, .events-container, .lineup-container');
                         containers.forEach(container => {
                             container.style.cssText = 'display: block !important; min-height: 200px !important; width: 100% !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; overflow: visible !important; position: relative !important; max-height: 60vh !important; overflow-y: auto !important; overflow-x: hidden !important;';
                         });
-                        
                         // 基本情報タブのコンテナも強制設定
                         const basicInfoContainer = targetPane.querySelector('.basic-info.fotmob-style');
                         if (basicInfoContainer) {
                             basicInfoContainer.style.cssText = 'max-height: 60vh !important; overflow-y: auto !important; overflow-x: hidden !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; border: 1px solid rgba(76, 175, 80, 0.3) !important;';
-                            
                             // カスタムスクロールバーを強制適用
                             basicInfoContainer.style.setProperty('--scrollbar-width', '8px', 'important');
                             basicInfoContainer.style.setProperty('--scrollbar-track-color', 'rgba(255, 255, 255, 0.1)', 'important');
                             basicInfoContainer.style.setProperty('--scrollbar-thumb-color', 'rgba(76, 175, 80, 0.6)', 'important');
                         }
-                        
                         // フォーメーション表示も強制設定
                         const formationDisplay = targetPane.querySelector('.formation-display');
                         if (formationDisplay) {
                             formationDisplay.style.cssText = 'margin-top: 20px !important; padding: 20px !important; background: rgba(255, 255, 255, 0.1) !important; border-radius: 10px !important; max-height: 40vh !important; overflow-y: auto !important; overflow-x: hidden !important;';
-                            
                             // カスタムスクロールバーを強制適用
                             formationDisplay.style.setProperty('--scrollbar-width', '8px', 'important');
                             formationDisplay.style.setProperty('--scrollbar-track-color', 'rgba(255, 255, 255, 0.1)', 'important');
                             formationDisplay.style.setProperty('--scrollbar-thumb-color', 'rgba(76, 175, 80, 0.6)', 'important');
                         }
-                        
                         // プレイヤーグリッドも強制設定
                         const lineupGrid = targetPane.querySelector('.lineup-players.fotmob-grid');
                         if (lineupGrid) {
                             lineupGrid.style.cssText = 'display: grid !important; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important; gap: 15px !important; margin-top: 20px !important; max-height: 30vh !important; overflow-y: auto !important; overflow-x: hidden !important;';
-                            
                             // カスタムスクロールバーを強制適用
                             lineupGrid.style.setProperty('--scrollbar-width', '8px', 'important');
                             lineupGrid.style.setProperty('--scrollbar-track-color', 'rgba(255, 255, 255, 0.1)', 'important');
                             lineupGrid.style.setProperty('--scrollbar-thumb-color', 'rgba(76, 175, 80, 0.6)', 'important');
                         }
-                        
                         // 親要素の寸法制限も解除
                         const tabContent = targetPane.closest('.tab-content');
                         if (tabContent) {
                             tabContent.style.cssText = 'min-height: 300px !important; width: 100% !important; height: auto !important; overflow: hidden !important; position: relative !important; display: block !important;';
                         }
-                        
                         // 他のタブペインを強力に非表示
                         tabPanes.forEach(pane => {
                             if (pane !== targetPane) {
@@ -5096,66 +4901,53 @@
                                 pane.classList.remove('active');
                             }
                         });
-                        
                         console.log('Target pane display style after:', targetPane.style.display);
                         console.log('Target pane computed display after:', window.getComputedStyle(targetPane).display);
                         console.log('Target pane offset dimensions after:', targetPane.offsetWidth, 'x', targetPane.offsetHeight);
-                        
                         // 強制リフロー
                         targetPane.offsetHeight;
-                        
                         // さらに強制的に表示
                         setTimeout(() => {
                             // モーダル全体も再度強制
                             if (modalContent) {
                                 modalContent.style.cssText = 'width: 90% !important; max-width: none !important; min-width: 800px !important; overflow: visible !important; position: relative !important;';
                             }
-                            
                             targetPane.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; height: auto !important; width: 100% !important; min-height: 250px !important; position: relative !important; overflow: hidden !important;';
-                            
                             // コンテナも再度強制表示
                             containers.forEach(container => {
                                 container.style.cssText = 'display: block !important; min-height: 200px !important; width: 100% !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; overflow: visible !important; position: relative !important; max-height: 60vh !important; overflow-y: auto !important; overflow-x: hidden !important;';
                             });
-                            
                             // 基本情報タブのコンテナも強制設定
                             const basicInfoContainer = targetPane.querySelector('.basic-info.fotmob-style');
                             if (basicInfoContainer) {
                                 basicInfoContainer.style.cssText = 'max-height: 60vh !important; overflow-y: auto !important; overflow-x: hidden !important; padding: 20px !important; background: rgba(255, 255, 255, 0.05) !important; border-radius: 8px !important; border: 1px solid rgba(76, 175, 80, 0.3) !important;';
-                                
                                 // カスタムスクロールバーを強制適用
                                 basicInfoContainer.style.setProperty('--scrollbar-width', '8px', 'important');
                                 basicInfoContainer.style.setProperty('--scrollbar-track-color', 'rgba(255, 255, 255, 0.1)', 'important');
                                 basicInfoContainer.style.setProperty('--scrollbar-thumb-color', 'rgba(76, 175, 80, 0.6)', 'important');
                             }
-                            
                             // フォーメーション表示も強制設定
                             const formationDisplay = targetPane.querySelector('.formation-display');
                             if (formationDisplay) {
                                 formationDisplay.style.cssText = 'margin-top: 20px !important; padding: 20px !important; background: rgba(255, 255, 255, 0.1) !important; border-radius: 10px !important; max-height: 40vh !important; overflow-y: auto !important; overflow-x: hidden !important;';
-                                
                                 // カスタムスクロールバーを強制適用
                                 formationDisplay.style.setProperty('--scrollbar-width', '8px', 'important');
                                 formationDisplay.style.setProperty('--scrollbar-track-color', 'rgba(255, 255, 255, 0.1)', 'important');
                                 formationDisplay.style.setProperty('--scrollbar-thumb-color', 'rgba(76, 175, 80, 0.6)', 'important');
                             }
-                            
                             // プレイヤーグリッドも強制設定
                             const lineupGrid = targetPane.querySelector('.lineup-players.fotmob-grid');
                             if (lineupGrid) {
                                 lineupGrid.style.cssText = 'display: grid !important; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important; gap: 15px !important; margin-top: 20px !important; max-height: 30vh !important; overflow-y: auto !important; overflow-x: hidden !important;';
-                                
                                 // カスタムスクロールバーを強制適用
                                 lineupGrid.style.setProperty('--scrollbar-width', '8px', 'important');
                                 lineupGrid.style.setProperty('--scrollbar-track-color', 'rgba(255, 255, 255, 0.1)', 'important');
                                 lineupGrid.style.setProperty('--scrollbar-thumb-color', 'rgba(76, 175, 80, 0.6)', 'important');
                             }
-                            
                             // 親要素も再度強制
                             if (tabContent) {
                                 tabContent.style.cssText = 'min-height: 300px !important; width: 100% !important; height: auto !important; overflow: hidden !important; position: relative !important; display: block !important;';
                             }
-                            
                             console.log('Final force display applied');
                             console.log('Final dimensions:', targetPane.offsetWidth, 'x', targetPane.offsetHeight);
                             console.log('Container count:', containers.length);
@@ -5167,7 +4959,6 @@
                     }
                 });
             });
-            
             // モーダル関連のコードは削除（#matchViewに統一）
             // モーダル内のスクロールイベントが背景に伝播しないようにする（#matchView用）
             // matchViewは既に4835行目で宣言されているので、再宣言しない
@@ -5178,7 +4969,6 @@
                     // 試合統計タブがアクティブな場合、スクロールイベントを処理
                     const canScrollUp = statsTab.scrollTop > 0;
                     const canScrollDown = statsTab.scrollTop < (statsTab.scrollHeight - statsTab.clientHeight - 1);
-                    
                     // スクロール可能な範囲内の場合、イベントを止める
                     if ((e.deltaY < 0 && canScrollUp) || (e.deltaY > 0 && canScrollDown)) {
                         e.stopPropagation();
@@ -5195,7 +4985,6 @@
                 }
             }, { passive: false });
             }
-            
             // #matchView内のタッチイベントも処理
             if (matchView) {
                 matchView.addEventListener('touchmove', function(e) {
@@ -5203,7 +4992,6 @@
                     if (statsTab && !statsTab.classList.contains('hidden')) {
                     const canScrollUp = statsTab.scrollTop > 0;
                     const canScrollDown = statsTab.scrollTop < (statsTab.scrollHeight - statsTab.clientHeight - 1);
-                    
                     if (canScrollUp || canScrollDown) {
                         e.stopPropagation();
                     }
@@ -5212,46 +5000,38 @@
                 }
             }, { passive: false });
             }
-            
             // 試合統計タブ内のスクロールイベントを確実に処理
             const statsTab = matchView ? matchView.querySelector('[data-panel="stats"]') : null;
             if (statsTab) {
                 statsTab.addEventListener('wheel', function(e) {
                     e.stopPropagation();
                 }, { passive: false });
-                
                 statsTab.addEventListener('touchmove', function(e) {
                     e.stopPropagation();
                 }, { passive: false });
             }
-            
             // 初期データを読み込み
             loadMatches();
-            
             // リーグ選択の変更を監視
             const leagueSelect = document.getElementById('leagueSelect');
             if (leagueSelect) {
                 leagueSelect.addEventListener('change', loadMatches);
             }
-            
             // シーズン選択の変更を監視
             const seasonSelect = document.getElementById('seasonSelect');
             if (seasonSelect) {
                 seasonSelect.addEventListener('change', loadMatches);
             }
-            
             // 期間選択の変更を監視
             const timeRangeSelect = document.getElementById('timeRangeSelect');
             if (timeRangeSelect) {
                 timeRangeSelect.addEventListener('change', loadMatches);
             }
-            
             // ステータスフィルターの変更を監視
             const statusFilter = document.getElementById('statusFilter');
             if (statusFilter) {
                 statusFilter.addEventListener('change', loadMatches);
             }
-            
             // 検索入力の変更を監視
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {
@@ -5266,10 +5046,8 @@
             const season = document.getElementById('seasonSelect').value;
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const statusFilter = document.getElementById('statusFilter').value;
-            
             console.log('🚀 loadMatches called with:', { league, timeRange, season, searchTerm, statusFilter });
             console.log('🔍 About to call integrated API...');
-            
             const contentDiv = document.getElementById('scheduleContent');
             contentDiv.innerHTML = '<div class="loading">試合データを読み込み中...</div>';
 
@@ -5277,7 +5055,6 @@
                 // 統合されたデータを優先的に使用
                 let response;
                 let dataSource = 'integrated';
-                
                 try {
                     // まず統合データを試す
                     // リーグコードを新しいAPI形式にマッピング（日本語名も対応）
@@ -5303,13 +5080,11 @@
                         'ヨーロッパリーグ': 'europaLeague',
                         'ヨーロッパカンファレンスリーグ': 'conferenceLeague'
                     };
-                    
                     const mappedLeague = leagueMapping[league] || league;
                     const leagueParam = mappedLeague ? `&league=${encodeURIComponent(mappedLeague)}` : '';
                     const statusParam = statusFilter ? `&status=${encodeURIComponent(statusFilter)}` : '';
                     const seasonParam = season ? `&season=${encodeURIComponent(season)}` : '';
                     const timeRangeParam = timeRange ? `&timeRange=${encodeURIComponent(timeRange)}` : '';
-                    
                     console.log('🔄 統合APIを呼び出し中...');
                     console.log('🔍 リーグマッピング:', league, '→', mappedLeague);
                     const integratedUrl = `/api/schedule?season=${season}${leagueParam}${statusParam}${timeRangeParam}`;
@@ -5322,57 +5097,45 @@
                         },
                         signal: AbortSignal.timeout(30000) // 30秒のタイムアウト
                     });
-                
                 if (!response.ok) {
                         throw new Error(`Integrated API error! status: ${response.status}`);
                 }
-                
                 const responseText = await response.text();
                     console.log('✅ 統合API レスポンス取得成功');
                     console.log('レスポンスサイズ:', responseText.length, '文字');
-                
                     data = JSON.parse(responseText);
                     console.log('📊 統合データ解析成功:', data.items?.length || 0, '件のマッチ');
                     console.log('📊 データソース:', data.source);
-                    
                     // 新しいAPI形式に合わせてデータを変換
                     if (data.items) {
                         data.matches = data.items;
                     }
-                    
                 } catch (integratedError) {
                     console.log('⚠️ 統合API失敗:', integratedError.message);
                     console.log('🔍 統合APIエラーの詳細:', integratedError);
-                    
                     // フォールバックデータは使用しない
                     console.log('❌ APIデータが取得できませんでした。データを表示しません。');
                     throw new Error('APIデータの取得に失敗しました');
                 }
-                
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
                   console.log(`Found matches from ${dataSource}:`, data.matches.length);
                   console.log('🔍 最初のマッチのデータ構造:', data.matches[0]);
                     currentMatches = data.matches;
-                  
                   // データソースを更新
                   dataSource = data.dataSource || dataSource;
-                    
                     // データソース情報を表示（新しいAPI形式に対応）
                   const dataSourceInfo = document.createElement('div');
                   dataSourceInfo.className = 'data-source-info';
-                  
                   // サーバーのsourceプロパティを優先使用（フォールバック判定の修正）
                   const actualSource = data.source || 'fallback';
                   const totalCount = data.total || data.matches.length;
                   const limitedCount = data.limited;
-                  
                   console.log('🔍 データソース判定:', { 
                       serverSource: data.source, 
                       actualSource, 
                       matchesCount: data.matches.length,
                       totalCount 
                   });
-                  
                   dataSourceInfo.innerHTML = `
                       <div class="source-badge">
                           <span class="source-icon">${actualSource === 'live' ? '🔗' : actualSource === 'cache' ? '💾' : actualSource === 'api-football' ? '⚽' : actualSource === 'football-data' ? '🌐' : '📁'}</span>
@@ -5389,18 +5152,14 @@
                               `データ - ${data.matches.length}件表示${limitedCount ? ` (全${totalCount}件中)` : ''}`}</span>
                       </div>
                   `;
-                    
                     // フィルタリングを適用
                     const filteredMatches = filterMatches(currentMatches, league, timeRange, searchTerm, statusFilter, season);
-                    
                     console.log(`🔍 フィルタリング結果: ${currentMatches.length} → ${filteredMatches.length}件`);
                     console.log('🔍 フィルタリング条件:', { league, timeRange, searchTerm, statusFilter });
-                    
                     if (filteredMatches.length === 0) {
                         contentDiv.innerHTML = '<div class="no-matches">条件に一致する試合が見つかりませんでした。</div>';
                         return;
                     }
-                    
                     // 試合カードを生成
                     const matchesHtml = filteredMatches.map((match, index) => {
                         // 日付の正規化と表示（Invalid Date対策）
@@ -5409,22 +5168,22 @@
                             const date = new Date(dateStr);
                             return isNaN(date.getTime()) ? null : date;
                         };
-                        
                         // 複数の日付フィールドをチェック
                         const matchDate = parseUtcDate(match.date || match.utcDate || match.matchDate || match.fixture?.date);
                         const timeString = matchDate ? matchDate.toLocaleTimeString('ja-JP', { 
                             hour: '2-digit', 
                             minute: '2-digit' 
-                        }) : '時間未定';
+                        },
+                            timeZone: 'Asia/Tokyo') : '時間未定';
                         const dateString = matchDate ? matchDate.toLocaleDateString('ja-JP', { 
                             month: 'short', 
                             day: 'numeric' 
-                        }) : '日付未定';
+                        },
+                            timeZone: 'Asia/Tokyo') : '日付未定';
 
                         // スコアの表示（統合APIとAPI-Footballの両方に対応）
                         const homeScore = match.score?.fullTime?.home ?? match.homeScore;
                         const awayScore = match.score?.fullTime?.away ?? match.awayScore;
-                        
                         // チーム名の取得（複数のフィールドをチェック）
                         const homeTeamName = typeof match.homeTeam === 'string' ? match.homeTeam : 
                                             match.homeTeam?.name || 
@@ -5436,18 +5195,15 @@
                                             match.awayTeam?.team?.name || 
                                             match.teams?.away?.name || 
                                             'Unknown';
-                        
                         // 会場の正規化（複数のフィールドをチェック）
                         const venueName = match.venue?.name || 
                                          match.venue || 
                                          match.fixture?.venue?.name || 
                                          '会場未定';
-                        
                         // 試合の状態に応じた表示
                         const matchStatus = getMatchStatus(match);
                         let statusDisplay = matchStatus;
                         let scoreDisplay = '';
-                        
                         // 試合中・試合終了の場合は0でも表示する
                         const displayHomeScore = (matchStatus === '終了' || matchStatus === '試合中') 
                             ? (homeScore !== undefined && homeScore !== null ? homeScore : 0)
@@ -5455,7 +5211,6 @@
                         const displayAwayScore = (matchStatus === '終了' || matchStatus === '試合中')
                             ? (awayScore !== undefined && awayScore !== null ? awayScore : 0)
                             : (awayScore !== undefined && awayScore !== null ? awayScore : null);
-                        
                         if (matchStatus === '終了') {
                             scoreDisplay = `<span class="text-white font-bold">${displayHomeScore} - ${displayAwayScore}</span>`;
                         } else if (matchStatus === '試合中') {
@@ -5463,21 +5218,17 @@
                         } else {
                             scoreDisplay = `<span class="text-gray-400">-</span>`;
                         }
-                        
                         // 試合データをJSONエンコードしてdata属性に保存
                         const matchDataJson = JSON.stringify(match).replace(/'/g, "&#39;").replace(/"/g, '&quot;');
                         const matchId = match.id || match.match_id || match.matchId || 'unknown';
                         const matchLeague = match.leagueName || match.league || '';
-                        
                         // データソースの判定（fotmob or api_football）
                         const dataSource = match.source === 'fotmob' || match.source === 'FotMob' ? 'fotmob' : 
                                           (match.fixture?.id ? 'api_football' : 'fotmob');
-                        
                         // API-Football fixture.idの抽出（優先）
                         // match.fixture?.idが存在する場合はそれを使用（API-Football由来）
                         // それ以外で、match.idが数値でAPI-FootballのID形式の場合はそれを使用
                         let apiFootballId = match.fixture?.id || null;
-                        
                         // デバッグ: fixture.idの取得状況を確認
                         if (index === 0) {
                             console.log('🔍 Fixture ID extraction debug:', {
@@ -5488,26 +5239,20 @@
                                 'extracted apiFootballId': apiFootballId
                             });
                         }
-                        
                         if (!apiFootballId && match.id && typeof match.id === 'number' && match.id > 100000) {
                             // API-FootballのIDは通常6桁以上の数値
                             apiFootballId = match.id;
                         }
-                        
                         // 文字列の数値の場合も変換
                         if (!apiFootballId && match.id && typeof match.id === 'string' && /^\d{6,}$/.test(match.id)) {
                             apiFootballId = match.id;
                         }
-                        
                         // FotMob IDの抽出（API-Football IDがない場合のみ）
                         const fotmobId = apiFootballId ? null : (match.fotmobId || match.id || (match.source === 'fotmob' ? matchId : null));
-                        
                         // リーグキーの抽出（CL, PL, PD, SA, BL1, FL1など）
                         const leagueKey = getLeagueKey(match.leagueName || match.league || '');
-                        
                         // キックオフ時刻（UTC）
                         const kickoffUtc = match.utcDate || match.date || '';
-                        
                         const matchHtml = `
                                 <div class="match-card glass group" 
                                      data-match-id="${matchId}" 
@@ -5526,7 +5271,6 @@
                                         const isFinished = match.status === 'Finished' || match.status === 'FT';
                                         const isUpcoming = match.status === 'TIMED' || match.status === 'Scheduled' || match.status === '予定';
                                         const elapsed = match.fixture?.status?.elapsed || match.minute || '';
-                                        
                                         let statusBadge = '';
                                         if (isLive) {
                                             statusBadge = `<div style="position: absolute; top: 0; right: 0; padding: 0.75rem;">
@@ -5547,10 +5291,8 @@
                                                 </span>
                                             </div>`;
                                         }
-                                        
                                         const homeTeamId = getTeamId(homeTeamName);
                                         const awayTeamId = getTeamId(awayTeamName);
-                                        
                                         let scoreDisplay = '';
                                         let scoreLabel = '';
                                         if (isLive || isFinished) {
@@ -5566,7 +5308,6 @@
                                             scoreDisplay = `<div style="font-size: 1.125rem; font-weight: bold; letter-spacing: 0.1em; color: rgba(100, 116, 139, 0.8); text-transform: uppercase;">VS</div>`;
                                             scoreLabel = '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(71, 85, 105, 0.8); text-transform: uppercase; margin-top: 0.5rem; font-style: italic;">Upcoming</span>';
                                         }
-                                        
                                         let footerInfo = '';
                                         if (isLive) {
                                             footerInfo = `<div style="display: flex; gap: 0.25rem; align-items: center;">
@@ -5587,7 +5328,6 @@
                                         </div>
                                             <button style="font-size: 0.75rem; font-weight: bold; color: var(--primary); background: none; border: none; cursor: pointer; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Predictions</button>`;
                                         }
-                                        
                                         return `
                                             ${statusBadge}
                                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; margin-top: 1rem;">
@@ -5627,7 +5367,6 @@
                     console.log('No matches found in response. Response structure:', data);
                     console.log('Data type:', typeof data);
                     console.log('Data keys:', data ? Object.keys(data) : 'null/undefined');
-                    
                     contentDiv.innerHTML = `
                         <div class="no-matches">
                             <p>指定された条件に一致する試合が見つかりませんでした。</p>
@@ -5652,7 +5391,6 @@
         // 試合を表示
         function displayMatches(matches) {
             const contentDiv = document.getElementById('scheduleContent');
-            
             if (matches.length === 0) {
                 contentDiv.innerHTML = '<div class="no-matches">試合が見つかりませんでした。</div>';
                 return;
@@ -5663,20 +5401,20 @@
                 const timeString = matchDate.toLocaleTimeString('ja-JP', { 
                     hour: '2-digit', 
                     minute: '2-digit' 
-                });
+                },
+                            timeZone: 'Asia/Tokyo');
                 const dateString = matchDate.toLocaleDateString('ja-JP', { 
                     month: 'short', 
                     day: 'numeric' 
-                });
+                },
+                            timeZone: 'Asia/Tokyo');
 
                 // スコアの表示を元のnull表示に戻す
                 const homeScore = match.homeScore;
                 const awayScore = match.awayScore;
-                
                 // 試合の状態に応じた表示
                 let statusDisplay = '';
                 let scoreDisplay = '';
-                
                 if (match.status === 'TIMED' || match.status === 'Scheduled') {
                     statusDisplay = '予定';
                     scoreDisplay = `<span class="text-gray-400">null</span>`;
@@ -5694,20 +5432,17 @@
                     statusDisplay = match.status || '未定';
                     scoreDisplay = `<span class="text-gray-400">null</span>`;
                 }
-                
                 const matchHtml = `
                         <div class="match-card">
                             <div class="match-header">
                                 <span class="match-league">${getLeagueName(match.league)}</span>
                                 <span class="match-status ${getStatusClass(match.status)}">${getStatusText(match.status)}</span>
                             </div>
-                            
                             <div class="match-teams">
                                 <div class="team">
                                     <div class="team-logo">🏟️</div>
                                     <div class="team-name">${match.homeTeam}</div>
                                 </div>
-                                
                                 <div class="match-score">
                                     ${(() => {
                                         const isFinishedOrLive = match.status === 'Finished' || match.status === 'FT' || match.status === 'LIVE' || match.status === 'HT';
@@ -5721,13 +5456,11 @@
                                         return `<span>${displayHomeScore}</span><span>${separator}</span><span>${displayAwayScore}</span>`;
                                     })()}
                                 </div>
-                                
                                 <div class="team">
                                     <div class="team-logo">🏟️</div>
                                     <div class="team-name">${match.awayTeam}</div>
                                 </div>
                             </div>
-                            
                             <div class="match-venue">${match.venue}</div>
                             <div class="match-time">${dateString} ${timeString}</div>
                         </div>
@@ -5744,7 +5477,6 @@
         // ステータスクラスを取得
         function getStatusClass(status) {
             console.log('Getting status class for:', status);
-            
             switch (status) {
                 case 'Finished':
                 case 'FT':
@@ -5775,7 +5507,6 @@
         // ステータステキストを取得
         function getStatusText(status) {
             console.log('Getting status text for:', status);
-            
             switch (status) {
                 case 'Finished':
                 case 'FT':
@@ -5806,9 +5537,7 @@
         // リーグキーを取得（CL, PL, PD, SA, BL1, FL1など）
         function getLeagueKey(leagueName) {
             if (!leagueName) return '';
-            
             const normalized = leagueName.toLowerCase().replace(/\s+/g, '');
-            
             // 主要リーグのマッピング
             if (normalized.includes('champions') || normalized.includes('ucl') || normalized === 'cl') return 'CL';
             if (normalized.includes('europa') || normalized.includes('uel') || normalized === 'el') return 'EL';
@@ -5817,14 +5546,12 @@
             if (normalized.includes('serie a') || normalized === 'sa') return 'SA';
             if (normalized.includes('bundesliga') || normalized === 'bl1') return 'BL1';
             if (normalized.includes('ligue 1') || normalized.includes('ligue1') || normalized === 'fl1') return 'FL1';
-            
             return '';
         }
 
         // リーグ名を取得（各種表記に対応）
         function getLeagueName(leagueCode) {
             if (!leagueCode) return '不明';
-            
             // 正規化関数（大文字小文字・アクセント記号・スペースを無視）
             const normalize = (name) => {
                 if (!name) return '';
@@ -5839,9 +5566,7 @@
                     .replace(/\s+/g, '')
                     .trim();
             };
-            
             const normalizedCode = normalize(leagueCode);
-            
             // リーグコードまたは正規化された名前でのマッピング
             const leagueNames = {
                 // コード
@@ -5879,19 +5604,16 @@
                 'uefaconference': 'ヨーロッパカンファレンスリーグ',
                 'uecl': 'ヨーロッパカンファレンスリーグ'
             };
-            
             // まず直接マッチを試す
             if (leagueNames[normalizedCode]) {
                 return leagueNames[normalizedCode];
             }
-            
             // 部分マッチを試す
             for (const [key, value] of Object.entries(leagueNames)) {
                 if (normalizedCode.includes(key) || key.includes(normalizedCode)) {
                     return value;
                 }
             }
-            
             // マッチしない場合は元の値を返す
             return leagueCode;
         }
@@ -5903,42 +5625,33 @@
                 if (!status) return '';
                 return String(status).toLowerCase().trim();
             };
-            
             const status = normalizeStatus(match.status || match.fixture?.status?.short || match.fixture?.status?.long);
-            
             // 終了ステータスのチェック（複数のパターンに対応）
             if (status === 'finished' || status === 'ft' || status === 'full-time' || status === 'complete') {
                 return '終了';
             }
-            
             // 試合中ステータスのチェック
             if (status === 'live' || status === 'inplay' || status === 'in_play' || status === 'in-play' || 
                 status === 'playing' || status === 'first_half' || status === 'second_half' || 
                 status === 'half_time' || status === 'ht') {
                 return '試合中';
             }
-            
             // 予定ステータスのチェック
             if (status === 'scheduled' || status === 'timed' || status === 'ns' || status === 'not_started' || 
                 status === 'not-started' || status === 'upcoming' || status === 'future') {
                 return '予定';
             }
-            
             // ステータスが不明な場合、日時で判定
             const now = new Date();
             const matchDate = match.date ? new Date(match.date) : null;
-            
             if (!matchDate || isNaN(matchDate.getTime())) {
                 // 日時が無効な場合はデフォルトで予定として扱う
                 return '予定';
             }
-            
             const matchTime = matchDate.getTime();
             const currentTime = now.getTime();
-            
             // 試合開始時刻から90分後（試合終了想定時刻）
             const matchEndTime = matchTime + (90 * 60 * 1000);
-            
             if (matchTime <= currentTime && currentTime <= matchEndTime) {
                 return '試合中';
             } else if (matchTime > currentTime) {
@@ -5953,11 +5666,9 @@
         function filterMatches(matches, league, timeRange, searchTerm, statusFilter, season = null) {
             let filteredMatches = matches;
             console.log(`🔍 フィルタリング開始: ${matches.length}件のマッチ`);
-            
             // リーグでフィルタリング
             if (league && league !== '') {
                 const beforeCount = filteredMatches.length;
-                
                 // リーグコードと日本語名のマッピング（大文字小文字・スペース・アクセント記号を考慮）
                 const leagueNameMap = {
                     'PL': ['premier league', 'プレミアリーグ', 'premier', 'premierleague'],
@@ -5974,9 +5685,7 @@
                     'EL': ['europa league', 'ヨーロッパリーグ', 'uefa europa', 'uel', 'europa'],
                     'ECL': ['conference league', 'ヨーロッパカンファレンスリーグ', 'uefa conference', 'uecl', 'conference']
                 };
-                
                 const searchTerms = leagueNameMap[league] || [league.toLowerCase()];
-                
                 filteredMatches = filteredMatches.filter(match => {
                     // リーグ名を正規化（小文字化、アクセント記号除去、スペース除去）
                     const normalizeLeagueName = (name) => {
@@ -5992,9 +5701,7 @@
                             .replace(/\s+/g, ' ')  // 複数のスペースを1つに
                             .trim();
                     };
-                    
                     const matchLeague = normalizeLeagueName(match.leagueName || match.league || '');
-                    
                     // マッピングされた検索語でマッチング
                     for (const term of searchTerms) {
                         const normalizedTerm = normalizeLeagueName(term);
@@ -6006,22 +5713,18 @@
                             return true;
                         }
                     }
-                    
                     // リーグコード直接マッチ（PD, PL など）
                     if (matchLeague === league.toLowerCase()) {
                         return true;
                     }
-                    
                     // 部分一致
                     if (matchLeague.includes(league.toLowerCase()) || league.toLowerCase().includes(matchLeague)) {
                         return true;
                     }
-                    
                     return false;
                 });
                 console.log(`🔍 リーグフィルタリング: ${beforeCount} → ${filteredMatches.length}件 (リーグ: ${league})`);
             }
-            
             // 期間でフィルタリング（過去シーズンの場合はスキップ）
             // シーズンの正規化（2024/25形式を2024に変換）
             let normalizedSeason = season || null;
@@ -6030,22 +5733,18 @@
             } else if (normalizedSeason) {
                 normalizedSeason = parseInt(normalizedSeason);
             }
-            
             // 現在のシーズンを判定（8月以降は新しいシーズン）
             const currentDate = new Date();
             const currentYear = currentDate.getFullYear();
             const currentMonth = currentDate.getMonth() + 1; // 0-indexed
             const currentSeason = currentMonth >= 8 ? currentYear : currentYear - 1;
             const isPastSeason = normalizedSeason && normalizedSeason < currentSeason;
-            
             // 過去シーズンの場合は期間フィルタリングをスキップ
             if (timeRange && timeRange !== '' && !isPastSeason) {
                 const beforeCount = filteredMatches.length;
                 const now = new Date();
                 now.setHours(0, 0, 0, 0);
-                
                 let startDate, endDate;
-                
                 switch (timeRange) {
                     case 'today':
                         startDate = new Date(now);
@@ -6114,7 +5813,6 @@
                         startDate = null;
                         endDate = null;
                 }
-                
                 if (startDate && endDate) {
                     filteredMatches = filteredMatches.filter(match => {
                         const parseUtcDate = (dateStr) => {
@@ -6122,16 +5820,13 @@
                             const date = new Date(dateStr);
                             return isNaN(date.getTime()) ? null : date;
                         };
-                        
                         const matchDate = parseUtcDate(match.date || match.utcDate || match.matchDate || match.fixture?.date);
                         if (!matchDate) return false;
-                        
                         return matchDate >= startDate && matchDate <= endDate;
                     });
                     console.log(`🔍 期間フィルタリング: ${beforeCount} → ${filteredMatches.length}件 (期間: ${timeRange})`);
                 }
             }
-            
             // ステータスでフィルタリング
             if (statusFilter && statusFilter !== '') {
                 filteredMatches = filteredMatches.filter(match => {
@@ -6139,7 +5834,6 @@
                     return matchStatus === statusFilter;
                 });
             }
-            
             // 検索語でフィルタリング
             if (searchTerm && searchTerm.trim() !== '') {
                 filteredMatches = filteredMatches.filter(match => {
@@ -6147,13 +5841,11 @@
                     const homeTeamName = typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name || '';
                     const awayTeamName = typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name || '';
                     const venue = match.venue ? match.venue.toLowerCase() : '';
-                    
                     return homeTeamName.toLowerCase().includes(searchTerm) || 
                            awayTeamName.toLowerCase().includes(searchTerm) || 
                            venue.includes(searchTerm);
                 });
             }
-            
             return filteredMatches;
         }
 
@@ -6168,7 +5860,6 @@
                 const kickoffUtc = cardElement.dataset.kickoffUtc || '';
                 const home = cardElement.dataset.home || '';
                 const away = cardElement.dataset.away || '';
-                
                 console.log('🔍 showDetailedMatchInfoFromCard called:', {
                     source,
                     apiFootballId,
@@ -6178,7 +5869,6 @@
                     home,
                     away
                 });
-                
                 // API-Football IDが存在する場合はそれを使用（優先）
                 let matchId = '';
                 if (apiFootballId && apiFootballId !== 'undefined' && apiFootballId !== 'null' && apiFootballId !== '') {
@@ -6188,7 +5878,6 @@
                     matchId = `fotmob_${fotmobId}`;
                     console.log('⚠️ Using FotMob ID:', fotmobId);
                 }
-                
                 if (matchId) {
                     // クエリパラメータに遷移（ルーティング機能が処理する）
                     const url = new URL(location.href);
@@ -6226,7 +5915,6 @@
                 console.log('getMatchId - returning queryMatch:', queryMatch);
                 return queryMatch;
             }
-            
             // ハッシュから取得（後方互換性）
             const h = location.hash.replace("#", "");
             if (!h) {
@@ -6266,7 +5954,6 @@
         async function route() {
             if (routedOnce) return;
             routedOnce = true;
-            
             console.log('route() called');
             const matchId = getMatchId();
             console.log('route() - matchId:', matchId);
@@ -6278,15 +5965,12 @@
             }
             console.log('route() - matchId found, showing match view');
             showMatchView();
-            
             // ✅ 先にDOM構造を治す
             moveStatsPanelIntoMatchView();
             ensureAllPanels();
-            
             setActiveTab("lineup");
             await loadMatchIntoView(matchId);
             window.scrollTo({ top: 0, behavior: "instant" });
-            
             routedOnce = false; // リセット
         }
 
@@ -6371,7 +6055,6 @@
                     b.style.boxShadow = "none";
                 }
             });
-            
             console.log('Tab switched to:', activeTab);
         }
 
@@ -6394,25 +6077,21 @@
             try {
                 console.log('Loading match into view:', matchId);
                 console.log('MatchView exists:', !!document.getElementById('matchView'));
-                
                 // matchIdからfixtureIdとfotmobIdを判定
                 let fixtureId = '';
                 let fotmobId = '';
                 let source = 'api_football';
-                
                 if (matchId.startsWith('fotmob_')) {
                     fotmobId = matchId.replace('fotmob_', '');
                     source = 'fotmob';
                 } else {
                     fixtureId = matchId;
                 }
-                
                 console.log('Calling showDetailedMatchInfoV2 with:', {
                     source,
                     fixtureId,
                     fotmobId
                 });
-                
                 // 既存のshowDetailedMatchInfoV2関数を使用
                     await showDetailedMatchInfoV2({
                     source,
@@ -6433,15 +6112,12 @@
         async function showDetailedMatchInfoV2({ source, fixtureId, fotmobId, leagueKey, kickoffUtc, home, away }) {
             try {
                 console.log('🔍 showDetailedMatchInfoV2 called:', { source, fixtureId, fotmobId, leagueKey, kickoffUtc, home, away });
-                
                 // matchViewは既に表示されている（route関数で処理済み）
-                
                 // モーダルタイトルを更新
                 const modalTitle = document.getElementById('modalTitle');
                 if (modalTitle) {
                     modalTitle.textContent = `${home} vs ${away}`;
                 }
-                
                 // 新しいAPIエンドポイントを使用（fixtureIdを優先）
                 const params = new URLSearchParams({
                     ...(fixtureId ? { fixtureId } : {}),
@@ -6451,16 +6127,13 @@
                     ...(leagueKey ? { leagueKey } : {}),
                     ...(kickoffUtc ? { kickoffUtc } : {})
                 });
-                
                 console.log('📡 Fetching match details from new endpoint:', params.toString());
-                
                 const response = await fetch(`/api/match/details?${params.toString()}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 });
-                
                 if (!response.ok) {
                     const errorText = await response.text();
                     let errorData;
@@ -6477,7 +6150,6 @@
                     alert(`試合詳細の取得に失敗しました: ${errorData.reason || errorData.message || errorData.error || `HTTP ${response.status}`}`);
                     return;
                 }
-                
                 const result = await response.json();
                 console.log('📊 API response:', result);
                 console.log('🔍 API response structure check:', {
@@ -6488,13 +6160,10 @@
                     hasFixtureId: 'fixtureId' in result,
                     resultKeys: Object.keys(result)
                 });
-                
                 if (result.success && result.data) {
                     console.log('✅ Match details fetched successfully:', result.data);
-                    
                     // result.dataをそのまま使用（既に正しい形式になっている）
                     const matchDetails = result.data;
-                    
                     // デバッグログを追加
                     console.log('🔍 Match details structure:', {
                         hasStats: !!matchDetails.stats,
@@ -6505,12 +6174,10 @@
                         expectedGoals: matchDetails.stats?.expectedGoals,
                         bigChances: matchDetails.stats?.bigChances
                     });
-                    
                     displayDetailedMatchInfo(matchDetails);
                 } else if (result.ok && result.fixtureId) {
                     // 後方互換性のためのフォールバック
                     console.log('✅ Match details fetched successfully (legacy format):', result);
-                    
                     // result.dataが存在する場合はそれを使用（Football-data.org APIのデータを含む）
                     if (result.data) {
                         console.log('✅ Using result.data from legacy format');
@@ -6531,7 +6198,6 @@
                             lineups: result.lineups || null,
                             footballData: result.footballData || null
                         };
-                        
                         displayDetailedMatchInfo(matchDetails);
                     }
                 } else {
@@ -6548,14 +6214,11 @@
         async function showDetailedMatchInfo(matchId, league, matchData = null) {
             try {
                 console.log('🔍 showDetailedMatchInfo called:', { matchId, league, matchData });
-                
                 // IDの安全チェックと実際のfixture IDの抽出
                 let actualMatchId = matchId;
-                
                 // 生成されたID（match_xxx形式）の場合は、matchDataから実際のfixture IDを取得
                 if (matchId && matchId.startsWith('match_')) {
                     console.log('⚠️ Generated match ID detected, trying to extract actual fixture ID from matchData');
-                    
                     if (matchData) {
                         // matchDataから実際のfixture IDを取得
                         actualMatchId = matchData.fixture?.id || 
@@ -6563,14 +6226,12 @@
                                        matchData.id || 
                                        matchData.matchId ||
                                        matchId;
-                        
                         console.log('✅ Extracted actual fixture ID:', actualMatchId);
                     } else {
                         console.warn('⚠️ No matchData available, using generated ID');
                         actualMatchId = matchId;
                     }
                 }
-                
                 // IDの安全チェック
                 if (!actualMatchId || actualMatchId === 'unknown' || actualMatchId === 'undefined') {
                     // matchDataからIDを取得してみる
@@ -6583,17 +6244,13 @@
                         return;
                     }
                 }
-                
                 console.log('Loading detailed match info for ID:', actualMatchId, 'League:', league);
-                
                 const detailedModal = document.getElementById('matchDetailsModal');
                 if (!detailedModal) {
                     console.error('Detailed modal not found');
                     return;
                 }
-                
                 detailedModal.style.display = 'block';
-                
                 // モーダルタイトルを更新
                 const modalTitle = document.getElementById('modalTitle');
                 if (modalTitle) {
@@ -6608,15 +6265,12 @@
                 } else {
                     console.warn('Modal title element not found, continuing without title update');
                 }
-                
                 // 試合詳細データを取得（クリックした試合の情報も送信）
                 const requestUrl = `/api/match/${actualMatchId}/details?league=${encodeURIComponent(league || '')}`;
                 const requestBody = {
                     clickedMatchData: matchData
                 };
-                
                 console.log('📡 Fetching match details:', { url: requestUrl, actualMatchId, matchData });
-                
                 const response = await fetch(requestUrl, {
                     method: 'POST',
                     headers: {
@@ -6625,19 +6279,16 @@
                     body: JSON.stringify(requestBody)
                 });
                 const result = await response.json();
-                
                 if (result.success && result.data) {
                     // 取得したデータのチーム名を確認（クリックした試合と一致しているか）
                     const apiHomeTeam = result.data.homeTeam || result.data.home;
                     const apiAwayTeam = result.data.awayTeam || result.data.away;
                     const clickedHomeTeam = matchData?.homeTeam || matchData?.home || matchData?.teams?.home?.name;
                     const clickedAwayTeam = matchData?.awayTeam || matchData?.away || matchData?.teams?.away?.name;
-                    
                     console.log('🔍 Team name verification:', {
                         api: { apiHomeTeam, apiAwayTeam },
                         clicked: { clickedHomeTeam, clickedAwayTeam }
                     });
-                    
                     // チーム名が一致しない場合は警告を出して、クリックした試合のデータを使用
                     if (clickedHomeTeam && clickedAwayTeam && 
                         (apiHomeTeam !== clickedHomeTeam || apiAwayTeam !== clickedAwayTeam)) {
@@ -6653,32 +6304,25 @@
                         result.data.homeTeam = clickedHomeTeam;
                         result.data.awayTeam = clickedAwayTeam;
                     }
-                    
                     // クリックした試合の情報も保存（フォールバックデータとして使用しないように）
                     result.data.clickedMatchData = matchData;
-                    
                     // モーダルタイトルを試合情報で更新
                     if (modalTitle) {
                         modalTitle.textContent = `${result.data.homeTeam} vs ${result.data.awayTeam}`;
                     }
-                    
                     displayDetailedMatchInfo(result.data);
                 } else {
                     throw new Error('データの取得に失敗しました');
                 }
-                
             } catch (error) {
                 console.error('Error loading detailed match info:', error);
-                
                 // エラーメッセージを表示
                 const modalTitle = document.getElementById('modalTitle');
                 if (modalTitle) {
                     modalTitle.textContent = 'エラーが発生しました';
                 }
-                
                 // エラー内容をコンソールに表示
                 console.error('Error details:', error);
-                
                 // エラーが発生した場合のフォールバック表示
                 const overviewTab = document.getElementById('overview');
                 if (overviewTab) {
@@ -6701,21 +6345,18 @@
         // 得点者リストを生成する関数（チーム別）
         function generateScorersListByTeam(matchData, teamType) {
             console.log('Generating scorers list for team:', teamType);
-            
             if (!matchData.events || matchData.events.length === 0) {
                 return '<div class="no-data">得点者情報がありません</div>';
             }
 
             const homeTeam = matchData.homeTeam || matchData.home;
             const awayTeam = matchData.awayTeam || matchData.away;
-            
             // ゴールイベントをフィルタリング
             const goals = matchData.events.filter(event => {
                 const eventType = event.type || event.eventType || event.name;
                 if (eventType !== 'Goal' && eventType !== 'goal' && eventType !== 'GOAL') {
                     return false;
                 }
-                
                 // チームでフィルタリング
                 let eventTeam = '';
                 if (event.team === 'home' || event.team?.name === homeTeam || event.team === homeTeam) {
@@ -6730,17 +6371,14 @@
                         eventTeam = 'away';
                     }
                 }
-                
                 return eventTeam === teamType;
             });
-            
             if (goals.length === 0) {
                 return '<div class="no-data">得点者情報がありません</div>';
             }
 
             return goals.map(goal => {
                 let playerName, time, detail;
-                
                 // プレイヤー名の取得
                 if (goal.player && typeof goal.player === 'object') {
                     playerName = goal.player.name || goal.player.displayName || goal.player.firstName || '不明';
@@ -6756,7 +6394,6 @@
                 } else {
                     playerName = '不明';
                 }
-                
                 // 時間の取得
                 if (typeof goal.time === 'object' && goal.time.elapsed) {
                     time = goal.time.elapsed;
@@ -6767,9 +6404,7 @@
                 } else {
                     time = '?';
                 }
-                
                 detail = goal.detail || goal.goalType || 'Normal Goal';
-                
                 return `
                     <div class="scorer-item">
                         <div class="scorer-info">
@@ -6783,18 +6418,15 @@
                 `;
             }).join('');
         }
-        
         // アシストリストを生成する関数（チーム別）
         function generateAssistsListByTeam(matchData, teamType) {
             console.log('Generating assists list for team:', teamType);
-            
             if (!matchData.events || matchData.events.length === 0) {
                 return '<div class="no-data">アシスト情報がありません</div>';
             }
 
             const homeTeam = matchData.homeTeam || matchData.home;
             const awayTeam = matchData.awayTeam || matchData.away;
-            
             // アシストイベントをフィルタリング
             const assists = matchData.events.filter(event => {
                 const eventType = event.type || event.eventType || event.name;
@@ -6804,7 +6436,6 @@
                 if (!event.assist && !event.assistPlayer && !event.assistName && !event.assistPlayerName) {
                     return false;
                 }
-                
                 // チームでフィルタリング
                 let eventTeam = '';
                 if (event.team === 'home' || event.team?.name === homeTeam || event.team === homeTeam) {
@@ -6819,17 +6450,14 @@
                         eventTeam = 'away';
                     }
                 }
-                
                 return eventTeam === teamType;
             });
-            
             if (assists.length === 0) {
                 return '<div class="no-data">アシスト情報がありません</div>';
             }
 
             return assists.map(assist => {
                 let assistName, time;
-                
                 // アシスト者名の取得
                 if (assist.assist && typeof assist.assist === 'object') {
                     assistName = assist.assist.name || assist.assist.displayName || assist.assist.firstName || '不明';
@@ -6849,7 +6477,6 @@
                 } else {
                     assistName = '不明';
                 }
-                
                 // 時間の取得
                 if (typeof assist.time === 'object' && assist.time.elapsed) {
                     time = assist.time.elapsed;
@@ -6860,7 +6487,6 @@
                 } else {
                     time = '?';
                 }
-                
                 return `
                     <div class="assist-item">
                         <div class="assist-info">
@@ -6877,7 +6503,6 @@
         // アシストリストを生成する関数
         function generateAssistsList(matchData) {
             console.log('Generating assists list with matchData:', matchData);
-            
             if (!matchData.events || matchData.events.length === 0) {
                 console.log('No events data available for assists');
                 return '<div class="no-data">アシスト情報がありません</div>';
@@ -6889,9 +6514,7 @@
                 return (eventType === 'Goal' || eventType === 'goal' || eventType === 'GOAL') && 
                        (event.assist || event.assistPlayer || event.assistName || event.assistPlayerName);
             });
-            
             console.log('Filtered assists:', assists);
-            
             if (assists.length === 0) {
                 return '<div class="no-data">アシスト情報がありません</div>';
             }
@@ -6899,7 +6522,6 @@
             return assists.map(assist => {
                 // APIから取得したデータの構造に対応
                 let assistName, team, time;
-                
                 // アシスト者名の取得を改善
                 if (assist.assist && typeof assist.assist === 'object') {
                     // オブジェクトの場合（FotMob形式）
@@ -6925,7 +6547,6 @@
                 } else {
                     assistName = '不明';
                 }
-                
                 // チーム名の取得を改善
                 if (assist.team === 'home' || assist.team?.name === matchData.homeTeam || assist.team === matchData.homeTeam) {
                     team = matchData.homeTeam || matchData.home;
@@ -6936,7 +6557,6 @@
                 } else {
                     team = assist.team || '不明';
                 }
-                
                 // 時間の取得を改善
                 if (typeof assist.time === 'object' && assist.time.elapsed) {
                     time = assist.time.elapsed;
@@ -6947,9 +6567,7 @@
                 } else {
                     time = '?';
                 }
-                
                 console.log('Processing assist:', { assistName, team, time, originalAssist: assist });
-                
                 return `
                     <div class="assist-item">
                         <div class="assist-info">
@@ -6979,7 +6597,8 @@
             const formattedTime = matchDate.toLocaleTimeString('ja-JP', {
                 hour: '2-digit',
                 minute: '2-digit'
-            });
+            },
+                            timeZone: 'Asia/Tokyo');
 
             basicInfoContainer.innerHTML = `
                 <div class="basic-info fotmob-style">
@@ -7204,7 +6823,6 @@
                         element: p
                     });
                 });
-                
                 // tab-content-modern内のパネルも確認
                 console.log('tab-content-modern exists:', !!tabContent);
                 if (tabContent) {
@@ -7237,33 +6855,26 @@
                     return; // STATSパネルが見つからない場合は処理を中断
                 }
             }
-            
             console.log('Stats panel found:', {
                 exists: !!statsPanel,
                 hidden: statsPanel.classList.contains('hidden'),
                 display: window.getComputedStyle(statsPanel).display,
                 parent: statsPanel.parentElement?.className
             });
-            
             if (!matchData) {
                 console.error('matchData is null or undefined');
                 return;
             }
-            
             // スコアボードヘッダーを統一更新
             updateScoreboardHeader(matchData);
-            
                 const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
                 const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
-            
             console.log('Home team:', homeTeam, 'Away team:', awayTeam);
-            
             // チーム略称を更新
             const homeTeamAbbrStats = document.getElementById('homeTeamAbbrStats');
             const awayTeamAbbrStats = document.getElementById('awayTeamAbbrStats');
             if (homeTeamAbbrStats) homeTeamAbbrStats.textContent = homeTeam.substring(0, 3).toUpperCase();
             if (awayTeamAbbrStats) awayTeamAbbrStats.textContent = awayTeam.substring(0, 3).toUpperCase();
-            
             // スコアとステータスを更新（既にupdateScoreboardHeaderで更新済み）
             const isFinished = matchData?.status === 'Finished' || matchData?.status === 'FT';
             const isLive = matchData?.status === 'LIVE' || matchData?.status === 'HT';
@@ -7273,9 +6884,7 @@
             const awayScore = matchData?.awayScore !== undefined && matchData?.awayScore !== null 
                 ? matchData.awayScore 
                 : (matchData?.score?.fullTime?.away !== undefined ? matchData.score.fullTime.away : 0);
-            
             console.log('Scores:', { homeScore, awayScore, isFinished, isLive });
-            
             if (matchScoreStats) {
                 matchScoreStats.textContent = `${homeScore} - ${awayScore}`;
                 console.log('Updated matchScoreStats:', `${homeScore} - ${awayScore}`);
@@ -7288,13 +6897,11 @@
             } else {
                 console.error('matchStatusBadgeStats element not found');
             }
-            
             // ヒートマップラベルを更新
             const homeTeamHeatmapLabel = document.getElementById('homeTeamHeatmapLabel');
             const awayTeamHeatmapLabel = document.getElementById('awayTeamHeatmapLabel');
             if (homeTeamHeatmapLabel) homeTeamHeatmapLabel.textContent = homeTeam.substring(0, 3).toUpperCase();
             if (awayTeamHeatmapLabel) awayTeamHeatmapLabel.textContent = awayTeam.substring(0, 3).toUpperCase();
-            
             // 統計比較を更新（statsDataがnullの場合でもデフォルトデータを表示）
             const statsComparison = document.getElementById('statsComparison');
             console.log('statsComparison element:', statsComparison);
@@ -7335,7 +6942,6 @@
                     statsComparison.innerHTML = generateStatsComparisonHTML(statsData, matchData);
                 }
             }
-            
             // Event Distributionピッチを更新
             const eventDistributionPitch = document.getElementById('eventDistributionPitch');
             if (eventDistributionPitch && matchData?.events) {
@@ -7343,10 +6949,8 @@
                 const shots = events.filter(e => e.type === 'Goal' || e.type === 'Shot' || e.type === 'Shot on Target');
                 const fouls = events.filter(e => e.type === 'Card' || e.type === 'Foul');
                 const corners = events.filter(e => e.type === 'Corner');
-                
                 // イベントマーカーを生成（ホームチームは左側、アウェイチームは右側）
                 let eventMarkersHTML = '';
-                
                 // ホームチームのイベント（左側、team-a色）
                 shots.slice(0, 3).forEach((event, index) => {
                     const isGoal = event.type === 'Goal';
@@ -7358,7 +6962,6 @@
                         </div>
                     `;
                 });
-                
                 // アウェイチームのイベント（右側、team-b色）
                 shots.slice(3, 6).forEach((event, index) => {
                     const isGoal = event.type === 'Goal';
@@ -7370,7 +6973,6 @@
                         </div>
                     `;
                 });
-                
                 // ゴールマーカーを追加（スコアから）
                 if (homeScore > 0) {
                     eventMarkersHTML += `
@@ -7379,7 +6981,6 @@
                         </div>
                     `;
                 }
-                
                 if (eventMarkersHTML) {
                     // 既存のピッチマーキングの後にイベントマーカーを追加
                     const existingContent = eventDistributionPitch.innerHTML;
@@ -7388,35 +6989,29 @@
                     }
                 }
             }
-            
             // Sticky Footerを表示
             const statsFooter = document.getElementById('statsFooter');
             if (statsFooter) {
                 statsFooter.style.display = 'flex';
             }
-            
             // キーマッチファクターを更新
             const keyMatchFactors = document.getElementById('keyMatchFactors');
             if (keyMatchFactors) {
                 keyMatchFactors.innerHTML = generateKeyMatchFactorsHTML(statsData, matchData);
             }
         }
-        
         // 統計比較HTMLを生成
         function generateStatsComparisonHTML(statsData, matchData) {
             console.log('generateStatsComparisonHTML called with:', { statsData, matchData });
-            
             // statsDataが空でもデフォルト値を生成
             const homeTeam = matchData?.homeTeam || matchData?.home || 'ホームチーム';
             const awayTeam = matchData?.awayTeam || matchData?.away || 'アウェイチーム';
-            
             // 統計データを取得（デフォルト値付き）
             const possession = statsData?.possession || { home: 50, away: 50 };
             const totalShots = statsData?.shots || statsData?.totalShots || { home: 10, away: 10 };
             const shotsOnTarget = statsData?.shotsOnTarget || { home: 5, away: 5 };
             const cornerKicks = statsData?.cornerKicks || statsData?.corners || { home: 5, away: 5 };
             const fouls = statsData?.fouls || { home: 10, away: 10 };
-            
             // パーセンテージを計算
             const possessionHome = Math.round(possession.home || 50);
             const possessionAway = Math.round(possession.away || 50);
@@ -7432,24 +7027,19 @@
             const foulsHome = fouls.home || 10;
             const foulsAway = fouls.away || 10;
             const foulsSum = foulsHome + foulsAway || 1;
-            
             // xG（Expected Goals）を計算（実際のデータがない場合は推定）
             const xgHome = statsData.xg?.home || (totalShots.home * 0.12).toFixed(2);
             const xgAway = statsData.xg?.away || (totalShots.away * 0.12).toFixed(2);
             const xgSum = parseFloat(xgHome) + parseFloat(xgAway) || 1;
-            
             // Big Chances（実際のデータがない場合は推定）
             const bigChancesHome = statsData.bigChances?.home || Math.floor(totalShots.home * 0.3);
             const bigChancesAway = statsData.bigChances?.away || Math.floor(totalShots.away * 0.3);
             const bigChancesSum = bigChancesHome + bigChancesAway || 1;
-            
             // Pass Accuracy（実際のデータがない場合は推定）
             const passAccuracyHome = statsData.passAccuracy?.home || Math.floor(85 + Math.random() * 10);
             const passAccuracyAway = statsData.passAccuracy?.away || Math.floor(75 + Math.random() * 10);
             const passAccuracySum = passAccuracyHome + passAccuracyAway || 1;
-            
             let html = '';
-            
             // xG (Expected Goals)
             const xgHomePercent = (parseFloat(xgHome) / xgSum) * 100;
             const xgAwayPercent = (parseFloat(xgAway) / xgSum) * 100;
@@ -7469,7 +7059,6 @@
                     </div>
                 </div>
             `;
-            
             // Possession
             html += `
                 <div>
@@ -7487,7 +7076,6 @@
                     </div>
                 </div>
             `;
-            
             // Big Chances
             const bigChancesHomePercent = (bigChancesHome / bigChancesSum) * 100;
             const bigChancesAwayPercent = (bigChancesAway / bigChancesSum) * 100;
@@ -7507,7 +7095,6 @@
                     </div>
                 </div>
             `;
-            
             // Pass Accuracy
             const passAccuracyHomePercent = (passAccuracyHome / passAccuracySum) * 100;
             const passAccuracyAwayPercent = (passAccuracyAway / passAccuracySum) * 100;
@@ -7527,14 +7114,11 @@
                     </div>
                 </div>
             `;
-            
             return html;
         }
-        
         // キーマッチファクターHTMLを生成
         function generateKeyMatchFactorsHTML(statsData, matchData) {
             const factors = [];
-            
             // ポゼッションが高い場合
             if (statsData.possession) {
                 const possessionHome = statsData.possession.home || 50;
@@ -7555,7 +7139,6 @@
                     });
                 }
             }
-            
             // コーナーキックが多い場合
             if (statsData.cornerKicks || statsData.corners) {
                 const cornersHome = statsData.cornerKicks?.home || statsData.corners?.home || 0;
@@ -7576,7 +7159,6 @@
                     });
                 }
             }
-            
             // デフォルトファクター
             if (factors.length === 0) {
                 factors.push({
@@ -7586,7 +7168,6 @@
                     description: 'Detailed match analysis will be available after the match.'
                 });
             }
-            
             return factors.map(factor => `
                 <div class="flex items-start gap-3">
                     <span class="material-symbols-outlined ${factor.iconColor} text-xl">${factor.icon}</span>
@@ -7606,7 +7187,6 @@
             try {
                 console.log('🔄 API-Football詳細統計を取得中:', fixtureId);
                 const response = await fetch(`/api/match/${fixtureId}/statistics`);
-                
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success && data.statistics) {
@@ -7661,7 +7241,6 @@
             // 統計データをマップに変換
             const homeStatsMap = {};
             const awayStatsMap = {};
-            
             homeStats.forEach(stat => {
                 let value = stat.value;
                 if (typeof value === 'string' && value.includes('%')) {
@@ -7673,7 +7252,6 @@
                 }
                 homeStatsMap[stat.type] = value;
             });
-            
             awayStats.forEach(stat => {
                 let value = stat.value;
                 if (typeof value === 'string' && value.includes('%')) {
@@ -7700,19 +7278,16 @@
             statOrder.forEach(statType => {
                 const homeValue = homeStatsMap[statType];
                 const awayValue = awayStatsMap[statType];
-                
                 // 値が存在しない、または両方0の場合はスキップ（ポゼッションは例外）
                 if (statType !== 'Ball Possession' && homeValue === undefined && awayValue === undefined) return;
                 if (statType !== 'Ball Possession' && homeValue === 0 && awayValue === 0) return;
 
                 const label = statMapping[statType] || statType.toUpperCase();
-                
                 // パーセンテージ表示の処理
                 let homeDisplay = homeValue || 0;
                 let awayDisplay = awayValue || 0;
                 let homeNum = typeof homeValue === 'string' ? parseInt(homeValue.replace('%', '')) || 0 : homeValue;
                 let awayNum = typeof awayValue === 'string' ? parseInt(awayValue.replace('%', '')) || 0 : awayValue;
-                
                 if (statType === 'Ball Possession' || statType === 'Passes %') {
                     homeDisplay = typeof homeValue === 'string' ? homeValue : (homeValue || 0) + '%';
                     awayDisplay = typeof awayValue === 'string' ? awayValue : (awayValue || 0) + '%';
@@ -7734,22 +7309,18 @@
             // カテゴリ別統計と同じUIでレンダリング
             renderCategoryStats('detailedStats', detailedStats);
         }
-        
         // Football-data.orgの詳細統計を表示
         function updateDetailedStats(detailedStats, matchData) {
             const statsContainer = document.querySelector('.stats-categories');
             if (!statsContainer) return;
-            
             // 詳細統計セクションを追加
             let detailedStatsHtml = '';
-            
             if (detailedStats.freeKicks || detailedStats.goalKicks || detailedStats.throwIns) {
                 detailedStatsHtml = `
                     <div class="stats-category">
                         <h4 class="category-title">詳細統計</h4>
                         <div id="detailedStats" class="category-stats">
                 `;
-                
                 const detailedStatsList = [];
                 if (detailedStats.freeKicks) {
                     detailedStatsList.push({
@@ -7772,13 +7343,11 @@
                         away: detailedStats.throwIns.away || 0
                     });
                 }
-                
                 detailedStatsHtml += renderCategoryStatsHTML(detailedStatsList);
                 detailedStatsHtml += `
                         </div>
                     </div>
                 `;
-                
                 // ディシプリン統計の後に追加
                 const disciplineCategory = statsContainer.querySelector('#disciplineStats')?.closest('.stats-category');
                 if (disciplineCategory) {
@@ -7788,7 +7357,6 @@
                 }
             }
         }
-        
         // カテゴリ統計のHTMLを生成（詳細統計用）
         function renderCategoryStatsHTML(stats) {
             let html = '';
@@ -7797,7 +7365,6 @@
                 // 中央起点で左右に伸びるバーのため、最大値の50%を基準にする
                 const homePercent = (stat.home / maxValue) * 50; // 最大50%まで右に伸びる
                 const awayPercent = (stat.away / maxValue) * 50; // 最大50%まで左に伸びる
-                
                 html += `
                     <div class="category-stat-item">
                         <span class="category-stat-value home">${stat.home}</span>
@@ -7821,15 +7388,12 @@
             if (!possessionData || (possessionData.home === undefined && possessionData.away === undefined)) {
                             return;
                         }
-                        
             const homePossession = possessionData.home || 50;
             const awayPossession = possessionData.away || 50;
-            
             const homeEl = document.getElementById('possessionHome');
             const awayEl = document.getElementById('possessionAway');
             const homeLabel = document.getElementById('possessionHomeLabel');
             const awayLabel = document.getElementById('possessionAwayLabel');
-            
             if (homeEl) homeEl.style.width = `${homePossession}%`;
             if (awayEl) awayEl.style.width = `${awayPossession}%`;
             if (homeLabel) homeLabel.textContent = `${homePossession}%`;
@@ -7840,14 +7404,12 @@
         function updateTopStats(statsData, matchData) {
             const topStatsContainer = document.getElementById('topStats');
             if (!topStatsContainer) return;
-            
             const topStats = [
                 { key: 'shots', label: 'シュート数', home: statsData.shots?.home || 0, away: statsData.shots?.away || 0 },
                 { key: 'shotsOnTarget', label: '枠内シュート', home: statsData.shotsOnTarget?.home || 0, away: statsData.shotsOnTarget?.away || 0 },
                 { key: 'bigChances', label: 'ビッグチャンス', home: statsData.bigChances?.home || 0, away: statsData.bigChances?.away || 0 },
                 { key: 'expectedGoals', label: '期待値(xG)', home: statsData.expectedGoals?.home || 0, away: statsData.expectedGoals?.away || 0, isDecimal: true }
             ];
-            
             let html = '';
             topStats.forEach(stat => {
                 const homeValue = stat.isDecimal ? parseFloat(stat.home).toFixed(2) : stat.home;
@@ -7855,7 +7417,6 @@
                 const maxValue = Math.max(stat.home, stat.away, 1);
                 const homePercent = (stat.home / maxValue) * 100;
                 const awayPercent = (stat.away / maxValue) * 100;
-                
                 html += `
                     <div class="top-stat-item">
                         <div class="top-stat-label">${stat.label}</div>
@@ -7874,7 +7435,6 @@
                             </div>
                         `;
             });
-            
             topStatsContainer.innerHTML = html;
         }
 
@@ -7889,7 +7449,6 @@
                 { key: 'crosses', label: 'クロス', home: statsData.crosses?.home || 0, away: statsData.crosses?.away || 0 }
             ];
             renderCategoryStats('passesStats', passesStats);
-            
             // 守備統計
             const defenseStats = [
                 { key: 'tackles', label: 'タックル', home: statsData.tackles?.home || 0, away: statsData.tackles?.away || 0 },
@@ -7899,7 +7458,6 @@
                 { key: 'blockedShots', label: 'ブロック', home: statsData.blockedShots?.home || 0, away: statsData.blockedShots?.away || 0 }
             ];
             renderCategoryStats('defenseStats', defenseStats);
-            
             // シュート統計
             const shootingStats = [
                 { key: 'shots', label: '総シュート', home: statsData.shots?.home || 0, away: statsData.shots?.away || 0 },
@@ -7909,7 +7467,6 @@
                 { key: 'hitWoodwork', label: 'ポスト・クロスバー', home: statsData.hitWoodwork?.home || 0, away: statsData.hitWoodwork?.away || 0 }
             ];
             renderCategoryStats('shootingStats', shootingStats);
-            
             // ドリブル統計
             const dribblingStats = [
                 { key: 'dribblesAttempted', label: 'ドリブル試行', home: statsData.dribblesAttempted?.home || 0, away: statsData.dribblesAttempted?.away || 0 },
@@ -7918,7 +7475,6 @@
                 { key: 'aerialDuels', label: '空中戦', home: statsData.aerialDuels?.home || 0, away: statsData.aerialDuels?.away || 0 }
             ];
             renderCategoryStats('dribblingStats', dribblingStats);
-            
             // ディシプリン統計
             const disciplineStats = [
                 { key: 'yellowCards', label: 'イエローカード', home: statsData.yellowCards?.home || 0, away: statsData.yellowCards?.away || 0 },
@@ -7933,7 +7489,6 @@
         function renderCategoryStats(containerId, stats) {
             const container = document.getElementById(containerId);
             if (!container) return;
-            
             let html = '';
             stats.forEach(stat => {
                 // homeDisplayとawayDisplayが定義されている場合はそれを使用
@@ -7941,15 +7496,12 @@
                 const awayValue = stat.awayDisplay !== undefined ? stat.awayDisplay : stat.away;
                 const homeNum = typeof stat.home === 'number' ? stat.home : (typeof stat.homeDisplay === 'number' ? stat.homeDisplay : parseInt(stat.homeDisplay) || 0);
                 const awayNum = typeof stat.away === 'number' ? stat.away : (typeof stat.awayDisplay === 'number' ? stat.awayDisplay : parseInt(stat.awayDisplay) || 0);
-                
                 if (homeNum === 0 && awayNum === 0) return;
-                
                 const maxValue = Math.max(homeNum, awayNum, 1);
                 // 中央起点で左右に伸びるバーのため、最大値の50%を基準にする
                 const homePercent = (homeNum / maxValue) * 50; // 最大50%まで右に伸びる
                 const awayPercent = (awayNum / maxValue) * 50; // 最大50%まで左に伸びる
                 const suffix = stat.suffix || '';
-                
                 html += `
                     <div class="category-stat-item">
                         <span class="category-stat-value home">${homeValue}${suffix}</span>
@@ -7965,7 +7517,6 @@
                     </div>
                 `;
             });
-            
             container.innerHTML = html || '<div class="no-data">データがありません</div>';
         }
 
@@ -7973,22 +7524,17 @@
         async function loadHeadToHead(matchData) {
             const h2hContainer = document.getElementById('h2hStats');
             if (!h2hContainer) return;
-            
             const homeTeam = matchData.homeTeam || matchData.home || '';
             const awayTeam = matchData.awayTeam || matchData.away || '';
-            
             if (!homeTeam || !awayTeam) {
                 h2hContainer.innerHTML = '<div class="no-data">チーム情報が不足しています</div>';
                 return;
             }
-            
             try {
                 const oneYearAgo = new Date();
                 oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
                 const fromDate = oneYearAgo.toISOString().split('T')[0];
-                
                 const response = await fetch(`/api/matches/h2h?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&from=${fromDate}`);
-                
                 if (response.ok) {
                     const h2hData = await response.json();
                     renderHeadToHead(h2hData, homeTeam, awayTeam);
@@ -8005,7 +7551,6 @@
         async function calculateHeadToHeadFromSchedule(homeTeam, awayTeam) {
             const h2hContainer = document.getElementById('h2hStats');
             if (!h2hContainer) return;
-            
             try {
                 const storedMatches = JSON.parse(localStorage.getItem('recentMatches') || '[]');
                 const h2hMatches = storedMatches.filter(match => {
@@ -8014,16 +7559,13 @@
                     return (matchHome === homeTeam && matchAway === awayTeam) ||
                            (matchHome === awayTeam && matchAway === homeTeam);
                 });
-                
                 if (h2hMatches.length > 0) {
                     let homeWins = 0, awayWins = 0, draws = 0;
                     const matchList = [];
-                    
                     h2hMatches.forEach(match => {
                         const isHome = (match.homeTeam || match.home) === homeTeam;
                         const homeScore = match.homeScore || match.score?.home || 0;
                         const awayScore = match.awayScore || match.score?.away || 0;
-                        
                         if (homeScore > awayScore) {
                             if (isHome) homeWins++;
                             else awayWins++;
@@ -8033,7 +7575,6 @@
                         } else {
                             draws++;
                         }
-                        
                         matchList.push({
                             home: isHome ? homeTeam : awayTeam,
                             away: isHome ? awayTeam : homeTeam,
@@ -8042,7 +7583,6 @@
                             date: match.date || match.kickoffUtc || ''
                         });
                     });
-                    
                     renderHeadToHead({
                         homeWins,
                         awayWins,
@@ -8062,12 +7602,10 @@
         function renderHeadToHead(h2hData, homeTeam, awayTeam) {
             const h2hContainer = document.getElementById('h2hStats');
             if (!h2hContainer) return;
-            
             const homeWins = h2hData.homeWins || 0;
             const awayWins = h2hData.awayWins || 0;
             const draws = h2hData.draws || 0;
             const matches = h2hData.matches || [];
-            
             let html = `
                 <div class="h2h-summary">
                     <div class="h2h-stat">
@@ -8084,7 +7622,6 @@
                     </div>
                     </div>
                 `;
-            
             if (matches.length > 0) {
                 html += '<div class="h2h-matches">';
                 matches.forEach(match => {
@@ -8104,7 +7641,6 @@
             } else {
                 html += '<div class="no-data">過去の対戦記録がありません</div>';
             }
-            
             h2hContainer.innerHTML = html;
         }
 
@@ -8114,13 +7650,10 @@
             if (!eventsContainer) return;
 
             console.log('Updating events tab with data:', eventsData);
-            
             if (eventsData && Array.isArray(eventsData) && eventsData.length > 0) {
                 let eventsHTML = '';
-                
                 // イベントを時間順にソート
                 const sortedEvents = eventsData.sort((a, b) => (a.time || 0) - (b.time || 0));
-                
                 sortedEvents.forEach((event, index) => {
                     const time = event.time || 0;
                     const type = event.type || 'Unknown';
@@ -8128,12 +7661,10 @@
                     const team = event.team || '';
                     const player = event.player || '';
                     const assist = event.assist || '';
-                    
                     // イベントタイプに応じたアイコンと色を設定
                     let eventIcon = '';
                     let eventColor = '';
                     let assistDisplay = '';
-                    
                     switch(type.toLowerCase()) {
                         case 'goal':
                             eventIcon = '⚽';
@@ -8168,7 +7699,6 @@
                                 assistDisplay = `<div class="event-assist">アシスト: ${assist}</div>`;
                             }
                     }
-                    
                     eventsHTML += `
                         <div class="event-item" style="border-left-color: ${eventColor}">
                             <div class="event-time">${time}'</div>
@@ -8182,7 +7712,6 @@
                         </div>
                     `;
                 });
-                
                 if (eventsHTML) {
                     eventsContainer.innerHTML = `
                         <div class="events-container">
@@ -8328,7 +7857,6 @@
                 else if (count === 2) roleHint = 'FW2';
                 else if (count === 3) roleHint = 'FW3';
             }
-            
             return window.FHJ.getXSlotsForLine(count, roleHint);
         };
 
@@ -8338,24 +7866,18 @@
                 .split("-")
                 .map(n => parseInt(n, 10))
                 .filter(Boolean);
-            
             const lines = nums.length ? nums : [4, 4, 2]; // fallback
-            
             // 上半分の安全域（絶対に50%を跨がない）
             const yGK = 8;      // away GK は上寄り
             const yStart = 18;  // DF line
             const yEnd = 45;    // FW line（センターライン手前で止める）
-            
             const slots = [];
             slots.push({ role: "GK", x: 50, y: yGK, lineIndex: -1, indexInLine: 0 });
-            
             const laneCount = lines.length;
             const step = laneCount > 1 ? (yEnd - yStart) / (laneCount - 1) : 0;
-            
             for (let i = 0; i < laneCount; i++) {
                 const count = lines[i];
                 const y = yStart + step * i;
-                
                 // フォーメーションから役割を判定してroleHintを生成
                 let roleHint;
                 if (i === 0) {
@@ -8391,10 +7913,8 @@
                         roleHint = "CM3";
                     }
                 }
-                
                 // 役割ベースのパターンでX座標を生成
                 const xs = window.FHJ.getXSlotsForLine(count, roleHint);
-                
                 for (let k = 0; k < xs.length; k++) {
                     slots.push({ 
                         role: `L${i}`, 
@@ -8405,7 +7925,6 @@
                     });
                 }
             }
-            
             return slots;
         };
 
@@ -8436,27 +7955,21 @@
         // 選手をslotに割り当てる関数（安定した順序で）
         window.FHJ.assignPlayersToSlots = function(startXI, slots) {
             if (!startXI?.length || !slots?.length) return [];
-            
             // GKを先に探す（positionがあるなら最優先）
             const players = [...startXI];
-            
             const gkIndex = players.findIndex(p => {
                 const pos = (p?.player?.pos || p?.player?.position || p?.position || "").toUpperCase();
                 return pos.includes("GK") || pos.includes("G");
             });
             const gk = gkIndex >= 0 ? players.splice(gkIndex, 1)[0] : players.shift();
-            
             const slotGK = slots.find(s => s.role === "GK");
             const fieldSlots = slots.filter(s => s.role !== "GK");
-            
             const assigned = [];
             if (slotGK && gk) assigned.push({ player: gk, slot: slotGK });
-            
             // 残りはそのまま順番でslotへ（これが一番安定する）
             for (let i = 0; i < Math.min(players.length, fieldSlots.length); i++) {
                 assigned.push({ player: players[i], slot: fieldSlots[i] });
             }
-            
             return assigned;
         };
 
@@ -8537,7 +8050,6 @@
             // ピッチ内の余白
             const px = 10 + x * 80; // %
             const py = 8 + y * 84;  // %
-            
             const result = { x: px, y: py };
             console.log(`📍 gridToXY: "${gridStr}" (isAway: ${isAway}) ->`, result);
             return result;
@@ -8573,7 +8085,6 @@
                 const homeSubs = matchData?.lineups?.home?.substitutes || 
                                matchData?.footballData?.lineups?.home?.substitutes ||
                                matchData?.fixture?.lineups?.home?.substitutes || [];
-                
                 if (homeSubs.length > 0) {
                     homeSubsEl.innerHTML = homeSubs.map(sub => {
                         const player = sub?.player || sub;
@@ -8586,12 +8097,10 @@
                                         player?.photoUrl || sub?.photoUrl ||
                                         player?.image || sub?.image ||
                                         player?.avatar || sub?.avatar || null;
-                        
                         // 写真URLがない場合、playerIdから生成を試みる（API-Football形式）
                         if (!playerPhoto && playerId) {
                             playerPhoto = `https://media.api-sports.io/football/players/${playerId}.png`;
                         }
-                        
                         const photoStyle = playerPhoto 
                             ? `background-image: url('${playerPhoto}'); background-size: cover; background-position: center; background-color: rgba(26,134,240,0.3);`
                             : `background-color: #1A86F0;`;
@@ -8618,7 +8127,6 @@
                 const awaySubs = matchData?.lineups?.away?.substitutes || 
                                matchData?.footballData?.lineups?.away?.substitutes ||
                                matchData?.fixture?.lineups?.away?.substitutes || [];
-                
                 if (awaySubs.length > 0) {
                     awaySubsEl.innerHTML = awaySubs.map(sub => {
                         const player = sub?.player || sub;
@@ -8631,12 +8139,10 @@
                                         player?.photoUrl || sub?.photoUrl ||
                                         player?.image || sub?.image ||
                                         player?.avatar || sub?.avatar || null;
-                        
                         // 写真URLがない場合、playerIdから生成を試みる（API-Football形式）
                         if (!playerPhoto && playerId) {
                             playerPhoto = `https://media.api-sports.io/football/players/${playerId}.png`;
                         }
-                        
                         const photoStyle = playerPhoto 
                             ? `background-image: url('${playerPhoto}'); background-size: cover; background-position: center; background-color: rgba(48,212,79,0.3);`
                             : `background-color: #30D44F;`;
@@ -8661,7 +8167,6 @@
 
         window.FHJ.renderPitch = function(matchData){
             console.log('🎯 renderPitch called with matchData:', matchData);
-            
             // pitchContainerの高さを確実に設定
             const pitchContainer = document.getElementById("pitchContainer");
             if(!pitchContainer) {
@@ -8697,7 +8202,6 @@
 
             const homeTeamId = matchData?.teams?.home?.id;
             const awayTeamId = matchData?.teams?.away?.id;
-            
             const homeLU = lineups.find(l => l?.team?.id === homeTeamId) || 
                           (matchData?.lineups?.home ? { ...matchData.lineups.home, team: matchData.teams?.home } : null) ||
                           lineups[0];
@@ -8726,7 +8230,6 @@
             const awayTeamName = matchData?.teams?.away?.name || matchData?.awayTeam || 'AWAY';
             const homeFirstPlayerName = homeXI?.[0]?.player?.name || homeXI?.[0]?.name || 'Unknown';
             const awayFirstPlayerName = awayXI?.[0]?.player?.name || awayXI?.[0]?.name || 'Unknown';
-            
             console.log('🏠 HOME team:', homeTeamName, 'XI[0]:', homeFirstPlayerName);
             console.log('✈️ AWAY team:', awayTeamName, 'XI[0]:', awayFirstPlayerName);
 
@@ -8751,7 +8254,6 @@
             // Awayは上半分（5-45%）、Homeは下半分（55-95%）
             const topSlots = window.FHJ.generateTopHalfSlots(awayForm);
             const bottomSlots = window.FHJ.generateBottomHalfSlotsFromTop(topSlots);
-            
             // AwayはtopSlots、HomeはbottomSlotsを使う（絶対混ざらない）
             const awaySlots = topSlots;
             const homeSlots = bottomSlots;
@@ -8765,7 +8267,6 @@
             const homeAssigned = window.FHJ.assignPlayersToSlots ? 
                 window.FHJ.assignPlayersToSlots(normalizedHomeXI, homeSlots) : 
                 normalizedHomeXI.slice(0, 11).map((p, idx) => ({ player: p, slot: homeSlots[idx] || { x: 50, y: 92 } }));
-            
             const awayAssigned = window.FHJ.assignPlayersToSlots ? 
                 window.FHJ.assignPlayersToSlots(normalizedAwayXI, awaySlots) : 
                 normalizedAwayXI.slice(0, 11).map((p, idx) => ({ player: p, slot: awaySlots[idx] || { x: 50, y: 8 } }));
@@ -8782,13 +8283,11 @@
                 const playerNumber = player?.number || p?.number || '';
                 const rating = player?.rating || p?.rating || null;
                 const playerId = player?.id || p?.id || null;
-                
                 // 写真URLを取得（複数のデータ構造に対応）
                 let photoUrl = player?.photo || p?.photo || 
                               player?.photoUrl || p?.photoUrl ||
                               player?.image || p?.image ||
                               player?.avatar || p?.avatar || null;
-                
                 // デバッグログ（最初の選手のみ）
                 if (awayNodesCount === 0) {
                     console.log('📸 Photo debug (Away):', {
@@ -8801,24 +8300,22 @@
                         pKeys: Object.keys(p || {})
                     });
                 }
-                
                 // 写真URLがない場合、playerIdから生成を試みる（API-Football形式）
                 if (!photoUrl && playerId) {
                     // API-Footballの写真URL形式: https://media.api-sports.io/football/players/{id}.png
                     photoUrl = `https://media.api-sports.io/football/players/${playerId}.png`;
                 }
-                
                 const badgeStyle = photoUrl 
                     ? `background-image: url('${photoUrl}'); background-color: rgba(48,212,79,0.3);`
                     : `background: rgba(48,212,79,0.9);`;
-                
                 nodesHtml.push(`
                     <div class="player-node is-away" style="left:${slot.x}%; top:${slot.y}%;">
                         <div class="player-badge" style="${badgeStyle} box-shadow:0 0 14px rgba(48,212,79,0.45);">
                             ${photoUrl ? `<img src="${photoUrl}" alt="${fullName}" class="player-badge-photo" onerror="this.style.display='none'; this.parentElement.style.background='rgba(48,212,79,0.9)';" />` : ''}
-                            <span class="player-badge-number">${playerNumber}</span>
-                        </div>
+                            // 背番号はplayer-labelに移動
+                                                    </div>
                         <div class="player-label name-up" title="${fullName}">
+                            ${playerNumber ? `<span class="player-label-number">${playerNumber}</span>` : \'\'}
                             ${shortName}
                             ${rating ? `<span style="margin-left: 4px; font-size: 9px; opacity: 0.8;">${rating}</span>` : ''}
                         </div>
@@ -8835,13 +8332,11 @@
                 const playerNumber = player?.number || p?.number || '';
                 const rating = player?.rating || p?.rating || null;
                 const playerId = player?.id || p?.id || null;
-                
                 // 写真URLを取得（複数のデータ構造に対応）
                 let photoUrl = player?.photo || p?.photo || 
                               player?.photoUrl || p?.photoUrl ||
                               player?.image || p?.image ||
                               player?.avatar || p?.avatar || null;
-                
                 // デバッグログ（最初の選手のみ）
                 if (homeNodesCount === 0) {
                     console.log('📸 Photo debug (Home):', {
@@ -8854,24 +8349,21 @@
                         pKeys: Object.keys(p || {})
                     });
                 }
-                
                 // 写真URLがない場合、playerIdから生成を試みる（API-Football形式）
                 if (!photoUrl && playerId) {
                     // API-Footballの写真URL形式: https://media.api-sports.io/football/players/{id}.png
                     photoUrl = `https://media.api-sports.io/football/players/${playerId}.png`;
                 }
-                
                 const badgeStyle = photoUrl 
                     ? `background-image: url('${photoUrl}'); background-color: rgba(26,134,240,0.3);`
                     : `background: rgba(26,134,240,0.9);`;
-                
                 nodesHtml.push(`
                     <div class="player-node is-home" style="left:${slot.x}%; top:${slot.y}%;">
                         <div class="player-badge" style="${badgeStyle} box-shadow:0 0 14px rgba(26,134,240,0.45);">
                             ${photoUrl ? `<img src="${photoUrl}" alt="${fullName}" class="player-badge-photo" onerror="this.style.display='none'; this.parentElement.style.background='rgba(26,134,240,0.9)';" />` : ''}
-                            <span class="player-badge-number">${playerNumber}</span>
                         </div>
                         <div class="player-label" title="${fullName}">
+                            ${playerNumber ? `<span class="player-label-number">${playerNumber}</span>` : \'\'}
                             ${shortName}
                             ${rating ? `<span style="margin-left: 4px; font-size: 9px; opacity: 0.8;">${rating}</span>` : ''}
                         </div>
@@ -8903,7 +8395,6 @@
 
             // 既存の内容をクリアしてから新しい内容を設定（重複を防ぐ）
             playersContainer.innerHTML = '';
-            
             // プレイヤーノードを追加
             const htmlToSet = `
                 ${fallback}
@@ -8911,7 +8402,6 @@
             `;
             console.log('📝 Setting playersContainer.innerHTML, length:', htmlToSet.length);
             playersContainer.innerHTML = htmlToSet;
-            
             // 最終確認：children数が22（11+11）になっているか確認
             const finalCount = playersContainer.children.length;
             console.log(`✅ playersContainer.innerHTML set, children count: ${finalCount} (expected: 22)`);
@@ -8925,13 +8415,11 @@
                     window.FHJ.resolveLabelCollisions("#playersContainer");
                 }
             });
-                
                 // 最初のプレイヤーノードのスタイルを確認
                 setTimeout(() => {
                     const firstPlayerNode = playersContainer.querySelector('.player-node');
                     const containerStyle = window.getComputedStyle(playersContainer);
                     const pitchStyle = playersContainer.parentElement ? window.getComputedStyle(playersContainer.parentElement) : null;
-                    
                     const containerInfo = {
                         display: containerStyle.display,
                         position: containerStyle.position,
@@ -8944,7 +8432,6 @@
                         bottom: containerStyle.bottom
                     };
                     console.log('🔍 Container styles:', JSON.stringify(containerInfo, null, 2));
-                    
                     if (pitchStyle) {
                         const pitchInfo = {
                             display: pitchStyle.display,
@@ -8955,7 +8442,6 @@
                         };
                         console.log('🔍 Pitch container styles:', JSON.stringify(pitchInfo, null, 2));
                     }
-                    
                     if (firstPlayerNode) {
                         const computedStyle = window.getComputedStyle(firstPlayerNode);
                         const nodeInfo = {
@@ -8973,7 +8459,6 @@
                             offsetParent: firstPlayerNode.offsetParent?.id
                         };
                         console.log('🎯 First player node styles:', JSON.stringify(nodeInfo, null, 2));
-                        
                         // 実際の位置を確認
                         const rect = firstPlayerNode.getBoundingClientRect();
                         const rectInfo = {
@@ -8986,7 +8471,6 @@
                             visible: rect.width > 0 && rect.height > 0
                         };
                         console.log('📍 First player node bounding rect:', JSON.stringify(rectInfo, null, 2));
-                        
                         // プレイヤーノードが表示されない原因を特定
                         if (rect.width === 0 || rect.height === 0) {
                             console.error('❌ Player node has zero size!');
@@ -9026,11 +8510,9 @@
                 homeFormation: matchData.lineups?.home?.formation,
                 awayFormation: matchData.lineups?.away?.formation
             });
-            
             try {
                 const pitchContainer = document.getElementById('pitchContainer');
                 const formationBadge = document.getElementById('formationBadge');
-                
                 if (!pitchContainer) {
                     console.error('Pitch container not found');
                     return;
@@ -9043,9 +8525,7 @@
                                    matchStatus === '予定' ||
                                    matchStatus === 'NS' ||
                                    (matchData.status && matchData.status.includes('予定'));
-                
                 console.log('🔍 Match status:', { matchStatus, isScheduled });
-                
                 // 予定の試合でスタメンデータがない場合
                 if (isScheduled && (!matchData.lineups?.home?.startXI || !matchData.lineups?.away?.startXI)) {
                     console.log('📋 Scheduled match without lineup data');
@@ -9067,7 +8547,6 @@
 
                 // フォールバックデータを使用
                 let homeLineup, awayLineup, homeFormation, awayFormation;
-                
                 // チーム名を取得
                 const homeTeamName = matchData?.teams?.home?.name || matchData?.homeTeam || matchData?.home || 'HOME';
                 const awayTeamName = matchData?.teams?.away?.name || matchData?.awayTeam || matchData?.away || 'AWAY';
@@ -9095,7 +8574,6 @@
                 } else {
                     const homeTeam = matchData.homeTeam || matchData.home || 'ホームチーム';
                     const awayTeam = matchData.awayTeam || matchData.away || 'アウェイチーム';
-                    
                     if (isScheduled) {
                         let playersContainer = document.getElementById('playersContainer');
                         if (!playersContainer) {
@@ -9150,7 +8628,6 @@
                 const awayFirstPlayerName = awayXI?.[0]?.player?.name || awayXI?.[0]?.name || 'Unknown';
                 console.log('🏠 HOME team:', homeTeamName, 'XI[0]:', homeFirstPlayerName);
                 console.log('✈️ AWAY team:', awayTeamName, 'XI[0]:', awayFirstPlayerName);
-                
                 if (homeFirstPlayerName === awayFirstPlayerName && homeXI.length > 0 && awayXI.length > 0) {
                     console.error('❌ WARNING: HOME and AWAY XI[0] have the same player name! This indicates a data structure issue.');
                 }
@@ -9173,7 +8650,6 @@
 
                 // フォーメーションテキストを設定
                 setFormationText(matchData);
-                
                 // ヒートマップラベルを更新
                 const homeTeamHeatmapLabelLineup = document.getElementById('homeTeamHeatmapLabelLineup');
                 const awayTeamHeatmapLabelLineup = document.getElementById('awayTeamHeatmapLabelLineup');
@@ -9185,31 +8661,25 @@
                 if (awayTeamHeatmapLabelLineup) {
                     awayTeamHeatmapLabelLineup.textContent = awayTeam.substring(0, 3).toUpperCase();
                 }
-                
                 // 比較メトリクスを更新（statsがない場合でもデフォルトデータを表示）
                 const comparativeMetricsLineup = document.getElementById('comparativeMetricsLineup');
                 if (comparativeMetricsLineup) {
                     const stats = matchData.stats || {};
                     const homeScore = matchData?.homeScore || matchData?.score?.fullTime?.home || 0;
                     const awayScore = matchData?.awayScore || matchData?.score?.fullTime?.away || 0;
-                    
                     // xGを推定（スコアとシュート数から）
                     const shotsHome = stats.shots?.home || stats.totalShots?.home || Math.max(10, homeScore * 5 + Math.floor(Math.random() * 5));
                     const shotsAway = stats.shots?.away || stats.totalShots?.away || Math.max(10, awayScore * 5 + Math.floor(Math.random() * 5));
                     const xgHome = stats.xg?.home || (shotsHome * 0.12).toFixed(2);
                     const xgAway = stats.xg?.away || (shotsAway * 0.12).toFixed(2);
-                    
                     // ポゼッションを推定（スコアから）
                     const possessionHome = stats.possession?.home || (homeScore > awayScore ? 55 : (homeScore < awayScore ? 45 : 50));
                     const possessionAway = stats.possession?.away || (awayScore > homeScore ? 55 : (awayScore < homeScore ? 45 : 50));
-                    
                     // Big Chancesを推定
                     const bigChancesHome = stats.bigChances?.home || Math.floor(shotsHome * 0.3);
                     const bigChancesAway = stats.bigChances?.away || Math.floor(shotsAway * 0.3);
-                    
                     const xgSum = parseFloat(xgHome) + parseFloat(xgAway) || 1;
                     const bigChancesSum = bigChancesHome + bigChancesAway || 1;
-                    
                     comparativeMetricsLineup.innerHTML = `
                         <div>
                             <div class="flex justify-between text-[10px] font-bold text-[#9ab0bc] mb-2 uppercase tracking-tighter">
@@ -9243,7 +8713,6 @@
                             </div>
                         `;
                 }
-                
                 // 平均ポジションを更新
                 const averagePositions = document.getElementById('averagePositions');
                 if (averagePositions && homeLineup && awayLineup) {
@@ -9257,7 +8726,6 @@
                         const pos = p.player?.pos || p.position || p.pos;
                         return pos === 'F' || pos === 'FW' || pos === 'ST';
                     });
-                    
                     const awayGK = awayLineup.find(p => (p.player?.pos || p.position || p.pos) === 'GK' || (p.player?.pos || p.position || p.pos) === 'G');
                     const awayMF = awayLineup.find(p => {
                         const pos = p.player?.pos || p.position || p.pos;
@@ -9267,9 +8735,7 @@
                         const pos = p.player?.pos || p.position || p.pos;
                         return pos === 'F' || pos === 'FW' || pos === 'ST';
                     });
-                    
                     let averagePositionsHTML = '';
-                    
                     if (homeMF) {
                         const playerName = homeMF.player?.name || homeMF.name || 'Unknown';
                         const shortName = playerName.split(' ').pop() || playerName;
@@ -9287,7 +8753,6 @@
                     </div>
                 `;
                     }
-                    
                     if (awayFW) {
                         const playerName = awayFW.player?.name || awayFW.name || 'Unknown';
                         const shortName = playerName.split(' ').pop() || playerName;
@@ -9305,7 +8770,6 @@
                             </div>
                         `;
                     }
-                    
                     if (averagePositionsHTML) {
                         averagePositions.innerHTML = averagePositionsHTML;
                     } else {
@@ -9322,7 +8786,6 @@
                     homeLineupSample: homeLineup?.[0],
                     awayLineupSample: awayLineup?.[0]
                 });
-                
                 if (!homeLineup || !awayLineup || homeLineup.length === 0 || awayLineup.length === 0) {
                     console.error('❌ Lineup data is missing or empty:', {
                         homeLineup: !!homeLineup,
@@ -9345,7 +8808,6 @@
                     `;
                     return;
                 }
-                
                 const homePlayers = processPlayerData(homeLineup, 'home');
                 const awayPlayers = processPlayerData(awayLineup, 'away');
 
@@ -9375,7 +8837,6 @@
                 }
 
                 console.log('✅ Lineup tab updated successfully');
-                
             } catch (error) {
                 console.error('Error updating lineup tab:', error);
                 const pitchContainer = document.getElementById('pitchContainer');
@@ -9395,11 +8856,9 @@
                 }
             }
         }
-        
         // 縦向きピッチ用の位置を取得する関数（提供されたHTMLデザインに基づく）
         function getVerticalFormationPositions(formation) {
             const positions = [];
-            
             switch (formation) {
                 case '4-2-3-1':
                     // アウェイチーム（上側）の位置: top (%), left (%)
@@ -9416,7 +8875,6 @@
                     positions.push({ top: 38, left: 80 });  // RW (11) Salah
                     positions.push({ top: 44, left: 50 });  // ST (9) Nunez
                     break;
-                    
                 case '4-3-3':
                     // ホームチーム（下側）の位置: top (%), left (%)
                     // 画像のキャプチャに基づく正確な4-3-3フォーメーション（Manchester City）
@@ -9432,7 +8890,6 @@
                     positions.push({ top: 55, left: 50 });  // ST (9) Haaland
                     positions.push({ top: 56, left: 80 });  // RW (47) Foden
                     break;
-                    
                 case '4-4-2':
                     // ホームチーム（上側）の位置: top (%), left (%)
                     positions.push({ top: 8, left: 50 });   // GK
@@ -9447,7 +8904,6 @@
                     positions.push({ top: 46, left: 30 });  // LS
                     positions.push({ top: 46, left: 70 });  // RS
                     break;
-                    
                 default:
                     // デフォルトは4-3-3（ホームチーム下側）
                     positions.push({ top: 92, left: 50 });   // GK
@@ -9463,10 +8919,8 @@
                     positions.push({ top: 56, left: 80 });  // RW
                     break;
             }
-            
             return positions;
         }
-        
         // モダンなピッチHTMLを生成
         function generateModernPitchHTML(homePlayers, awayPlayers, homeFormation, awayFormation) {
             console.log('generateModernPitchHTML called with:', {
@@ -9475,13 +8929,10 @@
                 homeFormation,
                 awayFormation
             });
-            
             const homePositions = getVerticalFormationPositions(homeFormation);
             const awayPositions = getVerticalFormationPositions(awayFormation);
-            
             // ProFooty AnalyticsスタイルのピッチHTMLを生成
             let html = '';
-            
             // アウェイチームのプレイヤー（上側 - team-b色）
             if (awayPlayers && awayPlayers.length > 0) {
                 html += '<div class="absolute inset-0">';
@@ -9494,7 +8945,6 @@
                     const shortName = playerName.split(' ').pop() || playerName;
                     const playerNumber = player.number || player.player?.number || (index + 1);
                     const rating = player.rating || player.player?.rating || null;
-                    
                     html += `
                         <div class="player-node-b absolute flex flex-col items-center gap-1" style="top: ${topPercent}%; ${isCenter ? 'left: 50%; transform: translate(-50%, -50%);' : `left: ${leftPercent}%; transform: translate(-50%, -50%);`} z-20;">
                             <div style="width: 3rem; height: 3rem; border-radius: 9999px; background-color: #00CC00; border: 2px solid rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: bold; color: white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);">${playerNumber}</div>
@@ -9507,7 +8957,6 @@
             } else {
                 console.warn('No away players provided to generateModernPitchHTML');
             }
-            
             // ホームチームのプレイヤー（下側 - team-a色）
             if (homePlayers && homePlayers.length > 0) {
                 html += '<div class="absolute inset-0">';
@@ -9520,7 +8969,6 @@
                     const shortName = playerName.split(' ').pop() || playerName;
                     const playerNumber = player.number || player.player?.number || (index + 1);
                     const rating = player.rating || player.player?.rating || null;
-                    
                     html += `
                         <div class="player-node-a absolute flex flex-col items-center gap-1" style="top: ${topPercent}%; ${isCenter ? 'left: 50%; transform: translate(-50%, -50%);' : `left: ${leftPercent}%; transform: translate(-50%, -50%);`} z-20;">
                             <div style="width: 3rem; height: 3rem; border-radius: 9999px; background-color: #0099e6; border: 2px solid rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: bold; color: white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);">${playerNumber}</div>
@@ -9533,10 +8981,8 @@
             } else {
                 console.warn('No home players provided to generateModernPitchHTML');
             }
-            
             return html;
         }
-        
         // スタメンリストを生成（提供されたHTMLデザインに合わせて - 顔写真なし）
         function generateStartingXIList(players, teamType) {
             return players.map((player, index) => {
@@ -9544,7 +8990,6 @@
                 const position = getPositionLabel(player.position || player.pos);
                 const playerName = player.name || 'Unknown';
                 const playerNumber = player.number || (index + 1);
-                
                 // ホームチーム用のHTML（左揃え: 背番号、名前、ポジション）
                 if (teamType === 'home') {
                     return `
@@ -9570,7 +9015,6 @@
                 }
             }).join('');
         }
-        
         // サブスティテュートリストを生成（新デザイン）
         function generateSubstitutesList(subs, teamType) {
             if (!subs || subs.length === 0) {
@@ -9583,7 +9027,6 @@
                 const positionLabel = getPositionLabel(playerPosition);
                 const teamColor = teamType === 'home' ? 'marinos-blue' : 'frontale-green';
                 const borderSide = teamType === 'home' ? 'border-l-2' : 'border-r-2';
-                
                 // ホームチーム用のHTML（左揃え）
                 if (teamType === 'home') {
                     return `
@@ -9609,23 +9052,19 @@
                 }
             }).join('');
         }
-        
         // ハイライトリストを生成
         function generateHighlightsList(events) {
             const highlights = events.filter(e => 
                 e.type === 'Goal' || e.type === 'Card' || e.type === 'subst'
             ).slice(0, 5);
-            
             if (highlights.length === 0) {
                 return '<div class="no-data">ハイライト情報がありません</div>';
             }
-            
             return highlights.map(event => {
                 const minute = event.time?.elapsed || event.minute || event.time || '?';
                 const type = event.type || 'Unknown';
                 const player = event.player?.name || event.player || 'Unknown';
                 const detail = event.detail || type;
-                
                 let title = '';
                 if (type === 'Goal') {
                     title = `GOAL! (${event.team?.name || ''})`;
@@ -9634,7 +9073,6 @@
                 } else {
                     title = detail.toUpperCase();
                 }
-                
                 return `
                     <div class="highlight-item">
                         <span class="highlight-minute">${minute}'</span>
@@ -9652,7 +9090,6 @@
             try {
                 const homeBenchContainer = document.getElementById('home-bench-players');
                 const awayBenchContainer = document.getElementById('away-bench-players');
-                
                 if (!homeBenchContainer || !awayBenchContainer) {
                     console.error('Bench containers not found');
                     return;
@@ -9679,7 +9116,6 @@
                     } else if (player.id) {
                         playerId = player.id;
                     }
-                    
                     // プレイヤー写真の取得
                     let playerPhoto = null;
                     if (player.player && player.player.photo && player.player.photo !== 'UNKNOWN' && player.player.photo !== 'Unknown' && player.player.photo !== 'null' && player.player.photo !== null && player.player.photo !== '') {
@@ -9687,19 +9123,15 @@
                     } else if (player.photo && player.photo !== 'UNKNOWN' && player.photo !== 'Unknown' && player.photo !== 'null' && player.photo !== null && player.photo !== '') {
                         playerPhoto = player.photo;
                     }
-                    
                     // フォールバック: プレイヤーIDがある場合はそれを使用して写真URLを生成
                     if (!playerPhoto && playerId) {
                         playerPhoto = `https://media.api-sports.io/football/players/${playerId}.png`;
                     }
-                    
                     // 最終フォールバック: 写真がない場合はnullを設定（頭文字を表示）
                     if (!playerPhoto || playerPhoto === 'null' || playerPhoto === 'UNKNOWN' || playerPhoto === 'Unknown') {
                         playerPhoto = null;
                     }
-                    
                     const playerName = player.player?.name || player.name || 'Unknown';
-                    
                     return `
                         <div class="bench-player" onclick="showPlayerDetails('${playerName}', '${matchData.homeTeam}')">
                             <div class="player-avatar-small">
@@ -9725,7 +9157,6 @@
                     } else if (player.id) {
                         playerId = player.id;
                     }
-                    
                     // プレイヤー写真の取得
                     let playerPhoto = null;
                     if (player.player && player.player.photo && player.player.photo !== 'UNKNOWN' && player.player.photo !== 'Unknown' && player.player.photo !== 'null' && player.player.photo !== null && player.player.photo !== '') {
@@ -9733,19 +9164,15 @@
                     } else if (player.photo && player.photo !== 'UNKNOWN' && player.photo !== 'Unknown' && player.photo !== 'null' && player.photo !== null && player.photo !== '') {
                         playerPhoto = player.photo;
                     }
-                    
                     // フォールバック: プレイヤーIDがある場合はそれを使用して写真URLを生成
                     if (!playerPhoto && playerId) {
                         playerPhoto = `https://media.api-sports.io/football/players/${playerId}.png`;
                     }
-                    
                     // 最終フォールバック: 写真がない場合はnullを設定（頭文字を表示）
                     if (!playerPhoto || playerPhoto === 'null' || playerPhoto === 'UNKNOWN' || playerPhoto === 'Unknown') {
                         playerPhoto = null;
                     }
-                    
                     const playerName = player.player?.name || player.name || 'Unknown';
-                    
                     return `
                         <div class="bench-player" onclick="showPlayerDetails('${playerName}', '${matchData.awayTeam}')">
                             <div class="player-avatar-small">
@@ -9763,7 +9190,6 @@
                 }).join('');
 
                 console.log('Bench players displayed successfully');
-                
             } catch (error) {
                 console.error('Error displaying bench players:', error);
             }
@@ -9832,15 +9258,12 @@
                     ST2: { x: 50, y: 65 }
                 }
             };
-            
             const positions = formationMap[formation] || formationMap['4-2-3-1'];
             let html = '';
-            
             // プレイヤーをポジションに配置
             players.forEach((player, index) => {
                 const playerName = player.player?.name || player.name || `Player ${index + 1}`;
                 const playerPosition = player.player?.pos || player.position || player.pos || 'Unknown';
-                
                 // ポジションに応じた座標を取得（左右反転対応）
                 let coords = null;
                 if (playerPosition === 'GK') coords = positions.GK;
@@ -9855,17 +9278,14 @@
                 else if (playerPosition === 'AM') coords = positions.AM;
                 else if (playerPosition === 'LWB') coords = positions.RWB; // 左右反転: LWBはRWB位置を使用
                 else if (playerPosition === 'RWB') coords = positions.LWB; // 左右反転: RWBはLWB位置を使用
-                
                 // デフォルト位置（フォーメーションに基づく）
                 if (!coords) {
                     const defaultPositions = Object.values(positions);
                     coords = defaultPositions[index] || { x: 50, y: 50 };
                 }
-                
                 // アウェイチームの場合は左右反転
                 const x = team === 'away' ? (100 - coords.x) : coords.x;
                 const y = coords.y;
-                
                 html += `
                     <div class="pitch-player" style="left: ${x}%; top: ${y}%;" title="${playerName} (${playerPosition})">
                         <div class="pitch-player-avatar">${playerName.charAt(0)}</div>
@@ -9873,7 +9293,6 @@
                     </div>
                 `;
             });
-            
             return html;
         }
 
@@ -9881,13 +9300,11 @@
         function updateScoreboardHeader(matchData) {
             const home = matchData?.teams?.home || {};
             const away = matchData?.teams?.away || {};
-            
             // データの取得（複数の形式に対応）
             const homeName = home?.name || matchData?.homeTeam || matchData?.home || "HOME";
             const awayName = away?.name || matchData?.awayTeam || matchData?.away || "AWAY";
             const homeLogo = home?.logo || matchData?.homeLogo || "";
             const awayLogo = away?.logo || matchData?.awayLogo || "";
-            
             const isFinishedOrLive = matchData?.status === 'Finished' || matchData?.status === 'FT' || matchData?.status === 'LIVE' || matchData?.status === 'HT' || matchData?.status === '試合中' || matchData?.status === '終了';
             const goals = matchData?.goals || {};
                     const homeScore = isFinishedOrLive 
@@ -9896,11 +9313,9 @@
                     const awayScore = isFinishedOrLive
                 ? (goals.away ?? matchData?.awayScore ?? 0)
                 : (goals.away ?? matchData?.awayScore ?? '-');
-            
             // チームIDを取得（ロゴがない場合のフォールバック）
             const homeTeamId = home?.id || matchData?.teams?.home?.id || getTeamId(homeName);
             const awayTeamId = away?.id || matchData?.teams?.away?.id || getTeamId(awayName);
-            
             // ロゴURLを生成（API-Football形式）
             const homeLogoUrl = homeLogo || `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
             const awayLogoUrl = awayLogo || `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
@@ -9919,7 +9334,6 @@
             if (awayNameEl) awayNameEl.textContent = awayName.toUpperCase();
             if (homeScoreEl) homeScoreEl.textContent = homeScore;
             if (awayScoreEl) awayScoreEl.textContent = awayScore;
-            
             if (homeLogoEl && homeLogoUrl) {
                 homeLogoEl.src = homeLogoUrl;
                 homeLogoEl.alt = homeName;
@@ -9976,18 +9390,14 @@
         // 詳細な試合情報を表示
         function displayDetailedMatchInfo(matchData) {
             console.log('Displaying detailed match info:', matchData);
-            
             try {
                 // スコアボードヘッダーを統一更新
                 updateScoreboardHeader(matchData);
-                
                 // その他の情報を更新
                 const venueEl = document.getElementById('venueName');
                 const liveBadge = document.getElementById('liveBadge');
                 const matchMinuteEl = document.getElementById('matchMinute');
-                
                 if (venueEl) venueEl.textContent = matchData.venue || matchData.footballData?.venue || '-';
-                
                 // LIVEバッジの表示
                 if (liveBadge && (matchData.status === 'LIVE' || matchData.status === 'HT' || matchData.status === '試合中')) {
                     liveBadge.style.display = 'flex';
@@ -10004,7 +9414,6 @@
                     if (liveBadge) liveBadge.style.display = 'none';
                     if (matchMinuteEl) matchMinuteEl.style.display = 'none';
                 }
-                
                 // チーム名（小）を更新
                 const homeTeam = matchData.homeTeam || matchData.home || '-';
                 const awayTeam = matchData.awayTeam || matchData.away || '-';
@@ -10012,10 +9421,8 @@
                 const awayTeamNameSmallEl = document.getElementById('awayTeamNameSmall');
                 if (homeTeamNameSmallEl) homeTeamNameSmallEl.textContent = homeTeam.toUpperCase();
                 if (awayTeamNameSmallEl) awayTeamNameSmallEl.textContent = awayTeam.toUpperCase();
-                
                 // 基本情報タブを更新
                 updateBasicInfo(matchData);
-                
                 // 統計タブを更新
                 console.log('Calling updateStatsTab with:', {
                     stats: matchData.stats,
@@ -10026,19 +9433,14 @@
                     awayScore: matchData.awayScore
                 });
                 updateStatsTab(matchData.stats || null, matchData);
-                
                 // イベントタブを更新
                 updateEventsTab(matchData.events || []);
-                
                 // ラインアップタブを更新
                     updateLineupTab(matchData);
-                
                 // 最初のタブ（Lineup）をアクティブにして表示（setActiveTab関数を使用）
                 setActiveTab('lineup');
-                
             } catch (error) {
                 console.error('Error in displayDetailedMatchInfo:', error);
-                
                 const overviewTab = document.getElementById('overview');
                 if (overviewTab) {
                     overviewTab.innerHTML = `
@@ -10066,28 +9468,24 @@
                 let playerPosition = '不明';
                 let playerNumber = index + 1;
                 let playerPhoto = null;
-                
                 // プレイヤー名の取得
                 if (player.player && player.player.name && player.player.name !== 'UNKNOWN' && player.player.name !== 'Unknown' && player.player.name !== 'null' && player.player.name !== null) {
                     playerName = player.player.name;
                 } else if (player.name && player.name !== 'UNKNOWN' && player.name !== 'Unknown' && player.name !== 'null' && player.name !== null) {
                     playerName = player.name;
                 }
-                
                 // ポジション情報の取得
                 if (player.player && player.player.pos && player.player.pos !== 'UNKNOWN' && player.player.pos !== 'Unknown' && player.player.pos !== 'null' && player.player.pos !== null) {
                     playerPosition = player.player.pos;
                 } else if (player.position && player.position !== 'UNKNOWN' && player.position !== 'Unknown' && player.position !== 'null' && player.position !== null) {
                     playerPosition = player.position;
                 }
-                
                 // 背番号の取得
                 if (player.player && player.player.number && player.player.number !== 'UNKNOWN' && player.player.number !== 'Unknown' && player.player.number !== 'null' && player.player.number !== null) {
                     playerNumber = player.player.number;
                 } else if (player.number && player.number !== 'UNKNOWN' && player.number !== 'Unknown' && player.number !== 'null' && player.number !== null) {
                     playerNumber = player.number;
                 }
-                
                 // プレイヤーIDの取得（写真URL生成に必要）
                 let playerId = null;
                 if (player.player && player.player.id) {
@@ -10095,24 +9493,20 @@
                 } else if (player.id) {
                     playerId = player.id;
                 }
-                
                 // プレイヤー写真の取得（API-Footballのphotoフィールド）
                 if (player.player && player.player.photo && player.player.photo !== 'UNKNOWN' && player.player.photo !== 'Unknown' && player.player.photo !== 'null' && player.player.photo !== null && player.player.photo !== '') {
                     playerPhoto = player.player.photo;
                 } else if (player.photo && player.photo !== 'UNKNOWN' && player.photo !== 'Unknown' && player.photo !== 'null' && player.photo !== null && player.photo !== '') {
                     playerPhoto = player.photo;
                 }
-                
                 // フォールバック: プレイヤーIDがある場合はそれを使用して写真URLを生成
                 if (!playerPhoto && playerId) {
                     playerPhoto = `https://media.api-sports.io/football/players/${playerId}.png`;
                 }
-                
                 // 最終フォールバック: 写真がない場合はnullを設定（頭文字を表示）
                 if (!playerPhoto || playerPhoto === 'null' || playerPhoto === 'UNKNOWN' || playerPhoto === 'Unknown') {
                     playerPhoto = null;
                 }
-                
                 // デバッグ情報をコンソールに出力
                 console.log(`Player ${index + 1} (${teamType}):`, {
                     name: playerName,
@@ -10122,12 +9516,10 @@
                     hasPhoto: !!playerPhoto,
                     rawPlayer: player
                 });
-                
                 // パフォーマンス評価（現在はランダム生成、実際のAPIデータが利用可能になったらそれを使用）
                 // 注意: 評価点は現在ランダムに生成されており、実際の試合パフォーマンスを反映していません
                 const performanceRating = (Math.random() * 2 + 6).toFixed(1);
                 const ratingClass = performanceRating >= 7.5 ? 'rating-excellent' : performanceRating >= 7.0 ? 'rating-good' : 'rating-average';
-                
                 return {
                     name: playerName,
                     position: playerPosition,
@@ -10147,11 +9539,9 @@
             // チーム名を取得（オブジェクトの場合はnameプロパティを使用）
             const homeTeamName = typeof homeTeam === 'string' ? homeTeam : homeTeam?.name || 'ホームチーム';
             const awayTeamName = typeof awayTeam === 'string' ? awayTeam : awayTeam?.name || 'アウェイチーム';
-            
             // チームIDを取得
             const homeTeamId = getTeamId(homeTeamName);
             const awayTeamId = getTeamId(awayTeamName);
-            
             return `
                 <div class="unified-pitch">
                     <div class="pitch-header">
@@ -10166,9 +9556,7 @@
                                 <div class="team-rating">Rating: 7.2</div>
                             </div>
                         </div>
-                        
                         <div class="vs-separator">VS</div>
-                        
                         <div class="team-info away-team">
                             <div class="team-logo">
                                 <img src="https://media.api-sports.io/football/teams/${awayTeamId}.png" alt="${awayTeamName}" class="team-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -10181,35 +9569,28 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div class="pitch-field">
                         <!-- ピッチの線とマーク -->
                         <div class="center-line"></div>
                         <div class="center-circle"></div>
                         <div class="half-court-divider"></div>
                         <div class="center-safe-zone"></div>
-                        
                         <!-- 陣地境界 -->
                         <div class="territory-boundary left"></div>
                         <div class="territory-boundary right"></div>
-                        
                         <!-- ペナルティエリア -->
                         <div class="penalty-area left"></div>
                         <div class="penalty-area right"></div>
-                        
                         <!-- ゴールエリア -->
                         <div class="goal-area left"></div>
                         <div class="goal-area right"></div>
-                        
                         <!-- コーナーアーク -->
                         <div class="corner-arc top-left"></div>
                         <div class="corner-arc top-right"></div>
                         <div class="corner-arc bottom-left"></div>
                         <div class="corner-arc bottom-right"></div>
-                        
                         <!-- ホームチームのプレイヤー -->
                         ${generateUnifiedPlayerPositions(homePlayers, 'home', homeFormation || '4-2-3-1', homeTeam, awayTeam)}
-                        
                         <!-- アウェイチームのプレイヤー -->
                         ${generateUnifiedPlayerPositions(awayPlayers, 'away', awayFormation || '4-1-4-1', homeTeam, awayTeam)}
                     </div>
@@ -10221,19 +9602,16 @@
         function generateUnifiedPlayerPositions(players, teamType, formation, homeTeam, awayTeam) {
             // フォーメーションに応じて適切な位置を取得
             const basePositions = getFormationPositions(formation);
-            
             // 選手を配置（インデックスベース - フォーメーションの位置配列の順序に従う）
             // 通常、APIから返されるプレイヤーの順序はフォーメーションの順序と一致している
             return players.map((player, index) => {
                 // インデックスがフォーメーションの位置数を超えないように制限
                 const positionIndex = Math.min(index, basePositions.length - 1);
                 let pos = basePositions[positionIndex];
-                
                 if (!pos) {
                     console.warn(`No position found for player ${player.name} at index ${index}`);
                     return '';
                 }
-                
                 // アウェイチームの場合、左右を反転させる
                 // キーパーから見て、左側の選手（LB、LW、LWB、LMなど）は左側に、右側の選手（RB、RW、RWB、RMなど）は右側に配置されるべき
                 // アウェイチームは右側に配置されるため、すべての選手のtop位置を反転させる必要がある
@@ -10241,15 +9619,12 @@
                     // すべての選手のtop位置を反転（左右を反転）
                     pos = { ...pos, top: 100 - pos.top };
                 }
-                
                 return createPlayerMarker(pos, player, teamType, homeTeam, awayTeam);
             }).join('');
         }
-        
         // プレイヤーマーカーを作成する関数（共通処理）
         function createPlayerMarker(pos, player, teamType, homeTeam, awayTeam) {
                 let left, top;
-                
                 if (teamType === 'home') {
                 // ホームチーム（左側、left: 2-46%）
                 // フォーメーションの位置をそのまま使用（すべてホームチーム基準に統一されている）
@@ -10260,12 +9635,10 @@
                 // ホームチーム基準の位置を反転（左右対称）
                 left = 100 - pos.left;
                 top = pos.top; // topはそのまま（上下は反転しない）
-                    
                 // 中央線（50%）を超えないように、かつ右側の範囲内に制限
                 left = Math.max(54, Math.min(98, left)); // 54-98%の範囲に制限
                 top = Math.max(5, Math.min(95, top)); // 5-95%の範囲に制限
                     }
-            
             // プレイヤー情報を取得
             const playerName = player.name || player.player?.name || 'Unknown';
             const playerNumber = player.number || player.player?.number || 0;
@@ -10288,11 +9661,9 @@
             const ratingClass = player.ratingClass || 
                               (typeof parseFloat(playerRating) === 'number' && parseFloat(playerRating) >= 7 ? 'high' : 
                                typeof parseFloat(playerRating) === 'number' && parseFloat(playerRating) >= 6 ? 'medium' : 'low');
-                
                 // 新デザインのプレイヤーマーカー（縦向きピッチ用）
                 const nodeClass = teamType === 'home' ? 'player-node-marinos' : 'player-node-frontale';
                 const shortName = playerName.split(' ').pop() || playerName; // 姓のみを表示
-                
                 return `
                     <div class="absolute flex flex-col items-center" style="left: ${left}%; top: ${top}%; transform: translate(-50%, -50%);" onclick="showPlayerDetails('${playerName}', '${teamType === 'home' ? homeTeam : awayTeam}')">
                         <div class="size-11 ${nodeClass} rounded-full flex items-center justify-center text-sm font-bold">
@@ -10302,50 +9673,40 @@
                     </div>
                 `;
         }
-        
         // 選手位置を調整して重なりを防ぐ関数
         function adjustPlayerPositions(positions, teamType) {
             const adjusted = [...positions];
             const minDistance = 8; // 最小距離（%）
-            
             for (let i = 0; i < adjusted.length; i++) {
                 for (let j = i + 1; j < adjusted.length; j++) {
                     const dx = Math.abs(adjusted[i].left - adjusted[j].left);
                     const dy = Math.abs(adjusted[i].top - adjusted[j].top);
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    
                     if (distance < minDistance) {
                         // 重なっている場合、位置を調整
                         const angle = Math.atan2(adjusted[j].top - adjusted[i].top, adjusted[j].left - adjusted[i].left);
                         const offset = minDistance - distance;
-                        
                         adjusted[j].left += Math.cos(angle) * offset;
                         adjusted[j].top += Math.sin(angle) * offset;
-                        
                         // 境界チェック
                         adjusted[j].left = Math.max(5, Math.min(95, adjusted[j].left));
                         adjusted[j].top = Math.max(5, Math.min(95, adjusted[j].top));
                     }
                 }
             }
-            
             return adjusted;
         }
-        
         // 名前の表示位置を計算する関数（重なりを防ぐ）
         function calculateNameOffset(index, positions, teamType) {
             const currentPos = positions[index];
             let offsetX = 0; // デフォルトは中央（transform: translateX(-50%)で中央揃え）
             let offsetY = 0; // デフォルトは下（top: 100%）
-            
             // 近くの選手をチェック
             for (let i = 0; i < positions.length; i++) {
                 if (i === index) continue;
-                
                 const otherPos = positions[i];
                 const dx = Math.abs(currentPos.left - otherPos.left);
                 const dy = Math.abs(currentPos.top - otherPos.top);
-                
                 // 同じライン（topが近い）で左右に近い場合
                 if (dy < 5 && dx < 15) {
                     // 左側の選手は名前を左に、右側の選手は名前を右に
@@ -10355,7 +9716,6 @@
                         offsetX = 20; // 右にずらす（px単位）
                     }
                 }
-                
                 // 上下に近い場合、名前を横にずらす
                 if (dx < 5 && dy < 15) {
                     if (currentPos.top < otherPos.top) {
@@ -10365,17 +9725,14 @@
                     }
                 }
             }
-            
             return { x: offsetX, y: offsetY };
         }
 
         // フォーメーションに基づくプレイヤー位置を取得する関数（統一版 - すべてホームチーム基準）
         function getFormationPositions(formation) {
             const positions = [];
-            
             // すべてのフォーメーションをホームチーム基準（左側、left: 0-50%）に統一
             // アウェイチームは後で left = 100 - pos.left で反転される
-            
             switch (formation) {
                 case '4-2-3-1':
                     // GK (左のゴール) - 中央
@@ -10395,7 +9752,6 @@
                     // Striker (左から5番目のライン) - さらに離す
                     positions.push({ left: 48, top: 50 });
                     break;
-                    
                 case '4-1-4-1':
                     // GK (左のゴール) - 中央
                     positions.push({ left: 8, top: 50 });
@@ -10414,7 +9770,6 @@
                     // Striker (左から5番目のライン) - さらに離す
                     positions.push({ left: 48, top: 50 });
                     break;
-                    
                 case '4-4-2':
                     // GK (左のゴール) - 中央
                     positions.push({ left: 8, top: 50 });
@@ -10432,7 +9787,6 @@
                     positions.push({ left: 42, top: 40 }); // LS
                     positions.push({ left: 42, top: 60 }); // RS
                     break;
-                    
                 case '3-5-2':
                     // GK (左のゴール) - 中央
                     positions.push({ left: 8, top: 50 });
@@ -10450,7 +9804,6 @@
                     positions.push({ left: 42, top: 40 }); // LS
                     positions.push({ left: 42, top: 60 }); // RS
                     break;
-                    
                 case '4-3-3':
                     // GK (左のゴール) - 中央
                     positions.push({ left: 8, top: 50 });
@@ -10468,7 +9821,6 @@
                     positions.push({ left: 42, top: 50 }); // ST (中央)
                     positions.push({ left: 42, top: 20 }); // RW
                     break;
-                    
                 default:
                     // デフォルトの4-4-2（ホームチーム基準） - CBとSBの間くらいに配置
                     positions.push({ left: 8, top: 50 }); // GK (中央)
@@ -10484,7 +9836,6 @@
                     positions.push({ left: 42, top: 60 }); // RS
                     break;
             }
-            
             return positions;
         }
 
@@ -10619,9 +9970,7 @@
                     </div>
                 </div>
             `;
-            
             document.body.appendChild(modal);
-            
             // モーダル外クリックで閉じる
             modal.addEventListener('click', function(e) {
                 if (e.target === modal) {
@@ -10661,7 +10010,6 @@
         function getTeamId(teamName) {
             // チーム名がオブジェクトの場合はnameプロパティを取得
             const actualTeamName = typeof teamName === 'string' ? teamName : teamName?.name || '';
-            
             const teamIdMap = {
                 // Premier League
                 'Liverpool': '40',
@@ -10691,7 +10039,6 @@
                 'Nottingham Forest': '65',
                 'Sheffield United': '62',
                 'Luton Town': '1359',
-                
                 // La Liga
                 'Real Madrid': '541',
                 'Real Madrid CF': '541',
@@ -10717,7 +10064,6 @@
                 'Elche': '797',
                 'Granada': '715',
                 'Las Palmas': '532',
-                
                 // Serie A
                 'Sassuolo': '471',
                 'Napoli': '492',
@@ -10739,7 +10085,6 @@
                 'Empoli': '511',
                 'Salernitana': '514',
                 'Cagliari': '490',
-                
                 // Bundesliga
                 'Bayern München': '157',
                 'RB Leipzig': '173',
@@ -10759,7 +10104,6 @@
                 'FC Heidenheim': '184',
                 'SV Darmstadt 98': '181',
                 'VfL Bochum': '36',
-                
                 // Ligue 1
                 'Paris Saint Germain': '85',
                 'Angers': '91',
@@ -10781,7 +10125,6 @@
                 'Clermont': '99',
                 'Metz': '112',
                 'Le Havre': '111',
-                
                 // Champions League
                 'Real Madrid': '541',
                 'Barcelona': '529',
@@ -10814,7 +10157,6 @@
                 'AEK Athens': '449',
                 'Olympiakos': '449',
                 'Panathinaikos': '449',
-                
                 // J1 League
                 '浦和レッズ': '1001',
                 '横浜F・マリノス': '1002',
@@ -10881,28 +10223,23 @@
                 'ベガルタ仙台': '1063',
                 '福島ユナイテッドFC': '1064'
             };
-            
             // チーム名の正規化（大文字小文字を無視）
             const normalizedName = actualTeamName.toLowerCase().trim();
             const normalizedMap = {};
-            
             // マップを正規化
             for (const [key, value] of Object.entries(teamIdMap)) {
                 normalizedMap[key.toLowerCase().trim()] = value;
             }
-            
             // 完全一致を探す
             if (normalizedMap[normalizedName]) {
                 return normalizedMap[normalizedName];
             }
-            
             // 部分一致を探す
             for (const [key, value] of Object.entries(normalizedMap)) {
                 if (key.includes(normalizedName) || normalizedName.includes(key)) {
                     return value;
                 }
             }
-            
             // デフォルトは1（API-Footballのデフォルト）
             return '1';
         }
