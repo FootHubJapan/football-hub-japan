@@ -8581,7 +8581,17 @@
                         const playerNumber = player?.number || sub?.number || '';
                         const playerPosition = player?.pos || sub?.position || sub?.pos || 'Unknown';
                         const positionLabel = getPositionLabel(playerPosition);
-                        const playerPhoto = player?.photo || sub?.photo || player?.photoUrl || sub?.photoUrl || null;
+                        const playerId = player?.id || sub?.id || null;
+                        let playerPhoto = player?.photo || sub?.photo || 
+                                        player?.photoUrl || sub?.photoUrl ||
+                                        player?.image || sub?.image ||
+                                        player?.avatar || sub?.avatar || null;
+                        
+                        // 写真URLがない場合、playerIdから生成を試みる（API-Football形式）
+                        if (!playerPhoto && playerId) {
+                            playerPhoto = `https://media.api-sports.io/football/players/${playerId}.png`;
+                        }
+                        
                         const photoStyle = playerPhoto 
                             ? `background-image: url('${playerPhoto}'); background-size: cover; background-position: center; background-color: rgba(26,134,240,0.3);`
                             : `background-color: #1A86F0;`;
@@ -8616,7 +8626,17 @@
                         const playerNumber = player?.number || sub?.number || '';
                         const playerPosition = player?.pos || sub?.position || sub?.pos || 'Unknown';
                         const positionLabel = getPositionLabel(playerPosition);
-                        const playerPhoto = player?.photo || sub?.photo || player?.photoUrl || sub?.photoUrl || null;
+                        const playerId = player?.id || sub?.id || null;
+                        let playerPhoto = player?.photo || sub?.photo || 
+                                        player?.photoUrl || sub?.photoUrl ||
+                                        player?.image || sub?.image ||
+                                        player?.avatar || sub?.avatar || null;
+                        
+                        // 写真URLがない場合、playerIdから生成を試みる（API-Football形式）
+                        if (!playerPhoto && playerId) {
+                            playerPhoto = `https://media.api-sports.io/football/players/${playerId}.png`;
+                        }
+                        
                         const photoStyle = playerPhoto 
                             ? `background-image: url('${playerPhoto}'); background-size: cover; background-position: center; background-color: rgba(48,212,79,0.3);`
                             : `background-color: #30D44F;`;
@@ -8761,14 +8781,31 @@
                 const shortName = fullName.length > 14 ? fullName.slice(0, 12) + "…" : fullName;
                 const playerNumber = player?.number || p?.number || '';
                 const rating = player?.rating || p?.rating || null;
-                const playerPhoto = player?.photo || p?.photo || player?.photoUrl || p?.photoUrl || null;
                 const playerId = player?.id || p?.id || null;
                 
                 // 写真URLを取得（複数のデータ構造に対応）
-                let photoUrl = playerPhoto;
+                let photoUrl = player?.photo || p?.photo || 
+                              player?.photoUrl || p?.photoUrl ||
+                              player?.image || p?.image ||
+                              player?.avatar || p?.avatar || null;
+                
+                // デバッグログ（最初の選手のみ）
+                if (awayNodesCount === 0) {
+                    console.log('📸 Photo debug (Away):', {
+                        playerName: fullName,
+                        playerId,
+                        photoFromPlayer: player?.photo,
+                        photoFromP: p?.photo,
+                        photoUrl,
+                        playerKeys: Object.keys(player || {}),
+                        pKeys: Object.keys(p || {})
+                    });
+                }
+                
+                // 写真URLがない場合、playerIdから生成を試みる（API-Football形式）
                 if (!photoUrl && playerId) {
-                    // データベースから写真を取得する場合のフォールバック
-                    // ここでは直接APIデータを使用
+                    // API-Footballの写真URL形式: https://media.api-sports.io/football/players/{id}.png
+                    photoUrl = `https://media.api-sports.io/football/players/${playerId}.png`;
                 }
                 
                 const badgeStyle = photoUrl 
@@ -8797,14 +8834,31 @@
                 const shortName = fullName.length > 14 ? fullName.slice(0, 12) + "…" : fullName;
                 const playerNumber = player?.number || p?.number || '';
                 const rating = player?.rating || p?.rating || null;
-                const playerPhoto = player?.photo || p?.photo || player?.photoUrl || p?.photoUrl || null;
                 const playerId = player?.id || p?.id || null;
                 
                 // 写真URLを取得（複数のデータ構造に対応）
-                let photoUrl = playerPhoto;
+                let photoUrl = player?.photo || p?.photo || 
+                              player?.photoUrl || p?.photoUrl ||
+                              player?.image || p?.image ||
+                              player?.avatar || p?.avatar || null;
+                
+                // デバッグログ（最初の選手のみ）
+                if (homeNodesCount === 0) {
+                    console.log('📸 Photo debug (Home):', {
+                        playerName: fullName,
+                        playerId,
+                        photoFromPlayer: player?.photo,
+                        photoFromP: p?.photo,
+                        photoUrl,
+                        playerKeys: Object.keys(player || {}),
+                        pKeys: Object.keys(p || {})
+                    });
+                }
+                
+                // 写真URLがない場合、playerIdから生成を試みる（API-Football形式）
                 if (!photoUrl && playerId) {
-                    // データベースから写真を取得する場合のフォールバック
-                    // ここでは直接APIデータを使用
+                    // API-Footballの写真URL形式: https://media.api-sports.io/football/players/{id}.png
+                    photoUrl = `https://media.api-sports.io/football/players/${playerId}.png`;
                 }
                 
                 const badgeStyle = photoUrl 
