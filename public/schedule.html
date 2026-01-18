@@ -4316,6 +4316,7 @@
             font-weight: 800;
             font-size: 12px;
             color:#fff;
+            order: 1; /* バッジは中央 */
         }
         .player-label{
             background: rgba(0,0,0,0.55);
@@ -4330,6 +4331,14 @@
             white-space: nowrap;
             overflow:hidden;
             text-overflow: ellipsis;
+        }
+        .player-label.name-up{
+            order: -1; /* 上に表示 */
+            margin-bottom: 6px;
+        }
+        .player-label.name-down{
+            order: 2; /* 下に表示 */
+            margin-top: 6px;
         }
     </style>
 </head>
@@ -8278,6 +8287,36 @@
             return slots.slice(0, 11); // 最大11人
         };
 
+        // 衝突回避関数（中央列の重なりを防ぐ）
+        window.FHJ.applyAntiOverlap = function(slots, side) {
+            // 1) 中央列だけ寄せて衝突回避
+            const centerBias = side === "away" ? -3 : 3;
+
+            // 2) 同じy近辺に複数いるとき、交互に±2
+            const groups = new Map(); // key: rounded y
+            for (const s of slots) {
+                const key = Math.round(s.y / 4) * 4; // 4%刻みで近いyをまとめる
+                if (!groups.has(key)) groups.set(key, []);
+                groups.get(key).push(s);
+            }
+
+            for (const [, arr] of groups) {
+                // xの近い順に並べる
+                arr.sort((a, b) => a.x - b.x);
+
+                // 中央に近いものだけ調整
+                const nearCenter = arr.filter(s => Math.abs(s.x - 50) < 5);
+                nearCenter.forEach((s, i) => {
+                    s.x += centerBias;
+                    // 同じ列が多いときの細かい散らし
+                    s.x += (i % 2 === 0 ? -2 : 2);
+                    s.x = Math.max(8, Math.min(92, s.x));
+                });
+            }
+
+            return slots;
+        };
+
         // 旧gridToXY関数（後方互換性のため残す）
         window.FHJ.gridToXY = function(gridStr, isAway){
             // grid例: "1:1", "2:3" など（API-FootballのstartXIに入ってることが多い）
@@ -8482,8 +8521,14 @@
             console.log('📊 Formations:', { homeForm, awayForm });
 
             // formationベースの座標生成
-            const homeSlots = window.FHJ.formationToSlots(homeForm, false);
-            const awaySlots = window.FHJ.formationToSlots(awayForm, true);
+            let homeSlots = window.FHJ.formationToSlots(homeForm, false);
+            let awaySlots = window.FHJ.formationToSlots(awayForm, true);
+
+            // 衝突回避を適用
+            if (window.FHJ.applyAntiOverlap) {
+                homeSlots = window.FHJ.applyAntiOverlap(homeSlots, "home");
+                awaySlots = window.FHJ.applyAntiOverlap(awaySlots, "away");
+            }
 
             console.log('📊 Slots generated:', {
                 homeSlots: homeSlots.length,
@@ -8497,7 +8542,8 @@
             // Home players（下側に配置）
             normalizedHomeXI.slice(0, 11).forEach((p, idx) => {
                 const player = p?.player || p;
-                const playerName = player?.name || p?.name || 'Unknown';
+                const fullName = player?.name || p?.name || 'Unknown';
+                const shortName = fullName.length > 14 ? fullName.slice(0, 12) + "…" : fullName;
                 const playerNumber = player?.number || p?.number || '';
                 const rating = player?.rating || p?.rating || null;
                 
@@ -8506,12 +8552,12 @@
                 
                 nodesHtml.push(`
                     <div class="player-node" style="left:${slot.x}%; top:${slot.y}%;">
+                        <div class="player-label name-down" title="${fullName}">
+                            ${shortName}
+                            ${rating ? `<span style="margin-left: 4px; font-size: 9px; opacity: 0.8;">${rating}</span>` : ''}
+                        </div>
                         <div class="player-badge" style="background: rgba(26,134,240,0.9); box-shadow:0 0 14px rgba(26,134,240,0.45);">
                             ${playerNumber}
-                        </div>
-                        <div class="player-label">
-                            ${playerName}
-                            ${rating ? `<span style="margin-left: 4px; font-size: 9px; opacity: 0.8;">${rating}</span>` : ''}
                         </div>
                     </div>
                 `);
@@ -8521,7 +8567,8 @@
             // Away players（上側に配置）
             normalizedAwayXI.slice(0, 11).forEach((p, idx) => {
                 const player = p?.player || p;
-                const playerName = player?.name || p?.name || 'Unknown';
+                const fullName = player?.name || p?.name || 'Unknown';
+                const shortName = fullName.length > 14 ? fullName.slice(0, 12) + "…" : fullName;
                 const playerNumber = player?.number || p?.number || '';
                 const rating = player?.rating || p?.rating || null;
                 
@@ -8530,12 +8577,12 @@
                 
                 nodesHtml.push(`
                     <div class="player-node" style="left:${slot.x}%; top:${slot.y}%;">
+                        <div class="player-label name-up" title="${fullName}">
+                            ${shortName}
+                            ${rating ? `<span style="margin-left: 4px; font-size: 9px; opacity: 0.8;">${rating}</span>` : ''}
+                        </div>
                         <div class="player-badge" style="background: rgba(48,212,79,0.9); box-shadow:0 0 14px rgba(48,212,79,0.45);">
                             ${playerNumber}
-                        </div>
-                        <div class="player-label">
-                            ${playerName}
-                            ${rating ? `<span style="margin-left: 4px; font-size: 9px; opacity: 0.8;">${rating}</span>` : ''}
                         </div>
                     </div>
                 `);
