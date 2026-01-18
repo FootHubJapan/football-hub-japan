@@ -5172,14 +5172,14 @@
                         const matchDate = parseUtcDate(match.date || match.utcDate || match.matchDate || match.fixture?.date);
                         const timeString = matchDate ? matchDate.toLocaleTimeString('ja-JP', { 
                             hour: '2-digit', 
-                            minute: '2-digit' 
-                        },
-                            timeZone: 'Asia/Tokyo') : '時間未定';
+                            minute: '2-digit',
+                            timeZone: 'Asia/Tokyo'
+                        }) : '時間未定';
                         const dateString = matchDate ? matchDate.toLocaleDateString('ja-JP', { 
                             month: 'short', 
-                            day: 'numeric' 
-                        },
-                            timeZone: 'Asia/Tokyo') : '日付未定';
+                            day: 'numeric',
+                            timeZone: 'Asia/Tokyo'
+                        }) : '日付未定';
 
                         // スコアの表示（統合APIとAPI-Footballの両方に対応）
                         const homeScore = match.score?.fullTime?.home ?? match.homeScore;
@@ -5400,14 +5400,14 @@
                 const matchDate = new Date(match.date);
                 const timeString = matchDate.toLocaleTimeString('ja-JP', { 
                     hour: '2-digit', 
-                    minute: '2-digit' 
-                },
-                            timeZone: 'Asia/Tokyo');
+                    minute: '2-digit',
+                    timeZone: 'Asia/Tokyo'
+                });
                 const dateString = matchDate.toLocaleDateString('ja-JP', { 
                     month: 'short', 
-                    day: 'numeric' 
-                },
-                            timeZone: 'Asia/Tokyo');
+                    day: 'numeric',
+                    timeZone: 'Asia/Tokyo'
+                });
 
                 // スコアの表示を元のnull表示に戻す
                 const homeScore = match.homeScore;
