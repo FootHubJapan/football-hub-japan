@@ -7717,9 +7717,28 @@
 
         // イベントタブを更新
         function updateEventsTab(eventsData) {
-            const timelineEvents = document.getElementById('timelineEvents');
+            // 要素が見つかるまで待機（最大5秒）
+            let timelineEvents = document.getElementById('timelineEvents');
             if (!timelineEvents) {
-                console.warn('timelineEvents element not found');
+                // 要素が見つからない場合、少し待ってから再試行
+                let retries = 0;
+                const maxRetries = 50; // 5秒間（100ms * 50）
+                const checkElement = setInterval(() => {
+                    timelineEvents = document.getElementById('timelineEvents');
+                    if (timelineEvents) {
+                        clearInterval(checkElement);
+                        console.log('✅ timelineEvents element found after retry');
+                        // 関数の残りの処理を実行
+                        updateEventsTab(eventsData);
+                    } else {
+                        retries++;
+                        if (retries >= maxRetries) {
+                            clearInterval(checkElement);
+                            console.error('❌ timelineEvents element not found after retries');
+                            return;
+                        }
+                    }
+                }, 100);
                 return;
             }
 
