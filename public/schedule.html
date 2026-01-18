@@ -8256,6 +8256,36 @@
             return nums.length ? nums : [4,3,3];
         };
 
+        // X座標を生成する関数（ラインの役割に応じてspreadを変える）
+        window.FHJ.xPositions = function(count, role, isAway) {
+            // role: 'GK' | 'DF' | 'MF' | 'FW'
+            // 0〜100 のX（%）で返す
+            const center = 50;
+
+            const spreadByRole = {
+                GK: 0.00,
+                DF: 0.80,
+                MF: 0.55, // ←ここが肝。MFを密にする
+                FW: 0.60,
+            };
+
+            const spread = spreadByRole[role] ?? 0.65;
+
+            if (count === 1) return [center];
+
+            // 例: count=3なら [-1,0,1] / (count-1) で均等化
+            const xs = [];
+            for (let i = 0; i < count; i++) {
+                const t = (count === 1) ? 0 : (i / (count - 1)); // 0..1
+                const offset = (t - 0.5) * spread * 100;         // -spread*50 .. +spread*50
+                xs.push(center + offset);
+            }
+
+            // 左右対称のために、必ず昇順で返す
+            xs.sort((a, b) => a - b);
+            return xs;
+        };
+
         // Away（上半分）のslotだけを生成（センターラインを跨がない）
         window.FHJ.generateTopHalfSlots = function(formation) {
             const nums = String(formation || "")
@@ -8270,9 +8300,6 @@
             const yStart = 18;  // DF line
             const yEnd = 45;    // FW line（センターライン手前で止める）
             
-            const xMin = 16;
-            const xMax = 84;
-            
             const slots = [];
             slots.push({ role: "GK", x: 50, y: yGK, lineIndex: -1, indexInLine: 0 });
             
@@ -8283,16 +8310,27 @@
                 const count = lines[i];
                 const y = yStart + step * i;
                 
-                if (count === 1) {
-                    slots.push({ role: `L${i}`, x: 50, y, lineIndex: i, indexInLine: 0 });
-                    continue;
+                // ラインの役割を判定（先頭=DF、最後=FW、それ以外=MF）
+                let role;
+                if (i === 0) {
+                    role = "DF"; // 先頭ラインはDF
+                } else if (i === laneCount - 1) {
+                    role = "FW"; // 最後のラインはFW
+                } else {
+                    role = "MF"; // それ以外はMF
                 }
                 
-                // 左右対称：x=50中心に等間隔
-                const gap = (xMax - xMin) / (count - 1);
-                for (let k = 0; k < count; k++) {
-                    const x = xMin + gap * k;
-                    slots.push({ role: `L${i}`, x, y, lineIndex: i, indexInLine: k });
+                // 役割に応じたspreadでX座標を生成
+                const xs = window.FHJ.xPositions(count, role, true);
+                
+                for (let k = 0; k < xs.length; k++) {
+                    slots.push({ 
+                        role: `L${i}`, 
+                        x: xs[k], 
+                        y, 
+                        lineIndex: i, 
+                        indexInLine: k 
+                    });
                 }
             }
             
