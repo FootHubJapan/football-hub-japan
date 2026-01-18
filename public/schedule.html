@@ -8225,28 +8225,55 @@
         window.FHJ.formationToSlots = function(formation, isAway) {
             const lines = window.FHJ.parseFormation(formation);
 
-            // 上から: GK + DF/MF/FW...
-            // "それっぽく"見える固定Y（%）
-            // awayは上側（8-70%）、homeは下側（30-92%）
-            const yGK = isAway ? 8 : 92; // awayは上、homeは下
-            const yLinesAway = [18, 34, 52, 70]; // away用（上から）
-            const yLinesHome = [86, 70, 52, 34]; // home用（下から）
+            // ピッチを50%で均等に分割
+            // Away（上側）: 0% - 50%
+            // Home（下側）: 50% - 100%
+            const topBoundary = 0;      // 上端
+            const middleLine = 50;      // センターライン
+            const bottomBoundary = 100; // 下端
+
+            // 各チームのスペース（50%ずつ）
+            const teamSpace = 50; // 各チームが使用するスペース（%）
+
+            // Away用のY座標（上側 0-50%）
+            // GK: 8%, DF: 18%, MF: 30%, FW: 42%
+            const yAwayGK = 8;
+            const yAwayLines = [18, 30, 42]; // DF, MF, FW用
+
+            // Home用のY座標（下側 50-100%）
+            // GK: 92%, DF: 82%, MF: 70%, FW: 58%
+            const yHomeGK = 92;
+            const yHomeLines = [82, 70, 58]; // DF, MF, FW用（下から上へ）
 
             const slots = [];
-            const yLines = isAway ? yLinesAway : yLinesHome;
+            
+            if (isAway) {
+                // Away（上側）の配置
+                const yGK = yAwayGK;
+                slots.push({ x: 50, y: yGK }); // GK
 
-            // GK slot（最初の1つ）
-            slots.push({ x: 50, y: yGK });
+                // Lines（フォーメーションの各ライン）
+                lines.forEach((count, i) => {
+                    const y = yAwayLines[i] ?? (yAwayGK + (i + 1) * 10); // デフォルトは10%間隔
+                    for (let k = 0; k < count; k++) {
+                        const x = ((k + 1) * 100) / (count + 1); // 均等割り
+                        slots.push({ x, y });
+                    }
+                });
+            } else {
+                // Home（下側）の配置
+                const yGK = yHomeGK;
+                slots.push({ x: 50, y: yGK }); // GK
 
-            // Lines（フォーメーションの各ライン）
-            // 例: "4-2-3-1" -> [4,2,3,1] -> GK + 4人(DF) + 2人(MF) + 3人(MF) + 1人(FW)
-            lines.forEach((count, i) => {
-                const y = yLines[i] ?? (isAway ? 18 + i * 16 : 86 - i * 16);
-                for (let k = 0; k < count; k++) {
-                    const x = ((k + 1) * 100) / (count + 1); // 均等割り
-                    slots.push({ x, y });
-                }
-            });
+                // Lines（フォーメーションの各ライン）
+                lines.forEach((count, i) => {
+                    const y = yHomeLines[i] ?? (yHomeGK - (i + 1) * 10); // デフォルトは10%間隔
+                    for (let k = 0; k < count; k++) {
+                        const x = ((k + 1) * 100) / (count + 1); // 均等割り
+                        slots.push({ x, y });
+                    }
+                });
+            }
 
             return slots.slice(0, 11); // 最大11人
         };
