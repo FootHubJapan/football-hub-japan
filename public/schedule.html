@@ -4304,7 +4304,7 @@
             display:flex;
             flex-direction: column;
             align-items:center;
-            gap:6px;
+            gap: 0; /* gapは使わず、marginで制御 */
             pointer-events:none;
             z-index: 30;
         }
@@ -4317,6 +4317,7 @@
             font-size: 12px;
             color:#fff;
             order: 1; /* バッジは中央 */
+            flex-shrink: 0; /* バッジのサイズを固定 */
         }
         .player-label{
             background: rgba(0,0,0,0.55);
@@ -4331,21 +4332,22 @@
             white-space: nowrap;
             overflow:hidden;
             text-overflow: ellipsis;
+            flex-shrink: 0; /* ラベルのサイズを固定 */
         }
         .player-label.name-up{
             order: -1; /* 上に表示 */
-            margin-bottom: 6px;
+            margin-bottom: 24px; /* バッジとの間隔を確保 */
         }
         .player-label.name-down{
             order: 2; /* 下に表示 */
-            margin-top: 6px;
+            margin-top: 24px; /* バッジとの間隔を確保 */
         }
         /* 名前ラベルの位置を上下に分離（被り防止） */
         .player-node.is-away .player-label {
-            transform: translateY(-14px); /* 上へ */
+            transform: translateY(-20px); /* 上へ（より離す） */
         }
         .player-node.is-home .player-label {
-            transform: translateY(14px); /* 下へ */
+            transform: translateY(20px); /* 下へ（より離す） */
         }
     </style>
 </head>
