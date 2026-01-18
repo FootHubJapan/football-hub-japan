@@ -4340,6 +4340,13 @@
             order: 2; /* 下に表示 */
             margin-top: 6px;
         }
+        /* 名前ラベルの位置を上下に分離（被り防止） */
+        .player-node.is-away .player-label {
+            transform: translateY(-14px); /* 上へ */
+        }
+        .player-node.is-home .player-label {
+            transform: translateY(14px); /* 下へ */
+        }
     </style>
 </head>
 <body>
@@ -8231,66 +8238,66 @@
             return nums.length ? nums : [4,3,3];
         };
 
-        // 左右対称のslot生成関数
-        window.FHJ.generateSymmetricSlots = function(formation, side) {
-            // formation: "4-2-3-1" など
-            const nums = String(formation || "").split("-").map(n => parseInt(n, 10)).filter(Boolean);
+        // Away（上半分）のslotだけを生成（センターラインを跨がない）
+        window.FHJ.generateTopHalfSlots = function(formation) {
+            const nums = String(formation || "")
+                .split("-")
+                .map(n => parseInt(n, 10))
+                .filter(Boolean);
             
-            // 4-?-?-? が取れない時の保険（適当な整列）
-            const lines = nums.length ? nums : [4,4,2];
+            const lines = nums.length ? nums : [4, 4, 2]; // fallback
             
-            // yレーン（home側: 下にGK、上にFW）
-            // ※ピッチ内で見やすいレンジに収める（上:10〜下:90）
-            const yGK = 88;
-            const yStart = 72;    // DF
-            const yEnd = 18;      // FW
-            const laneCount = lines.length; 
-            const step = laneCount > 1 ? (yStart - yEnd) / (laneCount - 1) : 0;
+            // 上半分の安全域（絶対に50%を跨がない）
+            const yGK = 8;      // away GK は上寄り
+            const yStart = 18;  // DF line
+            const yEnd = 45;    // FW line（センターライン手前で止める）
             
-            // xの左右余白（狭すぎると被る）
             const xMin = 16;
             const xMax = 84;
             
-            const slotsHome = [];
+            const slots = [];
+            slots.push({ role: "GK", x: 50, y: yGK, lineIndex: -1, indexInLine: 0 });
             
-            // GK（常に中央）
-            slotsHome.push({ role: "GK", x: 50, y: yGK, lineIndex: -1, indexInLine: 0 });
+            const laneCount = lines.length;
+            const step = laneCount > 1 ? (yEnd - yStart) / (laneCount - 1) : 0;
             
-            // DF〜FW
             for (let i = 0; i < laneCount; i++) {
                 const count = lines[i];
-                const y = yStart - step * i;
+                const y = yStart + step * i;
                 
-                // xを左右対称に等間隔
-                const xs = [];
                 if (count === 1) {
-                    xs.push(50);
-                } else {
-                    const gap = (xMax - xMin) / (count - 1);
-                    for (let k = 0; k < count; k++) xs.push(xMin + gap * k);
+                    slots.push({ role: `L${i}`, x: 50, y, lineIndex: i, indexInLine: 0 });
+                    continue;
                 }
                 
-                // ここで完全に左右対称になる
-                for (let k = 0; k < xs.length; k++) {
-                    slotsHome.push({
-                        role: `L${i}`,
-                        x: xs[k],
-                        y,
-                        lineIndex: i,
-                        indexInLine: k
-                    });
+                // 左右対称：x=50中心に等間隔
+                const gap = (xMax - xMin) / (count - 1);
+                for (let k = 0; k < count; k++) {
+                    const x = xMin + gap * k;
+                    slots.push({ role: `L${i}`, x, y, lineIndex: i, indexInLine: k });
                 }
             }
             
-            if (side === "home") return slotsHome;
-            
-            // awayは "x同一・y反転" のみ（これが左右対称の肝）
-            const slotsAway = slotsHome.map(s => ({
+            return slots;
+        };
+
+        // Home（下半分）は yだけ反転して作る（xはそのまま）
+        window.FHJ.generateBottomHalfSlotsFromTop = function(topSlots) {
+            return topSlots.map(s => ({
                 ...s,
-                y: 100 - s.y
+                x: s.x,           // ★左右は入れ替えない
+                y: 100 - s.y,     // ★上下だけ反転 → 必ず 55%〜95% に入る
             }));
-            
-            return slotsAway;
+        };
+
+        // 後方互換性のため残す（内部でgenerateTopHalfSlotsを使用）
+        window.FHJ.generateSymmetricSlots = function(formation, side) {
+            const topSlots = window.FHJ.generateTopHalfSlots(formation);
+            if (side === "away") {
+                return topSlots;
+            } else {
+                return window.FHJ.generateBottomHalfSlotsFromTop(topSlots);
+            }
         };
 
         // 旧formationToSlots関数（後方互換性のため残す）
@@ -8528,9 +8535,14 @@
 
             console.log('📊 Formations:', { homeForm, awayForm });
 
-            // 左右対称のslot生成
-            const homeSlots = window.FHJ.generateSymmetricSlots(homeForm, "home");
-            const awaySlots = window.FHJ.generateSymmetricSlots(awayForm, "away");
+            // センターラインで上下を完全に分離したslot生成
+            // Awayは上半分（5-45%）、Homeは下半分（55-95%）
+            const topSlots = window.FHJ.generateTopHalfSlots(awayForm);
+            const bottomSlots = window.FHJ.generateBottomHalfSlotsFromTop(topSlots);
+            
+            // AwayはtopSlots、HomeはbottomSlotsを使う（絶対混ざらない）
+            const awaySlots = topSlots;
+            const homeSlots = bottomSlots;
 
             console.log('📊 Slots generated:', {
                 homeSlots: homeSlots.length,
@@ -8550,29 +8562,7 @@
             let homeNodesCount = 0;
             let awayNodesCount = 0;
 
-            // Home players（下側に配置）
-            homeAssigned.forEach(({ player: p, slot }) => {
-                const player = p?.player || p;
-                const fullName = player?.name || p?.name || 'Unknown';
-                const shortName = fullName.length > 14 ? fullName.slice(0, 12) + "…" : fullName;
-                const playerNumber = player?.number || p?.number || '';
-                const rating = player?.rating || p?.rating || null;
-                
-                nodesHtml.push(`
-                    <div class="player-node" style="left:${slot.x}%; top:${slot.y}%;">
-                        <div class="player-label name-down" title="${fullName}">
-                            ${shortName}
-                            ${rating ? `<span style="margin-left: 4px; font-size: 9px; opacity: 0.8;">${rating}</span>` : ''}
-                        </div>
-                        <div class="player-badge" style="background: rgba(26,134,240,0.9); box-shadow:0 0 14px rgba(26,134,240,0.45);">
-                            ${playerNumber}
-                        </div>
-                    </div>
-                `);
-                homeNodesCount++;
-            });
-
-            // Away players（上側に配置）
+            // Away players（上半分に配置、名前ラベルは上）
             awayAssigned.forEach(({ player: p, slot }) => {
                 const player = p?.player || p;
                 const fullName = player?.name || p?.name || 'Unknown';
@@ -8581,17 +8571,39 @@
                 const rating = player?.rating || p?.rating || null;
                 
                 nodesHtml.push(`
-                    <div class="player-node" style="left:${slot.x}%; top:${slot.y}%;">
+                    <div class="player-node is-away" style="left:${slot.x}%; top:${slot.y}%;">
+                        <div class="player-badge" style="background: rgba(48,212,79,0.9); box-shadow:0 0 14px rgba(48,212,79,0.45);">
+                            ${playerNumber}
+                        </div>
                         <div class="player-label name-up" title="${fullName}">
                             ${shortName}
                             ${rating ? `<span style="margin-left: 4px; font-size: 9px; opacity: 0.8;">${rating}</span>` : ''}
                         </div>
-                        <div class="player-badge" style="background: rgba(48,212,79,0.9); box-shadow:0 0 14px rgba(48,212,79,0.45);">
-                            ${playerNumber}
-                        </div>
                     </div>
                 `);
                 awayNodesCount++;
+            });
+
+            // Home players（下半分に配置、名前ラベルは下）
+            homeAssigned.forEach(({ player: p, slot }) => {
+                const player = p?.player || p;
+                const fullName = player?.name || p?.name || 'Unknown';
+                const shortName = fullName.length > 14 ? fullName.slice(0, 12) + "…" : fullName;
+                const playerNumber = player?.number || p?.number || '';
+                const rating = player?.rating || p?.rating || null;
+                
+                nodesHtml.push(`
+                    <div class="player-node is-home" style="left:${slot.x}%; top:${slot.y}%;">
+                        <div class="player-badge" style="background: rgba(26,134,240,0.9); box-shadow:0 0 14px rgba(26,134,240,0.45);">
+                            ${playerNumber}
+                        </div>
+                        <div class="player-label name-down" title="${fullName}">
+                            ${shortName}
+                            ${rating ? `<span style="margin-left: 4px; font-size: 9px; opacity: 0.8;">${rating}</span>` : ''}
+                        </div>
+                    </div>
+                `);
+                homeNodesCount++;
             });
 
             console.log(`✅ Rendered ${homeNodesCount} home players and ${awayNodesCount} away players`);
