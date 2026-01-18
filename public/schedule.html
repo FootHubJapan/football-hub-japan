@@ -93,6 +93,46 @@
             background-color: var(--surface-dark);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
+        
+        /* Timeline UI Styles */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .timeline-line {
+            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.1) 5%, rgba(255,255,255,0.1) 95%, transparent);
+        }
+        .event-card {
+            position: relative;
+            transition: all 0.3s;
+        }
+        .event-card:hover {
+            transform: scale(1.02);
+        }
+        .glow-goal {
+            text-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+        }
+        .glow-var {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+        .minute-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(24px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            z-index: 20;
+            font-weight: 800;
+            font-size: 0.875rem;
+            letter-spacing: -0.05em;
+        }
         /* ライブパルスアニメーション */
         .live-pulse {
             box-shadow: 0 0 0 0 rgba(51, 255, 255, 0.7);
@@ -7646,101 +7686,213 @@
 
         // イベントタブを更新
         function updateEventsTab(eventsData) {
-            const eventsContainer = document.getElementById('events');
-            if (!eventsContainer) return;
+            const timelineEvents = document.getElementById('timelineEvents');
+            if (!timelineEvents) {
+                console.warn('timelineEvents element not found');
+                return;
+            }
 
-            console.log('Updating events tab with data:', eventsData);
+            console.log('Updating timeline tab with data:', eventsData);
+            
+            // matchDataからホーム/アウェイチーム名を取得（グローバル変数または関数パラメータから）
+            const matchData = window.currentMatchData || {};
+            const homeTeam = matchData.homeTeam || matchData.home || 'Home';
+            const awayTeam = matchData.awayTeam || matchData.away || 'Away';
+            
             if (eventsData && Array.isArray(eventsData) && eventsData.length > 0) {
-                let eventsHTML = '';
                 // イベントを時間順にソート
-                const sortedEvents = eventsData.sort((a, b) => (a.time || 0) - (b.time || 0));
-                sortedEvents.forEach((event, index) => {
-                    const time = event.time || 0;
-                    const type = event.type || 'Unknown';
-                    const detail = event.detail || '';
-                    const team = event.team || '';
-                    const player = event.player || '';
-                    const assist = event.assist || '';
-                    // イベントタイプに応じたアイコンと色を設定
-                    let eventIcon = '';
-                    let eventColor = '';
-                    let assistDisplay = '';
-                    switch(type.toLowerCase()) {
-                        case 'goal':
-                            eventIcon = '⚽';
-                            eventColor = '#4CAF50';
-                            // 得点シーンの場合はアシストを表示
-                            if (assist) {
-                                assistDisplay = `<div class="event-assist">アシスト: ${assist}</div>`;
-                            }
-                            break;
-                        case 'card':
-                            eventIcon = '🟨';
-                            eventColor = '#FFC107';
-                            break;
-                        case 'subst':
-                            eventIcon = '🔄';
-                            eventColor = '#2196F3';
-                            // 交代の場合はIn/Outを表示
-                            // playerがIn、assistがOutと仮定
-                            if (player && assist) {
-                                assistDisplay = `<div class="event-assist">In: ${player} / Out: ${assist}</div>`;
-                            } else if (player) {
-                                assistDisplay = `<div class="event-assist">In: ${player}</div>`;
-                            } else if (assist) {
-                                assistDisplay = `<div class="event-assist">Out: ${assist}</div>`;
-                            }
-                            break;
-                        default:
-                            eventIcon = '📝';
-                            eventColor = '#9E9E9E';
-                            // その他のイベントでアシストがある場合は表示
-                            if (assist) {
-                                assistDisplay = `<div class="event-assist">アシスト: ${assist}</div>`;
-                            }
-                    }
-                    eventsHTML += `
-                        <div class="event-item" style="border-left-color: ${eventColor}">
-                            <div class="event-time">${time}'</div>
-                            <div class="event-icon">${eventIcon}</div>
-                            <div class="event-details">
-                                <div class="event-type">${detail}</div>
-                                <div class="event-player">${player}</div>
-                                <div class="event-team">${team}</div>
-                                ${assistDisplay}
-                            </div>
-                        </div>
-                    `;
+                const sortedEvents = eventsData.sort((a, b) => {
+                    const timeA = a.time?.elapsed || a.time || a.minute || 0;
+                    const timeB = b.time?.elapsed || b.time || b.minute || 0;
+                    return timeA - timeB;
                 });
-                if (eventsHTML) {
-                    eventsContainer.innerHTML = `
-                        <div class="events-container">
-                            <h3>試合イベント</h3>
-                            <div class="events-header">
-                                <span>時間</span>
-                                <span>イベント</span>
-                                <span>詳細</span>
-                            </div>
-                            <div class="events-list">
-                                ${eventsHTML}
-                            </div>
+                
+                // キックオフマーカー
+                let eventsHTML = `
+                    <div class="flex justify-center">
+                        <div class="glass-panel px-6 py-2 rounded-full border-white/5" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);">
+                            <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Kick Off</span>
                         </div>
-                    `;
-                    console.log('Events HTML updated with', eventsData.length, 'events');
-                } else {
-                    eventsContainer.innerHTML = `
-                        <div class="events-container">
-                            <h3>試合イベント</h3>
-                            <div class="no-data">イベントデータが利用できません</div>
-                        </div>
-                    `;
-                }
+                    </div>
+                `;
+                
+                // イベントをグループ化（同じ分のイベントをまとめる）
+                const eventsByMinute = {};
+                sortedEvents.forEach(event => {
+                    const time = event.time?.elapsed || event.time || event.minute || 0;
+                    const timeStr = time.toString();
+                    if (!eventsByMinute[timeStr]) {
+                        eventsByMinute[timeStr] = [];
+                    }
+                    eventsByMinute[timeStr].push(event);
+                });
+                
+                // 各分のイベントを表示
+                Object.keys(eventsByMinute).sort((a, b) => parseInt(a) - parseInt(b)).forEach(minute => {
+                    const events = eventsByMinute[minute];
+                    const minuteNum = parseInt(minute);
+                    
+                    events.forEach(event => {
+                        const type = (event.type || '').toLowerCase();
+                        const detail = event.detail || event.comments || '';
+                        const player = event.player?.name || event.player || '';
+                        const assist = event.assist?.name || event.assist || '';
+                        const teamName = event.team?.name || event.team || '';
+                        const isHome = teamName === homeTeam || event.team === 'home' || event.team === homeTeam;
+                        
+                        // イベントタイプに応じた表示
+                        if (type === 'goal' || type === 'goal ') {
+                            // ゴールイベント
+                            eventsHTML += `
+                                <div class="flex items-center w-full">
+                                    <div class="w-1/2 pr-12 ${isHome ? 'text-right' : ''}">
+                                        ${isHome ? `
+                                        <div class="event-card glass-panel p-5 rounded-2xl inline-block" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1.25rem; transition: all 0.3s;">
+                                            <div class="flex items-center justify-end gap-4 mb-1">
+                                                <div>
+                                                    <h3 class="text-lg font-black text-white leading-none">${player || 'Unknown'}</h3>
+                                                    ${assist ? `<p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Assist: ${assist}</p>` : ''}
+                                                </div>
+                                                <span class="material-symbols-outlined text-3xl text-goal-gold fill-1 glow-goal" style="color: #fbbf24; font-size: 1.875rem; text-shadow: 0 0 15px rgba(251, 191, 36, 0.6);">sports_soccer</span>
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                    <div class="minute-marker" style="display: flex; align-items: center; justify-center; width: 3rem; height: 3rem; border-radius: 9999px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); backdrop-filter: blur(24px); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); z-index: 20; font-weight: 800; font-size: 0.875rem; letter-spacing: -0.05em;">${minuteNum}'</div>
+                                    <div class="w-1/2 pl-12 ${!isHome ? 'text-left' : ''}">
+                                        ${!isHome ? `
+                                        <div class="event-card glass-panel p-5 rounded-2xl inline-block" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1.25rem; transition: all 0.3s;">
+                                            <div class="flex items-center gap-4 mb-1">
+                                                <span class="material-symbols-outlined text-3xl text-goal-gold fill-1 glow-goal" style="color: #fbbf24; font-size: 1.875rem; text-shadow: 0 0 15px rgba(251, 191, 36, 0.6);">sports_soccer</span>
+                                                <div>
+                                                    <h3 class="text-lg font-black text-white leading-none">${player || 'Unknown'}</h3>
+                                                    ${assist ? `<p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Assist: ${assist}</p>` : ''}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        } else if (type === 'card' || type.includes('yellow') || type.includes('red')) {
+                            // カードイベント
+                            const isRed = type.includes('red') || detail.toLowerCase().includes('red');
+                            const cardColor = isRed ? 'card-red' : 'card-yellow';
+                            const cardColorValue = isRed ? '#ef4444' : '#fbbf24';
+                            
+                            eventsHTML += `
+                                <div class="flex items-center w-full">
+                                    <div class="w-1/2 pr-12 ${isHome ? 'text-right' : ''}">
+                                        ${isHome ? `
+                                        <div class="event-card glass-panel p-5 rounded-2xl inline-block border-l-4" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid ${cardColorValue}; border-radius: 1rem; padding: 1.25rem;">
+                                            <div class="flex items-center justify-end gap-4 mb-1">
+                                                <div>
+                                                    <h3 class="text-lg font-black text-white leading-none">${player || 'Unknown'}</h3>
+                                                    <p class="text-[10px] font-bold text-slate-500 uppercase mt-1">${detail || 'Card'}</p>
+                                                </div>
+                                                <span class="material-symbols-outlined text-2xl fill-1" style="color: ${cardColorValue}; font-size: 1.5rem;">rectangle</span>
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                    <div class="minute-marker ${isRed ? 'border-red-500/50 text-red-500 bg-red-500/10' : ''}" style="display: flex; align-items: center; justify-center; width: 3rem; height: 3rem; border-radius: 9999px; border: 1px solid ${isRed ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.2)'}; background: ${isRed ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.1)'}; backdrop-filter: blur(24px); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); z-index: 20; font-weight: 800; font-size: 0.875rem; letter-spacing: -0.05em; color: ${isRed ? '#ef4444' : 'white'};">${minuteNum}'</div>
+                                    <div class="w-1/2 pl-12 ${!isHome ? 'text-left' : ''}">
+                                        ${!isHome ? `
+                                        <div class="event-card glass-panel p-5 rounded-2xl inline-block border-l-4" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid ${cardColorValue}; border-radius: 1rem; padding: 1.25rem;">
+                                            <div class="flex items-center gap-4 mb-1">
+                                                <span class="material-symbols-outlined text-2xl fill-1" style="color: ${cardColorValue}; font-size: 1.5rem;">rectangle</span>
+                                                <div>
+                                                    <h3 class="text-lg font-black text-white leading-none">${player || 'Unknown'}</h3>
+                                                    <p class="text-[10px] font-bold text-slate-500 uppercase mt-1">${detail || 'Card'}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        } else if (type === 'subst' || type.includes('substitution')) {
+                            // 交代イベント
+                            const subIn = player || '';
+                            const subOut = assist || '';
+                            
+                            eventsHTML += `
+                                <div class="flex items-center w-full">
+                                    <div class="w-1/2 pr-12 ${isHome ? 'text-right' : ''}">
+                                        ${isHome ? `
+                                        <div class="event-card glass-panel p-5 rounded-2xl inline-block" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1.25rem;">
+                                            <div class="flex items-center justify-end gap-5">
+                                                <div class="text-right">
+                                                    ${subIn ? `<div class="flex items-center justify-end gap-2 mb-1"><span class="material-symbols-outlined font-black text-sm" style="color: #22c55e;">arrow_upward</span><span class="text-sm font-black text-white">${subIn}</span></div>` : ''}
+                                                    ${subOut ? `<div class="flex items-center justify-end gap-2"><span class="material-symbols-outlined font-black text-sm" style="color: #ef4444;">arrow_downward</span><span class="text-sm font-bold text-slate-500">${subOut}</span></div>` : ''}
+                                                </div>
+                                                <span class="material-symbols-outlined text-3xl text-primary" style="color: #00bdc7; font-size: 1.875rem;">sync_alt</span>
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                    <div class="minute-marker" style="display: flex; align-items: center; justify-center; width: 3rem; height: 3rem; border-radius: 9999px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); backdrop-filter: blur(24px); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); z-index: 20; font-weight: 800; font-size: 0.875rem; letter-spacing: -0.05em;">${minuteNum}'</div>
+                                    <div class="w-1/2 pl-12 ${!isHome ? 'text-left' : ''}">
+                                        ${!isHome ? `
+                                        <div class="event-card glass-panel p-5 rounded-2xl inline-block" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1.25rem;">
+                                            <div class="flex items-center gap-5">
+                                                <span class="material-symbols-outlined text-3xl text-primary" style="color: #00bdc7; font-size: 1.875rem;">sync_alt</span>
+                                                <div>
+                                                    ${subIn ? `<div class="flex items-center gap-2 mb-1"><span class="material-symbols-outlined font-black text-sm" style="color: #22c55e;">arrow_upward</span><span class="text-sm font-black text-white">${subIn}</span></div>` : ''}
+                                                    ${subOut ? `<div class="flex items-center gap-2"><span class="material-symbols-outlined font-black text-sm" style="color: #ef4444;">arrow_downward</span><span class="text-sm font-bold text-slate-500">${subOut}</span></div>` : ''}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            // その他のイベント
+                            eventsHTML += `
+                                <div class="flex items-center w-full">
+                                    <div class="w-1/2 pr-12 ${isHome ? 'text-right' : ''}">
+                                        ${isHome ? `
+                                        <div class="event-card glass-panel p-5 rounded-2xl inline-block" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1.25rem;">
+                                            <div class="flex items-center justify-end gap-4 mb-1">
+                                                <div>
+                                                    <h3 class="text-lg font-black text-white leading-none">${player || 'Unknown'}</h3>
+                                                    ${detail ? `<p class="text-[10px] font-bold text-slate-500 uppercase mt-1">${detail}</p>` : ''}
+                                                </div>
+                                                <span class="material-symbols-outlined text-2xl text-slate-400">info</span>
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                    <div class="minute-marker" style="display: flex; align-items: center; justify-center; width: 3rem; height: 3rem; border-radius: 9999px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); backdrop-filter: blur(24px); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); z-index: 20; font-weight: 800; font-size: 0.875rem; letter-spacing: -0.05em;">${minuteNum}'</div>
+                                    <div class="w-1/2 pl-12 ${!isHome ? 'text-left' : ''}">
+                                        ${!isHome ? `
+                                        <div class="event-card glass-panel p-5 rounded-2xl inline-block" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem; padding: 1.25rem;">
+                                            <div class="flex items-center gap-4 mb-1">
+                                                <span class="material-symbols-outlined text-2xl text-slate-400">info</span>
+                                                <div>
+                                                    <h3 class="text-lg font-black text-white leading-none">${player || 'Unknown'}</h3>
+                                                    ${detail ? `<p class="text-[10px] font-bold text-slate-500 uppercase mt-1">${detail}</p>` : ''}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                });
+                
+                timelineEvents.innerHTML = eventsHTML;
+                console.log('Timeline HTML updated with', eventsData.length, 'events');
             } else {
                 // データがない場合のフォールバック表示
-                eventsContainer.innerHTML = `
-                    <div class="events-container">
-                        <h3>試合イベント</h3>
-                        <div class="no-data">イベントデータが利用できません</div>
+                timelineEvents.innerHTML = `
+                    <div class="flex justify-center">
+                        <div class="glass-panel px-6 py-2 rounded-full border-white/5" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);">
+                            <span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">No Events Available</span>
+                        </div>
                     </div>
                 `;
             }
@@ -9433,7 +9585,7 @@
                 });
                 updateStatsTab(matchData.stats || null, matchData);
                 // イベントタブを更新
-                updateEventsTab(matchData.events || []);
+                window.currentMatchData = matchData; updateEventsTab(matchData.events || [], matchData);
                 // ラインアップタブを更新
                     updateLineupTab(matchData);
                 // 最初のタブ（Lineup）をアクティブにして表示（setActiveTab関数を使用）
