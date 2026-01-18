@@ -4304,7 +4304,7 @@
             display:flex;
             flex-direction: column;
             align-items:center;
-            gap: 0; /* gapは使わず、marginで制御 */
+            gap: 0;
             pointer-events:none;
             z-index: 30;
         }
@@ -4316,38 +4316,54 @@
             font-weight: 800;
             font-size: 12px;
             color:#fff;
-            order: 1; /* バッジは中央 */
-            flex-shrink: 0; /* バッジのサイズを固定 */
+            flex-shrink: 0;
         }
         .player-label{
-            background: rgba(0,0,0,0.55);
-            border: 1px solid rgba(255,255,255,0.10);
-            backdrop-filter: blur(6px);
-            color: rgba(255,255,255,0.9);
-            font-size: 10px;
-            font-weight: 700;
-            padding: 3px 8px;
+            position:absolute;
+            left:50%;
+            transform: translateX(-50%);
+            padding: 2px 8px;
             border-radius: 999px;
-            max-width: 140px;
+            font-size: 10px;
+            line-height: 1.1;
             white-space: nowrap;
-            overflow:hidden;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(6px);
+            pointer-events: none;
+            max-width: 96px;
+            overflow: hidden;
             text-overflow: ellipsis;
-            flex-shrink: 0; /* ラベルのサイズを固定 */
+            border: 1px solid rgba(255,255,255,0.10);
+            color: rgba(255,255,255,0.9);
+            font-weight: 700;
         }
-        .player-label.name-up{
-            order: -1; /* 上に表示 */
-            margin-bottom: 24px; /* バッジとの間隔を確保 */
+        /* 上半分(Away)は上に固定 */
+        .player-node.is-away .player-label{
+            bottom: 100%;
+            margin-bottom: 6px;
         }
-        .player-label.name-down{
-            order: 2; /* 下に表示 */
-            margin-top: 24px; /* バッジとの間隔を確保 */
+        /* 下半分(Home)は下に固定 */
+        .player-node.is-home .player-label{
+            top: 100%;
+            margin-top: 6px;
         }
-        /* 名前ラベルの位置を上下に分離（被り防止） */
-        .player-node.is-away .player-label {
-            transform: translateY(-20px); /* 上へ（より離す） */
+        /* アンカー線（視覚的な紐づき強化） */
+        .player-label::after{
+            content:"";
+            position:absolute;
+            left:50%;
+            transform: translateX(-50%);
+            width: 1px;
+            opacity: 0.35;
+            background: rgba(255,255,255,0.5);
         }
-        .player-node.is-home .player-label {
-            transform: translateY(20px); /* 下へ（より離す） */
+        .player-node.is-away .player-label::after{
+            top:100%;
+            height: 6px;
+        }
+        .player-node.is-home .player-label::after{
+            bottom:100%;
+            height: 6px;
         }
     </style>
 </head>
@@ -8334,6 +8350,56 @@
             return assigned;
         };
 
+        // ラベルの重なりを解決する関数（最大12pxまで微調整）
+        window.FHJ.resolveLabelCollisions = function(containerSelector = "#playersContainer") {
+            const container = document.querySelector(containerSelector);
+            if (!container) return;
+
+            const nodes = [...container.querySelectorAll(".player-node")];
+
+            // ラベルの矩形を取得（DOM反映後に）
+            const labels = nodes.map(node => {
+                const label = node.querySelector(".player-label");
+                if (!label) return null;
+                label.dataset.shift = "0";
+                return { node, label };
+            }).filter(Boolean);
+
+            // 近い距離感を保つため、最大シフト量を小さく固定
+            const shifts = [0, 4, 8, 12]; // px
+            const isOverlap = (a, b) => {
+                const ra = a.getBoundingClientRect();
+                const rb = b.getBoundingClientRect();
+                return !(ra.right < rb.left || ra.left > rb.right || ra.bottom < rb.top || ra.top > rb.bottom);
+            };
+
+            // 上から順に処理（視覚的に自然）
+            labels.sort((A, B) => A.label.getBoundingClientRect().top - B.label.getBoundingClientRect().top);
+
+            for (let i = 0; i < labels.length; i++) {
+                const { label } = labels[i];
+
+                // すでに重なっている相手がいるなら、段差をつける
+                for (let s = 0; s < shifts.length; s++) {
+                    const shift = shifts[s];
+
+                    // Awayは上方向に、Homeは下方向に微調整
+                    const parent = label.closest(".player-node");
+                    const isHome = parent.classList.contains("is-home");
+                    const signed = isHome ? +shift : -shift;
+
+                    label.style.transform = `translateX(-50%) translateY(${signed}px)`;
+
+                    // これで既存ラベルと被らないかチェック
+                    let ok = true;
+                    for (let j = 0; j < i; j++) {
+                        if (isOverlap(label, labels[j].label)) { ok = false; break; }
+                    }
+                    if (ok) break;
+                }
+            }
+        };
+
         // 旧gridToXY関数（後方互換性のため残す）
         window.FHJ.gridToXY = function(gridStr, isAway){
             // grid例: "1:1", "2:3" など（API-FootballのstartXIに入ってることが多い）
@@ -8599,7 +8665,7 @@
                         <div class="player-badge" style="background: rgba(26,134,240,0.9); box-shadow:0 0 14px rgba(26,134,240,0.45);">
                             ${playerNumber}
                         </div>
-                        <div class="player-label name-down" title="${fullName}">
+                        <div class="player-label" title="${fullName}">
                             ${shortName}
                             ${rating ? `<span style="margin-left: 4px; font-size: 9px; opacity: 0.8;">${rating}</span>` : ''}
                         </div>
@@ -8646,6 +8712,13 @@
             if (finalCount !== 22) {
                 console.warn(`⚠️ Expected 22 children but got ${finalCount}`);
             }
+
+            // ラベルの重なりを解決（次のフレームで実行）
+            requestAnimationFrame(() => {
+                if (window.FHJ.resolveLabelCollisions) {
+                    window.FHJ.resolveLabelCollisions("#playersContainer");
+                }
+            });
                 
                 // 最初のプレイヤーノードのスタイルを確認
                 setTimeout(() => {
