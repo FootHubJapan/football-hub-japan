@@ -4317,6 +4317,24 @@
             font-size: 12px;
             color:#fff;
             flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+        }
+        .player-badge-number{
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+        .player-badge-photo{
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.85;
+            z-index: 1;
         }
         .player-label{
             position:absolute;
@@ -8563,9 +8581,16 @@
                         const playerNumber = player?.number || sub?.number || '';
                         const playerPosition = player?.pos || sub?.position || sub?.pos || 'Unknown';
                         const positionLabel = getPositionLabel(playerPosition);
+                        const playerPhoto = player?.photo || sub?.photo || player?.photoUrl || sub?.photoUrl || null;
+                        const photoStyle = playerPhoto 
+                            ? `background-image: url('${playerPhoto}'); background-size: cover; background-position: center; background-color: rgba(26,134,240,0.3);`
+                            : `background-color: #1A86F0;`;
                         return `
                             <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background-color: #16252d; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.05);">
-                                <div style="width: 2rem; height: 2rem; background-color: #1A86F0; border-radius: 0.25rem; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.875rem; color: white;">${playerNumber}</div>
+                                <div style="width: 2rem; height: 2rem; ${photoStyle} border-radius: 0.25rem; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.875rem; color: white; position: relative; overflow: hidden;">
+                                    ${playerPhoto ? `<img src="${playerPhoto}" alt="${playerName}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.8;" onerror="this.style.display='none'; this.parentElement.style.background='#1A86F0';" />` : ''}
+                                    <span style="position: relative; z-index: 2; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">${playerNumber}</span>
+                                </div>
                                 <div style="flex: 1;">
                                     <div style="font-weight: 600; font-size: 0.875rem; color: white; margin-bottom: 0.125rem;">${playerName}</div>
                                     <div style="font-size: 0.625rem; color: #9ab0bc; text-transform: uppercase; letter-spacing: 0.05em;">${positionLabel}</div>
@@ -8591,9 +8616,16 @@
                         const playerNumber = player?.number || sub?.number || '';
                         const playerPosition = player?.pos || sub?.position || sub?.pos || 'Unknown';
                         const positionLabel = getPositionLabel(playerPosition);
+                        const playerPhoto = player?.photo || sub?.photo || player?.photoUrl || sub?.photoUrl || null;
+                        const photoStyle = playerPhoto 
+                            ? `background-image: url('${playerPhoto}'); background-size: cover; background-position: center; background-color: rgba(48,212,79,0.3);`
+                            : `background-color: #30D44F;`;
                         return `
                             <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background-color: #16252d; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.05); flex-direction: row-reverse;">
-                                <div style="width: 2rem; height: 2rem; background-color: #30D44F; border-radius: 0.25rem; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.875rem; color: white;">${playerNumber}</div>
+                                <div style="width: 2rem; height: 2rem; ${photoStyle} border-radius: 0.25rem; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.875rem; color: white; position: relative; overflow: hidden;">
+                                    ${playerPhoto ? `<img src="${playerPhoto}" alt="${playerName}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.8;" onerror="this.style.display='none'; this.parentElement.style.background='#30D44F';" />` : ''}
+                                    <span style="position: relative; z-index: 2; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">${playerNumber}</span>
+                                </div>
                                 <div style="flex: 1; text-align: right;">
                                     <div style="font-weight: 600; font-size: 0.875rem; color: white; margin-bottom: 0.125rem;">${playerName}</div>
                                     <div style="font-size: 0.625rem; color: #9ab0bc; text-transform: uppercase; letter-spacing: 0.05em;">${positionLabel}</div>
@@ -8729,11 +8761,25 @@
                 const shortName = fullName.length > 14 ? fullName.slice(0, 12) + "…" : fullName;
                 const playerNumber = player?.number || p?.number || '';
                 const rating = player?.rating || p?.rating || null;
+                const playerPhoto = player?.photo || p?.photo || player?.photoUrl || p?.photoUrl || null;
+                const playerId = player?.id || p?.id || null;
+                
+                // 写真URLを取得（複数のデータ構造に対応）
+                let photoUrl = playerPhoto;
+                if (!photoUrl && playerId) {
+                    // データベースから写真を取得する場合のフォールバック
+                    // ここでは直接APIデータを使用
+                }
+                
+                const badgeStyle = photoUrl 
+                    ? `background-image: url('${photoUrl}'); background-color: rgba(48,212,79,0.3);`
+                    : `background: rgba(48,212,79,0.9);`;
                 
                 nodesHtml.push(`
                     <div class="player-node is-away" style="left:${slot.x}%; top:${slot.y}%;">
-                        <div class="player-badge" style="background: rgba(48,212,79,0.9); box-shadow:0 0 14px rgba(48,212,79,0.45);">
-                            ${playerNumber}
+                        <div class="player-badge" style="${badgeStyle} box-shadow:0 0 14px rgba(48,212,79,0.45);">
+                            ${photoUrl ? `<img src="${photoUrl}" alt="${fullName}" class="player-badge-photo" onerror="this.style.display='none'; this.parentElement.style.background='rgba(48,212,79,0.9)';" />` : ''}
+                            <span class="player-badge-number">${playerNumber}</span>
                         </div>
                         <div class="player-label name-up" title="${fullName}">
                             ${shortName}
@@ -8751,11 +8797,25 @@
                 const shortName = fullName.length > 14 ? fullName.slice(0, 12) + "…" : fullName;
                 const playerNumber = player?.number || p?.number || '';
                 const rating = player?.rating || p?.rating || null;
+                const playerPhoto = player?.photo || p?.photo || player?.photoUrl || p?.photoUrl || null;
+                const playerId = player?.id || p?.id || null;
+                
+                // 写真URLを取得（複数のデータ構造に対応）
+                let photoUrl = playerPhoto;
+                if (!photoUrl && playerId) {
+                    // データベースから写真を取得する場合のフォールバック
+                    // ここでは直接APIデータを使用
+                }
+                
+                const badgeStyle = photoUrl 
+                    ? `background-image: url('${photoUrl}'); background-color: rgba(26,134,240,0.3);`
+                    : `background: rgba(26,134,240,0.9);`;
                 
                 nodesHtml.push(`
                     <div class="player-node is-home" style="left:${slot.x}%; top:${slot.y}%;">
-                        <div class="player-badge" style="background: rgba(26,134,240,0.9); box-shadow:0 0 14px rgba(26,134,240,0.45);">
-                            ${playerNumber}
+                        <div class="player-badge" style="${badgeStyle} box-shadow:0 0 14px rgba(26,134,240,0.45);">
+                            ${photoUrl ? `<img src="${photoUrl}" alt="${fullName}" class="player-badge-photo" onerror="this.style.display='none'; this.parentElement.style.background='rgba(26,134,240,0.9)';" />` : ''}
+                            <span class="player-badge-number">${playerNumber}</span>
                         </div>
                         <div class="player-label" title="${fullName}">
                             ${shortName}
