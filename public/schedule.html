@@ -8256,34 +8256,62 @@
             return nums.length ? nums : [4,3,3];
         };
 
-        // X座標を生成する関数（ラインの役割に応じてspreadを変える）
-        window.FHJ.xPositions = function(count, role, isAway) {
-            // role: 'GK' | 'DF' | 'MF' | 'FW'
+        // X座標を生成する関数（役割ベースのパターン）
+        window.FHJ.getXSlotsForLine = function(count, roleHint) {
+            // roleHint: 'DEF4' 'DM2' 'AM3' 'FW2' など、ラインの意味を渡す
             // 0〜100 のX（%）で返す
-            const center = 50;
+            const C = 50; // 中央
 
-            const spreadByRole = {
-                GK: 0.00,
-                DF: 0.80,
-                MF: 0.55, // ←ここが肝。MFを密にする
-                FW: 0.60,
+            // よく使う完成形寄りのスロット（左右対称）
+            const patterns = {
+                DEF4: [18, 38, 62, 82], // SBが外、CBが中
+                DEF3: [25, 50, 75],     // 3バック
+                DEF5: [12, 30, 50, 70, 88], // 5バック
+                DM2:  [43, 57],         // 2ボラは中央寄り（密）
+                CM2:  [43, 57],         // 2CMも中央寄り
+                CM3:  [36, 50, 64],     // 中盤3は密
+                AM3:  [28, 50, 72],     // 2WG+中央（WG広げる）
+                AM4:  [18, 40, 60, 82], // 4枚（LM/CM/CM/RM、外を張らせる）
+                FW2:  [42, 58],         // 2トップは中央寄り
+                FW3:  [30, 50, 70],     // 3トップ（WG広め）
+                FW1:  [50],             // 単独FW
             };
 
-            const spread = spreadByRole[role] ?? 0.65;
-
-            if (count === 1) return [center];
-
-            // 例: count=3なら [-1,0,1] / (count-1) で均等化
-            const xs = [];
-            for (let i = 0; i < count; i++) {
-                const t = (count === 1) ? 0 : (i / (count - 1)); // 0..1
-                const offset = (t - 0.5) * spread * 100;         // -spread*50 .. +spread*50
-                xs.push(center + offset);
+            if (roleHint && patterns[roleHint]) {
+                return patterns[roleHint];
             }
 
-            // 左右対称のために、必ず昇順で返す
-            xs.sort((a, b) => a - b);
-            return xs;
+            if (count === 1) return [C];
+
+            // fallback（均等）…ただし広げすぎない
+            const spread = 0.65;
+            return Array.from({ length: count }, (_, i) => {
+                const t = i / (count - 1);
+                return C + (t - 0.5) * spread * 100;
+            }).sort((a, b) => a - b);
+        };
+
+        // 旧xPositions関数（後方互換性のため残す）
+        window.FHJ.xPositions = function(count, role, isAway) {
+            // role: 'GK' | 'DF' | 'MF' | 'FW'
+            // roleHintに変換してgetXSlotsForLineを呼ぶ
+            let roleHint;
+            if (role === 'GK') {
+                return [50];
+            } else if (role === 'DF') {
+                roleHint = count === 4 ? 'DEF4' : count === 3 ? 'DEF3' : count === 5 ? 'DEF5' : null;
+            } else if (role === 'MF') {
+                if (count === 2) roleHint = 'DM2';
+                else if (count === 3) roleHint = 'AM3';
+                else if (count === 4) roleHint = 'AM4';
+                else roleHint = 'CM3';
+            } else if (role === 'FW') {
+                if (count === 1) roleHint = 'FW1';
+                else if (count === 2) roleHint = 'FW2';
+                else if (count === 3) roleHint = 'FW3';
+            }
+            
+            return window.FHJ.getXSlotsForLine(count, roleHint);
         };
 
         // Away（上半分）のslotだけを生成（センターラインを跨がない）
@@ -8310,18 +8338,44 @@
                 const count = lines[i];
                 const y = yStart + step * i;
                 
-                // ラインの役割を判定（先頭=DF、最後=FW、それ以外=MF）
-                let role;
+                // フォーメーションから役割を判定してroleHintを生成
+                let roleHint;
                 if (i === 0) {
-                    role = "DF"; // 先頭ラインはDF
+                    // 先頭ラインはDF
+                    if (count === 4) roleHint = "DEF4";
+                    else if (count === 3) roleHint = "DEF3";
+                    else if (count === 5) roleHint = "DEF5";
+                    else roleHint = null;
                 } else if (i === laneCount - 1) {
-                    role = "FW"; // 最後のラインはFW
+                    // 最後のラインはFW
+                    if (count === 1) roleHint = "FW1";
+                    else if (count === 2) roleHint = "FW2";
+                    else if (count === 3) roleHint = "FW3";
+                    else roleHint = null;
                 } else {
-                    role = "MF"; // それ以外はMF
+                    // それ以外はMF（フォーメーションの位置で判定）
+                    // 4-2-3-1 の "2" は DM2、"3" は AM3 と判定
+                    if (laneCount === 4 && i === 1 && count === 2) {
+                        // 4-2-3-1 や 4-4-2 の2枚目はDM2
+                        roleHint = "DM2";
+                    } else if (laneCount === 4 && i === 2 && count === 3) {
+                        // 4-2-3-1 の3枚目はAM3（WG広げる）
+                        roleHint = "AM3";
+                    } else if (count === 2) {
+                        roleHint = "DM2";
+                    } else if (count === 3) {
+                        // 3枚のMFはAM3（WG広げる）
+                        roleHint = "AM3";
+                    } else if (count === 4) {
+                        // 4枚のMFはAM4（外を張らせる）
+                        roleHint = "AM4";
+                    } else {
+                        roleHint = "CM3";
+                    }
                 }
                 
-                // 役割に応じたspreadでX座標を生成
-                const xs = window.FHJ.xPositions(count, role, true);
+                // 役割ベースのパターンでX座標を生成
+                const xs = window.FHJ.getXSlotsForLine(count, roleHint);
                 
                 for (let k = 0; k < xs.length; k++) {
                     slots.push({ 
