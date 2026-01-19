@@ -7706,7 +7706,7 @@
                         </div>
                     `;
                 });
-                html += '</div>';
+                            html += '</div>';
             } else {
                 html += '<div class="no-data">過去の対戦記録がありません</div>';
             }
@@ -7750,7 +7750,8 @@
             html += '<div class="flex flex-col gap-12 relative">';
             html += '<div class="flex justify-center"><div class="glass-panel px-6 py-2 rounded-full border-white/5"><span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Kick Off</span></div></div>';
 
-            // イベントを表示            sortedEvents.forEach(event => {
+            // イベントを表示
+            sortedEvents.forEach(event => {
                 const time = event.time?.elapsed ?? event.time ?? event.minute ?? 0;
                 const type = String(event.type || '').toLowerCase().trim();
                 const detail = event.detail || event.comments || '';
@@ -7890,13 +7891,12 @@
                     }
                 }
             });
-html += '</div></div>';
+            html += '</div></div>';
             root.innerHTML = html;
         }
-;
-            renderTimelinePro(matchData);
-        }
 
+        // renderTimelinePro関数の呼び出し
+        renderTimelinePro(matchData);
         function getSinglePlayersContainer() {
   const pitchContainer = document.getElementById("pitchContainer");
   if (!pitchContainer) return null;
@@ -9108,7 +9108,7 @@ html += '</div></div>';
                         </div>
                 `;
                 });
-                html += '</div>';
+                            html += '</div>';
             } else {
                 console.warn('No away players provided to generateModernPitchHTML');
             }
@@ -9132,7 +9132,7 @@ html += '</div></div>';
                                 </div>
                     `;
                 });
-                html += '</div>';
+                            html += '</div>';
             } else {
                 console.warn('No home players provided to generateModernPitchHTML');
             }
