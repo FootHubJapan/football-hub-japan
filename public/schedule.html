@@ -3311,6 +3311,237 @@
         }
 
         /* 過去の対戦成績 */
+        /* H2H Modern UI Styles */
+        .h2h-modern-container {
+            background: linear-gradient(to bottom right, #0f2439, #0a1628);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .h2h-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .h2h-stat-card {
+            text-align: center;
+        }
+
+        .h2h-stat-number {
+            font-size: 3.75rem;
+            font-weight: bold;
+            margin-bottom: 0.75rem;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .h2h-stat-number.home-wins {
+            background-image: linear-gradient(to bottom right, #60a5fa, #3b82f6);
+        }
+
+        .h2h-stat-number.draws {
+            background-image: linear-gradient(to bottom right, #22d3ee, #14b8a6);
+        }
+
+        .h2h-stat-number.away-wins {
+            background-image: linear-gradient(to bottom right, #f87171, #ef4444);
+        }
+
+        .h2h-stat-label {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            margin-bottom: 1rem;
+        }
+
+        .h2h-progress-bar {
+            width: 100%;
+            background-color: rgba(55, 65, 81, 0.3);
+            border-radius: 9999px;
+            height: 0.5rem;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .h2h-progress-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 1s ease-out;
+        }
+
+        .h2h-progress-fill.home-wins-bar {
+            background: linear-gradient(to right, #60a5fa, #3b82f6);
+        }
+
+        .h2h-progress-fill.draws-bar {
+            background: linear-gradient(to right, #22d3ee, #14b8a6);
+        }
+
+        .h2h-progress-fill.away-wins-bar {
+            background: linear-gradient(to right, #f87171, #ef4444);
+        }
+
+        .h2h-stat-percentage {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
+        .h2h-history-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+
+        .h2h-divider-line {
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(55, 65, 81, 0.7), transparent);
+            flex: 1;
+        }
+
+        .h2h-matches-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .h2h-match-card {
+            position: relative;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            overflow: hidden;
+            background: rgba(10, 30, 51, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .h2h-match-card:hover {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(14, 165, 233, 0.1) 100%);
+            transform: scale(1.02) translateX(8px);
+        }
+
+        .h2h-match-accent {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .h2h-match-accent.home-win {
+            background: linear-gradient(to bottom, #60a5fa, #3b82f6);
+        }
+
+        .h2h-match-accent.away-win {
+            background: linear-gradient(to bottom, #f87171, #ef4444);
+        }
+
+        .h2h-match-accent.draw {
+            background: linear-gradient(to bottom, #22d3ee, #14b8a6);
+        }
+
+        .h2h-match-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-left: 1rem;
+        }
+
+        .h2h-match-teams {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .h2h-team-name {
+            color: #ffffff;
+            font-weight: 600;
+            min-width: 100px;
+            transition: color 0.3s ease;
+        }
+
+        .h2h-match-card:hover .h2h-team-name.home-team {
+            color: #60a5fa;
+        }
+
+        .h2h-match-card:hover .h2h-team-name.away-team {
+            color: #f87171;
+        }
+
+        .h2h-score-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.5rem;
+        }
+
+        .h2h-score {
+            font-weight: bold;
+            font-size: 1.25rem;
+            color: #9ca3af;
+        }
+
+        .h2h-score.winner {
+            color: #60a5fa;
+        }
+
+        .h2h-score.draw-score {
+            color: #22d3ee;
+        }
+
+        .h2h-match-card:hover .h2h-score.winner {
+            color: #60a5fa;
+        }
+
+        .h2h-score-separator {
+            color: #6b7280;
+        }
+
+        .h2h-match-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .h2h-match-date {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-family: monospace;
+        }
+
+        .h2h-match-detail {
+            color: #22d3ee;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .h2h-match-card:hover .h2h-match-detail {
+            opacity: 1;
+        }
+
+        .h2h-no-data {
+            text-align: center;
+            color: #9ca3af;
+            padding: 2rem;
+            font-size: 0.875rem;
+        }
+
         .h2h-section {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
@@ -3321,66 +3552,6 @@
 
         .h2h-container {
             margin-top: 1rem;
-        }
-
-        .h2h-summary {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 1.5rem;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-        }
-
-        .h2h-stat {
-            text-align: center;
-        }
-
-        .h2h-stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #00ff88;
-            margin-bottom: 0.25rem;
-        }
-
-        .h2h-stat-label {
-            color: #a0a0a0;
-            font-size: 0.85rem;
-        }
-
-        .h2h-matches {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .h2h-match-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
-            border-left: 3px solid #00ff88;
-        }
-
-        .h2h-match-teams {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .h2h-match-score {
-            font-weight: bold;
-            color: #00ff88;
-            margin: 0 1rem;
-        }
-
-        .h2h-match-date {
-            color: #a0a0a0;
-            font-size: 0.85rem;
         }
 
         .performance-grid {
@@ -7668,50 +7839,141 @@
             }
         }
 
-        // 過去の対戦成績を表示
+        // 過去の対戦成績を表示（新しいUIデザイン）
         function renderHeadToHead(h2hData, homeTeam, awayTeam) {
             const h2hContainer = document.getElementById('h2hStats');
             if (!h2hContainer) return;
+            
             const homeWins = h2hData.homeWins || 0;
             const awayWins = h2hData.awayWins || 0;
             const draws = h2hData.draws || 0;
             const matches = h2hData.matches || [];
+            
+            const totalMatches = homeWins + awayWins + draws || 1;
+            const homeWinPercentage = (homeWins / totalMatches) * 100;
+            const drawPercentage = (draws / totalMatches) * 100;
+            const awayWinPercentage = (awayWins / totalMatches) * 100;
+            
             let html = `
-                <div class="h2h-summary">
-                    <div class="h2h-stat">
-                        <div class="h2h-stat-value">${homeWins}</div>
-                        <div class="h2h-stat-label">${homeTeam}の勝利</div>
-                    </div>
-                    <div class="h2h-stat">
-                        <div class="h2h-stat-value">${draws}</div>
-                        <div class="h2h-stat-label">引き分け</div>
-                    </div>
-                    <div class="h2h-stat">
-                        <div class="h2h-stat-value">${awayWins}</div>
-                        <div class="h2h-stat-label">${awayTeam}の勝利</div>
-                    </div>
-                    </div>
-                `;
-            if (matches.length > 0) {
-                html += '<div class="h2h-matches">';
-                matches.forEach(match => {
-                    const matchDate = match.date ? new Date(match.date).toLocaleDateString('ja-JP') : '';
-                    html += `
-                        <div class="h2h-match-item">
-                            <div class="h2h-match-teams">
-                                <span>${match.home}</span>
-                                <span class="h2h-match-score">${match.homeScore} - ${match.awayScore}</span>
-                                <span>${match.away}</span>
+                <div class="h2h-modern-container">
+                    <!-- Stats Summary -->
+                    <div class="h2h-stats-grid">
+                        <!-- Home Wins -->
+                        <div class="h2h-stat-card">
+                            <div class="h2h-stat-number home-wins">${homeWins}</div>
+                            <div class="h2h-stat-label">${homeTeam}の勝利</div>
+                            <div class="h2h-progress-bar">
+                                <div class="h2h-progress-fill home-wins-bar" style="width: ${homeWinPercentage}%"></div>
                             </div>
-                            <div class="h2h-match-date">${matchDate}</div>
+                            <div class="h2h-stat-percentage">${homeWinPercentage.toFixed(0)}%</div>
+                        </div>
+                        
+                        <!-- Draws -->
+                        <div class="h2h-stat-card">
+                            <div class="h2h-stat-number draws">${draws}</div>
+                            <div class="h2h-stat-label">引き分け</div>
+                            <div class="h2h-progress-bar">
+                                <div class="h2h-progress-fill draws-bar" style="width: ${drawPercentage}%"></div>
+                            </div>
+                            <div class="h2h-stat-percentage">${drawPercentage.toFixed(0)}%</div>
+                        </div>
+                        
+                        <!-- Away Wins -->
+                        <div class="h2h-stat-card">
+                            <div class="h2h-stat-number away-wins">${awayWins}</div>
+                            <div class="h2h-stat-label">${awayTeam}の勝利</div>
+                            <div class="h2h-progress-bar">
+                                <div class="h2h-progress-fill away-wins-bar" style="width: ${awayWinPercentage}%"></div>
+                            </div>
+                            <div class="h2h-stat-percentage">${awayWinPercentage.toFixed(0)}%</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Match History Header -->
+                    <div class="h2h-history-header">
+                        <div class="h2h-divider-line"></div>
+                        <span>過去の対戦成績</span>
+                        <div class="h2h-divider-line"></div>
+                    </div>
+                    
+                    <!-- Match History -->
+                    <div class="h2h-matches-list">
+            `;
+            
+            if (matches.length > 0) {
+                matches.forEach((match, index) => {
+                    const isHomeWin = match.homeScore > match.awayScore;
+                    const isAwayWin = match.homeScore < match.awayScore;
+                    const isDraw = match.homeScore === match.awayScore;
+                    const matchDate = match.date ? new Date(match.date).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' }).replace(/\//g, '/') : (match.date || '');
+                    
+                    html += `
+                        <div class="h2h-match-card" data-index="${index}">
+                            <div class="h2h-match-accent ${isHomeWin ? 'home-win' : isAwayWin ? 'away-win' : 'draw'}"></div>
+                            <div class="h2h-match-content">
+                                <div class="h2h-match-teams">
+                                    <span class="h2h-team-name home-team">${match.home || match.homeTeam}</span>
+                                    <div class="h2h-score-box">
+                                        <span class="h2h-score ${isHomeWin ? 'winner' : isDraw ? 'draw-score' : ''}">${match.homeScore}</span>
+                                        <span class="h2h-score-separator">-</span>
+                                        <span class="h2h-score ${isAwayWin ? 'winner' : isDraw ? 'draw-score' : ''}">${match.awayScore}</span>
+                                    </div>
+                                    <span class="h2h-team-name away-team">${match.away || match.awayTeam}</span>
+                                </div>
+                                <div class="h2h-match-meta">
+                                    <span class="h2h-match-date">${matchDate}</span>
+                                    <span class="h2h-match-detail">詳細 →</span>
+                                </div>
+                            </div>
                         </div>
                     `;
                 });
-                            html += '</div>';
             } else {
-                html += '<div class="no-data">過去の対戦記録がありません</div>';
+                html += '<div class="h2h-no-data">過去の対戦記録がありません</div>';
             }
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
             h2hContainer.innerHTML = html;
+            
+            // アニメーションを適用
+            setTimeout(() => {
+                const statCards = h2hContainer.querySelectorAll('.h2h-stat-card');
+                const matchCards = h2hContainer.querySelectorAll('.h2h-match-card');
+                const progressBars = h2hContainer.querySelectorAll('.h2h-progress-fill');
+                
+                statCards.forEach((card, i) => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.8)';
+                    setTimeout(() => {
+                        card.style.transition = 'all 0.5s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'scale(1)';
+                    }, 100 * (i + 1));
+                });
+                
+                progressBars.forEach((bar, i) => {
+                    const width = bar.style.width;
+                    bar.style.width = '0%';
+                    setTimeout(() => {
+                        bar.style.transition = 'width 1s ease-out';
+                        bar.style.width = width;
+                    }, 300 + (i * 100));
+                });
+                
+                matchCards.forEach((card, i) => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateX(-20px)';
+                    setTimeout(() => {
+                        card.style.transition = 'all 0.4s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateX(0)';
+                    }, 600 + (i * 50));
+                });
+            }, 10);
         }
 
         // イベントタブを更新
