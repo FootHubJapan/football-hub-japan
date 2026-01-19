@@ -7930,6 +7930,8 @@
 }
 
         // XIの並び順を正規化する関数（GK → DF → MF → FWの順）
+        // window.FHJが未初期化の場合に備えて初期化
+        window.FHJ = window.FHJ || {};
         window.FHJ.normalizeXI = function(xi) {
             const posRank = (p) => {
                 const pos = (p?.player?.pos || p?.player?.position || p?.position || "").toUpperCase();
