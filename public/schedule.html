@@ -9596,6 +9596,8 @@
                 window.currentMatchData = matchData; updateTimelineTab(matchData.events || [], matchData);
                 // ラインアップタブを更新
                     updateLineupTab(matchData);
+                // H2Hタブを更新
+                loadHeadToHead(matchData);
                 // 最初のタブ（Lineup）をアクティブにして表示（setActiveTab関数を使用）
                 setActiveTab('lineup');
             } catch (error) {
