@@ -7750,49 +7750,147 @@
             html += '<div class="flex flex-col gap-12 relative">';
             html += '<div class="flex justify-center"><div class="glass-panel px-6 py-2 rounded-full border-white/5"><span class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Kick Off</span></div></div>';
 
-            // イベントを表示
-            sortedEvents.forEach(event => {
-                const time = event.time?.elapsed || event.time || event.minute || 0;
-                const type = (event.type || '').toLowerCase();
+            // イベントを表示            sortedEvents.forEach(event => {
+                const time = event.time?.elapsed ?? event.time ?? event.minute ?? 0;
+                const type = String(event.type || '').toLowerCase().trim();
                 const detail = event.detail || event.comments || '';
                 const player = event.player?.name || event.player || '';
                 const assist = event.assist?.name || event.assist || '';
                 const teamName = event.team?.name || event.team || '';
                 const isHome = teamName === homeTeam || event.team === 'home' || event.team === homeTeam;
 
-                if (type === 'goal' || type === 'goal ') {
-                    // ゴールイベント
+                const minuteMarker = (t, extraStyle = '') =>
+                    `<div class="minute-marker"${extraStyle ? ` style="${extraStyle}"` : ''}>${t}'</div>`;
+
+                if (type === 'goal') {
                     if (isHome) {
-                        html += '<div class="flex items-center w-full"><div class="w-1/2 pr-12 text-right"><div class="event-card glass-panel p-5 rounded-2xl inline-block"><div class="flex items-center justify-end gap-4 mb-1"><div><h3 class="text-lg font-black text-white leading-none">' + (player || 'Unknown') + '</h3>' + (assist ? '<p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Assist: ' + assist + '</p>' : '') + '</div><span class="material-symbols-outlined text-3xl text-goal-gold fill-1 glow-goal">sports_soccer</span></div></div></div><div class="minute-marker">' + time + '\'</div><div class="w-1/2 pl-12"></div></div>";
+                        html += `
+                        <div class="flex items-center w-full">
+                            <div class="w-1/2 pr-12 text-right">
+                                <div class="event-card glass-panel p-5 rounded-2xl inline-block">
+                                    <div class="flex items-center justify-end gap-4 mb-1">
+                                        <div>
+                                            <h3 class="text-lg font-black text-white leading-none">${player || 'Unknown'}</h3>
+                                            ${assist ? `<p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Assist: ${assist}</p>` : ''}
+                                        </div>
+                                        <span class="material-symbols-outlined text-3xl text-goal-gold fill-1 glow-goal">sports_soccer</span>
+                                    </div>
+                                </div>
+                            </div>
+                            ${minuteMarker(time)}
+                            <div class="w-1/2 pl-12"></div>
+                        </div>
+                    `;
                     } else {
-                        html += '<div class="flex items-center w-full"><div class="w-1/2 pr-12"></div><div class="minute-marker">' + time + '\'</div><div class="w-1/2 pl-12 text-left"><div class="event-card glass-panel p-5 rounded-2xl inline-block"><div class="flex items-center gap-4 mb-1"><span class="material-symbols-outlined text-3xl text-goal-gold fill-1 glow-goal">sports_soccer</span><div><h3 class="text-lg font-black text-white leading-none">' + (player || 'Unknown') + '</h3>' + (assist ? '<p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Assist: ' + assist + '</p>' : '') + '</div></div></div></div></div>';
+                        html += `
+                        <div class="flex items-center w-full">
+                            <div class="w-1/2 pr-12"></div>
+                            ${minuteMarker(time)}
+                            <div class="w-1/2 pl-12 text-left">
+                                <div class="event-card glass-panel p-5 rounded-2xl inline-block">
+                                    <div class="flex items-center gap-4 mb-1">
+                                        <span class="material-symbols-outlined text-3xl text-goal-gold fill-1 glow-goal">sports_soccer</span>
+                                        <div>
+                                            <h3 class="text-lg font-black text-white leading-none">${player || 'Unknown'}</h3>
+                                            ${assist ? `<p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Assist: ${assist}</p>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                     }
-                } else if (type === 'card' || type.includes('yellow') || type.includes('red')) {
-                    // カードイベント
-                    const isRed = type.includes('red') || detail.toLowerCase().includes('red');
+                }
+
+                else if (type === 'card' || type.includes('yellow') || type.includes('red')) {
+                    const isRed = type.includes('red') || String(detail).toLowerCase().includes('red');
                     const cardColor = isRed ? '#ef4444' : '#fbbf24';
-                    const cardStyle = 'border-left-color: ' + cardColor + ';';
-                    const markerStyle = isRed ? 'border-color: rgba(239,68,68,0.5); color: #ef4444; background: rgba(239,68,68,0.1);' : '';
-                    
+                    const cardStyle = `border-left-color:${cardColor};`;
+                    const markerStyle = isRed ? 'border-color: rgba(239,68,68,0.5); color:#ef4444; background: rgba(239,68,68,0.1);' : '';
+
                     if (isHome) {
-                        html += '<div class="flex items-center w-full"><div class="w-1/2 pr-12 text-right"><div class="event-card glass-panel p-5 rounded-2xl inline-block border-l-4" style="' + cardStyle + '"><div class="flex items-center justify-end gap-4 mb-1"><div><h3 class="text-lg font-black text-white leading-none">' + (player || 'Unknown') + '</h3><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">' + (detail || 'Card') + '</p></div><span class="material-symbols-outlined text-2xl fill-1" style="color: ' + cardColor + ';">rectangle</span></div></div></div><div class="minute-marker" style="' + markerStyle + '">' + time + '\'</div><div class="w-1/2 pl-12"></div></div>";
+                        html += `
+                        <div class="flex items-center w-full">
+                            <div class="w-1/2 pr-12 text-right">
+                                <div class="event-card glass-panel p-5 rounded-2xl inline-block border-l-4" style="${cardStyle}">
+                                    <div class="flex items-center justify-end gap-4 mb-1">
+                                        <div>
+                                            <h3 class="text-lg font-black text-white leading-none">${player || 'Unknown'}</h3>
+                                            <p class="text-[10px] font-bold text-slate-500 uppercase mt-1">${detail || 'Card'}</p>
+                                        </div>
+                                        <span class="material-symbols-outlined text-2xl fill-1" style="color:${cardColor};">rectangle</span>
+                                    </div>
+                                </div>
+                            </div>
+                            ${minuteMarker(time, markerStyle)}
+                            <div class="w-1/2 pl-12"></div>
+                        </div>
+                    `;
                     } else {
-                        html += '<div class="flex items-center w-full"><div class="w-1/2 pr-12"></div><div class="minute-marker" style="' + markerStyle + '">' + time + '\'</div><div class="w-1/2 pl-12 text-left"><div class="event-card glass-panel p-5 rounded-2xl inline-block border-l-4" style="' + cardStyle + ' + '"><div class="flex items-center gap-4 mb-1"><span class="material-symbols-outlined text-2xl fill-1" style="color: ' + cardColor + ';">rectangle</span><div><h3 class="text-lg font-black text-white leading-none">' + (player || 'Unknown') + '</h3><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">' + (detail || 'Card') + '</p></div></div></div></div></div>';
+                        html += `
+                        <div class="flex items-center w-full">
+                            <div class="w-1/2 pr-12"></div>
+                            ${minuteMarker(time, markerStyle)}
+                            <div class="w-1/2 pl-12 text-left">
+                                <div class="event-card glass-panel p-5 rounded-2xl inline-block border-l-4" style="${cardStyle}">
+                                    <div class="flex items-center gap-4 mb-1">
+                                        <span class="material-symbols-outlined text-2xl fill-1" style="color:${cardColor};">rectangle</span>
+                                        <div>
+                                            <h3 class="text-lg font-black text-white leading-none">${player || 'Unknown'}</h3>
+                                            <p class="text-[10px] font-bold text-slate-500 uppercase mt-1">${detail || 'Card'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                     }
-                } else if (type === 'subst' || type.includes('substitution')) {
-                    // 交代イベント
+                }
+
+                else if (type === 'subst' || type.includes('substitution')) {
                     const subIn = player || '';
                     const subOut = assist || '';
-                    
+
                     if (isHome) {
-                        html += '<div class="flex items-center w-full"><div class="w-1/2 pr-12 text-right"><div class="event-card glass-panel p-5 rounded-2xl inline-block"><div class="flex items-center justify-end gap-5"><div class="text-right">' + (subIn ? '<div class="flex items-center justify-end gap-2 mb-1"><span class="material-symbols-outlined font-black text-sm text-sub-in">arrow_upward</span><span class="text-sm font-black text-white">' + subIn + '</span></div>' : '') + (subOut ? '<div class="flex items-center justify-end gap-2"><span class="material-symbols-outlined font-black text-sm text-sub-out">arrow_downward</span><span class="text-sm font-bold text-slate-500">' + subOut + '</span></div>' : '') + '</div><span class="material-symbols-outlined text-3xl text-primary">sync_alt</span></div></div></div><div class="minute-marker">' + time + '\'</div><div class="w-1/2 pl-12"></div></div>";
+                        html += `
+                        <div class="flex items-center w-full">
+                            <div class="w-1/2 pr-12 text-right">
+                                <div class="event-card glass-panel p-5 rounded-2xl inline-block">
+                                    <div class="flex items-center justify-end gap-5">
+                                        <div class="text-right">
+                                            ${subIn ? `<div class="flex items-center justify-end gap-2 mb-1"><span class="material-symbols-outlined font-black text-sm text-sub-in">arrow_upward</span><span class="text-sm font-black text-white">${subIn}</span></div>` : ''}
+                                            ${subOut ? `<div class="flex items-center justify-end gap-2"><span class="material-symbols-outlined font-black text-sm text-sub-out">arrow_downward</span><span class="text-sm font-bold text-slate-500">${subOut}</span></div>` : ''}
+                                        </div>
+                                        <span class="material-symbols-outlined text-3xl text-primary">sync_alt</span>
+                                    </div>
+                                </div>
+                            </div>
+                            ${minuteMarker(time)}
+                            <div class="w-1/2 pl-12"></div>
+                        </div>
+                    `;
                     } else {
-                        html += '<div class="flex items-center w-full"><div class="w-1/2 pr-12"></div><div class="minute-marker">' + time + '\'</div><div class="w-1/2 pl-12 text-left"><div class="event-card glass-panel p-5 rounded-2xl inline-block"><div class="flex items-center gap-5"><span class="material-symbols-outlined text-3xl text-primary">sync_alt</span><div>' + (subIn ? '<div class="flex items-center gap-2 mb-1"><span class="material-symbols-outlined font-black text-sm text-sub-in">arrow_upward</span><span class="text-sm font-black text-white">' + subIn + '</span></div>' : '') + (subOut ? '<div class="flex items-center gap-2"><span class="material-symbols-outlined font-black text-sm text-sub-out">arrow_downward</span><span class="text-sm font-bold text-slate-500">' + subOut + '</span></div>' : '') + '</div></div></div></div></div>';
+                        html += `
+                        <div class="flex items-center w-full">
+                            <div class="w-1/2 pr-12"></div>
+                            ${minuteMarker(time)}
+                            <div class="w-1/2 pl-12 text-left">
+                                <div class="event-card glass-panel p-5 rounded-2xl inline-block">
+                                    <div class="flex items-center gap-5">
+                                        <span class="material-symbols-outlined text-3xl text-primary">sync_alt</span>
+                                        <div>
+                                            ${subIn ? `<div class="flex items-center gap-2 mb-1"><span class="material-symbols-outlined font-black text-sm text-sub-in">arrow_upward</span><span class="text-sm font-black text-white">${subIn}</span></div>` : ''}
+                                            ${subOut ? `<div class="flex items-center gap-2"><span class="material-symbols-outlined font-black text-sm text-sub-out">arrow_downward</span><span class="text-sm font-bold text-slate-500">${subOut}</span></div>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                     }
                 }
             });
-
-            html += '</div></div>';
+html += '</div></div>';
             root.innerHTML = html;
         }
 ;
