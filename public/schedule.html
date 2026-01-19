@@ -7961,9 +7961,9 @@ html += '</div></div>';
                 DEF4: [18, 38, 62, 82], // SBが外、CBが中
                 DEF3: [25, 50, 75],     // 3バック
                 DEF5: [12, 30, 50, 70, 88], // 5バック
-                DM2:  [43, 57],         // 2ボラは中央寄り（密）
-                CM2:  [43, 57],         // 2CMも中央寄り
-                CM3:  [36, 50, 64],     // 中盤3は密
+                DM2:  [46, 54],         // 2ボラは中央寄り（密）
+                CM2:  [46, 54],         // 2CMも中央寄り
+                CM3:  [40, 50, 60],     // 中盤3は密
                 AM3:  [28, 50, 72],     // 2WG+中央（WG広げる）
                 AM4:  [18, 40, 60, 82], // 4枚（LM/CM/CM/RM、外を張らせる）
                 FW2:  [42, 58],         // 2トップは中央寄り
@@ -8041,8 +8041,11 @@ html += '</div></div>';
                     else roleHint = null;
                 } else {
                     // それ以外はMF（フォーメーションの位置で判定）
-                    // 4-2-3-1 の "2" は DM2、"3" は AM3 と判定
-                    if (laneCount === 4 && i === 1 && count === 2) {
+                    // 4-3-3 の "3" は CM3、4-2-3-1 の "3" は AM3 と判定
+                    if (laneCount === 3 && i === 1 && count === 3) {
+                        // 4-3-3 の中盤3枚はCM3（密）
+                        roleHint = "CM3";
+                    } else if (laneCount === 4 && i === 1 && count === 2) {
                         // 4-2-3-1 や 4-4-2 の2枚目はDM2
                         roleHint = "DM2";
                     } else if (laneCount === 4 && i === 2 && count === 3) {
@@ -8102,8 +8105,10 @@ html += '</div></div>';
         // 選手をslotに割り当てる関数（安定した順序で）
         window.FHJ.assignPlayersToSlots = function(startXI, slots) {
             if (!startXI?.length || !slots?.length) return [];
+            // normalizeXIを適用してGK→DF→MF→FW順に並べ替え
+            const normalizedXI = window.FHJ.normalizeXI ? window.FHJ.normalizeXI(startXI) : startXI;
             // GKを先に探す（positionがあるなら最優先）
-            const players = [...startXI];
+            const players = [...normalizedXI];
             const gkIndex = players.findIndex(p => {
                 const pos = (p?.player?.pos || p?.player?.position || p?.position || "").toUpperCase();
                 return pos.includes("GK") || pos.includes("G");
@@ -8113,7 +8118,7 @@ html += '</div></div>';
             const fieldSlots = slots.filter(s => s.role !== "GK");
             const assigned = [];
             if (slotGK && gk) assigned.push({ player: gk, slot: slotGK });
-            // 残りはそのまま順番でslotへ（これが一番安定する）
+            // 残りはそのまま順番でslotへ（normalizeXIでGK→DF→MF→FW順になっている）
             for (let i = 0; i < Math.min(players.length, fieldSlots.length); i++) {
                 assigned.push({ player: players[i], slot: fieldSlots[i] });
             }
