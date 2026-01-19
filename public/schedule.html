@@ -7898,33 +7898,35 @@ html += '</div></div>';
         }
 
         function getSinglePlayersContainer() {
-            const containers = document.querySelectorAll('#playersContainer');
-            if (containers.length === 0) {
-                const pitchContainer = document.getElementById('pitchContainer');
-                if (!pitchContainer) return null;
-                const container = document.createElement('div');
-                container.id = 'playersContainer';
-                container.className = 'absolute inset-0 z-20';
-                container.style.position = 'absolute';
-                container.style.inset = '0';
-                container.style.zIndex = '30';
-                container.style.pointerEvents = 'none';
-                container.style.width = '100%';
-                container.style.height = '100%';
-                pitchContainer.appendChild(container);
-                console.log('✅ Created new playersContainer');
-                return container;
-            } else if (containers.length === 1) {
-                return containers[0];
-            } else {
-                // 複数存在する場合は、最初の1つ以外を非表示にする
-                console.warn(`⚠️ Found ${containers.length} playersContainer elements, hiding duplicates`);
-                for (let i = 1; i < containers.length; i++) {
-                    containers[i].style.display = 'none';
-                }
-                return containers[0];
-            }
-        }
+  const pitchContainer = document.getElementById("pitchContainer");
+  if (!pitchContainer) return null;
+
+  // pitchContainer が relative じゃないと absolute の基準がズレる
+  const pcs = window.getComputedStyle(pitchContainer);
+  if (pcs.position === "static") pitchContainer.style.position = "relative";
+
+  // 重複していたら1つだけ残す
+  const all = pitchContainer.querySelectorAll("#playersContainer");
+  all.forEach((el, idx) => { if (idx > 0) el.remove(); });
+
+  let playersContainer = pitchContainer.querySelector("#playersContainer");
+  if (!playersContainer) {
+    playersContainer = document.createElement("div");
+    playersContainer.id = "playersContainer";
+    pitchContainer.appendChild(playersContainer);
+  }
+
+  // 描画の前提スタイルを固定
+  playersContainer.style.position = "absolute";
+  playersContainer.style.inset = "0";
+  playersContainer.style.zIndex = "30";
+  playersContainer.style.pointerEvents = "none";
+  playersContainer.style.width = "100%";
+  playersContainer.style.height = "100%";
+  playersContainer.style.display = "block";
+
+  return playersContainer;
+}
 
         // XIの並び順を正規化する関数（GK → DF → MF → FWの順）
         window.FHJ.normalizeXI = function(xi) {
@@ -7944,6 +7946,8 @@ html += '</div></div>';
         };
 
         // Formationベースの座標生成関数
+        // window.FHJが未初期化の場合に備えて初期化
+        window.FHJ = window.FHJ || {};
         window.FHJ.parseFormation = function(form) {
             // "4-2-3-1" -> [4,2,3,1]
             const nums = String(form || "").split("-").map(n => parseInt(n, 10)).filter(Boolean);
