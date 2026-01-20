@@ -5534,6 +5534,12 @@
                     firstMatch: data?.matches?.[0] || data?.items?.[0] || null
                 });
                 
+                // data.itemsをdata.matchesに変換（まだ変換されていない場合）
+                if (data && data.items && Array.isArray(data.items) && (!data.matches || data.matches.length === 0)) {
+                    data.matches = data.items;
+                    console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
+                }
+                
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
                   console.log(`✅ Found matches from ${dataSource}:`, data.matches.length);
                   console.log('🔍 最初のマッチのデータ構造:', data.matches[0]);
@@ -5841,42 +5847,14 @@
                     }
                 }
             } catch (error) {
-                console.error('❌ Error loading matches:', error);
-                console.error('❌ Error stack:', error.stack);
-                console.error('❌ Error details:', {
-                    message: error.message,
-                    name: error.name,
-                    cause: error.cause
-                });
-                
+                console.error('Error loading matches:', error);
                 contentDiv.innerHTML = `
-                    <div class="error" style="padding: 2rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; margin: 2rem 0;">
-                        <h3 style="color: #ef4444; margin-bottom: 1rem;">試合データの読み込みに失敗しました</h3>
-                        <p style="color: #fca5a5; margin-bottom: 0.5rem;"><strong>エラー:</strong> ${error.message}</p>
-                        <p style="color: #fca5a5; margin-bottom: 0.5rem;"><strong>エラータイプ:</strong> ${error.name}</p>
-                        <p style="color: #94a3b8; margin-top: 1rem; font-size: 0.875rem;">API制限の可能性があります。しばらく時間をおいてから再度お試しください。</p>
-                        <p style="color: #94a3b8; margin-top: 0.5rem; font-size: 0.875rem;">ブラウザのコンソール（F12）で詳細なエラー情報を確認できます。</p>
+                    <div class="error">
+                        <p>試合データの読み込みに失敗しました。</p>
+                        <p>エラー: ${error.message}</p>
+                        <p>API制限の可能性があります。しばらく時間をおいてから再度お試しください。</p>
                     </div>
                 `;
-            }
-        }
-        
-        // ページ読み込み時に確実にloadMatchesを呼び出す
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                console.log('📄 DOMContentLoaded: loadMatchesを呼び出します');
-                if (typeof loadMatches === 'function') {
-                    loadMatches();
-                } else {
-                    console.error('❌ loadMatches関数が定義されていません');
-                }
-            });
-        } else {
-            console.log('📄 DOM already loaded: loadMatchesを呼び出します');
-            if (typeof loadMatches === 'function') {
-                loadMatches();
-            } else {
-                console.error('❌ loadMatches関数が定義されていません');
             }
         }
 
