@@ -5395,16 +5395,41 @@
 
         // 試合データを読み込む
         async function loadMatches() {
-            const league = document.getElementById('leagueSelect').value;
-            const timeRange = document.getElementById('timeRangeSelect').value;
-            const season = document.getElementById('seasonSelect').value;
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const statusFilter = document.getElementById('statusFilter').value;
+            console.log('🚀 loadMatches function called');
+            
+            // 要素の存在確認
+            const leagueSelect = document.getElementById('leagueSelect');
+            const timeRangeSelect = document.getElementById('timeRangeSelect');
+            const seasonSelect = document.getElementById('seasonSelect');
+            const searchInput = document.getElementById('searchInput');
+            const statusFilterSelect = document.getElementById('statusFilter');
+            const contentDiv = document.getElementById('scheduleContent');
+            
+            if (!contentDiv) {
+                console.error('❌ scheduleContent element not found!');
+                return;
+            }
+            
+            if (!leagueSelect || !timeRangeSelect || !seasonSelect || !statusFilterSelect) {
+                console.error('❌ Required form elements not found!', {
+                    leagueSelect: !!leagueSelect,
+                    timeRangeSelect: !!timeRangeSelect,
+                    seasonSelect: !!seasonSelect,
+                    statusFilterSelect: !!statusFilterSelect
+                });
+                contentDiv.innerHTML = '<div class="error">フォーム要素が見つかりません。ページをリロードしてください。</div>';
+                return;
+            }
+            
+            const league = leagueSelect.value;
+            const timeRange = timeRangeSelect.value;
+            const season = seasonSelect.value;
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            const statusFilter = statusFilterSelect.value;
             
             console.log('🚀 loadMatches called with:', { league, timeRange, season, searchTerm, statusFilter });
             console.log('🔍 About to call integrated API...');
             
-            const contentDiv = document.getElementById('scheduleContent');
             contentDiv.innerHTML = '<div class="loading">試合データを読み込み中...</div>';
 
             try {
