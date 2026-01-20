@@ -5517,11 +5517,6 @@
                         throw fetchError;
                     }
                     
-                    // 新しいAPI形式に合わせてデータを変換
-                    if (data.items) {
-                        data.matches = data.items;
-                    }
-                    
                 } catch (integratedError) {
                     console.log('⚠️ 統合API失敗:', integratedError.message);
                     console.log('🔍 統合APIエラーの詳細:', integratedError);
@@ -5537,8 +5532,21 @@
                     return;
                 }
                 
+                // デバッグ: データ構造を詳細に確認
+                console.log('🔍 データ構造チェック:', {
+                    hasData: !!data,
+                    hasMatches: !!data?.matches,
+                    matchesIsArray: Array.isArray(data?.matches),
+                    matchesLength: data?.matches?.length || 0,
+                    hasItems: !!data?.items,
+                    itemsIsArray: Array.isArray(data?.items),
+                    itemsLength: data?.items?.length || 0,
+                    dataKeys: data ? Object.keys(data) : [],
+                    firstMatch: data?.matches?.[0] || data?.items?.[0] || null
+                });
+                
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
-                  console.log(`Found matches from ${dataSource}:`, data.matches.length);
+                  console.log(`✅ Found matches from ${dataSource}:`, data.matches.length);
                   console.log('🔍 最初のマッチのデータ構造:', data.matches[0]);
                     currentMatches = data.matches;
                   
