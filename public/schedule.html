@@ -5422,6 +5422,7 @@
                 // 統合されたデータを優先的に使用
                 let response;
                 let dataSource = 'integrated';
+                let data = null;
                 
                 try {
                     // まず統合データを試す
@@ -5489,9 +5490,15 @@
                     console.log('⚠️ 統合API失敗:', integratedError.message);
                     console.log('🔍 統合APIエラーの詳細:', integratedError);
                     
-                    // フォールバックデータは使用しない
-                    console.log('❌ APIデータが取得できませんでした。データを表示しません。');
-                    throw new Error('APIデータの取得に失敗しました');
+                    // エラーメッセージを表示
+                    contentDiv.innerHTML = `
+                        <div class="error">
+                            <p>試合データの読み込みに失敗しました。</p>
+                            <p>エラー: ${integratedError.message}</p>
+                            <p>API制限の可能性があります。しばらく時間をおいてから再度お試しください。</p>
+                        </div>
+                    `;
+                    return;
                 }
                 
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
@@ -5776,14 +5783,29 @@
                     console.log('Data type:', typeof data);
                     console.log('Data keys:', data ? Object.keys(data) : 'null/undefined');
                     
-                    contentDiv.innerHTML = `
-                        <div class="no-matches">
-                            <p>指定された条件に一致する試合が見つかりませんでした。</p>
-                            <p>レスポンス構造: ${JSON.stringify(data, null, 2)}</p>
-                            <p>データ型: ${typeof data}</p>
-                            <p>キー: ${data ? Object.keys(data).join(', ') : 'null/undefined'}</p>
-                        </div>
-                    `;
+                    if (!data) {
+                        contentDiv.innerHTML = `
+                            <div class="error">
+                                <p>試合データの取得に失敗しました。</p>
+                                <p>APIからの応答がありませんでした。</p>
+                            </div>
+                        `;
+                    } else if (!data.matches || !Array.isArray(data.matches)) {
+                        contentDiv.innerHTML = `
+                            <div class="error">
+                                <p>試合データの形式が正しくありません。</p>
+                                <p>レスポンス構造: ${JSON.stringify(data, null, 2)}</p>
+                            </div>
+                        `;
+                    } else {
+                        contentDiv.innerHTML = `
+                            <div class="no-matches">
+                                <p>指定された条件に一致する試合が見つかりませんでした。</p>
+                                <p>データソース: ${data.source || '不明'}</p>
+                                <p>取得件数: ${data.matches.length}件</p>
+                            </div>
+                        `;
+                    }
                 }
             } catch (error) {
                 console.error('Error loading matches:', error);
