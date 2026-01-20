@@ -5452,14 +5452,14 @@
                     console.log('📡 パラメータ詳細:', { season, leagueParam, statusParam, timeRangeParam });
                     
                     try {
-                        response = await fetch(integratedUrl, {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            signal: AbortSignal.timeout(30000) // 30秒のタイムアウト
-                        });
-                    
+                    response = await fetch(integratedUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        signal: AbortSignal.timeout(30000) // 30秒のタイムアウト
+                    });
+                
                         console.log('📡 APIレスポンス受信:', {
                             status: response.status,
                             statusText: response.statusText,
@@ -5467,18 +5467,18 @@
                             headers: Object.fromEntries(response.headers.entries())
                         });
                     
-                        if (!response.ok) {
+                if (!response.ok) {
                             const errorText = await response.text();
                             console.error('❌ APIエラーレスポンス:', errorText);
                             throw new Error(`Integrated API error! status: ${response.status}, message: ${errorText.substring(0, 200)}`);
-                        }
-                    
-                        const responseText = await response.text();
-                        console.log('✅ 統合API レスポンス取得成功');
-                        console.log('レスポンスサイズ:', responseText.length, '文字');
+                }
+                
+                const responseText = await response.text();
+                    console.log('✅ 統合API レスポンス取得成功');
+                    console.log('レスポンスサイズ:', responseText.length, '文字');
                         console.log('レスポンスプレビュー:', responseText.substring(0, 500));
-                    
-                        data = JSON.parse(responseText);
+                
+                    data = JSON.parse(responseText);
                         console.log('📊 統合データ解析成功:', {
                             hasItems: !!data.items,
                             itemsLength: data.items?.length || 0,
@@ -5489,10 +5489,10 @@
                             keys: Object.keys(data),
                             metaKeys: data.meta ? Object.keys(data.meta) : []
                         });
-                        
-                        // 新しいAPI形式に合わせてデータを変換
+                    
+                    // 新しいAPI形式に合わせてデータを変換
                         if (data.items && !data.matches) {
-                            data.matches = data.items;
+                        data.matches = data.items;
                             console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
                         }
                         
@@ -5831,24 +5831,52 @@
                             </div>
                         `;
                     } else {
-                        contentDiv.innerHTML = `
-                            <div class="no-matches">
-                                <p>指定された条件に一致する試合が見つかりませんでした。</p>
+                    contentDiv.innerHTML = `
+                        <div class="no-matches">
+                            <p>指定された条件に一致する試合が見つかりませんでした。</p>
                                 <p>データソース: ${data.source || '不明'}</p>
                                 <p>取得件数: ${data.matches.length}件</p>
-                            </div>
-                        `;
+                        </div>
+                    `;
                     }
                 }
             } catch (error) {
-                console.error('Error loading matches:', error);
+                console.error('❌ Error loading matches:', error);
+                console.error('❌ Error stack:', error.stack);
+                console.error('❌ Error details:', {
+                    message: error.message,
+                    name: error.name,
+                    cause: error.cause
+                });
+                
                 contentDiv.innerHTML = `
-                    <div class="error">
-                        <p>試合データの読み込みに失敗しました。</p>
-                        <p>エラー: ${error.message}</p>
-                        <p>API制限の可能性があります。しばらく時間をおいてから再度お試しください。</p>
+                    <div class="error" style="padding: 2rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; margin: 2rem 0;">
+                        <h3 style="color: #ef4444; margin-bottom: 1rem;">試合データの読み込みに失敗しました</h3>
+                        <p style="color: #fca5a5; margin-bottom: 0.5rem;"><strong>エラー:</strong> ${error.message}</p>
+                        <p style="color: #fca5a5; margin-bottom: 0.5rem;"><strong>エラータイプ:</strong> ${error.name}</p>
+                        <p style="color: #94a3b8; margin-top: 1rem; font-size: 0.875rem;">API制限の可能性があります。しばらく時間をおいてから再度お試しください。</p>
+                        <p style="color: #94a3b8; margin-top: 0.5rem; font-size: 0.875rem;">ブラウザのコンソール（F12）で詳細なエラー情報を確認できます。</p>
                     </div>
                 `;
+            }
+        }
+        
+        // ページ読み込み時に確実にloadMatchesを呼び出す
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('📄 DOMContentLoaded: loadMatchesを呼び出します');
+                if (typeof loadMatches === 'function') {
+                    loadMatches();
+                } else {
+                    console.error('❌ loadMatches関数が定義されていません');
+                }
+            });
+        } else {
+            console.log('📄 DOM already loaded: loadMatchesを呼び出します');
+            if (typeof loadMatches === 'function') {
+                loadMatches();
+            } else {
+                console.error('❌ loadMatches関数が定義されていません');
             }
         }
 
