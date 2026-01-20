@@ -5461,25 +5461,53 @@
                     const integratedUrl = `/api/schedule?season=${season}${leagueParam}${statusParam}${timeRangeParam}`;
                     console.log('📡 統合API URL:', integratedUrl);
                     console.log('📡 パラメータ詳細:', { season, leagueParam, statusParam, timeRangeParam });
-                    response = await fetch(integratedUrl, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        signal: AbortSignal.timeout(30000) // 30秒のタイムアウト
-                    });
-                
-                if (!response.ok) {
-                        throw new Error(`Integrated API error! status: ${response.status}`);
-                }
-                
-                const responseText = await response.text();
-                    console.log('✅ 統合API レスポンス取得成功');
-                    console.log('レスポンスサイズ:', responseText.length, '文字');
-                
-                    data = JSON.parse(responseText);
-                    console.log('📊 統合データ解析成功:', data.items?.length || 0, '件のマッチ');
-                    console.log('📊 データソース:', data.source);
+                    
+                    try {
+                        response = await fetch(integratedUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            signal: AbortSignal.timeout(30000) // 30秒のタイムアウト
+                        });
+                    
+                        console.log('📡 APIレスポンス受信:', {
+                            status: response.status,
+                            statusText: response.statusText,
+                            ok: response.ok,
+                            headers: Object.fromEntries(response.headers.entries())
+                        });
+                    
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            console.error('❌ APIエラーレスポンス:', errorText);
+                            throw new Error(`Integrated API error! status: ${response.status}, message: ${errorText.substring(0, 200)}`);
+                        }
+                    
+                        const responseText = await response.text();
+                        console.log('✅ 統合API レスポンス取得成功');
+                        console.log('レスポンスサイズ:', responseText.length, '文字');
+                        console.log('レスポンスプレビュー:', responseText.substring(0, 500));
+                    
+                        data = JSON.parse(responseText);
+                        console.log('📊 統合データ解析成功:', {
+                            hasItems: !!data.items,
+                            itemsLength: data.items?.length || 0,
+                            hasMatches: !!data.matches,
+                            matchesLength: data.matches?.length || 0,
+                            source: data.source,
+                            keys: Object.keys(data)
+                        });
+                        
+                        // 新しいAPI形式に合わせてデータを変換
+                        if (data.items && !data.matches) {
+                            data.matches = data.items;
+                            console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
+                        }
+                    } catch (fetchError) {
+                        console.error('❌ Fetch error:', fetchError);
+                        throw fetchError;
+                    }
                     
                     // 新しいAPI形式に合わせてデータを変換
                     if (data.items) {
