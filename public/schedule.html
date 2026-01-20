@@ -5490,8 +5490,8 @@
                             statusText: response.statusText,
                             ok: response.ok,
                             headers: Object.fromEntries(response.headers.entries())
-                        });
-                    
+                    });
+                
                 if (!response.ok) {
                             const errorText = await response.text();
                             console.error('❌ APIエラーレスポンス:', errorText);
@@ -5872,16 +5872,25 @@
                     }
                 }
             } catch (error) {
-                console.error('Error loading matches:', error);
+                console.error('❌ Error loading matches:', error);
+                console.error('❌ Error stack:', error.stack);
+                const contentDiv = document.getElementById('scheduleContent');
+                if (contentDiv) {
                 contentDiv.innerHTML = `
                     <div class="error">
                         <p>試合データの読み込みに失敗しました。</p>
                         <p>エラー: ${error.message}</p>
+                            <p>詳細: ${error.stack || 'No stack trace'}</p>
                         <p>API制限の可能性があります。しばらく時間をおいてから再度お試しください。</p>
+                            <button onclick="loadMatches()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #00bdc7; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">再試行</button>
                     </div>
                 `;
+                }
             }
         }
+        
+        // グローバルに公開（デバッグ用）
+        window.loadMatches = loadMatches;
 
         // 試合を表示
         function displayMatches(matches) {
