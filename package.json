@@ -3,17 +3,19 @@
   "version": "1.0.0",
   "description": "Football Hub Japan - サッカーデータとAI分析プラットフォーム",
   "main": "index.js",
-    "scripts": {
-        "start": "node --max-old-space-size=1024 index.js",
-        "dev": "nodemon index.js",
-        "test": "node test-production.js",
-        "test:local": "BASE_URL=http://localhost:3000 node test-production.js",
-        "deploy": "bash deploy.sh",
-        "build": "echo \"No build step required\"",
-        "postinstall": "echo \"Post-install complete\"",
-        "update-players-2025": "node update-all-players-latest.js",
-        "update-finished-matches": "node update-finished-matches.js"
-    },
+  "scripts": {
+    "start": "node --max-old-space-size=1024 index.js",
+    "dev": "nodemon index.js",
+    "test": "node test-production.js",
+    "test:local": "BASE_URL=http://localhost:3000 node test-production.js",
+    "deploy": "bash deploy.sh",
+    "build": "npx tailwindcss -i ./src/input.css -o ./public/tailwind.css --minify",
+    "build:css": "npx tailwindcss -i ./src/input.css -o ./public/tailwind.css --minify",
+    "watch:css": "npx tailwindcss -i ./src/input.css -o ./public/tailwind.css --watch",
+    "postinstall": "npm run build:css",
+    "update-players-2025": "node update-all-players-latest.js",
+    "update-finished-matches": "node update-finished-matches.js"
+  },
   "keywords": [
     "football",
     "soccer",
@@ -37,6 +39,8 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
+    "@tailwindcss/container-queries": "^0.1.1",
+    "@tailwindcss/forms": "^0.5.11",
     "nodemon": "^3.0.1"
   },
   "engines": {
