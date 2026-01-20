@@ -8352,7 +8352,7 @@
         window.FHJ.generateBottomHalfSlotsFromTop = function(topSlots) {
             return topSlots.map(s => ({
                 ...s,
-                x: s.x,           // ★左右は入れ替えない
+                x: 100 - s.x,     // ★左右を反転（ホームチームはアウェイチームの鏡像）
                 y: 100 - s.y,     // ★上下だけ反転 → 必ず 55%〜95% に入る
             }));
         };
