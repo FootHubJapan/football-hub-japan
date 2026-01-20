@@ -5618,17 +5618,22 @@
                   `;
                     
                     // フィルタリングを適用
+                    console.log('🔍 フィルタリング前:', currentMatches.length, '件');
                     const filteredMatches = filterMatches(currentMatches, league, timeRange, searchTerm, statusFilter, season);
                     
                     console.log(`🔍 フィルタリング結果: ${currentMatches.length} → ${filteredMatches.length}件`);
-                    console.log('🔍 フィルタリング条件:', { league, timeRange, searchTerm, statusFilter });
+                    console.log('🔍 フィルタリング条件:', { league, timeRange, searchTerm, statusFilter, season });
+                    console.log('🔍 フィルタリング後の最初のマッチ:', filteredMatches[0] || 'なし');
                     
                     if (filteredMatches.length === 0) {
+                        console.warn('⚠️ フィルタリング後、試合が0件になりました');
+                        console.log('🔍 フィルタリング前のデータ:', currentMatches.slice(0, 3));
                         contentDiv.innerHTML = '<div class="no-matches">条件に一致する試合が見つかりませんでした。</div>';
                         return;
                     }
                     
                     // 試合カードを生成
+                    console.log('🔍 試合カード生成開始:', filteredMatches.length, '件');
                     const matchesHtml = filteredMatches.map((match, index) => {
                         // 日付の正規化と表示（Invalid Date対策）
                         const parseUtcDate = (dateStr) => {
@@ -5851,8 +5856,29 @@
                         return matchHtml;
                     }).join('');
 
+                    console.log('🔍 生成されたHTMLの長さ:', matchesHtml.length, '文字');
+                    console.log('🔍 HTMLプレビュー:', matchesHtml.substring(0, 500));
+                    console.log('🔍 contentDiv要素:', contentDiv);
+                    console.log('🔍 contentDivの現在の内容:', contentDiv.innerHTML.substring(0, 200));
+
                     // データソース情報と試合カードを表示
-                    contentDiv.innerHTML = dataSourceInfo.outerHTML + `<div class="schedule-grid">${matchesHtml}</div>`;
+                    const finalHtml = dataSourceInfo.outerHTML + `<div class="schedule-grid">${matchesHtml}</div>`;
+                    console.log('🔍 最終HTMLの長さ:', finalHtml.length, '文字');
+                    contentDiv.innerHTML = finalHtml;
+                    
+                    // DOM更新後の確認
+                    setTimeout(() => {
+                        const gridElement = contentDiv.querySelector('.schedule-grid');
+                        const matchCards = contentDiv.querySelectorAll('.match-card');
+                        console.log('🔍 DOM更新後の確認:');
+                        console.log('  - schedule-grid要素:', gridElement ? '存在' : '不存在');
+                        console.log('  - match-card要素の数:', matchCards.length);
+                        console.log('  - contentDivの子要素数:', contentDiv.children.length);
+                        if (gridElement) {
+                            console.log('  - gridElementのスタイル:', window.getComputedStyle(gridElement).display);
+                            console.log('  - gridElementの子要素数:', gridElement.children.length);
+                        }
+                    }, 100);
                 } else {
                     console.log('No matches found in response. Response structure:', data);
                     console.log('Data type:', typeof data);
