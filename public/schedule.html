@@ -15,20 +15,31 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS CDN (警告は機能に影響しません) -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Tailwind CSSの警告を抑制（CDNスクリプトの前に配置） -->
     <script>
         // Tailwind CSSの警告を抑制（機能には影響しません）
-        if (typeof console !== 'undefined' && console.warn) {
-            const originalWarn = console.warn;
-            console.warn = function(...args) {
-                if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) {
-                    return; // Tailwind CSSの警告を無視
-                }
-                originalWarn.apply(console, args);
-            };
-        }
+        (function() {
+            if (typeof console !== 'undefined' && console.warn) {
+                const originalWarn = console.warn;
+                console.warn = function(...args) {
+                    // Tailwind CSSのCDN警告を無視
+                    if (args.length > 0) {
+                        const message = args[0];
+                        if (typeof message === 'string' && (
+                            message.includes('cdn.tailwindcss.com') ||
+                            message.includes('should not be used in production') ||
+                            message.includes('Tailwind CSS')
+                        )) {
+                            return; // 警告を無視
+                        }
+                    }
+                    originalWarn.apply(console, args);
+                };
+            }
+        })();
     </script>
+    <!-- Tailwind CSS CDN (警告は機能に影響しません) -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
     <style>
         :root {
