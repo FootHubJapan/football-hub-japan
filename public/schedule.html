@@ -5370,16 +5370,26 @@
                 }, { passive: false });
             }
             
-            // 初期データを読み込み
+            // 初期データを読み込み（loadMatches関数が定義されるまで待つ）
             console.log('🚀 DOMContentLoaded完了、loadMatchesを呼び出します');
-            setTimeout(() => {
-                console.log('🚀 setTimeout経由でloadMatchesを呼び出します');
+            const tryLoadMatches = () => {
+                console.log('🚀 loadMatches関数の存在確認中...');
                 if (typeof loadMatches === 'function') {
-                    loadMatches();
+                    console.log('✅ loadMatches関数が見つかりました。呼び出します。');
+                    loadMatches().catch(err => {
+                        console.error('❌ loadMatches実行エラー:', err);
+                    });
+                } else if (typeof window.loadMatches === 'function') {
+                    console.log('✅ window.loadMatches関数が見つかりました。呼び出します。');
+                    window.loadMatches().catch(err => {
+                        console.error('❌ window.loadMatches実行エラー:', err);
+                    });
                 } else {
-                    console.error('❌ loadMatches関数が定義されていません');
+                    console.warn('⚠️ loadMatches関数が見つかりません。500ms後に再試行します。');
+                    setTimeout(tryLoadMatches, 500);
                 }
-            }, 100);
+            };
+            setTimeout(tryLoadMatches, 100);
             
             // リーグ選択の変更を監視
             const leagueSelect = document.getElementById('leagueSelect');
