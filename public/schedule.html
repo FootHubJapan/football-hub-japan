@@ -7918,30 +7918,56 @@
         
         /**
          * LINEUP_FIX_V1: 選手の座標を計算（統一ロジック、縦レンジ拡大版）
-         * @param {number} rowIndex - 行インデックス（0=FW, 1=MF, 2=DF）
+         * @param {number} rowIndex - 行インデックス（0=FW=上、1=MF=中、2=DF=下）
          * @param {number} colIndex - 列インデックス（0から開始）
          * @param {number} rowCount - その行の選手数
          * @param {number} totalRows - 総行数（GK除く）
          * @param {string} side - 'home' or 'away'
          * @returns {{x: number, y: number}} 座標（パーセンテージ）
+         * 
+         * 座標系の統一：
+         * - rowIndex=0: FW（センターライン側、上）
+         * - rowIndex=1: MF（中央）
+         * - rowIndex=2: DF（GK側、下）
+         * 
+         * ホームチーム：上側（12%〜44%）
+         * アウェーチーム：下側（56%〜88%）- 座標を反転して下側に配置
          */
         function computePlayerPosition(rowIndex, colIndex, rowCount, totalRows, side) {
             // X座標：行内での横位置（左右均等配置）
             const x = 5 + ((colIndex + 1) * 90 / (rowCount + 1));
             
             // Y座標：行の位置（上から下）
-            // 縦レンジを広げて重なりを防止（ホーム：12〜44、アウェー：56〜88）
-            const minY = side === 'home' ? 12 : 56;
-            const maxY = side === 'home' ? 44 : 88;
-            let y;
+            // ホームチーム用の基準座標（上側：12%〜44%）
+            const homeMinY = 12;
+            const homeMaxY = 44;
+            let homeY;
             
             if (totalRows <= 1) {
                 // 1行のみの場合は中央
-                y = (minY + maxY) / 2;
+                homeY = (homeMinY + homeMaxY) / 2;
             } else {
                 // 複数行の場合は均等配置
+                // rowIndex=0（FW）→ minY（上）、rowIndex=2（DF）→ maxY（下）
                 const t = rowIndex / (totalRows - 1); // 0.0 〜 1.0
-                y = minY + t * (maxY - minY);
+                homeY = homeMinY + t * (homeMaxY - homeMinY);
+            }
+            
+            // アウェーチームの場合は座標を反転（下側に配置）
+            let y;
+            if (side === 'away') {
+                // アウェーは下側（56%〜88%）に配置
+                // ホームの座標を反転：100 - homeY で下側に配置
+                // ただし、レンジを56%〜88%に調整
+                const awayMinY = 56;
+                const awayMaxY = 88;
+                // ホームの相対位置（0.0〜1.0）を計算
+                const relativePos = (homeY - homeMinY) / (homeMaxY - homeMinY);
+                // アウェーの座標に変換（下から上：DF=下、FW=上）
+                y = awayMaxY - relativePos * (awayMaxY - awayMinY);
+            } else {
+                // ホームチームはそのまま
+                y = homeY;
             }
             
             return { x, y };
