@@ -8526,6 +8526,8 @@
         // タイムラインをレンダリング（FootyJP Proスタイル）
         function renderTimelinePro(matchData) {
             console.log('📋 renderTimelinePro called with:', matchData);
+            console.log('📋 matchData.events:', matchData.events);
+            console.log('📋 matchData.fixture?.events:', matchData.fixture?.events);
             
             const timelineEvents = document.getElementById('timelineEvents');
             if (!timelineEvents) {
@@ -8533,13 +8535,26 @@
                 return;
             }
             
-            const events = matchData.events || matchData.fixture?.events || [];
-            const homeTeam = matchData.homeTeam || matchData.home || matchData.teams?.home?.name || 'Home';
-            const awayTeam = matchData.awayTeam || matchData.away || matchData.teams?.away?.name || 'Away';
-            const matchStatus = matchData.status || matchData.fixture?.status?.short || 'FT';
-            const currentMinute = matchData.fixture?.status?.elapsed || matchData.time?.elapsed || null;
+            // イベントデータの取得（複数のデータ構造に対応）
+            let events = [];
+            if (matchData.events && Array.isArray(matchData.events)) {
+                events = matchData.events;
+            } else if (matchData.fixture?.events && Array.isArray(matchData.fixture.events)) {
+                events = matchData.fixture.events;
+            } else if (matchData.data?.events && Array.isArray(matchData.data.events)) {
+                events = matchData.data.events;
+            }
+            
+            console.log('📋 Extracted events:', events);
+            console.log('📋 Events count:', events.length);
+            
+            const homeTeam = matchData.homeTeam || matchData.home || matchData.teams?.home?.name || matchData.fixture?.teams?.home?.name || 'Home';
+            const awayTeam = matchData.awayTeam || matchData.away || matchData.teams?.away?.name || matchData.fixture?.teams?.away?.name || 'Away';
+            const matchStatus = matchData.status || matchData.fixture?.status?.short || matchData.fixture?.fixture?.status?.short || 'FT';
+            const currentMinute = matchData.fixture?.status?.elapsed || matchData.fixture?.fixture?.status?.elapsed || matchData.time?.elapsed || null;
             
             if (!events || events.length === 0) {
+                console.warn('⚠️ No events found in matchData');
                 timelineEvents.innerHTML = '<div class="no-data" style="text-align: center; color: #9ab0bc; padding: 2rem;">イベントデータがありません</div>';
                 return;
             }
