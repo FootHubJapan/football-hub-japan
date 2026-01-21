@@ -7948,7 +7948,35 @@
         }
         
         /**
-         * シンプルな選手配置（window.FHJがない場合のフォールバック）
+         * 選手をポジションごとに分類（実データのポジション情報を使用）
+         * @param {Array} players - 選手配列
+         * @returns {{gk: Array, df: Array, mf: Array, fw: Array}}
+         */
+        function classifyPlayersByPosition(players) {
+            const classified = { gk: [], df: [], mf: [], fw: [] };
+            
+            players.forEach(player => {
+                const pos = (player.position || player.player?.pos || player.pos || '').toString().toUpperCase();
+                
+                if (pos.includes('G') || pos === 'GK') {
+                    classified.gk.push(player);
+                } else if (pos.includes('D') || pos === 'DF' || pos === 'DEF') {
+                    classified.df.push(player);
+                } else if (pos.includes('M') || pos === 'MF' || pos === 'MID') {
+                    classified.mf.push(player);
+                } else if (pos.includes('F') || pos === 'FW' || pos === 'FOR' || pos === 'ATT') {
+                    classified.fw.push(player);
+                } else {
+                    // ポジション不明の場合は、番号順で後ろに配置
+                    classified.mf.push(player);
+                }
+            });
+            
+            return classified;
+        }
+        
+        /**
+         * シンプルな選手配置（実データのポジション情報を使用）
          * 座標変換は1箇所のみ（computePlayerPosition内のy反転）
          */
         function renderPlayersOnPitchSimple(homeStartXI, awayStartXI, homeFormation, awayFormation) {
@@ -7967,7 +7995,8 @@
                 awayFormation
             });
             
-            // フォーメーション配列を正規化（[FW, MF, DF]の順、上から下）
+            // フォーメーション配列を正規化（[DF, MF, FW]の順、下から上）
+            // 例：[4, 3, 3] → DF=4, MF=3, FW=3
             const homeFormationRows = normalizeFormationRows(homeFormation);
             const awayFormationRows = normalizeFormationRows(awayFormation);
             
@@ -7977,73 +8006,90 @@
             });
             
             // ホームチーム（上側）
-            const homeGK = homeStartXI.find(p => {
-                const pos = (p.position || p.player?.pos || p.pos || '').toString().toUpperCase();
-                return pos.includes('G') || pos === 'GK';
-            });
-            
-            let homeOutfieldPlayers = homeStartXI.filter(p => {
-                const pos = (p.position || p.player?.pos || p.pos || '').toString().toUpperCase();
-                return !pos.includes('G') && pos !== 'GK';
+            const homeClassified = classifyPlayersByPosition(homeStartXI);
+            console.log('📋 Home players classified:', {
+                gk: homeClassified.gk.length,
+                df: homeClassified.df.length,
+                mf: homeClassified.mf.length,
+                fw: homeClassified.fw.length,
+                dfPlayers: homeClassified.df.map(p => ({ name: p.name, pos: p.position || p.player?.pos })),
+                mfPlayers: homeClassified.mf.map(p => ({ name: p.name, pos: p.position || p.player?.pos })),
+                fwPlayers: homeClassified.fw.map(p => ({ name: p.name, pos: p.position || p.player?.pos }))
             });
             
             // ホームGKを配置（上側中央）
-            if (homeGK) {
-                createPlayerMarker(playersContainer, 50, 8, homeGK, 'home');
+            if (homeClassified.gk.length > 0) {
+                createPlayerMarker(playersContainer, 50, 8, homeClassified.gk[0], 'home');
             }
             
             // ホームフィールドプレイヤーを配置（上から下：FW→MF→DF）
-            let homePlayerIndex = 0;
-            homeFormationRows.forEach((count, rowIndex) => {
-                for (let colIndex = 0; colIndex < count && homePlayerIndex < homeOutfieldPlayers.length; colIndex++) {
+            // フォーメーション配列は[FW, MF, DF]の順（normalizeFormationRowsで逆順）
+            const homeRows = [
+                { players: homeClassified.fw, expectedCount: homeFormationRows[0] || 0, label: 'FW' },
+                { players: homeClassified.mf, expectedCount: homeFormationRows[1] || 0, label: 'MF' },
+                { players: homeClassified.df, expectedCount: homeFormationRows[2] || 0, label: 'DF' }
+            ];
+            
+            homeRows.forEach((row, rowIndex) => {
+                const count = Math.min(row.expectedCount, row.players.length);
+                for (let colIndex = 0; colIndex < count; colIndex++) {
                     const { x, y } = computePlayerPosition(rowIndex, colIndex, count, homeFormationRows.length, 'home');
-                    const player = homeOutfieldPlayers[homePlayerIndex];
+                    const player = row.players[colIndex];
                     if (player) {
-                        console.log(`📋 Home player ${homePlayerIndex + 1}: ${player.name || 'Unknown'} at (${x.toFixed(1)}, ${y.toFixed(1)})`);
+                        console.log(`📋 Home ${row.label} ${colIndex + 1}: ${player.name || 'Unknown'} (${player.position || player.player?.pos || 'Unknown'}) at (${x.toFixed(1)}, ${y.toFixed(1)})`);
                         createPlayerMarker(playersContainer, x, y, player, 'home');
-                        homePlayerIndex++;
                     }
                 }
             });
             
             // アウェイチーム（下側）
-            const awayGK = awayStartXI.find(p => {
-                const pos = (p.position || p.player?.pos || p.pos || '').toString().toUpperCase();
-                return pos.includes('G') || pos === 'GK';
-            });
-            
-            let awayOutfieldPlayers = awayStartXI.filter(p => {
-                const pos = (p.position || p.player?.pos || p.pos || '').toString().toUpperCase();
-                return !pos.includes('G') && pos !== 'GK';
+            const awayClassified = classifyPlayersByPosition(awayStartXI);
+            console.log('📋 Away players classified:', {
+                gk: awayClassified.gk.length,
+                df: awayClassified.df.length,
+                mf: awayClassified.mf.length,
+                fw: awayClassified.fw.length,
+                dfPlayers: awayClassified.df.map(p => ({ name: p.name, pos: p.position || p.player?.pos })),
+                mfPlayers: awayClassified.mf.map(p => ({ name: p.name, pos: p.position || p.player?.pos })),
+                fwPlayers: awayClassified.fw.map(p => ({ name: p.name, pos: p.position || p.player?.pos }))
             });
             
             // アウェーGKを配置（下側中央）
-            if (awayGK) {
-                createPlayerMarker(playersContainer, 50, 92, awayGK, 'away');
+            if (awayClassified.gk.length > 0) {
+                createPlayerMarker(playersContainer, 50, 92, awayClassified.gk[0], 'away');
             }
             
             // アウェーフィールドプレイヤーを配置（下から上：DF→MF→FW）
-            // 座標反転はcomputePlayerPosition内で処理（y = 100 - homeY）
-            let awayPlayerIndex = 0;
-            awayFormationRows.forEach((count, rowIndex) => {
-                for (let colIndex = 0; colIndex < count && awayPlayerIndex < awayOutfieldPlayers.length; colIndex++) {
-                    const { x, y } = computePlayerPosition(rowIndex, colIndex, count, awayFormationRows.length, 'away');
-                    const player = awayOutfieldPlayers[awayPlayerIndex];
+            // フォーメーション配列は[FW, MF, DF]の順だが、アウェーは下から上なのでDF→MF→FWの順
+            const awayRows = [
+                { players: awayClassified.df, expectedCount: awayFormationRows[2] || 0, label: 'DF' },
+                { players: awayClassified.mf, expectedCount: awayFormationRows[1] || 0, label: 'MF' },
+                { players: awayClassified.fw, expectedCount: awayFormationRows[0] || 0, label: 'FW' }
+            ];
+            
+            awayRows.forEach((row, rowIndex) => {
+                const count = Math.min(row.expectedCount, row.players.length);
+                for (let colIndex = 0; colIndex < count; colIndex++) {
+                    // アウェーは下から上に配置するため、rowIndexを反転（DF=0, MF=1, FW=2 → フォーメーション配列の順序に合わせる）
+                    const formationRowIndex = 2 - rowIndex; // DF=2, MF=1, FW=0
+                    const { x, y } = computePlayerPosition(formationRowIndex, colIndex, count, awayFormationRows.length, 'away');
+                    const player = row.players[colIndex];
                     if (player) {
-                        console.log(`📋 Away player ${awayPlayerIndex + 1}: ${player.name || 'Unknown'} at (${x.toFixed(1)}, ${y.toFixed(1)})`);
+                        console.log(`📋 Away ${row.label} ${colIndex + 1}: ${player.name || 'Unknown'} (${player.position || player.player?.pos || 'Unknown'}) at (${x.toFixed(1)}, ${y.toFixed(1)})`);
                         createPlayerMarker(playersContainer, x, y, player, 'away');
-                        awayPlayerIndex++;
                     }
                 }
             });
             
             console.log('📋 Players rendered:', {
-                homeGK: !!homeGK,
-                homeOutfield: homeOutfieldPlayers.length,
-                awayGK: !!awayGK,
-                awayOutfield: awayOutfieldPlayers.length,
-                totalHome: (homeGK ? 1 : 0) + homeOutfieldPlayers.length,
-                totalAway: (awayGK ? 1 : 0) + awayOutfieldPlayers.length
+                homeGK: homeClassified.gk.length,
+                homeDF: homeClassified.df.length,
+                homeMF: homeClassified.mf.length,
+                homeFW: homeClassified.fw.length,
+                awayGK: awayClassified.gk.length,
+                awayDF: awayClassified.df.length,
+                awayMF: awayClassified.mf.length,
+                awayFW: awayClassified.fw.length
             });
         }
         
