@@ -7766,10 +7766,40 @@
                             window.FHJ.generateTopHalfSlots(awayFormationArray)
                         );
                         
+                        console.log('📋 Slots generated:', { 
+                            homeSlots: homeSlots.length, 
+                            awaySlots: awaySlots.length,
+                            homeStartXI: homeStartXI.length,
+                            awayStartXI: awayStartXI.length
+                        });
+                        
                         const homeAssigned = window.FHJ.assignPlayersToSlots(homeStartXI, homeSlots);
                         const awayAssigned = window.FHJ.assignPlayersToSlots(awayStartXI, awaySlots);
                         
-                        renderPlayersOnPitch(homeAssigned, awayAssigned);
+                        console.log('📋 Players assigned:', { 
+                            homeAssigned: homeAssigned.length, 
+                            awayAssigned: awayAssigned.length
+                        });
+                        
+                        // 11人すべてが割り当てられているか確認
+                        if (homeAssigned.length < 11 || awayAssigned.length < 11) {
+                            console.warn('⚠️ 11人すべてが割り当てられていません。フォールバックを使用します。');
+                            // 割り当てられなかった選手を追加
+                            const homeUnassigned = homeStartXI.filter(p => !homeAssigned.some(a => a.name === p.name || a.number === p.number));
+                            const awayUnassigned = awayStartXI.filter(p => !awayAssigned.some(a => a.name === p.name || a.number === p.number));
+                            
+                            console.log('📋 Unassigned players:', { 
+                                home: homeUnassigned.length, 
+                                away: awayUnassigned.length,
+                                homeUnassigned: homeUnassigned.map(p => ({ name: p.name, number: p.number })),
+                                awayUnassigned: awayUnassigned.map(p => ({ name: p.name, number: p.number }))
+                            });
+                            
+                            // シンプルな配置を使用（11人すべてを表示）
+                            renderPlayersOnPitchSimple(homeStartXI, awayStartXI, homeFormationArray, awayFormationArray);
+                        } else {
+                            renderPlayersOnPitch(homeAssigned, awayAssigned);
+                        }
                     } else {
                         // シンプルな配置（フォーメーションベース）
                         renderPlayersOnPitchSimple(homeStartXI, awayStartXI, homeFormationArray, awayFormationArray);
@@ -7832,22 +7862,46 @@
             
             playersContainer.innerHTML = '';
             
+            console.log('📋 renderPlayersOnPitchSimple called:', {
+                homeStartXI: homeStartXI.length,
+                awayStartXI: awayStartXI.length,
+                homeFormation,
+                awayFormation
+            });
+            
             // 基本的な配置ロジック（フォーメーションに基づく）
             const pitchWidth = 100;
             const pitchHeight = 100;
             
             // ホームチーム（上側、5%〜45%）
-            const homeYBase = 10;
-            const homeYSpacing = 35 / (homeFormation.length + 1);
+            // GKを最初に配置（中央、最上部）
+            const homeGK = homeStartXI.find(p => {
+                const pos = (p.position || p.player?.pos || p.pos || '').toString().toUpperCase();
+                return pos.includes('G') || pos === 'GK';
+            });
+            
+            let homeOutfieldPlayers = homeStartXI.filter(p => {
+                const pos = (p.position || p.player?.pos || p.pos || '').toString().toUpperCase();
+                return !pos.includes('G') && pos !== 'GK';
+            });
+            
+            // GKを配置
+            if (homeGK) {
+                createPlayerMarker(playersContainer, 50, 8, homeGK, 'home');
+            }
+            
+            // フィールドプレイヤーを配置
+            const homeYBase = 15;
+            const homeYSpacing = 30 / (homeFormation.length + 1);
             
             let homePlayerIndex = 0;
             homeFormation.forEach((count, lineIndex) => {
                 const y = homeYBase + (lineIndex + 1) * homeYSpacing;
                 const xSpacing = 90 / (count + 1);
                 
-                for (let i = 0; i < count && homePlayerIndex < homeStartXI.length; i++) {
+                for (let i = 0; i < count && homePlayerIndex < homeOutfieldPlayers.length; i++) {
                     const x = 5 + (i + 1) * xSpacing;
-                    const player = homeStartXI[homePlayerIndex];
+                    const player = homeOutfieldPlayers[homePlayerIndex];
                     if (player) {
                         createPlayerMarker(playersContainer, x, y, player, 'home');
                         homePlayerIndex++;
@@ -7856,22 +7910,48 @@
             });
             
             // アウェイチーム（下側、55%〜95%）
-            const awayYBase = 55;
-            const awayYSpacing = 35 / (awayFormation.length + 1);
+            // GKを最初に配置（中央、最下部）
+            const awayGK = awayStartXI.find(p => {
+                const pos = (p.position || p.player?.pos || p.pos || '').toString().toUpperCase();
+                return pos.includes('G') || pos === 'GK';
+            });
+            
+            let awayOutfieldPlayers = awayStartXI.filter(p => {
+                const pos = (p.position || p.player?.pos || p.pos || '').toString().toUpperCase();
+                return !pos.includes('G') && pos !== 'GK';
+            });
+            
+            // GKを配置
+            if (awayGK) {
+                createPlayerMarker(playersContainer, 50, 92, awayGK, 'away');
+            }
+            
+            // フィールドプレイヤーを配置
+            const awayYBase = 60;
+            const awayYSpacing = 30 / (awayFormation.length + 1);
             
             let awayPlayerIndex = 0;
             awayFormation.forEach((count, lineIndex) => {
                 const y = awayYBase + (lineIndex + 1) * awayYSpacing;
                 const xSpacing = 90 / (count + 1);
                 
-                for (let i = 0; i < count && awayPlayerIndex < awayStartXI.length; i++) {
+                for (let i = 0; i < count && awayPlayerIndex < awayOutfieldPlayers.length; i++) {
                     const x = 5 + (i + 1) * xSpacing;
-                    const player = awayStartXI[awayPlayerIndex];
+                    const player = awayOutfieldPlayers[awayPlayerIndex];
                     if (player) {
                         createPlayerMarker(playersContainer, x, y, player, 'away');
                         awayPlayerIndex++;
                     }
                 }
+            });
+            
+            console.log('📋 Players rendered:', {
+                homeGK: !!homeGK,
+                homeOutfield: homeOutfieldPlayers.length,
+                awayGK: !!awayGK,
+                awayOutfield: awayOutfieldPlayers.length,
+                totalHome: (homeGK ? 1 : 0) + homeOutfieldPlayers.length,
+                totalAway: (awayGK ? 1 : 0) + awayOutfieldPlayers.length
             });
         }
         
