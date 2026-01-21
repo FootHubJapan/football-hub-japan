@@ -7852,7 +7852,52 @@
             renderSubstitutes('awaySubstitutesLineup', awaySubs, 'Away');
         }
         
-        // シンプルな選手配置（window.FHJがない場合のフォールバック）
+        /**
+         * フォーメーション配列を正規化（常に[FW, MF, DF]の順、上から下）
+         * フォーメーション文字列（例："4-3-3"）は通常「DF-MF-FW」の順（下から上）を表すため、
+         * 表示用に「FW-MF-DF」の順（上から下）に変換する
+         */
+        function normalizeFormationRows(formationArray) {
+            // フォーメーション配列を逆順にして、上から下の順（FW→MF→DF）にする
+            return [...formationArray].reverse();
+        }
+        
+        /**
+         * 選手の座標を計算（統一ロジック）
+         * @param {number} rowIndex - 行インデックス（0=FW, 1=MF, 2=DF）
+         * @param {number} colIndex - 列インデックス（0から開始）
+         * @param {number} rowCount - その行の選手数
+         * @param {number} totalRows - 総行数（GK除く）
+         * @param {string} side - 'home' or 'away'
+         * @returns {{x: number, y: number}} 座標（パーセンテージ）
+         */
+        function computePlayerPosition(rowIndex, colIndex, rowCount, totalRows, side) {
+            // X座標：行内での横位置（左右均等配置）
+            const x = 5 + ((colIndex + 1) * 90 / (rowCount + 1));
+            
+            // Y座標：行の位置（上から下）
+            // ホームチーム：上側（5%〜45%）
+            // アウェーチーム：下側（55%〜95%）
+            const rowSpacing = 30 / (totalRows + 1);
+            let y;
+            
+            if (side === 'home') {
+                // ホーム：上から下に配置（FW=上、DF=下）
+                y = 15 + (rowIndex + 1) * rowSpacing;
+            } else {
+                // アウェー：下から上に配置（GK=下、DF=下、MF=中、FW=上）
+                // 座標反転：100 - y で下側に配置
+                const homeY = 15 + (rowIndex + 1) * rowSpacing;
+                y = 100 - homeY; // 反転（下側に配置）
+            }
+            
+            return { x, y };
+        }
+        
+        /**
+         * シンプルな選手配置（window.FHJがない場合のフォールバック）
+         * 座標変換は1箇所のみ（computePlayerPosition内のy反転）
+         */
         function renderPlayersOnPitchSimple(homeStartXI, awayStartXI, homeFormation, awayFormation) {
             const playersContainer = document.getElementById('playersContainer');
             if (!playersContainer) {
@@ -7869,12 +7914,16 @@
                 awayFormation
             });
             
-            // 基本的な配置ロジック（フォーメーションに基づく）
-            const pitchWidth = 100;
-            const pitchHeight = 100;
+            // フォーメーション配列を正規化（[FW, MF, DF]の順、上から下）
+            const homeFormationRows = normalizeFormationRows(homeFormation);
+            const awayFormationRows = normalizeFormationRows(awayFormation);
             
-            // ホームチーム（上側、5%〜45%）
-            // GKを最初に配置（中央、最上部）
+            console.log('📋 Normalized formations:', {
+                home: { original: homeFormation, normalized: homeFormationRows },
+                away: { original: awayFormation, normalized: awayFormationRows }
+            });
+            
+            // ホームチーム（上側）
             const homeGK = homeStartXI.find(p => {
                 const pos = (p.position || p.player?.pos || p.pos || '').toString().toUpperCase();
                 return pos.includes('G') || pos === 'GK';
@@ -7885,32 +7934,26 @@
                 return !pos.includes('G') && pos !== 'GK';
             });
             
-            // GKを配置
+            // ホームGKを配置（上側中央）
             if (homeGK) {
                 createPlayerMarker(playersContainer, 50, 8, homeGK, 'home');
             }
             
-            // フィールドプレイヤーを配置
-            const homeYBase = 15;
-            const homeYSpacing = 30 / (homeFormation.length + 1);
-            
+            // ホームフィールドプレイヤーを配置（上から下：FW→MF→DF）
             let homePlayerIndex = 0;
-            homeFormation.forEach((count, lineIndex) => {
-                const y = homeYBase + (lineIndex + 1) * homeYSpacing;
-                const xSpacing = 90 / (count + 1);
-                
-                for (let i = 0; i < count && homePlayerIndex < homeOutfieldPlayers.length; i++) {
-                    const x = 5 + (i + 1) * xSpacing;
+            homeFormationRows.forEach((count, rowIndex) => {
+                for (let colIndex = 0; colIndex < count && homePlayerIndex < homeOutfieldPlayers.length; colIndex++) {
+                    const { x, y } = computePlayerPosition(rowIndex, colIndex, count, homeFormationRows.length, 'home');
                     const player = homeOutfieldPlayers[homePlayerIndex];
                     if (player) {
+                        console.log(`📋 Home player ${homePlayerIndex + 1}: ${player.name || 'Unknown'} at (${x.toFixed(1)}, ${y.toFixed(1)})`);
                         createPlayerMarker(playersContainer, x, y, player, 'home');
                         homePlayerIndex++;
                     }
                 }
             });
             
-            // アウェイチーム（下側、55%〜95%）
-            // GKを最初に配置（中央、最下部）
+            // アウェイチーム（下側）
             const awayGK = awayStartXI.find(p => {
                 const pos = (p.position || p.player?.pos || p.pos || '').toString().toUpperCase();
                 return pos.includes('G') || pos === 'GK';
@@ -7921,27 +7964,20 @@
                 return !pos.includes('G') && pos !== 'GK';
             });
             
-            // GKを配置
+            // アウェーGKを配置（下側中央）
             if (awayGK) {
                 createPlayerMarker(playersContainer, 50, 92, awayGK, 'away');
             }
             
-            // フィールドプレイヤーを配置（フォーメーション配列を逆順にして、下から上に配置）
-            // アウェーチームは下側から上側に向かって：GK → DF → MF → FW
-            const awayFormationReversed = [...awayFormation].reverse(); // フォーメーション配列を逆順に
-            const awayYBase = 92; // GKの位置から開始
-            const awayYSpacing = -30 / (awayFormation.length + 1); // 負の値で上方向に配置
-            
+            // アウェーフィールドプレイヤーを配置（下から上：DF→MF→FW）
+            // 座標反転はcomputePlayerPosition内で処理（y = 100 - homeY）
             let awayPlayerIndex = 0;
-            awayFormationReversed.forEach((count, lineIndex) => {
-                // 下から上に向かって配置（GKの上から）
-                const y = awayYBase + (lineIndex + 1) * awayYSpacing;
-                const xSpacing = 90 / (count + 1);
-                
-                for (let i = 0; i < count && awayPlayerIndex < awayOutfieldPlayers.length; i++) {
-                    const x = 5 + (i + 1) * xSpacing;
+            awayFormationRows.forEach((count, rowIndex) => {
+                for (let colIndex = 0; colIndex < count && awayPlayerIndex < awayOutfieldPlayers.length; colIndex++) {
+                    const { x, y } = computePlayerPosition(rowIndex, colIndex, count, awayFormationRows.length, 'away');
                     const player = awayOutfieldPlayers[awayPlayerIndex];
                     if (player) {
+                        console.log(`📋 Away player ${awayPlayerIndex + 1}: ${player.name || 'Unknown'} at (${x.toFixed(1)}, ${y.toFixed(1)})`);
                         createPlayerMarker(playersContainer, x, y, player, 'away');
                         awayPlayerIndex++;
                     }
