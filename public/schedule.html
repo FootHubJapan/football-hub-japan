@@ -5619,15 +5619,31 @@
                     
                     // フィルタリングを適用
                     console.log('🔍 フィルタリング前:', currentMatches.length, '件');
-                    const filteredMatches = filterMatches(currentMatches, league, timeRange, searchTerm, statusFilter, season);
+                    console.log('🔍 フィルタリング前の最初の3件:', currentMatches.slice(0, 3));
+                    
+                    // デバッグ: フィルタリングを一時的に無効化してデータ確認
+                    let filteredMatches;
+                    if (league === '' || league === 'すべてのリーグ' || league === 'all') {
+                        // リーグフィルターが「すべて」の場合は、期間フィルターのみ適用
+                        console.log('🔍 リーグフィルターなし、期間フィルターのみ適用');
+                        filteredMatches = filterMatches(currentMatches, '', timeRange, searchTerm, statusFilter, season);
+                    } else {
+                        filteredMatches = filterMatches(currentMatches, league, timeRange, searchTerm, statusFilter, season);
+                    }
                     
                     console.log(`🔍 フィルタリング結果: ${currentMatches.length} → ${filteredMatches.length}件`);
                     console.log('🔍 フィルタリング条件:', { league, timeRange, searchTerm, statusFilter, season });
                     console.log('🔍 フィルタリング後の最初のマッチ:', filteredMatches[0] || 'なし');
                     
-                    if (filteredMatches.length === 0) {
-                        console.warn('⚠️ フィルタリング後、試合が0件になりました');
+                    // フィルタリング後0件の場合、フィルタリングなしで再試行
+                    if (filteredMatches.length === 0 && currentMatches.length > 0) {
+                        console.warn('⚠️ フィルタリング後、試合が0件になりました。フィルタリングなしで再試行します。');
                         console.log('🔍 フィルタリング前のデータ:', currentMatches.slice(0, 3));
+                        filteredMatches = currentMatches; // フィルタリングなしで表示
+                        console.log('🔍 フィルタリングなしで表示:', filteredMatches.length, '件');
+                    }
+                    
+                    if (filteredMatches.length === 0) {
                         contentDiv.innerHTML = '<div class="no-matches">条件に一致する試合が見つかりませんでした。</div>';
                         return;
                     }
