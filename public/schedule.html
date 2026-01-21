@@ -8513,7 +8513,7 @@
             renderTimelinePro(matchData);
         }
         
-        // タイムラインをレンダリング（以前のUI実装を復元）
+        // タイムラインをレンダリング（FootyJPスタイル）
         function renderTimelinePro(matchData) {
             console.log('📋 renderTimelinePro called with:', matchData);
             
@@ -8523,9 +8523,24 @@
                 return;
             }
             
+            // 親コンテナにtimeline-lineスタイルを追加
+            const timelineContainer = timelineEvents.parentElement;
+            if (timelineContainer) {
+                timelineContainer.style.position = 'relative';
+                // 中央の縦線を追加
+                if (!timelineContainer.querySelector('.timeline-line')) {
+                    const line = document.createElement('div');
+                    line.className = 'timeline-line';
+                    line.style.cssText = 'position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); z-index: 0;';
+                    timelineContainer.appendChild(line);
+                }
+            }
+            
             const events = matchData.events || matchData.fixture?.events || [];
             const homeTeam = matchData.homeTeam || matchData.home || matchData.teams?.home?.name || 'Home';
             const awayTeam = matchData.awayTeam || matchData.away || matchData.teams?.away?.name || 'Away';
+            const matchStatus = matchData.status || matchData.fixture?.status?.short || 'FT';
+            const currentMinute = matchData.fixture?.status?.elapsed || matchData.time?.elapsed || null;
             
             if (!events || events.length === 0) {
                 timelineEvents.innerHTML = '<div class="no-data" style="text-align: center; color: #9ab0bc; padding: 2rem;">イベントデータがありません</div>';
@@ -8541,73 +8556,175 @@
             
             let html = '';
             
+            // "Match Started"ラベルを追加
+            html += `
+                <div class="relative z-10 flex justify-center">
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 0.25rem 1rem; border-radius: 9999px; border: 1px solid rgba(218, 230, 231, 0.3);">
+                        <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; color: #9ab0bc;">Match Started</span>
+                    </div>
+                </div>
+            `;
+            
             sortedEvents.forEach((event, index) => {
                 const time = event.time?.elapsed || event.minute || 0;
-                const type = event.type || '';
-                const detail = event.detail || '';
+                const timeExtra = event.time?.extra || null;
+                const type = (event.type || '').toLowerCase();
+                const detail = (event.detail || '').toLowerCase();
                 const player = event.player?.name || '';
                 const team = event.team?.name || '';
                 const assist = event.assist?.name || '';
+                const playerIn = event.assist?.name || event.playerIn?.name || null;
+                const playerOut = event.playerOut?.name || null;
                 
                 // チーム判定
                 const isHomeTeam = team === homeTeam || (matchData.teams?.home?.id && event.team?.id === matchData.teams.home.id);
-                const isAwayTeam = team === awayTeam || (matchData.teams?.away?.id && event.team?.id === matchData.teams.away.id);
+                
+                // 時間表示
+                const timeDisplay = timeExtra ? `${time}+${timeExtra}'` : `${time}'`;
                 
                 // イベントタイプに応じたスタイル
-                let cardStyle = '';
-                let icon = '';
-                let eventText = '';
+                let iconClass = '';
+                let iconName = '';
+                let borderColor = 'rgba(255, 255, 255, 0.1)';
+                let eventContent = '';
                 
-                if (type === 'Goal' || detail === 'Normal Goal' || detail === 'Penalty' || detail === 'Own Goal') {
-                    cardStyle = 'background: rgba(251, 191, 36, 0.1); border-left: 3px solid #fbbf24;';
-                    icon = '⚽';
-                    eventText = detail === 'Own Goal' ? 'オウンゴール' : 'ゴール';
-                } else if (type === 'Card' && detail === 'Yellow Card') {
-                    cardStyle = 'background: rgba(251, 191, 36, 0.1); border-left: 3px solid #fbbf24;';
-                    icon = '🟨';
-                    eventText = 'イエローカード';
-                } else if (type === 'Card' && detail === 'Red Card') {
-                    cardStyle = 'background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444;';
-                    icon = '🟥';
-                    eventText = 'レッドカード';
-                } else if (type === 'subst') {
-                    cardStyle = 'background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6;';
-                    icon = '🔄';
-                    eventText = '交代';
-                } else if (type === 'Var') {
-                    cardStyle = 'background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6;';
-                    icon = '📺';
-                    eventText = 'VAR';
+                if (type === 'goal' || detail.includes('goal')) {
+                    iconClass = 'text-accent-orange';
+                    iconName = 'sports_soccer';
+                    borderColor = '#00bdc7'; // primary color
+                    eventContent = `
+                        <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-2 mb-1">
+                            ${isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                            <span class="material-symbols-outlined ${iconClass}" style="fill: 1;">${iconName}</span>
+                            ${!isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                        </div>
+                        ${assist ? `<p class="text-xs text-gray-500 font-medium">Assist: ${assist}</p>` : ''}
+                    `;
+                } else if (type === 'card' && detail.includes('yellow')) {
+                    iconClass = 'text-yellow-500';
+                    iconName = 'rectangle';
+                    borderColor = 'rgba(255, 255, 255, 0.1)';
+                    eventContent = `
+                        <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-2 mb-1">
+                            ${isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                            <span class="material-symbols-outlined ${iconClass}" style="fill: 1;">${iconName}</span>
+                            ${!isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                        </div>
+                        ${detail.includes('foul') ? `<p class="text-xs text-gray-500 font-medium">Foul on ${event.comments || 'opponent'}</p>` : ''}
+                    `;
+                } else if (type === 'card' && detail.includes('red')) {
+                    iconClass = 'text-red-600';
+                    iconName = 'rectangle';
+                    borderColor = '#ef4444';
+                    eventContent = `
+                        <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-2 mb-1">
+                            ${isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                            <span class="material-symbols-outlined ${iconClass}" style="fill: 1;">${iconName}</span>
+                            ${!isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                        </div>
+                        <p class="text-xs text-red-500 font-bold uppercase tracking-tighter">${detail.includes('direct') ? 'Direct Red Card' : 'Red Card'}</p>
+                    `;
+                } else if (type === 'subst' || type === 'substitution') {
+                    iconClass = 'text-primary';
+                    iconName = 'published_with_changes';
+                    borderColor = 'rgba(255, 255, 255, 0.1)';
+                    if (playerIn && playerOut) {
+                        eventContent = `
+                            <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-2 mb-1">
+                                ${isHomeTeam ? `
+                                    <div class="flex flex-col text-right">
+                                        <span class="text-sm font-bold text-green-500 flex items-center justify-end gap-1">
+                                            <span class="material-symbols-outlined text-xs">arrow_upward</span> ${playerIn}
+                                        </span>
+                                        <span class="text-sm font-bold text-red-500 flex items-center justify-end gap-1">
+                                            <span class="material-symbols-outlined text-xs">arrow_downward</span> ${playerOut}
+                                        </span>
+                                    </div>
+                                ` : ''}
+                                <span class="material-symbols-outlined ${iconClass}">${iconName}</span>
+                                ${!isHomeTeam ? `
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-green-500 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-xs">arrow_upward</span> ${playerIn}
+                                        </span>
+                                        <span class="text-sm font-bold text-red-500 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-xs">arrow_downward</span> ${playerOut}
+                                        </span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    } else {
+                        eventContent = `
+                            <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-2 mb-1">
+                                ${isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                                <span class="material-symbols-outlined ${iconClass}">${iconName}</span>
+                                ${!isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                            </div>
+                        `;
+                    }
+                } else if (type === 'var' || detail.includes('var')) {
+                    // VARイベントは中央に配置
+                    html += `
+                        <div class="relative z-10 flex justify-center">
+                            <div style="background: rgba(44, 107, 237, 0.1); color: #2c6bed; padding: 0.5rem 1.5rem; border-radius: 0.75rem; border: 1px solid rgba(44, 107, 237, 0.2); display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined" style="font-size: 1.25rem;">tv_options_edit_channels</span>
+                                    <span style="font-size: 0.875rem; font-weight: bold; letter-spacing: -0.025em;">VAR DECISION: ${detail.includes('penalty') ? 'PENALTY' : 'NO PENALTY'}</span>
+                                </div>
+                                <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8;">${timeDisplay} • ${isHomeTeam ? homeTeam : awayTeam} Review</span>
+                            </div>
+                        </div>
+                    `;
+                    return; // VARイベントはここで終了
                 } else {
-                    cardStyle = 'background: rgba(255, 255, 255, 0.03); border-left: 3px solid rgba(255, 255, 255, 0.2);';
-                    icon = '📌';
-                    eventText = type || 'イベント';
+                    iconClass = 'text-gray-400';
+                    iconName = 'info';
+                    borderColor = 'rgba(255, 255, 255, 0.1)';
+                    eventContent = `
+                        <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-2 mb-1">
+                            ${isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                            <span class="material-symbols-outlined ${iconClass}">${iconName}</span>
+                            ${!isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                        </div>
+                    `;
                 }
                 
-                const timeDisplay = time > 0 ? `${time}'` : time === 0 ? "0'" : "HT";
-                
+                // イベントアイテムを追加
                 html += `
-                    <div class="event-card" style="display: flex; align-items: center; gap: 1.5rem; position: relative; ${cardStyle} padding: 1rem; border-radius: 8px; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                        <div class="minute-marker" style="display: flex; align-items: center; justify-content: center; width: 3rem; height: 3rem; border-radius: 9999px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(24px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); z-index: 20; font-weight: 800; font-size: 0.875rem; letter-spacing: -0.05em; color: white; flex-shrink: 0;">
-                            ${timeDisplay}
-                        </div>
-                        <div style="flex: 1; display: flex; flex-direction: column; gap: 0.25rem;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span style="font-size: 1.25rem;">${icon}</span>
-                                <span style="font-weight: bold; color: white; font-size: 0.875rem;">${eventText}</span>
-                                ${detail && detail !== 'Normal Goal' && detail !== 'Yellow Card' && detail !== 'Red Card' ? `<span style="color: #9ab0bc; font-size: 0.75rem;">(${detail})</span>` : ''}
-                            </div>
-                            ${player ? `
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
-                                    <span style="color: ${isHomeTeam ? '#3b82f6' : isAwayTeam ? '#10b981' : '#9ab0bc'}; font-weight: 600; font-size: 0.875rem;">${player}</span>
-                                    ${assist ? `<span style="color: #9ab0bc; font-size: 0.75rem;">(アシスト: ${assist})</span>` : ''}
+                    <div class="flex items-center w-full">
+                        ${isHomeTeam ? `
+                            <div class="flex-1 flex justify-end pr-8">
+                                <div class="text-right">
+                                    ${eventContent}
                                 </div>
-                            ` : ''}
-                            ${team ? `<div style="color: #9ab0bc; font-size: 0.75rem; margin-top: 0.25rem;">${team}</div>` : ''}
+                            </div>
+                        ` : '<div class="flex-1 pr-8"></div>'}
+                        <div class="relative z-10" style="width: 2.5rem; height: 2.5rem; border-radius: 9999px; background: rgba(15, 34, 35, 0.8); border: 2px solid ${borderColor}; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                            <span style="font-size: 0.875rem; font-weight: bold; font-variant-numeric: tabular-nums; color: white;">${timeDisplay}</span>
                         </div>
+                        ${!isHomeTeam ? `
+                            <div class="flex-1 flex justify-start pl-8">
+                                <div>
+                                    ${eventContent}
+                                </div>
+                            </div>
+                        ` : '<div class="flex-1 pl-8"></div>'}
                     </div>
                 `;
             });
+            
+            // Live表示を追加（試合中の場合）
+            if (matchStatus === 'LIVE' || matchStatus === 'HT' || (matchStatus === '1H' || matchStatus === '2H')) {
+                html += `
+                    <div class="relative z-10 flex justify-center">
+                        <div class="flex flex-col items-center">
+                            <div style="width: 0.75rem; height: 0.75rem; background: #ff6b4a; border-radius: 9999px; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; margin-bottom: 0.5rem;"></div>
+                            <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.2em; color: #ff6b4a;">Live (${currentMinute || '?'}')</span>
+                        </div>
+                    </div>
+                `;
+            }
             
             timelineEvents.innerHTML = html || '<div class="no-data" style="text-align: center; color: #9ab0bc; padding: 2rem;">イベントデータがありません</div>';
         }
