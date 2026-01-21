@@ -7753,27 +7753,94 @@
             }).join('');
         }
         
-        // H2Hタブを更新（既存の関数があれば使用）
-        function loadHeadToHead(matchData) {
+        // H2Hタブを更新
+        async function loadHeadToHead(matchData) {
             console.log('📋 loadHeadToHead called with:', matchData);
-            // 既存のloadHeadToHead関数があれば呼び出す
-            if (typeof window.loadHeadToHead === 'function' && window.loadHeadToHead !== loadHeadToHead) {
-                window.loadHeadToHead(matchData);
-            } else {
-                // プレースホルダー: 実際の実装が必要
-                console.log('⚠️ loadHeadToHead実装が必要です');
+            
+            const h2hStats = document.getElementById('h2hStats');
+            if (!h2hStats) {
+                console.log('⚠️ h2hStats要素が見つかりません');
+                return;
+            }
+            
+            const homeTeam = matchData.homeTeam || matchData.home || matchData.teams?.home?.name || '';
+            const awayTeam = matchData.awayTeam || matchData.away || matchData.teams?.away?.name || '';
+            
+            if (!homeTeam || !awayTeam) {
+                h2hStats.innerHTML = '<div class="no-data">チーム情報が不足しています</div>';
+                return;
+            }
+            
+            try {
+                // H2Hデータを取得
+                const response = await fetch(`/api/matches/h2h?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    // 既存のrenderHeadToHead関数があれば使用
+                    if (typeof window.renderHeadToHead === 'function') {
+                        window.renderHeadToHead(result.data, matchData);
+                    } else {
+                        // シンプルな表示
+                        h2hStats.innerHTML = `
+                            <div class="h2h-summary">
+                                <h4 class="text-lg font-bold mb-4">対戦成績</h4>
+                                <p>ホーム: ${result.data.homeWins || 0}勝</p>
+                                <p>ドロー: ${result.data.draws || 0}分</p>
+                                <p>アウェイ: ${result.data.awayWins || 0}勝</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    h2hStats.innerHTML = '<div class="no-data">対戦成績データが取得できませんでした</div>';
+                }
+            } catch (error) {
+                console.error('❌ H2Hデータ取得エラー:', error);
+                h2hStats.innerHTML = '<div class="no-data">対戦成績の取得中にエラーが発生しました</div>';
             }
         }
         
-        // TIMELINEタブを更新（既存の関数があれば使用）
+        // TIMELINEタブを更新
         function updateTimelineTab(matchData) {
             console.log('📋 updateTimelineTab called with:', matchData);
-            // 既存のupdateTimelineTab関数があれば呼び出す
-            if (typeof window.updateTimelineTab === 'function' && window.updateTimelineTab !== updateTimelineTab) {
-                window.updateTimelineTab(matchData);
+            
+            const timelineContainer = document.querySelector('[data-panel="timeline"]');
+            if (!timelineContainer) {
+                console.log('⚠️ timelineコンテナが見つかりません');
+                return;
+            }
+            
+            const events = matchData.events || matchData.fixture?.events || [];
+            
+            if (!events || events.length === 0) {
+                timelineContainer.innerHTML = '<div class="no-data">イベントデータがありません</div>';
+                return;
+            }
+            
+            // 既存のrenderTimelinePro関数があれば使用
+            if (typeof window.renderTimelinePro === 'function') {
+                window.renderTimelinePro(matchData);
             } else {
-                // プレースホルダー: 実際の実装が必要
-                console.log('⚠️ updateTimelineTab実装が必要です');
+                // シンプルなタイムライン表示
+                const timelineHtml = events.map(event => {
+                    const time = event.time?.elapsed || event.minute || '';
+                    const type = event.type || '';
+                    const detail = event.detail || '';
+                    const player = event.player?.name || '';
+                    const team = event.team?.name || '';
+                    
+                    return `
+                        <div class="timeline-event">
+                            <span class="time">${time}'</span>
+                            <span class="type">${type}</span>
+                            <span class="detail">${detail}</span>
+                            <span class="player">${player}</span>
+                            <span class="team">${team}</span>
+                        </div>
+                    `;
+                }).join('');
+                
+                timelineContainer.innerHTML = timelineHtml || '<div class="no-data">イベントデータがありません</div>';
             }
         }
     </script>
