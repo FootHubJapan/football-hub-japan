@@ -8518,6 +8518,35 @@
         // TIMELINEタブを更新
         function updateTimelineTab(matchData) {
             console.log('📋 updateTimelineTab called with:', matchData);
+            console.log('📋 matchData.events:', matchData.events);
+            console.log('📋 matchData.fixture?.events:', matchData.fixture?.events);
+            console.log('📋 matchData.data?.events:', matchData.data?.events);
+            
+            // イベントデータが存在しない場合、APIから取得を試みる
+            if ((!matchData.events || matchData.events.length === 0) && 
+                (!matchData.fixture?.events || matchData.fixture.events.length === 0)) {
+                const matchId = matchData.id || matchData.fixture?.id || matchData.fixtureId;
+                if (matchId) {
+                    console.log('📡 Fetching events from API for matchId:', matchId);
+                    fetch(`/api/match/${matchId}/events`)
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success && result.data && result.data.length > 0) {
+                                console.log('✅ Events fetched from API:', result.data);
+                                matchData.events = result.data;
+                                renderTimelinePro(matchData);
+                            } else {
+                                console.warn('⚠️ No events found in API response');
+                                renderTimelinePro(matchData);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('❌ Error fetching events:', error);
+                            renderTimelinePro(matchData);
+                        });
+                    return;
+                }
+            }
             
             // 以前のUI実装を復元（renderTimelinePro関数を使用）
             renderTimelinePro(matchData);
