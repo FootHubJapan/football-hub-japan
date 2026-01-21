@@ -5965,19 +5965,57 @@
                     console.log('🔍 最終HTMLの長さ:', finalHtml.length, '文字');
                     contentDiv.innerHTML = finalHtml;
                     
-                    // DOM更新後の確認
+                    // DOM更新後の確認（詳細）
                     setTimeout(() => {
+                        console.log('🔍 ========== DOM更新後の確認 ==========');
                         const gridElement = contentDiv.querySelector('.schedule-grid');
                         const matchCards = contentDiv.querySelectorAll('.match-card');
-                        console.log('🔍 DOM更新後の確認:');
-                        console.log('  - schedule-grid要素:', gridElement ? '存在' : '不存在');
-                        console.log('  - match-card要素の数:', matchCards.length);
-                        console.log('  - contentDivの子要素数:', contentDiv.children.length);
-                        if (gridElement) {
-                            console.log('  - gridElementのスタイル:', window.getComputedStyle(gridElement).display);
-                            console.log('  - gridElementの子要素数:', gridElement.children.length);
+                        const dataSourceBadge = contentDiv.querySelector('.data-source-info');
+                        
+                        console.log('🔍 contentDiv要素:', {
+                            exists: !!contentDiv,
+                            id: contentDiv?.id,
+                            innerHTMLLength: contentDiv?.innerHTML?.length || 0,
+                            childrenCount: contentDiv?.children?.length || 0,
+                            display: contentDiv ? window.getComputedStyle(contentDiv).display : 'N/A',
+                            visibility: contentDiv ? window.getComputedStyle(contentDiv).visibility : 'N/A',
+                            opacity: contentDiv ? window.getComputedStyle(contentDiv).opacity : 'N/A'
+                        });
+                        
+                        console.log('🔍 schedule-grid要素:', {
+                            exists: !!gridElement,
+                            display: gridElement ? window.getComputedStyle(gridElement).display : 'N/A',
+                            visibility: gridElement ? window.getComputedStyle(gridElement).visibility : 'N/A',
+                            opacity: gridElement ? window.getComputedStyle(gridElement).opacity : 'N/A',
+                            childrenCount: gridElement?.children?.length || 0,
+                            innerHTMLLength: gridElement?.innerHTML?.length || 0
+                        });
+                        
+                        console.log('🔍 match-card要素:', {
+                            count: matchCards.length,
+                            firstCard: matchCards[0] ? {
+                                display: window.getComputedStyle(matchCards[0]).display,
+                                visibility: window.getComputedStyle(matchCards[0]).visibility,
+                                opacity: window.getComputedStyle(matchCards[0]).opacity
+                            } : 'なし'
+                        });
+                        
+                        console.log('🔍 data-source-info要素:', {
+                            exists: !!dataSourceBadge,
+                            display: dataSourceBadge ? window.getComputedStyle(dataSourceBadge).display : 'N/A'
+                        });
+                        
+                        // 表示されない場合の警告
+                        if (!gridElement) {
+                            console.error('❌ schedule-grid要素が見つかりません！');
+                            console.error('❌ contentDivの内容:', contentDiv.innerHTML.substring(0, 500));
+                        } else if (matchCards.length === 0) {
+                            console.error('❌ match-card要素が0個です！');
+                            console.error('❌ gridElementの内容:', gridElement.innerHTML.substring(0, 500));
+                        } else {
+                            console.log('✅ DOM要素は正しく挿入されています');
                         }
-                    }, 100);
+                    }, 200);
                 } else {
                     console.log('No matches found in response. Response structure:', data);
                     console.log('Data type:', typeof data);
