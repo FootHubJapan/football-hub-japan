@@ -8586,12 +8586,14 @@
                 let markerStyle = '';
                 let eventContent = '';
                 let cardStyle = 'glass-panel p-5 rounded-2xl inline-block';
+                let markerLabel = ''; // 時間マーカーの横に表示するラベル
                 
                 if (type === 'goal' || detail.includes('goal')) {
                     iconClass = 'text-goal-gold';
                     iconName = 'sports_soccer';
                     borderColor = '#00bdc7';
                     cardStyle += ' ring-2 ring-primary/20';
+                    markerLabel = assist ? `${player} ⚽ (${assist})` : `${player} ⚽`;
                     eventContent = `
                         <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-4 mb-1">
                             ${isHomeTeam ? `
@@ -8614,6 +8616,7 @@
                     iconName = 'rectangle';
                     borderColor = 'rgba(255, 255, 255, 0.1)';
                     cardStyle += ' border-l-4 border-l-card-yellow';
+                    markerLabel = `${player} 🟨`;
                     eventContent = `
                         <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-4 mb-1">
                             ${isHomeTeam ? '' : `<span class="material-symbols-outlined text-2xl ${iconClass}" style="fill: 1;">${iconName}</span>`}
@@ -8630,6 +8633,7 @@
                     borderColor = '#ef4444';
                     markerStyle = 'border-red-500/50 text-red-500 bg-red-500/10';
                     cardStyle += ' border-l-4 border-l-card-red shadow-lg shadow-red-500/10';
+                    markerLabel = `${player} 🟥`;
                     eventContent = `
                         <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-4 mb-1">
                             ${isHomeTeam ? '' : `<span class="material-symbols-outlined text-2xl ${iconClass}" style="fill: 1;">${iconName}</span>`}
@@ -8645,6 +8649,7 @@
                     iconName = 'sync_alt';
                     borderColor = 'rgba(255, 255, 255, 0.1)';
                     if (playerIn && playerOut) {
+                        markerLabel = `${playerIn} ↔ ${playerOut}`;
                         eventContent = `
                             <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-5">
                                 ${isHomeTeam ? `
@@ -8675,6 +8680,7 @@
                             </div>
                         `;
                     } else {
+                        markerLabel = player ? `${player} 🔄` : '🔄';
                         eventContent = `
                             <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-4 mb-1">
                                 ${isHomeTeam ? `<h3 class="text-lg font-black text-white leading-none">${player}</h3>` : ''}
@@ -8702,6 +8708,7 @@
                     iconClass = 'text-slate-400';
                     iconName = 'info';
                     borderColor = 'rgba(255, 255, 255, 0.1)';
+                    markerLabel = player ? `${player}` : '';
                     eventContent = `
                         <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-4 mb-1">
                             ${isHomeTeam ? `<h3 class="text-lg font-black text-white leading-none">${player}</h3>` : ''}
@@ -8721,7 +8728,14 @@
                                 </div>
                             </div>
                         ` : '<div class="w-1/2 pr-12"></div>'}
-                        <div class="minute-marker ${markerStyle}">${timeDisplay}</div>
+                        <div class="flex flex-col items-center gap-1">
+                            <div class="minute-marker ${markerStyle}">${timeDisplay}</div>
+                            ${markerLabel ? `
+                                <div style="font-size: 10px; font-weight: 700; color: rgba(255, 255, 255, 0.7); text-align: center; max-width: 120px; line-height: 1.2; padding: 0 4px;">
+                                    ${markerLabel}
+                                </div>
+                            ` : ''}
+                        </div>
                         ${!isHomeTeam ? `
                             <div class="w-1/2 pl-12 text-left">
                                 <div class="event-card ${cardStyle}">
