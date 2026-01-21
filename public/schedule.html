@@ -7926,12 +7926,15 @@
                 createPlayerMarker(playersContainer, 50, 92, awayGK, 'away');
             }
             
-            // フィールドプレイヤーを配置
-            const awayYBase = 60;
-            const awayYSpacing = 30 / (awayFormation.length + 1);
+            // フィールドプレイヤーを配置（フォーメーション配列を逆順にして、下から上に配置）
+            // アウェーチームは下側から上側に向かって：GK → DF → MF → FW
+            const awayFormationReversed = [...awayFormation].reverse(); // フォーメーション配列を逆順に
+            const awayYBase = 92; // GKの位置から開始
+            const awayYSpacing = -30 / (awayFormation.length + 1); // 負の値で上方向に配置
             
             let awayPlayerIndex = 0;
-            awayFormation.forEach((count, lineIndex) => {
+            awayFormationReversed.forEach((count, lineIndex) => {
+                // 下から上に向かって配置（GKの上から）
                 const y = awayYBase + (lineIndex + 1) * awayYSpacing;
                 const xSpacing = 90 / (count + 1);
                 
