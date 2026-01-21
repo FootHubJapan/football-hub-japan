@@ -5672,33 +5672,62 @@
                   `;
                     
                     // フィルタリングを適用
+                    console.log('🔍 ========== フィルタリング開始 ==========');
                     console.log('🔍 フィルタリング前:', currentMatches.length, '件');
                     console.log('🔍 フィルタリング前の最初の3件:', currentMatches.slice(0, 3));
+                    console.log('🔍 フィルタリング条件:', { league, timeRange, searchTerm, statusFilter, season });
                     
-                    // デバッグ: フィルタリングを一時的に無効化してデータ確認
-                    let filteredMatches;
-                    if (league === '' || league === 'すべてのリーグ' || league === 'all') {
-                        // リーグフィルターが「すべて」の場合は、期間フィルターのみ適用
-                        console.log('🔍 リーグフィルターなし、期間フィルターのみ適用');
-                        filteredMatches = filterMatches(currentMatches, '', timeRange, searchTerm, statusFilter, season);
-                    } else {
-                        filteredMatches = filterMatches(currentMatches, league, timeRange, searchTerm, statusFilter, season);
-                    }
+                    // リーグフィルターが「すべて」の場合は空文字列に変換
+                    const normalizedLeague = (league === 'すべてのリーグ' || league === 'all' || league === '') ? '' : league;
+                    
+                    let filteredMatches = filterMatches(currentMatches, normalizedLeague, timeRange, searchTerm, statusFilter, season);
                     
                     console.log(`🔍 フィルタリング結果: ${currentMatches.length} → ${filteredMatches.length}件`);
-                    console.log('🔍 フィルタリング条件:', { league, timeRange, searchTerm, statusFilter, season });
                     console.log('🔍 フィルタリング後の最初のマッチ:', filteredMatches[0] || 'なし');
                     
-                    // フィルタリング後0件の場合、フィルタリングなしで再試行
+                    // フィルタリング後0件の場合、段階的にフィルタリングを緩和
                     if (filteredMatches.length === 0 && currentMatches.length > 0) {
-                        console.warn('⚠️ フィルタリング後、試合が0件になりました。フィルタリングなしで再試行します。');
-                        console.log('🔍 フィルタリング前のデータ:', currentMatches.slice(0, 3));
-                        filteredMatches = currentMatches; // フィルタリングなしで表示
-                        console.log('🔍 フィルタリングなしで表示:', filteredMatches.length, '件');
+                        console.warn('⚠️ フィルタリング後、試合が0件になりました。フィルタリングを緩和します。');
+                        
+                        // まず期間フィルターを無効化して再試行
+                        if (timeRange && timeRange !== '') {
+                            console.log('🔍 期間フィルターを無効化して再試行');
+                            filteredMatches = filterMatches(currentMatches, normalizedLeague, '', searchTerm, statusFilter, season);
+                            console.log(`🔍 期間フィルター無効化後: ${filteredMatches.length}件`);
+                        }
+                        
+                        // まだ0件の場合は、ステータスフィルターも無効化
+                        if (filteredMatches.length === 0 && statusFilter && statusFilter !== '' && statusFilter !== 'すべてのステータス') {
+                            console.log('🔍 ステータスフィルターも無効化して再試行');
+                            filteredMatches = filterMatches(currentMatches, normalizedLeague, '', searchTerm, '', season);
+                            console.log(`🔍 ステータスフィルター無効化後: ${filteredMatches.length}件`);
+                        }
+                        
+                        // それでも0件の場合は、検索語のみ適用
+                        if (filteredMatches.length === 0 && searchTerm && searchTerm !== '') {
+                            console.log('🔍 検索語のみ適用して再試行');
+                            filteredMatches = filterMatches(currentMatches, '', '', searchTerm, '', season);
+                            console.log(`🔍 検索語のみ適用後: ${filteredMatches.length}件`);
+                        }
+                        
+                        // 最後の手段：全てのフィルターを無効化
+                    if (filteredMatches.length === 0) {
+                            console.warn('⚠️ 全てのフィルターを無効化して表示します');
+                            filteredMatches = currentMatches;
+                            console.log('🔍 フィルタリングなしで表示:', filteredMatches.length, '件');
+                        }
                     }
                     
                     if (filteredMatches.length === 0) {
-                        contentDiv.innerHTML = '<div class="no-matches">条件に一致する試合が見つかりませんでした。</div>';
+                        console.error('❌ 試合が0件です。データを確認してください。');
+                        contentDiv.innerHTML = `
+                            <div class="no-matches">
+                                <p>条件に一致する試合が見つかりませんでした。</p>
+                                <p>取得した試合数: ${currentMatches.length}件</p>
+                                <p>フィルタリング条件: リーグ=${league}, 期間=${timeRange}, ステータス=${statusFilter}</p>
+                                <button onclick="loadMatches()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #00bdc7; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">再読み込み</button>
+                            </div>
+                        `;
                         return;
                     }
                     
