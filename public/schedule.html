@@ -5533,7 +5533,18 @@
                     console.log('レスポンスサイズ:', responseText.length, '文字');
                         console.log('レスポンスプレビュー:', responseText.substring(0, 500));
                 
+                        if (!responseText || responseText.trim() === '') {
+                            throw new Error('APIレスポンスが空です');
+                        }
+                    
+                        try {
                     data = JSON.parse(responseText);
+                            console.log('✅ JSON解析成功');
+                        } catch (parseError) {
+                            console.error('❌ JSON解析エラー:', parseError);
+                            console.error('❌ レスポンステキスト:', responseText.substring(0, 1000));
+                            throw new Error(`JSON解析に失敗しました: ${parseError.message}`);
+                        }
                         console.log('📊 統合データ解析成功:', {
                             hasItems: !!data.items,
                             itemsLength: data.items?.length || 0,
