@@ -7957,14 +7957,18 @@
             let y;
             if (side === 'away') {
                 // アウェーは下側（56%〜88%）に配置
-                // ホームの座標を反転：100 - homeY で下側に配置
-                // ただし、レンジを56%〜88%に調整
+                // rowIndex=0（FW）→ 上側（56%）、rowIndex=2（DF）→ 下側（88%）
                 const awayMinY = 56;
                 const awayMaxY = 88;
-                // ホームの相対位置（0.0〜1.0）を計算
-                const relativePos = (homeY - homeMinY) / (homeMaxY - homeMinY);
-                // アウェーの座標に変換（下から上：DF=下、FW=上）
-                y = awayMaxY - relativePos * (awayMaxY - awayMinY);
+                
+                if (totalRows <= 1) {
+                    y = (awayMinY + awayMaxY) / 2;
+                } else {
+                    // アウェーの場合、rowIndex=0（FW）は上側（awayMinY）、rowIndex=2（DF）は下側（awayMaxY）
+                    // ホームと同じ計算ロジックを使用（rowIndexがそのまま適用される）
+                    const t = rowIndex / (totalRows - 1); // 0.0 〜 1.0
+                    y = awayMinY + t * (awayMaxY - awayMinY);
+                }
             } else {
                 // ホームチームはそのまま
                 y = homeY;
