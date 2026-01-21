@@ -5615,9 +5615,24 @@
                     console.warn('⚠️ data.meta:', data.meta);
                 }
                 
+                // データが存在するか最終確認
+                if (!data) {
+                    console.error('❌ data is null or undefined');
+                    contentDiv.innerHTML = '<div class="error">データが取得できませんでした。</div>';
+                    return;
+                }
+                
+                // data.itemsをdata.matchesに変換（確実に）
+                if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+                    if (!data.matches || data.matches.length === 0) {
+                        data.matches = data.items;
+                        console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
+                    }
+                }
+                
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
                   console.log(`✅ Found matches from ${dataSource}:`, data.matches.length);
-                  console.log('🔍 最初のマッチのデータ構造:', data.matches[0]);
+                  console.log('🔍 最初のマッチのデータ構造:', JSON.stringify(data.matches[0], null, 2));
                     currentMatches = data.matches;
                   
                   // データソースを更新
