@@ -4721,7 +4721,7 @@
                                     <span class="text-xs bg-team-b/20 text-team-b px-3 py-1 rounded font-bold">4 - 2 - 3 - 1</span>
                     </div>
                 </div>
-                            <div class="relative w-full rounded-2xl border border-white/10 overflow-hidden pitch-pattern" id="pitchContainer" style="background: #1a2e24; aspect-ratio: 2 / 3; min-height: 700px; height: 800px;">
+                            <div class="relative w-full rounded-2xl border border-white/10 overflow-hidden pitch-pattern" id="pitchContainer" style="background: #1a2e24; aspect-ratio: 2 / 3; min-height: 500px; position: relative;">
                                 <!-- Pitch Markings -->
                                 <div class="absolute inset-4 border border-white/10"></div>
                                 <div class="absolute inset-x-4 top-1/2 border-t border-white/30 z-10 shadow-[0_0_15px_rgba(255,255,255,0.05)]"></div>
@@ -4729,7 +4729,7 @@
                                 <div class="absolute top-4 left-1/2 -translate-x-1/2 w-80 h-32 border border-white/10 border-t-0"></div>
                                 <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-80 h-32 border border-white/10 border-b-0"></div>
                                 <!-- Players will be dynamically inserted here -->
-                                <div id="playersContainer" class="absolute inset-0 z-20"></div>
+                                <div id="playersContainer" style="position: absolute; inset: 0; z-index: 20; width: 100%; height: 100%;"></div>
                             </div>
                         </main>
 
@@ -4751,8 +4751,8 @@
                 <section data-panel="h2h" class="hidden" style="display: none;">
                     <div class="bg-card-dark border border-[#27343a] rounded-xl p-6">
                         <div id="h2hStats">
-                            <h4 class="text-lg font-bold mb-4">Head to Head</h4>
-                            <p class="text-[#9ab0bc]">対戦成績を読み込み中...</p>
+                        <h4 class="text-lg font-bold mb-4">Head to Head</h4>
+                        <p class="text-[#9ab0bc]">対戦成績を読み込み中...</p>
                         </div>
                     </div>
                 </section>
@@ -7955,7 +7955,7 @@
             });
         }
         
-        // 選手マーカーを作成（以前のUI実装を復元：ヘッドショット画像と名前表示）
+        // 選手マーカーを作成（レスポンシブ対応、重なり対策済み）
         function createPlayerMarker(container, x, y, player, team) {
             // 選手情報の取得（複数のデータ構造に対応）
             const playerNumber = player.number !== undefined && player.number !== null ? player.number : 
@@ -7976,7 +7976,7 @@
                 photoUrl = `https://media.api-sports.io/football/players/${playerId}.png`;
             }
             
-            // 選手マーカーコンテナ
+            // 選手マーカーコンテナ（レスポンシブ対応）
             const playerWrapper = document.createElement('div');
             playerWrapper.style.position = 'absolute';
             playerWrapper.style.left = `${x}%`;
@@ -7985,16 +7985,28 @@
             playerWrapper.style.display = 'flex';
             playerWrapper.style.flexDirection = 'column';
             playerWrapper.style.alignItems = 'center';
+            playerWrapper.style.justifyContent = 'flex-start';
             playerWrapper.style.zIndex = '30';
             playerWrapper.style.cursor = 'pointer';
             playerWrapper.style.transition = 'transform 0.2s ease';
-            playerWrapper.onmouseover = () => { playerWrapper.style.transform = 'translate(-50%, -50%) scale(1.1)'; };
-            playerWrapper.onmouseout = () => { playerWrapper.style.transform = 'translate(-50%, -50%) scale(1)'; };
+            playerWrapper.style.pointerEvents = 'auto';
+            // ホバー時の拡大を控えめに（重なりを避ける）
+            playerWrapper.onmouseover = () => { 
+                playerWrapper.style.transform = 'translate(-50%, -50%) scale(1.05)';
+                playerWrapper.style.zIndex = '40';
+            };
+            playerWrapper.onmouseout = () => { 
+                playerWrapper.style.transform = 'translate(-50%, -50%) scale(1)';
+                playerWrapper.style.zIndex = '30';
+            };
             
-            // 選手写真または番号表示
+            // 選手写真または番号表示（レスポンシブサイズ）
             const playerPhotoEl = document.createElement('div');
-            playerPhotoEl.style.width = '56px';
-            playerPhotoEl.style.height = '56px';
+            const iconSize = 'clamp(32px, 4vw, 56px)';
+            playerPhotoEl.style.width = iconSize;
+            playerPhotoEl.style.height = iconSize;
+            playerPhotoEl.style.minWidth = iconSize;
+            playerPhotoEl.style.minHeight = iconSize;
             playerPhotoEl.style.borderRadius = '50%';
             playerPhotoEl.style.overflow = 'hidden';
             playerPhotoEl.style.border = `3px solid ${team === 'home' ? '#1A86F0' : '#30D44F'}`;
@@ -8003,6 +8015,8 @@
             playerPhotoEl.style.alignItems = 'center';
             playerPhotoEl.style.justifyContent = 'center';
             playerPhotoEl.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+            playerPhotoEl.style.flexShrink = '0';
+            playerPhotoEl.style.position = 'relative';
             
             if (photoUrl) {
                 const img = document.createElement('img');
@@ -8011,64 +8025,86 @@
                 img.style.width = '100%';
                 img.style.height = '100%';
                 img.style.objectFit = 'cover';
+                img.style.display = 'block';
                 img.onerror = () => {
                     // 画像読み込み失敗時は番号を表示
                     img.style.display = 'none';
                     playerPhotoEl.style.background = team === 'home' ? 'rgba(26, 134, 240, 0.8)' : 'rgba(48, 212, 79, 0.8)';
-                    playerPhotoEl.innerHTML = `<span style="color: white; font-weight: bold; font-size: 0.875rem;">${playerNumber || playerName.charAt(0).toUpperCase()}</span>`;
+                    const fallbackText = document.createElement('span');
+                    fallbackText.textContent = playerNumber || playerName.charAt(0).toUpperCase();
+                    fallbackText.style.color = 'white';
+                    fallbackText.style.fontWeight = 'bold';
+                    fallbackText.style.fontSize = 'clamp(0.75rem, 1.5vw, 0.875rem)';
+                    playerPhotoEl.appendChild(fallbackText);
                 };
                 playerPhotoEl.appendChild(img);
             } else {
                 // 写真がない場合は番号を表示
                 playerPhotoEl.style.background = team === 'home' ? 'rgba(26, 134, 240, 0.8)' : 'rgba(48, 212, 79, 0.8)';
-                playerPhotoEl.innerHTML = `<span style="color: white; font-weight: bold; font-size: 0.875rem;">${playerNumber || playerName.charAt(0).toUpperCase()}</span>`;
+                const fallbackText = document.createElement('span');
+                fallbackText.textContent = playerNumber || playerName.charAt(0).toUpperCase();
+                fallbackText.style.color = 'white';
+                fallbackText.style.fontWeight = 'bold';
+                fallbackText.style.fontSize = 'clamp(0.75rem, 1.5vw, 0.875rem)';
+                playerPhotoEl.appendChild(fallbackText);
             }
-            
-            // 選手名表示
-            const playerNameEl = document.createElement('div');
-            playerNameEl.style.marginTop = '0.25rem';
-            playerNameEl.style.padding = '0.125rem 0.375rem';
-            playerNameEl.style.background = 'rgba(0, 0, 0, 0.7)';
-            playerNameEl.style.borderRadius = '0.25rem';
-            playerNameEl.style.backdropFilter = 'blur(8px)';
-            playerNameEl.style.maxWidth = '80px';
-            playerNameEl.style.overflow = 'hidden';
-            playerNameEl.style.textOverflow = 'ellipsis';
-            playerNameEl.style.whiteSpace = 'nowrap';
-            
-            const nameText = document.createElement('span');
-            nameText.textContent = playerName || `Player ${playerNumber}`;
-            nameText.style.color = 'white';
-            nameText.style.fontSize = '0.625rem';
-            nameText.style.fontWeight = '600';
-            nameText.style.textAlign = 'center';
-            nameText.style.display = 'block';
-            
-            playerNameEl.appendChild(nameText);
             
             // 番号バッジ（写真がある場合）
             if (photoUrl && playerNumber) {
                 const numberBadge = document.createElement('div');
                 numberBadge.style.position = 'absolute';
-                numberBadge.style.bottom = '-4px';
-                numberBadge.style.right = '-4px';
-                numberBadge.style.width = '20px';
-                numberBadge.style.height = '20px';
+                numberBadge.style.bottom = '-2px';
+                numberBadge.style.right = '-2px';
+                numberBadge.style.width = 'clamp(16px, 2vw, 20px)';
+                numberBadge.style.height = 'clamp(16px, 2vw, 20px)';
                 numberBadge.style.borderRadius = '50%';
                 numberBadge.style.background = team === 'home' ? '#1A86F0' : '#30D44F';
                 numberBadge.style.border = '2px solid #1a2e24';
                 numberBadge.style.display = 'flex';
                 numberBadge.style.alignItems = 'center';
                 numberBadge.style.justifyContent = 'center';
-                numberBadge.innerHTML = `<span style="color: white; font-size: 0.625rem; font-weight: bold;">${playerNumber}</span>`;
-                playerPhotoEl.style.position = 'relative';
+                numberBadge.style.flexShrink = '0';
+                const badgeText = document.createElement('span');
+                badgeText.textContent = playerNumber;
+                badgeText.style.color = 'white';
+                badgeText.style.fontSize = 'clamp(0.5rem, 1vw, 0.625rem)';
+                badgeText.style.fontWeight = 'bold';
+                badgeText.style.lineHeight = '1';
+                numberBadge.appendChild(badgeText);
                 playerPhotoEl.appendChild(numberBadge);
             }
+            
+            // 選手名表示（アイコンの下に固定、レスポンシブ対応）
+            const playerNameEl = document.createElement('div');
+            playerNameEl.style.position = 'relative';
+            playerNameEl.style.top = 'calc(100% + 4px)';
+            playerNameEl.style.padding = '0.125rem 0.25rem';
+            playerNameEl.style.background = 'rgba(0, 0, 0, 0.75)';
+            playerNameEl.style.borderRadius = '0.25rem';
+            playerNameEl.style.backdropFilter = 'blur(8px)';
+            playerNameEl.style.maxWidth = 'clamp(60px, 8vw, 90px)';
+            playerNameEl.style.overflow = 'hidden';
+            playerNameEl.style.textOverflow = 'ellipsis';
+            playerNameEl.style.whiteSpace = 'nowrap';
+            playerNameEl.style.flexShrink = '0';
+            playerNameEl.style.pointerEvents = 'none';
+            
+            const nameText = document.createElement('span');
+            nameText.textContent = playerName || `Player ${playerNumber}`;
+            nameText.style.color = 'white';
+            nameText.style.fontSize = 'clamp(9px, 1.1vw, 12px)';
+            nameText.style.fontWeight = '600';
+            nameText.style.textAlign = 'center';
+            nameText.style.display = 'block';
+            nameText.style.lineHeight = '1.1';
+            nameText.style.width = '100%';
+            
+            playerNameEl.appendChild(nameText);
             
             playerWrapper.appendChild(playerPhotoEl);
             playerWrapper.appendChild(playerNameEl);
             
-            // ツールチップ
+            // ツールチップ（フルネーム表示）
             playerWrapper.title = `${playerName}${playerNumber ? ` (${playerNumber})` : ''}`;
             
             container.appendChild(playerWrapper);
