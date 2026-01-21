@@ -8023,17 +8023,19 @@
             }
             
             // ホームフィールドプレイヤーを配置（上から下：FW→MF→DF）
+            // FWはセンターライン側（上、rowIndex=0）、DFはGK側（下、rowIndex=2）
             // フォーメーション配列は[FW, MF, DF]の順（normalizeFormationRowsで逆順）
             const homeRows = [
-                { players: homeClassified.fw, expectedCount: homeFormationRows[0] || 0, label: 'FW' },
-                { players: homeClassified.mf, expectedCount: homeFormationRows[1] || 0, label: 'MF' },
-                { players: homeClassified.df, expectedCount: homeFormationRows[2] || 0, label: 'DF' }
+                { players: homeClassified.fw, expectedCount: homeFormationRows[0] || 0, label: 'FW', rowIndex: 0 }, // 上（センターライン側）
+                { players: homeClassified.mf, expectedCount: homeFormationRows[1] || 0, label: 'MF', rowIndex: 1 }, // 中
+                { players: homeClassified.df, expectedCount: homeFormationRows[2] || 0, label: 'DF', rowIndex: 2 }  // 下（GK側）
             ];
             
-            homeRows.forEach((row, rowIndex) => {
+            homeRows.forEach((row) => {
                 const count = Math.min(row.expectedCount, row.players.length);
                 for (let colIndex = 0; colIndex < count; colIndex++) {
-                    const { x, y } = computePlayerPosition(rowIndex, colIndex, count, homeFormationRows.length, 'home');
+                    // rowIndexを明示的に指定（FW=0=上、DF=2=下）
+                    const { x, y } = computePlayerPosition(row.rowIndex, colIndex, count, homeFormationRows.length, 'home');
                     const player = row.players[colIndex];
                     if (player) {
                         console.log(`📋 Home ${row.label} ${colIndex + 1}: ${player.name || 'Unknown'} (${player.position || player.player?.pos || 'Unknown'}) at (${x.toFixed(1)}, ${y.toFixed(1)})`);
@@ -8060,19 +8062,20 @@
             }
             
             // アウェーフィールドプレイヤーを配置（下から上：DF→MF→FW）
+            // DFはGK側（下、rowIndex=2）、FWはセンターライン側（上、rowIndex=0）
             // フォーメーション配列は[FW, MF, DF]の順だが、アウェーは下から上なのでDF→MF→FWの順
             const awayRows = [
-                { players: awayClassified.df, expectedCount: awayFormationRows[2] || 0, label: 'DF' },
-                { players: awayClassified.mf, expectedCount: awayFormationRows[1] || 0, label: 'MF' },
-                { players: awayClassified.fw, expectedCount: awayFormationRows[0] || 0, label: 'FW' }
+                { players: awayClassified.df, expectedCount: awayFormationRows[2] || 0, label: 'DF', rowIndex: 2 }, // 下（GK側）
+                { players: awayClassified.mf, expectedCount: awayFormationRows[1] || 0, label: 'MF', rowIndex: 1 }, // 中
+                { players: awayClassified.fw, expectedCount: awayFormationRows[0] || 0, label: 'FW', rowIndex: 0 }  // 上（センターライン側）
             ];
             
-            awayRows.forEach((row, rowIndex) => {
+            awayRows.forEach((row) => {
                 const count = Math.min(row.expectedCount, row.players.length);
                 for (let colIndex = 0; colIndex < count; colIndex++) {
-                    // アウェーは下から上に配置するため、rowIndexを反転（DF=0, MF=1, FW=2 → フォーメーション配列の順序に合わせる）
-                    const formationRowIndex = 2 - rowIndex; // DF=2, MF=1, FW=0
-                    const { x, y } = computePlayerPosition(formationRowIndex, colIndex, count, awayFormationRows.length, 'away');
+                    // rowIndexを明示的に指定（DF=2=下、FW=0=上）
+                    // computePlayerPosition内でアウェーの場合はy座標が反転される（100 - homeY）
+                    const { x, y } = computePlayerPosition(row.rowIndex, colIndex, count, awayFormationRows.length, 'away');
                     const player = row.players[colIndex];
                     if (player) {
                         console.log(`📋 Away ${row.label} ${colIndex + 1}: ${player.name || 'Unknown'} (${player.position || player.player?.pos || 'Unknown'}) at (${x.toFixed(1)}, ${y.toFixed(1)})`);
