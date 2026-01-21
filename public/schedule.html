@@ -6077,31 +6077,36 @@
         // グローバルに公開（デバッグ用・確実に呼び出せるように）
         window.loadMatches = loadMatches;
         console.log('✅ loadMatches関数をグローバルに公開しました');
+        console.log('✅ loadMatches関数の型:', typeof window.loadMatches);
         
         // ページ読み込み完了時に自動的に呼び出す（関数定義後に実行）
-        (function() {
+        (function autoLoadMatches() {
+            console.log('🚀 autoLoadMatches実行中...');
+            console.log('🚀 document.readyState:', document.readyState);
+            console.log('🚀 window.loadMatches存在確認:', typeof window.loadMatches);
+            
+            const callLoadMatches = () => {
+                console.log('🚀 callLoadMatches実行');
+                if (typeof window.loadMatches === 'function') {
+                    console.log('✅ window.loadMatchesを呼び出します');
+                    window.loadMatches().catch(err => {
+                        console.error('❌ loadMatches実行エラー:', err);
+                        console.error('❌ エラースタック:', err.stack);
+                    });
+                } else {
+                    console.error('❌ window.loadMatchesが関数ではありません:', typeof window.loadMatches);
+                }
+            };
+            
             if (document.readyState === 'loading') {
+                console.log('🚀 DOMContentLoadedイベントを待機中...');
                 document.addEventListener('DOMContentLoaded', function() {
                     console.log('🚀 DOMContentLoaded (関数定義後) - loadMatchesを呼び出します');
-                    setTimeout(() => {
-                        if (typeof window.loadMatches === 'function') {
-                            console.log('✅ window.loadMatchesを呼び出します');
-                            window.loadMatches().catch(err => {
-                                console.error('❌ loadMatches実行エラー:', err);
-                            });
-                        }
-                    }, 300);
+                    setTimeout(callLoadMatches, 500);
                 });
             } else {
                 console.log('🚀 DOM既に読み込み済み (関数定義後) - loadMatchesを呼び出します');
-                setTimeout(() => {
-                    if (typeof window.loadMatches === 'function') {
-                        console.log('✅ window.loadMatchesを呼び出します');
-                        window.loadMatches().catch(err => {
-                            console.error('❌ loadMatches実行エラー:', err);
-                        });
-                    }
-                }, 300);
+                setTimeout(callLoadMatches, 500);
             }
         })();
 
