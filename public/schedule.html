@@ -7907,72 +7907,67 @@
         }
         
         /**
-         * フォーメーション配列を正規化（常に[FW, MF, DF]の順、上から下）
-         * フォーメーション文字列（例："4-3-3"）は通常「DF-MF-FW」の順（下から上）を表すため、
-         * 表示用に「FW-MF-DF」の順（上から下）に変換する
+         * フォーメーション配列をそのまま返す（DF→MF→FWの順を維持）
+         * フォーメーション文字列（例："3-5-2"）は「DF-MF-FW」の順（自陣ゴール→センター）を表す
+         * この順序を維持して、Y座標計算で使用する
          */
         function normalizeFormationRows(formationArray) {
-            // フォーメーション配列を逆順にして、上から下の順（FW→MF→DF）にする
-            return [...formationArray].reverse();
+            // フォーメーション配列はそのまま返す（DF→MF→FWの順）
+            return [...formationArray];
         }
         
         /**
-         * LINEUP_FIX_V1: 選手の座標を計算（統一ロジック、縦レンジ拡大版）
-         * @param {number} rowIndex - 行インデックス（0=FW=上、1=MF=中、2=DF=下）
+         * フォーメーションから各行のY座標を生成
+         * @param {string} formationStr - フォーメーション文字列（例："3-5-2"）
+         * @param {boolean} isHome - ホームチームかどうか
+         * @returns {{rows: Array<number>, ys: Array<number>}} 各行の人数とY座標
+         * 
+         * フォーメーションは「DF-MF-FW」の順（自陣ゴール→センター）
+         * HOME：DF=上（y小）、FW=下（y大、センター側）
+         * AWAY：DF=下（y大）、FW=上（y小、センター側）
+         */
+        function buildRowYs(formationStr, isHome) {
+            // formationParts は DF→MF→FW の順で扱う（3-5-2なら [3,5,2]）
+            const formationParts = (formationStr || "4-4-2")
+                .split("-")
+                .map(n => parseInt(n, 10))
+                .filter(Number.isFinite);
+            
+            // GK + (DF/MF/FW...) の行数
+            const rows = [1, ...formationParts]; // 先頭にGK行を追加
+            
+            // ピッチ内で使うYレンジ
+            const minY = isHome ? 12 : 88; // Homeは上寄り、Awayは下寄りから開始
+            const maxY = isHome ? 44 : 56; // Homeはセンター寄りへ、Awayはセンター寄りへ
+            
+            // 行数に応じて等間隔にYを作る（自陣ゴール→センター方向）
+            const rowCount = rows.length;
+            const ys = [];
+            for (let i = 0; i < rowCount; i++) {
+                const t = rowCount === 1 ? 0.5 : i / (rowCount - 1);
+                ys.push(minY + t * (maxY - minY));
+            }
+            
+            // 返す：rows（各行の人数）と、その行のY
+            return { rows, ys };
+        }
+        
+        /**
+         * LINEUP_FIX_V2: 選手の座標を計算（フォーメーション順に基づく）
+         * @param {number} rowIndex - 行インデックス（0=GK, 1=DF, 2=MF, 3=FW）
          * @param {number} colIndex - 列インデックス（0から開始）
          * @param {number} rowCount - その行の選手数
-         * @param {number} totalRows - 総行数（GK除く）
+         * @param {Array<number>} rowYs - 各行のY座標配列（buildRowYsで生成）
          * @param {string} side - 'home' or 'away'
          * @returns {{x: number, y: number}} 座標（パーセンテージ）
-         * 
-         * 座標系の統一：
-         * - rowIndex=0: FW（センターライン側、上）
-         * - rowIndex=1: MF（中央）
-         * - rowIndex=2: DF（GK側、下）
-         * 
-         * ホームチーム：上側（12%〜44%）
-         * アウェーチーム：下側（56%〜88%）- 座標を反転して下側に配置
          */
-        function computePlayerPosition(rowIndex, colIndex, rowCount, totalRows, side) {
+        function computePlayerPosition(rowIndex, colIndex, rowCount, rowYs, side) {
             // X座標：行内での横位置（左右均等配置）
             const x = 5 + ((colIndex + 1) * 90 / (rowCount + 1));
             
-            // Y座標：行の位置（上から下）
-            // ホームチーム用の基準座標（上側：12%〜44%）
-            const homeMinY = 12;
-            const homeMaxY = 44;
-            let homeY;
-            
-            if (totalRows <= 1) {
-                // 1行のみの場合は中央
-                homeY = (homeMinY + homeMaxY) / 2;
-            } else {
-                // 複数行の場合は均等配置
-                // rowIndex=0（FW）→ minY（上）、rowIndex=2（DF）→ maxY（下）
-                const t = rowIndex / (totalRows - 1); // 0.0 〜 1.0
-                homeY = homeMinY + t * (homeMaxY - homeMinY);
-            }
-            
-            // アウェーチームの場合は座標を反転（下側に配置）
-            let y;
-            if (side === 'away') {
-                // アウェーは下側（56%〜88%）に配置
-                // rowIndex=0（FW）→ 上側（56%）、rowIndex=2（DF）→ 下側（88%）
-                const awayMinY = 56;
-                const awayMaxY = 88;
-                
-                if (totalRows <= 1) {
-                    y = (awayMinY + awayMaxY) / 2;
-                } else {
-                    // アウェーの場合、rowIndex=0（FW）は上側（awayMinY）、rowIndex=2（DF）は下側（awayMaxY）
-                    // ホームと同じ計算ロジックを使用（rowIndexがそのまま適用される）
-                    const t = rowIndex / (totalRows - 1); // 0.0 〜 1.0
-                    y = awayMinY + t * (awayMaxY - awayMinY);
-                }
-            } else {
-                // ホームチームはそのまま
-                y = homeY;
-            }
+            // Y座標：rowYs配列から取得
+            // rowIndex=0: GK, rowIndex=1: DF, rowIndex=2: MF, rowIndex=3: FW
+            const y = rowYs[rowIndex] || rowYs[rowYs.length - 1];
             
             return { x, y };
         }
@@ -8025,14 +8020,17 @@
                 awayFormation
             });
             
-            // フォーメーション配列を正規化（[DF, MF, FW]の順、下から上）
-            // 例：[4, 3, 3] → DF=4, MF=3, FW=3
-            const homeFormationRows = normalizeFormationRows(homeFormation);
-            const awayFormationRows = normalizeFormationRows(awayFormation);
+            // フォーメーション配列を取得（DF→MF→FWの順を維持）
+            const homeFormationArray = (homeFormation || '4-3-3').split('-').map(Number).filter(n => !isNaN(n));
+            const awayFormationArray = (awayFormation || '4-3-3').split('-').map(Number).filter(n => !isNaN(n));
             
-            console.log('📋 Normalized formations:', {
-                home: { original: homeFormation, normalized: homeFormationRows },
-                away: { original: awayFormation, normalized: awayFormationRows }
+            // 各行のY座標を生成（自陣ゴール→センター方向）
+            const homeRowYs = buildRowYs(homeFormation, true);
+            const awayRowYs = buildRowYs(awayFormation, false);
+            
+            console.log('📋 Formation rowYs:', {
+                home: { formation: homeFormation, rows: homeRowYs.rows, ys: homeRowYs.ys },
+                away: { formation: awayFormation, rows: awayRowYs.rows, ys: awayRowYs.ys }
             });
             
             // ホームチーム（上側）
@@ -8052,20 +8050,20 @@
                 createPlayerMarker(playersContainer, 50, 8, homeClassified.gk[0], 'home');
             }
             
-            // ホームフィールドプレイヤーを配置（上から下：FW→MF→DF）
-            // FWはセンターライン側（上、rowIndex=0）、DFはGK側（下、rowIndex=2）
-            // フォーメーション配列は[FW, MF, DF]の順（normalizeFormationRowsで逆順）
+            // ホームフィールドプレイヤーを配置（DF→MF→FWの順、自陣ゴール→センター）
+            // DFは上（y小）、FWは下（y大、センター側）
+            // rowYs[0]=GK, rowYs[1]=DF, rowYs[2]=MF, rowYs[3]=FW
             const homeRows = [
-                { players: homeClassified.fw, expectedCount: homeFormationRows[0] || 0, label: 'FW', rowIndex: 0 }, // 上（センターライン側）
-                { players: homeClassified.mf, expectedCount: homeFormationRows[1] || 0, label: 'MF', rowIndex: 1 }, // 中
-                { players: homeClassified.df, expectedCount: homeFormationRows[2] || 0, label: 'DF', rowIndex: 2 }  // 下（GK側）
+                { players: homeClassified.df, expectedCount: homeFormationArray[0] || 0, label: 'DF', rowIndex: 1 }, // DF（自陣ゴール側、上）
+                { players: homeClassified.mf, expectedCount: homeFormationArray[1] || 0, label: 'MF', rowIndex: 2 }, // MF（中央）
+                { players: homeClassified.fw, expectedCount: homeFormationArray[2] || 0, label: 'FW', rowIndex: 3 }  // FW（センター側、下）
             ];
             
             homeRows.forEach((row) => {
                 const count = Math.min(row.expectedCount, row.players.length);
                 for (let colIndex = 0; colIndex < count; colIndex++) {
-                    // rowIndexを明示的に指定（FW=0=上、DF=2=下）
-                    const { x, y } = computePlayerPosition(row.rowIndex, colIndex, count, homeFormationRows.length, 'home');
+                    // rowYs配列からY座標を取得（rowIndex=1=DF, rowIndex=3=FW）
+                    const { x, y } = computePlayerPosition(row.rowIndex, colIndex, count, homeRowYs.ys, 'home');
                     const player = row.players[colIndex];
                     if (player) {
                         console.log(`📋 Home ${row.label} ${colIndex + 1}: ${player.name || 'Unknown'} (${player.position || player.player?.pos || 'Unknown'}) at (${x.toFixed(1)}, ${y.toFixed(1)})`);
@@ -8091,21 +8089,21 @@
                 createPlayerMarker(playersContainer, 50, 92, awayClassified.gk[0], 'away');
             }
             
-            // アウェーフィールドプレイヤーを配置（下から上：DF→MF→FW）
-            // DFはGK側（下、rowIndex=2）、FWはセンターライン側（上、rowIndex=0）
-            // フォーメーション配列は[FW, MF, DF]の順だが、アウェーは下から上なのでDF→MF→FWの順
+            // アウェーフィールドプレイヤーを配置（DF→MF→FWの順、自陣ゴール→センター）
+            // DFは下（y大）、FWは上（y小、センター側）
+            // rowYs[0]=GK, rowYs[1]=DF, rowYs[2]=MF, rowYs[3]=FW
             const awayRows = [
-                { players: awayClassified.df, expectedCount: awayFormationRows[2] || 0, label: 'DF', rowIndex: 2 }, // 下（GK側）
-                { players: awayClassified.mf, expectedCount: awayFormationRows[1] || 0, label: 'MF', rowIndex: 1 }, // 中
-                { players: awayClassified.fw, expectedCount: awayFormationRows[0] || 0, label: 'FW', rowIndex: 0 }  // 上（センターライン側）
+                { players: awayClassified.df, expectedCount: awayFormationArray[0] || 0, label: 'DF', rowIndex: 1 }, // DF（自陣ゴール側、下）
+                { players: awayClassified.mf, expectedCount: awayFormationArray[1] || 0, label: 'MF', rowIndex: 2 }, // MF（中央）
+                { players: awayClassified.fw, expectedCount: awayFormationArray[2] || 0, label: 'FW', rowIndex: 3 }  // FW（センター側、上）
             ];
             
             awayRows.forEach((row) => {
                 const count = Math.min(row.expectedCount, row.players.length);
                 for (let colIndex = 0; colIndex < count; colIndex++) {
-                    // rowIndexを明示的に指定（DF=2=下、FW=0=上）
-                    // computePlayerPosition内でアウェーの場合はy座標が反転される（100 - homeY）
-                    const { x, y } = computePlayerPosition(row.rowIndex, colIndex, count, awayFormationRows.length, 'away');
+                    // rowYs配列からY座標を取得（rowIndex=1=DF, rowIndex=3=FW）
+                    // buildRowYsでAWAYの場合はYが反転されている（DF=y大、FW=y小）
+                    const { x, y } = computePlayerPosition(row.rowIndex, colIndex, count, awayRowYs.ys, 'away');
                     const player = row.players[colIndex];
                     if (player) {
                         console.log(`📋 Away ${row.label} ${colIndex + 1}: ${player.name || 'Unknown'} (${player.position || player.player?.pos || 'Unknown'}) at (${x.toFixed(1)}, ${y.toFixed(1)})`);
