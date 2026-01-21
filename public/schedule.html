@@ -8017,44 +8017,107 @@
         function updateTimelineTab(matchData) {
             console.log('📋 updateTimelineTab called with:', matchData);
             
-            const timelineContainer = document.querySelector('[data-panel="timeline"]');
-            if (!timelineContainer) {
-                console.log('⚠️ timelineコンテナが見つかりません');
+            // 以前のUI実装を復元（renderTimelinePro関数を使用）
+            renderTimelinePro(matchData);
+        }
+        
+        // タイムラインをレンダリング（以前のUI実装を復元）
+        function renderTimelinePro(matchData) {
+            console.log('📋 renderTimelinePro called with:', matchData);
+            
+            const timelineEvents = document.getElementById('timelineEvents');
+            if (!timelineEvents) {
+                console.error('❌ timelineEvents element not found');
                 return;
             }
             
             const events = matchData.events || matchData.fixture?.events || [];
+            const homeTeam = matchData.homeTeam || matchData.home || matchData.teams?.home?.name || 'Home';
+            const awayTeam = matchData.awayTeam || matchData.away || matchData.teams?.away?.name || 'Away';
             
             if (!events || events.length === 0) {
-                timelineContainer.innerHTML = '<div class="no-data">イベントデータがありません</div>';
+                timelineEvents.innerHTML = '<div class="no-data" style="text-align: center; color: #9ab0bc; padding: 2rem;">イベントデータがありません</div>';
                 return;
             }
             
-            // 既存のrenderTimelinePro関数があれば使用
-            if (typeof window.renderTimelinePro === 'function') {
-                window.renderTimelinePro(matchData);
-            } else {
-                // シンプルなタイムライン表示
-                const timelineHtml = events.map(event => {
-                    const time = event.time?.elapsed || event.minute || '';
-                    const type = event.type || '';
-                    const detail = event.detail || '';
-                    const player = event.player?.name || '';
-                    const team = event.team?.name || '';
-                    
-                    return `
-                        <div class="timeline-event">
-                            <span class="time">${time}'</span>
-                            <span class="type">${type}</span>
-                            <span class="detail">${detail}</span>
-                            <span class="player">${player}</span>
-                            <span class="team">${team}</span>
-                        </div>
-                    `;
-                }).join('');
+            // イベントを時間順にソート
+            const sortedEvents = [...events].sort((a, b) => {
+                const timeA = a.time?.elapsed || a.minute || 0;
+                const timeB = b.time?.elapsed || b.minute || 0;
+                return timeA - timeB;
+            });
+            
+            let html = '';
+            
+            sortedEvents.forEach((event, index) => {
+                const time = event.time?.elapsed || event.minute || 0;
+                const type = event.type || '';
+                const detail = event.detail || '';
+                const player = event.player?.name || '';
+                const team = event.team?.name || '';
+                const assist = event.assist?.name || '';
                 
-                timelineContainer.innerHTML = timelineHtml || '<div class="no-data">イベントデータがありません</div>';
-            }
+                // チーム判定
+                const isHomeTeam = team === homeTeam || (matchData.teams?.home?.id && event.team?.id === matchData.teams.home.id);
+                const isAwayTeam = team === awayTeam || (matchData.teams?.away?.id && event.team?.id === matchData.teams.away.id);
+                
+                // イベントタイプに応じたスタイル
+                let cardStyle = '';
+                let icon = '';
+                let eventText = '';
+                
+                if (type === 'Goal' || detail === 'Normal Goal' || detail === 'Penalty' || detail === 'Own Goal') {
+                    cardStyle = 'background: rgba(251, 191, 36, 0.1); border-left: 3px solid #fbbf24;';
+                    icon = '⚽';
+                    eventText = detail === 'Own Goal' ? 'オウンゴール' : 'ゴール';
+                } else if (type === 'Card' && detail === 'Yellow Card') {
+                    cardStyle = 'background: rgba(251, 191, 36, 0.1); border-left: 3px solid #fbbf24;';
+                    icon = '🟨';
+                    eventText = 'イエローカード';
+                } else if (type === 'Card' && detail === 'Red Card') {
+                    cardStyle = 'background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444;';
+                    icon = '🟥';
+                    eventText = 'レッドカード';
+                } else if (type === 'subst') {
+                    cardStyle = 'background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6;';
+                    icon = '🔄';
+                    eventText = '交代';
+                } else if (type === 'Var') {
+                    cardStyle = 'background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6;';
+                    icon = '📺';
+                    eventText = 'VAR';
+                } else {
+                    cardStyle = 'background: rgba(255, 255, 255, 0.03); border-left: 3px solid rgba(255, 255, 255, 0.2);';
+                    icon = '📌';
+                    eventText = type || 'イベント';
+                }
+                
+                const timeDisplay = time > 0 ? `${time}'` : time === 0 ? "0'" : "HT";
+                
+                html += `
+                    <div class="event-card" style="display: flex; align-items: center; gap: 1.5rem; position: relative; ${cardStyle} padding: 1rem; border-radius: 8px; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <div class="minute-marker" style="display: flex; align-items: center; justify-content: center; width: 3rem; height: 3rem; border-radius: 9999px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(24px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); z-index: 20; font-weight: 800; font-size: 0.875rem; letter-spacing: -0.05em; color: white; flex-shrink: 0;">
+                            ${timeDisplay}
+                        </div>
+                        <div style="flex: 1; display: flex; flex-direction: column; gap: 0.25rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-size: 1.25rem;">${icon}</span>
+                                <span style="font-weight: bold; color: white; font-size: 0.875rem;">${eventText}</span>
+                                ${detail && detail !== 'Normal Goal' && detail !== 'Yellow Card' && detail !== 'Red Card' ? `<span style="color: #9ab0bc; font-size: 0.75rem;">(${detail})</span>` : ''}
+                            </div>
+                            ${player ? `
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+                                    <span style="color: ${isHomeTeam ? '#3b82f6' : isAwayTeam ? '#10b981' : '#9ab0bc'}; font-weight: 600; font-size: 0.875rem;">${player}</span>
+                                    ${assist ? `<span style="color: #9ab0bc; font-size: 0.75rem;">(アシスト: ${assist})</span>` : ''}
+                                </div>
+                            ` : ''}
+                            ${team ? `<div style="color: #9ab0bc; font-size: 0.75rem; margin-top: 0.25rem;">${team}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            timelineEvents.innerHTML = html || '<div class="no-data" style="text-align: center; color: #9ab0bc; padding: 2rem;">イベントデータがありません</div>';
         }
     </script>
 </body>
