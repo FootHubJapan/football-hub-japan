@@ -5414,7 +5414,8 @@
 
         // 試合データを読み込む
         async function loadMatches() {
-            console.log('🚀 loadMatches function called');
+            console.log('🚀 ========== loadMatches function called ==========');
+            console.log('🚀 タイムスタンプ:', new Date().toISOString());
             
             // 要素の存在確認
             const leagueSelect = document.getElementById('leagueSelect');
@@ -5566,6 +5567,8 @@
                 }
                 
                 // デバッグ: データ構造を詳細に確認
+                console.log('🔍 ========== データ構造チェック ==========');
+                console.log('🔍 データ全体:', data);
                 console.log('🔍 データ構造チェック:', {
                     hasData: !!data,
                     hasMatches: !!data?.matches,
@@ -5574,14 +5577,32 @@
                     hasItems: !!data?.items,
                     itemsIsArray: Array.isArray(data?.items),
                     itemsLength: data?.items?.length || 0,
+                    hasMeta: !!data?.meta,
+                    metaSource: data?.meta?.source,
                     dataKeys: data ? Object.keys(data) : [],
                     firstMatch: data?.matches?.[0] || data?.items?.[0] || null
                 });
                 
                 // data.itemsをdata.matchesに変換（まだ変換されていない場合）
-                if (data && data.items && Array.isArray(data.items) && (!data.matches || data.matches.length === 0)) {
-                    data.matches = data.items;
-                    console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
+                if (data && data.items && Array.isArray(data.items)) {
+                    if (!data.matches || data.matches.length === 0) {
+                        data.matches = data.items;
+                        console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
+                    } else {
+                        console.log('📊 data.matchesが既に存在:', data.matches.length, '件');
+                    }
+                }
+                
+                // データが空の場合の詳細ログ
+                if (!data || (!data.matches && !data.items)) {
+                    console.error('❌ データが空です！');
+                    console.error('❌ data:', data);
+                    return;
+                }
+                
+                if (data.matches && data.matches.length === 0 && data.items && data.items.length === 0) {
+                    console.warn('⚠️ データは存在するが、試合が0件です');
+                    console.warn('⚠️ data.meta:', data.meta);
                 }
                 
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
