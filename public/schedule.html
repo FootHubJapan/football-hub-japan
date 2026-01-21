@@ -7516,13 +7516,122 @@
         function displayDetailedMatchInfo(matchData) {
             console.log('📋 displayDetailedMatchInfo called with:', matchData);
             
+            // ヒーローセクション（スコアボード）を更新
+            updateMatchHero(matchData);
+            
             // Statsタブを更新
             updateStatsTab(matchData);
             
-            // その他のタブも更新（必要に応じて）
-            // updateLineupTab(matchData);
-            // loadHeadToHead(matchData);
-            // updateTimelineTab(matchData);
+            // LINEUPタブを更新
+            updateLineupTab(matchData);
+            
+            // H2Hタブを更新
+            loadHeadToHead(matchData);
+            
+            // TIMELINEタブを更新
+            updateTimelineTab(matchData);
+        }
+        
+        // ヒーローセクション（スコアボード）を更新
+        function updateMatchHero(matchData) {
+            console.log('📋 updateMatchHero called with:', matchData);
+            
+            const homeName = matchData.homeTeam || matchData.home || matchData.teams?.home?.name || 'HOME';
+            const awayName = matchData.awayTeam || matchData.away || matchData.teams?.away?.name || 'AWAY';
+            const homeScore = matchData.homeScore !== undefined ? matchData.homeScore : (matchData.goals?.home !== undefined ? matchData.goals.home : (matchData.fixture?.goals?.home !== undefined ? matchData.fixture.goals.home : '-'));
+            const awayScore = matchData.awayScore !== undefined ? matchData.awayScore : (matchData.goals?.away !== undefined ? matchData.goals.away : (matchData.fixture?.goals?.away !== undefined ? matchData.fixture.goals.away : '-'));
+            const homeTeamId = matchData.homeTeam?.id || matchData.home?.id || matchData.teams?.home?.id || matchData.homeTeamId || null;
+            const awayTeamId = matchData.awayTeam?.id || matchData.away?.id || matchData.teams?.away?.id || matchData.awayTeamId || null;
+            const status = matchData.status || matchData.fixture?.status?.short || matchData.fixture?.status?.long || 'TIMED';
+            const date = matchData.date || matchData.fixture?.fixture?.date || matchData.utcDate || '';
+            
+            // チーム名を更新
+            const homeNameEl = document.getElementById('homeName');
+            if (homeNameEl) homeNameEl.textContent = homeName;
+            
+            const awayNameEl = document.getElementById('awayName');
+            if (awayNameEl) awayNameEl.textContent = awayName;
+            
+            // スコアを更新
+            const homeScoreEl = document.getElementById('homeScore');
+            if (homeScoreEl) homeScoreEl.textContent = homeScore !== null && homeScore !== undefined ? homeScore : '-';
+            
+            const awayScoreEl = document.getElementById('awayScore');
+            if (awayScoreEl) awayScoreEl.textContent = awayScore !== null && awayScore !== undefined ? awayScore : '-';
+            
+            // ロゴを更新
+            const homeLogoEl = document.getElementById('homeLogo');
+            if (homeLogoEl && homeTeamId) {
+                homeLogoEl.src = `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
+            }
+            
+            const awayLogoEl = document.getElementById('awayLogo');
+            if (awayLogoEl && awayTeamId) {
+                awayLogoEl.src = `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
+            }
+            
+            // ステータスバッジを更新
+            const matchBadgeEl = document.getElementById('matchBadge');
+            if (matchBadgeEl) {
+                if (status === 'LIVE' || status === 'HT' || status === 'IN_PLAY') {
+                    matchBadgeEl.textContent = 'LIVE';
+                    matchBadgeEl.className = 'px-4 py-1.5 rounded-full bg-red-500/20 border border-red-500/50 text-red-400 font-bold text-sm tracking-widest uppercase';
+                } else if (status === 'FT' || status === 'FINISHED') {
+                    matchBadgeEl.textContent = 'FINISHED';
+                    matchBadgeEl.className = 'px-4 py-1.5 rounded-full bg-gray-500/20 border border-gray-500/50 text-gray-400 font-bold text-sm tracking-widest uppercase';
+                } else {
+                    matchBadgeEl.textContent = 'SCHEDULED';
+                    matchBadgeEl.className = 'px-4 py-1.5 rounded-full bg-[#00bdc7]/20 border border-[#00bdc7]/50 text-[#00bdc7] font-bold text-sm tracking-widest uppercase';
+                }
+            }
+            
+            // メタ情報を更新
+            const matchMetaEl = document.getElementById('matchMeta');
+            if (matchMetaEl && date) {
+                try {
+                    const matchDate = new Date(date);
+                    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                    matchMetaEl.textContent = matchDate.toLocaleDateString('ja-JP', options);
+                } catch (e) {
+                    matchMetaEl.textContent = date;
+                }
+            }
+        }
+        
+        // LINEUPタブを更新（既存の関数があれば使用、なければプレースホルダー）
+        function updateLineupTab(matchData) {
+            console.log('📋 updateLineupTab called with:', matchData);
+            // 既存のupdateLineupTab関数があれば呼び出す
+            if (typeof window.updateLineupTab === 'function' && window.updateLineupTab !== updateLineupTab) {
+                window.updateLineupTab(matchData);
+            } else {
+                // プレースホルダー: 実際の実装が必要
+                console.log('⚠️ updateLineupTab実装が必要です');
+            }
+        }
+        
+        // H2Hタブを更新（既存の関数があれば使用）
+        function loadHeadToHead(matchData) {
+            console.log('📋 loadHeadToHead called with:', matchData);
+            // 既存のloadHeadToHead関数があれば呼び出す
+            if (typeof window.loadHeadToHead === 'function' && window.loadHeadToHead !== loadHeadToHead) {
+                window.loadHeadToHead(matchData);
+            } else {
+                // プレースホルダー: 実際の実装が必要
+                console.log('⚠️ loadHeadToHead実装が必要です');
+            }
+        }
+        
+        // TIMELINEタブを更新（既存の関数があれば使用）
+        function updateTimelineTab(matchData) {
+            console.log('📋 updateTimelineTab called with:', matchData);
+            // 既存のupdateTimelineTab関数があれば呼び出す
+            if (typeof window.updateTimelineTab === 'function' && window.updateTimelineTab !== updateTimelineTab) {
+                window.updateTimelineTab(matchData);
+            } else {
+                // プレースホルダー: 実際の実装が必要
+                console.log('⚠️ updateTimelineTab実装が必要です');
+            }
         }
     </script>
 </body>
