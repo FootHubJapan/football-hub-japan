@@ -5008,6 +5008,11 @@
 
     <script src="/ai-widget.js"></script>
     <script>
+        // ページ読み込み確認用ログ（最優先で実行）
+        console.log('🚀 ========== schedule.html スクリプト開始 ==========');
+        console.log('🚀 タイムスタンプ:', new Date().toISOString());
+        console.log('🚀 document.readyState:', document.readyState);
+        
         let currentMatches = [];
 
         // イベントリスナーを設定
