@@ -4954,8 +4954,8 @@
                 <section data-panel="h2h" class="hidden" style="display: none;">
                     <div class="bg-card-dark border border-[#27343a] rounded-xl p-6">
                         <div id="h2hStats">
-                            <h4 class="text-lg font-bold mb-4">Head to Head</h4>
-                            <p class="text-[#9ab0bc]">対戦成績を読み込み中...</p>
+                        <h4 class="text-lg font-bold mb-4">Head to Head</h4>
+                        <p class="text-[#9ab0bc]">対戦成績を読み込み中...</p>
                         </div>
                     </div>
                 </section>
@@ -7879,6 +7879,8 @@
             const homeTeam = matchData.homeTeam || matchData.home || matchData.teams?.home?.name || '';
             const awayTeam = matchData.awayTeam || matchData.away || matchData.teams?.away?.name || '';
             
+            console.log('📋 Teams for H2H:', { homeTeam, awayTeam });
+            
             if (!homeTeam || !awayTeam) {
                 h2hStats.innerHTML = '<div class="no-data">チーム情報が不足しています</div>';
                 return;
@@ -7886,30 +7888,66 @@
             
             try {
                 // H2Hデータを取得
+                console.log('📡 Fetching H2H data from API...');
                 const response = await fetch(`/api/matches/h2h?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const result = await response.json();
+                console.log('📊 H2H API response:', result);
                 
                 if (result.success && result.data) {
                     // 既存のrenderHeadToHead関数があれば使用
                     if (typeof window.renderHeadToHead === 'function') {
+                        console.log('✅ Using window.renderHeadToHead function');
                         window.renderHeadToHead(result.data, matchData);
                     } else {
                         // シンプルな表示
+                        console.log('⚠️ renderHeadToHead function not found, using simple display');
+                        const h2hData = result.data;
                         h2hStats.innerHTML = `
                             <div class="h2h-summary">
                                 <h4 class="text-lg font-bold mb-4">対戦成績</h4>
-                                <p>ホーム: ${result.data.homeWins || 0}勝</p>
-                                <p>ドロー: ${result.data.draws || 0}分</p>
-                                <p>アウェイ: ${result.data.awayWins || 0}勝</p>
+                                <div class="flex gap-8 mb-4">
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-blue-400">${h2hData.homeWins || 0}</div>
+                                        <div class="text-xs text-gray-400">ホーム勝利</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-gray-400">${h2hData.draws || 0}</div>
+                                        <div class="text-xs text-gray-400">ドロー</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-green-400">${h2hData.awayWins || 0}</div>
+                                        <div class="text-xs text-gray-400">アウェイ勝利</div>
+                                    </div>
+                                </div>
+                                ${h2hData.matches && h2hData.matches.length > 0 ? `
+                                    <div class="mt-4">
+                                        <h5 class="font-bold mb-2">直近の対戦</h5>
+                                        <div class="space-y-2">
+                                            ${h2hData.matches.slice(0, 5).map(match => `
+                                                <div class="flex justify-between items-center p-2 bg-gray-800 rounded">
+                                                    <span>${match.homeTeam || homeTeam} ${match.homeScore || '-'} - ${match.awayScore || '-'} ${match.awayTeam || awayTeam}</span>
+                                                    <span class="text-xs text-gray-400">${match.date || ''}</span>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
                             </div>
                         `;
                     }
                 } else {
+                    console.error('❌ H2H API returned error:', result);
                     h2hStats.innerHTML = '<div class="no-data">対戦成績データが取得できませんでした</div>';
                 }
             } catch (error) {
                 console.error('❌ H2Hデータ取得エラー:', error);
-                h2hStats.innerHTML = '<div class="no-data">対戦成績の取得中にエラーが発生しました</div>';
+                console.error('❌ Error stack:', error.stack);
+                h2hStats.innerHTML = `<div class="no-data">対戦成績の取得中にエラーが発生しました: ${error.message}</div>`;
             }
         }
         
