@@ -7819,43 +7819,123 @@
             });
         }
         
-        // 選手マーカーを作成
+        // 選手マーカーを作成（以前のUI実装を復元：ヘッドショット画像と名前表示）
         function createPlayerMarker(container, x, y, player, team) {
-            const playerEl = document.createElement('div');
-            playerEl.className = 'player-marker';
-            playerEl.style.position = 'absolute';
-            playerEl.style.left = `${x}%`;
-            playerEl.style.top = `${y}%`;
-            playerEl.style.transform = 'translate(-50%, -50%)';
-            playerEl.style.width = '40px';
-            playerEl.style.height = '40px';
-            playerEl.style.borderRadius = '50%';
-            playerEl.style.background = team === 'home' ? 'rgba(26, 134, 240, 0.8)' : 'rgba(48, 212, 79, 0.8)';
-            playerEl.style.border = `2px solid ${team === 'home' ? '#1A86F0' : '#30D44F'}`;
-            playerEl.style.display = 'flex';
-            playerEl.style.alignItems = 'center';
-            playerEl.style.justifyContent = 'center';
-            playerEl.style.color = 'white';
-            playerEl.style.fontSize = '0.75rem';
-            playerEl.style.fontWeight = 'bold';
-            playerEl.style.cursor = 'pointer';
-                    playerEl.style.zIndex = '30';
-            
             // 選手情報の取得（複数のデータ構造に対応）
             const playerNumber = player.number !== undefined && player.number !== null ? player.number : 
                                 (player.player?.number !== undefined && player.player?.number !== null ? player.player.number : 
                                 (player.jerseyNumber !== undefined && player.jerseyNumber !== null ? player.jerseyNumber : ''));
             const playerName = player.name || player.player?.name || '';
+            const playerPhoto = player.photo || player.player?.photo || null;
+            const playerId = player.player?.id || player.id || null;
             
             if (playerNumber === '' && !playerName) {
                 console.warn('⚠️ 選手情報が不完全:', player);
                 return;
             }
             
-            playerEl.textContent = playerNumber || playerName.charAt(0).toUpperCase();
-            playerEl.title = playerName ? `${playerName}${playerNumber ? ` (${playerNumber})` : ''}` : `Player ${playerNumber}`;
+            // 選手写真のURLを生成
+            let photoUrl = playerPhoto;
+            if (!photoUrl && playerId) {
+                photoUrl = `https://media.api-sports.io/football/players/${playerId}.png`;
+            }
             
-            container.appendChild(playerEl);
+            // 選手マーカーコンテナ
+            const playerWrapper = document.createElement('div');
+            playerWrapper.style.position = 'absolute';
+            playerWrapper.style.left = `${x}%`;
+            playerWrapper.style.top = `${y}%`;
+            playerWrapper.style.transform = 'translate(-50%, -50%)';
+            playerWrapper.style.display = 'flex';
+            playerWrapper.style.flexDirection = 'column';
+            playerWrapper.style.alignItems = 'center';
+            playerWrapper.style.zIndex = '30';
+            playerWrapper.style.cursor = 'pointer';
+            playerWrapper.style.transition = 'transform 0.2s ease';
+            playerWrapper.onmouseover = () => { playerWrapper.style.transform = 'translate(-50%, -50%) scale(1.1)'; };
+            playerWrapper.onmouseout = () => { playerWrapper.style.transform = 'translate(-50%, -50%) scale(1)'; };
+            
+            // 選手写真または番号表示
+            const playerPhotoEl = document.createElement('div');
+            playerPhotoEl.style.width = '56px';
+            playerPhotoEl.style.height = '56px';
+            playerPhotoEl.style.borderRadius = '50%';
+            playerPhotoEl.style.overflow = 'hidden';
+            playerPhotoEl.style.border = `3px solid ${team === 'home' ? '#1A86F0' : '#30D44F'}`;
+            playerPhotoEl.style.background = team === 'home' ? 'rgba(26, 134, 240, 0.2)' : 'rgba(48, 212, 79, 0.2)';
+            playerPhotoEl.style.display = 'flex';
+            playerPhotoEl.style.alignItems = 'center';
+            playerPhotoEl.style.justifyContent = 'center';
+            playerPhotoEl.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+            
+            if (photoUrl) {
+                const img = document.createElement('img');
+                img.src = photoUrl;
+                img.alt = playerName;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                img.onerror = () => {
+                    // 画像読み込み失敗時は番号を表示
+                    img.style.display = 'none';
+                    playerPhotoEl.style.background = team === 'home' ? 'rgba(26, 134, 240, 0.8)' : 'rgba(48, 212, 79, 0.8)';
+                    playerPhotoEl.innerHTML = `<span style="color: white; font-weight: bold; font-size: 0.875rem;">${playerNumber || playerName.charAt(0).toUpperCase()}</span>`;
+                };
+                playerPhotoEl.appendChild(img);
+            } else {
+                // 写真がない場合は番号を表示
+                playerPhotoEl.style.background = team === 'home' ? 'rgba(26, 134, 240, 0.8)' : 'rgba(48, 212, 79, 0.8)';
+                playerPhotoEl.innerHTML = `<span style="color: white; font-weight: bold; font-size: 0.875rem;">${playerNumber || playerName.charAt(0).toUpperCase()}</span>`;
+            }
+            
+            // 選手名表示
+            const playerNameEl = document.createElement('div');
+            playerNameEl.style.marginTop = '0.25rem';
+            playerNameEl.style.padding = '0.125rem 0.375rem';
+            playerNameEl.style.background = 'rgba(0, 0, 0, 0.7)';
+            playerNameEl.style.borderRadius = '0.25rem';
+            playerNameEl.style.backdropFilter = 'blur(8px)';
+            playerNameEl.style.maxWidth = '80px';
+            playerNameEl.style.overflow = 'hidden';
+            playerNameEl.style.textOverflow = 'ellipsis';
+            playerNameEl.style.whiteSpace = 'nowrap';
+            
+            const nameText = document.createElement('span');
+            nameText.textContent = playerName || `Player ${playerNumber}`;
+            nameText.style.color = 'white';
+            nameText.style.fontSize = '0.625rem';
+            nameText.style.fontWeight = '600';
+            nameText.style.textAlign = 'center';
+            nameText.style.display = 'block';
+            
+            playerNameEl.appendChild(nameText);
+            
+            // 番号バッジ（写真がある場合）
+            if (photoUrl && playerNumber) {
+                const numberBadge = document.createElement('div');
+                numberBadge.style.position = 'absolute';
+                numberBadge.style.bottom = '-4px';
+                numberBadge.style.right = '-4px';
+                numberBadge.style.width = '20px';
+                numberBadge.style.height = '20px';
+                numberBadge.style.borderRadius = '50%';
+                numberBadge.style.background = team === 'home' ? '#1A86F0' : '#30D44F';
+                numberBadge.style.border = '2px solid #1a2e24';
+                numberBadge.style.display = 'flex';
+                numberBadge.style.alignItems = 'center';
+                numberBadge.style.justifyContent = 'center';
+                numberBadge.innerHTML = `<span style="color: white; font-size: 0.625rem; font-weight: bold;">${playerNumber}</span>`;
+                playerPhotoEl.style.position = 'relative';
+                playerPhotoEl.appendChild(numberBadge);
+            }
+            
+            playerWrapper.appendChild(playerPhotoEl);
+            playerWrapper.appendChild(playerNameEl);
+            
+            // ツールチップ
+            playerWrapper.title = `${playerName}${playerNumber ? ` (${playerNumber})` : ''}`;
+            
+            container.appendChild(playerWrapper);
         }
         
         // ピッチ上に選手を描画
