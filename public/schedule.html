@@ -7603,6 +7603,7 @@
         // LINEUPタブを更新
         function updateLineupTab(matchData) {
             console.log('📋 updateLineupTab called with:', matchData);
+            console.log('📋 matchData.lineups:', matchData.lineups);
             
             // 既存のupdateLineupTab関数があれば呼び出す
             if (typeof window.updateLineupTab === 'function' && window.updateLineupTab !== updateLineupTab) {
@@ -7610,10 +7611,20 @@
                 return;
             }
             
-            // ラインアップデータの取得
-            const lineups = matchData.lineups || matchData.lineup || null;
+            // ラインアップデータの取得（複数の構造に対応）
+            let lineups = matchData.lineups || matchData.lineup || null;
+            
+            // APIレスポンスの構造を確認
+            if (!lineups && matchData.fixture?.lineups) {
+                lineups = matchData.fixture.lineups;
+            }
+            
             if (!lineups) {
-                console.log('⚠️ ラインアップデータがありません');
+                console.log('⚠️ ラインアップデータがありません。matchData構造:', Object.keys(matchData));
+                const homeSubstitutesEl = document.getElementById('homeSubstitutesLineup');
+                const awaySubstitutesEl = document.getElementById('awaySubstitutesLineup');
+                if (homeSubstitutesEl) homeSubstitutesEl.innerHTML = '<div class="text-xs text-[#9ab0bc]">ラインアップデータが取得できませんでした</div>';
+                if (awaySubstitutesEl) awaySubstitutesEl.innerHTML = '<div class="text-xs text-[#9ab0bc]">ラインアップデータが取得できませんでした</div>';
                 return;
             }
             
@@ -7621,14 +7632,19 @@
             const homeLineup = lineups.home || lineups[0] || null;
             const awayLineup = lineups.away || lineups[1] || null;
             
+            console.log('📋 homeLineup:', homeLineup);
+            console.log('📋 awayLineup:', awayLineup);
+            
             if (!homeLineup || !awayLineup) {
                 console.log('⚠️ ホームまたはアウェイのラインアップデータが不完全です');
                 return;
             }
             
-            // フォーメーションの表示
-            const homeFormation = homeLineup.formation || homeLineup.tactics?.formation || '4-3-3';
-            const awayFormation = awayLineup.formation || awayLineup.tactics?.formation || '4-3-3';
+            // フォーメーションの取得
+            const homeFormation = homeLineup.formation || homeLineup.tactics?.formation || homeLineup.tactics?.formation || '4-3-3';
+            const awayFormation = awayLineup.formation || awayLineup.tactics?.formation || awayLineup.tactics?.formation || '4-3-3';
+            
+            console.log('📋 Formations:', { home: homeFormation, away: awayFormation });
             
             const formationBadge = document.getElementById('formationBadge');
             if (formationBadge) {
@@ -7638,17 +7654,23 @@
                 `;
             }
             
-            // ピッチ上に選手を配置（既存の関数があれば使用）
-            if (typeof window.FHJ !== 'undefined' && window.FHJ.assignPlayersToSlots) {
+            // スターティングXIの取得
+            const homeStartXI = homeLineup.startXI || homeLineup.starting_xi || homeLineup.startingXI || [];
+            const awayStartXI = awayLineup.startXI || awayLineup.starting_xi || awayLineup.startingXI || [];
+            
+            console.log('📋 StartXI:', { home: homeStartXI.length, away: awayStartXI.length });
+            
+            // ピッチ上に選手を配置
+            if (homeStartXI.length > 0 && awayStartXI.length > 0) {
                 try {
-                    const homeStartXI = homeLineup.startXI || homeLineup.starting_xi || [];
-                    const awayStartXI = awayLineup.startXI || awayLineup.starting_xi || [];
+                    // フォーメーション配列に変換
+                    const homeFormationArray = homeFormation.split('-').map(Number).filter(n => !isNaN(n));
+                    const awayFormationArray = awayFormation.split('-').map(Number).filter(n => !isNaN(n));
                     
-                    // スロット生成と選手配置
-                    const homeFormationArray = homeFormation.split('-').map(Number);
-                    const awayFormationArray = awayFormation.split('-').map(Number);
+                    console.log('📋 Formation arrays:', { home: homeFormationArray, away: awayFormationArray });
                     
-                    if (window.FHJ.generateTopHalfSlots && window.FHJ.generateBottomHalfSlotsFromTop) {
+                    // window.FHJ関数が存在する場合は使用、なければシンプルな配置
+                    if (typeof window.FHJ !== 'undefined' && window.FHJ.generateTopHalfSlots && window.FHJ.assignPlayersToSlots) {
                         const homeSlots = window.FHJ.generateTopHalfSlots(homeFormationArray);
                         const awaySlots = window.FHJ.generateBottomHalfSlotsFromTop(
                             window.FHJ.generateTopHalfSlots(awayFormationArray)
@@ -7657,20 +7679,109 @@
                         const homeAssigned = window.FHJ.assignPlayersToSlots(homeStartXI, homeSlots);
                         const awayAssigned = window.FHJ.assignPlayersToSlots(awayStartXI, awaySlots);
                         
-                        // ピッチに描画
                         renderPlayersOnPitch(homeAssigned, awayAssigned);
+                    } else {
+                        // シンプルな配置（フォーメーションベース）
+                        renderPlayersOnPitchSimple(homeStartXI, awayStartXI, homeFormationArray, awayFormationArray);
                     }
                 } catch (error) {
                     console.error('❌ ラインアップ描画エラー:', error);
+                    console.error('❌ エラースタック:', error.stack);
                 }
             }
             
             // サブスティテュートの表示
-            const homeSubs = homeLineup.substitutes || homeLineup.subs || [];
-            const awaySubs = awayLineup.substitutes || awayLineup.subs || [];
+            const homeSubs = homeLineup.substitutes || homeLineup.subs || homeLineup.substitutes || [];
+            const awaySubs = awayLineup.substitutes || awayLineup.subs || awayLineup.substitutes || [];
+            
+            console.log('📋 Substitutes:', { home: homeSubs.length, away: awaySubs.length });
             
             renderSubstitutes('homeSubstitutesLineup', homeSubs, 'Home');
             renderSubstitutes('awaySubstitutesLineup', awaySubs, 'Away');
+        }
+        
+        // シンプルな選手配置（window.FHJがない場合のフォールバック）
+        function renderPlayersOnPitchSimple(homeStartXI, awayStartXI, homeFormation, awayFormation) {
+            const playersContainer = document.getElementById('playersContainer');
+            if (!playersContainer) {
+                console.error('❌ playersContainer要素が見つかりません');
+                return;
+            }
+            
+            playersContainer.innerHTML = '';
+            
+            // 基本的な配置ロジック（フォーメーションに基づく）
+            const pitchWidth = 100;
+            const pitchHeight = 100;
+            
+            // ホームチーム（上側、5%〜45%）
+            const homeYBase = 10;
+            const homeYSpacing = 35 / (homeFormation.length + 1);
+            
+            let homePlayerIndex = 0;
+            homeFormation.forEach((count, lineIndex) => {
+                const y = homeYBase + (lineIndex + 1) * homeYSpacing;
+                const xSpacing = 90 / (count + 1);
+                
+                for (let i = 0; i < count && homePlayerIndex < homeStartXI.length; i++) {
+                    const x = 5 + (i + 1) * xSpacing;
+                    const player = homeStartXI[homePlayerIndex];
+                    if (player) {
+                        createPlayerMarker(playersContainer, x, y, player, 'home');
+                        homePlayerIndex++;
+                    }
+                }
+            });
+            
+            // アウェイチーム（下側、55%〜95%）
+            const awayYBase = 55;
+            const awayYSpacing = 35 / (awayFormation.length + 1);
+            
+            let awayPlayerIndex = 0;
+            awayFormation.forEach((count, lineIndex) => {
+                const y = awayYBase + (lineIndex + 1) * awayYSpacing;
+                const xSpacing = 90 / (count + 1);
+                
+                for (let i = 0; i < count && awayPlayerIndex < awayStartXI.length; i++) {
+                    const x = 5 + (i + 1) * xSpacing;
+                    const player = awayStartXI[awayPlayerIndex];
+                    if (player) {
+                        createPlayerMarker(playersContainer, x, y, player, 'away');
+                        awayPlayerIndex++;
+                    }
+                }
+            });
+        }
+        
+        // 選手マーカーを作成
+        function createPlayerMarker(container, x, y, player, team) {
+            const playerEl = document.createElement('div');
+            playerEl.className = 'player-marker';
+            playerEl.style.position = 'absolute';
+            playerEl.style.left = `${x}%`;
+            playerEl.style.top = `${y}%`;
+            playerEl.style.transform = 'translate(-50%, -50%)';
+            playerEl.style.width = '40px';
+            playerEl.style.height = '40px';
+            playerEl.style.borderRadius = '50%';
+            playerEl.style.background = team === 'home' ? 'rgba(26, 134, 240, 0.8)' : 'rgba(48, 212, 79, 0.8)';
+            playerEl.style.border = `2px solid ${team === 'home' ? '#1A86F0' : '#30D44F'}`;
+            playerEl.style.display = 'flex';
+            playerEl.style.alignItems = 'center';
+            playerEl.style.justifyContent = 'center';
+            playerEl.style.color = 'white';
+            playerEl.style.fontSize = '0.75rem';
+            playerEl.style.fontWeight = 'bold';
+            playerEl.style.cursor = 'pointer';
+            playerEl.style.zIndex = '30';
+            
+            const playerNumber = player.number || player.player?.number || player.jerseyNumber || '';
+            const playerName = player.name || player.player?.name || '';
+            
+            playerEl.textContent = playerNumber;
+            playerEl.title = `${playerName} (${playerNumber})`;
+            
+            container.appendChild(playerEl);
         }
         
         // ピッチ上に選手を描画
