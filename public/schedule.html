@@ -7839,13 +7839,21 @@
             playerEl.style.fontSize = '0.75rem';
             playerEl.style.fontWeight = 'bold';
             playerEl.style.cursor = 'pointer';
-            playerEl.style.zIndex = '30';
+                    playerEl.style.zIndex = '30';
             
-            const playerNumber = player.number || player.player?.number || player.jerseyNumber || '';
+            // 選手情報の取得（複数のデータ構造に対応）
+            const playerNumber = player.number !== undefined && player.number !== null ? player.number : 
+                                (player.player?.number !== undefined && player.player?.number !== null ? player.player.number : 
+                                (player.jerseyNumber !== undefined && player.jerseyNumber !== null ? player.jerseyNumber : ''));
             const playerName = player.name || player.player?.name || '';
             
-            playerEl.textContent = playerNumber;
-            playerEl.title = `${playerName} (${playerNumber})`;
+            if (playerNumber === '' && !playerName) {
+                console.warn('⚠️ 選手情報が不完全:', player);
+                return;
+            }
+            
+            playerEl.textContent = playerNumber || playerName.charAt(0).toUpperCase();
+            playerEl.title = playerName ? `${playerName}${playerNumber ? ` (${playerNumber})` : ''}` : `Player ${playerNumber}`;
             
             container.appendChild(playerEl);
         }
@@ -7903,8 +7911,14 @@
                     playerEl.style.color = 'white';
                     playerEl.style.fontSize = '0.75rem';
                     playerEl.style.fontWeight = 'bold';
-                    playerEl.textContent = player.number || player.player?.number || '';
-                    playerEl.title = player.name || player.player?.name || '';
+                    
+                    // 選手情報の取得（複数のデータ構造に対応）
+                    const playerNumber = player.number !== undefined && player.number !== null ? player.number : 
+                                        (player.player?.number !== undefined && player.player?.number !== null ? player.player.number : '');
+                    const playerName = player.name || player.player?.name || '';
+                    
+                    playerEl.textContent = playerNumber || playerName.charAt(0).toUpperCase();
+                    playerEl.title = playerName ? `${playerName}${playerNumber ? ` (${playerNumber})` : ''}` : `Player ${playerNumber}`;
                     playersContainer.appendChild(playerEl);
                 }
             });
@@ -7921,12 +7935,19 @@
             }
             
             container.innerHTML = substitutes.map(sub => {
+                // 選手情報の取得（複数のデータ構造に対応）
                 const playerName = sub.name || sub.player?.name || 'Unknown';
-                const playerNumber = sub.number || sub.player?.number || '';
+                const playerNumber = sub.number !== undefined && sub.number !== null ? sub.number : 
+                                    (sub.player?.number !== undefined && sub.player?.number !== null ? sub.player.number : '');
+                const playerPosition = sub.position || sub.player?.pos || sub.player?.position || '';
+                
                 return `
-                    <div class="flex items-center gap-2 p-2 bg-[#1a2e24] rounded border border-white/5">
-                        <span class="text-xs font-bold text-white">${playerNumber}</span>
-                        <span class="text-xs text-[#9ab0bc]">${playerName}</span>
+                    <div class="flex items-center gap-2 p-2 bg-[#1a2e24] rounded border border-white/5 hover:bg-[#1f3a2e] transition-colors">
+                        ${playerNumber ? `<span class="text-xs font-bold text-white min-w-[1.5rem]">${playerNumber}</span>` : ''}
+                        <div class="flex-1 flex flex-col">
+                            <span class="text-xs text-white font-medium">${playerName}</span>
+                            ${playerPosition ? `<span class="text-xs text-[#9ab0bc]">${playerPosition}</span>` : ''}
+                        </div>
                     </div>
                 `;
             }).join('');
