@@ -7598,16 +7598,159 @@
             }
         }
         
-        // LINEUPタブを更新（既存の関数があれば使用、なければプレースホルダー）
+        // LINEUPタブを更新
         function updateLineupTab(matchData) {
             console.log('📋 updateLineupTab called with:', matchData);
+            
             // 既存のupdateLineupTab関数があれば呼び出す
             if (typeof window.updateLineupTab === 'function' && window.updateLineupTab !== updateLineupTab) {
                 window.updateLineupTab(matchData);
-            } else {
-                // プレースホルダー: 実際の実装が必要
-                console.log('⚠️ updateLineupTab実装が必要です');
+                return;
             }
+            
+            // ラインアップデータの取得
+            const lineups = matchData.lineups || matchData.lineup || null;
+            if (!lineups) {
+                console.log('⚠️ ラインアップデータがありません');
+                return;
+            }
+            
+            // ホームチームとアウェイチームのラインアップ
+            const homeLineup = lineups.home || lineups[0] || null;
+            const awayLineup = lineups.away || lineups[1] || null;
+            
+            if (!homeLineup || !awayLineup) {
+                console.log('⚠️ ホームまたはアウェイのラインアップデータが不完全です');
+                return;
+            }
+            
+            // フォーメーションの表示
+            const homeFormation = homeLineup.formation || homeLineup.tactics?.formation || '4-3-3';
+            const awayFormation = awayLineup.formation || awayLineup.tactics?.formation || '4-3-3';
+            
+            const formationBadge = document.getElementById('formationBadge');
+            if (formationBadge) {
+                formationBadge.innerHTML = `
+                    <span class="text-xs bg-team-a/20 text-team-a px-3 py-1 rounded font-bold">${homeFormation}</span>
+                    <span class="text-xs bg-team-b/20 text-team-b px-3 py-1 rounded font-bold">${awayFormation}</span>
+                `;
+            }
+            
+            // ピッチ上に選手を配置（既存の関数があれば使用）
+            if (typeof window.FHJ !== 'undefined' && window.FHJ.assignPlayersToSlots) {
+                try {
+                    const homeStartXI = homeLineup.startXI || homeLineup.starting_xi || [];
+                    const awayStartXI = awayLineup.startXI || awayLineup.starting_xi || [];
+                    
+                    // スロット生成と選手配置
+                    const homeFormationArray = homeFormation.split('-').map(Number);
+                    const awayFormationArray = awayFormation.split('-').map(Number);
+                    
+                    if (window.FHJ.generateTopHalfSlots && window.FHJ.generateBottomHalfSlotsFromTop) {
+                        const homeSlots = window.FHJ.generateTopHalfSlots(homeFormationArray);
+                        const awaySlots = window.FHJ.generateBottomHalfSlotsFromTop(
+                            window.FHJ.generateTopHalfSlots(awayFormationArray)
+                        );
+                        
+                        const homeAssigned = window.FHJ.assignPlayersToSlots(homeStartXI, homeSlots);
+                        const awayAssigned = window.FHJ.assignPlayersToSlots(awayStartXI, awaySlots);
+                        
+                        // ピッチに描画
+                        renderPlayersOnPitch(homeAssigned, awayAssigned);
+                    }
+                } catch (error) {
+                    console.error('❌ ラインアップ描画エラー:', error);
+                }
+            }
+            
+            // サブスティテュートの表示
+            const homeSubs = homeLineup.substitutes || homeLineup.subs || [];
+            const awaySubs = awayLineup.substitutes || awayLineup.subs || [];
+            
+            renderSubstitutes('homeSubstitutesLineup', homeSubs, 'Home');
+            renderSubstitutes('awaySubstitutesLineup', awaySubs, 'Away');
+        }
+        
+        // ピッチ上に選手を描画
+        function renderPlayersOnPitch(homePlayers, awayPlayers) {
+            const playersContainer = document.getElementById('playersContainer');
+            if (!playersContainer) return;
+            
+            playersContainer.innerHTML = '';
+            
+            // ホームチーム（上側）
+            homePlayers.forEach(player => {
+                if (player && player.x !== undefined && player.y !== undefined) {
+                    const playerEl = document.createElement('div');
+                    playerEl.className = 'player-marker';
+                    playerEl.style.position = 'absolute';
+                    playerEl.style.left = `${player.x}%`;
+                    playerEl.style.top = `${player.y}%`;
+                    playerEl.style.transform = 'translate(-50%, -50%)';
+                    playerEl.style.width = '40px';
+                    playerEl.style.height = '40px';
+                    playerEl.style.borderRadius = '50%';
+                    playerEl.style.background = 'rgba(26, 134, 240, 0.8)';
+                    playerEl.style.border = '2px solid #1A86F0';
+                    playerEl.style.display = 'flex';
+                    playerEl.style.alignItems = 'center';
+                    playerEl.style.justifyContent = 'center';
+                    playerEl.style.color = 'white';
+                    playerEl.style.fontSize = '0.75rem';
+                    playerEl.style.fontWeight = 'bold';
+                    playerEl.textContent = player.number || player.player?.number || '';
+                    playerEl.title = player.name || player.player?.name || '';
+                    playersContainer.appendChild(playerEl);
+                }
+            });
+            
+            // アウェイチーム（下側）
+            awayPlayers.forEach(player => {
+                if (player && player.x !== undefined && player.y !== undefined) {
+                    const playerEl = document.createElement('div');
+                    playerEl.className = 'player-marker';
+                    playerEl.style.position = 'absolute';
+                    playerEl.style.left = `${player.x}%`;
+                    playerEl.style.top = `${player.y}%`;
+                    playerEl.style.transform = 'translate(-50%, -50%)';
+                    playerEl.style.width = '40px';
+                    playerEl.style.height = '40px';
+                    playerEl.style.borderRadius = '50%';
+                    playerEl.style.background = 'rgba(48, 212, 79, 0.8)';
+                    playerEl.style.border = '2px solid #30D44F';
+                    playerEl.style.display = 'flex';
+                    playerEl.style.alignItems = 'center';
+                    playerEl.style.justifyContent = 'center';
+                    playerEl.style.color = 'white';
+                    playerEl.style.fontSize = '0.75rem';
+                    playerEl.style.fontWeight = 'bold';
+                    playerEl.textContent = player.number || player.player?.number || '';
+                    playerEl.title = player.name || player.player?.name || '';
+                    playersContainer.appendChild(playerEl);
+                }
+            });
+        }
+        
+        // サブスティテュートを表示
+        function renderSubstitutes(containerId, substitutes, teamLabel) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            if (!substitutes || substitutes.length === 0) {
+                container.innerHTML = '<div class="text-xs text-[#9ab0bc]">サブスティテュートなし</div>';
+                return;
+            }
+            
+            container.innerHTML = substitutes.map(sub => {
+                const playerName = sub.name || sub.player?.name || 'Unknown';
+                const playerNumber = sub.number || sub.player?.number || '';
+                return `
+                    <div class="flex items-center gap-2 p-2 bg-[#1a2e24] rounded border border-white/5">
+                        <span class="text-xs font-bold text-white">${playerNumber}</span>
+                        <span class="text-xs text-[#9ab0bc]">${playerName}</span>
+                    </div>
+                `;
+            }).join('');
         }
         
         // H2Hタブを更新（既存の関数があれば使用）
