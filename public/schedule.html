@@ -7667,11 +7667,24 @@
                         name: p.name || p.player.name || 'Unknown',
                         number: p.number || p.player.number || 0,
                         position: p.position || p.player.pos || p.player.position || 'Unknown',
-                        player: p.player,
+                        player: {
+                            ...p.player,
+                            id: p.player.id || p.id || null,
+                            name: p.name || p.player.name || 'Unknown',
+                            number: p.number || p.player.number || 0,
+                            pos: p.position || p.player.pos || p.player.position || 'Unknown',
+                            photo: p.player.photo || p.photo || null
+                        },
+                        photo: p.photo || p.player.photo || null,
+                        id: p.id || p.player.id || null,
                         ...p
                     };
                 }
-                return p;
+                return {
+                    ...p,
+                    photo: p.photo || null,
+                    id: p.id || null
+                };
             });
             
             awayStartXI = awayStartXI.map(p => {
@@ -7680,18 +7693,61 @@
                         name: p.name || p.player.name || 'Unknown',
                         number: p.number || p.player.number || 0,
                         position: p.position || p.player.pos || p.player.position || 'Unknown',
-                        player: p.player,
+                        player: {
+                            ...p.player,
+                            id: p.player.id || p.id || null,
+                            name: p.name || p.player.name || 'Unknown',
+                            number: p.number || p.player.number || 0,
+                            pos: p.position || p.player.pos || p.player.position || 'Unknown',
+                            photo: p.player.photo || p.photo || null
+                        },
+                        photo: p.photo || p.player.photo || null,
+                        id: p.id || p.player.id || null,
                         ...p
                     };
                 }
-                return p;
+                return {
+                    ...p,
+                    photo: p.photo || null,
+                    id: p.id || null
+                };
             });
+            
+            // normalizeXI関数でGK→DF→MF→FW順に並べ替え
+            const normalizeXI = (xi) => {
+                if (!xi || !Array.isArray(xi)) return [];
+                
+                const positionOrder = { 'G': 0, 'GK': 0, 'D': 1, 'DF': 1, 'M': 2, 'MF': 2, 'F': 3, 'FW': 3 };
+                
+                return [...xi].sort((a, b) => {
+                    const posA = (a.position || a.player?.pos || a.pos || '').toString().toUpperCase();
+                    const posB = (b.position || b.player?.pos || b.pos || '').toString().toUpperCase();
+                    
+                    const orderA = positionOrder[posA] ?? (posA.includes('G') ? 0 : posA.includes('D') ? 1 : posA.includes('M') ? 2 : 3);
+                    const orderB = positionOrder[posB] ?? (posB.includes('G') ? 0 : posB.includes('D') ? 1 : posB.includes('M') ? 2 : 3);
+                    
+                    if (orderA !== orderB) return orderA - orderB;
+                    
+                    // 同じポジション内では番号順
+                    const numA = a.number || a.player?.number || 99;
+                    const numB = b.number || b.player?.number || 99;
+                    return numA - numB;
+                });
+            };
+            
+            // 11人に限定（GKは1人、その他は10人）
+            homeStartXI = normalizeXI(homeStartXI).slice(0, 11);
+            awayStartXI = normalizeXI(awayStartXI).slice(0, 11);
             
             console.log('📋 StartXI:', { 
                 home: homeStartXI.length, 
                 away: awayStartXI.length,
+                homeFormation: homeFormation,
+                awayFormation: awayFormation,
                 homeFirst: homeStartXI[0],
-                awayFirst: awayStartXI[0]
+                awayFirst: awayStartXI[0],
+                homeAll: homeStartXI.map(p => ({ name: p.name, number: p.number, position: p.position || p.player?.pos })),
+                awayAll: awayStartXI.map(p => ({ name: p.name, number: p.number, position: p.position || p.player?.pos }))
             });
             
             // ピッチ上に選手を配置
