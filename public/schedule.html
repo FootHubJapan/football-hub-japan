@@ -7918,7 +7918,7 @@
         
         /**
          * フォーメーションから各行のY座標を生成
-         * @param {string} formationStr - フォーメーション文字列（例："3-5-2"）
+         * @param {string|object|array} formationInput - フォーメーション文字列（例："3-5-2"）またはオブジェクト/配列
          * @param {boolean} isHome - ホームチームかどうか
          * @returns {{rows: Array<number>, ys: Array<number>}} 各行の人数とY座標
          * 
@@ -7926,9 +7926,22 @@
          * HOME：DF=上（y小）、FW=下（y大、センター側）
          * AWAY：DF=下（y大）、FW=上（y小、センター側）
          */
-        function buildRowYs(formationStr, isHome) {
+        function buildRowYs(formationInput, isHome) {
+            // フォーメーションを文字列に正規化
+            let formationStr = "4-4-2"; // デフォルト
+            
+            if (typeof formationInput === 'string') {
+                formationStr = formationInput;
+            } else if (Array.isArray(formationInput)) {
+                // 配列の場合（例：[4, 3, 3]）
+                formationStr = formationInput.join('-');
+            } else if (formationInput && typeof formationInput === 'object') {
+                // オブジェクトの場合（例：{formation: "4-3-3"}）
+                formationStr = formationInput.formation || formationInput.formationStr || "4-4-2";
+            }
+            
             // formationParts は DF→MF→FW の順で扱う（3-5-2なら [3,5,2]）
-            const formationParts = (formationStr || "4-4-2")
+            const formationParts = formationStr
                 .split("-")
                 .map(n => parseInt(n, 10))
                 .filter(Number.isFinite);
@@ -8020,13 +8033,28 @@
                 awayFormation
             });
             
+            // フォーメーションを文字列に正規化
+            const normalizeFormation = (formation) => {
+                if (typeof formation === 'string') {
+                    return formation;
+                } else if (Array.isArray(formation)) {
+                    return formation.join('-');
+                } else if (formation && typeof formation === 'object') {
+                    return formation.formation || formation.formationStr || '4-3-3';
+                }
+                return '4-3-3';
+            };
+            
+            const homeFormationStr = normalizeFormation(homeFormation);
+            const awayFormationStr = normalizeFormation(awayFormation);
+            
             // フォーメーション配列を取得（DF→MF→FWの順を維持）
-            const homeFormationArray = (homeFormation || '4-3-3').split('-').map(Number).filter(n => !isNaN(n));
-            const awayFormationArray = (awayFormation || '4-3-3').split('-').map(Number).filter(n => !isNaN(n));
+            const homeFormationArray = homeFormationStr.split('-').map(Number).filter(n => !isNaN(n));
+            const awayFormationArray = awayFormationStr.split('-').map(Number).filter(n => !isNaN(n));
             
             // 各行のY座標を生成（自陣ゴール→センター方向）
-            const homeRowYs = buildRowYs(homeFormation, true);
-            const awayRowYs = buildRowYs(awayFormation, false);
+            const homeRowYs = buildRowYs(homeFormationStr, true);
+            const awayRowYs = buildRowYs(awayFormationStr, false);
             
             console.log('📋 Formation rowYs:', {
                 home: { formation: homeFormation, rows: homeRowYs.rows, ys: homeRowYs.ys },
