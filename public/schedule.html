@@ -7948,58 +7948,14 @@
             // ホームチーム（上側）
             homePlayers.forEach(player => {
                 if (player && player.x !== undefined && player.y !== undefined) {
-                    const playerEl = document.createElement('div');
-                    playerEl.className = 'player-marker';
-                    playerEl.style.position = 'absolute';
-                    playerEl.style.left = `${player.x}%`;
-                    playerEl.style.top = `${player.y}%`;
-                    playerEl.style.transform = 'translate(-50%, -50%)';
-                    playerEl.style.width = '40px';
-                    playerEl.style.height = '40px';
-                    playerEl.style.borderRadius = '50%';
-                    playerEl.style.background = 'rgba(26, 134, 240, 0.8)';
-                    playerEl.style.border = '2px solid #1A86F0';
-                    playerEl.style.display = 'flex';
-                    playerEl.style.alignItems = 'center';
-                    playerEl.style.justifyContent = 'center';
-                    playerEl.style.color = 'white';
-                    playerEl.style.fontSize = '0.75rem';
-                    playerEl.style.fontWeight = 'bold';
-                    playerEl.textContent = player.number || player.player?.number || '';
-                    playerEl.title = player.name || player.player?.name || '';
-                    playersContainer.appendChild(playerEl);
+                    createPlayerMarker(playersContainer, player.x, player.y, player, 'home');
                 }
             });
             
             // アウェイチーム（下側）
             awayPlayers.forEach(player => {
                 if (player && player.x !== undefined && player.y !== undefined) {
-                    const playerEl = document.createElement('div');
-                    playerEl.className = 'player-marker';
-                    playerEl.style.position = 'absolute';
-                    playerEl.style.left = `${player.x}%`;
-                    playerEl.style.top = `${player.y}%`;
-                    playerEl.style.transform = 'translate(-50%, -50%)';
-                    playerEl.style.width = '40px';
-                    playerEl.style.height = '40px';
-                    playerEl.style.borderRadius = '50%';
-                    playerEl.style.background = 'rgba(48, 212, 79, 0.8)';
-                    playerEl.style.border = '2px solid #30D44F';
-                    playerEl.style.display = 'flex';
-                    playerEl.style.alignItems = 'center';
-                    playerEl.style.justifyContent = 'center';
-                    playerEl.style.color = 'white';
-                    playerEl.style.fontSize = '0.75rem';
-                    playerEl.style.fontWeight = 'bold';
-                    
-                    // 選手情報の取得（複数のデータ構造に対応）
-                    const playerNumber = player.number !== undefined && player.number !== null ? player.number : 
-                                        (player.player?.number !== undefined && player.player?.number !== null ? player.player.number : '');
-                    const playerName = player.name || player.player?.name || '';
-                    
-                    playerEl.textContent = playerNumber || playerName.charAt(0).toUpperCase();
-                    playerEl.title = playerName ? `${playerName}${playerNumber ? ` (${playerNumber})` : ''}` : `Player ${playerNumber}`;
-                    playersContainer.appendChild(playerEl);
+                    createPlayerMarker(playersContainer, player.x, player.y, player, 'away');
                 }
             });
         }
