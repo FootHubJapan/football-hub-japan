@@ -7654,11 +7654,43 @@
                 `;
             }
             
-            // スターティングXIの取得
-            const homeStartXI = homeLineup.startXI || homeLineup.starting_xi || homeLineup.startingXI || [];
-            const awayStartXI = awayLineup.startXI || awayLineup.starting_xi || awayLineup.startingXI || [];
+            // スターティングXIの取得（データ構造を正しく処理）
+            let homeStartXI = homeLineup.startXI || homeLineup.starting_xi || homeLineup.startingXI || [];
+            let awayStartXI = awayLineup.startXI || awayLineup.starting_xi || awayLineup.startingXI || [];
             
-            console.log('📋 StartXI:', { home: homeStartXI.length, away: awayStartXI.length });
+            // データ構造の正規化（playerオブジェクト内にデータがある場合に対応）
+            homeStartXI = homeStartXI.map(p => {
+                if (p.player) {
+                    return {
+                        name: p.name || p.player.name || 'Unknown',
+                        number: p.number || p.player.number || 0,
+                        position: p.position || p.player.pos || p.player.position || 'Unknown',
+                        player: p.player,
+                        ...p
+                    };
+                }
+                return p;
+            });
+            
+            awayStartXI = awayStartXI.map(p => {
+                if (p.player) {
+                    return {
+                        name: p.name || p.player.name || 'Unknown',
+                        number: p.number || p.player.number || 0,
+                        position: p.position || p.player.pos || p.player.position || 'Unknown',
+                        player: p.player,
+                        ...p
+                    };
+                }
+                return p;
+            });
+            
+            console.log('📋 StartXI:', { 
+                home: homeStartXI.length, 
+                away: awayStartXI.length,
+                homeFirst: homeStartXI[0],
+                awayFirst: awayStartXI[0]
+            });
             
             // ピッチ上に選手を配置
             if (homeStartXI.length > 0 && awayStartXI.length > 0) {
@@ -7690,11 +7722,43 @@
                 }
             }
             
-            // サブスティテュートの表示
-            const homeSubs = homeLineup.substitutes || homeLineup.subs || homeLineup.substitutes || [];
-            const awaySubs = awayLineup.substitutes || awayLineup.subs || awayLineup.substitutes || [];
+            // サブスティテュートの表示（データ構造を正しく処理）
+            let homeSubs = homeLineup.substitutes || homeLineup.subs || [];
+            let awaySubs = awayLineup.substitutes || awayLineup.subs || [];
             
-            console.log('📋 Substitutes:', { home: homeSubs.length, away: awaySubs.length });
+            // データ構造の正規化
+            homeSubs = homeSubs.map(p => {
+                if (p.player) {
+                    return {
+                        name: p.name || p.player.name || 'Unknown',
+                        number: p.number || p.player.number || 0,
+                        position: p.position || p.player.pos || p.player.position || 'Unknown',
+                        player: p.player,
+                        ...p
+                    };
+                }
+                return p;
+            });
+            
+            awaySubs = awaySubs.map(p => {
+                if (p.player) {
+                    return {
+                        name: p.name || p.player.name || 'Unknown',
+                        number: p.number || p.player.number || 0,
+                        position: p.position || p.player.pos || p.player.position || 'Unknown',
+                        player: p.player,
+                        ...p
+                    };
+                }
+                return p;
+            });
+            
+            console.log('📋 Substitutes:', { 
+                home: homeSubs.length, 
+                away: awaySubs.length,
+                homeFirst: homeSubs[0],
+                awayFirst: awaySubs[0]
+            });
             
             renderSubstitutes('homeSubstitutesLineup', homeSubs, 'Home');
             renderSubstitutes('awaySubstitutesLineup', awaySubs, 'Away');
