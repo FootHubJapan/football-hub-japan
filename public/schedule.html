@@ -4469,6 +4469,60 @@
             bottom:100%;
             height: 6px;
         }
+        /* LINEUP_FIX_V1: ピッチ上の選手マーカーのCSS優先度確保 */
+        #pitchContainer {
+            position: relative !important;
+            width: 100% !important;
+            aspect-ratio: 2 / 3 !important;
+            min-height: 500px !important;
+            overflow: hidden !important;
+        }
+        
+        #playersContainer {
+            position: absolute !important;
+            inset: 0 !important;
+            z-index: 20 !important;
+            width: 100% !important;
+            height: 100% !important;
+            pointer-events: none !important;
+        }
+        
+        /* 選手マーカーの基本スタイル（優先度確保） */
+        #playersContainer > div {
+            position: absolute !important;
+            transform: translate(-50%, -50%) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            z-index: 30 !important;
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            transition: transform 0.2s ease !important;
+        }
+        
+        /* 選手アイコンのサイズ（レスポンシブ） */
+        #playersContainer > div > div:first-child {
+            width: clamp(32px, 4vw, 56px) !important;
+            height: clamp(32px, 4vw, 56px) !important;
+            min-width: clamp(32px, 4vw, 56px) !important;
+            min-height: clamp(32px, 4vw, 56px) !important;
+            flex-shrink: 0 !important;
+        }
+        
+        /* 選手名ラベルのスタイル */
+        #playersContainer > div > div:last-child {
+            position: relative !important;
+            top: calc(100% + 4px) !important;
+            max-width: clamp(60px, 8vw, 90px) !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            font-size: clamp(9px, 1.1vw, 12px) !important;
+            line-height: 1.1 !important;
+            padding: 2px 6px !important;
+            pointer-events: none !important;
+        }
     </style>
 </head>
 <body>
@@ -7863,7 +7917,7 @@
         }
         
         /**
-         * 選手の座標を計算（統一ロジック）
+         * LINEUP_FIX_V1: 選手の座標を計算（統一ロジック、縦レンジ拡大版）
          * @param {number} rowIndex - 行インデックス（0=FW, 1=MF, 2=DF）
          * @param {number} colIndex - 列インデックス（0から開始）
          * @param {number} rowCount - その行の選手数
@@ -7876,19 +7930,18 @@
             const x = 5 + ((colIndex + 1) * 90 / (rowCount + 1));
             
             // Y座標：行の位置（上から下）
-            // ホームチーム：上側（5%〜45%）
-            // アウェーチーム：下側（55%〜95%）
-            const rowSpacing = 30 / (totalRows + 1);
+            // 縦レンジを広げて重なりを防止（ホーム：12〜44、アウェー：56〜88）
+            const minY = side === 'home' ? 12 : 56;
+            const maxY = side === 'home' ? 44 : 88;
             let y;
             
-            if (side === 'home') {
-                // ホーム：上から下に配置（FW=上、DF=下）
-                y = 15 + (rowIndex + 1) * rowSpacing;
+            if (totalRows <= 1) {
+                // 1行のみの場合は中央
+                y = (minY + maxY) / 2;
             } else {
-                // アウェー：下から上に配置（GK=下、DF=下、MF=中、FW=上）
-                // 座標反転：100 - y で下側に配置
-                const homeY = 15 + (rowIndex + 1) * rowSpacing;
-                y = 100 - homeY; // 反転（下側に配置）
+                // 複数行の場合は均等配置
+                const t = rowIndex / (totalRows - 1); // 0.0 〜 1.0
+                y = minY + t * (maxY - minY);
             }
             
             return { x, y };
