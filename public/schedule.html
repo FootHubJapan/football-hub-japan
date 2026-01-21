@@ -5898,8 +5898,9 @@
                                             </div>`;
                                         }
                                         
-                                        const homeTeamId = getTeamId(homeTeamName);
-                                        const awayTeamId = getTeamId(awayTeamName);
+                                        // チームIDの取得（matchオブジェクトから直接取得）
+                                        const homeTeamId = match.homeTeam?.id || match.home?.id || match.teams?.home?.id || match.homeTeamId || null;
+                                        const awayTeamId = match.awayTeam?.id || match.away?.id || match.teams?.away?.id || match.awayTeamId || null;
                                         
                                         let scoreDisplay = '';
                                         let scoreLabel = '';
