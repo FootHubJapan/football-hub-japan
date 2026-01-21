@@ -5371,7 +5371,15 @@
             }
             
             // 初期データを読み込み
-            loadMatches();
+            console.log('🚀 DOMContentLoaded完了、loadMatchesを呼び出します');
+            setTimeout(() => {
+                console.log('🚀 setTimeout経由でloadMatchesを呼び出します');
+                if (typeof loadMatches === 'function') {
+                    loadMatches();
+                } else {
+                    console.error('❌ loadMatches関数が定義されていません');
+                }
+            }, 100);
             
             // リーグ選択の変更を監視
             const leagueSelect = document.getElementById('leagueSelect');
