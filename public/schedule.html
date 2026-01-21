@@ -8513,7 +8513,7 @@
             renderTimelinePro(matchData);
         }
         
-        // タイムラインをレンダリング（FootyJPスタイル）
+        // タイムラインをレンダリング（FootyJP Proスタイル）
         function renderTimelinePro(matchData) {
             console.log('📋 renderTimelinePro called with:', matchData);
             
@@ -8521,19 +8521,6 @@
             if (!timelineEvents) {
                 console.error('❌ timelineEvents element not found');
                 return;
-            }
-            
-            // 親コンテナにtimeline-lineスタイルを追加
-            const timelineContainer = timelineEvents.parentElement;
-            if (timelineContainer) {
-                timelineContainer.style.position = 'relative';
-                // 中央の縦線を追加
-                if (!timelineContainer.querySelector('.timeline-line')) {
-                    const line = document.createElement('div');
-                    line.className = 'timeline-line';
-                    line.style.cssText = 'position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); z-index: 0;';
-                    timelineContainer.appendChild(line);
-                }
             }
             
             const events = matchData.events || matchData.fixture?.events || [];
@@ -8556,11 +8543,11 @@
             
             let html = '';
             
-            // "Match Started"ラベルを追加
+            // "Kick Off"ラベルを追加
             html += `
-                <div class="relative z-10 flex justify-center">
-                    <div style="background: rgba(255, 255, 255, 0.1); padding: 0.25rem 1rem; border-radius: 9999px; border: 1px solid rgba(218, 230, 231, 0.3);">
-                        <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; color: #9ab0bc;">Match Started</span>
+                <div class="flex justify-center">
+                    <div class="glass-panel px-6 py-2 rounded-full border-white/5">
+                        <span style="font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3em; color: #9ab0bc;">Kick Off</span>
                     </div>
                 </div>
             `;
@@ -8573,93 +8560,116 @@
                 const player = event.player?.name || '';
                 const team = event.team?.name || '';
                 const assist = event.assist?.name || '';
-                const playerIn = event.assist?.name || event.playerIn?.name || null;
+                const playerIn = event.playerIn?.name || event.assist?.name || null;
                 const playerOut = event.playerOut?.name || null;
                 
                 // チーム判定
                 const isHomeTeam = team === homeTeam || (matchData.teams?.home?.id && event.team?.id === matchData.teams.home.id);
                 
                 // 時間表示
-                const timeDisplay = timeExtra ? `${time}+${timeExtra}'` : `${time}'`;
+                const timeDisplay = timeExtra ? `${time}+${timeExtra}` : `${time}'`;
                 
                 // イベントタイプに応じたスタイル
                 let iconClass = '';
                 let iconName = '';
                 let borderColor = 'rgba(255, 255, 255, 0.1)';
+                let markerStyle = '';
                 let eventContent = '';
+                let cardStyle = 'glass-panel p-5 rounded-2xl inline-block';
                 
                 if (type === 'goal' || detail.includes('goal')) {
-                    iconClass = 'text-accent-orange';
+                    iconClass = 'text-goal-gold';
                     iconName = 'sports_soccer';
-                    borderColor = '#00bdc7'; // primary color
+                    borderColor = '#00bdc7';
+                    cardStyle += ' ring-2 ring-primary/20';
                     eventContent = `
-                        <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-2 mb-1">
-                            ${isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
-                            <span class="material-symbols-outlined ${iconClass}" style="fill: 1;">${iconName}</span>
-                            ${!isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                        <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-4 mb-1">
+                            ${isHomeTeam ? `
+                                <div>
+                                    <h3 class="text-lg font-black text-white leading-none">${player}</h3>
+                                    ${assist ? `<p style="font-size: 10px; font-weight: bold; color: #9ab0bc; text-transform: uppercase; margin-top: 0.25rem;">Assist: ${assist}</p>` : ''}
+                                </div>
+                            ` : ''}
+                            <span class="material-symbols-outlined text-3xl ${iconClass} glow-goal" style="fill: 1;">${iconName}</span>
+                            ${!isHomeTeam ? `
+                                <div>
+                                    <h3 class="text-lg font-black text-white leading-none">${player}</h3>
+                                    ${assist ? `<p style="font-size: 10px; font-weight: bold; color: #9ab0bc; text-transform: uppercase; margin-top: 0.25rem;">Assist: ${assist}</p>` : ''}
+                                </div>
+                            ` : ''}
                         </div>
-                        ${assist ? `<p class="text-xs text-gray-500 font-medium">Assist: ${assist}</p>` : ''}
                     `;
                 } else if (type === 'card' && detail.includes('yellow')) {
-                    iconClass = 'text-yellow-500';
+                    iconClass = 'text-card-yellow';
                     iconName = 'rectangle';
                     borderColor = 'rgba(255, 255, 255, 0.1)';
+                    cardStyle += ' border-l-4 border-l-card-yellow';
                     eventContent = `
-                        <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-2 mb-1">
-                            ${isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
-                            <span class="material-symbols-outlined ${iconClass}" style="fill: 1;">${iconName}</span>
-                            ${!isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                        <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-4 mb-1">
+                            ${isHomeTeam ? '' : `<span class="material-symbols-outlined text-2xl ${iconClass}" style="fill: 1;">${iconName}</span>`}
+                            <div>
+                                <h3 class="text-lg font-black text-white leading-none">${player}</h3>
+                                <p style="font-size: 10px; font-weight: bold; color: #9ab0bc; text-transform: uppercase; margin-top: 0.25rem;">${detail.includes('foul') ? 'Tactical Foul' : 'Yellow Card'}</p>
+                            </div>
+                            ${isHomeTeam ? `<span class="material-symbols-outlined text-2xl ${iconClass}" style="fill: 1;">${iconName}</span>` : ''}
                         </div>
-                        ${detail.includes('foul') ? `<p class="text-xs text-gray-500 font-medium">Foul on ${event.comments || 'opponent'}</p>` : ''}
                     `;
                 } else if (type === 'card' && detail.includes('red')) {
-                    iconClass = 'text-red-600';
+                    iconClass = 'text-card-red';
                     iconName = 'rectangle';
                     borderColor = '#ef4444';
+                    markerStyle = 'border-red-500/50 text-red-500 bg-red-500/10';
+                    cardStyle += ' border-l-4 border-l-card-red shadow-lg shadow-red-500/10';
                     eventContent = `
-                        <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-2 mb-1">
-                            ${isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
-                            <span class="material-symbols-outlined ${iconClass}" style="fill: 1;">${iconName}</span>
-                            ${!isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                        <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-4 mb-1">
+                            ${isHomeTeam ? '' : `<span class="material-symbols-outlined text-2xl ${iconClass}" style="fill: 1;">${iconName}</span>`}
+                            <div>
+                                <h3 class="text-lg font-black text-white leading-none">${player}</h3>
+                                <p style="font-size: 10px; font-weight: 900; color: #ef4444; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em;">${detail.includes('direct') ? 'Straight Red' : 'Red Card'}</p>
+                            </div>
+                            ${isHomeTeam ? `<span class="material-symbols-outlined text-2xl ${iconClass}" style="fill: 1;">${iconName}</span>` : ''}
                         </div>
-                        <p class="text-xs text-red-500 font-bold uppercase tracking-tighter">${detail.includes('direct') ? 'Direct Red Card' : 'Red Card'}</p>
                     `;
                 } else if (type === 'subst' || type === 'substitution') {
                     iconClass = 'text-primary';
-                    iconName = 'published_with_changes';
+                    iconName = 'sync_alt';
                     borderColor = 'rgba(255, 255, 255, 0.1)';
                     if (playerIn && playerOut) {
                         eventContent = `
-                            <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-2 mb-1">
+                            <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-5">
                                 ${isHomeTeam ? `
-                                    <div class="flex flex-col text-right">
-                                        <span class="text-sm font-bold text-green-500 flex items-center justify-end gap-1">
-                                            <span class="material-symbols-outlined text-xs">arrow_upward</span> ${playerIn}
-                                        </span>
-                                        <span class="text-sm font-bold text-red-500 flex items-center justify-end gap-1">
-                                            <span class="material-symbols-outlined text-xs">arrow_downward</span> ${playerOut}
-                                        </span>
+                                    <div class="text-right">
+                                        <div class="flex items-center justify-end gap-2 mb-1">
+                                            <span class="material-symbols-outlined text-sub-in font-black text-sm">arrow_upward</span>
+                                            <span class="text-sm font-black text-white">${playerIn}</span>
+                                        </div>
+                                        <div class="flex items-center justify-end gap-2">
+                                            <span class="material-symbols-outlined text-sub-out font-black text-sm">arrow_downward</span>
+                                            <span class="text-sm font-bold text-slate-500">${playerOut}</span>
+                                        </div>
                                     </div>
                                 ` : ''}
-                                <span class="material-symbols-outlined ${iconClass}">${iconName}</span>
+                                <span class="material-symbols-outlined text-3xl ${iconClass}">${iconName}</span>
                                 ${!isHomeTeam ? `
-                                    <div class="flex flex-col">
-                                        <span class="text-sm font-bold text-green-500 flex items-center gap-1">
-                                            <span class="material-symbols-outlined text-xs">arrow_upward</span> ${playerIn}
-                                        </span>
-                                        <span class="text-sm font-bold text-red-500 flex items-center gap-1">
-                                            <span class="material-symbols-outlined text-xs">arrow_downward</span> ${playerOut}
-                                        </span>
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="material-symbols-outlined text-sub-in font-black text-sm">arrow_upward</span>
+                                            <span class="text-sm font-black text-white">${playerIn}</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-symbols-outlined text-sub-out font-black text-sm">arrow_downward</span>
+                                            <span class="text-sm font-bold text-slate-500">${playerOut}</span>
+                                        </div>
                                     </div>
                                 ` : ''}
                             </div>
                         `;
                     } else {
                         eventContent = `
-                            <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-2 mb-1">
-                                ${isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
-                                <span class="material-symbols-outlined ${iconClass}">${iconName}</span>
-                                ${!isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                            <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-4 mb-1">
+                                ${isHomeTeam ? `<h3 class="text-lg font-black text-white leading-none">${player}</h3>` : ''}
+                                <span class="material-symbols-outlined text-3xl ${iconClass}">${iconName}</span>
+                                ${!isHomeTeam ? `<h3 class="text-lg font-black text-white leading-none">${player}</h3>` : ''}
                             </div>
                         `;
                     }
@@ -8667,25 +8677,26 @@
                     // VARイベントは中央に配置
                     html += `
                         <div class="relative z-10 flex justify-center">
-                            <div style="background: rgba(44, 107, 237, 0.1); color: #2c6bed; padding: 0.5rem 1.5rem; border-radius: 0.75rem; border: 1px solid rgba(44, 107, 237, 0.2); display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined" style="font-size: 1.25rem;">tv_options_edit_channels</span>
-                                    <span style="font-size: 0.875rem; font-weight: bold; letter-spacing: -0.025em;">VAR DECISION: ${detail.includes('penalty') ? 'PENALTY' : 'NO PENALTY'}</span>
+                            <div class="glow-var bg-var-blue/10 backdrop-blur-xl px-10 py-5 rounded-3xl flex flex-col items-center gap-2 border border-var-blue/30 max-w-md w-full">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-var-blue text-3xl">tv_options_edit_channels</span>
+                                    <h4 style="font-size: 0.875rem; font-weight: 900; letter-spacing: 0.1em; color: #3b82f6; text-transform: uppercase;">VAR Decision: ${detail.includes('penalty') ? 'Penalty' : 'No Penalty'}</h4>
                                 </div>
-                                <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8;">${timeDisplay} • ${isHomeTeam ? homeTeam : awayTeam} Review</span>
+                                <div style="height: 1px; width: 100%; background: rgba(59, 130, 246, 0.2); margin: 0.25rem 0;"></div>
+                                <span style="font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: #9ab0bc;">${timeDisplay} • ${isHomeTeam ? homeTeam : awayTeam} Penalty Review</span>
                             </div>
                         </div>
                     `;
                     return; // VARイベントはここで終了
                 } else {
-                    iconClass = 'text-gray-400';
+                    iconClass = 'text-slate-400';
                     iconName = 'info';
                     borderColor = 'rgba(255, 255, 255, 0.1)';
                     eventContent = `
-                        <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-2 mb-1">
-                            ${isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
-                            <span class="material-symbols-outlined ${iconClass}">${iconName}</span>
-                            ${!isHomeTeam ? `<span class="text-lg font-bold">${player}</span>` : ''}
+                        <div class="flex items-center ${isHomeTeam ? 'justify-end' : 'justify-start'} gap-4 mb-1">
+                            ${isHomeTeam ? `<h3 class="text-lg font-black text-white leading-none">${player}</h3>` : ''}
+                            <span class="material-symbols-outlined text-2xl ${iconClass}">${iconName}</span>
+                            ${!isHomeTeam ? `<h3 class="text-lg font-black text-white leading-none">${player}</h3>` : ''}
                         </div>
                     `;
                 }
@@ -8694,22 +8705,20 @@
                 html += `
                     <div class="flex items-center w-full">
                         ${isHomeTeam ? `
-                            <div class="flex-1 flex justify-end pr-8">
-                                <div class="text-right">
+                            <div class="w-1/2 pr-12 text-right">
+                                <div class="event-card ${cardStyle}">
                                     ${eventContent}
                                 </div>
                             </div>
-                        ` : '<div class="flex-1 pr-8"></div>'}
-                        <div class="relative z-10" style="width: 2.5rem; height: 2.5rem; border-radius: 9999px; background: rgba(15, 34, 35, 0.8); border: 2px solid ${borderColor}; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                            <span style="font-size: 0.875rem; font-weight: bold; font-variant-numeric: tabular-nums; color: white;">${timeDisplay}</span>
-                        </div>
+                        ` : '<div class="w-1/2 pr-12"></div>'}
+                        <div class="minute-marker ${markerStyle}">${timeDisplay}</div>
                         ${!isHomeTeam ? `
-                            <div class="flex-1 flex justify-start pl-8">
-                                <div>
+                            <div class="w-1/2 pl-12 text-left">
+                                <div class="event-card ${cardStyle}">
                                     ${eventContent}
                                 </div>
                             </div>
-                        ` : '<div class="flex-1 pl-8"></div>'}
+                        ` : '<div class="w-1/2 pl-12"></div>'}
                     </div>
                 `;
             });
@@ -8717,10 +8726,11 @@
             // Live表示を追加（試合中の場合）
             if (matchStatus === 'LIVE' || matchStatus === 'HT' || (matchStatus === '1H' || matchStatus === '2H')) {
                 html += `
-                    <div class="relative z-10 flex justify-center">
+                    <div class="relative z-10 flex justify-center mt-8">
                         <div class="flex flex-col items-center">
-                            <div style="width: 0.75rem; height: 0.75rem; background: #ff6b4a; border-radius: 9999px; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; margin-bottom: 0.5rem;"></div>
-                            <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.2em; color: #ff6b4a;">Live (${currentMinute || '?'}')</span>
+                            <div style="width: 1rem; height: 1rem; background: #00bdc7; border-radius: 9999px; animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; position: absolute;"></div>
+                            <div style="width: 1rem; height: 1rem; background: #00bdc7; border-radius: 9999px; position: relative;"></div>
+                            <span style="font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.4em; color: #00bdc7; margin-top: 1.5rem;">Live Match Progress (${currentMinute || '?'}')</span>
                         </div>
                     </div>
                 `;
