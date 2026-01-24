@@ -286,7 +286,8 @@ async function updateAllPlayersWithCareer() {
         }
     } else {
         // 通常モード: 未更新の選手を取得
-        const playersWithId = players.filter(p => p.playerId);
+        // playerId、apiFootballId、またはidフィールドを持つ選手を対象とする
+        const playersWithId = players.filter(p => p.playerId || p.apiFootballId || p.id);
         
         // 選手の年齢から取得可能なシーズン数を計算する関数
         function getPossibleSeasonsCount(player) {
@@ -381,7 +382,10 @@ async function updateAllPlayersWithCareer() {
         const player = playersToUpdate[i];
         
         try {
-            console.log(`\n📊 [${i + 1}/${playersToUpdate.length}] ${player.name || 'Unknown'} (ID: ${player.playerId})`);
+            // playerId、apiFootballId、またはidから実際のIDを取得
+            const playerId = player.playerId || player.apiFootballId || player.id;
+            
+            console.log(`\n📊 [${i + 1}/${playersToUpdate.length}] ${player.name || 'Unknown'} (ID: ${playerId})`);
             
             // キャリアスタッツを取得（既存のデータがあれば使用）
             console.log(`  🔄 キャリアスタッツを取得中...`);
@@ -389,7 +393,7 @@ async function updateAllPlayersWithCareer() {
             let careerStats = [];
             
             try {
-                careerStats = await getPlayerCareerStats(player.playerId, existingCareerStats, player);
+                careerStats = await getPlayerCareerStats(playerId, existingCareerStats, player);
             } catch (error) {
                 if (error.isRequestLimit) {
                     console.error(`\n❌ APIリクエスト制限に達しました！`);
@@ -398,7 +402,7 @@ async function updateAllPlayersWithCareer() {
                     
                     // 現在の選手と残りの選手をエラーログに記録
                     failedPlayerIds.push({
-                        playerId: player.playerId,
+                        playerId: playerId,
                         name: player.name || 'Unknown',
                         error: 'API_REQUEST_LIMIT_REACHED',
                         timestamp: new Date().toISOString()
@@ -407,9 +411,10 @@ async function updateAllPlayersWithCareer() {
                     // 残りの未処理選手もエラーログに追加
                     for (let j = i; j < playersToUpdate.length; j++) {
                         const remainingPlayer = playersToUpdate[j];
-                        if (remainingPlayer.playerId) {
+                        const remainingPlayerId = remainingPlayer.playerId || remainingPlayer.apiFootballId || remainingPlayer.id;
+                        if (remainingPlayerId) {
                             failedPlayerIds.push({
-                                playerId: remainingPlayer.playerId,
+                                playerId: remainingPlayerId,
                                 name: remainingPlayer.name || 'Unknown',
                                 error: 'API_REQUEST_LIMIT_REACHED (未処理)',
                                 timestamp: new Date().toISOString()
@@ -461,7 +466,7 @@ async function updateAllPlayersWithCareer() {
             // 2025年の統計を取得（全コンペティション）
             console.log(`  🔄 2025年統計を取得中...`);
             try {
-                const url = `https://v3.football.api-sports.io/players?season=2025&id=${player.playerId}`;
+                const url = `https://v3.football.api-sports.io/players?season=2025&id=${playerId}`;
                 let data;
                 
                 try {
@@ -483,9 +488,10 @@ async function updateAllPlayersWithCareer() {
                         // 残りの未処理選手もエラーログに追加
                         for (let j = i; j < playersToUpdate.length; j++) {
                             const remainingPlayer = playersToUpdate[j];
-                            if (remainingPlayer.playerId) {
-                                failedPlayerIds.push({
-                                    playerId: remainingPlayer.playerId,
+                        const remainingPlayerId = remainingPlayer.playerId || remainingPlayer.apiFootballId || remainingPlayer.id;
+                        if (remainingPlayerId) {
+                            failedPlayerIds.push({
+                                playerId: remainingPlayerId,
                                     name: remainingPlayer.name || 'Unknown',
                                     error: 'API_REQUEST_LIMIT_REACHED (未処理)',
                                     timestamp: new Date().toISOString()
@@ -641,11 +647,12 @@ async function updateAllPlayersWithCareer() {
             player.lastUpdated = new Date().toISOString();
             
         } catch (error) {
-            console.error(`❌ ${player.name || 'Unknown'} (ID: ${player.playerId || 'N/A'}): エラー - ${error.message}`);
+            const playerId = player.playerId || player.apiFootballId || player.id;
+            console.error(`❌ ${player.name || 'Unknown'} (ID: ${playerId || 'N/A'}): エラー - ${error.message}`);
             errorCount++;
-            if (player.playerId) {
+            if (playerId) {
                 failedPlayerIds.push({
-                    playerId: player.playerId,
+                    playerId: playerId,
                     name: player.name || 'Unknown',
                     error: error.message,
                     timestamp: new Date().toISOString()
