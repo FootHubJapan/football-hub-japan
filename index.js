@@ -5423,12 +5423,18 @@ app.get('/api/matches/h2h', async (req, res) => {
             // チーム名からチームIDを検索
             const homeTeamResponse = await axios.get('https://v3.football.api-sports.io/teams', {
                 params: { search: home },
-                headers: { 'X-RapidAPI-Key': API_FOOTBALL_KEY }
+                headers: { 
+                    'x-apisports-key': API_FOOTBALL_KEY,
+                    'x-rapidapi-host': 'v3.football.api-sports.io'
+                }
             });
             
             const awayTeamResponse = await axios.get('https://v3.football.api-sports.io/teams', {
                 params: { search: away },
-                headers: { 'X-RapidAPI-Key': API_FOOTBALL_KEY }
+                headers: { 
+                    'x-apisports-key': API_FOOTBALL_KEY,
+                    'x-rapidapi-host': 'v3.football.api-sports.io'
+                }
             });
             
             const homeTeamId = homeTeamResponse.data?.response?.[0]?.team?.id;
@@ -5485,11 +5491,13 @@ app.get('/api/matches/h2h', async (req, res) => {
                 }
                 
                 matches.push({
-                    home: isHomeTeamHome ? fixtureHome : fixtureAway,
-                    away: isHomeTeamHome ? fixtureAway : fixtureHome,
+                    homeTeam: isHomeTeamHome ? fixtureHome : fixtureAway,
+                    awayTeam: isHomeTeamHome ? fixtureAway : fixtureHome,
                     homeScore: isHomeTeamHome ? homeScore : awayScore,
                     awayScore: isHomeTeamHome ? awayScore : homeScore,
-                    date: fixture.fixture?.date || ''
+                    date: fixture.fixture?.date || '',
+                    competition: fixture.league?.name || '',
+                    status: fixture.fixture?.status?.short || 'FINISHED'
                 });
             });
             
