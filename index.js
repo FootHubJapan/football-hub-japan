@@ -7479,13 +7479,131 @@ async function handleMatchDetailsRequest(req, res) {
                     id: matchDetails.id
                 });
             } else {
-                // クリックした試合データもない場合はエラーを返す
-                console.error('❌ No match data available from API or clicked match');
-                return res.status(404).json({ 
-                    success: false, 
-                    error: '試合詳細が見つかりませんでした',
-                    matchId 
-                });
+                // クリックした試合データもない場合は、直接fixture IDで検索を試みる
+                console.log('⚠️ No match data available from API or clicked match, trying direct fixture fetch');
+                try {
+                    const directResponse = await axios.get(`https://v3.football.api-sports.io/fixtures`, {
+                        headers: {
+                            'x-apisports-key': apiKey,
+                            'x-rapidapi-host': 'v3.football.api-sports.io'
+                        },
+                        params: { id: matchId },
+                        timeout: 15000
+                    });
+                    
+                    if (directResponse.data && directResponse.data.response && directResponse.data.response[0]) {
+                        const match = directResponse.data.response[0];
+                        fixture = match;
+                        
+                        // イベントとラインアップを取得
+                        let events = [];
+                        let lineups = null;
+                        
+                        try {
+                            const eventsResponse = await axios.get(`https://v3.football.api-sports.io/fixtures/events`, {
+                                headers: {
+                                    'x-apisports-key': apiKey,
+                                    'x-rapidapi-host': 'v3.football.api-sports.io'
+                                },
+                                params: { fixture: matchId },
+                                timeout: 10000
+                            });
+                            
+                            if (eventsResponse.data && eventsResponse.data.response && Array.isArray(eventsResponse.data.response)) {
+                                events = eventsResponse.data.response.map(event => ({
+                                    time: { elapsed: event.time?.elapsed || 0, extra: event.time?.extra || null },
+                                    type: event.type || 'Unknown',
+                                    detail: event.detail || 'Unknown',
+                                    team: { name: event.team?.name || 'Unknown', id: event.team?.id || null },
+                                    player: { name: event.player?.name || 'Unknown' },
+                                    assist: event.assist ? { name: event.assist.name } : null
+                                }));
+                            }
+                        } catch (eventsError) {
+                            console.error('❌ Failed to fetch events:', eventsError.message);
+                        }
+                        
+                        try {
+                            const lineupsResponse = await axios.get(`https://v3.football.api-sports.io/fixtures/lineups`, {
+                                headers: {
+                                    'x-apisports-key': apiKey,
+                                    'x-rapidapi-host': 'v3.football.api-sports.io'
+                                },
+                                params: { fixture: matchId },
+                                timeout: 10000
+                            });
+                            
+                            if (lineupsResponse.data && lineupsResponse.data.response && Array.isArray(lineupsResponse.data.response)) {
+                                lineups = {
+                                    home: null,
+                                    away: null
+                                };
+                                
+                                lineupsResponse.data.response.forEach(lineup => {
+                                    if (lineup.team && lineup.startXI) {
+                                        const isHome = lineup.team.id === match.teams.home.id;
+                                        const teamKey = isHome ? 'home' : 'away';
+                                        
+                                        lineups[teamKey] = {
+                                            formation: lineup.formation || 'Unknown',
+                                            startXI: lineup.startXI.map(player => ({
+                                                name: player.player?.name || player.name || 'Unknown',
+                                                number: player.player?.number || player.number || 0,
+                                                position: player.player?.pos || player.pos || 'Unknown',
+                                                player: player.player || player,
+                                                photo: player.player?.photo || player.photo || null,
+                                                rating: player.player?.statistics?.[0]?.games?.rating || null
+                                            })),
+                                            substitutes: lineup.substitutes ? lineup.substitutes.map(player => ({
+                                                name: player.player?.name || player.name || 'Unknown',
+                                                number: player.player?.number || player.number || 0,
+                                                position: player.player?.pos || player.pos || 'Unknown',
+                                                player: player.player || player,
+                                                photo: player.player?.photo || player.photo || null,
+                                                rating: player.player?.statistics?.[0]?.games?.rating || null
+                                            })) : [],
+                                            coach: lineup.coach?.name || 'Unknown'
+                                        };
+                                    }
+                                });
+                            }
+                        } catch (lineupsError) {
+                            console.error('❌ Failed to fetch lineups:', lineupsError.message);
+                        }
+                        
+                        matchDetails = {
+                            id: match.fixture.id,
+                            league: league || match.league?.name || 'Unknown',
+                            homeTeam: match.teams.home.name,
+                            awayTeam: match.teams.away.name,
+                            homeScore: match.goals.home,
+                            awayScore: match.goals.away,
+                            date: match.fixture.date,
+                            venue: match.fixture.venue?.name || 'Unknown',
+                            status: match.fixture.status.short,
+                            statusLong: match.fixture.status.long,
+                            referee: match.fixture.referee || 'Unknown',
+                            stats: null,
+                            events: events,
+                            lineups: lineups
+                        };
+                        console.log('✅ Created match details from direct fixture fetch');
+                    } else {
+                        console.error('❌ No match data available from API or clicked match');
+                        return res.status(404).json({ 
+                            success: false, 
+                            error: '試合詳細が見つかりませんでした',
+                            matchId 
+                        });
+                    }
+                } catch (directError) {
+                    console.error('❌ Direct fixture fetch failed:', directError.message);
+                    return res.status(404).json({ 
+                        success: false, 
+                        error: '試合詳細が見つかりませんでした',
+                        matchId 
+                    });
+                }
             }
         }
         
