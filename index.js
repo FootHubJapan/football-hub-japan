@@ -6452,6 +6452,8 @@ async function handleMatchDetailsRequest(req, res) {
         }
         
         let matchDetails = null;
+        let fixture = null;
+        let fixtureData = null;
         
         // API-Footballから試合詳細を取得
         const apiKey = process.env.API_FOOTBALL_KEY || process.env.RAPIDAPI_KEY;
