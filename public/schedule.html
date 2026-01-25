@@ -4676,7 +4676,7 @@
             <section id="matchView" class="hidden" style="display: none;">
             <!-- 戻るボタン -->
             <div style="margin-bottom: 1rem;">
-                <button onclick="(function(){const url=new URL(location.href);url.searchParams.delete('match');location.href=url.pathname+url.search;})()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(51, 255, 255, 0.2); color: var(--primary); border-radius: 0.5rem; border: none; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(51,255,255,0.3)'" onmouseout="this.style.background='rgba(51,255,255,0.2)'">
+                <button onclick="(function(){const url=new window.URL(location.href);url.searchParams.delete('match');location.href=url.pathname+url.search;})()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(51, 255, 255, 0.2); color: var(--primary); border-radius: 0.5rem; border: none; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(51,255,255,0.3)'" onmouseout="this.style.background='rgba(51,255,255,0.2)'">
                     <span class="material-symbols-outlined">arrow_back</span>
                     <span>試合一覧に戻る</span>
                 </button>
