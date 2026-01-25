@@ -8274,6 +8274,26 @@
                 { players: awayClassified.fw, expectedCount: awayFormationArray[2] || 0, label: 'FW', rowIndex: 3 }  // FW（センター側、上）
             ];
             
+            console.log('📋 Away Formation vs Actual Players:', {
+                formation: awayFormationStr,
+                formationArray: awayFormationArray,
+                expected: {
+                    DF: awayFormationArray[0] || 0,
+                    MF: awayFormationArray[1] || 0,
+                    FW: awayFormationArray[2] || 0
+                },
+                actual: {
+                    DF: awayClassified.df.length,
+                    MF: awayClassified.mf.length,
+                    FW: awayClassified.fw.length
+                },
+                match: {
+                    DF: (awayFormationArray[0] || 0) === awayClassified.df.length,
+                    MF: (awayFormationArray[1] || 0) === awayClassified.mf.length,
+                    FW: (awayFormationArray[2] || 0) === awayClassified.fw.length
+                }
+            });
+            
             awayRows.forEach((row) => {
                 // 実際の選手数を優先（11人すべてを表示するため）
                 const count = row.players.length;
