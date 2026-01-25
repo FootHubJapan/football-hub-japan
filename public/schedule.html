@@ -6939,19 +6939,19 @@
                     return;
                 }
                 
-                // /api/match/:idエンドポイントを試す（シンプルなエンドポイント）
-                console.log('📡 Fetching match details from /api/match/:id:', matchId);
-                let response = await fetch(`/api/match/${matchId}`, {
+                // /api/match/:id/detailsエンドポイントを優先的に使用（より詳細なデータを返す）
+                console.log('📡 Fetching match details from /api/match/:id/details:', matchId);
+                let response = await fetch(`/api/match/${matchId}/details`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 });
                 
-                // /api/match/:idが失敗した場合は/detailsエンドポイントを試す
+                // /api/match/:id/detailsが失敗した場合は/api/match/:idエンドポイントを試す
                 if (!response.ok) {
-                    console.log('📡 /api/match/:id failed, trying /api/match/:id/details');
-                    response = await fetch(`/api/match/${matchId}/details`, {
+                    console.log('📡 /api/match/:id/details failed, trying /api/match/:id');
+                    response = await fetch(`/api/match/${matchId}`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json'
