@@ -7862,13 +7862,25 @@
                 };
             });
             
-            // normalizeXI関数でGK→DF→MF→FW順に並べ替え
+            // normalizeXI関数でGK→DF→MF→FW順に並べ替え（フィルタリングはしない）
             const normalizeXI = (xi) => {
                 if (!xi || !Array.isArray(xi)) return [];
                 
+                // まず、有効な選手のみをフィルタ（nameまたはplayer.nameが存在する）
+                const validPlayers = xi.filter(p => {
+                    const name = p.name || p.player?.name || '';
+                    return name && name !== 'Unknown' && name.trim() !== '';
+                });
+                
+                console.log('📋 normalizeXI input:', { 
+                    original: xi.length, 
+                    valid: validPlayers.length,
+                    players: validPlayers.map(p => ({ name: p.name || p.player?.name, pos: p.position || p.player?.pos }))
+                });
+                
                 const positionOrder = { 'G': 0, 'GK': 0, 'D': 1, 'DF': 1, 'M': 2, 'MF': 2, 'F': 3, 'FW': 3 };
                 
-                return [...xi].sort((a, b) => {
+                return validPlayers.sort((a, b) => {
                     const posA = (a.position || a.player?.pos || a.pos || '').toString().toUpperCase();
                     const posB = (b.position || b.player?.pos || b.pos || '').toString().toUpperCase();
                     
@@ -7885,8 +7897,19 @@
             };
             
             // 11人に限定（GKは1人、その他は10人）
-            homeStartXI = normalizeXI(homeStartXI).slice(0, 11);
-            awayStartXI = normalizeXI(awayStartXI).slice(0, 11);
+            // ただし、元のデータが11人未満の場合は全て使用
+            const normalizedHome = normalizeXI(homeStartXI);
+            const normalizedAway = normalizeXI(awayStartXI);
+            
+            console.log('📋 After normalizeXI:', {
+                homeOriginal: homeStartXI.length,
+                homeNormalized: normalizedHome.length,
+                awayOriginal: awayStartXI.length,
+                awayNormalized: normalizedAway.length
+            });
+            
+            homeStartXI = normalizedHome.length >= 11 ? normalizedHome.slice(0, 11) : normalizedHome;
+            awayStartXI = normalizedAway.length >= 11 ? normalizedAway.slice(0, 11) : normalizedAway;
             
             console.log('📋 StartXI:', { 
                 home: homeStartXI.length, 
