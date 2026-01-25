@@ -6933,34 +6933,82 @@
                 console.log('Loading match into view:', matchId);
                 console.log('MatchView exists:', !!document.getElementById('matchView'));
                 
-                // matchIdからfixtureIdとfotmobIdを判定
-                let fixtureId = '';
-                let fotmobId = '';
-                let source = 'api_football';
-                
-                if (matchId.startsWith('fotmob_')) {
-                    fotmobId = matchId.replace('fotmob_', '');
-                    source = 'fotmob';
-                } else {
-                    fixtureId = matchId;
+                // matchIdから直接試合詳細を取得
+                if (!matchId) {
+                    console.error('No matchId provided');
+                    return;
                 }
                 
-                console.log('Calling showDetailedMatchInfoV2 with:', {
-                    source,
-                    fixtureId,
-                    fotmobId
+                // /api/match/:idエンドポイントを試す（シンプルなエンドポイント）
+                console.log('📡 Fetching match details from /api/match/:id:', matchId);
+                let response = await fetch(`/api/match/${matchId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
                 
-                // 既存のshowDetailedMatchInfoV2関数を使用
-                    await showDetailedMatchInfoV2({
-                    source,
-                    fixtureId,
-                        fotmobId,
-                    leagueKey: '',
-                    kickoffUtc: '',
-                    home: '',
-                    away: ''
-                });
+                // /api/match/:idが失敗した場合は/detailsエンドポイントを試す
+                if (!response.ok) {
+                    console.log('📡 /api/match/:id failed, trying /api/match/:id/details');
+                    response = await fetch(`/api/match/${matchId}/details`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                }
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { message: errorText };
+                    }
+                    console.error('❌ Failed to fetch match details:', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        error: errorData
+                    });
+                    alert(`試合詳細の取得に失敗しました: ${errorData.reason || errorData.message || errorData.error || `HTTP ${response.status}`}`);
+                    return;
+                }
+                
+                const result = await response.json();
+                console.log('📊 API response:', result);
+                
+                if (result.success && result.data) {
+                    console.log('✅ Match details fetched successfully:', result.data);
+                    displayDetailedMatchInfo(result.data);
+                } else if (result.ok && result.fixtureId) {
+                    // 後方互換性のためのフォールバック
+                    console.log('✅ Match details fetched successfully (legacy format):', result);
+                    if (result.data) {
+                        displayDetailedMatchInfo(result.data);
+                    } else {
+                        // データを既存の形式に変換
+                        const matchDetails = {
+                            id: result.fixtureId,
+                            homeTeam: result.fixture?.teams?.home?.name || 'Home',
+                            awayTeam: result.fixture?.teams?.away?.name || 'Away',
+                            homeScore: result.fixture?.goals?.home || null,
+                            awayScore: result.fixture?.goals?.away || null,
+                            date: result.fixture?.fixture?.date || new Date().toISOString(),
+                            status: result.fixture?.fixture?.status?.short || 'TIMED',
+                            venue: result.fixture?.fixture?.venue?.name || 'Unknown',
+                            stats: result.stats || null,
+                            events: result.events || [],
+                            lineups: result.lineups || null,
+                            footballData: result.footballData || null
+                        };
+                        displayDetailedMatchInfo(matchDetails);
+                    }
+                } else {
+                    console.error('❌ Failed to fetch match details:', result);
+                    alert(`試合詳細の取得に失敗しました: ${result.reason || result.message || result.error || 'Unknown error'}`);
+                }
             } catch (error) {
                 console.error('Error loading match into view:', error);
                 alert(`試合データの読み込み中にエラーが発生しました: ${error.message}`);

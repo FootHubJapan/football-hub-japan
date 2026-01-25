@@ -7079,8 +7079,8 @@ async function handleMatchDetailsRequest(req, res) {
                     
                     // イベントデータの処理
                     let events = [];
-                    if (fixture.events && Array.isArray(fixture.events)) {
-                        console.log('Processing events:', fixture.events);
+                    if (fixture.events && Array.isArray(fixture.events) && fixture.events.length > 0) {
+                        console.log('Processing events from fixture data:', fixture.events.length);
                         events = fixture.events.map(event => ({
                             time: event.time?.elapsed || 0,
                             type: event.type || 'Unknown',
@@ -7089,6 +7089,35 @@ async function handleMatchDetailsRequest(req, res) {
                             player: event.player?.name || 'Unknown',
                             assist: event.assist?.name || null
                         }));
+                    } else {
+                        // イベントデータが存在しない場合、/fixtures/eventsエンドポイントから取得
+                        try {
+                            console.log('📋 Fetching events from separate endpoint for fixture:', fixture.fixture.id);
+                            const eventsResponse = await axios.get(`https://v3.football.api-sports.io/fixtures/events`, {
+                                headers: {
+                                    'x-apisports-key': apiKey,
+                                    'x-rapidapi-host': 'v3.football.api-sports.io'
+                                },
+                                params: { fixture: fixture.fixture.id },
+                                timeout: 15000
+                            });
+                            
+                            if (eventsResponse.data && eventsResponse.data.response && Array.isArray(eventsResponse.data.response)) {
+                                console.log('✅ Processing events from events endpoint:', eventsResponse.data.response.length);
+                                events = eventsResponse.data.response.map(event => ({
+                                    time: event.time?.elapsed || 0,
+                                    type: event.type || 'Unknown',
+                                    detail: event.detail || 'Unknown',
+                                    team: event.team?.name || 'Unknown',
+                                    player: event.player?.name || 'Unknown',
+                                    assist: event.assist?.name || null
+                                }));
+                            } else {
+                                console.warn('⚠️ Events API returned empty response or no data');
+                            }
+                        } catch (eventsError) {
+                            console.error('❌ Failed to fetch events from separate endpoint:', eventsError.message);
+                        }
                     }
                     
                     // ラインアップデータの処理
