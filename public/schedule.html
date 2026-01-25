@@ -7791,11 +7791,33 @@
                 return;
             }
             
-            // フォーメーションの取得
-            const homeFormation = homeLineup.formation || homeLineup.tactics?.formation || homeLineup.tactics?.formation || '4-3-3';
-            const awayFormation = awayLineup.formation || awayLineup.tactics?.formation || awayLineup.tactics?.formation || '4-3-3';
+            // フォーメーションの取得（APIから取得した実際のフォーメーションを使用）
+            // 複数のデータ構造に対応（API-Football, Football-data.orgなど）
+            const homeFormation = homeLineup.formation || 
+                                 homeLineup.tactics?.formation || 
+                                 matchData.lineups?.home?.formation ||
+                                 '4-3-3'; // デフォルト（フォーメーションが取得できない場合のみ）
+            const awayFormation = awayLineup.formation || 
+                                 awayLineup.tactics?.formation || 
+                                 matchData.lineups?.away?.formation ||
+                                 '4-3-3'; // デフォルト（フォーメーションが取得できない場合のみ）
             
-            console.log('📋 Formations:', { home: homeFormation, away: awayFormation });
+            console.log('📋 Formations (from API):', { 
+                home: homeFormation, 
+                away: awayFormation,
+                homeSource: homeLineup.formation ? 'homeLineup.formation' : 
+                           (homeLineup.tactics?.formation ? 'homeLineup.tactics.formation' : 
+                           (matchData.lineups?.home?.formation ? 'matchData.lineups.home.formation' : 'default')),
+                awaySource: awayLineup.formation ? 'awayLineup.formation' : 
+                           (awayLineup.tactics?.formation ? 'awayLineup.tactics.formation' : 
+                           (matchData.lineups?.away?.formation ? 'matchData.lineups.away.formation' : 'default')),
+                homeLineupFormation: homeLineup.formation,
+                awayLineupFormation: awayLineup.formation,
+                matchDataLineups: matchData.lineups ? {
+                    homeFormation: matchData.lineups.home?.formation,
+                    awayFormation: matchData.lineups.away?.formation
+                } : null
+            });
             
             const formationBadge = document.getElementById('formationBadge');
             if (formationBadge) {
