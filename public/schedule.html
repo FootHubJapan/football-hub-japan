@@ -7809,6 +7809,13 @@
             let homeStartXI = homeLineup.startXI || homeLineup.starting_xi || homeLineup.startingXI || [];
             let awayStartXI = awayLineup.startXI || awayLineup.starting_xi || awayLineup.startingXI || [];
             
+            console.log('📋 Raw StartXI before normalization:', {
+                homeRaw: homeStartXI.length,
+                awayRaw: awayStartXI.length,
+                homeRawData: homeStartXI.map(p => ({ name: p.name || p.player?.name, number: p.number || p.player?.number, pos: p.position || p.player?.pos })),
+                awayRawData: awayStartXI.map(p => ({ name: p.name || p.player?.name, number: p.number || p.player?.number, pos: p.position || p.player?.pos }))
+            });
+            
             // データ構造の正規化（playerオブジェクト内にデータがある場合に対応）
             homeStartXI = homeStartXI.map(p => {
                 if (p.player) {
