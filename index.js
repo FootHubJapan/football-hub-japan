@@ -5436,10 +5436,13 @@ app.get('/api/matches/h2h', async (req, res) => {
             
             if (!homeTeamId || !awayTeamId) {
                 return res.json({
-                    homeWins: 0,
-                    awayWins: 0,
-                    draws: 0,
-                    matches: []
+                    success: true,
+                    data: {
+                        homeWins: 0,
+                        awayWins: 0,
+                        draws: 0,
+                        matches: []
+                    }
                 });
             }
             
@@ -5449,7 +5452,10 @@ app.get('/api/matches/h2h', async (req, res) => {
                     h2h: `${homeTeamId}-${awayTeamId}`,
                     last: 10
                 },
-                headers: { 'X-RapidAPI-Key': API_FOOTBALL_KEY }
+                headers: { 
+                    'x-apisports-key': API_FOOTBALL_KEY,
+                    'x-rapidapi-host': 'v3.football.api-sports.io'
+                }
             });
             
             const fixtures = h2hResponse.data?.response || [];
@@ -5488,20 +5494,26 @@ app.get('/api/matches/h2h', async (req, res) => {
             });
             
             res.json({
-                homeWins,
-                awayWins,
-                draws,
-                matches: matches.slice(0, 10)
+                success: true,
+                data: {
+                    homeWins,
+                    awayWins,
+                    draws,
+                    matches: matches.slice(0, 10)
+                }
             });
             
         } catch (apiError) {
             console.error('API-Football H2H error:', apiError.message);
             // フォールバック: 空のデータを返す
             res.json({
-                homeWins: 0,
-                awayWins: 0,
-                draws: 0,
-                matches: []
+                success: true,
+                data: {
+                    homeWins: 0,
+                    awayWins: 0,
+                    draws: 0,
+                    matches: []
+                }
             });
         }
     } catch (error) {
