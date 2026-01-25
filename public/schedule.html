@@ -6729,7 +6729,7 @@
                 
                 if (matchId) {
                     // クエリパラメータに遷移（ルーティング機能が処理する）
-                    const url = new URL(location.href);
+                    const url = new window.URL(location.href);
                     url.searchParams.set('match', matchId);
                     location.href = url.pathname + url.search;
                 } else {
@@ -6757,7 +6757,7 @@
 
         function getMatchId() {
             // クエリパラメータを優先、なければハッシュから取得
-            const url = new URL(location.href);
+            const url = new window.URL(location.href);
             const queryMatch = url.searchParams.get("match");
             console.log('getMatchId - queryMatch:', queryMatch, 'URL:', location.href);
             if (queryMatch) {
