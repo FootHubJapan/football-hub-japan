@@ -7919,7 +7919,9 @@
                 homeFirst: homeStartXI[0],
                 awayFirst: awayStartXI[0],
                 homeAll: homeStartXI.map(p => ({ name: p.name, number: p.number, position: p.position || p.player?.pos })),
-                awayAll: awayStartXI.map(p => ({ name: p.name, number: p.number, position: p.position || p.player?.pos }))
+                awayAll: awayStartXI.map(p => ({ name: p.name, number: p.number, position: p.position || p.player?.pos })),
+                homeWarning: homeStartXI.length < 11 ? `⚠️ ホームチームは${homeStartXI.length}人しかいません（11人必要）` : '✅ ホームチームは11人',
+                awayWarning: awayStartXI.length < 11 ? `⚠️ アウェイチームは${awayStartXI.length}人しかいません（11人必要）` : '✅ アウェイチームは11人'
             });
             
             // ピッチ上に選手を配置
@@ -8206,7 +8208,8 @@
             ];
             
             homeRows.forEach((row) => {
-                const count = Math.min(row.expectedCount, row.players.length);
+                // 実際の選手数を優先（11人すべてを表示するため）
+                const count = row.players.length;
                 for (let colIndex = 0; colIndex < count; colIndex++) {
                     // rowYs配列からY座標を取得（rowIndex=1=DF, rowIndex=3=FW）
                     const { x, y } = computePlayerPosition(row.rowIndex, colIndex, count, homeRowYs.ys, 'home');
