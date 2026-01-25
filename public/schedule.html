@@ -6978,18 +6978,30 @@
                 
                 const result = await response.json();
                 console.log('📊 API response:', result);
+                console.log('📊 API response structure:', {
+                    hasSuccess: 'success' in result,
+                    hasData: 'data' in result,
+                    hasOk: 'ok' in result,
+                    hasId: 'id' in result,
+                    hasHomeTeam: 'homeTeam' in result,
+                    keys: Object.keys(result)
+                });
+                
+                // レスポンス形式の判定と処理
+                let matchData = null;
                 
                 if (result.success && result.data) {
-                    console.log('✅ Match details fetched successfully:', result.data);
-                    displayDetailedMatchInfo(result.data);
+                    // /api/match/:id/details形式: { success: true, data: {...} }
+                    console.log('✅ Match details fetched successfully (success:true format):', result.data);
+                    matchData = result.data;
                 } else if (result.ok && result.fixtureId) {
-                    // 後方互換性のためのフォールバック
+                    // 後方互換性のためのフォールバック: { ok: true, fixtureId: ..., data: {...} }
                     console.log('✅ Match details fetched successfully (legacy format):', result);
                     if (result.data) {
-                        displayDetailedMatchInfo(result.data);
+                        matchData = result.data;
                     } else {
                         // データを既存の形式に変換
-                        const matchDetails = {
+                        matchData = {
                             id: result.fixtureId,
                             homeTeam: result.fixture?.teams?.home?.name || 'Home',
                             awayTeam: result.fixture?.teams?.away?.name || 'Away',
@@ -7003,11 +7015,23 @@
                             lineups: result.lineups || null,
                             footballData: result.footballData || null
                         };
-                        displayDetailedMatchInfo(matchDetails);
                     }
+                } else if (result.id || result.homeTeam || (result.homeTeam && result.awayTeam)) {
+                    // /api/match/:id形式: 直接matchDataオブジェクト
+                    console.log('✅ Match details fetched successfully (direct format):', result);
+                    matchData = result;
                 } else {
-                    console.error('❌ Failed to fetch match details:', result);
+                    console.error('❌ Failed to fetch match details - unknown response format:', result);
                     alert(`試合詳細の取得に失敗しました: ${result.reason || result.message || result.error || 'Unknown error'}`);
+                    return;
+                }
+                
+                // matchDataが取得できた場合、表示する
+                if (matchData) {
+                    displayDetailedMatchInfo(matchData);
+                } else {
+                    console.error('❌ Match data is null or undefined');
+                    alert('試合詳細の取得に失敗しました: データが空です');
                 }
             } catch (error) {
                 console.error('Error loading match into view:', error);
