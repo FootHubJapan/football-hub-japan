@@ -7620,12 +7620,25 @@
             const awayNameEl = document.getElementById('awayName');
             if (awayNameEl) awayNameEl.textContent = awayName;
             
-            // スコアを更新
+            // スコアを更新（live/finishedの場合は0を表示、それ以外は-）
+            const isLiveOrFinished = status === 'LIVE' || status === 'HT' || status === 'IN_PLAY' || status === 'FT' || status === 'FINISHED';
             const homeScoreEl = document.getElementById('homeScore');
-            if (homeScoreEl) homeScoreEl.textContent = homeScore !== null && homeScore !== undefined ? homeScore : '-';
+            if (homeScoreEl) {
+                if (isLiveOrFinished) {
+                    homeScoreEl.textContent = homeScore !== null && homeScore !== undefined ? homeScore : 0;
+                } else {
+                    homeScoreEl.textContent = homeScore !== null && homeScore !== undefined ? homeScore : '-';
+                }
+            }
             
             const awayScoreEl = document.getElementById('awayScore');
-            if (awayScoreEl) awayScoreEl.textContent = awayScore !== null && awayScore !== undefined ? awayScore : '-';
+            if (awayScoreEl) {
+                if (isLiveOrFinished) {
+                    awayScoreEl.textContent = awayScore !== null && awayScore !== undefined ? awayScore : 0;
+                } else {
+                    awayScoreEl.textContent = awayScore !== null && awayScore !== undefined ? awayScore : '-';
+                }
+            }
             
             // ロゴを更新
             const homeLogoEl = document.getElementById('homeLogo');
@@ -8481,9 +8494,9 @@
                             <div class="h2h-match-content" style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
                                 <div class="h2h-team-name" style="flex: 1; color: white; font-weight: 600;">${match.homeTeam || homeTeam}</div>
                                 <div class="h2h-score-box" style="display: flex; align-items: center; gap: 0.5rem; margin: 0 1rem;">
-                                    <span class="h2h-score" style="font-weight: bold; color: ${isHomeWin ? '#3b82f6' : 'white'}; font-size: 1.125rem;">${match.homeScore !== null && match.homeScore !== undefined ? match.homeScore : '-'}</span>
+                                    <span class="h2h-score" style="font-weight: bold; color: ${isHomeWin ? '#3b82f6' : 'white'}; font-size: 1.125rem;">${match.homeScore !== null && match.homeScore !== undefined ? match.homeScore : (match.status === 'FINISHED' || match.status === 'Finished' || match.status === 'FT' ? 0 : '-')}</span>
                                     <span class="h2h-score-separator" style="color: #9ab0bc;">-</span>
-                                    <span class="h2h-score" style="font-weight: bold; color: ${isAwayWin ? '#10b981' : 'white'}; font-size: 1.125rem;">${match.awayScore !== null && match.awayScore !== undefined ? match.awayScore : '-'}</span>
+                                    <span class="h2h-score" style="font-weight: bold; color: ${isAwayWin ? '#10b981' : 'white'}; font-size: 1.125rem;">${match.awayScore !== null && match.awayScore !== undefined ? match.awayScore : (match.status === 'FINISHED' || match.status === 'Finished' || match.status === 'FT' ? 0 : '-')}</span>
                                 </div>
                                 <div class="h2h-team-name" style="flex: 1; color: white; font-weight: 600; text-align: right;">${match.awayTeam || awayTeam}</div>
                                 <div class="h2h-match-meta" style="margin-left: 1rem; display: flex; flex-direction: column; align-items: flex-end;">
@@ -8523,9 +8536,12 @@
             console.log('📋 matchData.data?.events:', matchData.data?.events);
             
             // イベントデータが存在しない場合、APIから取得を試みる
+            const matchId = matchData.id || matchData.fixture?.id || matchData.fixtureId || matchData.matchId || matchData.match_id;
             if ((!matchData.events || matchData.events.length === 0) && 
-                (!matchData.fixture?.events || matchData.fixture.events.length === 0)) {
-                const matchId = matchData.id || matchData.fixture?.id || matchData.fixtureId;
+                (!matchData.fixture?.events || matchData.fixture.events.length === 0) &&
+                (!matchData.goalScorers || matchData.goalScorers.length === 0) &&
+                (!matchData.bookings || matchData.bookings.length === 0) &&
+                (!matchData.substitutions || matchData.substitutions.length === 0)) {
                 if (matchId) {
                     console.log('📡 Fetching events from API for matchId:', matchId);
                     fetch(`/api/match/${matchId}/events`)
@@ -8533,23 +8549,94 @@
                         .then(result => {
                             if (result.success && result.data && result.data.length > 0) {
                                 console.log('✅ Events fetched from API:', result.data);
-                                matchData.events = result.data;
+                                // APIレスポンスのデータ構造を正しくマッピング
+                                matchData.events = result.data.map(event => ({
+                                    time: { elapsed: event.time || event.minute || 0, extra: event.timeExtra || null },
+                                    type: event.type || 'unknown',
+                                    detail: event.detail || '',
+                                    team: { name: event.team || event.teamName || 'Unknown', id: event.teamId || null },
+                                    player: { name: event.player || event.playerName || '' },
+                                    assist: event.assist ? { name: event.assist } : null,
+                                    comments: event.comments || null
+                                }));
                                 renderTimelinePro(matchData);
                             } else {
                                 console.warn('⚠️ No events found in API response');
+                                // 既存のデータからイベントを構築
+                                buildEventsFromMatchData(matchData);
                                 renderTimelinePro(matchData);
                             }
                         })
                         .catch(error => {
                             console.error('❌ Error fetching events:', error);
+                            // 既存のデータからイベントを構築
+                            buildEventsFromMatchData(matchData);
                             renderTimelinePro(matchData);
                         });
                     return;
+                } else {
+                    // matchIdがない場合も既存データから構築
+                    buildEventsFromMatchData(matchData);
                 }
+            } else {
+                // 既存のデータからイベントを構築
+                buildEventsFromMatchData(matchData);
             }
             
             // 以前のUI実装を復元（renderTimelinePro関数を使用）
             renderTimelinePro(matchData);
+        }
+        
+        // 既存のマッチデータからイベントを構築する関数
+        function buildEventsFromMatchData(matchData) {
+            if (!matchData.events || matchData.events.length === 0) {
+                const events = [];
+                
+                // goalScorersからゴールイベントを構築
+                if (matchData.goalScorers && Array.isArray(matchData.goalScorers)) {
+                    matchData.goalScorers.forEach(goal => {
+                        events.push({
+                            time: { elapsed: goal.minute || 0, extra: null },
+                            type: 'Goal',
+                            detail: goal.type || 'Normal Goal',
+                            team: { name: goal.team || matchData.homeTeam || matchData.awayTeam || 'Unknown', id: null },
+                            player: { name: goal.name || goal.player || '' },
+                            assist: goal.assist ? { name: goal.assist } : null
+                        });
+                    });
+                }
+                
+                // bookingsからカードイベントを構築
+                if (matchData.bookings && Array.isArray(matchData.bookings)) {
+                    matchData.bookings.forEach(booking => {
+                        events.push({
+                            time: { elapsed: booking.minute || 0, extra: null },
+                            type: 'Card',
+                            detail: booking.card || 'Yellow Card',
+                            team: { name: booking.team || matchData.homeTeam || matchData.awayTeam || 'Unknown', id: null },
+                            player: { name: booking.name || booking.player || '' }
+                        });
+                    });
+                }
+                
+                // substitutionsから交代イベントを構築
+                if (matchData.substitutions && Array.isArray(matchData.substitutions)) {
+                    matchData.substitutions.forEach(sub => {
+                        events.push({
+                            time: { elapsed: sub.minute || 0, extra: null },
+                            type: 'subst',
+                            detail: 'Substitution',
+                            team: { name: sub.team || matchData.homeTeam || matchData.awayTeam || 'Unknown', id: null },
+                            player: { name: sub.playerOut || '' },
+                            assist: sub.playerIn ? { name: sub.playerIn } : null
+                        });
+                    });
+                }
+                
+                if (events.length > 0) {
+                    matchData.events = events;
+                }
+            }
         }
         
         // タイムラインをレンダリング（FootyJP Proスタイル）
