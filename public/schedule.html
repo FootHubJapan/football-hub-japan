@@ -8214,6 +8214,26 @@
                 { players: homeClassified.fw, expectedCount: homeFormationArray[2] || 0, label: 'FW', rowIndex: 3 }  // FW（センター側、下）
             ];
             
+            console.log('📋 Home Formation vs Actual Players:', {
+                formation: homeFormationStr,
+                formationArray: homeFormationArray,
+                expected: {
+                    DF: homeFormationArray[0] || 0,
+                    MF: homeFormationArray[1] || 0,
+                    FW: homeFormationArray[2] || 0
+                },
+                actual: {
+                    DF: homeClassified.df.length,
+                    MF: homeClassified.mf.length,
+                    FW: homeClassified.fw.length
+                },
+                match: {
+                    DF: (homeFormationArray[0] || 0) === homeClassified.df.length,
+                    MF: (homeFormationArray[1] || 0) === homeClassified.mf.length,
+                    FW: (homeFormationArray[2] || 0) === homeClassified.fw.length
+                }
+            });
+            
             homeRows.forEach((row) => {
                 // 実際の選手数を優先（11人すべてを表示するため）
                 const count = row.players.length;
