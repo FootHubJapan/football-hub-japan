@@ -7605,29 +7605,38 @@
             // APIレスポンスのデータ構造を正規化（複数の構造に対応）
             let normalizedStats = {};
             
-            // statsが配列の場合（API-Football形式）
+            // statsが配列の場合（API-Football形式: [{team: {...}, statistics: [...]}, ...]）
             if (Array.isArray(stats)) {
-                stats.forEach(stat => {
-                    if (stat.type && stat.value !== undefined) {
-                        const key = stat.type.toLowerCase().replace(/\s+/g, '');
-                        // home/awayの判定（team.idまたはteam.nameで判定）
-                        const isHome = stat.team?.id === matchData.homeTeamId || 
-                                      stat.team?.name === homeTeam ||
-                                      (stat.team === 'home' || stat.team === 'Home');
-                        
-                        if (!normalizedStats[key]) {
-                            normalizedStats[key] = { home: 0, away: 0 };
-                        }
-                        
-                        if (isHome) {
-                            normalizedStats[key].home = parseFloat(stat.value) || parseInt(stat.value) || 0;
-                        } else {
-                            normalizedStats[key].away = parseFloat(stat.value) || parseInt(stat.value) || 0;
-                        }
+                // API-Footballの形式: 配列の最初がhome、2番目がaway
+                stats.forEach((teamStats, teamIndex) => {
+                    const teamKey = teamIndex === 0 ? 'home' : 'away';
+                    
+                    if (teamStats.statistics && Array.isArray(teamStats.statistics)) {
+                        teamStats.statistics.forEach(stat => {
+                            if (stat.type && stat.value !== undefined) {
+                                const key = stat.type.toLowerCase().replace(/\s+/g, '');
+                                
+                                if (!normalizedStats[key]) {
+                                    normalizedStats[key] = { home: 0, away: 0 };
+                                }
+                                
+                                let value = stat.value;
+                                // パーセンテージ値の処理
+                                if (typeof value === 'string' && value.includes('%')) {
+                                    value = parseInt(value.replace('%', '')) || 0;
+                                } else if (typeof value === 'string' && value === 'null') {
+                                    value = 0;
+                                } else {
+                                    value = parseFloat(value) || parseInt(value) || 0;
+                                }
+                                
+                                normalizedStats[key][teamKey] = value;
+                            }
+                        });
                     }
                 });
             } else if (typeof stats === 'object' && stats !== null) {
-                // statsがオブジェクトの場合（既に正規化されている形式）
+                // statsがオブジェクトの場合（既に正規化されている形式: {possession: {home: X, away: Y}, ...}）
                 normalizedStats = stats;
             }
 
@@ -8762,26 +8771,43 @@
                 
                 if (result.success && result.data && Array.isArray(result.data) && result.data.length > 0) {
                     console.log('✅ Events fetched from API:', result.data.length, 'events');
+                    console.log('📋 First event sample:', result.data[0]);
                     // APIレスポンスのデータ構造を正しくマッピング
-                    matchData.events = result.data.map(event => ({
-                        time: { 
-                            elapsed: event.time?.elapsed || event.time || event.minute || 0, 
-                            extra: event.time?.extra || event.timeExtra || null 
-                        },
-                        type: event.type || 'unknown',
-                        detail: event.detail || '',
-                        team: { 
-                            name: event.team?.name || event.team || event.teamName || 'Unknown', 
-                            id: event.team?.id || event.teamId || null 
-                        },
-                        player: { 
-                            name: event.player?.name || event.player || event.playerName || '' 
-                        },
-                        assist: event.assist ? { 
-                            name: event.assist?.name || event.assist || event.assistName || '' 
-                        } : null,
-                        comments: event.comments || null
-                    }));
+                    matchData.events = result.data.map(event => {
+                        // API-Footballのレスポンス形式に対応
+                        // event.timeは数値（elapsed）またはオブジェクト{elapsed, extra}
+                        let timeElapsed = 0;
+                        let timeExtra = null;
+                        
+                        if (typeof event.time === 'number') {
+                            timeElapsed = event.time;
+                        } else if (event.time && typeof event.time === 'object') {
+                            timeElapsed = event.time.elapsed || 0;
+                            timeExtra = event.time.extra || null;
+                        } else if (event.minute !== undefined) {
+                            timeElapsed = event.minute || 0;
+                        }
+                        
+                        return {
+                            time: { 
+                                elapsed: timeElapsed, 
+                                extra: timeExtra
+                            },
+                            type: event.type || 'unknown',
+                            detail: event.detail || '',
+                            team: { 
+                                name: typeof event.team === 'string' ? event.team : (event.team?.name || 'Unknown'), 
+                                id: typeof event.team === 'object' ? (event.team?.id || null) : null
+                            },
+                            player: { 
+                                name: typeof event.player === 'string' ? event.player : (event.player?.name || '') 
+                            },
+                            assist: event.assist ? { 
+                                name: typeof event.assist === 'string' ? event.assist : (event.assist?.name || '') 
+                            } : null,
+                            comments: event.comments || null
+                        };
+                    });
                     renderTimelinePro(matchData);
                 } else {
                     console.warn('⚠️ No events found in API response, trying fallback');
