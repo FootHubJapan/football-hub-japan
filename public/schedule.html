@@ -7600,28 +7600,71 @@
             const homeTeam = matchData.homeTeam || matchData.home || matchData.teams?.home?.name || 'Home';
             const awayTeam = matchData.awayTeam || matchData.away || matchData.teams?.away?.name || 'Away';
 
-            // 統計項目の定義
+            console.log('📊 renderStatsComparison called with stats:', stats);
+
+            // APIレスポンスのデータ構造を正規化（複数の構造に対応）
+            let normalizedStats = {};
+            
+            // statsが配列の場合（API-Football形式）
+            if (Array.isArray(stats)) {
+                stats.forEach(stat => {
+                    if (stat.type && stat.value !== undefined) {
+                        const key = stat.type.toLowerCase().replace(/\s+/g, '');
+                        // home/awayの判定（team.idまたはteam.nameで判定）
+                        const isHome = stat.team?.id === matchData.homeTeamId || 
+                                      stat.team?.name === homeTeam ||
+                                      (stat.team === 'home' || stat.team === 'Home');
+                        
+                        if (!normalizedStats[key]) {
+                            normalizedStats[key] = { home: 0, away: 0 };
+                        }
+                        
+                        if (isHome) {
+                            normalizedStats[key].home = parseFloat(stat.value) || parseInt(stat.value) || 0;
+                        } else {
+                            normalizedStats[key].away = parseFloat(stat.value) || parseInt(stat.value) || 0;
+                        }
+                    }
+                });
+            } else if (typeof stats === 'object' && stats !== null) {
+                // statsがオブジェクトの場合（既に正規化されている形式）
+                normalizedStats = stats;
+            }
+
+            console.log('📊 Normalized stats:', normalizedStats);
+
+            // 統計項目の定義（API-Footballのキー名に対応）
             const statItems = [
-                { key: 'possession', label: 'Ball Possession', format: (v) => `${v}%`, max: 100 },
-                { key: 'shots', label: 'Total Shots', format: (v) => v.toString(), max: null },
-                { key: 'shotsOnTarget', label: 'Shots on Target', format: (v) => v.toString(), max: null },
-                { key: 'shotsOffTarget', label: 'Shots off Target', format: (v) => v.toString(), max: null },
-                { key: 'corners', label: 'Corner Kicks', format: (v) => v.toString(), max: null },
-                { key: 'fouls', label: 'Fouls', format: (v) => v.toString(), max: null },
-                { key: 'yellowCards', label: 'Yellow Cards', format: (v) => v.toString(), max: null },
-                { key: 'redCards', label: 'Red Cards', format: (v) => v.toString(), max: null },
-                { key: 'offsides', label: 'Offsides', format: (v) => v.toString(), max: null },
-                { key: 'saves', label: 'Saves', format: (v) => v.toString(), max: null },
-                { key: 'passes', label: 'Total Passes', format: (v) => v.toString(), max: null },
-                { key: 'passesAccuracy', label: 'Pass Accuracy', format: (v) => `${v}%`, max: 100 },
-                { key: 'attacks', label: 'Attacks', format: (v) => v.toString(), max: null },
-                { key: 'dangerousAttacks', label: 'Dangerous Attacks', format: (v) => v.toString(), max: null }
+                { key: 'ballpossession', apiKeys: ['ballpossession', 'possession'], label: 'Ball Possession', format: (v) => `${v}%`, max: 100 },
+                { key: 'totalshots', apiKeys: ['totalshots', 'shots', 'shotstotal'], label: 'Total Shots', format: (v) => v.toString(), max: null },
+                { key: 'shotsontarget', apiKeys: ['shotsontarget', 'shotsOnTarget', 'shotson'], label: 'Shots on Target', format: (v) => v.toString(), max: null },
+                { key: 'shotsofftarget', apiKeys: ['shotsofftarget', 'shotsOffTarget', 'shotsoff'], label: 'Shots off Target', format: (v) => v.toString(), max: null },
+                { key: 'cornerkicks', apiKeys: ['cornerkicks', 'corners', 'cornertotal'], label: 'Corner Kicks', format: (v) => v.toString(), max: null },
+                { key: 'fouls', apiKeys: ['fouls', 'foulstotal'], label: 'Fouls', format: (v) => v.toString(), max: null },
+                { key: 'yellowcards', apiKeys: ['yellowcards', 'yellowCards', 'yellowcardstotal'], label: 'Yellow Cards', format: (v) => v.toString(), max: null },
+                { key: 'redcards', apiKeys: ['redcards', 'redCards', 'redcardstotal'], label: 'Red Cards', format: (v) => v.toString(), max: null },
+                { key: 'offsides', apiKeys: ['offsides', 'offsidestotal'], label: 'Offsides', format: (v) => v.toString(), max: null },
+                { key: 'goalkeepersaves', apiKeys: ['goalkeepersaves', 'saves', 'savestotal'], label: 'Saves', format: (v) => v.toString(), max: null },
+                { key: 'totalpasses', apiKeys: ['totalpasses', 'passes', 'passestotal'], label: 'Total Passes', format: (v) => v.toString(), max: null },
+                { key: 'passesaccurate', apiKeys: ['passesaccurate', 'passesAccuracy', 'passaccuracy'], label: 'Pass Accuracy', format: (v) => `${v}%`, max: 100 },
+                { key: 'attacks', apiKeys: ['attacks', 'attackstotal'], label: 'Attacks', format: (v) => v.toString(), max: null },
+                { key: 'dangerousattacks', apiKeys: ['dangerousattacks', 'dangerousAttacks', 'dangerousattackstotal'], label: 'Dangerous Attacks', format: (v) => v.toString(), max: null }
             ];
 
             let html = '';
             statItems.forEach(item => {
-                const homeValue = stats[item.key]?.home || 0;
-                const awayValue = stats[item.key]?.away || 0;
+                // 複数のキー名を試す
+                let homeValue = 0;
+                let awayValue = 0;
+                
+                for (const apiKey of item.apiKeys) {
+                    if (normalizedStats[apiKey]) {
+                        homeValue = normalizedStats[apiKey].home || 0;
+                        awayValue = normalizedStats[apiKey].away || 0;
+                        break;
+                    }
+                }
+                
                 const total = item.max || Math.max(homeValue, awayValue, 1);
                 const homePercent = total > 0 ? (homeValue / total) * 100 : 50;
                 const awayPercent = total > 0 ? (awayValue / total) * 100 : 50;
@@ -8697,62 +8740,61 @@
         }
         
         // TIMELINEタブを更新
-        function updateTimelineTab(matchData) {
+        async function updateTimelineTab(matchData) {
             console.log('📋 updateTimelineTab called with:', matchData);
-            console.log('📋 matchData.events:', matchData.events);
-            console.log('📋 matchData.fixture?.events:', matchData.fixture?.events);
-            console.log('📋 matchData.data?.events:', matchData.data?.events);
             
-            // イベントデータが存在しない場合、APIから取得を試みる
+            // 試合IDを取得
             const matchId = matchData.id || matchData.fixture?.id || matchData.fixtureId || matchData.matchId || matchData.match_id;
-            if ((!matchData.events || matchData.events.length === 0) && 
-                (!matchData.fixture?.events || matchData.fixture.events.length === 0) &&
-                (!matchData.goalScorers || matchData.goalScorers.length === 0) &&
-                (!matchData.bookings || matchData.bookings.length === 0) &&
-                (!matchData.substitutions || matchData.substitutions.length === 0)) {
-                if (matchId) {
-                    console.log('📡 Fetching events from API for matchId:', matchId);
-                    fetch(`/api/match/${matchId}/events`)
-                        .then(response => response.json())
-                        .then(result => {
-                            if (result.success && result.data && result.data.length > 0) {
-                                console.log('✅ Events fetched from API:', result.data);
-                                // APIレスポンスのデータ構造を正しくマッピング
-                                matchData.events = result.data.map(event => ({
-                                    time: { elapsed: event.time || event.minute || 0, extra: event.timeExtra || null },
-                                    type: event.type || 'unknown',
-                                    detail: event.detail || '',
-                                    team: { name: event.team || event.teamName || 'Unknown', id: event.teamId || null },
-                                    player: { name: event.player || event.playerName || '' },
-                                    assist: event.assist ? { name: event.assist } : null,
-                                    comments: event.comments || null
-                                }));
-                                renderTimelinePro(matchData);
-                            } else {
-                                console.warn('⚠️ No events found in API response');
-                                // 既存のデータからイベントを構築
-                                buildEventsFromMatchData(matchData);
-                                renderTimelinePro(matchData);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('❌ Error fetching events:', error);
-                            // 既存のデータからイベントを構築
-                            buildEventsFromMatchData(matchData);
-                            renderTimelinePro(matchData);
-                        });
-                    return;
-                } else {
-                    // matchIdがない場合も既存データから構築
-                    buildEventsFromMatchData(matchData);
+            if (!matchId) {
+                console.error('Match ID not found in matchData');
+                const timelineContainer = document.getElementById('timelineContainer') || document.querySelector('[data-panel="timeline"]');
+                if (timelineContainer) {
+                    timelineContainer.innerHTML = '<div class="no-data">試合IDが見つかりません</div>';
                 }
-            } else {
-                // 既存のデータからイベントを構築
-                buildEventsFromMatchData(matchData);
+                return;
             }
             
-            // 以前のUI実装を復元（renderTimelinePro関数を使用）
-            renderTimelinePro(matchData);
+            try {
+                // 常にAPIからイベントデータを取得
+                console.log('📡 Fetching events from API for matchId:', matchId);
+                const response = await fetch(`/api/match/${matchId}/events`);
+                const result = await response.json();
+                
+                if (result.success && result.data && Array.isArray(result.data) && result.data.length > 0) {
+                    console.log('✅ Events fetched from API:', result.data.length, 'events');
+                    // APIレスポンスのデータ構造を正しくマッピング
+                    matchData.events = result.data.map(event => ({
+                        time: { 
+                            elapsed: event.time?.elapsed || event.time || event.minute || 0, 
+                            extra: event.time?.extra || event.timeExtra || null 
+                        },
+                        type: event.type || 'unknown',
+                        detail: event.detail || '',
+                        team: { 
+                            name: event.team?.name || event.team || event.teamName || 'Unknown', 
+                            id: event.team?.id || event.teamId || null 
+                        },
+                        player: { 
+                            name: event.player?.name || event.player || event.playerName || '' 
+                        },
+                        assist: event.assist ? { 
+                            name: event.assist?.name || event.assist || event.assistName || '' 
+                        } : null,
+                        comments: event.comments || null
+                    }));
+                    renderTimelinePro(matchData);
+                } else {
+                    console.warn('⚠️ No events found in API response, trying fallback');
+                    // 既存のデータからイベントを構築
+                    buildEventsFromMatchData(matchData);
+                    renderTimelinePro(matchData);
+                }
+            } catch (error) {
+                console.error('❌ Error fetching events:', error);
+                // 既存のデータからイベントを構築
+                buildEventsFromMatchData(matchData);
+                renderTimelinePro(matchData);
+            }
         }
         
         // 既存のマッチデータからイベントを構築する関数
