@@ -4843,44 +4843,7 @@
 
                 <!-- 試合統計タブ（ProFooty Analyticsスタイル） -->
                 <section data-panel="stats" class="hidden" style="display: none; flex-direction: column; gap: 2rem;">
-                    <!-- Match Scorecard -->
-                    <div class="bg-[#17252b] border border-white/10 rounded-2xl p-8 flex items-center justify-between" id="matchScorecard" style="background-color: #17252b; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1rem; padding: 2rem; display: flex; align-items: center; justify-content: space-between;">
-                        <!-- LEFT: Home -->
-                        <div class="flex items-center gap-4" style="display: flex; align-items: center; gap: 1rem; min-width: 260px;">
-                            <div class="size-12 rounded-full bg-black/20 border border-white/10 flex items-center justify-center overflow-hidden" style="width: 3rem; height: 3rem; border-radius: 9999px; background-color: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                                <img id="homeTeamLogoStats" class="w-10 h-10 object-contain" alt="home logo" style="width: 2.5rem; height: 2.5rem; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="team-logo-fallback" style="display: none; font-size: 1.5rem;">🏟️</div>
-                            </div>
-                            <div>
-                                <div id="homeTeamNameStats" class="text-white font-semibold text-lg leading-tight" style="color: white; font-weight: 600; font-size: 1.125rem; line-height: 1.25;">Home</div>
-                                <div class="text-white/40 text-xs tracking-widest uppercase font-bold mt-1" style="color: rgba(255, 255, 255, 0.4); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; margin-top: 0.25rem;">HOME TEAM</div>
-                        </div>
-                        </div>
-
-                        <!-- CENTER: Score -->
-                        <div class="flex flex-col items-center flex-1" style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-                            <div id="matchScoreStats" class="font-display font-bold tracking-tighter text-[84px] leading-[0.95] text-white" style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.05em; font-size: 84px; line-height: 0.95; color: white;">
-                                0 - 0
-                            </div>
-                            <div id="matchStatusBadgeStats" class="mt-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/40 text-primary text-xs font-bold tracking-widest uppercase" style="margin-top: 0.5rem; padding: 0.25rem 0.75rem; border-radius: 9999px; background-color: rgba(0, 189, 199, 0.2); border: 1px solid rgba(0, 189, 199, 0.4); color: #00bdc7; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;">
-                                FT
-                    </div>
-                </div>
-                
-                        <!-- RIGHT: Away -->
-                        <div class="flex items-center gap-4 justify-end" style="display: flex; align-items: center; gap: 1rem; justify-content: flex-end; min-width: 260px;">
-                            <div class="text-right">
-                                <div id="awayTeamNameStats" class="text-white font-semibold text-lg leading-tight" style="color: white; font-weight: 600; font-size: 1.125rem; line-height: 1.25;">Away</div>
-                                <div class="text-white/40 text-xs tracking-widest uppercase font-bold mt-1" style="color: rgba(255, 255, 255, 0.4); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; margin-top: 0.25rem;">AWAY TEAM</div>
-                            </div>
-                            <div class="size-12 rounded-full bg-black/20 border border-white/10 flex items-center justify-center overflow-hidden" style="width: 3rem; height: 3rem; border-radius: 9999px; background-color: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                                <img id="awayTeamLogoStats" class="w-10 h-10 object-contain" alt="away logo" style="width: 2.5rem; height: 2.5rem; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="team-logo-fallback" style="display: none; font-size: 1.5rem;">🏟️</div>
-                            </div>
-                    </div>
-                </div>
-                
-                <!-- Bento Grid Advanced Stats -->
+                    <!-- Bento Grid Advanced Stats -->
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                         <!-- Left Column: Metrics Visualization -->
                         <div class="lg:col-span-8 flex flex-col gap-6">
