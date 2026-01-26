@@ -7642,22 +7642,22 @@
 
             console.log('📊 Normalized stats:', normalizedStats);
 
-            // 統計項目の定義（API-Footballのキー名に対応）
+            // 統計項目の定義（APIエンドポイントが返すキー名に合わせる）
             const statItems = [
-                { key: 'ballpossession', apiKeys: ['ballpossession', 'possession'], label: 'Ball Possession', format: (v) => `${v}%`, max: 100 },
-                { key: 'totalshots', apiKeys: ['totalshots', 'shots', 'shotstotal'], label: 'Total Shots', format: (v) => v.toString(), max: null },
-                { key: 'shotsontarget', apiKeys: ['shotsontarget', 'shotsOnTarget', 'shotson'], label: 'Shots on Target', format: (v) => v.toString(), max: null },
-                { key: 'shotsofftarget', apiKeys: ['shotsofftarget', 'shotsOffTarget', 'shotsoff'], label: 'Shots off Target', format: (v) => v.toString(), max: null },
-                { key: 'cornerkicks', apiKeys: ['cornerkicks', 'corners', 'cornertotal'], label: 'Corner Kicks', format: (v) => v.toString(), max: null },
+                { key: 'possession', apiKeys: ['possession', 'ballpossession'], label: 'Ball Possession', format: (v) => `${v}%`, max: 100 },
+                { key: 'shots', apiKeys: ['shots', 'totalshots', 'shotstotal'], label: 'Total Shots', format: (v) => v.toString(), max: null },
+                { key: 'shotsOnTarget', apiKeys: ['shotsOnTarget', 'shotsontarget', 'shotson'], label: 'Shots on Target', format: (v) => v.toString(), max: null },
+                { key: 'shotsOffTarget', apiKeys: ['shotsOffTarget', 'shotsofftarget', 'shotsoff'], label: 'Shots off Target', format: (v) => v.toString(), max: null },
+                { key: 'corners', apiKeys: ['corners', 'cornerkicks', 'cornertotal'], label: 'Corner Kicks', format: (v) => v.toString(), max: null },
                 { key: 'fouls', apiKeys: ['fouls', 'foulstotal'], label: 'Fouls', format: (v) => v.toString(), max: null },
-                { key: 'yellowcards', apiKeys: ['yellowcards', 'yellowCards', 'yellowcardstotal'], label: 'Yellow Cards', format: (v) => v.toString(), max: null },
-                { key: 'redcards', apiKeys: ['redcards', 'redCards', 'redcardstotal'], label: 'Red Cards', format: (v) => v.toString(), max: null },
+                { key: 'yellowCards', apiKeys: ['yellowCards', 'yellowcards', 'yellowcardstotal'], label: 'Yellow Cards', format: (v) => v.toString(), max: null },
+                { key: 'redCards', apiKeys: ['redCards', 'redcards', 'redcardstotal'], label: 'Red Cards', format: (v) => v.toString(), max: null },
                 { key: 'offsides', apiKeys: ['offsides', 'offsidestotal'], label: 'Offsides', format: (v) => v.toString(), max: null },
-                { key: 'goalkeepersaves', apiKeys: ['goalkeepersaves', 'saves', 'savestotal'], label: 'Saves', format: (v) => v.toString(), max: null },
-                { key: 'totalpasses', apiKeys: ['totalpasses', 'passes', 'passestotal'], label: 'Total Passes', format: (v) => v.toString(), max: null },
-                { key: 'passesaccurate', apiKeys: ['passesaccurate', 'passesAccuracy', 'passaccuracy'], label: 'Pass Accuracy', format: (v) => `${v}%`, max: 100 },
+                { key: 'saves', apiKeys: ['saves', 'goalkeepersSaves', 'goalkeepersaves', 'savestotal'], label: 'Saves', format: (v) => v.toString(), max: null },
+                { key: 'passes', apiKeys: ['passes', 'totalpasses', 'passestotal'], label: 'Total Passes', format: (v) => v.toString(), max: null },
+                { key: 'passesAccuracy', apiKeys: ['passesAccuracy', 'passesaccurate', 'passaccuracy'], label: 'Pass Accuracy', format: (v) => `${v}%`, max: 100 },
                 { key: 'attacks', apiKeys: ['attacks', 'attackstotal'], label: 'Attacks', format: (v) => v.toString(), max: null },
-                { key: 'dangerousattacks', apiKeys: ['dangerousattacks', 'dangerousAttacks', 'dangerousattackstotal'], label: 'Dangerous Attacks', format: (v) => v.toString(), max: null }
+                { key: 'dangerousAttacks', apiKeys: ['dangerousAttacks', 'dangerousattacks', 'dangerousattackstotal'], label: 'Dangerous Attacks', format: (v) => v.toString(), max: null }
             ];
 
             let html = '';
