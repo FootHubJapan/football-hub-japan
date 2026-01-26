@@ -7662,16 +7662,24 @@
 
             let html = '';
             statItems.forEach(item => {
-                // 複数のキー名を試す
+                // 複数のキー名を試す（APIエンドポイントが返すキー名を優先）
                 let homeValue = 0;
                 let awayValue = 0;
+                let foundKey = null;
                 
                 for (const apiKey of item.apiKeys) {
                     if (normalizedStats[apiKey]) {
                         homeValue = normalizedStats[apiKey].home || 0;
                         awayValue = normalizedStats[apiKey].away || 0;
+                        foundKey = apiKey;
+                        console.log(`📊 Found ${item.label}: home=${homeValue}, away=${awayValue} (key: ${apiKey})`);
                         break;
                     }
+                }
+                
+                // 値が見つからない場合のログ
+                if (!foundKey) {
+                    console.warn(`⚠️ ${item.label} not found. Tried keys:`, item.apiKeys, 'Available keys:', Object.keys(normalizedStats));
                 }
                 
                 const total = item.max || Math.max(homeValue, awayValue, 1);
