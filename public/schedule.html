@@ -4707,8 +4707,8 @@
                 <!-- Home -->
                 <div class="flex flex-col items-center gap-4 text-center">
                   <div class="size-32 bg-[#23262b] rounded-2xl flex items-center justify-center p-6 border border-white/10 shadow-2xl">
-                    <img id="homeLogo" class="w-full h-full object-contain" alt="Home Logo" src="" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="team-logo-fallback" style="display: none; font-size: 2rem;">🏟️</div>
+                    <img id="homeLogo" class="w-full h-full object-contain" alt="Home Logo" src="" loading="lazy" decoding="async" onerror="if(this.nextElementSibling){this.style.display='none';this.nextElementSibling.style.display='flex';}">
+                    <div class="team-logo-fallback" style="display: none; font-size: 2rem; align-items: center; justify-content: center;">🏟️</div>
                   </div>
                   <div>
                     <h2 id="homeName" class="text-3xl font-bold tracking-tight uppercase text-white">HOME</h2>
@@ -4734,8 +4734,8 @@
                 <!-- Away -->
                 <div class="flex flex-col items-center gap-4 text-center">
                   <div class="size-32 bg-[#23262b] rounded-2xl flex items-center justify-center p-6 border border-white/10 shadow-2xl">
-                    <img id="awayLogo" class="w-full h-full object-contain" alt="Away Logo" src="" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="team-logo-fallback" style="display: none; font-size: 2rem;">🏟️</div>
+                    <img id="awayLogo" class="w-full h-full object-contain" alt="Away Logo" src="" loading="lazy" decoding="async" onerror="if(this.nextElementSibling){this.style.display='none';this.nextElementSibling.style.display='flex';}">
+                    <div class="team-logo-fallback" style="display: none; font-size: 2rem; align-items: center; justify-content: center;">🏟️</div>
                   </div>
                   <div>
                     <h2 id="awayName" class="text-3xl font-bold tracking-tight uppercase text-white">AWAY</h2>
@@ -7969,24 +7969,26 @@
                     // ロゴを確実に表示
                     homeLogoEl.loading = 'lazy';
                     homeLogoEl.decoding = 'async';
-                    homeLogoEl.src = `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
+                    const logoUrl = `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
+                    homeLogoEl.src = logoUrl;
                     homeLogoEl.style.display = 'block';
                     homeLogoEl.style.visibility = 'visible';
                     homeLogoEl.style.opacity = '1';
                     if (homeLogoFallback) {
                         homeLogoFallback.style.display = 'none';
+                        // フォールバックにチーム名の頭文字を設定
+                        homeLogoFallback.textContent = homeName.charAt(0) || '🏟️';
                     }
-                    console.log('📋 Home logo set:', `https://media.api-sports.io/football/teams/${homeTeamId}.png`);
+                    console.log('📋 Home logo set:', logoUrl, 'for team:', homeName);
                     
-                    // エラー時のフォールバック
-                    homeLogoEl.onerror = function() {
+                    // エラー時のフォールバック（HTMLのonerrorと併用）
+                    homeLogoEl.addEventListener('error', function() {
                         console.warn('⚠️ Home logo failed to load, using fallback');
                         this.style.display = 'none';
                         if (homeLogoFallback) {
                             homeLogoFallback.style.display = 'flex';
-                            homeLogoFallback.textContent = homeName.charAt(0) || '🏟️';
                         }
-                    };
+                    }, { once: true });
                 } else {
                     console.warn('⚠️ Home team ID not found, using fallback');
                     homeLogoEl.style.display = 'none';
@@ -8004,24 +8006,26 @@
                     // ロゴを確実に表示
                     awayLogoEl.loading = 'lazy';
                     awayLogoEl.decoding = 'async';
-                    awayLogoEl.src = `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
+                    const logoUrl = `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
+                    awayLogoEl.src = logoUrl;
                     awayLogoEl.style.display = 'block';
                     awayLogoEl.style.visibility = 'visible';
                     awayLogoEl.style.opacity = '1';
                     if (awayLogoFallback) {
                         awayLogoFallback.style.display = 'none';
+                        // フォールバックにチーム名の頭文字を設定
+                        awayLogoFallback.textContent = awayName.charAt(0) || '🏟️';
                     }
-                    console.log('📋 Away logo set:', `https://media.api-sports.io/football/teams/${awayTeamId}.png`);
+                    console.log('📋 Away logo set:', logoUrl, 'for team:', awayName);
                     
-                    // エラー時のフォールバック
-                    awayLogoEl.onerror = function() {
+                    // エラー時のフォールバック（HTMLのonerrorと併用）
+                    awayLogoEl.addEventListener('error', function() {
                         console.warn('⚠️ Away logo failed to load, using fallback');
                         this.style.display = 'none';
                         if (awayLogoFallback) {
                             awayLogoFallback.style.display = 'flex';
-                            awayLogoFallback.textContent = awayName.charAt(0) || '🏟️';
                         }
-                    };
+                    }, { once: true });
                 } else {
                     console.warn('⚠️ Away team ID not found, using fallback');
                     awayLogoEl.style.display = 'none';
