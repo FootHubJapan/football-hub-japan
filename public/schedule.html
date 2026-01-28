@@ -6044,15 +6044,26 @@
                                         
                                         let scoreDisplay = '';
                                         let scoreLabel = '';
-                                        if (isLive || isFinished) {
-                                            const displayHomeScore = homeScore !== undefined && homeScore !== null ? homeScore : 0;
-                                            const displayAwayScore = awayScore !== undefined && awayScore !== null ? awayScore : 0;
-                                            scoreDisplay = `<div style="font-size: 2.25rem; font-weight: bold; letter-spacing: -0.05em; display: flex; align-items: center; gap: 0.5rem;">
-                                                <span>${displayHomeScore}</span>
-                                                <span style="color: rgba(71, 85, 105, 0.8);">-</span>
-                                                <span>${displayAwayScore}</span>
-                                            </div>`;
-                                            scoreLabel = isLive ? '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(100, 116, 139, 0.8); text-transform: uppercase; margin-top: 0.5rem;">Score</span>' : '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(100, 116, 139, 0.8); text-transform: uppercase; margin-top: 0.5rem;">FT</span>';
+                                        // スコアが存在する場合は表示（終了・試合中・予定問わず）
+                                        const hasScore = (homeScore !== undefined && homeScore !== null) || (awayScore !== undefined && awayScore !== null);
+                                        
+                                        if (isLive || isFinished || hasScore) {
+                                            const displayHomeScore = homeScore !== undefined && homeScore !== null ? homeScore : (isLive || isFinished ? 0 : '-');
+                                            const displayAwayScore = awayScore !== undefined && awayScore !== null ? awayScore : (isLive || isFinished ? 0 : '-');
+                                            
+                                            if (isLive || isFinished || (displayHomeScore !== '-' && displayAwayScore !== '-')) {
+                                                scoreDisplay = `<div style="font-size: 2.25rem; font-weight: bold; letter-spacing: -0.05em; display: flex; align-items: center; gap: 0.5rem;">
+                                                    <span style="color: ${isLive ? 'var(--primary)' : isFinished ? 'white' : 'rgba(148, 163, 184, 0.8)'}">${displayHomeScore}</span>
+                                                    <span style="color: rgba(71, 85, 105, 0.8);">-</span>
+                                                    <span style="color: ${isLive ? 'var(--primary)' : isFinished ? 'white' : 'rgba(148, 163, 184, 0.8)'}">${displayAwayScore}</span>
+                                                </div>`;
+                                                scoreLabel = isLive ? '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(100, 116, 139, 0.8); text-transform: uppercase; margin-top: 0.5rem;">Score</span>' : 
+                                                             isFinished ? '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(100, 116, 139, 0.8); text-transform: uppercase; margin-top: 0.5rem;">FT</span>' :
+                                                             '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(100, 116, 139, 0.8); text-transform: uppercase; margin-top: 0.5rem;">Score</span>';
+                                            } else {
+                                                scoreDisplay = `<div style="font-size: 1.125rem; font-weight: bold; letter-spacing: 0.1em; color: rgba(100, 116, 139, 0.8); text-transform: uppercase;">VS</div>`;
+                                                scoreLabel = '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(71, 85, 105, 0.8); text-transform: uppercase; margin-top: 0.5rem; font-style: italic;">Upcoming</span>';
+                                            }
                                         } else {
                                             scoreDisplay = `<div style="font-size: 1.125rem; font-weight: bold; letter-spacing: 0.1em; color: rgba(100, 116, 139, 0.8); text-transform: uppercase;">VS</div>`;
                                             scoreLabel = '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(71, 85, 105, 0.8); text-transform: uppercase; margin-top: 0.5rem; font-style: italic;">Upcoming</span>';
@@ -6314,27 +6325,35 @@
                             
                             <div class="match-teams">
                                 <div class="team">
-                                    <div class="team-logo">🏟️</div>
-                                    <div class="team-name">${match.homeTeam}</div>
+                                    ${(() => {
+                                        const homeTeamName = typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name || match.home?.name || match.teams?.home?.name || 'Unknown';
+                                        const homeTeamId = match.homeTeam?.id || match.home?.id || match.teams?.home?.id || match.homeTeamId || null;
+                                        if (homeTeamId) {
+                                            return `<img src="https://media.api-sports.io/football/teams/${homeTeamId}.png" alt="${homeTeamName}" class="team-logo-img" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="team-logo-fallback" style="display: none; font-size: 1.5rem;">${homeTeamName.charAt(0) || '🏟️'}</div>`;
+                                        } else {
+                                            return `<div class="team-logo">${homeTeamName.charAt(0) || '🏟️'}</div>`;
+                                        }
+                                    })()}
+                                    <div class="team-name">${typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name || match.home?.name || match.teams?.home?.name || 'Unknown'}</div>
                                 </div>
                                 
                                 <div class="match-score">
-                                    ${(() => {
-                                        const isFinishedOrLive = match.status === 'Finished' || match.status === 'FT' || match.status === 'LIVE' || match.status === 'HT';
-                                        const displayHomeScore = isFinishedOrLive 
-                                            ? (match.homeScore !== undefined && match.homeScore !== null ? match.homeScore : 0)
-                                            : (match.homeScore !== undefined && match.homeScore !== null ? match.homeScore : '');
-                                        const displayAwayScore = isFinishedOrLive
-                                            ? (match.awayScore !== undefined && match.awayScore !== null ? match.awayScore : 0)
-                                            : (match.awayScore !== undefined && match.awayScore !== null ? match.awayScore : '');
-                                        const separator = (displayHomeScore !== '' && displayAwayScore !== '') ? '-' : '';
-                                        return `<span>${displayHomeScore}</span><span>${separator}</span><span>${displayAwayScore}</span>`;
-                                    })()}
+                                    ${scoreDisplay}
                                 </div>
                                 
                                 <div class="team">
-                                    <div class="team-logo">🏟️</div>
-                                    <div class="team-name">${match.awayTeam}</div>
+                                    ${(() => {
+                                        const awayTeamName = typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name || match.away?.name || match.teams?.away?.name || 'Unknown';
+                                        const awayTeamId = match.awayTeam?.id || match.away?.id || match.teams?.away?.id || match.awayTeamId || null;
+                                        if (awayTeamId) {
+                                            return `<img src="https://media.api-sports.io/football/teams/${awayTeamId}.png" alt="${awayTeamName}" class="team-logo-img" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="team-logo-fallback" style="display: none; font-size: 1.5rem;">${awayTeamName.charAt(0) || '🏟️'}</div>`;
+                                        } else {
+                                            return `<div class="team-logo">${awayTeamName.charAt(0) || '🏟️'}</div>`;
+                                        }
+                                    })()}
+                                    <div class="team-name">${typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name || match.away?.name || match.teams?.away?.name || 'Unknown'}</div>
                                 </div>
                             </div>
                             
@@ -7840,12 +7859,47 @@
         function updateMatchHero(matchData) {
             console.log('📋 updateMatchHero called with:', matchData);
             
-            const homeName = matchData.homeTeam || matchData.home || matchData.teams?.home?.name || 'HOME';
-            const awayName = matchData.awayTeam || matchData.away || matchData.teams?.away?.name || 'AWAY';
-            const homeScore = matchData.homeScore !== undefined ? matchData.homeScore : (matchData.goals?.home !== undefined ? matchData.goals.home : (matchData.fixture?.goals?.home !== undefined ? matchData.fixture.goals.home : '-'));
-            const awayScore = matchData.awayScore !== undefined ? matchData.awayScore : (matchData.goals?.away !== undefined ? matchData.goals.away : (matchData.fixture?.goals?.away !== undefined ? matchData.fixture.goals.away : '-'));
-            const homeTeamId = matchData.homeTeam?.id || matchData.home?.id || matchData.teams?.home?.id || matchData.homeTeamId || null;
-            const awayTeamId = matchData.awayTeam?.id || matchData.away?.id || matchData.teams?.away?.id || matchData.awayTeamId || null;
+            // チーム名の取得（複数のフィールドをチェック）
+            const homeName = typeof matchData.homeTeam === 'string' ? matchData.homeTeam : 
+                            matchData.homeTeam?.name || 
+                            matchData.homeTeam?.team?.name ||
+                            matchData.home?.name ||
+                            matchData.teams?.home?.name || 
+                            matchData.home || 'HOME';
+            const awayName = typeof matchData.awayTeam === 'string' ? matchData.awayTeam : 
+                            matchData.awayTeam?.name || 
+                            matchData.awayTeam?.team?.name ||
+                            matchData.away?.name ||
+                            matchData.teams?.away?.name || 
+                            matchData.away || 'AWAY';
+            
+            // スコアの取得（複数のフィールドをチェック）
+            const homeScore = matchData.homeScore !== undefined ? matchData.homeScore : 
+                             (matchData.score?.fullTime?.home !== undefined ? matchData.score.fullTime.home :
+                             (matchData.goals?.home !== undefined ? matchData.goals.home : 
+                             (matchData.fixture?.goals?.home !== undefined ? matchData.fixture.goals.home : '-')));
+            const awayScore = matchData.awayScore !== undefined ? matchData.awayScore : 
+                             (matchData.score?.fullTime?.away !== undefined ? matchData.score.fullTime.away :
+                             (matchData.goals?.away !== undefined ? matchData.goals.away : 
+                             (matchData.fixture?.goals?.away !== undefined ? matchData.fixture.goals.away : '-')));
+            
+            // チームIDの取得（複数のフィールドをチェック）
+            const homeTeamId = matchData.homeTeam?.id || 
+                              matchData.homeTeam?.team?.id ||
+                              matchData.home?.id || 
+                              matchData.teams?.home?.id || 
+                              matchData.homeTeamId ||
+                              (matchData.fixture?.teams?.home?.id) ||
+                              null;
+            const awayTeamId = matchData.awayTeam?.id || 
+                              matchData.awayTeam?.team?.id ||
+                              matchData.away?.id || 
+                              matchData.teams?.away?.id || 
+                              matchData.awayTeamId ||
+                              (matchData.fixture?.teams?.away?.id) ||
+                              null;
+            
+            console.log('📋 updateMatchHero - Team IDs:', { homeTeamId, awayTeamId, homeName, awayName });
             const status = matchData.status || matchData.fixture?.status?.short || matchData.fixture?.status?.long || 'TIMED';
             const date = matchData.date || matchData.fixture?.fixture?.date || matchData.utcDate || '';
             
@@ -7878,17 +7932,37 @@
             
             // ロゴを更新（遅延読み込み対応）
             const homeLogoEl = document.getElementById('homeLogo');
-            if (homeLogoEl && homeTeamId) {
-                homeLogoEl.loading = 'lazy';
-                homeLogoEl.decoding = 'async';
-                homeLogoEl.src = `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
+            const homeLogoFallback = homeLogoEl?.nextElementSibling;
+            if (homeLogoEl) {
+                if (homeTeamId) {
+                    homeLogoEl.loading = 'lazy';
+                    homeLogoEl.decoding = 'async';
+                    homeLogoEl.src = `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
+                    homeLogoEl.style.display = '';
+                    if (homeLogoFallback) homeLogoFallback.style.display = 'none';
+                    console.log('📋 Home logo set:', `https://media.api-sports.io/football/teams/${homeTeamId}.png`);
+                } else {
+                    console.warn('⚠️ Home team ID not found, using fallback');
+                    homeLogoEl.style.display = 'none';
+                    if (homeLogoFallback) homeLogoFallback.style.display = 'flex';
+                }
             }
             
             const awayLogoEl = document.getElementById('awayLogo');
-            if (awayLogoEl && awayTeamId) {
-                awayLogoEl.loading = 'lazy';
-                awayLogoEl.decoding = 'async';
-                awayLogoEl.src = `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
+            const awayLogoFallback = awayLogoEl?.nextElementSibling;
+            if (awayLogoEl) {
+                if (awayTeamId) {
+                    awayLogoEl.loading = 'lazy';
+                    awayLogoEl.decoding = 'async';
+                    awayLogoEl.src = `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
+                    awayLogoEl.style.display = '';
+                    if (awayLogoFallback) awayLogoFallback.style.display = 'none';
+                    console.log('📋 Away logo set:', `https://media.api-sports.io/football/teams/${awayTeamId}.png`);
+                } else {
+                    console.warn('⚠️ Away team ID not found, using fallback');
+                    awayLogoEl.style.display = 'none';
+                    if (awayLogoFallback) awayLogoFallback.style.display = 'flex';
+                }
             }
             
             // ステータスバッジを更新
