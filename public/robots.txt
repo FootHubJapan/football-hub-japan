@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Google AdSense and Analytics crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Mediapartners-Google
+Allow: /
+
+# Sitemap (if you have one)
+# Sitemap: https://football-hub-japan-ubzb.onrender.com/sitemap.xml

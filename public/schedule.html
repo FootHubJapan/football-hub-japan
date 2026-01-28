@@ -4,15 +4,28 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6574544891375303"
+     crossorigin="anonymous"></script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y5KSLP58SP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-Y5KSLP58SP');
+    </script>
     <title>試合スケジュール - Football Hub Japan</title>
     
     <!-- フォント -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-    
     <!-- 日本語フォントの"豆腐"対策 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://media.api-sports.io" crossorigin>
+    <link rel="dns-prefetch" href="https://media.api-sports.io">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSSの警告を抑制（CDNスクリプトの前に配置） -->
@@ -4694,7 +4707,7 @@
                 <!-- Home -->
                 <div class="flex flex-col items-center gap-4 text-center">
                   <div class="size-32 bg-[#23262b] rounded-2xl flex items-center justify-center p-6 border border-white/10 shadow-2xl">
-                    <img id="homeLogo" class="w-full h-full object-contain" alt="Home Logo" src="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <img id="homeLogo" class="w-full h-full object-contain" alt="Home Logo" src="" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="team-logo-fallback" style="display: none; font-size: 2rem;">🏟️</div>
                   </div>
                   <div>
@@ -4721,7 +4734,7 @@
                 <!-- Away -->
                 <div class="flex flex-col items-center gap-4 text-center">
                   <div class="size-32 bg-[#23262b] rounded-2xl flex items-center justify-center p-6 border border-white/10 shadow-2xl">
-                    <img id="awayLogo" class="w-full h-full object-contain" alt="Away Logo" src="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <img id="awayLogo" class="w-full h-full object-contain" alt="Away Logo" src="" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="team-logo-fallback" style="display: none; font-size: 2rem;">🏟️</div>
                   </div>
                   <div>
@@ -5975,7 +5988,7 @@
                                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; margin-top: 1rem;">
                                                 <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem; width: 33.333%;">
                                                     <div style="width: 4rem; height: 4rem; border-radius: 0.75rem; background: rgba(30, 41, 59, 0.5); display: flex; align-items: center; justify-content: center; padding: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.05);">
-                                                        <img src="https://media.api-sports.io/football/teams/${homeTeamId}.png" alt="${homeTeamName}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                        <img src="https://media.api-sports.io/football/teams/${homeTeamId}.png" alt="${homeTeamName}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                                         <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 1.5rem;">${homeTeamName.charAt(0)}</div>
                                             </div>
                                                     <span style="font-weight: bold; text-align: center; font-size: 0.875rem;">${homeTeamName}</span>
@@ -5986,7 +5999,7 @@
                                     </div>
                                                 <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem; width: 33.333%;">
                                                     <div style="width: 4rem; height: 4rem; border-radius: 0.75rem; background: rgba(30, 41, 59, 0.5); display: flex; align-items: center; justify-content: center; padding: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.05);">
-                                                        <img src="https://media.api-sports.io/football/teams/${awayTeamId}.png" alt="${awayTeamName}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                        <img src="https://media.api-sports.io/football/teams/${awayTeamId}.png" alt="${awayTeamName}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                                         <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 1.5rem;">${awayTeamName.charAt(0)}</div>
                                                     </div>
                                                     <span style="font-weight: bold; text-align: center; font-size: 0.875rem;">${awayTeamName}</span>
@@ -6902,6 +6915,28 @@
                     return;
                 }
                 
+                // フロントエンドキャッシュをチェック（5分間有効）
+                const cacheKey = `match_${matchId}`;
+                const cachedData = sessionStorage.getItem(cacheKey);
+                if (cachedData) {
+                    try {
+                        const cached = JSON.parse(cachedData);
+                        const cacheAge = Date.now() - cached.timestamp;
+                        if (cacheAge < 5 * 60 * 1000) { // 5分以内のキャッシュは使用
+                            console.log('📦 Using cached match data:', matchId);
+                            const result = { success: true, data: cached.data };
+                            // キャッシュされたデータを使用して表示
+                            if (result.success && result.data) {
+                                matchData = result.data;
+                                displayDetailedMatchInfo(matchData);
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        console.log('⚠️ Cache parse error, fetching fresh data');
+                    }
+                }
+                
                 // /api/match/:id/detailsエンドポイントを優先的に使用（より詳細なデータを返す）
                 console.log('📡 Fetching match details from /api/match/:id/details:', matchId);
                 let response = await fetch(`/api/match/${matchId}/details`, {
@@ -6991,6 +7026,16 @@
                 
                 // matchDataが取得できた場合、表示する
                 if (matchData) {
+                    // キャッシュに保存（5分間有効）
+                    try {
+                        sessionStorage.setItem(cacheKey, JSON.stringify({
+                            data: matchData,
+                            timestamp: Date.now()
+                        }));
+                    } catch (e) {
+                        console.warn('⚠️ Failed to cache match data:', e);
+                    }
+                    
                     displayDetailedMatchInfo(matchData);
                 } else {
                     console.error('❌ Match data is null or undefined');
@@ -7735,14 +7780,18 @@
                 }
             }
             
-            // ロゴを更新
+            // ロゴを更新（遅延読み込み対応）
             const homeLogoEl = document.getElementById('homeLogo');
             if (homeLogoEl && homeTeamId) {
+                homeLogoEl.loading = 'lazy';
+                homeLogoEl.decoding = 'async';
                 homeLogoEl.src = `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
             }
             
             const awayLogoEl = document.getElementById('awayLogo');
             if (awayLogoEl && awayTeamId) {
+                awayLogoEl.loading = 'lazy';
+                awayLogoEl.decoding = 'async';
                 awayLogoEl.src = `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
             }
             

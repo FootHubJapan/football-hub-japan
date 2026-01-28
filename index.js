@@ -310,23 +310,19 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.static('public', {
-    setHeaders: (res, filePath) => {
-        if (filePath.endsWith('.html')) {
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        } else if (filePath.endsWith('.js')) {
-            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-        } else if (filePath.endsWith('.css')) {
-            res.setHeader('Content-Type', 'text/css; charset=utf-8');
-        } else if (filePath.endsWith('.json')) {
-            res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        } else if (filePath.endsWith('.svg')) {
-            res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+// Routes - 静的ファイルより前に定義（優先度を高くする）
+app.get('/', (req, res) => {
+    // デバッグ: 実際に配信しているファイルを確認
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+    console.log('[ROUTE /] Serving index.html from:', indexPath);
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            console.error('[ROUTE /] Error serving index.html:', err);
+            res.status(500).send('Error loading page');
         }
-    }
-}));
+    });
+});
 
-// 静的ファイルのルーティング
 app.get('/ranking', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'ranking.html'));
 });
@@ -350,10 +346,40 @@ app.get('/favicon.ico', (req, res) => {
     res.status(204).end();
 });
 
-// Routes
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// ads.txt for Google AdSense
+app.get('/ads.txt', (req, res) => {
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.sendFile(path.join(__dirname, 'public', 'ads.txt'));
 });
+
+// 静的ファイルの配信（ルートハンドラーの後に設定）
+// index.htmlは明示的にルートハンドラーで配信するため、express.staticのindexオプションをfalseに設定
+app.use(express.static('public', {
+    index: false, // index.htmlの自動配信を無効化（ルートハンドラーで明示的に配信）
+    maxAge: '1y', // 静的ファイルのキャッシュ期間を1年に設定
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            // HTMLファイルはキャッシュしない（常に最新版を取得）
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        } else if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1年キャッシュ
+        } else if (filePath.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css; charset=utf-8');
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1年キャッシュ
+        } else if (filePath.endsWith('.json')) {
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.setHeader('Cache-Control', 'public, max-age=3600'); // JSONは1時間キャッシュ
+        } else if (filePath.match(/\.(png|jpg|jpeg|gif|webp|svg|ico)$/i)) {
+            // 画像ファイルは1年キャッシュ（パフォーマンス最適化）
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+            if (filePath.endsWith('.svg')) {
+                res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+            }
+        }
+    }
+}));
 
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
@@ -4565,18 +4591,38 @@ app.get('/api/match/:id', async (req, res) => {
                 if (response.data && response.data.response && response.data.response[0]) {
                     const match = response.data.response[0];
                     
-                    // イベントデータを取得
+                    // イベントデータとラインアップデータを並列で取得（パフォーマンス最適化）
                     let events = [];
+                    let lineups = null;
+                    
                     try {
-                        const eventsResponse = await axios.get(`https://v3.football.api-sports.io/fixtures/events`, {
-                            headers: {
-                                'x-apisports-key': apiKey,
-                                'x-rapidapi-host': 'v3.football.api-sports.io'
-                            },
-                            params: { fixture: matchId },
-                            timeout: 10000
-                        });
+                        // Promise.allで並列実行
+                        const [eventsResponse, lineupsResponse] = await Promise.all([
+                            axios.get(`https://v3.football.api-sports.io/fixtures/events`, {
+                                headers: {
+                                    'x-apisports-key': apiKey,
+                                    'x-rapidapi-host': 'v3.football.api-sports.io'
+                                },
+                                params: { fixture: matchId },
+                                timeout: 10000
+                            }).catch(err => {
+                                console.error('❌ Failed to fetch events:', err.message);
+                                return { data: null };
+                            }),
+                            axios.get(`https://v3.football.api-sports.io/fixtures/lineups`, {
+                                headers: {
+                                    'x-apisports-key': apiKey,
+                                    'x-rapidapi-host': 'v3.football.api-sports.io'
+                                },
+                                params: { fixture: matchId },
+                                timeout: 10000
+                            }).catch(err => {
+                                console.error('❌ Failed to fetch lineups:', err.message);
+                                return { data: null };
+                            })
+                        ]);
                         
+                        // イベントデータの処理
                         if (eventsResponse.data && eventsResponse.data.response && Array.isArray(eventsResponse.data.response)) {
                             events = eventsResponse.data.response.map(event => ({
                                 time: { elapsed: event.time?.elapsed || 0, extra: event.time?.extra || null },
@@ -4587,22 +4633,8 @@ app.get('/api/match/:id', async (req, res) => {
                                 assist: event.assist ? { name: event.assist.name } : null
                             }));
                         }
-                    } catch (eventsError) {
-                        console.error('❌ Failed to fetch events:', eventsError.message);
-                    }
-                    
-                    // ラインアップデータを取得
-                    let lineups = null;
-                    try {
-                        const lineupsResponse = await axios.get(`https://v3.football.api-sports.io/fixtures/lineups`, {
-                            headers: {
-                                'x-apisports-key': apiKey,
-                                'x-rapidapi-host': 'v3.football.api-sports.io'
-                            },
-                            params: { fixture: matchId },
-                            timeout: 10000
-                        });
                         
+                        // ラインアップデータの処理
                         if (lineupsResponse.data && lineupsResponse.data.response && Array.isArray(lineupsResponse.data.response)) {
                             lineups = {
                                 home: null,
@@ -4637,8 +4669,8 @@ app.get('/api/match/:id', async (req, res) => {
                                 }
                             });
                         }
-                    } catch (lineupsError) {
-                        console.error('❌ Failed to fetch lineups:', lineupsError.message);
+                    } catch (parallelError) {
+                        console.error('❌ Failed to fetch events/lineups in parallel:', parallelError.message);
                     }
                     
                     matchData = {
@@ -7499,16 +7531,34 @@ async function handleMatchDetailsRequest(req, res) {
                         let events = [];
                         let lineups = null;
                         
+                        // イベントとラインナップを並列で取得（パフォーマンス最適化）
                         try {
-                            const eventsResponse = await axios.get(`https://v3.football.api-sports.io/fixtures/events`, {
-                                headers: {
-                                    'x-apisports-key': apiKey,
-                                    'x-rapidapi-host': 'v3.football.api-sports.io'
-                                },
-                                params: { fixture: matchId },
-                                timeout: 10000
-                            });
+                            const [eventsResponse, lineupsResponse] = await Promise.all([
+                                axios.get(`https://v3.football.api-sports.io/fixtures/events`, {
+                                    headers: {
+                                        'x-apisports-key': apiKey,
+                                        'x-rapidapi-host': 'v3.football.api-sports.io'
+                                    },
+                                    params: { fixture: matchId },
+                                    timeout: 10000
+                                }).catch(err => {
+                                    console.error('❌ Failed to fetch events:', err.message);
+                                    return { data: null };
+                                }),
+                                axios.get(`https://v3.football.api-sports.io/fixtures/lineups`, {
+                                    headers: {
+                                        'x-apisports-key': apiKey,
+                                        'x-rapidapi-host': 'v3.football.api-sports.io'
+                                    },
+                                    params: { fixture: matchId },
+                                    timeout: 10000
+                                }).catch(err => {
+                                    console.error('❌ Failed to fetch lineups:', err.message);
+                                    return { data: null };
+                                })
+                            ]);
                             
+                            // イベントデータの処理
                             if (eventsResponse.data && eventsResponse.data.response && Array.isArray(eventsResponse.data.response)) {
                                 events = eventsResponse.data.response.map(event => ({
                                     time: { elapsed: event.time?.elapsed || 0, extra: event.time?.extra || null },
@@ -7519,20 +7569,8 @@ async function handleMatchDetailsRequest(req, res) {
                                     assist: event.assist ? { name: event.assist.name } : null
                                 }));
                             }
-                        } catch (eventsError) {
-                            console.error('❌ Failed to fetch events:', eventsError.message);
-                        }
-                        
-                        try {
-                            const lineupsResponse = await axios.get(`https://v3.football.api-sports.io/fixtures/lineups`, {
-                                headers: {
-                                    'x-apisports-key': apiKey,
-                                    'x-rapidapi-host': 'v3.football.api-sports.io'
-                                },
-                                params: { fixture: matchId },
-                                timeout: 10000
-                            });
                             
+                            // ラインナップデータの処理
                             if (lineupsResponse.data && lineupsResponse.data.response && Array.isArray(lineupsResponse.data.response)) {
                                 lineups = {
                                     home: null,
@@ -7567,8 +7605,8 @@ async function handleMatchDetailsRequest(req, res) {
                                     }
                                 });
                             }
-                        } catch (lineupsError) {
-                            console.error('❌ Failed to fetch lineups:', lineupsError.message);
+                        } catch (parallelError) {
+                            console.error('❌ Failed to fetch events/lineups in parallel:', parallelError.message);
                         }
                         
                         matchDetails = {

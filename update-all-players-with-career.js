@@ -198,18 +198,42 @@ async function getPlayerCareerStats(playerId, existingCareerStats = [], player =
                 playerData.statistics.forEach(stat => {
                     const games = stat.games || {};
                     const goals = stat.goals || {};
+                    const seasonStr = `${season}/${season + 1}`;
+                    const leagueName = stat.league?.name || 'Unknown';
+                    const teamName = stat.team?.name || 'Unknown';
+                    const matches = games.appearences || 0;
+                    const goalsTotal = goals.total || 0;
+                    const assists = goals.assists || 0;
+                    
+                    // 重複チェック：同じシーズン・同じチーム・同じリーグ・同じ試合数のデータが既に存在する場合はスキップ
+                    const isDuplicate = careerStats.some(existing => {
+                        const sameSeason = existing.season === seasonStr;
+                        const sameTeam = (existing.teamName || existing.team) === teamName;
+                        const sameLeague = (existing.leagueName || existing.league) === leagueName;
+                        const sameMatches = (existing.matches || existing.appearances) === matches;
+                        const sameGoals = existing.goals === goalsTotal;
+                        const sameAssists = existing.assists === assists;
+                        
+                        // 完全に同じデータの場合は重複とみなす
+                        return sameSeason && sameTeam && sameLeague && sameMatches && sameGoals && sameAssists;
+                    });
+                    
+                    if (isDuplicate) {
+                        console.log(`  ⚠️ 重複データをスキップ: ${seasonStr} - ${teamName} (${leagueName})`);
+                        return;
+                    }
                     
                     careerStats.push({
-                        season: `${season}/${season + 1}`,
-                        leagueName: stat.league?.name || 'Unknown',
+                        season: seasonStr,
+                        leagueName: leagueName,
                         leagueId: stat.league?.id || null,
-                        teamName: stat.team?.name || 'Unknown',
+                        teamName: teamName,
                         teamId: stat.team?.id || null,
-                        matches: games.appearences || 0,
-                        goals: goals.total || 0,
-                        assists: goals.assists || 0,
+                        matches: matches,
+                        goals: goalsTotal,
+                        assists: assists,
                         rating: games.rating ? parseFloat(games.rating) : null,
-                        appearances: games.appearences || 0,
+                        appearances: matches,
                         minutes: games.minutes || 0,
                         source: 'api-football',
                         lastUpdated: new Date().toISOString()
@@ -325,10 +349,21 @@ async function updateAllPlayersWithCareer() {
         // ただし、careerStatsが3シーズン未満の場合は再更新する
         // ただし、選手の年齢を考慮して、実際に取得可能なシーズン数に近い場合はスキップ
         const playersToUpdateAll = playersWithId.filter(p => {
-            // careerStatsUpdatedが存在する場合は、既に更新を試みたとみなして「更新済み」とする
-            // これは、24時間以内に更新された選手だけでなく、過去に更新を試みたすべての選手を含む
-            if (p.careerStatsUpdated) {
-                return false; // 既に更新を試みたので「更新済み」
+            // 2025/26シーズンのデータがあるかチェック
+            const has2025Data = p.stats && Array.isArray(p.stats) && p.stats.some(s => s.season === '2025/2026' || s.season === '2025/26');
+            
+            // 2025/26データがない場合は、必ず更新対象に含める（careerStatsUpdatedフラグに関係なく）
+            if (!has2025Data) {
+                return true; // 2025/26データがないので更新が必要
+            }
+            
+            // 2025/26データがある場合は、careerStatsUpdatedフラグとcareerStatsの状態をチェック
+            if (has2025Data && p.careerStatsUpdated) {
+                // キャリアスタッツが十分にある場合はスキップ
+                const existingSeasonsCount = (p.careerStats && Array.isArray(p.careerStats)) ? p.careerStats.length : 0;
+                if (existingSeasonsCount >= 3) {
+                    return false; // 既に更新済み
+                }
             }
             
             // careerStatsが存在しない、または空の場合は未更新

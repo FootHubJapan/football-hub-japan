@@ -1,11 +1,25 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y5KSLP58SP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-Y5KSLP58SP');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ランキングシステム - Football Hub Japan</title>
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6574544891375303"
+     crossorigin="anonymous"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://media.api-sports.io" crossorigin>
+    <link rel="dns-prefetch" href="https://media.api-sports.io">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -836,6 +850,24 @@
                 let url = `/api/ranking/players?season=${season}&league=${league}&position=${position}&stat=${stat}`;
                 if (search) url += `&search=${encodeURIComponent(search)}`;
                 
+                // キャッシュをチェック（2分間有効）
+                const cacheKey = `ranking_players_${season}_${league}_${position}_${stat}_${search}`;
+                const cachedData = sessionStorage.getItem(cacheKey);
+                if (cachedData) {
+                    try {
+                        const cached = JSON.parse(cachedData);
+                        const cacheAge = Date.now() - cached.timestamp;
+                        if (cacheAge < 2 * 60 * 1000) { // 2分以内のキャッシュは使用
+                            console.log('📦 Using cached ranking data');
+                            displayPlayerRanking(cached.players);
+                            updatePlayerChart(cached.players.slice(0, 10));
+                            return;
+                        }
+                    } catch (e) {
+                        console.log('⚠️ Cache parse error, fetching fresh data');
+                    }
+                }
+                
                 const response = await fetch(url);
                 let players;
 
@@ -850,6 +882,16 @@
                             const team = (p.currentTeam || p.team || '').toLowerCase();
                             return name.includes(searchLower) || team.includes(searchLower);
                         });
+                    }
+                    
+                    // キャッシュに保存（2分間有効）
+                    try {
+                        sessionStorage.setItem(cacheKey, JSON.stringify({
+                            players: players,
+                            timestamp: Date.now()
+                        }));
+                    } catch (e) {
+                        console.warn('⚠️ Failed to cache ranking data:', e);
                     }
                 } else {
                     players = generateFallbackPlayerData(league, position, stat, search);
@@ -889,7 +931,7 @@
                         <td class="rank-cell">${index + 1}</td>
                         <td>
                             <div class="player-cell">
-                                <img src="${photoUrl}" alt="${player.name}" class="player-photo" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&size=128&background=22c55e&color=0d1117&bold=true'">
+                                <img src="${photoUrl}" alt="${player.name}" class="player-photo" loading="lazy" decoding="async" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&size=128&background=22c55e&color=0d1117&bold=true'">
                                 <div class="player-info">
                                     <a href="/player/${player.id || player.playerId}" class="player-name">${player.name}</a>
                                     <span class="player-team">${player.currentTeam || player.team || '-'}</span>
@@ -994,7 +1036,7 @@
                     <td class="rank-cell">${index + 1}</td>
                     <td>
                         <div class="player-cell">
-                            ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : ''}
+                            ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo" loading="lazy" decoding="async">` : ''}
                             <span class="player-name">${team.name}</span>
                         </div>
                     </td>
@@ -1100,7 +1142,7 @@
                         <td class="rank-cell">${index + 1}</td>
                         <td>
                             <div class="player-cell">
-                                ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : ''}
+                                ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo" loading="lazy" decoding="async">` : ''}
                                 <span class="player-name">${team.name}</span>
                             </div>
                         </td>
@@ -1165,7 +1207,7 @@
                         <td class="rank-cell">${index + 1}</td>
                         <td>
                             <div class="player-cell">
-                                ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo">` : ''}
+                                ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo" loading="lazy" decoding="async">` : ''}
                                 <span class="player-name">${team.name}</span>
                             </div>
                         </td>
