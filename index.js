@@ -293,7 +293,10 @@ app.use(helmet({
                 "https://cdn.jsdelivr.net",
                 "https://www.google-analytics.com",
                 "https://www.googletagmanager.com",
-                "https://pagead2.googlesyndication.com"
+                "https://pagead2.googlesyndication.com",
+                "https://*.google.com",
+                "https://*.googleapis.com",
+                "https://*.gstatic.com"
             ],
             frameSrc: ["'self'", "https://googleads.g.doubleclick.net", "https://tpc.googlesyndication.com"],
             objectSrc: ["'none'"],
