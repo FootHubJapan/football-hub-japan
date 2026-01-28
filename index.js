@@ -303,7 +303,14 @@ app.use(helmet({
                 "https://*.doubleclick.net",
                 "https://*.googlesyndication.com"
             ],
-            frameSrc: ["'self'", "https://googleads.g.doubleclick.net", "https://tpc.googlesyndication.com"],
+            frameSrc: [
+                "'self'", 
+                "https://googleads.g.doubleclick.net", 
+                "https://tpc.googlesyndication.com",
+                "https://*.adtrafficquality.google",
+                "https://*.google.com",
+                "https://www.google.com"
+            ],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: []
         }
