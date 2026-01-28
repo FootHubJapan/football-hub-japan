@@ -279,7 +279,8 @@ app.use(helmet({
                 "https://cdn.jsdelivr.net", 
                 "https://cdn.tailwindcss.com",
                 "https://www.googletagmanager.com",
-                "https://pagead2.googlesyndication.com"
+                "https://pagead2.googlesyndication.com",
+                "https://*.adtrafficquality.google"
             ],
             scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
