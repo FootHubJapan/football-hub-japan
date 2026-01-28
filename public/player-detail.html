@@ -1874,8 +1874,6 @@
             // 優先順位3: player.statsから過去のシーズンを補完（APIデータにないシーズンを追加）
             // 注意: この処理は既に上記のキャッシュ機能で処理されているため、重複を避ける
             // player.statsからの補完のみ実行
-                
-                if (response.ok) {
                     const data = await response.json();
                     const careerStats = data.careerStats || [];
                     
