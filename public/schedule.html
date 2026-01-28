@@ -4650,9 +4650,9 @@
                     <label class="control-label">期間</label>
                     <select class="control-select" id="timeRangeSelect">
                         <option value="">すべて</option>
-                        <option value="today">今日</option>
+                        <option value="today" selected>今日</option>
                         <option value="tomorrow">明日</option>
-                        <option value="week" selected>今週</option>
+                        <option value="week">今週</option>
                         <option value="lastweek">先週</option>
                         <option value="month">今月</option>
                         <option value="lastmonth">先月</option>
@@ -5419,26 +5419,35 @@
                 }, { passive: false });
             }
             
-            // 初期データを読み込み（loadMatches関数が定義されるまで待つ）
-            console.log('🚀 DOMContentLoaded完了、loadMatchesを呼び出します');
+            // 初期データを読み込み（「今日」を最速で表示）
+            console.log('🚀 DOMContentLoaded完了、loadMatchesを呼び出します（今日の試合を優先）');
+            
+            // 「今日」のフィルタを確実に設定
+            const timeRangeSelect = document.getElementById('timeRangeSelect');
+            if (timeRangeSelect && !timeRangeSelect.value) {
+                timeRangeSelect.value = 'today';
+                console.log('✅ 期間フィルタを「今日」に設定しました');
+            }
+            
             const tryLoadMatches = () => {
                 console.log('🚀 loadMatches関数の存在確認中...');
                 if (typeof loadMatches === 'function') {
-                    console.log('✅ loadMatches関数が見つかりました。呼び出します。');
+                    console.log('✅ loadMatches関数が見つかりました。即座に呼び出します（今日の試合）。');
                     loadMatches().catch(err => {
                         console.error('❌ loadMatches実行エラー:', err);
                     });
                 } else if (typeof window.loadMatches === 'function') {
-                    console.log('✅ window.loadMatches関数が見つかりました。呼び出します。');
+                    console.log('✅ window.loadMatches関数が見つかりました。即座に呼び出します（今日の試合）。');
                     window.loadMatches().catch(err => {
                         console.error('❌ window.loadMatches実行エラー:', err);
                     });
                 } else {
-                    console.warn('⚠️ loadMatches関数が見つかりません。500ms後に再試行します。');
-                    setTimeout(tryLoadMatches, 500);
+                    console.warn('⚠️ loadMatches関数が見つかりません。100ms後に再試行します。');
+                    setTimeout(tryLoadMatches, 100);
                 }
             };
-            setTimeout(tryLoadMatches, 100);
+            // 即座に実行（待機時間を削減）
+            tryLoadMatches();
             
             // リーグ選択の変更を監視
             const leagueSelect = document.getElementById('leagueSelect');
@@ -5556,13 +5565,64 @@
                     console.log('📡 パラメータ詳細:', { season, leagueParam, statusParam, timeRangeParam });
                     
                     try {
-                    response = await fetch(integratedUrl, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        signal: AbortSignal.timeout(30000) // 30秒のタイムアウト
-                    });
+                    // 「今日」のデータはキャッシュを活用して高速化
+                    const cacheKey = `schedule_today_${season}_${league || 'all'}`;
+                    const cachedData = sessionStorage.getItem(cacheKey);
+                    
+                    // キャッシュが5分以内なら使用（「今日」のデータは頻繁に更新されるため短めに）
+                    if (timeRange === 'today' && cachedData) {
+                        try {
+                            const cached = JSON.parse(cachedData);
+                            const cacheAge = Date.now() - cached.timestamp;
+                            if (cacheAge < 5 * 60 * 1000) { // 5分以内
+                                console.log('⚡ キャッシュから「今日」の試合データを読み込み:', cacheAge / 1000, '秒前のデータ');
+                                data = cached.data;
+                                // キャッシュデータを表示しつつ、バックグラウンドで最新データを取得
+                                // （後で更新される）
+                            }
+                        } catch (e) {
+                            console.warn('キャッシュ解析エラー:', e);
+                        }
+                    }
+                    
+                    // キャッシュがない、または古い場合はAPIから取得
+                    if (!data) {
+                        response = await fetch(integratedUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            signal: AbortSignal.timeout(30000) // 30秒のタイムアウト
+                        });
+                    } else {
+                        // キャッシュデータを使用、バックグラウンドで最新データを取得
+                        console.log('⚡ キャッシュデータを使用中、バックグラウンドで最新データを取得します');
+                        fetch(integratedUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            signal: AbortSignal.timeout(30000)
+                        }).then(async (bgResponse) => {
+                            if (bgResponse.ok) {
+                                const bgData = await bgResponse.json();
+                                // キャッシュを更新
+                                sessionStorage.setItem(cacheKey, JSON.stringify({
+                                    timestamp: Date.now(),
+                                    data: bgData
+                                }));
+                                console.log('✅ バックグラウンドで最新データを取得し、キャッシュを更新しました');
+                                // 必要に応じて画面を更新
+                                if (timeRange === 'today') {
+                                    loadMatches();
+                                }
+                            }
+                        }).catch(err => {
+                            console.warn('バックグラウンド更新エラー（無視）:', err);
+                        });
+                        // キャッシュデータを使用して処理を続行
+                        response = { ok: true, status: 200 };
+                    }
                 
                         console.log('📡 APIレスポンス受信:', {
                             status: response.status,
@@ -5577,23 +5637,41 @@
                             throw new Error(`Integrated API error! status: ${response.status}, message: ${errorText.substring(0, 200)}`);
                 }
                 
-                const responseText = await response.text();
+                // キャッシュデータがない場合のみAPIから取得
+                if (!data) {
+                    const responseText = await response.text();
                     console.log('✅ 統合API レスポンス取得成功');
                     console.log('レスポンスサイズ:', responseText.length, '文字');
-                        console.log('レスポンスプレビュー:', responseText.substring(0, 500));
+                    console.log('レスポンスプレビュー:', responseText.substring(0, 500));
                 
-                        if (!responseText || responseText.trim() === '') {
-                            throw new Error('APIレスポンスが空です');
-                        }
+                    if (!responseText || responseText.trim() === '') {
+                        throw new Error('APIレスポンスが空です');
+                    }
                     
-                        try {
-                    data = JSON.parse(responseText);
-                            console.log('✅ JSON解析成功');
-                        } catch (parseError) {
-                            console.error('❌ JSON解析エラー:', parseError);
-                            console.error('❌ レスポンステキスト:', responseText.substring(0, 1000));
-                            throw new Error(`JSON解析に失敗しました: ${parseError.message}`);
+                    try {
+                        data = JSON.parse(responseText);
+                        console.log('✅ JSON解析成功');
+                        
+                        // 「今日」のデータをキャッシュに保存
+                        if (timeRange === 'today') {
+                            try {
+                                sessionStorage.setItem(cacheKey, JSON.stringify({
+                                    timestamp: Date.now(),
+                                    data: data
+                                }));
+                                console.log('💾 「今日」の試合データをキャッシュに保存しました');
+                            } catch (cacheError) {
+                                console.warn('キャッシュ保存エラー（無視）:', cacheError);
+                            }
                         }
+                    } catch (parseError) {
+                        console.error('❌ JSON解析エラー:', parseError);
+                        console.error('❌ レスポンステキスト:', responseText.substring(0, 1000));
+                        throw new Error(`JSON解析に失敗しました: ${parseError.message}`);
+                    }
+                } else {
+                    console.log('⚡ キャッシュデータを使用中');
+                }
                         console.log('📊 統合データ解析成功:', {
                             hasItems: !!data.items,
                             itemsLength: data.items?.length || 0,
