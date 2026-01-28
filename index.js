@@ -271,13 +271,31 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://www.gstatic.com", "https://cdn.jsdelivr.net", "https://cdn.tailwindcss.com"],
+            scriptSrc: [
+                "'self'", 
+                "'unsafe-inline'", 
+                "'unsafe-eval'", 
+                "https://www.gstatic.com", 
+                "https://cdn.jsdelivr.net", 
+                "https://cdn.tailwindcss.com",
+                "https://www.googletagmanager.com",
+                "https://pagead2.googlesyndication.com"
+            ],
             scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'", "https://api.football-data.org", "https://v3.football.api-sports.io", "https://firestore.googleapis.com", "https://cdn.jsdelivr.net"],
-            frameSrc: ["'self'"],
+            imgSrc: ["'self'", "data:", "https:", "https://www.google-analytics.com", "https://www.googletagmanager.com"],
+            connectSrc: [
+                "'self'", 
+                "https://api.football-data.org", 
+                "https://v3.football.api-sports.io", 
+                "https://firestore.googleapis.com", 
+                "https://cdn.jsdelivr.net",
+                "https://www.google-analytics.com",
+                "https://www.googletagmanager.com",
+                "https://pagead2.googlesyndication.com"
+            ],
+            frameSrc: ["'self'", "https://googleads.g.doubleclick.net", "https://tpc.googlesyndication.com"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: []
         }
