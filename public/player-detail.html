@@ -1597,8 +1597,139 @@
                     playerIdForApi = playerIdForApi.replace('api_', '');
                 }
                 
-                // キャリアスタッツAPIを呼び出し
-                const response = await fetch(`/api/player/career-stats/${playerIdForApi}?seasons=all`);
+                // キャッシュキー: 選手IDベース
+                const cacheKey = `player_career_stats_${playerIdForApi}`;
+                const cachedData = sessionStorage.getItem(cacheKey);
+                
+                // 現在のシーズンを判定（25/26シーズン）
+                const currentYear = new Date().getFullYear();
+                const currentMonth = new Date().getMonth() + 1;
+                const currentSeason = currentMonth >= 8 ? `${currentYear}/${String(currentYear + 1).slice(-2)}` : `${currentYear - 1}/${String(currentYear).slice(-2)}`;
+                
+                let careerStats = [];
+                let useCache = false;
+                
+                // キャッシュをチェック
+                if (cachedData) {
+                    try {
+                        const cached = JSON.parse(cachedData);
+                        const cacheAge = Date.now() - cached.timestamp;
+                        
+                        // 過去シーズンのデータは24時間キャッシュ、今シーズンは5分キャッシュ
+                        const cacheTTL = 24 * 60 * 60 * 1000; // 24時間（過去シーズンは変更されないため）
+                        
+                        if (cacheAge < cacheTTL) {
+                            console.log(`⚡ キャッシュからキャリアスタッツを読み込み: ${(cacheAge / 1000 / 60).toFixed(0)}分前のデータ`);
+                            careerStats = cached.data || [];
+                            
+                            // 今シーズンのデータのみAPIから最新データを取得（バックグラウンド）
+                            // 過去シーズンは変更されないので、キャッシュのみ使用
+                            const hasCurrentSeason = careerStats.some(stat => {
+                                const statSeason = normalizeSeason(stat.season);
+                                return statSeason === currentSeason;
+                            });
+                            
+                            if (hasCurrentSeason && cacheAge > 5 * 60 * 1000) {
+                                // 今シーズンのデータがある場合、5分以上経過していればバックグラウンド更新
+                                console.log('⚡ 今シーズンのデータをバックグラウンドで更新中...');
+                                fetch(`/api/player/career-stats/${playerIdForApi}?seasons=all`)
+                                    .then(async (bgResponse) => {
+                                        if (bgResponse.ok) {
+                                            const bgData = await bgResponse.json();
+                                            const bgCareerStats = bgData.careerStats || [];
+                                            
+                                            // キャッシュを更新
+                                            sessionStorage.setItem(cacheKey, JSON.stringify({
+                                                timestamp: Date.now(),
+                                                data: bgCareerStats
+                                            }));
+                                            console.log('✅ バックグラウンドで最新データを取得し、キャッシュを更新しました（次回のページ読み込み時に反映）');
+                                        }
+                                    })
+                                    .catch(err => {
+                                        console.warn('バックグラウンド更新エラー（無視）:', err);
+                                    });
+                            }
+                            
+                            useCache = true;
+                            
+                            // キャッシュから取得したデータをstatsBySeasonにマージ
+                            if (careerStats.length > 0) {
+                                console.log(`📊 キャッシュデータをstatsBySeasonにマージ中: ${careerStats.length}シーズン`);
+                                careerStats.forEach((stat, idx) => {
+                                    // リーグ戦のみを対象とする
+                                    const isLeague = isLeagueCompetition(stat);
+                                    if (!isLeague) {
+                                        return; // カップ戦はスキップ
+                                    }
+                                    
+                                    // シーズンを正規化
+                                    const rawSeason = stat.season || 'Unknown';
+                                    let season = normalizeSeason(rawSeason);
+                                    
+                                    if (season === 'Unknown' && rawSeason && /^\d{4}$/.test(String(rawSeason))) {
+                                        const year = parseInt(rawSeason);
+                                        season = `${year}/${String(year + 1).slice(-2)}`;
+                                    }
+                                    
+                                    // 有効なシーズンのみを処理
+                                    if (!isValidSeason(season)) {
+                                        return;
+                                    }
+                                    
+                                    const club = stat.club || stat.teamName || stat.team || 'Unknown';
+                                    const matches = stat.matches || stat.appearances || 0;
+                                    const goals = stat.goals || 0;
+                                    const assists = stat.assists || 0;
+                                    
+                                    // 試合数が0のデータは除外
+                                    if (matches === 0 && goals === 0 && assists === 0) {
+                                        return;
+                                    }
+                                    
+                                    // statsBySeasonにマージ
+                                    if (!statsBySeason[season]) {
+                                        statsBySeason[season] = {
+                                            season: season,
+                                            club: club,
+                                            matches: matches,
+                                            goals: goals,
+                                            assists: assists,
+                                            ratingSum: 0,
+                                            ratingCount: 0
+                                        };
+                                    } else {
+                                        // 既存データがある場合、試合数が多い方を優先
+                                        if (matches > statsBySeason[season].matches) {
+                                            statsBySeason[season].club = club;
+                                            statsBySeason[season].matches = matches;
+                                            statsBySeason[season].goals = goals;
+                                            statsBySeason[season].assists = assists;
+                                        }
+                                    }
+                                    
+                                    if (stat.rating) {
+                                        const rating = parseFloat(stat.rating);
+                                        if (!isNaN(rating)) {
+                                            statsBySeason[season].ratingSum = rating;
+                                            statsBySeason[season].ratingCount = 1;
+                                        }
+                                    }
+                                });
+                                console.log(`📊 キャッシュデータマージ後のシーズン数: ${Object.keys(statsBySeason).length}`);
+                            }
+                        } else {
+                            console.log(`⏰ キャッシュが期限切れ (${(cacheAge / 1000 / 60 / 60).toFixed(1)}時間前)`);
+                        }
+                    } catch (e) {
+                        console.warn('キャッシュ解析エラー:', e);
+                    }
+                }
+                
+                // キャッシュがない、または期限切れの場合はAPIから取得
+                if (!useCache) {
+                    // キャリアスタッツAPIを呼び出し
+                    const response = await fetch(`/api/player/career-stats/${playerIdForApi}?seasons=all`);
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -1717,12 +1848,24 @@
                             console.log(`  ✅ データを設定: 試合=${statsBySeason[season].matches}, ゴール=${statsBySeason[season].goals}, アシスト=${statsBySeason[season].assists}`);
                         });
                         console.log(`📊 APIデータマージ後のシーズン数: ${Object.keys(statsBySeason).length}`);
+                        
+                        // APIから取得したデータをキャッシュに保存
+                        try {
+                            sessionStorage.setItem(cacheKey, JSON.stringify({
+                                timestamp: Date.now(),
+                                data: careerStats
+                            }));
+                            console.log(`💾 キャリアスタッツをキャッシュに保存しました: ${careerStats.length}シーズン`);
+                        } catch (cacheError) {
+                            console.warn('キャッシュ保存エラー（無視）:', cacheError);
+                        }
                     } else {
                         console.log('⚠️ APIからキャリアスタッツが取得できませんでした');
                     }
                 } else {
                     const errorData = await response.json().catch(() => ({}));
                     console.log('⚠️ キャリアスタッツAPI失敗:', response.status, errorData);
+                }
                 }
             } catch (error) {
                 console.log('⚠️ キャリアスタッツ取得エラー:', error.message);
