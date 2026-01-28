@@ -5565,20 +5565,39 @@
                     console.log('📡 パラメータ詳細:', { season, leagueParam, statusParam, timeRangeParam });
                     
                     try {
-                    // 「今日」のデータはキャッシュを活用して高速化
-                    const cacheKey = `schedule_today_${season}_${league || 'all'}`;
+                    // キャッシュ戦略: 過去データは長期キャッシュ、現在・未来データは短期キャッシュ
+                    const isPastData = timeRange === 'lastweek' || timeRange === 'lastmonth' || 
+                                     timeRange === 'last3months' || timeRange === 'last6months' ||
+                                     statusFilter === '終了';
+                    const isFinishedStatusOnly = statusFilter === '終了';
+                    
+                    // キャッシュキー: 期間、リーグ、シーズン、ステータスを含める
+                    const cacheKey = `schedule_${timeRange || 'all'}_${season}_${league || 'all'}_${statusFilter || 'all'}`;
                     const cachedData = sessionStorage.getItem(cacheKey);
                     
-                    // キャッシュが5分以内なら使用（「今日」のデータは頻繁に更新されるため短めに）
-                    if (timeRange === 'today' && cachedData) {
+                    // キャッシュ有効期限: 過去データは24時間、現在・未来データは5分
+                    const cacheTTL = isPastData || isFinishedStatusOnly 
+                        ? 24 * 60 * 60 * 1000  // 24時間（過去データは変更されない）
+                        : 5 * 60 * 1000;        // 5分（現在・未来データは更新される可能性がある）
+                    
+                    if (cachedData) {
                         try {
                             const cached = JSON.parse(cachedData);
                             const cacheAge = Date.now() - cached.timestamp;
-                            if (cacheAge < 5 * 60 * 1000) { // 5分以内
-                                console.log('⚡ キャッシュから「今日」の試合データを読み込み:', cacheAge / 1000, '秒前のデータ');
+                            
+                            if (cacheAge < cacheTTL) {
+                                console.log(`⚡ キャッシュから試合データを読み込み: ${(cacheAge / 1000).toFixed(0)}秒前のデータ (${isPastData ? '過去データ' : '現在データ'})`);
                                 data = cached.data;
-                                // キャッシュデータを表示しつつ、バックグラウンドで最新データを取得
-                                // （後で更新される）
+                                
+                                // 過去データの場合はキャッシュのみ使用（バックグラウンド更新不要）
+                                // 現在・未来データの場合はバックグラウンドで最新データを取得
+                                if (!isPastData && !isFinishedStatusOnly) {
+                                    // バックグラウンド更新は後で処理
+                                } else {
+                                    console.log('📚 過去データのため、キャッシュのみ使用（更新不要）');
+                                }
+                            } else {
+                                console.log(`⏰ キャッシュが期限切れ (${(cacheAge / 1000 / 60).toFixed(0)}分前)`);
                             }
                         } catch (e) {
                             console.warn('キャッシュ解析エラー:', e);
@@ -5595,34 +5614,42 @@
                             signal: AbortSignal.timeout(30000) // 30秒のタイムアウト
                         });
                     } else {
-                        // キャッシュデータを使用、バックグラウンドで最新データを取得
-                        console.log('⚡ キャッシュデータを使用中、バックグラウンドで最新データを取得します');
-                        fetch(integratedUrl, {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            signal: AbortSignal.timeout(30000)
-                        }).then(async (bgResponse) => {
-                            if (bgResponse.ok) {
-                                const bgData = await bgResponse.json();
-                                // キャッシュを更新
-                                sessionStorage.setItem(cacheKey, JSON.stringify({
-                                    timestamp: Date.now(),
-                                    data: bgData
-                                }));
-                                console.log('✅ バックグラウンドで最新データを取得し、キャッシュを更新しました');
-                                // 必要に応じて画面を更新
-                                if (timeRange === 'today') {
-                                    loadMatches();
+                        // キャッシュデータを使用
+                        // 過去データの場合は更新不要、現在・未来データの場合はバックグラウンド更新
+                        if (!isPastData && !isFinishedStatusOnly) {
+                            console.log('⚡ キャッシュデータを使用中、バックグラウンドで最新データを取得します');
+                            fetch(integratedUrl, {
+                                method: 'GET',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                signal: AbortSignal.timeout(30000)
+                            }).then(async (bgResponse) => {
+                                if (bgResponse.ok) {
+                                    const bgData = await bgResponse.json();
+                                    // キャッシュを更新
+                                    sessionStorage.setItem(cacheKey, JSON.stringify({
+                                        timestamp: Date.now(),
+                                        data: bgData
+                                    }));
+                                    console.log('✅ バックグラウンドで最新データを取得し、キャッシュを更新しました');
+                                    // 必要に応じて画面を更新（今日のデータのみ）
+                                    if (timeRange === 'today' || timeRange === 'tomorrow' || timeRange === 'week') {
+                                        loadMatches();
+                                    }
                                 }
-                            }
-                        }).catch(err => {
-                            console.warn('バックグラウンド更新エラー（無視）:', err);
-                        });
+                            }).catch(err => {
+                                console.warn('バックグラウンド更新エラー（無視）:', err);
+                            });
+                        } else {
+                            console.log('📚 過去データのため、キャッシュのみ使用（バックグラウンド更新なし）');
+                        }
                         // キャッシュデータを使用して処理を続行
                         console.log('⚡ キャッシュデータを使用中、APIレスポンスはスキップします');
-                    } else {
+                    }
+                    
+                    // APIから取得する場合の処理
+                    if (!data && response) {
                         // APIから取得
                         console.log('📡 APIレスポンス受信:', {
                             status: response.status,
@@ -5650,17 +5677,16 @@
                             data = JSON.parse(responseText);
                             console.log('✅ JSON解析成功');
                             
-                            // 「今日」のデータをキャッシュに保存
-                            if (timeRange === 'today') {
-                                try {
-                                    sessionStorage.setItem(cacheKey, JSON.stringify({
-                                        timestamp: Date.now(),
-                                        data: data
-                                    }));
-                                    console.log('💾 「今日」の試合データをキャッシュに保存しました');
-                                } catch (cacheError) {
-                                    console.warn('キャッシュ保存エラー（無視）:', cacheError);
-                                }
+                            // すべてのデータをキャッシュに保存（過去データは長期、現在データは短期）
+                            try {
+                                sessionStorage.setItem(cacheKey, JSON.stringify({
+                                    timestamp: Date.now(),
+                                    data: data
+                                }));
+                                const cacheType = isPastData || isFinishedStatusOnly ? '長期（24時間）' : '短期（5分）';
+                                console.log(`💾 試合データをキャッシュに保存しました (${cacheType}):`, cacheKey);
+                            } catch (cacheError) {
+                                console.warn('キャッシュ保存エラー（無視）:', cacheError);
                             }
                         } catch (parseError) {
                             console.error('❌ JSON解析エラー:', parseError);
