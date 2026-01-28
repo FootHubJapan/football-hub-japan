@@ -7883,23 +7883,54 @@
                              (matchData.goals?.away !== undefined ? matchData.goals.away : 
                              (matchData.fixture?.goals?.away !== undefined ? matchData.fixture.goals.away : '-')));
             
-            // チームIDの取得（複数のフィールドをチェック）
-            const homeTeamId = matchData.homeTeam?.id || 
-                              matchData.homeTeam?.team?.id ||
-                              matchData.home?.id || 
-                              matchData.teams?.home?.id || 
-                              matchData.homeTeamId ||
-                              (matchData.fixture?.teams?.home?.id) ||
-                              null;
-            const awayTeamId = matchData.awayTeam?.id || 
-                              matchData.awayTeam?.team?.id ||
-                              matchData.away?.id || 
-                              matchData.teams?.away?.id || 
-                              matchData.awayTeamId ||
-                              (matchData.fixture?.teams?.away?.id) ||
-                              null;
+            // チームIDの取得（複数のフィールドをチェック、より包括的に）
+            let homeTeamId = null;
+            let awayTeamId = null;
             
-            console.log('📋 updateMatchHero - Team IDs:', { homeTeamId, awayTeamId, homeName, awayName });
+            // homeTeamIdの取得（優先順位順）
+            if (matchData.fixture?.teams?.home?.id) {
+                homeTeamId = matchData.fixture.teams.home.id;
+            } else if (matchData.teams?.home?.id) {
+                homeTeamId = matchData.teams.home.id;
+            } else if (matchData.homeTeam?.id) {
+                homeTeamId = matchData.homeTeam.id;
+            } else if (matchData.homeTeam?.team?.id) {
+                homeTeamId = matchData.homeTeam.team.id;
+            } else if (matchData.home?.id) {
+                homeTeamId = matchData.home.id;
+            } else if (matchData.homeTeamId) {
+                homeTeamId = matchData.homeTeamId;
+            } else if (typeof matchData.homeTeam === 'object' && matchData.homeTeam?.id) {
+                homeTeamId = matchData.homeTeam.id;
+            }
+            
+            // awayTeamIdの取得（優先順位順）
+            if (matchData.fixture?.teams?.away?.id) {
+                awayTeamId = matchData.fixture.teams.away.id;
+            } else if (matchData.teams?.away?.id) {
+                awayTeamId = matchData.teams.away.id;
+            } else if (matchData.awayTeam?.id) {
+                awayTeamId = matchData.awayTeam.id;
+            } else if (matchData.awayTeam?.team?.id) {
+                awayTeamId = matchData.awayTeam.team.id;
+            } else if (matchData.away?.id) {
+                awayTeamId = matchData.away.id;
+            } else if (matchData.awayTeamId) {
+                awayTeamId = matchData.awayTeamId;
+            } else if (typeof matchData.awayTeam === 'object' && matchData.awayTeam?.id) {
+                awayTeamId = matchData.awayTeam.id;
+            }
+            
+            console.log('📋 updateMatchHero - Team IDs:', { 
+                homeTeamId, 
+                awayTeamId, 
+                homeName, 
+                awayName,
+                fixtureTeams: matchData.fixture?.teams,
+                teams: matchData.teams,
+                homeTeam: matchData.homeTeam,
+                awayTeam: matchData.awayTeam
+            });
             const status = matchData.status || matchData.fixture?.status?.short || matchData.fixture?.status?.long || 'TIMED';
             const date = matchData.date || matchData.fixture?.fixture?.date || matchData.utcDate || '';
             
@@ -7935,16 +7966,34 @@
             const homeLogoFallback = homeLogoEl?.nextElementSibling;
             if (homeLogoEl) {
                 if (homeTeamId) {
+                    // ロゴを確実に表示
                     homeLogoEl.loading = 'lazy';
                     homeLogoEl.decoding = 'async';
                     homeLogoEl.src = `https://media.api-sports.io/football/teams/${homeTeamId}.png`;
-                    homeLogoEl.style.display = '';
-                    if (homeLogoFallback) homeLogoFallback.style.display = 'none';
+                    homeLogoEl.style.display = 'block';
+                    homeLogoEl.style.visibility = 'visible';
+                    homeLogoEl.style.opacity = '1';
+                    if (homeLogoFallback) {
+                        homeLogoFallback.style.display = 'none';
+                    }
                     console.log('📋 Home logo set:', `https://media.api-sports.io/football/teams/${homeTeamId}.png`);
+                    
+                    // エラー時のフォールバック
+                    homeLogoEl.onerror = function() {
+                        console.warn('⚠️ Home logo failed to load, using fallback');
+                        this.style.display = 'none';
+                        if (homeLogoFallback) {
+                            homeLogoFallback.style.display = 'flex';
+                            homeLogoFallback.textContent = homeName.charAt(0) || '🏟️';
+                        }
+                    };
                 } else {
                     console.warn('⚠️ Home team ID not found, using fallback');
                     homeLogoEl.style.display = 'none';
-                    if (homeLogoFallback) homeLogoFallback.style.display = 'flex';
+                    if (homeLogoFallback) {
+                        homeLogoFallback.style.display = 'flex';
+                        homeLogoFallback.textContent = homeName.charAt(0) || '🏟️';
+                    }
                 }
             }
             
@@ -7952,16 +8001,34 @@
             const awayLogoFallback = awayLogoEl?.nextElementSibling;
             if (awayLogoEl) {
                 if (awayTeamId) {
+                    // ロゴを確実に表示
                     awayLogoEl.loading = 'lazy';
                     awayLogoEl.decoding = 'async';
                     awayLogoEl.src = `https://media.api-sports.io/football/teams/${awayTeamId}.png`;
-                    awayLogoEl.style.display = '';
-                    if (awayLogoFallback) awayLogoFallback.style.display = 'none';
+                    awayLogoEl.style.display = 'block';
+                    awayLogoEl.style.visibility = 'visible';
+                    awayLogoEl.style.opacity = '1';
+                    if (awayLogoFallback) {
+                        awayLogoFallback.style.display = 'none';
+                    }
                     console.log('📋 Away logo set:', `https://media.api-sports.io/football/teams/${awayTeamId}.png`);
+                    
+                    // エラー時のフォールバック
+                    awayLogoEl.onerror = function() {
+                        console.warn('⚠️ Away logo failed to load, using fallback');
+                        this.style.display = 'none';
+                        if (awayLogoFallback) {
+                            awayLogoFallback.style.display = 'flex';
+                            awayLogoFallback.textContent = awayName.charAt(0) || '🏟️';
+                        }
+                    };
                 } else {
                     console.warn('⚠️ Away team ID not found, using fallback');
                     awayLogoEl.style.display = 'none';
-                    if (awayLogoFallback) awayLogoFallback.style.display = 'flex';
+                    if (awayLogoFallback) {
+                        awayLogoFallback.style.display = 'flex';
+                        awayLogoFallback.textContent = awayName.charAt(0) || '🏟️';
+                    }
                 }
             }
             
