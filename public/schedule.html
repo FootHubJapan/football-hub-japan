@@ -5690,50 +5690,6 @@
                         // キャッシュデータを使用して処理を続行
                         console.log('⚡ キャッシュデータを使用中、APIレスポンスはスキップします');
                     }
-                        // APIから取得
-                        console.log('📡 APIレスポンス受信:', {
-                            status: response.status,
-                            statusText: response.statusText,
-                            ok: response.ok,
-                            headers: Object.fromEntries(response.headers.entries())
-                        });
-                    
-                        if (!response.ok) {
-                            const errorText = await response.text();
-                            console.error('❌ APIエラーレスポンス:', errorText);
-                            throw new Error(`Integrated API error! status: ${response.status}, message: ${errorText.substring(0, 200)}`);
-                        }
-                        
-                        const responseText = await response.text();
-                        console.log('✅ 統合API レスポンス取得成功');
-                        console.log('レスポンスサイズ:', responseText.length, '文字');
-                        console.log('レスポンスプレビュー:', responseText.substring(0, 500));
-                    
-                        if (!responseText || responseText.trim() === '') {
-                            throw new Error('APIレスポンスが空です');
-                        }
-                        
-                        try {
-                            data = JSON.parse(responseText);
-                            console.log('✅ JSON解析成功');
-                            
-                            // すべてのデータをキャッシュに保存（過去データは長期、現在データは短期）
-                            try {
-                                sessionStorage.setItem(cacheKey, JSON.stringify({
-                                    timestamp: Date.now(),
-                                    data: data
-                                }));
-                                const cacheType = isPastData || isFinishedStatusOnly ? '長期（24時間）' : '短期（5分）';
-                                console.log(`💾 試合データをキャッシュに保存しました (${cacheType}):`, cacheKey);
-                            } catch (cacheError) {
-                                console.warn('キャッシュ保存エラー（無視）:', cacheError);
-                            }
-                        } catch (parseError) {
-                            console.error('❌ JSON解析エラー:', parseError);
-                            console.error('❌ レスポンステキスト:', responseText.substring(0, 1000));
-                            throw new Error(`JSON解析に失敗しました: ${parseError.message}`);
-                        }
-                    }
                         console.log('📊 統合データ解析成功:', {
                             hasItems: !!data.items,
                             itemsLength: data.items?.length || 0,
