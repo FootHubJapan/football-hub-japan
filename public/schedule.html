@@ -5461,13 +5461,8 @@
                 seasonSelect.addEventListener('change', loadMatches);
             }
             
-            // 期間選択の変更を監視（既に宣言済みの場合はスキップ）
-            if (!timeRangeSelect) {
-                const timeRangeSelect = document.getElementById('timeRangeSelect');
-                if (timeRangeSelect) {
-                    timeRangeSelect.addEventListener('change', loadMatches);
-                }
-            } else {
+            // 期間選択の変更を監視（既に5426行目で宣言済み）
+            if (timeRangeSelect) {
                 timeRangeSelect.addEventListener('change', loadMatches);
             }
             
