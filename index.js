@@ -296,7 +296,11 @@ app.use(helmet({
                 "https://pagead2.googlesyndication.com",
                 "https://*.google.com",
                 "https://*.googleapis.com",
-                "https://*.gstatic.com"
+                "https://*.gstatic.com",
+                "https://ep1.adtrafficquality.google",
+                "https://*.adtrafficquality.google",
+                "https://*.doubleclick.net",
+                "https://*.googlesyndication.com"
             ],
             frameSrc: ["'self'", "https://googleads.g.doubleclick.net", "https://tpc.googlesyndication.com"],
             objectSrc: ["'none'"],
