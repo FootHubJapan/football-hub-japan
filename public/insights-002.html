@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PPDA（Passes Allowed Per Defensive Action）の見方と注意点を解説。ハイプレスの強度を測る指標として注目されるPPDAの適切な解釈方法と、見落としがちな落とし穴を解説します。">
+    <meta name="keywords" content="PPDA,ハイプレス,戦術分析,データ分析">
+    <meta property="og:title" content="ハイプレスの強度をどう見る？PPDAの見方と注意点 - Football Hub Japan">
+    <meta property="og:description" content="PPDA（Passes Allowed Per Defensive Action）の見方と注意点を解説。ハイプレスの強度を測る指標として注目されるPPDAの適切な解釈方法を解説します。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://football-hub-japan-ubzb.onrender.com/insights-002.html">
+    <meta name="robots" content="index,follow">
+    <title>ハイプレスの強度をどう見る？PPDAの見方と注意点 - Football Hub Japan</title>
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6574544891375303"
+     crossorigin="anonymous"></script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y5KSLP58SP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-Y5KSLP58SP');
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: #0d1117;
+            --foreground: #f0f6fc;
+            --card: #161b22;
+            --card-hover: #1c2128;
+            --primary: #22c55e;
+            --primary-hover: #16a34a;
+            --primary-glow: rgba(34, 197, 94, 0.2);
+            --secondary: #21262d;
+            --muted: #8b949e;
+            --border: #30363d;
+            --border-light: rgba(48, 54, 61, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background);
+            color: var(--foreground);
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .header-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1.5rem;
+            height: 64px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--foreground);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .logo-text {
+            font-size: 1.125rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-menu a:hover {
+            color: var(--foreground);
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--background);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+
+        .breadcrumb {
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--muted);
+        }
+
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .article-header {
+            margin-bottom: 2rem;
+        }
+
+        .article-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .article-meta {
+            color: var(--muted);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .article-content h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .article-content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .article-content p {
+            margin-bottom: 1.5rem;
+            color: var(--muted);
+            line-height: 1.9;
+        }
+
+        .article-content ul, .article-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--muted);
+        }
+
+        .article-content li {
+            margin-bottom: 0.75rem;
+            line-height: 1.8;
+        }
+
+        .article-content strong {
+            color: var(--foreground);
+            font-weight: 600;
+        }
+
+        .article-footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .article-footer p {
+            font-size: 0.875rem;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            padding: 3rem 1.5rem 2rem;
+            margin-top: 4rem;
+        }
+
+        .footer-container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-brand {
+            max-width: 280px;
+        }
+
+        .footer-brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            text-decoration: none;
+            color: var(--foreground);
+        }
+
+        .footer-brand-text {
+            color: var(--muted);
+            font-size: 0.875rem;
+            line-height: 1.7;
+        }
+
+        .footer-column h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .footer-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--foreground);
+        }
+
+        .footer-bottom {
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.875rem;
+        }
+
+        .footer-credits {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+            .article-header h1 {
+                font-size: 2rem;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">⚡</div>
+                <span class="logo-text">Football Hub Japan</span>
+            </a>
+
+            <ul class="nav-menu">
+                <li><a href="/database-new.html">データベース</a></li>
+                <li><a href="/radar-enhanced.html">レーダーチャート</a></li>
+                <li><a href="/schedule.html">スケジュール</a></li>
+                <li><a href="/ai-agent-enhanced.html">AI分析</a></li>
+                <li><a href="/ranking.html">ランキング</a></li>
+                <li><a href="/insights.html">分析コラム</a></li>
+            </ul>
+
+            <div class="header-buttons">
+                <a href="/dashboard.html" class="btn btn-primary">無料で始める</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="content">
+            <div class="breadcrumb">
+                <a href="/">ホーム</a> / <a href="/insights.html">分析コラム</a> / PPDAの見方と注意点
+            </div>
+
+            <article class="article-content">
+                <div class="article-header">
+                    <h1>ハイプレスの強度をどう見る？PPDAの見方と注意点</h1>
+                    <p class="article-meta">2025年1月15日 | 戦術分析</p>
+                </div>
+
+                <p>現代サッカーにおいて、ハイプレス（高い位置からのプレッシング）は重要な戦術の一つです。ハイプレスの強度を測る指標として、PPDA（Passes Allowed Per Defensive Action）が注目されています。PPDAは、相手がパスを何本通したかに対して、守備側がどのくらいアクションを取ったかを示す指標です。数値が低いほど、ハイプレスが強力であることを意味します。</p>
+                <p>しかし、PPDAを単純に「低いほど良い」と解釈するのは危険です。PPDAには、見落としがちな落とし穴がいくつかあります。</p>
+
+                <h2>PPDAの基本的な見方</h2>
+                <p>PPDAは、「相手がパスを何本通したか」を「守備側のアクション（タックル、インターセプト、ファウル等）の回数」で割った値です。例えば、PPDAが10の場合、相手が10本のパスを通す間に、守備側が1回のアクションを取ったことを意味します。</p>
+                <p>一般的に、PPDAが8以下だと「非常に強いハイプレス」、8〜12だと「強いハイプレス」、12以上だと「弱いハイプレス」と分類されます。しかし、この分類は絶対的なものではなく、リーグや対戦相手によって基準が異なります。</p>
+
+                <h2>PPDAの落とし穴：コンテキストの重要性</h2>
+                <p>PPDAを評価する際、最も重要なのは「コンテキスト」です。同じPPDAの値でも、以下の要因によって意味が大きく変わります：</p>
+                <ul>
+                    <li><strong>対戦相手の強さ</strong>: 強い相手に対して低いPPDAを維持するのは、弱い相手に対して低いPPDAを維持するよりも難しい</li>
+                    <li><strong>試合の流れ</strong>: リードしている時と追いかけている時では、ハイプレスの強度が変わる</li>
+                    <li><strong>フィールドの位置</strong>: 自陣でハイプレスをかけるのと、敵陣でハイプレスをかけるのでは、難易度が異なる</li>
+                    <li><strong>試合時間</strong>: 後半になると、体力の消耗によりPPDAが上がる傾向がある</li>
+                </ul>
+
+                <h2>PPDAと失点の関係</h2>
+                <p>PPDAが低い（ハイプレスが強い）チームが、必ずしも失点が少ないとは限りません。ハイプレスは、相手の攻撃を早期に阻止できる一方で、スペースを空けやすいというリスクもあります。PPDAが低くても、ハイプレスの質が低い場合、簡単に突破されて失点につながる可能性があります。</p>
+                <p>逆に、PPDAが高い（ハイプレスが弱い）チームでも、組織的な守備により失点を抑えている場合があります。PPDAは「ハイプレスの強度」を示す指標であり、「守備の質」を示す指標ではないことを理解することが重要です。</p>
+
+                <h2>PPDAと他の指標の組み合わせ</h2>
+                <p>PPDAを単独で見るのではなく、以下の指標と組み合わせて分析することで、より正確な評価が可能になります：</p>
+                <ul>
+                    <li><strong>ハイプレス時の成功率</strong>: ハイプレスをかけた時のボール奪取率</li>
+                    <li><strong>ハイプレス後の攻撃</strong>: ハイプレスでボールを奪取した後の攻撃の質</li>
+                    <li><strong>失点の質</strong>: ハイプレスが破られた時の失点の頻度</li>
+                    <li><strong>フィールドの位置</strong>: どのエリアでハイプレスをかけているか</li>
+                </ul>
+                <p>これらの指標を総合的に見ることで、ハイプレスの「強度」だけでなく、「質」も評価できます。</p>
+
+                <h2>まとめ</h2>
+                <p>PPDAは、ハイプレスの強度を測る有用な指標ですが、単純に「低いほど良い」と解釈するのは危険です。PPDAを評価する際は、対戦相手の強さ、試合の流れ、フィールドの位置、試合時間などのコンテキストを考慮し、他の指標と組み合わせて分析することが重要です。データを多角的に分析することで、ハイプレスの真の強さと課題が見えてきます。</p>
+
+                <div class="article-footer">
+                    <p><strong>参考:</strong> 本記事で使用しているデータは、外部のAPIや公開されている情報源から取得したものです。データの正確性や最新性については保証いたしません。また、分析結果は一般的な傾向を示すものであり、個別のチームや試合に必ずしも当てはまるとは限りません。</p>
+                    <p><strong>免責:</strong> 本記事の内容は、情報提供を目的としたものであり、投資判断や賭博等への利用は自己責任でお願いします。</p>
+                    <a href="/insights.html" class="back-link">← 分析コラム一覧に戻る</a>
+                </div>
+            </article>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="/" class="footer-brand-logo">
+                        <div class="logo-icon">⚡</div>
+                        <span class="logo-text">Football Hub Japan</span>
+                    </a>
+                    <p class="footer-brand-text">最先端のAI技術で日本サッカーを分析・予測するデータプラットフォーム</p>
+                </div>
+
+                <div class="footer-column">
+                    <h3>プロダクト</h3>
+                    <ul class="footer-links">
+                        <li><a href="/#features">機能</a></li>
+                        <li><a href="/plans.html">料金</a></li>
+                        <li><a href="/advanced-stats.html">高度分析</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h3>リソース</h3>
+                    <ul class="footer-links">
+                        <li><a href="/database-new.html">データベース</a></li>
+                        <li><a href="/ranking.html">ランキング</a></li>
+                        <li><a href="/schedule.html">スケジュール</a></li>
+                        <li><a href="/insights.html">分析コラム</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h3>法的情報</h3>
+                    <ul class="footer-links">
+                        <li><a href="/terms.html">利用規約</a></li>
+                        <li><a href="/privacy-policy.html">プライバシーポリシー</a></li>
+                        <li><a href="/about.html">運営者情報</a></li>
+                        <li><a href="/contact.html">お問い合わせ</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 Football Hub Japan. All rights reserved.</p>
+                <div class="footer-credits">
+                    <p>Data sources: Football data is provided by external APIs and public sources. Team/league names and logos are trademarks of their respective owners.</p>
+                    <p style="margin-top: 0.5rem;">このサイトはファン向けの情報提供であり、公式の情報源ではありません。</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
