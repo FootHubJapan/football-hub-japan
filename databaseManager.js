@@ -27,16 +27,17 @@ class DatabaseManager {
         // Firestore用の初期化（firestoreモードの場合）
         if (this.storageMode === 'firestore') {
             try {
-                const { getFirestore } = require('../firebaseAdmin');
+                const { getFirestore } = require('./firebaseAdmin');
                 this.db = getFirestore();
-                console.log('✅ DatabaseManager: Firestoreモードで初期化');
+                console.log(`✅ DatabaseManager: Firestoreモードで初期化 (STORAGE_MODE=${this.storageMode})`);
             } catch (error) {
                 console.error('❌ DatabaseManager: Firestore初期化エラー:', error);
+                console.error('   エラー詳細:', error.message);
                 console.log('⚠️ fileモードにフォールバックします');
                 this.storageMode = 'file';
             }
         } else {
-            console.log('✅ DatabaseManager: ファイルモードで初期化');
+            console.log(`✅ DatabaseManager: ファイルモードで初期化 (STORAGE_MODE=${this.storageMode || '未設定'})`);
         }
         
         // 書き込みロック（同時書き込みを防ぐ）

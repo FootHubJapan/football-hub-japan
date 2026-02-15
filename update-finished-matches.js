@@ -361,9 +361,12 @@ async function updatePlayerStatsFromMatch(playerData, matchData, league) {
         // 既存の選手データを取得
         let players = [];
         try {
+            console.log(`📊 選手データを読み込み中... (STORAGE_MODE=${process.env.STORAGE_MODE || 'file'})`);
             players = await dbManager.loadComprehensivePlayers();
+            console.log(`📊 選手データ読み込み完了: ${players.length}名`);
         } catch (error) {
             console.error('⚠️ 選手データの読み込みエラー:', error.message);
+            console.error('   エラー詳細:', error);
             return;
         }
         
