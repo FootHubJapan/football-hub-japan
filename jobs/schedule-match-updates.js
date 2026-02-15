@@ -3,8 +3,8 @@
  * 終了した試合を検知して選手スタッツを更新
  * 
  * 使用方法:
- * - Render Cron: */5 * * * * node jobs/schedule-match-updates.js
- * - 保険の再同期: 30 4 * * * node jobs/schedule-match-updates.js
+ * - Render Cron: 5分ごと (cron式: */5 * * * *)
+ * - 保険の再同期: 毎日4:30 (cron式: 30 4 * * *)
  */
 
 require('dotenv').config();
