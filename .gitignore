@@ -121,3 +121,7 @@ ui-debug.log
 # API keys (backup)
 *.backup
 *.bak
+
+# Data files (large JSON files, not committed to git)
+data/
+data/backups/

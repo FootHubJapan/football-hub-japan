@@ -1,6 +1,7 @@
 /**
  * 包括的なサッカーデータベース管理システム
  * 98チーム分の選手データ、統計、顔写真を管理
+ * STORAGE_MODE環境変数で保存先を切り替え可能（file|firestore）
  */
 
 const fs = require('fs').promises;
@@ -8,6 +9,10 @@ const path = require('path');
 
 class DatabaseManager {
     constructor() {
+        // ストレージモードを環境変数から取得（デフォルト: file）
+        this.storageMode = process.env.STORAGE_MODE || 'file';
+        
+        // ファイルベースのパス設定（fileモード用）
         this.dataPath = path.join(__dirname, 'data');
         this.playersPath = path.join(this.dataPath, 'players.json');
         this.teamsPath = path.join(this.dataPath, 'teams.json');
@@ -18,6 +23,21 @@ class DatabaseManager {
         this.schedulesPath = path.join(this.dataPath, 'schedules.json');
         this.lineupsPath = path.join(this.dataPath, 'lineups.json');
         this.standingsPath = path.join(this.dataPath, 'standings.json');
+        
+        // Firestore用の初期化（firestoreモードの場合）
+        if (this.storageMode === 'firestore') {
+            try {
+                const { getFirestore } = require('../firebaseAdmin');
+                this.db = getFirestore();
+                console.log('✅ DatabaseManager: Firestoreモードで初期化');
+            } catch (error) {
+                console.error('❌ DatabaseManager: Firestore初期化エラー:', error);
+                console.log('⚠️ fileモードにフォールバックします');
+                this.storageMode = 'file';
+            }
+        } else {
+            console.log('✅ DatabaseManager: ファイルモードで初期化');
+        }
         
         // 書き込みロック（同時書き込みを防ぐ）
         this.writeLock = false;
@@ -203,8 +223,20 @@ class DatabaseManager {
 
     /**
      * 包括的な選手データを保存
+     * STORAGE_MODEに応じてfileまたはfirestoreに保存
      */
     async saveComprehensivePlayers(players) {
+        if (this.storageMode === 'firestore') {
+            return this.saveComprehensivePlayersToFirestore(players);
+        } else {
+            return this.saveComprehensivePlayersToFile(players);
+        }
+    }
+
+    /**
+     * ファイルに選手データを保存（既存の実装）
+     */
+    async saveComprehensivePlayersToFile(players) {
         // 書き込みロックを取得
         await this.acquireWriteLock();
         
@@ -364,9 +396,97 @@ class DatabaseManager {
     }
 
     /**
+     * Firestoreに選手データを保存（分割保存）
+     * players/{playerId} ドキュメントに set(merge:true) で更新
+     */
+    async saveComprehensivePlayersToFirestore(players) {
+        if (!this.db) {
+            throw new Error('Firestore is not initialized');
+        }
+
+        const batchSize = 500; // Firestoreのバッチ書き込み制限
+        let savedCount = 0;
+
+        try {
+            // 選手をバッチで処理
+            for (let i = 0; i < players.length; i += batchSize) {
+                const batch = this.db.batch();
+                const batchPlayers = players.slice(i, i + batchSize);
+
+                for (const player of batchPlayers) {
+                    const playerId = player.id || player.playerId;
+                    if (!playerId) {
+                        console.warn('⚠️ 選手IDがありません。スキップします:', player.name);
+                        continue;
+                    }
+
+                    // 選手データを正規化
+                    const normalizedPlayer = {
+                        id: playerId,
+                        name: player.name,
+                        fullName: player.fullName || player.name,
+                        firstName: player.firstName || player.name.split(' ')[0],
+                        lastName: player.lastName || player.name.split(' ').slice(1).join(' '),
+                        age: player.age,
+                        dateOfBirth: player.dateOfBirth,
+                        nationality: player.nationality,
+                        height: player.height,
+                        weight: player.weight,
+                        position: player.position,
+                        detailedPosition: player.detailedPosition || player.position,
+                        currentTeam: player.currentTeam,
+                        teamId: player.teamId,
+                        league: player.league,
+                        leagueId: player.leagueId,
+                        country: player.country,
+                        photo: player.photo,
+                        photoUrl: player.photoUrl,
+                        shirtNumber: player.shirtNumber,
+                        preferredFoot: player.preferredFoot,
+                        marketValue: player.marketValue,
+                        contractUntil: player.contractUntil,
+                        joinedDate: player.joinedDate,
+                        stats: player.stats || [],
+                        lastUpdated: new Date().toISOString(),
+                        source: player.source || 'api-football'
+                    };
+
+                    // players/{playerId} に set(merge:true) で更新
+                    const playerRef = this.db.collection('players').doc(String(playerId));
+                    batch.set(playerRef, normalizedPlayer, { merge: true });
+                }
+
+                // バッチ書き込み実行
+                await batch.commit();
+                savedCount += batchPlayers.length;
+                console.log(`💾 Firestoreに保存: ${savedCount}/${players.length}名`);
+            }
+
+            console.log(`✅ Firestoreに選手データを保存完了: ${savedCount}名`);
+            return players;
+
+        } catch (error) {
+            console.error('❌ Firestoreへの選手データ保存エラー:', error);
+            throw error;
+        }
+    }
+
+    /**
      * 包括的な選手データを読み込み
+     * STORAGE_MODEに応じてfileまたはfirestoreから読み込み
      */
     async loadComprehensivePlayers() {
+        if (this.storageMode === 'firestore') {
+            return this.loadComprehensivePlayersFromFirestore();
+        } else {
+            return this.loadComprehensivePlayersFromFile();
+        }
+    }
+
+    /**
+     * ファイルから選手データを読み込み（既存の実装）
+     */
+    async loadComprehensivePlayersFromFile() {
         let retryCount = 0;
         const maxRetries = 3;
         
@@ -422,6 +542,58 @@ class DatabaseManager {
         }
         
         return [];
+    }
+
+    /**
+     * Firestoreから選手データを読み込み（ページング対応）
+     */
+    async loadComprehensivePlayersFromFirestore(limit = null) {
+        if (!this.db) {
+            console.warn('⚠️ Firestore is not initialized. Returning empty array.');
+            return [];
+        }
+
+        try {
+            let players = [];
+            let query = this.db.collection('players');
+
+            // ページングで読み込み（全件一括読み込みを避ける）
+            let lastDoc = null;
+            const pageSize = 1000; // 1ページあたりの最大件数
+
+            do {
+                let pageQuery = query.limit(pageSize);
+                if (lastDoc) {
+                    pageQuery = pageQuery.startAfter(lastDoc);
+                }
+
+                const snapshot = await pageQuery.get();
+                
+                if (snapshot.empty) {
+                    break;
+                }
+
+                snapshot.forEach(doc => {
+                    players.push(doc.data());
+                });
+
+                lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+                // limitが指定されている場合は制限
+                if (limit && players.length >= limit) {
+                    players = players.slice(0, limit);
+                    break;
+                }
+
+            } while (lastDoc);
+
+            console.log(`📊 Firestoreから選手データを読み込み: ${players.length}名`);
+            return players;
+
+        } catch (error) {
+            console.error('❌ Firestoreからの選手データ読み込みエラー:', error);
+            return [];
+        }
     }
 
     /**

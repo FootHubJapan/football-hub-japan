@@ -14,6 +14,123 @@ if (!API_FOOTBALL_KEY) {
 const DatabaseManager = require('./databaseManager');
 const dbManager = new DatabaseManager();
 
+// Firestore用のヘルパー（処理済みfixture管理）
+let firestoreDb = null;
+if (process.env.STORAGE_MODE === 'firestore') {
+    try {
+        const { getFirestore } = require('./firebaseAdmin');
+        const admin = require('firebase-admin');
+        firestoreDb = getFirestore();
+        // FieldValueを取得するためにadminも必要
+        firestoreDb.firestore = admin.firestore;
+    } catch (error) {
+        console.warn('⚠️ Firestore初期化エラー（処理済みfixture管理はスキップ）:', error.message);
+    }
+}
+
+/**
+ * 処理済みfixtureをチェック（idempotent）
+ * @param {number} fixtureId 
+ * @returns {Promise<{isProcessed: boolean, isStale: boolean}>}
+ */
+async function checkProcessedFixture(fixtureId) {
+    if (!firestoreDb) {
+        // Firestoreが使えない場合は常に未処理として扱う
+        return { isProcessed: false, isStale: false };
+    }
+
+    try {
+        const docRef = firestoreDb.collection('sync_processed_fixtures').doc(String(fixtureId));
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            return { isProcessed: false, isStale: false };
+        }
+
+        const data = doc.data();
+        const status = data.status || 'unknown';
+        const updatedAt = data.updatedAt?.toDate() || new Date(0);
+        const now = new Date();
+        const hoursSinceUpdate = (now - updatedAt) / (1000 * 60 * 60);
+
+        // 処理完了済み
+        if (status === 'done') {
+            return { isProcessed: true, isStale: false };
+        }
+
+        // 処理中で一定時間以上経過している場合はstaleとして再処理
+        if (status === 'processing' && hoursSinceUpdate > 2) {
+            console.log(`⚠️ Fixture ${fixtureId} がstale状態です（${hoursSinceUpdate.toFixed(1)}時間経過）。再処理します。`);
+            return { isProcessed: false, isStale: true };
+        }
+
+        // 処理中
+        return { isProcessed: false, isStale: false };
+
+    } catch (error) {
+        console.error(`❌ 処理済みfixtureチェックエラー (${fixtureId}):`, error.message);
+        return { isProcessed: false, isStale: false };
+    }
+}
+
+/**
+ * 処理済みfixtureをマーク
+ * @param {number} fixtureId 
+ * @param {string} status - 'processing' | 'done' | 'error'
+ * @param {string} errorMessage - エラーメッセージ（エラー時のみ）
+ */
+async function markProcessedFixture(fixtureId, status, errorMessage = null) {
+    if (!firestoreDb) {
+        return; // Firestoreが使えない場合はスキップ
+    }
+
+    try {
+        const docRef = firestoreDb.collection('sync_processed_fixtures').doc(String(fixtureId));
+        const admin = require('firebase-admin');
+        const updateData = {
+            status: status,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            retryCount: admin.firestore.FieldValue.increment(1)
+        };
+
+        if (status === 'done') {
+            updateData.finishedAt = admin.firestore.FieldValue.serverTimestamp();
+        }
+
+        if (errorMessage) {
+            updateData.lastError = errorMessage;
+        }
+
+        await docRef.set(updateData, { merge: true });
+
+    } catch (error) {
+        console.error(`❌ 処理済みfixtureマークエラー (${fixtureId}):`, error.message);
+    }
+}
+
+/**
+ * 指数バックオフ付きリトライ
+ */
+async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            return await fn();
+        } catch (error) {
+            const isRateLimit = error.response?.status === 429;
+            const isServerError = error.response?.status >= 500;
+
+            if ((isRateLimit || isServerError) && attempt < maxRetries - 1) {
+                const delay = baseDelay * Math.pow(2, attempt);
+                console.log(`⚠️ リトライ ${attempt + 1}/${maxRetries} (${delay}ms待機):`, error.message);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+            }
+
+            throw error;
+        }
+    }
+}
+
 // 主要リーグのリスト
 const majorLeagues = [
     { id: 39, name: 'Premier League' },
@@ -42,6 +159,7 @@ async function checkAndUpdateFinishedMatches() {
         const season = (currentMonth >= 8) ? currentYear : currentYear - 1;
         
         let totalUpdated = 0;
+        let totalSkipped = 0;
         const processedMatches = new Set();
         
         for (const league of majorLeagues) {
@@ -53,31 +171,64 @@ async function checkAndUpdateFinishedMatches() {
                 
                 console.log(`📊 ${league.name} の終了試合を取得中... (${threeDaysAgo.toISOString().split('T')[0]} ～ ${today.toISOString().split('T')[0]})`);
                 
-                const response = await axios.get('https://v3.football.api-sports.io/fixtures', {
-                    params: {
-                        league: league.id,
-                        season: season,
-                        status: 'FT', // Full Time (終了)
-                        from: threeDaysAgo.toISOString().split('T')[0],
-                        to: today.toISOString().split('T')[0]
-                    },
-                    headers: {
-                        'x-apisports-key': API_FOOTBALL_KEY
-                    },
-                    timeout: 30000
-                });
+                // FT, AET, PEN のステータスを取得（延長/PK取りこぼし防止）
+                const statuses = ['FT', 'AET', 'PEN'];
+                let allFixtures = [];
+
+                for (const status of statuses) {
+                    try {
+                        const response = await retryWithBackoff(() => 
+                            axios.get('https://v3.football.api-sports.io/fixtures', {
+                                params: {
+                                    league: league.id,
+                                    season: season,
+                                    status: status,
+                                    from: threeDaysAgo.toISOString().split('T')[0],
+                                    to: today.toISOString().split('T')[0]
+                                },
+                                headers: {
+                                    'x-apisports-key': API_FOOTBALL_KEY
+                                },
+                                timeout: 30000
+                            })
+                        );
+                        
+                        const fixtures = response.data?.response || [];
+                        allFixtures.push(...fixtures);
+                        
+                        // APIレート制限対策
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                    } catch (statusError) {
+                        console.error(`⚠️ ${league.name} (${status}) の取得エラー:`, statusError.message);
+                    }
+                }
                 
-                const fixtures = response.data?.response || [];
-                console.log(`✅ ${league.name}: ${fixtures.length}件の終了試合を検出`);
+                console.log(`✅ ${league.name}: ${allFixtures.length}件の終了試合を検出`);
                 
-                for (const fixture of fixtures) {
+                for (const fixture of allFixtures) {
                     const fixtureId = fixture.fixture?.id;
                     if (!fixtureId || processedMatches.has(fixtureId)) {
+                        continue; // 既に処理済み（メモリ内）
+                    }
+                    
+                    // 処理済みfixtureをチェック（idempotent）
+                    const { isProcessed, isStale } = await checkProcessedFixture(fixtureId);
+                    
+                    if (isProcessed && !isStale) {
+                        totalSkipped++;
+                        processedMatches.add(fixtureId);
                         continue; // 既に処理済み
                     }
                     
                     try {
+                        // 処理開始をマーク
+                        await markProcessedFixture(fixtureId, 'processing');
+                        
                         await updatePlayersFromMatch(fixture, league);
+                        
+                        // 処理完了をマーク
+                        await markProcessedFixture(fixtureId, 'done');
+                        
                         processedMatches.add(fixtureId);
                         totalUpdated++;
                         
@@ -85,6 +236,8 @@ async function checkAndUpdateFinishedMatches() {
                         await new Promise(resolve => setTimeout(resolve, 200));
                     } catch (matchError) {
                         console.error(`❌ 試合 ${fixtureId} の処理エラー:`, matchError.message);
+                        // エラーをマーク（次回Cronで再処理可能）
+                        await markProcessedFixture(fixtureId, 'error', matchError.message);
                     }
                 }
                 
@@ -97,9 +250,13 @@ async function checkAndUpdateFinishedMatches() {
         }
         
         console.log(`\n✅ 合計 ${totalUpdated} 試合の選手データを更新しました`);
+        if (totalSkipped > 0) {
+            console.log(`   ${totalSkipped} 試合は既に処理済みのためスキップしました`);
+        }
         
     } catch (error) {
         console.error('❌ 試合ベース更新エラー:', error.message);
+        throw error;
     }
 }
 
