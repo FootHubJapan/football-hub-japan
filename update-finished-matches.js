@@ -358,25 +358,30 @@ async function updatePlayerStatsFromMatch(playerData, matchData, league) {
             return;
         }
         
-        // 既存の選手データを取得
-        let players = [];
+        // 既存の選手データを取得（最適化: Firestoreモードの場合は直接IDで取得）
+        let player = null;
         try {
-            console.log(`📊 選手データを読み込み中... (STORAGE_MODE=${process.env.STORAGE_MODE || 'file'})`);
-            players = await dbManager.loadComprehensivePlayers();
-            console.log(`📊 選手データ読み込み完了: ${players.length}名`);
+            if (process.env.STORAGE_MODE === 'firestore') {
+                // Firestoreモード: 選手IDで直接取得（全件読み込みを避ける）
+                console.log(`📊 選手データを取得中... (ID: ${playerId}, STORAGE_MODE=firestore)`);
+                player = await dbManager.getPlayerById(playerId);
+            } else {
+                // ファイルモード: 全選手を読み込んで検索
+                console.log(`📊 選手データを読み込み中... (STORAGE_MODE=file)`);
+                const players = await dbManager.loadComprehensivePlayers();
+                console.log(`📊 選手データ読み込み完了: ${players.length}名`);
+                player = players.find(p => 
+                    p.id === playerId || 
+                    p.playerId === playerId ||
+                    String(p.id) === String(playerId) ||
+                    String(p.playerId) === String(playerId)
+                );
+            }
         } catch (error) {
-            console.error('⚠️ 選手データの読み込みエラー:', error.message);
+            console.error('⚠️ 選手データの取得エラー:', error.message);
             console.error('   エラー詳細:', error);
             return;
         }
-        
-        // 選手を検索
-        let player = players.find(p => 
-            p.id === playerId || 
-            p.playerId === playerId ||
-            String(p.id) === String(playerId) ||
-            String(p.playerId) === String(playerId)
-        );
         
         if (!player) {
             // 選手が存在しない場合はスキップ（新規選手は別のスクリプトで追加）

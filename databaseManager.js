@@ -876,9 +876,47 @@ class DatabaseManager {
     // 既存のメソッドも保持
     async loadPlayers() { return this.loadComprehensivePlayers(); }
     async savePlayers(players) { return this.saveComprehensivePlayers(players); }
-    async getPlayerById(playerId) { 
-        const players = await this.loadComprehensivePlayers();
-        return players.find(p => p.id === playerId);
+    
+    /**
+     * 選手IDで選手データを取得（最適化版）
+     * Firestoreモードの場合は直接ドキュメントを取得（全件読み込みを避ける）
+     */
+    async getPlayerById(playerId) {
+        if (this.storageMode === 'firestore') {
+            return this.getPlayerByIdFromFirestore(playerId);
+        } else {
+            const players = await this.loadComprehensivePlayers();
+            return players.find(p => 
+                p.id === playerId || 
+                p.playerId === playerId ||
+                String(p.id) === String(playerId) ||
+                String(p.playerId) === String(playerId)
+            );
+        }
+    }
+
+    /**
+     * Firestoreから選手IDで選手データを取得（1ドキュメントのみ）
+     */
+    async getPlayerByIdFromFirestore(playerId) {
+        if (!this.db) {
+            console.warn('⚠️ Firestore is not initialized. Returning null.');
+            return null;
+        }
+
+        try {
+            const playerRef = this.db.collection('players').doc(String(playerId));
+            const doc = await playerRef.get();
+
+            if (doc.exists) {
+                return doc.data();
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error(`❌ Firestoreからの選手データ取得エラー (${playerId}):`, error.message);
+            return null;
+        }
     }
     async searchPlayers(query, filters) { return this.comprehensiveSearch(query, filters); }
     async getDatabaseStatus() { return this.getComprehensiveStatus(); }
