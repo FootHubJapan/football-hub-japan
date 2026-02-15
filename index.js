@@ -418,6 +418,18 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+app.get('/signup', (req, res) => {
+    // 新規登録ページは login.html に統合されているため、login.html を返す
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Next.js App Router構造のファイルへのリクエストを無視（404エラーを防ぐ）
+app.get('/layout.css', (req, res) => res.status(404).end());
+app.get('/page.js', (req, res) => res.status(404).end());
+app.get('/main-app.js', (req, res) => res.status(404).end());
+app.get('/app-pages-internals.js', (req, res) => res.status(404).end());
+app.get('/layout.js', (req, res) => res.status(404).end());
+
 app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
