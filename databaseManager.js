@@ -897,6 +897,7 @@ class DatabaseManager {
 
     /**
      * Firestoreから選手IDで選手データを取得（1ドキュメントのみ）
+     * リトライロジック付き（クォータエラー対策）
      */
     async getPlayerByIdFromFirestore(playerId) {
         if (!this.db) {
@@ -904,19 +905,42 @@ class DatabaseManager {
             return null;
         }
 
-        try {
-            const playerRef = this.db.collection('players').doc(String(playerId));
-            const doc = await playerRef.get();
+        const maxRetries = 3;
+        let retryCount = 0;
+        const baseDelay = 1000; // 1秒
 
-            if (doc.exists) {
-                return doc.data();
-            } else {
-                return null;
+        while (retryCount < maxRetries) {
+            try {
+                const playerRef = this.db.collection('players').doc(String(playerId));
+                const doc = await playerRef.get();
+
+                if (doc.exists) {
+                    return doc.data();
+                } else {
+                    return null;
+                }
+            } catch (error) {
+                // クォータエラー（8 RESOURCE_EXHAUSTED）の場合
+                if (error.code === 8 || error.message.includes('Quota exceeded')) {
+                    retryCount++;
+                    if (retryCount < maxRetries) {
+                        const delay = baseDelay * Math.pow(2, retryCount); // 指数バックオフ: 2秒, 4秒, 8秒
+                        console.warn(`⚠️ Firestoreクォータエラー (${playerId}), ${delay/1000}秒待機してリトライ ${retryCount}/${maxRetries}...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    } else {
+                        console.error(`❌ Firestoreからの選手データ取得エラー (${playerId}): クォータエラー - 最大リトライ回数に達しました`);
+                        return null;
+                    }
+                } else {
+                    // その他のエラー
+                    console.error(`❌ Firestoreからの選手データ取得エラー (${playerId}):`, error.message);
+                    return null;
+                }
             }
-        } catch (error) {
-            console.error(`❌ Firestoreからの選手データ取得エラー (${playerId}):`, error.message);
-            return null;
         }
+
+        return null;
     }
     async searchPlayers(query, filters) { return this.comprehensiveSearch(query, filters); }
     async getDatabaseStatus() { return this.getComprehensiveStatus(); }

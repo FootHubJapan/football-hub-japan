@@ -39,9 +39,14 @@ async function checkProcessedFixture(fixtureId) {
         return { isProcessed: false, isStale: false };
     }
 
-    try {
-        const docRef = firestoreDb.collection('sync_processed_fixtures').doc(String(fixtureId));
-        const doc = await docRef.get();
+    const maxRetries = 3;
+    let retryCount = 0;
+    const baseDelay = 1000;
+
+    while (retryCount < maxRetries) {
+        try {
+            const docRef = firestoreDb.collection('sync_processed_fixtures').doc(String(fixtureId));
+            const doc = await docRef.get();
 
         if (!doc.exists) {
             return { isProcessed: false, isStale: false };
@@ -53,24 +58,41 @@ async function checkProcessedFixture(fixtureId) {
         const now = new Date();
         const hoursSinceUpdate = (now - updatedAt) / (1000 * 60 * 60);
 
-        // 処理完了済み
-        if (status === 'done') {
-            return { isProcessed: true, isStale: false };
+            // 処理完了済み
+            if (status === 'done') {
+                return { isProcessed: true, isStale: false };
+            }
+
+            // 処理中で一定時間以上経過している場合はstaleとして再処理
+            if (status === 'processing' && hoursSinceUpdate > 2) {
+                console.log(`⚠️ Fixture ${fixtureId} がstale状態です（${hoursSinceUpdate.toFixed(1)}時間経過）。再処理します。`);
+                return { isProcessed: false, isStale: true };
+            }
+
+            // 処理中
+            return { isProcessed: false, isStale: false };
+
+        } catch (error) {
+            // クォータエラーの場合
+            if (error.code === 8 || error.message.includes('Quota exceeded')) {
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    const delay = baseDelay * Math.pow(2, retryCount);
+                    console.warn(`⚠️ 処理済みfixtureチェック クォータエラー (${fixtureId}), ${delay/1000}秒待機してリトライ ${retryCount}/${maxRetries}...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    continue;
+                } else {
+                    console.error(`❌ 処理済みfixtureチェックエラー (${fixtureId}): クォータエラー - 最大リトライ回数に達しました`);
+                    return { isProcessed: false, isStale: false };
+                }
+            } else {
+                console.error(`❌ 処理済みfixtureチェックエラー (${fixtureId}):`, error.message);
+                return { isProcessed: false, isStale: false };
+            }
         }
-
-        // 処理中で一定時間以上経過している場合はstaleとして再処理
-        if (status === 'processing' && hoursSinceUpdate > 2) {
-            console.log(`⚠️ Fixture ${fixtureId} がstale状態です（${hoursSinceUpdate.toFixed(1)}時間経過）。再処理します。`);
-            return { isProcessed: false, isStale: true };
-        }
-
-        // 処理中
-        return { isProcessed: false, isStale: false };
-
-    } catch (error) {
-        console.error(`❌ 処理済みfixtureチェックエラー (${fixtureId}):`, error.message);
-        return { isProcessed: false, isStale: false };
     }
+
+    return { isProcessed: false, isStale: false };
 }
 
 /**
@@ -84,27 +106,49 @@ async function markProcessedFixture(fixtureId, status, errorMessage = null) {
         return; // Firestoreが使えない場合はスキップ
     }
 
-    try {
-        const docRef = firestoreDb.collection('sync_processed_fixtures').doc(String(fixtureId));
-        const admin = require('firebase-admin');
-        const updateData = {
-            status: status,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            retryCount: admin.firestore.FieldValue.increment(1)
-        };
+    const maxRetries = 3;
+    let retryCount = 0;
+    const baseDelay = 1000;
 
-        if (status === 'done') {
-            updateData.finishedAt = admin.firestore.FieldValue.serverTimestamp();
+    while (retryCount < maxRetries) {
+        try {
+            const docRef = firestoreDb.collection('sync_processed_fixtures').doc(String(fixtureId));
+            const admin = require('firebase-admin');
+            const updateData = {
+                status: status,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                retryCount: admin.firestore.FieldValue.increment(1)
+            };
+
+            if (status === 'done') {
+                updateData.finishedAt = admin.firestore.FieldValue.serverTimestamp();
+            }
+
+            if (errorMessage) {
+                updateData.lastError = errorMessage;
+            }
+
+            await docRef.set(updateData, { merge: true });
+            return; // 成功したら終了
+
+        } catch (error) {
+            // クォータエラーの場合
+            if (error.code === 8 || error.message.includes('Quota exceeded')) {
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    const delay = baseDelay * Math.pow(2, retryCount);
+                    console.warn(`⚠️ 処理済みfixtureマーク クォータエラー (${fixtureId}), ${delay/1000}秒待機してリトライ ${retryCount}/${maxRetries}...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    continue;
+                } else {
+                    console.error(`❌ 処理済みfixtureマークエラー (${fixtureId}): クォータエラー - 最大リトライ回数に達しました`);
+                    return;
+                }
+            } else {
+                console.error(`❌ 処理済みfixtureマークエラー (${fixtureId}):`, error.message);
+                return;
+            }
         }
-
-        if (errorMessage) {
-            updateData.lastError = errorMessage;
-        }
-
-        await docRef.set(updateData, { merge: true });
-
-    } catch (error) {
-        console.error(`❌ 処理済みfixtureマークエラー (${fixtureId}):`, error.message);
     }
 }
 
@@ -233,7 +277,8 @@ async function checkAndUpdateFinishedMatches() {
                         totalUpdated++;
                         
                         // APIレート制限対策（Pro Plan: 300 r/m）
-                        await new Promise(resolve => setTimeout(resolve, 200));
+                        // Firestoreクォータ対策: リクエスト間に待機時間を追加
+                        await new Promise(resolve => setTimeout(resolve, 500));
                     } catch (matchError) {
                         console.error(`❌ 試合 ${fixtureId} の処理エラー:`, matchError.message);
                         // エラーをマーク（次回Cronで再処理可能）
