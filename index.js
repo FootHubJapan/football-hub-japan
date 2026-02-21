@@ -345,12 +345,12 @@ app.use((req, res, next) => {
 
 // Routes - 静的ファイルより前に定義（優先度を高くする）
 app.get('/', (req, res) => {
-    // トップページをダッシュボードに変更
-    const dashboardPath = path.join(__dirname, 'public', 'dashboard.html');
-    console.log('[ROUTE /] Serving dashboard.html from:', dashboardPath);
-    res.sendFile(dashboardPath, (err) => {
+    // デバッグ: 実際に配信しているファイルを確認
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+    console.log('[ROUTE /] Serving index.html from:', indexPath);
+    res.sendFile(indexPath, (err) => {
         if (err) {
-            console.error('[ROUTE /] Error serving dashboard.html:', err);
+            console.error('[ROUTE /] Error serving index.html:', err);
             res.status(500).send('Error loading page');
         }
     });
@@ -386,9 +386,9 @@ app.get('/ads.txt', (req, res) => {
 });
 
 // 静的ファイルの配信（ルートハンドラーの後に設定）
-// dashboard.htmlは明示的にルートハンドラーで配信するため、express.staticのindexオプションをfalseに設定
+// index.htmlは明示的にルートハンドラーで配信するため、express.staticのindexオプションをfalseに設定
 app.use(express.static('public', {
-    index: false, // dashboard.htmlの自動配信を無効化（ルートハンドラーで明示的に配信）
+    index: false, // index.htmlの自動配信を無効化（ルートハンドラーで明示的に配信）
     maxAge: '1y', // 静的ファイルのキャッシュ期間を1年に設定
     setHeaders: (res, filePath) => {
         if (filePath.endsWith('.html')) {
