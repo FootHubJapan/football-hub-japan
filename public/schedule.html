@@ -5487,11 +5487,33 @@
         });
 
         // 試合データを読み込む
+        // 実行中フラグとデバウンス用のタイマー
+        let loadMatchesRunning = false;
+        let loadMatchesTimer = null;
+        
         async function loadMatches() {
+            // デバウンス処理: 500ms以内の連続呼び出しを防ぐ
+            if (loadMatchesTimer) {
+                console.log('⏸️ loadMatches呼び出しをスキップ（デバウンス中）');
+                return;
+            }
+            
+            // 既に実行中の場合はスキップ
+            if (loadMatchesRunning) {
+                console.log('⏸️ loadMatchesは既に実行中です。スキップします。');
+                return;
+            }
+            
+            loadMatchesRunning = true;
+            loadMatchesTimer = setTimeout(() => {
+                loadMatchesTimer = null;
+            }, 500);
+            
             console.log('🚀 ========== loadMatches function called ==========');
             console.log('🚀 タイムスタンプ:', new Date().toISOString());
             
-            // 要素の存在確認
+            try {
+                // 要素の存在確認
             const leagueSelect = document.getElementById('leagueSelect');
             const timeRangeSelect = document.getElementById('timeRangeSelect');
             const seasonSelect = document.getElementById('seasonSelect');
@@ -5683,10 +5705,8 @@
                                         data: bgData
                                     }));
                                     console.log('✅ バックグラウンドで最新データを取得し、キャッシュを更新しました');
-                                    // 必要に応じて画面を更新（今日のデータのみ）
-                                    if (timeRange === 'today' || timeRange === 'tomorrow' || timeRange === 'week') {
-                                        loadMatches();
-                                    }
+                                    // バックグラウンド更新後の再呼び出しを削除（無限ループ防止）
+                                    // ユーザーが手動で更新するか、次回のloadMatches呼び出し時に最新データが使用される
                                 }
                             }).catch(err => {
                                 console.warn('バックグラウンド更新エラー（無視）:', err);
@@ -6235,6 +6255,9 @@
                     </div>
                 `;
                 }
+            } finally {
+                // 実行中フラグをリセット
+                loadMatchesRunning = false;
             }
         }
         
