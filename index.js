@@ -9809,39 +9809,79 @@ app.get('/api/integrated/players', async (req, res) => {
     try {
         const { query, limit = 10000, japanese = false, majorClubsOnly = false } = req.query;
         
-        // 統合された選手データを読み込み
-        const fs = require('fs');
-        const playersFile = path.join(__dirname, 'data', 'players.json');
-        
+        // STORAGE_MODEに応じてデータソースを選択
+        const storageMode = process.env.STORAGE_MODE || 'file';
         let players = [];
-        if (fs.existsSync(playersFile)) {
+        
+        // Firestoreモードの場合、DatabaseManagerから読み込む
+        if (storageMode === 'firestore' && apiService && apiService.dbManager) {
             try {
-                // メモリ効率を向上させるため、ファイルサイズをチェック
-                const stats = await fs.promises.stat(playersFile);
-                const fileSizeMB = stats.size / (1024 * 1024);
-                
-                // 大きなファイルの場合はストリーミング処理を検討
-                if (fileSizeMB > 50) {
-                    console.log(`⚠️ 大きなファイルを読み込み中: ${fileSizeMB.toFixed(2)}MB`);
+                console.log('🔄 Firestoreモード: DatabaseManagerから選手データを取得中...');
+                players = await apiService.dbManager.loadComprehensivePlayers(parseInt(limit));
+                console.log(`✅ Firestoreから${players.length}名の選手データを取得しました`);
+            } catch (firestoreError) {
+                console.error('❌ Firestoreからの選手データ取得エラー:', firestoreError);
+                console.log('⚠️ ファイルモードにフォールバックします');
+                // フォールバック: ファイルから読み込む
+                const fs = require('fs');
+                const playersFile = path.join(__dirname, 'data', 'players.json');
+                if (fs.existsSync(playersFile)) {
+                    try {
+                        const data = await fs.promises.readFile(playersFile, 'utf8');
+                        const parsed = JSON.parse(data);
+                        players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+                    } catch (readError) {
+                        console.error('❌ players.json読み込みエラー:', readError.message);
+                        players = [];
+                    }
                 }
-                
-                const data = await fs.promises.readFile(playersFile, 'utf8');
-                const parsed = JSON.parse(data);
-                // 配列形式またはオブジェクト形式に対応
-                players = Array.isArray(parsed) ? parsed : (parsed.players || []);
-                
-                // メモリを解放するため、不要なデータを削除
-                if (parsed && !Array.isArray(parsed)) {
-                    delete parsed.players;
-                }
-            } catch (readError) {
-                console.error('❌ players.json読み込みエラー:', readError.message);
-                // エラー時は空配列を返す
-                players = [];
             }
+        } else {
+            // ファイルモード: 従来通りファイルから読み込む
+            const fs = require('fs');
+            const playersFile = path.join(__dirname, 'data', 'players.json');
             
-            // 主要クラブの選手のみを返す場合
-            if (majorClubsOnly === 'true') {
+            if (fs.existsSync(playersFile)) {
+                try {
+                    // メモリ効率を向上させるため、ファイルサイズをチェック
+                    const stats = await fs.promises.stat(playersFile);
+                    const fileSizeMB = stats.size / (1024 * 1024);
+                    
+                    // 大きなファイルの場合はストリーミング処理を検討
+                    if (fileSizeMB > 50) {
+                        console.log(`⚠️ 大きなファイルを読み込み中: ${fileSizeMB.toFixed(2)}MB`);
+                    }
+                    
+                    const data = await fs.promises.readFile(playersFile, 'utf8');
+                    const parsed = JSON.parse(data);
+                    // 配列形式またはオブジェクト形式に対応
+                    players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+                    
+                    // メモリを解放するため、不要なデータを削除
+                    if (parsed && !Array.isArray(parsed)) {
+                        delete parsed.players;
+                    }
+                } catch (readError) {
+                    console.error('❌ players.json読み込みエラー:', readError.message);
+                    // エラー時は空配列を返す
+                    players = [];
+                }
+            }
+        }
+        
+        // データが空の場合、DatabaseManagerからも試す（フォールバック）
+        if (players.length === 0 && apiService && apiService.dbManager) {
+            try {
+                console.log('🔄 データが空のため、DatabaseManagerから選手データを取得中...');
+                players = await apiService.dbManager.loadComprehensivePlayers(parseInt(limit));
+                console.log(`✅ DatabaseManagerから${players.length}名の選手データを取得しました`);
+            } catch (dbError) {
+                console.error('❌ DatabaseManagerからの選手データ取得エラー:', dbError);
+            }
+        }
+        
+        // 主要クラブの選手のみを返す場合
+        if (majorClubsOnly === 'true') {
                 const majorTeamIds = Object.values(MAJOR_CLUBS);
                 players = players.filter(p => {
                     const teamId = p.teamId || p.team?.id || p.currentTeamId;
@@ -9865,15 +9905,15 @@ app.get('/api/integrated/players', async (req, res) => {
                            teamName.includes('juventus') ||
                            teamName.includes('napoli');
                 });
-            }
-            
-            // 重複を排除（ID、apiFootballId、playerId、名前+チームで判定）
-            const seenIds = new Set();
-            const seenApiIds = new Set();
-            const seenPlayerIds = new Set();
-            const seenNameTeam = new Set();
-            
-            players = players.filter(player => {
+        }
+        
+        // 重複を排除（ID、apiFootballId、playerId、名前+チームで判定）
+        const seenIds = new Set();
+        const seenApiIds = new Set();
+        const seenPlayerIds = new Set();
+        const seenNameTeam = new Set();
+        
+        players = players.filter(player => {
                 if (!player) return false;
                 
                 // IDで判定
@@ -9916,10 +9956,9 @@ app.get('/api/integrated/players', async (req, res) => {
                 }
                 
                 return true;
-            });
-            
-            console.log(`📊 重複排除後: ${players.length}名の選手データ`);
-        }
+        });
+        
+        console.log(`📊 重複排除後: ${players.length}名の選手データ`);
         
         // 検索処理
         if (query) {
