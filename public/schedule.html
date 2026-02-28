@@ -6383,18 +6383,36 @@
             }
 
             const matchesHtml = matches.map(match => {
-                const matchDate = new Date(match.date);
-                // 日本時間（JST）で表示
-                const timeString = matchDate.toLocaleTimeString('ja-JP', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    timeZone: 'Asia/Tokyo'
-                });
-                const dateString = matchDate.toLocaleDateString('ja-JP', { 
-                    month: 'short', 
-                    day: 'numeric',
-                    timeZone: 'Asia/Tokyo'
-                });
+                // 日時の取得（複数のフィールドをチェック）
+                let matchDate = null;
+                if (match.date) {
+                    matchDate = new Date(match.date);
+                } else if (match.utcDate) {
+                    matchDate = new Date(match.utcDate);
+                } else if (match.fixture?.date) {
+                    matchDate = new Date(match.fixture.date);
+                } else if (match.matchDate) {
+                    matchDate = new Date(match.matchDate);
+                }
+                
+                // 日時文字列の生成
+                let timeString = '';
+                let dateString = '';
+                if (matchDate && !isNaN(matchDate.getTime())) {
+                    timeString = matchDate.toLocaleTimeString('ja-JP', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        timeZone: 'Asia/Tokyo'
+                    });
+                    dateString = matchDate.toLocaleDateString('ja-JP', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        timeZone: 'Asia/Tokyo'
+                    });
+                } else {
+                    timeString = '時間未定';
+                    dateString = '日付未定';
+                }
 
                 // スコアの表示を元のnull表示に戻す
                 const homeScore = match.homeScore;
@@ -6422,6 +6440,16 @@
                     scoreDisplay = `<span class="text-gray-400">null</span>`;
                 }
                 
+                // チームIDの取得（より包括的に）
+                const homeTeamName = typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name || match.home?.name || match.teams?.home?.name || 'Unknown';
+                const awayTeamName = typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name || match.away?.name || match.teams?.away?.name || 'Unknown';
+                
+                // チームIDの取得（複数のフィールドをチェック）
+                let homeTeamId = match.homeTeam?.id || match.home?.id || match.teams?.home?.id || match.homeTeamId || 
+                                 match.fixture?.teams?.home?.id || match.teams?.home?.team?.id || null;
+                let awayTeamId = match.awayTeam?.id || match.away?.id || match.teams?.away?.id || match.awayTeamId || 
+                                 match.fixture?.teams?.away?.id || match.teams?.away?.team?.id || null;
+                
                 const matchHtml = `
                         <div class="match-card">
                             <div class="match-header">
@@ -6431,17 +6459,12 @@
                             
                             <div class="match-teams">
                                 <div class="team">
-                                    ${(() => {
-                                        const homeTeamName = typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name || match.home?.name || match.teams?.home?.name || 'Unknown';
-                                        const homeTeamId = match.homeTeam?.id || match.home?.id || match.teams?.home?.id || match.homeTeamId || null;
-                                        if (homeTeamId) {
-                                            return `<img src="https://media.api-sports.io/football/teams/${homeTeamId}.png" alt="${homeTeamName}" class="team-logo-img" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                <div class="team-logo-fallback" style="display: none; font-size: 1.5rem;">${homeTeamName.charAt(0) || '🏟️'}</div>`;
-                                        } else {
-                                            return `<div class="team-logo">${homeTeamName.charAt(0) || '🏟️'}</div>`;
-                                        }
-                                    })()}
-                                    <div class="team-name">${typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name || match.home?.name || match.teams?.home?.name || 'Unknown'}</div>
+                                    ${homeTeamId ? 
+                                        `<img src="https://media.api-sports.io/football/teams/${homeTeamId}.png" alt="${homeTeamName}" class="team-logo-img" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="team-logo-fallback" style="display: none; font-size: 1.5rem; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(51, 255, 255, 0.1); border-radius: 0.5rem;">${homeTeamName.charAt(0) || '🏟️'}</div>` :
+                                        `<div class="team-logo" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background: rgba(51, 255, 255, 0.1); border-radius: 0.5rem; font-size: 1.5rem;">${homeTeamName.charAt(0) || '🏟️'}</div>`
+                                    }
+                                    <div class="team-name">${homeTeamName}</div>
                                 </div>
                                 
                                 <div class="match-score">
@@ -6449,22 +6472,17 @@
                                 </div>
                                 
                                 <div class="team">
-                                    ${(() => {
-                                        const awayTeamName = typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name || match.away?.name || match.teams?.away?.name || 'Unknown';
-                                        const awayTeamId = match.awayTeam?.id || match.away?.id || match.teams?.away?.id || match.awayTeamId || null;
-                                        if (awayTeamId) {
-                                            return `<img src="https://media.api-sports.io/football/teams/${awayTeamId}.png" alt="${awayTeamName}" class="team-logo-img" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                <div class="team-logo-fallback" style="display: none; font-size: 1.5rem;">${awayTeamName.charAt(0) || '🏟️'}</div>`;
-                                        } else {
-                                            return `<div class="team-logo">${awayTeamName.charAt(0) || '🏟️'}</div>`;
-                                        }
-                                    })()}
-                                    <div class="team-name">${typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name || match.away?.name || match.teams?.away?.name || 'Unknown'}</div>
+                                    ${awayTeamId ? 
+                                        `<img src="https://media.api-sports.io/football/teams/${awayTeamId}.png" alt="${awayTeamName}" class="team-logo-img" loading="lazy" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="team-logo-fallback" style="display: none; font-size: 1.5rem; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(51, 255, 255, 0.1); border-radius: 0.5rem;">${awayTeamName.charAt(0) || '🏟️'}</div>` :
+                                        `<div class="team-logo" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background: rgba(51, 255, 255, 0.1); border-radius: 0.5rem; font-size: 1.5rem;">${awayTeamName.charAt(0) || '🏟️'}</div>`
+                                    }
+                                    <div class="team-name">${awayTeamName}</div>
                                 </div>
                             </div>
                             
                             <div class="match-venue">${match.venue || '会場未定'}</div>
-                            <div class="match-time">${dateString} ${timeString}</div>
+                            <div class="match-time">📅 ${dateString} 🕐 ${timeString}</div>
                         </div>
                     `;
 
