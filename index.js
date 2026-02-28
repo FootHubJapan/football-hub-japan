@@ -6045,12 +6045,24 @@ async function getMatchesFromAPIFootball(league, timeRange, season = null) {
                             league: league,
                             homeTeam: fixture.teams.home.name,
                             awayTeam: fixture.teams.away.name,
+                            homeTeamId: fixture.teams.home.id,
+                            awayTeamId: fixture.teams.away.id,
                             homeScore: fixture.goals.home,
                             awayScore: fixture.goals.away,
                             date: fixture.fixture.date,
                             venue: fixture.fixture.venue?.name || 'Unknown',
                             status: fixture.fixture.status.short,
-                            statusLong: fixture.fixture.status.long
+                            statusLong: fixture.fixture.status.long,
+                            teams: {
+                                home: {
+                                    id: fixture.teams.home.id,
+                                    name: fixture.teams.home.name
+                                },
+                                away: {
+                                    id: fixture.teams.away.id,
+                                    name: fixture.teams.away.name
+                                }
+                            }
                         });
                     });
                 }
@@ -6078,12 +6090,24 @@ async function getMatchesFromAPIFootball(league, timeRange, season = null) {
                                         league: leagueCode,
                                         homeTeam: fixture.teams.home.name,
                                         awayTeam: fixture.teams.away.name,
+                                        homeTeamId: fixture.teams.home.id,
+                                        awayTeamId: fixture.teams.away.id,
                                         homeScore: fixture.goals.home,
                                         awayScore: fixture.goals.away,
                                         date: fixture.fixture.date,
                                         venue: fixture.fixture.venue?.name || 'Unknown',
                                         status: fixture.fixture.status.short,
-                                        statusLong: fixture.fixture.status.long
+                                        statusLong: fixture.fixture.status.long,
+                                        teams: {
+                                            home: {
+                                                id: fixture.teams.home.id,
+                                                name: fixture.teams.home.name
+                                            },
+                                            away: {
+                                                id: fixture.teams.away.id,
+                                                name: fixture.teams.away.name
+                                            }
+                                        }
                                     });
                                 });
                             }
@@ -6204,12 +6228,24 @@ async function getMatchesFromFootballData(league, timeRange, season = null) {
                             league: league,
                             homeTeam: match.homeTeam.name,
                             awayTeam: match.awayTeam.name,
+                            homeTeamId: match.homeTeam.id,
+                            awayTeamId: match.awayTeam.id,
                             homeScore: match.score.fullTime.home,
                             awayScore: match.score.fullTime.away,
                             date: match.utcDate,
                             venue: match.venue || 'Unknown',
                             status: match.status,
-                            statusLong: match.status
+                            statusLong: match.status,
+                            teams: {
+                                home: {
+                                    id: match.homeTeam.id,
+                                    name: match.homeTeam.name
+                                },
+                                away: {
+                                    id: match.awayTeam.id,
+                                    name: match.awayTeam.name
+                                }
+                            }
                         });
                     });
                 }
@@ -6235,12 +6271,24 @@ async function getMatchesFromFootballData(league, timeRange, season = null) {
                                     league: leagueCode,
                                     homeTeam: match.homeTeam.name,
                                     awayTeam: match.awayTeam.name,
+                                    homeTeamId: match.homeTeam.id,
+                                    awayTeamId: match.awayTeam.id,
                                     homeScore: match.score.fullTime.home,
                                     awayScore: match.score.fullTime.away,
                                     date: match.utcDate,
                                     venue: match.venue || 'Unknown',
                                     status: match.status,
-                                    statusLong: match.status
+                                    statusLong: match.status,
+                                    teams: {
+                                        home: {
+                                            id: match.homeTeam.id,
+                                            name: match.homeTeam.name
+                                        },
+                                        away: {
+                                            id: match.awayTeam.id,
+                                            name: match.awayTeam.name
+                                        }
+                                    }
                                 });
                             });
                         }
