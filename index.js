@@ -5674,32 +5674,34 @@ app.get('/api/match-details/:matchId', async (req, res) => {
 
 // 試合スケジュールAPI（安全化版）
 app.get('/api/schedule', async (req, res) => {
-    const { season } = req.query;
+    const { season, timeRange = 'week' } = req.query;
     const qLeague = (req.query.league ?? '').trim();
     const qStatus = (req.query.status ?? '').trim();
 
-    // リーグ安全マッピング（空＝全リーグ）
+    // リーグ安全マッピング（UI短縮コード→API-Football用コード）
     const leagueMap = {
         // UI短縮コード
-        PL: 'premierLeague',
-        PD: 'laLiga',
-        SA: 'serieA',
-        BL1: 'bundesliga',
-        FL1: 'ligue1',
-        CL: 'championsLeague',
-        EL: 'europaLeague',
-        ECL: 'conferenceLeague',
-        // 直接名指定も許容
-        premierLeague: 'premierLeague',
-        laLiga: 'laLiga',
-        serieA: 'serieA',
-        bundesliga: 'bundesliga',
-        ligue1: 'ligue1',
-        championsLeague: 'championsLeague',
-        europaLeague: 'europaLeague',
-        conferenceLeague: 'conferenceLeague',
+        PL: 'PL',
+        PD: 'PD',
+        SA: 'SA',
+        BL1: 'BL1',
+        FL1: 'FL1',
+        CL: 'CL',
+        EL: 'EL',
+        ECL: 'ECL',
+        J1: 'J1',
+        // 新しいAPI形式から旧形式へのマッピング
+        premierLeague: 'PL',
+        laLiga: 'PD',
+        serieA: 'SA',
+        bundesliga: 'BL1',
+        ligue1: 'FL1',
+        championsLeague: 'CL',
+        europaLeague: 'EL',
+        conferenceLeague: 'ECL',
+        j1: 'J1',
     };
-    const league = qLeague ? (leagueMap[qLeague] || leagueMap[qLeague.toString()]) : null;
+    const league = qLeague ? (leagueMap[qLeague] || leagueMap[qLeague.toString()] || null) : null;
 
     // ステータス安全マッピング（日本語→内部コード／未指定はnull）
     const statusMap = {
@@ -5724,10 +5726,10 @@ app.get('/api/schedule', async (req, res) => {
     const normStatusKey = qStatus.toString();
     const status = statusMap.hasOwnProperty(normStatusKey) ? statusMap[normStatusKey] : null;
 
-    console.log(`📅 Schedule API called: league=${league || 'all'}, season=${season || '2025'}, status=${status || 'all'}`);
+    console.log(`📅 Schedule API called: league=${league || 'all'}, season=${season || '2025'}, status=${status || 'all'}, timeRange=${timeRange}`);
 
     try {
-        let result;
+        let items = [];
         
         // シーズンの正規化（2024/25形式を2024に変換）
         let normalizedSeason = season || '2025';
@@ -5746,86 +5748,32 @@ app.get('/api/schedule', async (req, res) => {
         
         console.log(`📅 Season info: requested=${normalizedSeason}, current=${currentSeason}, isPast=${isPastSeason}`);
         
-        if (league === null) {
-            // 全リーグのデータを取得
-            const leagueKeys = ['premierLeague', 'laLiga', 'serieA', 'bundesliga', 'ligue1', 'championsLeague', 'europaLeague'];
-            console.log(`🔍 Fetching data for leagues: ${leagueKeys.join(', ')}, season=${normalizedSeason}`);
+        // Firebase導入前の方法: 直接API-Footballから取得
+        try {
+            console.log('🔄 API-Footballから試合データを取得中...');
+            items = await getMatchesFromAPIFootball(league, timeRange);
+            console.log(`✅ API-Footballから${items.length}件の試合データを取得しました`);
             
-            const allMatches = await Promise.all(
-                leagueKeys.map(async k => {
-                    try {
-                        const matches = await unifiedMatchService.getUnifiedMatches(k, normalizedSeason);
-                        console.log(`📊 ${k}: ${matches?.length || 0} matches`);
-                        return matches || [];
-                    } catch (error) {
-                        console.error(`❌ Error fetching ${k} for season ${normalizedSeason}:`, error.message);
-                        return [];
-                    }
-                })
-            );
-            result = { items: allMatches.flat() };
-            console.log(`📊 Total matches from all leagues: ${result.items.length}`);
-        } else {
-            // 特定リーグのデータを取得
-            console.log(`🔍 Fetching data for league: ${league}, season=${normalizedSeason}`);
-            try {
-                const matches = await unifiedMatchService.getUnifiedMatches(league, normalizedSeason);
-                console.log(`📊 ${league}: ${matches?.length || 0} matches`);
-                result = { items: matches || [] };
-            } catch (error) {
-                console.error(`❌ Error fetching ${league} for season ${normalizedSeason}:`, error.message);
-                result = { items: [] };
+            // API-Footballからデータが取得できなかった場合は、Football-data.orgを試す
+            if (items.length === 0 && process.env.FOOTBALL_DATA_API_KEY) {
+                console.log('⚠️ API-Footballからデータが取得できませんでした。Football-data.orgを試します...');
+                const footballDataMatches = await getMatchesFromFootballData(league, timeRange);
+                if (footballDataMatches.length > 0) {
+                    items = footballDataMatches;
+                    console.log(`✅ Football-data.orgから${items.length}件の試合データを取得しました`);
+                }
             }
+        } catch (apiError) {
+            console.error('❌ API-Football取得エラー:', apiError.message);
+            // エラーが発生した場合は空配列を返す
+            items = [];
         }
-
-        let items = Array.isArray(result) ? result : (result?.items ?? []);
         
-        // デバッグ: 統合APIから取得した生データをログ出力
+        // デバッグ: APIから取得した生データをログ出力
         if (items.length > 0) {
             console.log('🔍 Raw API data structure:', JSON.stringify(items[0], null, 2));
         } else {
-            console.log('⚠️ No data from unified API, trying to get live data...');
-            // フォールバックデータを無効化して、実際のAPIデータを取得
-            try {
-                // 直接API-Footballからデータを取得
-                const axios = require('axios');
-                const apiFootballKey = process.env.API_FOOTBALL_KEY;
-                
-                if (apiFootballKey) {
-                    console.log('🔍 Trying direct API-Football call...');
-                    const response = await axios.get('https://api-football-v1.p.rapidapi.com/v3/fixtures', {
-                        headers: {
-                            'X-RapidAPI-Key': apiFootballKey,
-                            'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com'
-                        },
-                        params: {
-                            season: season || '2025',
-                            league: league === 'premierLeague' ? 39 : 
-                                   league === 'laLiga' ? 140 :
-                                   league === 'serieA' ? 135 :
-                                   league === 'bundesliga' ? 78 :
-                                   league === 'ligue1' ? 61 : null
-                        }
-                    });
-                    
-                    if (response.data && response.data.response) {
-                        items = response.data.response.map(fixture => ({
-                            id: fixture.fixture.id,
-                            homeTeam: fixture.teams.home.name,
-                            awayTeam: fixture.teams.away.name,
-                            date: fixture.fixture.date,
-                            venue: fixture.fixture.venue.name,
-                            homeScore: fixture.goals.home,
-                            awayScore: fixture.goals.away,
-                            status: fixture.fixture.status.short,
-                            leagueName: fixture.league.name
-                        }));
-                        console.log(`📊 Direct API-Football data: ${items.length} matches`);
-                    }
-                }
-            } catch (err) {
-                console.warn('⚠️ Direct API call failed:', err.message);
-            }
+            console.log('⚠️ No data from API');
         }
         
         // ステータスフィルタリング
