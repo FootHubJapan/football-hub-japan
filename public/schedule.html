@@ -5721,32 +5721,32 @@
                         console.error('❌ Inner fetch error:', innerFetchError);
                         throw innerFetchError;
                     }
-                    
-                    console.log('📊 統合データ解析成功:', {
-                        hasItems: !!data.items,
-                        itemsLength: data.items?.length || 0,
-                        hasMatches: !!data.matches,
-                        matchesLength: data.matches?.length || 0,
-                        source: data.source || data.meta?.source,
-                        metaSource: data.meta?.source,
-                        keys: Object.keys(data),
-                        metaKeys: data.meta ? Object.keys(data.meta) : []
-                    });
-                    
-                    // 新しいAPI形式に合わせてデータを変換
-                    if (data.items && !data.matches) {
-                        data.matches = data.items;
-                        console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
-                    }
-                    
-                    // meta.sourceをsourceにコピー（後方互換性のため）
-                    if (data.meta && data.meta.source && !data.source) {
-                        data.source = data.meta.source;
-                        console.log('📊 data.meta.sourceをdata.sourceにコピー:', data.source);
-                    }
                 } catch (fetchError) {
                     console.error('❌ Fetch error:', fetchError);
                     throw fetchError;
+                }
+                
+                console.log('📊 統合データ解析成功:', {
+                    hasItems: !!data.items,
+                    itemsLength: data.items?.length || 0,
+                    hasMatches: !!data.matches,
+                    matchesLength: data.matches?.length || 0,
+                    source: data.source || data.meta?.source,
+                    metaSource: data.meta?.source,
+                    keys: Object.keys(data),
+                    metaKeys: data.meta ? Object.keys(data.meta) : []
+                });
+                
+                // 新しいAPI形式に合わせてデータを変換
+                if (data.items && !data.matches) {
+                    data.matches = data.items;
+                    console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
+                }
+                
+                // meta.sourceをsourceにコピー（後方互換性のため）
+                if (data.meta && data.meta.source && !data.source) {
+                    data.source = data.meta.source;
+                    console.log('📊 data.meta.sourceをdata.sourceにコピー:', data.source);
                 }
                 
             } catch (integratedError) {
