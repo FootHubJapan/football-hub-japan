@@ -5416,7 +5416,13 @@ app.get('/api/fotmob/matches', async (req, res) => {
         } else {
         // API-Footballから実際の試合データを取得
         try {
-            matches = await getMatchesFromAPIFootball(league, timeRange);
+            // シーズンの自動計算
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            const currentMonth = today.getMonth() + 1;
+            const autoSeason = currentMonth >= 8 ? currentYear : currentYear - 1;
+            
+            matches = await getMatchesFromAPIFootball(league, timeRange, autoSeason);
             console.log('API-Football matches count:', matches.length);
                 
                 // 取得したデータをキャッシュに保存
@@ -5448,7 +5454,13 @@ app.get('/api/fotmob/matches', async (req, res) => {
         if (matches.length === 0) {
             try {
                 console.log('Trying Football-data.org as backup...');
-                const footballDataMatches = await getMatchesFromFootballData(league, timeRange);
+                // シーズンの自動計算
+                const today = new Date();
+                const currentYear = today.getFullYear();
+                const currentMonth = today.getMonth() + 1;
+                const autoSeason = currentMonth >= 8 ? currentYear : currentYear - 1;
+                
+                const footballDataMatches = await getMatchesFromFootballData(league, timeRange, autoSeason);
                 if (footballDataMatches.length > 0) {
                     matches = footballDataMatches;
                     console.log('Football-data.org matches count:', matches.length);
@@ -5751,13 +5763,13 @@ app.get('/api/schedule', async (req, res) => {
         // Firebase導入前の方法: 直接API-Footballから取得
         try {
             console.log('🔄 API-Footballから試合データを取得中...');
-            items = await getMatchesFromAPIFootball(league, timeRange);
+            items = await getMatchesFromAPIFootball(league, timeRange, normalizedSeason);
             console.log(`✅ API-Footballから${items.length}件の試合データを取得しました`);
             
             // API-Footballからデータが取得できなかった場合は、Football-data.orgを試す
             if (items.length === 0 && process.env.FOOTBALL_DATA_API_KEY) {
                 console.log('⚠️ API-Footballからデータが取得できませんでした。Football-data.orgを試します...');
-                const footballDataMatches = await getMatchesFromFootballData(league, timeRange);
+                const footballDataMatches = await getMatchesFromFootballData(league, timeRange, normalizedSeason);
                 if (footballDataMatches.length > 0) {
                     items = footballDataMatches;
                     console.log(`✅ Football-data.orgから${items.length}件の試合データを取得しました`);
@@ -5931,7 +5943,7 @@ app.get('/api/schedule', async (req, res) => {
 });
 
 // API-Footballから試合データを取得
-async function getMatchesFromAPIFootball(league, timeRange) {
+async function getMatchesFromAPIFootball(league, timeRange, season = null) {
     const matches = [];
     
     try {
@@ -5951,11 +5963,13 @@ async function getMatchesFromAPIFootball(league, timeRange) {
         const currentYear = today.getFullYear();
         const currentMonth = today.getMonth() + 1; // 0-indexed
         
-        // シーズンの決定（8月以降は新しいシーズン）
-        let season = currentMonth >= 8 ? currentYear : currentYear - 1;
+        // シーズンの決定（パラメータが渡されていない場合は自動計算）
+        if (!season) {
+            season = currentMonth >= 8 ? currentYear : currentYear - 1;
+        }
         
-        // J1リーグの場合は2024-25シーズンを使用
-        if (league === 'J1') {
+        // J1リーグの場合は2024-25シーズンを使用（シーズンが指定されていない場合のみ）
+        if (league === 'J1' && !season) {
             season = 2024;
             console.log(`J1 League: Using season ${season}`);
             
@@ -6098,7 +6112,7 @@ async function getMatchesFromAPIFootball(league, timeRange) {
 }
 
 // Football-data.orgから試合データを取得（バックアップ）
-async function getMatchesFromFootballData(league, timeRange) {
+async function getMatchesFromFootballData(league, timeRange, season = null) {
     const matches = [];
     
     try {
@@ -6121,10 +6135,14 @@ async function getMatchesFromFootballData(league, timeRange) {
         const today = new Date();
         const currentYear = today.getFullYear();
         const currentMonth = today.getMonth() + 1;
-        const season = currentMonth >= 8 ? currentYear : currentYear - 1;
         
-        // J1リーグの場合は2024-25シーズンを使用
-        if (league === 'J1') {
+        // シーズンの決定（パラメータが渡されていない場合は自動計算）
+        if (!season) {
+            season = currentMonth >= 8 ? currentYear : currentYear - 1;
+        }
+        
+        // J1リーグの場合は2024-25シーズンを使用（シーズンが指定されていない場合のみ）
+        if (league === 'J1' && !season) {
             season = 2024;
         }
         
