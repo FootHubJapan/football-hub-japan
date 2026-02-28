@@ -5521,10 +5521,10 @@ app.get('/api/matches/h2h', async (req, res) => {
                 return res.json({
                     success: true,
                     data: {
-                        homeWins: 0,
-                        awayWins: 0,
-                        draws: 0,
-                        matches: []
+                    homeWins: 0,
+                    awayWins: 0,
+                    draws: 0,
+                    matches: []
                     }
                 });
             }
@@ -5581,10 +5581,10 @@ app.get('/api/matches/h2h', async (req, res) => {
             res.json({
                 success: true,
                 data: {
-                    homeWins,
-                    awayWins,
-                    draws,
-                    matches: matches.slice(0, 10)
+                homeWins,
+                awayWins,
+                draws,
+                matches: matches.slice(0, 10)
                 }
             });
             
@@ -5594,10 +5594,10 @@ app.get('/api/matches/h2h', async (req, res) => {
             res.json({
                 success: true,
                 data: {
-                    homeWins: 0,
-                    awayWins: 0,
-                    draws: 0,
-                    matches: []
+                homeWins: 0,
+                awayWins: 0,
+                draws: 0,
+                matches: []
                 }
             });
         }
@@ -7672,12 +7672,12 @@ async function handleMatchDetailsRequest(req, res) {
                         };
                         console.log('✅ Created match details from direct fixture fetch');
                     } else {
-                        console.error('❌ No match data available from API or clicked match');
-                        return res.status(404).json({ 
-                            success: false, 
-                            error: '試合詳細が見つかりませんでした',
-                            matchId 
-                        });
+                console.error('❌ No match data available from API or clicked match');
+                return res.status(404).json({ 
+                    success: false, 
+                    error: '試合詳細が見つかりませんでした',
+                    matchId 
+                });
                     }
                 } catch (directError) {
                     console.error('❌ Direct fixture fetch failed:', directError.message);
@@ -9813,23 +9813,32 @@ app.get('/api/integrated/players', async (req, res) => {
         const storageMode = process.env.STORAGE_MODE || 'file';
         let players = [];
         
-        // Firestoreモードの場合、DatabaseManagerから読み込む
-        if (storageMode === 'firestore' && apiService && apiService.dbManager) {
+        // DatabaseManagerが利用可能な場合は優先的に使用（file/firestore両方に対応）
+        if (apiService && apiService.dbManager) {
             try {
-                console.log('🔄 Firestoreモード: DatabaseManagerから選手データを取得中...');
+                console.log(`🔄 DatabaseManagerから選手データを取得中... (STORAGE_MODE=${storageMode})`);
                 players = await apiService.dbManager.loadComprehensivePlayers(parseInt(limit));
-                console.log(`✅ Firestoreから${players.length}名の選手データを取得しました`);
-            } catch (firestoreError) {
-                console.error('❌ Firestoreからの選手データ取得エラー:', firestoreError);
-                console.log('⚠️ ファイルモードにフォールバックします');
-                // フォールバック: ファイルから読み込む
+                console.log(`✅ DatabaseManagerから${players.length}名の選手データを取得しました`);
+            } catch (dbError) {
+                console.error('❌ DatabaseManagerからの選手データ取得エラー:', dbError);
+                console.log('⚠️ 直接ファイル読み込みにフォールバックします');
+                // フォールバック: 直接ファイルから読み込む
                 const fs = require('fs');
                 const playersFile = path.join(__dirname, 'data', 'players.json');
                 if (fs.existsSync(playersFile)) {
                     try {
+                        const stats = await fs.promises.stat(playersFile);
+                        const fileSizeMB = stats.size / (1024 * 1024);
+                        if (fileSizeMB > 50) {
+                            console.log(`⚠️ 大きなファイルを読み込み中: ${fileSizeMB.toFixed(2)}MB`);
+                        }
                         const data = await fs.promises.readFile(playersFile, 'utf8');
                         const parsed = JSON.parse(data);
                         players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+                        if (parsed && !Array.isArray(parsed)) {
+                            delete parsed.players;
+                        }
+                        console.log(`✅ ファイルから${players.length}名の選手データを読み込みました`);
                     } catch (readError) {
                         console.error('❌ players.json読み込みエラー:', readError.message);
                         players = [];
@@ -9837,128 +9846,110 @@ app.get('/api/integrated/players', async (req, res) => {
                 }
             }
         } else {
-            // ファイルモード: 従来通りファイルから読み込む
+            // DatabaseManagerが利用できない場合: 直接ファイルから読み込む
             const fs = require('fs');
             const playersFile = path.join(__dirname, 'data', 'players.json');
             
             if (fs.existsSync(playersFile)) {
                 try {
-                    // メモリ効率を向上させるため、ファイルサイズをチェック
                     const stats = await fs.promises.stat(playersFile);
                     const fileSizeMB = stats.size / (1024 * 1024);
-                    
-                    // 大きなファイルの場合はストリーミング処理を検討
                     if (fileSizeMB > 50) {
                         console.log(`⚠️ 大きなファイルを読み込み中: ${fileSizeMB.toFixed(2)}MB`);
                     }
-                    
                     const data = await fs.promises.readFile(playersFile, 'utf8');
                     const parsed = JSON.parse(data);
-                    // 配列形式またはオブジェクト形式に対応
                     players = Array.isArray(parsed) ? parsed : (parsed.players || []);
-                    
-                    // メモリを解放するため、不要なデータを削除
                     if (parsed && !Array.isArray(parsed)) {
                         delete parsed.players;
                     }
+                    console.log(`✅ ファイルから${players.length}名の選手データを読み込みました`);
                 } catch (readError) {
                     console.error('❌ players.json読み込みエラー:', readError.message);
-                    // エラー時は空配列を返す
                     players = [];
                 }
             }
         }
-        
-        // データが空の場合、DatabaseManagerからも試す（フォールバック）
-        if (players.length === 0 && apiService && apiService.dbManager) {
-            try {
-                console.log('🔄 データが空のため、DatabaseManagerから選手データを取得中...');
-                players = await apiService.dbManager.loadComprehensivePlayers(parseInt(limit));
-                console.log(`✅ DatabaseManagerから${players.length}名の選手データを取得しました`);
-            } catch (dbError) {
-                console.error('❌ DatabaseManagerからの選手データ取得エラー:', dbError);
+            
+            // 主要クラブの選手のみを返す場合
+            if (majorClubsOnly === 'true') {
+                const majorTeamIds = Object.values(MAJOR_CLUBS);
+                players = players.filter(p => {
+                    const teamId = p.teamId || p.team?.id || p.currentTeamId;
+                    const teamName = (p.currentTeam || p.team || '').toLowerCase();
+                    return majorTeamIds.includes(teamId) || 
+                           teamName.includes('real madrid') ||
+                           teamName.includes('barcelona') ||
+                           teamName.includes('atletico') ||
+                           teamName.includes('arsenal') ||
+                           teamName.includes('chelsea') ||
+                           teamName.includes('liverpool') ||
+                           teamName.includes('manchester city') ||
+                           teamName.includes('manchester united') ||
+                           teamName.includes('tottenham') ||
+                           teamName.includes('bayern') ||
+                           teamName.includes('dortmund') ||
+                           teamName.includes('paris') ||
+                           teamName.includes('psg') ||
+                           teamName.includes('milan') ||
+                           teamName.includes('inter') ||
+                           teamName.includes('juventus') ||
+                           teamName.includes('napoli');
+                });
             }
-        }
-        
-        // 主要クラブの選手のみを返す場合
-        if (majorClubsOnly === 'true') {
-            const majorTeamIds = Object.values(MAJOR_CLUBS);
-            players = players.filter(p => {
-                const teamId = p.teamId || p.team?.id || p.currentTeamId;
-                const teamName = (p.currentTeam || p.team || '').toLowerCase();
-                return majorTeamIds.includes(teamId) || 
-                       teamName.includes('real madrid') ||
-                       teamName.includes('barcelona') ||
-                       teamName.includes('atletico') ||
-                       teamName.includes('arsenal') ||
-                       teamName.includes('chelsea') ||
-                       teamName.includes('liverpool') ||
-                       teamName.includes('manchester city') ||
-                       teamName.includes('manchester united') ||
-                       teamName.includes('tottenham') ||
-                       teamName.includes('bayern') ||
-                       teamName.includes('dortmund') ||
-                       teamName.includes('paris') ||
-                       teamName.includes('psg') ||
-                       teamName.includes('milan') ||
-                       teamName.includes('inter') ||
-                       teamName.includes('juventus') ||
-                       teamName.includes('napoli');
+            
+            // 重複を排除（ID、apiFootballId、playerId、名前+チームで判定）
+            const seenIds = new Set();
+            const seenApiIds = new Set();
+            const seenPlayerIds = new Set();
+            const seenNameTeam = new Set();
+            
+            players = players.filter(player => {
+                if (!player) return false;
+                
+                // IDで判定
+                if (player.id) {
+                    if (seenIds.has(player.id)) {
+                        console.log(`⚠️ 重複選手をスキップ（ID）: ${player.name} (ID: ${player.id})`);
+                        return false;
+                    }
+                    seenIds.add(player.id);
+                }
+                
+                // apiFootballIdで判定
+                if (player.apiFootballId) {
+                    if (seenApiIds.has(player.apiFootballId)) {
+                        console.log(`⚠️ 重複選手をスキップ（apiFootballId）: ${player.name} (apiFootballId: ${player.apiFootballId})`);
+                        return false;
+                    }
+                    seenApiIds.add(player.apiFootballId);
+                }
+                
+                // playerIdで判定
+                if (player.playerId) {
+                    if (seenPlayerIds.has(player.playerId)) {
+                        console.log(`⚠️ 重複選手をスキップ（playerId）: ${player.name} (playerId: ${player.playerId})`);
+                        return false;
+                    }
+                    seenPlayerIds.add(player.playerId);
+                }
+                
+                // 名前+チームで判定（IDがない場合のフォールバック）
+                const name = (player.name || player.fullName || '').toLowerCase().trim();
+                const team = (player.currentTeam || player.team || '').toLowerCase().trim();
+                if (name && team) {
+                    const nameTeamKey = `${name}::${team}`;
+                    if (seenNameTeam.has(nameTeamKey)) {
+                        console.log(`⚠️ 重複選手をスキップ（名前+チーム）: ${player.name} (${player.currentTeam || player.team})`);
+                        return false;
+                    }
+                    seenNameTeam.add(nameTeamKey);
+                }
+                
+                return true;
             });
-        }
-        
-        // 重複を排除（ID、apiFootballId、playerId、名前+チームで判定）
-        const seenIds = new Set();
-        const seenApiIds = new Set();
-        const seenPlayerIds = new Set();
-        const seenNameTeam = new Set();
-        
-        players = players.filter(player => {
-            if (!player) return false;
             
-            // IDで判定
-            if (player.id) {
-                if (seenIds.has(player.id)) {
-                    console.log(`⚠️ 重複選手をスキップ（ID）: ${player.name} (ID: ${player.id})`);
-                    return false;
-                }
-                seenIds.add(player.id);
-            }
-            
-            // apiFootballIdで判定
-            if (player.apiFootballId) {
-                if (seenApiIds.has(player.apiFootballId)) {
-                    console.log(`⚠️ 重複選手をスキップ（apiFootballId）: ${player.name} (apiFootballId: ${player.apiFootballId})`);
-                    return false;
-                }
-                seenApiIds.add(player.apiFootballId);
-            }
-            
-            // playerIdで判定
-            if (player.playerId) {
-                if (seenPlayerIds.has(player.playerId)) {
-                    console.log(`⚠️ 重複選手をスキップ（playerId）: ${player.name} (playerId: ${player.playerId})`);
-                    return false;
-                }
-                seenPlayerIds.add(player.playerId);
-            }
-            
-            // 名前+チームで判定（IDがない場合のフォールバック）
-            const name = (player.name || player.fullName || '').toLowerCase().trim();
-            const team = (player.currentTeam || player.team || '').toLowerCase().trim();
-            if (name && team) {
-                const nameTeamKey = `${name}::${team}`;
-                if (seenNameTeam.has(nameTeamKey)) {
-                    console.log(`⚠️ 重複選手をスキップ（名前+チーム）: ${player.name} (${player.currentTeam || player.team})`);
-                    return false;
-                }
-                seenNameTeam.add(nameTeamKey);
-            }
-            
-            return true;
-        });
-        
-        console.log(`📊 重複排除後: ${players.length}名の選手データ`);
+            console.log(`📊 重複排除後: ${players.length}名の選手データ`);
         
         // 検索処理
         if (query) {
