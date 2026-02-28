@@ -5548,11 +5548,12 @@
                 
                 contentDiv.innerHTML = '<div class="loading">試合データを読み込み中...</div>';
 
+                // 統合されたデータを優先的に使用
+                let response;
+                let dataSource = 'integrated';
+                let data = null;
+                
                 try {
-                    // 統合されたデータを優先的に使用
-                    let response;
-                    let dataSource = 'integrated';
-                    let data = null;
                     
                     try {
                     // まず統合データを試す
