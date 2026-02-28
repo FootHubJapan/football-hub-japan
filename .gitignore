@@ -123,5 +123,8 @@ ui-debug.log
 *.bak
 
 # Data files (large JSON files, not committed to git)
-data/
+# data/  # コメントアウト：Renderで使用するためGitに含める
 data/backups/
+# 大きなバックアップファイルは除外
+data/*.backup
+data/*.bak
