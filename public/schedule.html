@@ -4621,7 +4621,7 @@
                         <div style="padding: 0.25rem 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
                             <span style="font-size: 0.75rem; color: var(--primary); font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em;" id="currentMonth">Oct 2023</span>
                             <span style="font-size: 1.125rem; font-weight: bold; color: var(--foreground);" id="currentDate">Today, 24th</span>
-                            <span style="font-size: 0.7rem; color: var(--muted);" id="currentTime"></span>
+                            <span style="font-size: 0.85rem; color: var(--primary); font-weight: 600;" id="currentTime"></span>
                         </div>
                         <button style="padding: 0.5rem; background: none; border: none; color: var(--foreground); cursor: pointer; border-radius: 0.5rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">
                             <span class="material-symbols-outlined">chevron_right</span>
@@ -5117,15 +5117,23 @@
                     minute: '2-digit',
                     timeZone: 'Asia/Tokyo'
                 });
-                timeEl.textContent = timeStr;
+                timeEl.textContent = `🕐 ${timeStr}`;
             }
         }
         
-        // 初回実行
-        updateCurrentDateTime();
-        
-        // 1分ごとに更新
-        setInterval(updateCurrentDateTime, 60000);
+        // DOM読み込み後に実行
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                updateCurrentDateTime();
+                // 1分ごとに更新
+                setInterval(updateCurrentDateTime, 60000);
+            });
+        } else {
+            // 既に読み込み済みの場合
+            updateCurrentDateTime();
+            // 1分ごとに更新
+            setInterval(updateCurrentDateTime, 60000);
+        }
         
         let currentMatches = [];
 
