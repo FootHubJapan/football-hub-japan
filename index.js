@@ -9819,6 +9819,32 @@ app.get('/api/integrated/players', async (req, res) => {
                 console.log(`🔄 DatabaseManagerから選手データを取得中... (STORAGE_MODE=${storageMode})`);
                 players = await apiService.dbManager.loadComprehensivePlayers(parseInt(limit));
                 console.log(`✅ DatabaseManagerから${players.length}名の選手データを取得しました`);
+                
+                // DatabaseManagerが空配列を返した場合もフォールバック
+                if (players.length === 0) {
+                    console.log('⚠️ DatabaseManagerから空配列が返されました。直接ファイル読み込みにフォールバックします');
+                    const fs = require('fs');
+                    const playersFile = path.join(__dirname, 'data', 'players.json');
+                    if (fs.existsSync(playersFile)) {
+                        try {
+                            const stats = await fs.promises.stat(playersFile);
+                            const fileSizeMB = stats.size / (1024 * 1024);
+                            if (fileSizeMB > 50) {
+                                console.log(`⚠️ 大きなファイルを読み込み中: ${fileSizeMB.toFixed(2)}MB`);
+                            }
+                            const data = await fs.promises.readFile(playersFile, 'utf8');
+                            const parsed = JSON.parse(data);
+                            players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+                            if (parsed && !Array.isArray(parsed)) {
+                                delete parsed.players;
+                            }
+                            console.log(`✅ ファイルから${players.length}名の選手データを読み込みました`);
+                        } catch (readError) {
+                            console.error('❌ players.json読み込みエラー:', readError.message);
+                            players = [];
+                        }
+                    }
+                }
             } catch (dbError) {
                 console.error('❌ DatabaseManagerからの選手データ取得エラー:', dbError);
                 console.log('⚠️ 直接ファイル読み込みにフォールバックします');

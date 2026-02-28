@@ -475,10 +475,17 @@ class DatabaseManager {
     /**
      * 包括的な選手データを読み込み
      * STORAGE_MODEに応じてfileまたはfirestoreから読み込み
+     * Firestoreから空配列が返された場合は、ファイルから読み込む（フォールバック）
      */
-    async loadComprehensivePlayers() {
+    async loadComprehensivePlayers(limit = null) {
         if (this.storageMode === 'firestore') {
-            return this.loadComprehensivePlayersFromFirestore();
+            const firestorePlayers = await this.loadComprehensivePlayersFromFirestore(limit);
+            // Firestoreからデータが取得できなかった場合は、ファイルから読み込む
+            if (firestorePlayers.length === 0) {
+                console.log('⚠️ Firestoreからデータが取得できませんでした。ファイルから読み込みます。');
+                return this.loadComprehensivePlayersFromFile();
+            }
+            return firestorePlayers;
         } else {
             return this.loadComprehensivePlayersFromFile();
         }
