@@ -5520,35 +5520,35 @@
                 const searchInput = document.getElementById('searchInput');
                 const statusFilterSelect = document.getElementById('statusFilter');
                 const contentDiv = document.getElementById('scheduleContent');
-            
-            if (!contentDiv) {
-                console.error('❌ scheduleContent element not found!');
-                return;
-            }
-            
-            if (!leagueSelect || !timeRangeSelect || !seasonSelect || !statusFilterSelect) {
-                console.error('❌ Required form elements not found!', {
-                    leagueSelect: !!leagueSelect,
-                    timeRangeSelect: !!timeRangeSelect,
-                    seasonSelect: !!seasonSelect,
-                    statusFilterSelect: !!statusFilterSelect
-                });
-                contentDiv.innerHTML = '<div class="error">フォーム要素が見つかりません。ページをリロードしてください。</div>';
-                return;
-            }
-            
-            const league = leagueSelect.value;
-            const timeRange = timeRangeSelect.value;
-            const season = seasonSelect.value;
-            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-            const statusFilter = statusFilterSelect.value;
-            
-            console.log('🚀 loadMatches called with:', { league, timeRange, season, searchTerm, statusFilter });
-            console.log('🔍 About to call integrated API...');
-            
-            contentDiv.innerHTML = '<div class="loading">試合データを読み込み中...</div>';
+                
+                if (!contentDiv) {
+                    console.error('❌ scheduleContent element not found!');
+                    return;
+                }
+                
+                if (!leagueSelect || !timeRangeSelect || !seasonSelect || !statusFilterSelect) {
+                    console.error('❌ Required form elements not found!', {
+                        leagueSelect: !!leagueSelect,
+                        timeRangeSelect: !!timeRangeSelect,
+                        seasonSelect: !!seasonSelect,
+                        statusFilterSelect: !!statusFilterSelect
+                    });
+                    contentDiv.innerHTML = '<div class="error">フォーム要素が見つかりません。ページをリロードしてください。</div>';
+                    return;
+                }
+                
+                const league = leagueSelect.value;
+                const timeRange = timeRangeSelect.value;
+                const season = seasonSelect.value;
+                const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+                const statusFilter = statusFilterSelect.value;
+                
+                console.log('🚀 loadMatches called with:', { league, timeRange, season, searchTerm, statusFilter });
+                console.log('🔍 About to call integrated API...');
+                
+                contentDiv.innerHTML = '<div class="loading">試合データを読み込み中...</div>';
 
-            try {
+                try {
                 // 統合されたデータを優先的に使用
                 let response;
                 let dataSource = 'integrated';
@@ -5680,69 +5680,75 @@
                             } catch (cacheError) {
                                 console.warn('キャッシュ保存エラー（無視）:', cacheError);
                             }
-                        } catch (parseError) {
-                            console.error('❌ JSON解析エラー:', parseError);
-                            console.error('❌ レスポンステキスト:', responseText.substring(0, 1000));
-                            throw new Error(`JSON解析に失敗しました: ${parseError.message}`);
+                            } catch (parseError) {
+                                console.error('❌ JSON解析エラー:', parseError);
+                                console.error('❌ レスポンステキスト:', responseText.substring(0, 1000));
+                                throw new Error(`JSON解析に失敗しました: ${parseError.message}`);
+                            }
                         }
-                    } else {
-                        // キャッシュデータを使用
-                        // 過去データの場合は更新不要、現在・未来データの場合はバックグラウンド更新
-                        if (!isPastData && !isFinishedStatusOnly) {
-                            console.log('⚡ キャッシュデータを使用中、バックグラウンドで最新データを取得します');
-                            fetch(integratedUrl, {
-                                method: 'GET',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                signal: AbortSignal.timeout(30000)
-                            }).then(async (bgResponse) => {
-                                if (bgResponse.ok) {
-                                    const bgData = await bgResponse.json();
-                                    // キャッシュを更新
-                                    sessionStorage.setItem(cacheKey, JSON.stringify({
-                                        timestamp: Date.now(),
-                                        data: bgData
-                                    }));
-                                    console.log('✅ バックグラウンドで最新データを取得し、キャッシュを更新しました');
-                                    // バックグラウンド更新後の再呼び出しを削除（無限ループ防止）
-                                    // ユーザーが手動で更新するか、次回のloadMatches呼び出し時に最新データが使用される
-                                }
-                            }).catch(err => {
-                                console.warn('バックグラウンド更新エラー（無視）:', err);
-                            });
-                        } else {
-                            console.log('📚 過去データのため、キャッシュのみ使用（バックグラウンド更新なし）');
-                        }
-                        // キャッシュデータを使用して処理を続行
-                        console.log('⚡ キャッシュデータを使用中、APIレスポンスはスキップします');
+                    } catch (innerFetchError) {
+                        console.error('❌ Inner fetch error:', innerFetchError);
+                        throw innerFetchError;
                     }
-                        console.log('📊 統合データ解析成功:', {
-                            hasItems: !!data.items,
-                            itemsLength: data.items?.length || 0,
-                            hasMatches: !!data.matches,
-                            matchesLength: data.matches?.length || 0,
-                            source: data.source || data.meta?.source,
-                            metaSource: data.meta?.source,
-                            keys: Object.keys(data),
-                            metaKeys: data.meta ? Object.keys(data.meta) : []
+                } else {
+                    // キャッシュデータを使用
+                    // 過去データの場合は更新不要、現在・未来データの場合はバックグラウンド更新
+                    if (!isPastData && !isFinishedStatusOnly) {
+                        console.log('⚡ キャッシュデータを使用中、バックグラウンドで最新データを取得します');
+                        fetch(integratedUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            signal: AbortSignal.timeout(30000)
+                        }).then(async (bgResponse) => {
+                            if (bgResponse.ok) {
+                                const bgData = await bgResponse.json();
+                                // キャッシュを更新
+                                sessionStorage.setItem(cacheKey, JSON.stringify({
+                                    timestamp: Date.now(),
+                                    data: bgData
+                                }));
+                                console.log('✅ バックグラウンドで最新データを取得し、キャッシュを更新しました');
+                                // バックグラウンド更新後の再呼び出しを削除（無限ループ防止）
+                                // ユーザーが手動で更新するか、次回のloadMatches呼び出し時に最新データが使用される
+                            }
+                        }).catch(err => {
+                            console.warn('バックグラウンド更新エラー（無視）:', err);
                         });
+                    } else {
+                        console.log('📚 過去データのため、キャッシュのみ使用（バックグラウンド更新なし）');
+                    }
+                    // キャッシュデータを使用して処理を続行
+                    console.log('⚡ キャッシュデータを使用中、APIレスポンスはスキップします');
+                }
+                    
+                    console.log('📊 統合データ解析成功:', {
+                        hasItems: !!data.items,
+                        itemsLength: data.items?.length || 0,
+                        hasMatches: !!data.matches,
+                        matchesLength: data.matches?.length || 0,
+                        source: data.source || data.meta?.source,
+                        metaSource: data.meta?.source,
+                        keys: Object.keys(data),
+                        metaKeys: data.meta ? Object.keys(data.meta) : []
+                    });
                     
                     // 新しいAPI形式に合わせてデータを変換
-                        if (data.items && !data.matches) {
+                    if (data.items && !data.matches) {
                         data.matches = data.items;
-                            console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
-                        }
-                        
-                        // meta.sourceをsourceにコピー（後方互換性のため）
-                        if (data.meta && data.meta.source && !data.source) {
-                            data.source = data.meta.source;
-                            console.log('📊 data.meta.sourceをdata.sourceにコピー:', data.source);
-                        }
-                    } catch (fetchError) {
-                        console.error('❌ Fetch error:', fetchError);
-                        throw fetchError;
+                        console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
                     }
+                    
+                    // meta.sourceをsourceにコピー（後方互換性のため）
+                    if (data.meta && data.meta.source && !data.source) {
+                        data.source = data.meta.source;
+                        console.log('📊 data.meta.sourceをdata.sourceにコピー:', data.source);
+                    }
+                } catch (fetchError) {
+                    console.error('❌ Fetch error:', fetchError);
+                    throw fetchError;
+                }
                     
                 } catch (integratedError) {
                     console.log('⚠️ 統合API失敗:', integratedError.message);
