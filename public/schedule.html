@@ -5669,59 +5669,58 @@
                                 data = JSON.parse(responseText);
                                 console.log('✅ JSON解析成功');
                             
-                            // すべてのデータをキャッシュに保存（過去データは長期、現在データは短期）
-                            try {
-                                sessionStorage.setItem(cacheKey, JSON.stringify({
-                                    timestamp: Date.now(),
-                                    data: data
-                                }));
-                                const cacheType = isPastData || isFinishedStatusOnly ? '長期（24時間）' : '短期（5分）';
-                                console.log(`💾 試合データをキャッシュに保存しました (${cacheType}):`, cacheKey);
-                            } catch (cacheError) {
-                                console.warn('キャッシュ保存エラー（無視）:', cacheError);
-                            }
+                                // すべてのデータをキャッシュに保存（過去データは長期、現在データは短期）
+                                try {
+                                    sessionStorage.setItem(cacheKey, JSON.stringify({
+                                        timestamp: Date.now(),
+                                        data: data
+                                    }));
+                                    const cacheType = isPastData || isFinishedStatusOnly ? '長期（24時間）' : '短期（5分）';
+                                    console.log(`💾 試合データをキャッシュに保存しました (${cacheType}):`, cacheKey);
+                                } catch (cacheError) {
+                                    console.warn('キャッシュ保存エラー（無視）:', cacheError);
+                                }
                             } catch (parseError) {
                                 console.error('❌ JSON解析エラー:', parseError);
                                 console.error('❌ レスポンステキスト:', responseText.substring(0, 1000));
                                 throw new Error(`JSON解析に失敗しました: ${parseError.message}`);
                             }
+                        } else {
+                            // キャッシュデータを使用
+                            // 過去データの場合は更新不要、現在・未来データの場合はバックグラウンド更新
+                            if (!isPastData && !isFinishedStatusOnly) {
+                                console.log('⚡ キャッシュデータを使用中、バックグラウンドで最新データを取得します');
+                                fetch(integratedUrl, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    signal: AbortSignal.timeout(30000)
+                                }).then(async (bgResponse) => {
+                                    if (bgResponse.ok) {
+                                        const bgData = await bgResponse.json();
+                                        // キャッシュを更新
+                                        sessionStorage.setItem(cacheKey, JSON.stringify({
+                                            timestamp: Date.now(),
+                                            data: bgData
+                                        }));
+                                        console.log('✅ バックグラウンドで最新データを取得し、キャッシュを更新しました');
+                                        // バックグラウンド更新後の再呼び出しを削除（無限ループ防止）
+                                        // ユーザーが手動で更新するか、次回のloadMatches呼び出し時に最新データが使用される
+                                    }
+                                }).catch(err => {
+                                    console.warn('バックグラウンド更新エラー（無視）:', err);
+                                });
+                            } else {
+                                console.log('📚 過去データのため、キャッシュのみ使用（バックグラウンド更新なし）');
+                            }
+                            // キャッシュデータを使用して処理を続行
+                            console.log('⚡ キャッシュデータを使用中、APIレスポンスはスキップします');
                         }
                     } catch (innerFetchError) {
                         console.error('❌ Inner fetch error:', innerFetchError);
                         throw innerFetchError;
                     }
-                } else {
-                    // キャッシュデータを使用
-                    // 過去データの場合は更新不要、現在・未来データの場合はバックグラウンド更新
-                    if (!isPastData && !isFinishedStatusOnly) {
-                        console.log('⚡ キャッシュデータを使用中、バックグラウンドで最新データを取得します');
-                        fetch(integratedUrl, {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            signal: AbortSignal.timeout(30000)
-                        }).then(async (bgResponse) => {
-                            if (bgResponse.ok) {
-                                const bgData = await bgResponse.json();
-                                // キャッシュを更新
-                                sessionStorage.setItem(cacheKey, JSON.stringify({
-                                    timestamp: Date.now(),
-                                    data: bgData
-                                }));
-                                console.log('✅ バックグラウンドで最新データを取得し、キャッシュを更新しました');
-                                // バックグラウンド更新後の再呼び出しを削除（無限ループ防止）
-                                // ユーザーが手動で更新するか、次回のloadMatches呼び出し時に最新データが使用される
-                            }
-                        }).catch(err => {
-                            console.warn('バックグラウンド更新エラー（無視）:', err);
-                        });
-                    } else {
-                        console.log('📚 過去データのため、キャッシュのみ使用（バックグラウンド更新なし）');
-                    }
-                    // キャッシュデータを使用して処理を続行
-                    console.log('⚡ キャッシュデータを使用中、APIレスポンスはスキップします');
-                }
                     
                     console.log('📊 統合データ解析成功:', {
                         hasItems: !!data.items,
@@ -5749,75 +5748,76 @@
                     console.error('❌ Fetch error:', fetchError);
                     throw fetchError;
                 }
-                    
-                } catch (integratedError) {
-                    console.log('⚠️ 統合API失敗:', integratedError.message);
-                    console.log('🔍 統合APIエラーの詳細:', integratedError);
-                    
-                    // エラーメッセージを表示
-                    contentDiv.innerHTML = `
-                        <div class="error">
-                            <p>試合データの読み込みに失敗しました。</p>
-                            <p>エラー: ${integratedError.message}</p>
-                            <p>API制限の可能性があります。しばらく時間をおいてから再度お試しください。</p>
-                        </div>
-                    `;
-                    return;
-                }
                 
-                // デバッグ: データ構造を詳細に確認
-                console.log('🔍 ========== データ構造チェック ==========');
-                console.log('🔍 データ全体:', data);
-                console.log('🔍 データ構造チェック:', {
-                    hasData: !!data,
-                    hasMatches: !!data?.matches,
-                    matchesIsArray: Array.isArray(data?.matches),
-                    matchesLength: data?.matches?.length || 0,
-                    hasItems: !!data?.items,
-                    itemsIsArray: Array.isArray(data?.items),
-                    itemsLength: data?.items?.length || 0,
-                    hasMeta: !!data?.meta,
-                    metaSource: data?.meta?.source,
-                    dataKeys: data ? Object.keys(data) : [],
-                    firstMatch: data?.matches?.[0] || data?.items?.[0] || null
-                });
+            } catch (integratedError) {
+                console.log('⚠️ 統合API失敗:', integratedError.message);
+                console.log('🔍 統合APIエラーの詳細:', integratedError);
                 
-                // data.itemsをdata.matchesに変換（まだ変換されていない場合）
-                if (data && data.items && Array.isArray(data.items)) {
-                    if (!data.matches || data.matches.length === 0) {
-                        data.matches = data.items;
-                        console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
-                    } else {
-                        console.log('📊 data.matchesが既に存在:', data.matches.length, '件');
-                    }
+                // エラーメッセージを表示
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        <p>試合データの読み込みに失敗しました。</p>
+                        <p>エラー: ${integratedError.message}</p>
+                        <p>API制限の可能性があります。しばらく時間をおいてから再度お試しください。</p>
+                    </div>
+                `;
+                return;
                 }
-                
-                // データが空の場合の詳細ログ
-                if (!data || (!data.matches && !data.items)) {
-                    console.error('❌ データが空です！');
-                    console.error('❌ data:', data);
-                    return;
+            }
+            
+            // デバッグ: データ構造を詳細に確認
+            console.log('🔍 ========== データ構造チェック ==========');
+            console.log('🔍 データ全体:', data);
+            console.log('🔍 データ構造チェック:', {
+                hasData: !!data,
+                hasMatches: !!data?.matches,
+                matchesIsArray: Array.isArray(data?.matches),
+                matchesLength: data?.matches?.length || 0,
+                hasItems: !!data?.items,
+                itemsIsArray: Array.isArray(data?.items),
+                itemsLength: data?.items?.length || 0,
+                hasMeta: !!data?.meta,
+                metaSource: data?.meta?.source,
+                dataKeys: data ? Object.keys(data) : [],
+                firstMatch: data?.matches?.[0] || data?.items?.[0] || null
+            });
+            
+            // data.itemsをdata.matchesに変換（まだ変換されていない場合）
+            if (data && data.items && Array.isArray(data.items)) {
+                if (!data.matches || data.matches.length === 0) {
+                    data.matches = data.items;
+                    console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
+                } else {
+                    console.log('📊 data.matchesが既に存在:', data.matches.length, '件');
                 }
-                
-                if (data.matches && data.matches.length === 0 && data.items && data.items.length === 0) {
-                    console.warn('⚠️ データは存在するが、試合が0件です');
-                    console.warn('⚠️ data.meta:', data.meta);
+            }
+            
+            // データが空の場合の詳細ログ
+            if (!data || (!data.matches && !data.items)) {
+                console.error('❌ データが空です！');
+                console.error('❌ data:', data);
+                return;
+            }
+            
+            if (data.matches && data.matches.length === 0 && data.items && data.items.length === 0) {
+                console.warn('⚠️ データは存在するが、試合が0件です');
+                console.warn('⚠️ data.meta:', data.meta);
+            }
+            
+            // データが存在するか最終確認
+            if (!data) {
+                console.error('❌ data is null or undefined');
+                contentDiv.innerHTML = '<div class="error">データが取得できませんでした。</div>';
+                return;
+            }
+            
+            // data.itemsをdata.matchesに変換（確実に）
+            if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+                if (!data.matches || data.matches.length === 0) {
+                    data.matches = data.items;
+                    console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
                 }
-                
-                // データが存在するか最終確認
-                if (!data) {
-                    console.error('❌ data is null or undefined');
-                    contentDiv.innerHTML = '<div class="error">データが取得できませんでした。</div>';
-                    return;
-                }
-                
-                // data.itemsをdata.matchesに変換（確実に）
-                if (data.items && Array.isArray(data.items) && data.items.length > 0) {
-                    if (!data.matches || data.matches.length === 0) {
-                        data.matches = data.items;
-                        console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
-                    }
-                }
+            }
                 
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
                   console.log(`✅ Found matches from ${dataSource}:`, data.matches.length);
