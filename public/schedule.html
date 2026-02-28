@@ -5749,18 +5749,18 @@
                         console.log('📊 data.meta.sourceをdata.sourceにコピー:', data.source);
                     }
                 } catch (integratedError) {
-                console.log('⚠️ 統合API失敗:', integratedError.message);
-                console.log('🔍 統合APIエラーの詳細:', integratedError);
-                
-                // エラーメッセージを表示
-                contentDiv.innerHTML = `
-                    <div class="error">
-                        <p>試合データの読み込みに失敗しました。</p>
-                        <p>エラー: ${integratedError.message}</p>
-                        <p>API制限の可能性があります。しばらく時間をおいてから再度お試しください。</p>
-                    </div>
-                `;
-                return;
+                    console.log('⚠️ 統合API失敗:', integratedError.message);
+                    console.log('🔍 統合APIエラーの詳細:', integratedError);
+                    
+                    // エラーメッセージを表示
+                    contentDiv.innerHTML = `
+                        <div class="error">
+                            <p>試合データの読み込みに失敗しました。</p>
+                            <p>エラー: ${integratedError.message}</p>
+                            <p>API制限の可能性があります。しばらく時間をおいてから再度お試しください。</p>
+                        </div>
+                    `;
+                    return;
                 }
             }
             
