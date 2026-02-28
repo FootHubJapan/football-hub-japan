@@ -4863,7 +4863,7 @@
 
                 <!-- 試合統計タブ（ProFooty Analyticsスタイル） -->
                 <section data-panel="stats" class="hidden" style="display: none; flex-direction: column; gap: 2rem;">
-                    <!-- Bento Grid Advanced Stats -->
+                <!-- Bento Grid Advanced Stats -->
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                         <!-- Left Column: Metrics Visualization -->
                         <div class="lg:col-span-8 flex flex-col gap-6">
@@ -5514,12 +5514,12 @@
             
             try {
                 // 要素の存在確認
-            const leagueSelect = document.getElementById('leagueSelect');
-            const timeRangeSelect = document.getElementById('timeRangeSelect');
-            const seasonSelect = document.getElementById('seasonSelect');
-            const searchInput = document.getElementById('searchInput');
-            const statusFilterSelect = document.getElementById('statusFilter');
-            const contentDiv = document.getElementById('scheduleContent');
+                const leagueSelect = document.getElementById('leagueSelect');
+                const timeRangeSelect = document.getElementById('timeRangeSelect');
+                const seasonSelect = document.getElementById('seasonSelect');
+                const searchInput = document.getElementById('searchInput');
+                const statusFilterSelect = document.getElementById('statusFilter');
+                const contentDiv = document.getElementById('scheduleContent');
             
             if (!contentDiv) {
                 console.error('❌ scheduleContent element not found!');
@@ -5593,81 +5593,81 @@
                     console.log('📡 パラメータ詳細:', { season, leagueParam, statusParam, timeRangeParam });
                     
                     try {
-                    // キャッシュ戦略: 過去データは長期キャッシュ、現在・未来データは短期キャッシュ
-                    const isPastData = timeRange === 'lastweek' || timeRange === 'lastmonth' || 
-                                     timeRange === 'last3months' || timeRange === 'last6months' ||
-                                     statusFilter === '終了';
-                    const isFinishedStatusOnly = statusFilter === '終了';
-                    
-                    // キャッシュキー: 期間、リーグ、シーズン、ステータスを含める
-                    const cacheKey = `schedule_${timeRange || 'all'}_${season}_${league || 'all'}_${statusFilter || 'all'}`;
-                    const cachedData = sessionStorage.getItem(cacheKey);
-                    
-                    // キャッシュ有効期限: 過去データは24時間、現在・未来データは5分
-                    const cacheTTL = isPastData || isFinishedStatusOnly 
-                        ? 24 * 60 * 60 * 1000  // 24時間（過去データは変更されない）
-                        : 5 * 60 * 1000;        // 5分（現在・未来データは更新される可能性がある）
-                    
-                    if (cachedData) {
-                        try {
-                            const cached = JSON.parse(cachedData);
-                            const cacheAge = Date.now() - cached.timestamp;
-                            
-                            if (cacheAge < cacheTTL) {
-                                console.log(`⚡ キャッシュから試合データを読み込み: ${(cacheAge / 1000).toFixed(0)}秒前のデータ (${isPastData ? '過去データ' : '現在データ'})`);
-                                data = cached.data;
+                        // キャッシュ戦略: 過去データは長期キャッシュ、現在・未来データは短期キャッシュ
+                        const isPastData = timeRange === 'lastweek' || timeRange === 'lastmonth' || 
+                                         timeRange === 'last3months' || timeRange === 'last6months' ||
+                                         statusFilter === '終了';
+                        const isFinishedStatusOnly = statusFilter === '終了';
+                        
+                        // キャッシュキー: 期間、リーグ、シーズン、ステータスを含める
+                        const cacheKey = `schedule_${timeRange || 'all'}_${season}_${league || 'all'}_${statusFilter || 'all'}`;
+                        const cachedData = sessionStorage.getItem(cacheKey);
+                        
+                        // キャッシュ有効期限: 過去データは24時間、現在・未来データは5分
+                        const cacheTTL = isPastData || isFinishedStatusOnly 
+                            ? 24 * 60 * 60 * 1000  // 24時間（過去データは変更されない）
+                            : 5 * 60 * 1000;        // 5分（現在・未来データは更新される可能性がある）
+                        
+                        if (cachedData) {
+                            try {
+                                const cached = JSON.parse(cachedData);
+                                const cacheAge = Date.now() - cached.timestamp;
                                 
-                                // 過去データの場合はキャッシュのみ使用（バックグラウンド更新不要）
-                                // 現在・未来データの場合はバックグラウンドで最新データを取得
-                                if (!isPastData && !isFinishedStatusOnly) {
-                                    // バックグラウンド更新は後で処理
+                                if (cacheAge < cacheTTL) {
+                                    console.log(`⚡ キャッシュから試合データを読み込み: ${(cacheAge / 1000).toFixed(0)}秒前のデータ (${isPastData ? '過去データ' : '現在データ'})`);
+                                    data = cached.data;
+                                    
+                                    // 過去データの場合はキャッシュのみ使用（バックグラウンド更新不要）
+                                    // 現在・未来データの場合はバックグラウンドで最新データを取得
+                                    if (!isPastData && !isFinishedStatusOnly) {
+                                        // バックグラウンド更新は後で処理
+                                    } else {
+                                        console.log('📚 過去データのため、キャッシュのみ使用（更新不要）');
+                                    }
                                 } else {
-                                    console.log('📚 過去データのため、キャッシュのみ使用（更新不要）');
+                                    console.log(`⏰ キャッシュが期限切れ (${(cacheAge / 1000 / 60).toFixed(0)}分前)`);
                                 }
-                            } else {
-                                console.log(`⏰ キャッシュが期限切れ (${(cacheAge / 1000 / 60).toFixed(0)}分前)`);
+                            } catch (e) {
+                                console.warn('キャッシュ解析エラー:', e);
                             }
-                        } catch (e) {
-                            console.warn('キャッシュ解析エラー:', e);
-                        }
-                    }
-                    
-                    // キャッシュがない、または古い場合はAPIから取得
-                    if (!data) {
-                        response = await fetch(integratedUrl, {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            signal: AbortSignal.timeout(30000) // 30秒のタイムアウト
-                        });
-                        
-                        // APIから取得
-                        console.log('📡 APIレスポンス受信:', {
-                            status: response.status,
-                            statusText: response.statusText,
-                            ok: response.ok,
-                            headers: Object.fromEntries(response.headers.entries())
-                        });
-                    
-                        if (!response.ok) {
-                            const errorText = await response.text();
-                            console.error('❌ APIエラーレスポンス:', errorText);
-                            throw new Error(`Integrated API error! status: ${response.status}, message: ${errorText.substring(0, 200)}`);
                         }
                         
-                        const responseText = await response.text();
-                        console.log('✅ 統合API レスポンス取得成功');
-                        console.log('レスポンスサイズ:', responseText.length, '文字');
-                        console.log('レスポンスプレビュー:', responseText.substring(0, 500));
-                    
-                        if (!responseText || responseText.trim() === '') {
-                            throw new Error('APIレスポンスが空です');
-                        }
+                        // キャッシュがない、または古い場合はAPIから取得
+                        if (!data) {
+                            response = await fetch(integratedUrl, {
+                                method: 'GET',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                signal: AbortSignal.timeout(30000) // 30秒のタイムアウト
+                            });
                         
-                        try {
-                            data = JSON.parse(responseText);
-                            console.log('✅ JSON解析成功');
+                            // APIから取得
+                            console.log('📡 APIレスポンス受信:', {
+                                status: response.status,
+                                statusText: response.statusText,
+                                ok: response.ok,
+                                headers: Object.fromEntries(response.headers.entries())
+                            });
+                    
+                            if (!response.ok) {
+                                const errorText = await response.text();
+                                console.error('❌ APIエラーレスポンス:', errorText);
+                                throw new Error(`Integrated API error! status: ${response.status}, message: ${errorText.substring(0, 200)}`);
+                            }
+                            
+                            const responseText = await response.text();
+                            console.log('✅ 統合API レスポンス取得成功');
+                            console.log('レスポンスサイズ:', responseText.length, '文字');
+                            console.log('レスポンスプレビュー:', responseText.substring(0, 500));
+                    
+                            if (!responseText || responseText.trim() === '') {
+                                throw new Error('APIレスポンスが空です');
+                            }
+                            
+                            try {
+                                data = JSON.parse(responseText);
+                                console.log('✅ JSON解析成功');
                             
                             // すべてのデータをキャッシュに保存（過去データは長期、現在データは短期）
                             try {
@@ -6079,11 +6079,11 @@
                                             const displayAwayScore = awayScore !== undefined && awayScore !== null ? awayScore : (isLive || isFinished ? 0 : '-');
                                             
                                             if (isLive || isFinished || (displayHomeScore !== '-' && displayAwayScore !== '-')) {
-                                                scoreDisplay = `<div style="font-size: 2.25rem; font-weight: bold; letter-spacing: -0.05em; display: flex; align-items: center; gap: 0.5rem;">
+                                            scoreDisplay = `<div style="font-size: 2.25rem; font-weight: bold; letter-spacing: -0.05em; display: flex; align-items: center; gap: 0.5rem;">
                                                     <span style="color: ${isLive ? 'var(--primary)' : isFinished ? 'white' : 'rgba(148, 163, 184, 0.8)'}">${displayHomeScore}</span>
-                                                    <span style="color: rgba(71, 85, 105, 0.8);">-</span>
+                                                <span style="color: rgba(71, 85, 105, 0.8);">-</span>
                                                     <span style="color: ${isLive ? 'var(--primary)' : isFinished ? 'white' : 'rgba(148, 163, 184, 0.8)'}">${displayAwayScore}</span>
-                                                </div>`;
+                                            </div>`;
                                                 scoreLabel = isLive ? '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(100, 116, 139, 0.8); text-transform: uppercase; margin-top: 0.5rem;">Score</span>' : 
                                                              isFinished ? '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(100, 116, 139, 0.8); text-transform: uppercase; margin-top: 0.5rem;">FT</span>' :
                                                              '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(100, 116, 139, 0.8); text-transform: uppercase; margin-top: 0.5rem;">Score</span>';
