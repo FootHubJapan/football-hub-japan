@@ -39,8 +39,10 @@ const BATCH_SIZE = 100;
 // バッチ間の待機時間（秒）
 const BATCH_DELAY = 60;
 
-async function fetchPlayerLatestInfo(playerId) {
+async function fetchPlayerLatestInfo(playerId, retryCount = 0) {
     const headers = { 'x-apisports-key': API_KEY };
+    const maxRetries = 3;
+    const retryDelay = 5000; // 5秒
     
     // まず2024シーズンを試す（データがより充実している可能性が高い）
     const seasons = [2024, 2025];
@@ -48,13 +50,26 @@ async function fetchPlayerLatestInfo(playerId) {
     for (const season of seasons) {
         try {
             const url = `https://v3.football.api-sports.io/players?id=${playerId}&season=${season}`;
-            const response = await axios.get(url, { headers, timeout: 10000 });
+            const response = await axios.get(url, { 
+                headers, 
+                timeout: 30000, // タイムアウトを30秒に延長
+                validateStatus: function (status) {
+                    return status < 500; // 5xxエラー以外はリトライしない
+                }
+            });
             const data = response.data;
             
             if (data.response && data.response.length > 0) {
                 return data.response[0];
             }
         } catch (error) {
+            // DNS解決エラーやネットワークエラーの場合はリトライ
+            if ((error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') && retryCount < maxRetries) {
+                console.log(`  🔄 DNS/Network error for player ${playerId}, retrying (${retryCount + 1}/${maxRetries})...`);
+                await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)));
+                return fetchPlayerLatestInfo(playerId, retryCount + 1);
+            }
+            
             if (error.response && error.response.status === 429) {
                 // レート制限エラー
                 console.error(`  ⚠️ Rate limit exceeded for player ${playerId}, waiting...`);
@@ -68,7 +83,11 @@ async function fetchPlayerLatestInfo(playerId) {
             // その他のエラーはログに記録して続行
             if (season === seasons[seasons.length - 1]) {
                 // 最後のシーズンでも失敗した場合のみエラーを記録
-                console.error(`  ⚠️ Error fetching player ${playerId}:`, error.message);
+                if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+                    console.error(`  ⚠️ DNS/Network error for player ${playerId} after ${maxRetries} retries:`, error.message);
+                } else {
+                    console.error(`  ⚠️ Error fetching player ${playerId}:`, error.message);
+                }
             }
         }
     }
