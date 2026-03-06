@@ -2,13 +2,13 @@
 <html lang="ja">
 <head>
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y5KSLP58SP"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-47242CTHR5"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      gtag('config', 'G-Y5KSLP58SP');
+      gtag('config', 'G-47242CTHR5');
     </script>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -1654,71 +1654,71 @@
                             useCache = true;
                             
                             // キャッシュから取得したデータをstatsBySeasonにマージ
-                            if (careerStats.length > 0) {
+                    if (careerStats.length > 0) {
                                 console.log(`📊 キャッシュデータをstatsBySeasonにマージ中: ${careerStats.length}シーズン`);
-                                careerStats.forEach((stat, idx) => {
-                                    // リーグ戦のみを対象とする
-                                    const isLeague = isLeagueCompetition(stat);
-                                    if (!isLeague) {
-                                        return; // カップ戦はスキップ
-                                    }
-                                    
-                                    // シーズンを正規化
-                                    const rawSeason = stat.season || 'Unknown';
-                                    let season = normalizeSeason(rawSeason);
-                                    
-                                    if (season === 'Unknown' && rawSeason && /^\d{4}$/.test(String(rawSeason))) {
-                                        const year = parseInt(rawSeason);
-                                        season = `${year}/${String(year + 1).slice(-2)}`;
-                                    }
-                                    
-                                    // 有効なシーズンのみを処理
+                        careerStats.forEach((stat, idx) => {
+                            // リーグ戦のみを対象とする
+                            const isLeague = isLeagueCompetition(stat);
+                            if (!isLeague) {
+                                return; // カップ戦はスキップ
+                            }
+                            
+                            // シーズンを正規化
+                            const rawSeason = stat.season || 'Unknown';
+                            let season = normalizeSeason(rawSeason);
+                            
+                            if (season === 'Unknown' && rawSeason && /^\d{4}$/.test(String(rawSeason))) {
+                                const year = parseInt(rawSeason);
+                                season = `${year}/${String(year + 1).slice(-2)}`;
+                            }
+                            
+                            // 有効なシーズンのみを処理
                                     if (!isValidSeason(season)) {
-                                        return;
-                                    }
-                                    
-                                    const club = stat.club || stat.teamName || stat.team || 'Unknown';
-                                    const matches = stat.matches || stat.appearances || 0;
-                                    const goals = stat.goals || 0;
-                                    const assists = stat.assists || 0;
-                                    
+                                return;
+                            }
+                            
+                            const club = stat.club || stat.teamName || stat.team || 'Unknown';
+                            const matches = stat.matches || stat.appearances || 0;
+                            const goals = stat.goals || 0;
+                            const assists = stat.assists || 0;
+                            
                                     // 試合数が0のデータは除外
-                                    if (matches === 0 && goals === 0 && assists === 0) {
-                                        return;
-                                    }
-                                    
+                            if (matches === 0 && goals === 0 && assists === 0) {
+                                return;
+                            }
+                            
                                     // statsBySeasonにマージ
-                                    if (!statsBySeason[season]) {
-                                        statsBySeason[season] = {
-                                            season: season,
-                                            club: club,
+                            if (!statsBySeason[season]) {
+                                statsBySeason[season] = {
+                                    season: season,
+                                    club: club,
                                             matches: matches,
                                             goals: goals,
                                             assists: assists,
-                                            ratingSum: 0,
-                                            ratingCount: 0
-                                        };
-                                    } else {
+                                    ratingSum: 0,
+                                    ratingCount: 0
+                                };
+                            } else {
                                         // 既存データがある場合、試合数が多い方を優先
                                         if (matches > statsBySeason[season].matches) {
-                                            statsBySeason[season].club = club;
-                                            statsBySeason[season].matches = matches;
-                                            statsBySeason[season].goals = goals;
-                                            statsBySeason[season].assists = assists;
+                                    statsBySeason[season].club = club;
+                                    statsBySeason[season].matches = matches;
+                                    statsBySeason[season].goals = goals;
+                                    statsBySeason[season].assists = assists;
                                         }
                                     }
                                     
-                                    if (stat.rating) {
-                                        const rating = parseFloat(stat.rating);
-                                        if (!isNaN(rating)) {
-                                            statsBySeason[season].ratingSum = rating;
-                                            statsBySeason[season].ratingCount = 1;
-                                        }
-                                    }
-                                });
-                                console.log(`📊 キャッシュデータマージ後のシーズン数: ${Object.keys(statsBySeason).length}`);
+                            if (stat.rating) {
+                                const rating = parseFloat(stat.rating);
+                                if (!isNaN(rating)) {
+                                    statsBySeason[season].ratingSum = rating;
+                                    statsBySeason[season].ratingCount = 1;
+                                }
                             }
-                        } else {
+                        });
+                                console.log(`📊 キャッシュデータマージ後のシーズン数: ${Object.keys(statsBySeason).length}`);
+                    }
+                } else {
                             console.log(`⏰ キャッシュが期限切れ (${(cacheAge / 1000 / 60 / 60).toFixed(1)}時間前)`);
                         }
                     } catch (e) {
@@ -1728,8 +1728,8 @@
                 
                 // キャッシュがない、または期限切れの場合はAPIから取得
                 if (!useCache) {
-                    // キャリアスタッツAPIを呼び出し
-                    const response = await fetch(`/api/player/career-stats/${playerIdForApi}?seasons=all`);
+                // キャリアスタッツAPIを呼び出し
+                const response = await fetch(`/api/player/career-stats/${playerIdForApi}?seasons=all`);
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -1813,14 +1813,14 @@
                                     console.log(`  🔄 より多くの試合数のデータで更新: ${season} (${club}, ${matches}試合)`);
                                 } else if (matches === existingMatches && club !== statsBySeason[season].club) {
                                     // 試合数が同じ場合、より詳細な情報を優先
-                                    if (club !== 'Unknown' && statsBySeason[season].club === 'Unknown') {
-                                        statsBySeason[season].club = club;
-                                    }
+                                if (club !== 'Unknown' && statsBySeason[season].club === 'Unknown') {
+                                    statsBySeason[season].club = club;
+                                }
                                     // APIデータで上書き
                                     statsBySeason[season].matches = matches;
                                     statsBySeason[season].goals = goals;
                                     statsBySeason[season].assists = assists;
-                                    console.log(`  🔄 既存のシーズンを更新: ${season} (${club})`);
+                                console.log(`  🔄 既存のシーズンを更新: ${season} (${club})`);
                                 } else if (matches < existingMatches) {
                                     console.log(`  ⏭️ 既存データの方が多いためスキップ: ${season} (既存: ${existingMatches}試合, 新規: ${matches}試合)`);
                                     return;

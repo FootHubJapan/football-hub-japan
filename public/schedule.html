@@ -8,13 +8,13 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6574544891375303"
      crossorigin="anonymous"></script>
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y5KSLP58SP"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-47242CTHR5"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      gtag('config', 'G-Y5KSLP58SP');
+      gtag('config', 'G-47242CTHR5');
     </script>
     <title>試合スケジュール - Football Hub Japan</title>
     <meta name="description" content="Jリーグや欧州サッカーの試合スケジュールを確認できます。今日の試合、今後の試合、過去の試合結果を一覧で表示します。">
@@ -8666,31 +8666,58 @@
             
             // ホームフィールドプレイヤーを配置（DF→MF→FWの順、自陣ゴール→センター）
             // DFは上（y小）、FWは下（y大、センター側）
-            // rowYs[0]=GK, rowYs[1]=DF, rowYs[2]=MF, rowYs[3]=FW
-            const homeRows = [
-                { players: homeClassified.df, expectedCount: homeFormationArray[0] || 0, label: 'DF', rowIndex: 1 }, // DF（自陣ゴール側、上）
-                { players: homeClassified.mf, expectedCount: homeFormationArray[1] || 0, label: 'MF', rowIndex: 2 }, // MF（中央）
-                { players: homeClassified.fw, expectedCount: homeFormationArray[2] || 0, label: 'FW', rowIndex: 3 }  // FW（センター側、下）
-            ];
+            // rowYs[0]=GK, rowYs[1]=DF, rowYs[2]=MF1, rowYs[3]=MF2/FW, rowYs[4]=FW（4-2-3-1の場合）
+            // フォーメーション配列の長さに応じて動的に行を生成
+            const homeRows = [];
+            let mfIndex = 0; // MF選手のインデックス
+            let fwIndex = 0; // FW選手のインデックス
+            
+            // DF行（常に最初）
+            if (homeFormationArray.length > 0) {
+                homeRows.push({ 
+                    players: homeClassified.df, 
+                    expectedCount: homeFormationArray[0] || 0, 
+                    label: 'DF', 
+                    rowIndex: 1 
+                });
+            }
+            
+            // MF行（フォーメーション配列の2番目以降、最後の数字以外）
+            // 例：4-2-3-1の場合、[1]=2（MF1）、[2]=3（MF2）
+            for (let i = 1; i < homeFormationArray.length - 1; i++) {
+                const mfCount = homeFormationArray[i] || 0;
+                const mfPlayers = homeClassified.mf.slice(mfIndex, mfIndex + mfCount);
+                homeRows.push({ 
+                    players: mfPlayers, 
+                    expectedCount: mfCount, 
+                    label: `MF${i}`, 
+                    rowIndex: 1 + i // rowIndex=2, 3, 4...（DF=1から開始）
+                });
+                mfIndex += mfPlayers.length;
+            }
+            
+            // FW行（フォーメーション配列の最後）
+            if (homeFormationArray.length > 1) {
+                const fwCount = homeFormationArray[homeFormationArray.length - 1] || 0;
+                const fwPlayers = homeClassified.fw.slice(fwIndex, fwIndex + fwCount);
+                homeRows.push({ 
+                    players: fwPlayers, 
+                    expectedCount: fwCount, 
+                    label: 'FW', 
+                    rowIndex: homeFormationArray.length // 最後の行インデックス
+                });
+            }
             
             console.log('📋 Home Formation vs Actual Players:', {
                 formation: homeFormationStr,
                 formationArray: homeFormationArray,
-                expected: {
-                    DF: homeFormationArray[0] || 0,
-                    MF: homeFormationArray[1] || 0,
-                    FW: homeFormationArray[2] || 0
-                },
+                expected: homeFormationArray,
                 actual: {
                     DF: homeClassified.df.length,
                     MF: homeClassified.mf.length,
                     FW: homeClassified.fw.length
                 },
-                match: {
-                    DF: (homeFormationArray[0] || 0) === homeClassified.df.length,
-                    MF: (homeFormationArray[1] || 0) === homeClassified.mf.length,
-                    FW: (homeFormationArray[2] || 0) === homeClassified.fw.length
-                }
+                rows: homeRows.map(r => ({ label: r.label, expected: r.expectedCount, actual: r.players.length, rowIndex: r.rowIndex }))
             });
             
             homeRows.forEach((row) => {
@@ -8726,31 +8753,58 @@
             
             // アウェーフィールドプレイヤーを配置（DF→MF→FWの順、自陣ゴール→センター）
             // DFは下（y大）、FWは上（y小、センター側）
-            // rowYs[0]=GK, rowYs[1]=DF, rowYs[2]=MF, rowYs[3]=FW
-            const awayRows = [
-                { players: awayClassified.df, expectedCount: awayFormationArray[0] || 0, label: 'DF', rowIndex: 1 }, // DF（自陣ゴール側、下）
-                { players: awayClassified.mf, expectedCount: awayFormationArray[1] || 0, label: 'MF', rowIndex: 2 }, // MF（中央）
-                { players: awayClassified.fw, expectedCount: awayFormationArray[2] || 0, label: 'FW', rowIndex: 3 }  // FW（センター側、上）
-            ];
+            // rowYs[0]=GK, rowYs[1]=DF, rowYs[2]=MF1, rowYs[3]=MF2/FW, rowYs[4]=FW（4-2-3-1の場合）
+            // フォーメーション配列の長さに応じて動的に行を生成
+            const awayRows = [];
+            let awayMfIndex = 0; // MF選手のインデックス
+            let awayFwIndex = 0; // FW選手のインデックス
+            
+            // DF行（常に最初）
+            if (awayFormationArray.length > 0) {
+                awayRows.push({ 
+                    players: awayClassified.df, 
+                    expectedCount: awayFormationArray[0] || 0, 
+                    label: 'DF', 
+                    rowIndex: 1 
+                });
+            }
+            
+            // MF行（フォーメーション配列の2番目以降、最後の数字以外）
+            // 例：4-2-3-1の場合、[1]=2（MF1）、[2]=3（MF2）
+            for (let i = 1; i < awayFormationArray.length - 1; i++) {
+                const mfCount = awayFormationArray[i] || 0;
+                const mfPlayers = awayClassified.mf.slice(awayMfIndex, awayMfIndex + mfCount);
+                awayRows.push({ 
+                    players: mfPlayers, 
+                    expectedCount: mfCount, 
+                    label: `MF${i}`, 
+                    rowIndex: 1 + i // rowIndex=2, 3, 4...（DF=1から開始）
+                });
+                awayMfIndex += mfPlayers.length;
+            }
+            
+            // FW行（フォーメーション配列の最後）
+            if (awayFormationArray.length > 1) {
+                const fwCount = awayFormationArray[awayFormationArray.length - 1] || 0;
+                const fwPlayers = awayClassified.fw.slice(awayFwIndex, awayFwIndex + fwCount);
+                awayRows.push({ 
+                    players: fwPlayers, 
+                    expectedCount: fwCount, 
+                    label: 'FW', 
+                    rowIndex: awayFormationArray.length // 最後の行インデックス
+                });
+            }
             
             console.log('📋 Away Formation vs Actual Players:', {
                 formation: awayFormationStr,
                 formationArray: awayFormationArray,
-                expected: {
-                    DF: awayFormationArray[0] || 0,
-                    MF: awayFormationArray[1] || 0,
-                    FW: awayFormationArray[2] || 0
-                },
+                expected: awayFormationArray,
                 actual: {
                     DF: awayClassified.df.length,
                     MF: awayClassified.mf.length,
                     FW: awayClassified.fw.length
                 },
-                match: {
-                    DF: (awayFormationArray[0] || 0) === awayClassified.df.length,
-                    MF: (awayFormationArray[1] || 0) === awayClassified.mf.length,
-                    FW: (awayFormationArray[2] || 0) === awayClassified.fw.length
-                }
+                rows: awayRows.map(r => ({ label: r.label, expected: r.expectedCount, actual: r.players.length, rowIndex: r.rowIndex }))
             });
             
             awayRows.forEach((row) => {
