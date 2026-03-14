@@ -474,6 +474,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             event.preventDefault();
             const successMessage = document.getElementById('successMessage');
             successMessage.classList.add('show');
+
+            // generate_lead を GA4 に直接送信
+            if (typeof window.gtag === 'function') {
+                window.gtag('event', 'generate_lead', {
+                    form_id: 'contact_main',
+                    lead_type: 'inquiry',
+                    page_path: window.location.pathname,
+                    debug_mode: true
+                });
+            }
+
             document.getElementById('contactForm').reset();
             setTimeout(() => {
                 successMessage.classList.remove('show');
