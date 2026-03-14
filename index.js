@@ -283,7 +283,7 @@ app.use(helmet({
                 "https://*.adtrafficquality.google"
             ],
             scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://www.googletagmanager.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:", "https://www.google-analytics.com", "https://www.googletagmanager.com"],
             connectSrc: [
@@ -309,7 +309,8 @@ app.use(helmet({
                 "https://tpc.googlesyndication.com",
                 "https://*.adtrafficquality.google",
                 "https://*.google.com",
-                "https://www.google.com"
+                "https://www.google.com",
+                "https://www.googletagmanager.com"
             ],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: []
