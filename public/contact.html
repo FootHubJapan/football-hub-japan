@@ -492,5 +492,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }, 10000);
         }
     </script>
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.getElementById('contactForm');
+  if (!form) return;
+
+  let sentFormStart = false;
+
+  const sendFormStart = function () {
+    if (sentFormStart) return;
+    sentFormStart = true;
+
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'form_start', {
+        form_id: 'contact_main',
+        page_path: window.location.pathname,
+        debug_mode: true
+      });
+    }
+  };
+
+  const fields = form.querySelectorAll('input, textarea, select');
+  fields.forEach(function (field) {
+    field.addEventListener('focus', sendFormStart, { once: true });
+  });
+});
+    </script>
 </body>
 </html>
