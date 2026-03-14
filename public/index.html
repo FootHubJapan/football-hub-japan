@@ -705,7 +705,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
             <div class="header-buttons">
                 <a href="/login.html" class="btn btn-ghost">ログイン</a>
-                <a href="/dashboard.html" class="btn btn-primary">無料で始める</a>
+                <a href="/dashboard.html" class="btn btn-primary" data-cta="contact" data-cta-location="header">無料で始める</a>
             </div>
 
             <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
@@ -736,7 +736,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </ul>
         <div class="mobile-menu-buttons">
             <a href="/login.html" class="btn btn-outline btn-lg" style="justify-content: center;">ログイン</a>
-            <a href="/dashboard.html" class="btn btn-primary btn-lg" style="justify-content: center;">無料で始める</a>
+            <a href="/dashboard.html" class="btn btn-primary btn-lg" style="justify-content: center;" data-cta="contact" data-cta-location="mobile_menu">無料で始める</a>
         </div>
     </div>
 
@@ -761,13 +761,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </p>
 
                 <div class="hero-buttons">
-                    <a href="/dashboard.html" class="btn btn-primary btn-lg">
+                    <a href="/dashboard.html" class="btn btn-primary btn-lg" data-cta="contact" data-cta-location="hero">
                         無料で始める
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M5 12h14M12 5l7 7-7 7"/>
                         </svg>
                     </a>
-                    <a href="/radar-enhanced.html" class="btn btn-outline btn-lg">
+                    <a href="/radar-enhanced.html" class="btn btn-outline btn-lg" data-cta="radar_trial" data-cta-location="hero">
                         レーダーチャートを試す
                     </a>
                 </div>
@@ -927,7 +927,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             </div>
                         </div>
 
-                        <a href="/dashboard.html" class="btn btn-primary btn-lg">
+                        <a href="/dashboard.html" class="btn btn-primary btn-lg" data-cta="contact" data-cta-location="cta_section">
                             無料で始める
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -985,6 +985,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </footer>
 
     <script src="/ai-widget.js"></script>
+    <script src="/js/cta-tracking.js"></script>
     <script>
         function toggleMobileMenu() {
             const menu = document.getElementById('mobileMenu');
