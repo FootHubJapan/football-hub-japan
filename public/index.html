@@ -1,997 +1,389 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Football Hub Japan - サッカーデータプラットフォーム</title>
+<meta name="description" content="Football Hub Japanは、Jリーグと欧州サッカーのデータと指標をもとに、試合や選手を分析するファン向けサイトです。ランキング、試合スタッツ、分析コラムを提供します。">
+<meta name="keywords" content="サッカー,データ分析,Jリーグ,プレミアリーグ,選手統計,試合分析">
+<meta property="og:title" content="Football Hub Japan - サッカーデータプラットフォーム">
+<meta property="og:description" content="Football Hub Japanは、Jリーグと欧州サッカーのデータと指標をもとに、試合や選手を分析するファン向けサイトです。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://football-hub-japan-ubzb.onrender.com/">
+<meta name="robots" content="index,follow">
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-PNCBBCBM');</script>
-    <!-- End Google Tag Manager -->
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6574544891375303"
-     crossorigin="anonymous"></script>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-47242CTHR5"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-47242CTHR5');
-    </script>
-    <title>Football Hub Japan - サッカーデータプラットフォーム</title>
-    <meta name="description" content="Football Hub Japanは、Jリーグと欧州サッカーのデータと指標をもとに、試合や選手を分析するファン向けサイトです。ランキング、試合スタッツ、分析コラムを提供します。">
-    <meta name="keywords" content="サッカー,データ分析,Jリーグ,プレミアリーグ,選手統計,試合分析">
-    <meta property="og:title" content="Football Hub Japan - サッカーデータプラットフォーム">
-    <meta property="og:description" content="Football Hub Japanは、Jリーグと欧州サッカーのデータと指標をもとに、試合や選手を分析するファン向けサイトです。">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://football-hub-japan-ubzb.onrender.com/">
-    <meta name="robots" content="index,follow">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --background: #0d1117;
-            --foreground: #f0f6fc;
-            --card: #161b22;
-            --card-hover: #1c2128;
-            --primary: #22c55e;
-            --primary-hover: #16a34a;
-            --primary-glow: rgba(34, 197, 94, 0.2);
-            --secondary: #21262d;
-            --muted: #8b949e;
-            --border: #30363d;
-            --border-light: rgba(48, 54, 61, 0.5);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--background);
-            color: var(--foreground);
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        /* Header */
-        .header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: rgba(13, 17, 23, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .header-container {
-            max-width: 1280px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 1.5rem;
-            height: 64px;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            text-decoration: none;
-            color: var(--foreground);
-        }
-
-        .logo-icon {
-            width: 32px;
-            height: 32px;
-            background: var(--primary);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-        }
-
-        .logo-text {
-            font-size: 1.125rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
-
-        .nav-menu {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            list-style: none;
-        }
-
-        .nav-menu a {
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
-        .nav-menu a:hover {
-            color: var(--foreground);
-        }
-
-        .header-buttons {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .btn {
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-ghost {
-            background: transparent;
-            color: var(--muted);
-            border: none;
-        }
-
-        .btn-ghost:hover {
-            color: var(--foreground);
-            background: var(--secondary);
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: var(--background);
-            border: none;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-hover);
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: var(--foreground);
-            border: 1px solid var(--border);
-        }
-
-        .btn-outline:hover {
-            background: var(--secondary);
-            border-color: var(--muted);
-        }
-
-        .btn-lg {
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-        }
-
-        /* Hero Section */
-        .hero {
-            position: relative;
-            overflow: hidden;
-            padding: 5rem 1.5rem 4rem;
-        }
-
-        .hero-glow {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            width: 800px;
-            height: 500px;
-            transform: translateX(-50%) translateY(-50%);
-            background: var(--primary-glow);
-            border-radius: 50%;
-            filter: blur(120px);
-            pointer-events: none;
-        }
-
-        .hero-container {
-            max-width: 900px;
-            margin: 0 auto;
-            text-align: center;
-            position: relative;
-        }
-
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.375rem 1rem;
-            background: var(--secondary);
-            border: 1px solid var(--border);
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .hero-badge-icon {
-            color: var(--primary);
-        }
-
-        .hero-title {
-            font-size: clamp(2.5rem, 6vw, 4rem);
-            font-weight: 700;
-            letter-spacing: -0.03em;
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
-        }
-
-        .hero-title-accent {
-            color: var(--primary);
-        }
-
-        .hero-subtitle {
-            font-size: 1.125rem;
-            color: var(--muted);
-            max-width: 640px;
-            margin: 0 auto 2rem;
-            line-height: 1.8;
-        }
-
-        .hero-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin-bottom: 3rem;
-        }
-
-        .hero-leagues {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1.5rem;
-            opacity: 0.6;
-            font-size: 0.875rem;
-        }
-
-        .hero-leagues span:first-child {
-            font-weight: 500;
-        }
-
-        /* Stats Section */
-        .stats {
-            background: var(--secondary);
-            border-top: 1px solid var(--border-light);
-            border-bottom: 1px solid var(--border-light);
-            padding: 4rem 1.5rem;
-        }
-
-        .stats-container {
-            max-width: 1280px;
-            margin: 0 auto;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 2rem;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: clamp(2rem, 4vw, 3rem);
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            color: var(--muted);
-            font-size: 0.875rem;
-        }
-
-        /* Features Section */
-        .features {
-            padding: 5rem 1.5rem;
-        }
-
-        .features-container {
-            max-width: 1280px;
-            margin: 0 auto;
-        }
-
-        .section-header {
-            text-align: center;
-            max-width: 640px;
-            margin: 0 auto 4rem;
-        }
-
-        .section-title {
-            font-size: 2rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            margin-bottom: 1rem;
-        }
-
-        .section-subtitle {
-            color: var(--muted);
-            font-size: 1.125rem;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .feature-card {
-            background: var(--card);
-            border: 1px solid var(--border-light);
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: all 0.3s;
-            cursor: pointer;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-        }
-
-        .feature-card:hover {
-            border-color: rgba(34, 197, 94, 0.5);
-            background: var(--card-hover);
-            transform: translateY(-4px);
-        }
-
-        .feature-icon {
-            width: 48px;
-            height: 48px;
-            background: rgba(34, 197, 94, 0.1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-            color: var(--primary);
-            transition: all 0.3s;
-        }
-
-        .feature-card:hover .feature-icon {
-            background: var(--primary);
-            color: var(--background);
-        }
-
-        .feature-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-        }
-
-        .feature-description {
-            color: var(--muted);
-            font-size: 0.9375rem;
-            line-height: 1.7;
-        }
-
-        .api-badge {
-            display: flex;
-            justify-content: center;
-            margin-top: 3rem;
-        }
-
-        .api-badge-inner {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1.5rem;
-            background: rgba(34, 197, 94, 0.05);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .api-badge-icon {
-            color: var(--primary);
-        }
-
-        /* CTA Section */
-        .cta {
-            padding: 5rem 1.5rem;
-        }
-
-        .cta-container {
-            max-width: 1280px;
-            margin: 0 auto;
-        }
-
-        .cta-card {
-            position: relative;
-            overflow: hidden;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 4rem 2rem;
-            text-align: center;
-        }
-
-        .cta-glow-1 {
-            position: absolute;
-            top: -80px;
-            right: -80px;
-            width: 240px;
-            height: 240px;
-            background: rgba(34, 197, 94, 0.1);
-            border-radius: 50%;
-            filter: blur(80px);
-        }
-
-        .cta-glow-2 {
-            position: absolute;
-            bottom: -80px;
-            left: -80px;
-            width: 240px;
-            height: 240px;
-            background: rgba(34, 197, 94, 0.1);
-            border-radius: 50%;
-            filter: blur(80px);
-        }
-
-        .cta-content {
-            position: relative;
-            max-width: 640px;
-            margin: 0 auto;
-        }
-
-        .cta-title {
-            font-size: 2rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            margin-bottom: 1rem;
-        }
-
-        .cta-subtitle {
-            color: var(--muted);
-            font-size: 1.125rem;
-            margin-bottom: 2rem;
-        }
-
-        .cta-benefits {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .cta-benefit {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .cta-benefit-icon {
-            color: var(--primary);
-        }
-
-        /* Footer */
-        .footer {
-            background: var(--card);
-            border-top: 1px solid var(--border);
-            padding: 3rem 1.5rem 2rem;
-        }
-
-        .footer-container {
-            max-width: 1280px;
-            margin: 0 auto;
-        }
-
-        .footer-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 3rem;
-            margin-bottom: 3rem;
-        }
-
-        .footer-brand {
-            max-width: 280px;
-        }
-
-        .footer-brand-logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-            text-decoration: none;
-            color: var(--foreground);
-        }
-
-        .footer-brand-text {
-            color: var(--muted);
-            font-size: 0.875rem;
-            line-height: 1.7;
-        }
-
-        .footer-column h3 {
-            font-size: 0.875rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
-
-        .footer-links {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .footer-links a {
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 0.875rem;
-            transition: color 0.2s;
-        }
-
-        .footer-links a:hover {
-            color: var(--foreground);
-        }
-
-        .footer-bottom {
-            padding-top: 2rem;
-            border-top: 1px solid var(--border);
-            text-align: center;
-            color: var(--muted);
-            font-size: 0.875rem;
-        }
-
-        /* Mobile Menu */
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--foreground);
-            cursor: pointer;
-            padding: 0.5rem;
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .footer-grid {
-                grid-template-columns: 1fr 1fr;
+<!-- End Google Tag Manager -->
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6574544891375303"
+ crossorigin="anonymous"></script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-47242CTHR5"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-47242CTHR5');
+</script>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Noto Sans JP -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<style data-purpose="base-styles">
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+  </style>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              850: '#151e2e',
             }
-
-            .footer-brand {
-                grid-column: 1 / -1;
-                max-width: none;
-            }
+          }
         }
-
-        @media (max-width: 768px) {
-            .nav-menu,
-            .header-buttons {
-                display: none;
-            }
-
-            .mobile-menu-btn {
-                display: block;
-            }
-
-            .hero {
-                padding: 3rem 1rem;
-            }
-
-            .hero-title {
-                font-size: 2rem;
-            }
-
-            .hero-subtitle {
-                font-size: 1rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1.5rem;
-            }
-
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .footer-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .cta-card {
-                padding: 2rem 1rem;
-            }
-
-            .cta-benefits {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
-
-        /* Mobile Menu Overlay */
-        .mobile-menu {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: var(--background);
-            z-index: 200;
-            padding: 1.5rem;
-            flex-direction: column;
-        }
-
-        .mobile-menu.active {
-            display: flex;
-        }
-
-        .mobile-menu-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .mobile-menu-close {
-            background: none;
-            border: none;
-            color: var(--foreground);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .mobile-nav {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .mobile-nav a {
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 1.125rem;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
-        .mobile-nav a:hover {
-            color: var(--foreground);
-        }
-
-        .mobile-menu-buttons {
-            margin-top: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-    </style>
+      }
+    }
+  </script>
 </head>
-<body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PNCBBCBM"
+<body class="bg-slate-900 text-slate-200 antialiased selection:bg-green-500/30 selection:text-green-200">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PNCBBCBM"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
-    <!-- Header -->
-    <header class="header">
-        <div class="header-container">
-            <a href="/" class="logo">
-                <div class="logo-icon">⚡</div>
-                <span class="logo-text">Football Hub Japan</span>
-            </a>
-
-            <ul class="nav-menu">
-                <li><a href="/database-new.html">データベース</a></li>
-                <li><a href="/radar-enhanced.html">レーダーチャート</a></li>
-                <li><a href="/schedule.html">スケジュール</a></li>
-                <li><a href="/ai-agent-enhanced.html">AI分析</a></li>
-                <li><a href="/ranking.html">ランキング</a></li>
-                <li><a href="/insights.html">分析コラム</a></li>
-            </ul>
-
-            <div class="header-buttons">
-                <a href="/login.html" class="btn btn-ghost">ログイン</a>
-                <a href="/dashboard.html" class="btn btn-primary" data-cta="contact" data-cta-location="header">無料で始める</a>
-            </div>
-
-            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-            </button>
+<!-- End Google Tag Manager (noscript) -->
+<!-- BEGIN: TopBar -->
+<div class="bg-slate-950 py-1.5 border-b border-slate-800 text-xs font-medium text-slate-400 overflow-hidden" data-purpose="top-match-ticker">
+<div class="max-w-7xl mx-auto px-4 flex justify-center space-x-8 animate-pulse">
+<span>J1: 横浜FM 2-1 川崎F</span>
+<span class="text-slate-600">|</span>
+<span>J1: 浦和 1-0 鹿島</span>
+<span class="text-slate-600">|</span>
+<span>J2: 清水 3-2 町田</span>
+<span class="text-slate-600">|</span>
+<span>代表: 日本 4-1 ドイツ</span>
+</div>
+</div>
+<!-- END: TopBar -->
+<!-- BEGIN: MainHeader -->
+<header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800" data-purpose="site-header">
+<div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+<!-- Logo area -->
+<a class="flex items-center gap-2 group" href="/">
+<div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-slate-900 shadow-lg shadow-green-500/20 group-hover:bg-green-400 transition-colors">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+</div>
+<span class="text-lg font-bold text-white tracking-tight">Football Hub <span class="text-green-400">Japan</span></span>
+</a>
+<!-- Desktop Navigation -->
+<nav class="hidden md:flex items-center space-x-8" data-purpose="main-navigation">
+<a class="text-sm font-medium text-slate-300 hover:text-green-400 transition-colors" href="/insights.html">ニュース</a>
+<a class="text-sm font-medium text-slate-300 hover:text-green-400 transition-colors" href="/schedule.html">試合速報</a>
+<a class="text-sm font-medium text-slate-300 hover:text-green-400 transition-colors" href="/database-new.html">チームデータ</a>
+<a class="text-sm font-medium text-slate-300 hover:text-green-400 transition-colors" href="/ranking.html">選手データ</a>
+</nav>
+<!-- CTA Button + Mobile Menu -->
+<div class="flex items-center gap-2">
+<button class="md:hidden p-2 text-slate-400 hover:text-white" onclick="toggleMobileMenu()" aria-label="メニュー">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+</button>
+<a href="/ai-agent-enhanced.html" class="flex items-center gap-2 bg-green-500 hover:bg-green-400 text-slate-900 px-4 py-2 rounded-full text-sm font-bold transition-all shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:shadow-[0_0_20px_rgba(34,197,94,0.5)]" data-cta="ai_assistant" data-cta-location="header">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8V4H8"></path><rect height="12" rx="2" width="16" x="4" y="8"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
+          AIアシスタント
+        </a>
+</div>
+</div>
+</header>
+<!-- END: MainHeader -->
+<main>
+<!-- BEGIN: HeroSection -->
+<section class="relative h-[550px] flex items-center justify-center bg-slate-900 overflow-hidden" data-purpose="hero-section">
+<!-- Background Image -->
+<div class="absolute inset-0 w-full h-full">
+<img alt="Soccer match background" class="w-full h-full object-cover opacity-30 mix-blend-luminosity" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9Dlv8ft6BGDPg0LZjvh1yQgUU-QwTEQzpZwlPpI1l8DwU9J3_Z_o-C0B8XJq7k7jFr6QWeVNxNIBZYdjEJIcU23yQO78T4Stumtv3y0acxAV2y3qtzelIvwicdTSNstCujk6k-JrVsOZnfJbOOMIeN1oPOspNv-GcAFD3dDlsJrA8M_Fba8qfCgr0M3HVF_VX1duwuvDbMmN1HWaxkHaLm4I1oQo04IAAlYoFkrdcEjlSxQevs2OOUDA8k66fupu-Ko3yX-LhA30"/>
+</div>
+<!-- Gradient Overlay -->
+<div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div>
+<!-- Hero Content -->
+<div class="relative z-10 text-center px-4 w-full max-w-4xl mx-auto mt-[-40px]">
+<p class="text-green-400 font-bold mb-3 tracking-[0.2em] text-sm uppercase flex items-center justify-center gap-2">
+<span class="w-8 h-px bg-green-400/50"></span>
+          データで掴む勝利
+          <span class="w-8 h-px bg-green-400/50"></span>
+</p>
+<h1 class="text-4xl md:text-6xl font-extrabold text-white mb-8 leading-tight tracking-tight">
+          日本サッカーを<br class="md:hidden"/>データで読み解く
+        </h1>
+<!-- Search Bar -->
+<div class="max-w-2xl mx-auto bg-slate-800/80 backdrop-blur-md rounded-full p-1.5 border border-slate-700 shadow-2xl flex items-center transition-all focus-within:border-green-500/50 focus-within:ring-4 focus-within:ring-green-500/10">
+<div class="pl-4 text-slate-400">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+</div>
+<input class="flex-1 bg-transparent border-none text-white px-4 py-3 outline-none placeholder:text-slate-500 focus:ring-0" placeholder="チーム、選手、大会を検索..." type="text"/>
+<a href="/database-new.html" class="bg-green-500 hover:bg-green-400 text-slate-900 p-3 rounded-full transition-colors inline-flex" data-cta="search" data-cta-location="hero"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></a>
+</div>
+</div>
+</section>
+<!-- END: HeroSection -->
+<!-- BEGIN: StatsStrip -->
+<div class="relative z-20 max-w-5xl mx-auto px-4 -mt-16" data-purpose="statistics-strip">
+<div class="bg-slate-800 rounded-2xl shadow-2xl shadow-black/50 border border-slate-700 p-8">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-slate-700/50 text-center">
+<div class="px-4">
+<div class="text-4xl font-black text-green-400 mb-1">500+</div>
+<div class="text-xs font-medium text-slate-400 uppercase tracking-wider">登録チーム</div>
+</div>
+<div class="px-4">
+<div class="text-4xl font-black text-green-400 mb-1">50K+</div>
+<div class="text-xs font-medium text-slate-400 uppercase tracking-wider">選手データ</div>
+</div>
+<div class="px-4">
+<div class="text-4xl font-black text-green-400 mb-1">100+</div>
+<div class="text-xs font-medium text-slate-400 uppercase tracking-wider">分析指標</div>
+</div>
+<div class="px-4">
+<div class="text-4xl font-black text-green-400 mb-1">99.9%</div>
+<div class="text-xs font-medium text-slate-400 uppercase tracking-wider">データ精度</div>
+</div>
+</div>
+</div>
+</div>
+<!-- END: StatsStrip -->
+<!-- BEGIN: FeaturesSection -->
+<section class="py-24 max-w-7xl mx-auto px-4" data-purpose="features">
+<div class="text-center mb-16">
+<h2 class="text-3xl font-bold text-white mb-4">主な機能</h2>
+<p class="text-slate-400 max-w-2xl mx-auto">高度なデータ分析とAI技術を駆使し、サッカーのあらゆる側面を可視化します。</p>
+</div>
+<div class="grid md:grid-cols-2 gap-6">
+<!-- Feature Card 1 -->
+<div class="bg-slate-850 p-8 rounded-2xl border border-slate-800 hover:border-green-500/30 transition-all duration-300 group">
+<div class="w-14 h-14 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-green-500/20 transition-all">
+<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8V4H8"></path><rect height="12" rx="2" width="16" x="4" y="8"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
+</div>
+<h3 class="text-xl font-bold text-white mb-3">AI 試合予測エンジン</h3>
+<p class="text-slate-400 leading-relaxed text-sm">過去の対戦成績、選手のコンディション、気象条件など膨大なデータをAIが学習し、次戦の勝敗やスコアを高い精度で予測します。</p>
+</div>
+<!-- Feature Card 2 -->
+<div class="bg-slate-850 p-8 rounded-2xl border border-slate-800 hover:border-green-500/30 transition-all duration-300 group">
+<div class="w-14 h-14 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-green-500/20 transition-all">
+<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+</div>
+<h3 class="text-xl font-bold text-white mb-3">詳細なスカウティング</h3>
+<p class="text-slate-400 leading-relaxed text-sm">特定の条件で選手を絞り込み、パス成功率、ヒートマップ、デュエル勝率など、独自の指標で選手の潜在能力を詳細に評価・発掘します。</p>
+</div>
+<!-- Feature Card 3 -->
+<div class="bg-slate-850 p-8 rounded-2xl border border-slate-800 hover:border-green-500/30 transition-all duration-300 group">
+<div class="w-14 h-14 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-green-500/20 transition-all">
+<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+</div>
+<h3 class="text-xl font-bold text-white mb-3">リアルタイムスタッツ</h3>
+<p class="text-slate-400 leading-relaxed text-sm">試合中のポゼッション、シュート位置、パスネットワークなどをリアルタイムで更新し、戦況の変化を視覚的に把握できます。</p>
+</div>
+<!-- Feature Card 4 -->
+<div class="bg-slate-850 p-8 rounded-2xl border border-slate-800 hover:border-green-500/30 transition-all duration-300 group">
+<div class="w-14 h-14 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-green-500/20 transition-all">
+<svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+</div>
+<h3 class="text-xl font-bold text-white mb-3">カスタム通知設定</h3>
+<p class="text-slate-400 leading-relaxed text-sm">お気に入りのチームや選手の最新情報、試合開始、ゴール速報、注目スタッツの変動など、必要な情報を即座にプッシュ通知で受け取れます。</p>
+</div>
+</div>
+</section>
+<!-- END: FeaturesSection -->
+<!-- BEGIN: ColumnsArticles -->
+<section class="py-24 bg-slate-950 px-4" data-purpose="latest-articles">
+<div class="max-w-7xl mx-auto">
+<div class="flex items-center justify-between mb-12 border-b border-slate-800 pb-4">
+<h2 class="text-2xl md:text-3xl font-bold text-white">最新の分析コラム</h2>
+</div>
+<div class="grid md:grid-cols-3 gap-8">
+<!-- Article Card 1 -->
+<article class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex flex-col group hover:border-slate-700 transition-colors">
+<div class="h-48 relative overflow-hidden bg-slate-800">
+<img alt="Article Thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCB_URHp3l1T95Zgbj8KeMUCmlsCLhdsnq0YG9l1kKD8anBxAbMnVR3gbUmAPUMY7esb9pEWCTc6tDDeZxnBbgxLCK9HK5loDI9g-7YAQVwRXmywM_Fdcso6sPtShweyw_2T6huNDKEdvksK46XHeOUFgyFQc4OH9PYjE4p9YdPecZjRAt-uV9nrupJtzLiObZVXSw8U94_toqxEnim1svs5d71qdmaRT48SC3aTMBAEG_F_qKRv6OmH1jwMbPZKn2RWX8YaTzbuas"/>
+<div class="absolute top-4 left-4 bg-green-500 text-slate-900 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">戦術分析</div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<h3 class="text-lg font-bold text-white mb-3 leading-snug group-hover:text-green-400 transition-colors"><a href="/insights-001.html">新システム導入で激変した横浜FMの攻撃陣形をデータで解剖</a></h3>
+<p class="text-sm text-slate-400 mb-6 line-clamp-2">今シーズンから採用された新しいビルドアップの形が、どのように相手のプレスを無効化しているのか詳細データを元に解説します。</p>
+<div class="mt-auto flex items-center justify-between">
+<time class="text-xs text-slate-500 flex items-center gap-1">
+<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+                  2023.10.25
+                </time>
+</div>
+</div>
+</article>
+<!-- Article Card 2 -->
+<article class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex flex-col group hover:border-slate-700 transition-colors">
+<div class="h-48 relative overflow-hidden bg-slate-800">
+<img alt="Article Thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6iUduzWlgAckGHIGNXO16xox7jWhaEkQ34mw_30bAyTUdvJPfkJogo0D3CRs7oEP0sgGg4slTdtgk_u5TSy-LydZTc5LaoyAV5BpPyABuuQ0fqTQdoooZlVJxF1M6q6kBAdsMWZKwR7IRhhjzPs3RMBLYpiDXoxfYE54Pih3PYkFI7t6BWmmq_y1XglR-3zR5g7lExqdY9tmrn1S_hRTD_sVQLeKurpwHsqeCvJHIh-e_bPcRJmtHCEqNpD1AQQpJGrkaP5qxb6s"/>
+<div class="absolute top-4 left-4 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">選手フォーカス</div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<h3 class="text-lg font-bold text-white mb-3 leading-snug group-hover:text-green-400 transition-colors"><a href="/insights-002.html">欧州で躍動する若き才能。久保建英の「アシスト期待値」が示す真価</a></h3>
+<p class="text-sm text-slate-400 mb-6 line-clamp-2">単なるゴールやアシスト数だけでなく、xGやxAなどの詳細指標を用いて、彼がチームにもたらす影響力の本質に迫ります。</p>
+<div class="mt-auto flex items-center justify-between">
+<time class="text-xs text-slate-500 flex items-center gap-1">
+<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+                  2023.10.24
+                </time>
+</div>
+</div>
+</article>
+<!-- Article Card 3 -->
+<article class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex flex-col group hover:border-slate-700 transition-colors">
+<div class="h-48 relative overflow-hidden bg-slate-800">
+<img alt="Article Thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxA95NsP_KbnCCkE_uHBE-FPMZ7if728Vm4Otln9br84_B56FaQHAuUxjlnR1kzCv0lZqBMfv7V8bns6GYco0wfHQMDa6_1rHDckEZ9FUXup4z4_ESmTgaVLdmvxH86yhyqFK0O2oPU9GCX5xIjOWlVbQ7dpTbD5xvqiGCZl0d_V1aV-0aR86uiGvWFc6v7Z-i3vVSZBUKN6t34TFkTt2yBvqtIc_ldJ4bQllu2TLxZILi02JxGe4wVsXt4X9UrPpOBqJVbZhNKsA"/>
+<div class="absolute top-4 left-4 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">AI予測</div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<h3 class="text-lg font-bold text-white mb-3 leading-snug group-hover:text-green-400 transition-colors"><a href="/insights-003.html">Jリーグ終盤戦、優勝確率シミュレーション。AIが導き出した結末は？</a></h3>
+<p class="text-sm text-slate-400 mb-6 line-clamp-2">残り5節を残し、上位3チームの優勝確率を10,000回のシミュレーションから算出。今後のキーマッチを予測します。</p>
+<div class="mt-auto flex items-center justify-between">
+<time class="text-xs text-slate-500 flex items-center gap-1">
+<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+                  2023.10.22
+                </time>
+</div>
+</div>
+</article>
+</div>
+<div class="text-center mt-12">
+<a href="/insights.html" class="inline-flex items-center gap-2 text-green-400 hover:text-green-300 font-medium transition-colors">すべてのコラムを見る <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+</div>
+</div>
+</section>
+<!-- END: ColumnsArticles -->
+<!-- BEGIN: CTA Section -->
+<section class="py-24 px-4 relative overflow-hidden" data-purpose="call-to-action">
+<!-- Decorative blobs -->
+<div class="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-green-500/20 rounded-full blur-3xl mix-blend-screen pointer-events-none"></div>
+<div class="max-w-5xl mx-auto bg-gradient-to-br from-green-600 via-green-500 to-emerald-400 rounded-3xl p-12 md:p-16 text-center shadow-[0_0_50px_rgba(34,197,94,0.15)] relative z-10 overflow-hidden">
+<!-- Overlay pattern -->
+<div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 24px 24px;"></div>
+<div class="relative z-20">
+<h2 class="text-3xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">今すぐ分析を始めよう</h2>
+<p class="text-green-50 text-lg mb-10 max-w-2xl mx-auto font-medium">圧倒的なデータ量とAI技術で、あなたのサッカー観戦・分析を次のレベルへ。無料アカウントで基本機能をお試しいただけます。</p>
+<a href="/dashboard.html" class="inline-flex items-center justify-center gap-2 bg-white text-slate-900 font-bold px-8 py-4 rounded-full hover:bg-slate-100 transition-all hover:scale-105 hover:shadow-xl shadow-black/20 text-lg" data-cta="contact" data-cta-location="cta_section">
+            無料で始める
+</a>
+</div>
+</div>
+</section>
+<!-- END: CTA Section -->
+</main>
+<!-- BEGIN: Footer -->
+<footer class="bg-slate-950 pt-20 pb-10 border-t border-slate-800 px-4" data-purpose="site-footer">
+<div class="max-w-7xl mx-auto">
+<!-- Top Footer Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+<!-- Brand Info -->
+<div class="md:col-span-1">
+<a class="flex items-center gap-2 mb-6" href="/">
+<div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-slate-900">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+</div>
+<span class="text-lg font-bold text-white tracking-tight">Football Hub</span>
+</a>
+<p class="text-sm text-slate-400 leading-relaxed mb-6">日本最高峰のサッカーデータプラットフォーム。すべてのファン、アナリスト、関係者に最先端のインサイトを提供します。</p>
+<!-- Social Icons -->
+<div class="flex space-x-4">
+<a class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-green-500 hover:text-slate-900 transition-colors" href="#">
+<svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
+</a>
+<a class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-green-500 hover:text-slate-900 transition-colors" href="#">
+<svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"><rect height="20" rx="5" ry="5" width="20" x="2" y="2"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg>
+</a>
+<a class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-green-500 hover:text-slate-900 transition-colors" href="#">
+<svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+</a>
+</div>
+</div>
+<!-- Links Col 1 -->
+<div>
+<h4 class="text-white font-semibold mb-5 tracking-wide">データ</h4>
+<ul class="space-y-3">
+<li><a class="text-sm text-slate-400 hover:text-green-400 transition-colors" href="/ranking.html">Jリーグ順位表</a></li>
+<li><a class="text-sm text-slate-400 hover:text-green-400 transition-colors" href="/database-new.html">チーム別スタッツ</a></li>
+<li><a class="text-sm text-slate-400 hover:text-green-400 transition-colors" href="/ranking.html">選手ランキング</a></li>
+<li><a class="text-sm text-slate-400 hover:text-green-400 transition-colors" href="/ai-agent-enhanced.html">AI 予測レポート</a></li>
+<li><a class="text-sm text-slate-400 hover:text-green-400 transition-colors" href="/insights.html">過去データアーカイブ</a></li>
+</ul>
+</div>
+<!-- Links Col 2 -->
+<div>
+<h4 class="text-white font-semibold mb-5 tracking-wide">リソース</h4>
+<ul class="space-y-3">
+<li><a class="text-sm text-slate-400 hover:text-green-400 transition-colors" href="/insights.html">分析コラム</a></li>
+<li><a class="text-sm text-slate-400 hover:text-green-400 transition-colors" href="#">用語集</a></li>
+<li><a class="text-sm text-slate-400 hover:text-green-400 transition-colors" href="#">APIドキュメント</a></li>
+<li><a class="text-sm text-slate-400 hover:text-green-400 transition-colors" href="#">ヘルプセンター</a></li>
+</ul>
+</div>
+<!-- Links Col 3 -->
+<div>
+<h4 class="text-white font-semibold mb-5 tracking-wide">会社情報</h4>
+<ul class="space-y-3">
+<li><a class="text-sm text-slate-400 hover:text-green-400 transition-colors" href="/about.html">運営会社</a></li>
+<li><a class="text-sm text-slate-400 hover:text-green-400 transition-colors" href="#">採用情報</a></li>
+<li><a class="text-sm text-slate-400 hover:text-green-400 transition-colors" href="/contact.html">お問い合わせ</a></li>
+<li><a class="text-sm text-slate-400 hover:text-green-400 transition-colors" href="#">メディアキット</a></li>
+</ul>
+</div>
+</div>
+<!-- Bottom Footer -->
+<div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex flex-wrap gap-4 text-sm text-slate-500">
+<a class="hover:text-slate-300 transition-colors" href="/terms.html">利用規約</a>
+<a class="hover:text-slate-300 transition-colors" href="/privacy-policy.html">プライバシーポリシー</a>
+<a class="hover:text-slate-300 transition-colors" href="#">特定商取引法に基づく表記</a>
+</div>
+<div class="text-sm text-slate-500">
+          © 2025 Football Hub Japan. All rights reserved.
         </div>
-    </header>
-
-    <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobileMenu">
-        <div class="mobile-menu-header">
-            <a href="/" class="logo">
-                <div class="logo-icon">⚡</div>
-                <span class="logo-text">Football Hub</span>
-            </a>
-            <button class="mobile-menu-close" onclick="toggleMobileMenu()">×</button>
-        </div>
-        <ul class="mobile-nav">
-            <li><a href="/database-new.html" onclick="toggleMobileMenu()">データベース</a></li>
-            <li><a href="/radar-enhanced.html" onclick="toggleMobileMenu()">レーダーチャート</a></li>
-            <li><a href="/schedule.html" onclick="toggleMobileMenu()">スケジュール</a></li>
-            <li><a href="/ai-agent-enhanced.html" onclick="toggleMobileMenu()">AI分析</a></li>
-            <li><a href="/ranking.html" onclick="toggleMobileMenu()">ランキング</a></li>
-        </ul>
-        <div class="mobile-menu-buttons">
-            <a href="/login.html" class="btn btn-outline btn-lg" style="justify-content: center;">ログイン</a>
-            <a href="/dashboard.html" class="btn btn-primary btn-lg" style="justify-content: center;" data-cta="contact" data-cta-location="mobile_menu">無料で始める</a>
-        </div>
-    </div>
-
-    <main>
-        <!-- Hero Section -->
-        <section class="hero">
-            <div class="hero-glow"></div>
-            <div class="hero-container">
-                <div class="hero-badge">
-                    <span class="hero-badge-icon">✨</span>
-                    <span>AI搭載のサッカー分析</span>
-                </div>
-
-                <h1 class="hero-title">
-                    日本サッカーを<br>
-                    <span class="hero-title-accent">データで読み解く</span>
-                </h1>
-
-                <p class="hero-subtitle">
-                    最先端のAI技術で選手パフォーマンス、戦術、試合予測を詳細分析。<br>
-                    リアルタイムデータで日本サッカーの深層に迫る。
-                </p>
-
-                <div class="hero-buttons">
-                    <a href="/dashboard.html" class="btn btn-primary btn-lg" data-cta="contact" data-cta-location="hero">
-                        無料で始める
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                        </svg>
-                    </a>
-                    <a href="/radar-enhanced.html" class="btn btn-outline btn-lg" data-cta="radar_trial" data-cta-location="hero">
-                        レーダーチャートを試す
-                    </a>
-                </div>
-
-                <div class="hero-leagues">
-                    <span>対応リーグ:</span>
-                    <span>Jリーグ</span>
-                    <span>プレミアリーグ</span>
-                    <span>ラ・リーガ</span>
-                    <span>セリエA</span>
-                    <span>ブンデスリーガ</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Stats Section -->
-        <section class="stats">
-            <div class="stats-container">
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value">500+</div>
-                        <div class="stat-label">対応チーム数</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">50,000+</div>
-                        <div class="stat-label">選手データ</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">100+</div>
-                        <div class="stat-label">対応リーグ</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">99.9%</div>
-                        <div class="stat-label">データ精度</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Features Section -->
-        <section class="features" id="features">
-            <div class="features-container">
-                <div class="section-header">
-                    <h2 class="section-title">主な機能</h2>
-                    <p class="section-subtitle">プロフェッショナルなサッカー分析に必要なすべての機能を提供</p>
-                </div>
-
-                <div class="features-grid">
-                    <a href="/database-new.html" class="feature-card">
-                        <div class="feature-icon">📊</div>
-                        <h3 class="feature-title">サッカーデータベース</h3>
-                        <p class="feature-description">世界中のリーグ、チーム、選手の詳細なデータを網羅。リアルタイムで更新される統計情報にアクセスできます。</p>
-                    </a>
-
-                    <a href="/radar-enhanced.html" class="feature-card">
-                        <div class="feature-icon">📈</div>
-                        <h3 class="feature-title">レーダーチャート比較</h3>
-                        <p class="feature-description">選手やチームのパフォーマンスを視覚的に比較。多角的な分析で真の実力を把握できます。</p>
-                    </a>
-
-                    <a href="/match-detail.html" class="feature-card">
-                        <div class="feature-icon">📝</div>
-                        <h3 class="feature-title">試合レビュー/プレビュー</h3>
-                        <p class="feature-description">AIが生成する詳細な試合分析。過去の試合レビューと今後の試合予想を提供します。</p>
-                    </a>
-
-                    <a href="/schedule.html" class="feature-card">
-                        <div class="feature-icon">📅</div>
-                        <h3 class="feature-title">試合スケジュール</h3>
-                        <p class="feature-description">お気に入りのチームや選手の試合スケジュールを一覧表示。重要な試合を見逃しません。</p>
-                    </a>
-
-                    <a href="/ai-agent-enhanced.html" class="feature-card">
-                        <div class="feature-icon">🤖</div>
-                        <h3 class="feature-title">AI分析エージェント</h3>
-                        <p class="feature-description">最新のAI技術で試合結果を予想。機械学習による高精度な分析をお届けします。</p>
-                    </a>
-
-                    <a href="/ranking.html" class="feature-card">
-                        <div class="feature-icon">🏆</div>
-                        <h3 class="feature-title">ランキングシステム</h3>
-                        <p class="feature-description">ポジション別、リーグ別の詳細なランキング。選手の市場価値や移籍情報も追跡します。</p>
-                    </a>
-                </div>
-
-                <div class="api-badge">
-                    <div class="api-badge-inner">
-                        <span class="api-badge-icon">⚡</span>
-                        <span>API-Football v3 Pro + football-data.org による高度なスタッツ分析</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Insights Section -->
-        <section class="features" id="insights">
-            <div class="features-container">
-                <div class="section-header">
-                    <h2 class="section-title">最新の分析コラム</h2>
-                    <p class="section-subtitle">データから読み解くサッカーの深層。指標の見方と分析の視点を解説します</p>
-                </div>
-
-                <div class="features-grid">
-                    <a href="/insights-001.html" class="feature-card">
-                        <div class="feature-icon">📊</div>
-                        <h3 class="feature-title">Jリーグで"勝ち点を伸ばす"ための指標：xGだけでは足りない理由</h3>
-                        <p class="feature-description" style="margin-bottom: 0.75rem;">xG（期待得点数）は攻撃力を測る重要な指標ですが、勝ち点に直結するとは限りません。xGと実際の得点の差、守備の質、セットプレーでの得点率など、複合的な視点から勝ち点を伸ばす要因を分析します。</p>
-                        <p style="font-size: 0.875rem; color: var(--muted); margin-bottom: 0.5rem;">2025年1月20日 | データ分析</p>
-                        <span style="color: var(--primary); font-size: 0.875rem; font-weight: 500;">続きを読む →</span>
-                    </a>
-
-                    <a href="/insights-002.html" class="feature-card">
-                        <div class="feature-icon">⚡</div>
-                        <h3 class="feature-title">ハイプレスの強度をどう見る？PPDAの見方と注意点</h3>
-                        <p class="feature-description" style="margin-bottom: 0.75rem;">PPDA（Passes Allowed Per Defensive Action）は、ハイプレスの強度を測る指標として注目されています。しかし、単純に数値が低いほど良いとは限りません。PPDAの適切な解釈方法と、見落としがちな落とし穴を解説します。</p>
-                        <p style="font-size: 0.875rem; color: var(--muted); margin-bottom: 0.5rem;">2025年1月15日 | 戦術分析</p>
-                        <span style="color: var(--primary); font-size: 0.875rem; font-weight: 500;">続きを読む →</span>
-                    </a>
-
-                    <a href="/insights-003.html" class="feature-card">
-                        <div class="feature-icon">💎</div>
-                        <h3 class="feature-title">移籍市場価値は当てになる？データの限界と"使い方"</h3>
-                        <p class="feature-description" style="margin-bottom: 0.75rem;">移籍市場価値は、選手の実力を反映する一つの指標ですが、年齢、ポジション、契約期間、メディア露出など様々な要因に左右されます。データの限界を理解し、どのように活用すべきかを考察します。</p>
-                        <p style="font-size: 0.875rem; color: var(--muted); margin-bottom: 0.5rem;">2025年1月10日 | データ解釈</p>
-                        <span style="color: var(--primary); font-size: 0.875rem; font-weight: 500;">続きを読む →</span>
-                    </a>
-                </div>
-
-                <div style="text-align: center; margin-top: 2rem;">
-                    <a href="/insights.html" class="btn btn-outline btn-lg">すべてのコラムを見る</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- CTA Section -->
-        <section class="cta">
-            <div class="cta-container">
-                <div class="cta-card">
-                    <div class="cta-glow-1"></div>
-                    <div class="cta-glow-2"></div>
-                    <div class="cta-content">
-                        <h2 class="cta-title">今すぐ分析を始めよう</h2>
-                        <p class="cta-subtitle">登録不要で、AIによるサッカー分析の世界へ</p>
-
-                        <div class="cta-benefits">
-                            <div class="cta-benefit">
-                                <span class="cta-benefit-icon">✓</span>
-                                <span>アカウント不要で利用可能</span>
-                            </div>
-                            <div class="cta-benefit">
-                                <span class="cta-benefit-icon">✓</span>
-                                <span>すぐに分析を開始</span>
-                            </div>
-                            <div class="cta-benefit">
-                                <span class="cta-benefit-icon">✓</span>
-                                <span>全機能にアクセス</span>
-                            </div>
-                        </div>
-
-                        <a href="/dashboard.html" class="btn btn-primary btn-lg" data-cta="contact" data-cta-location="cta_section">
-                            無料で始める
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-grid">
-                <div class="footer-brand">
-                    <a href="/" class="footer-brand-logo">
-                        <div class="logo-icon">⚡</div>
-                        <span class="logo-text">Football Hub Japan</span>
-                    </a>
-                    <p class="footer-brand-text">最先端のAI技術で日本サッカーを分析・予測するデータプラットフォーム</p>
-                </div>
-
-                <!-- プロダクトセクションは削除（未完成ページへのリンクを避けるため） -->
-
-                <div class="footer-column">
-                    <h3>リソース</h3>
-                    <ul class="footer-links">
-                        <li><a href="/database-new.html">データベース</a></li>
-                        <li><a href="/ranking.html">ランキング</a></li>
-                        <li><a href="/schedule.html">スケジュール</a></li>
-                        <li><a href="/insights.html">分析コラム</a></li>
-                    </ul>
-                </div>
-
-                <div class="footer-column">
-                    <h3>法的情報</h3>
-                    <ul class="footer-links">
-                        <li><a href="/terms.html">利用規約</a></li>
-                        <li><a href="/privacy-policy.html">プライバシーポリシー</a></li>
-                        <li><a href="/about.html">運営者情報</a></li>
-                        <li><a href="/contact.html">お問い合わせ</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="footer-bottom">
-                <p>&copy; 2025 Football Hub Japan. All rights reserved.</p>
-                <div class="footer-credits" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--muted); line-height: 1.6;">
-                    <p>Data sources: Football data is provided by external APIs and public sources. Team/league names and logos are trademarks of their respective owners.</p>
-                    <p style="margin-top: 0.5rem;">このサイトはファン向けの情報提供であり、公式の情報源ではありません。</p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <script src="/ai-widget.js"></script>
-    <script src="/js/cta-tracking.js"></script>
-    <script>
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobileMenu');
-            menu.classList.toggle('active');
-            document.body.style.overflow = menu.classList.contains('active') ? 'hidden' : '';
-        }
-    </script>
+</div>
+<div class="mt-4 pt-4 border-t border-slate-800 text-xs text-slate-500 leading-relaxed">
+<p>Data sources: Football data is provided by external APIs and public sources. Team/league names and logos are trademarks of their respective owners.</p>
+<p class="mt-1">このサイトはファン向けの情報提供であり、公式の情報源ではありません。</p>
+</div>
+</div>
+</footer>
+<!-- END: Footer -->
+<!-- Mobile Menu Overlay -->
+<div id="mobileMenu" class="fixed inset-0 z-[60] bg-slate-900 hidden flex-col p-6 md:hidden">
+<div class="flex justify-between items-center mb-8">
+<a href="/" class="flex items-center gap-2" onclick="toggleMobileMenu()">
+<div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-slate-900"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg></div>
+<span class="text-lg font-bold text-white">Football Hub Japan</span>
+</a>
+<button onclick="toggleMobileMenu()" class="p-2 text-slate-400 hover:text-white text-2xl">×</button>
+</div>
+<nav class="flex flex-col gap-4">
+<a href="/insights.html" class="text-slate-300 hover:text-green-400 py-2" onclick="toggleMobileMenu()">ニュース</a>
+<a href="/schedule.html" class="text-slate-300 hover:text-green-400 py-2" onclick="toggleMobileMenu()">試合速報</a>
+<a href="/database-new.html" class="text-slate-300 hover:text-green-400 py-2" onclick="toggleMobileMenu()">チームデータ</a>
+<a href="/ranking.html" class="text-slate-300 hover:text-green-400 py-2" onclick="toggleMobileMenu()">選手データ</a>
+<a href="/ai-agent-enhanced.html" class="text-green-400 font-medium py-2" onclick="toggleMobileMenu()">AIアシスタント</a>
+</nav>
+</div>
+<script src="/ai-widget.js"></script>
+<script src="/js/cta-tracking.js"></script>
+<script>
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobileMenu');
+  menu.classList.toggle('hidden');
+  menu.classList.toggle('flex');
+  document.body.style.overflow = menu.classList.contains('flex') ? 'hidden' : '';
+}
+</script>
 </body>
 </html>
