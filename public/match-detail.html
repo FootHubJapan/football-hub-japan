@@ -19,7 +19,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>試合詳細 - Football Hub Japan</title>
+    <meta name="description" content="試合のプレビュー、結果、スタッツをまとめて確認できます。Football Hub Japanの試合詳細ページ。">
+    <title>試合プレビュー・結果・スタッツ | Football Hub Japan</title>
+
+    <!-- Structured data placeholder (filled by JS after match data load) -->
+    <script type="application/ld+json" id="matchJsonLd">{}</script>
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6574544891375303"
      crossorigin="anonymous"></script>
@@ -52,6 +56,44 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             background: var(--background);
             color: var(--foreground);
             min-height: 100vh;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .related-links {
+            margin: 0.75rem 0 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .related-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.65rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(33, 38, 45, 0.6);
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .related-link:hover {
+            border-color: rgba(34, 197, 94, 0.4);
+            color: var(--foreground);
         }
 
         .header {
@@ -1304,6 +1346,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="main-container">
         <!-- 戻るリンク -->
         <a href="/schedule.html" class="back-link">← スケジュールに戻る</a>
+
+        <!-- SEO: primary heading (filled by JS) -->
+        <h1 id="matchH1" class="sr-only">試合詳細</h1>
+
+        <!-- Internal links (navigation) -->
+        <div class="related-links" aria-label="関連リンク">
+            <a class="related-link" href="/schedule.html" data-cta="internal_schedule" data-cta-location="match_detail">スケジュール</a>
+            <a class="related-link" href="/ranking.html" data-cta="internal_ranking" data-cta-location="match_detail">ランキング</a>
+            <a class="related-link" href="/database-new.html" data-cta="internal_database" data-cta-location="match_detail">データベース</a>
+            <a class="related-link" href="/insights.html" data-cta="internal_insights" data-cta-location="match_detail">分析コラム</a>
+        </div>
         
         <!-- 試合ヘッダー -->
         <div class="match-header">
@@ -1597,6 +1650,73 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             updateLineupTab(matchData);
         }
 
+        function updateMatchSeo(matchData) {
+            if (!matchData) return;
+
+            const home = matchData.homeTeam || 'ホームチーム';
+            const away = matchData.awayTeam || 'アウェイチーム';
+            const league = matchData.league || '';
+            const venue = matchData.venue || '';
+
+            const homeScore = matchData.homeScore !== null && matchData.homeScore !== undefined ? matchData.homeScore : null;
+            const awayScore = matchData.awayScore !== null && matchData.awayScore !== undefined ? matchData.awayScore : null;
+            const hasScore = (homeScore !== null && awayScore !== null && homeScore !== '-' && awayScore !== '-');
+
+            const kickoff = matchData.date ? new Date(matchData.date) : null;
+            const kickoffIso = kickoff && !isNaN(kickoff.getTime()) ? kickoff.toISOString() : null;
+
+            const card = `${home} vs ${away}`;
+            const suffix = 'Football Hub Japan';
+
+            document.title = `${card}${league ? '｜' + league : ''}｜結果・スタッツ・レビュー | ${suffix}`;
+
+            const meta = document.querySelector('meta[name="description"]');
+            if (meta) {
+                const parts = [];
+                parts.push(`${card}のプレビュー/結果/スタッツをまとめて確認。`);
+                if (league) parts.push(`大会: ${league}`);
+                if (kickoff) parts.push(`日時: ${kickoff.toLocaleString('ja-JP')}`);
+                if (venue) parts.push(`会場: ${venue}`);
+                if (hasScore) parts.push(`スコア: ${homeScore}-${awayScore}`);
+                parts.push(suffix);
+                meta.setAttribute('content', parts.join(' / '));
+            }
+
+            const h1 = document.getElementById('matchH1');
+            if (h1) {
+                h1.textContent = `${home} 対 ${away}（${league || '試合詳細'}）`;
+            }
+
+            // Structured data (SportsEvent)
+            const jsonEl = document.getElementById('matchJsonLd');
+            if (jsonEl) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const matchId = urlParams.get('id') || '';
+
+                const sd = {
+                    "@context": "https://schema.org",
+                    "@type": "SportsEvent",
+                    "name": `${home} vs ${away}`,
+                    "sport": "Soccer",
+                    "startDate": kickoffIso || undefined,
+                    "eventStatus": matchData.status === 'FT' || matchData.status === 'finished' ? "https://schema.org/EventCompleted" : undefined,
+                    "location": venue ? { "@type": "Place", "name": venue } : undefined,
+                    "competitor": [
+                        { "@type": "SportsTeam", "name": home },
+                        { "@type": "SportsTeam", "name": away }
+                    ],
+                    "mainEntityOfPage": {
+                        "@type": "WebPage",
+                        "@id": `https://football-hub-japan-ubzb.onrender.com/match-detail.html?id=${encodeURIComponent(matchId)}`
+                    }
+                };
+
+                // Remove undefined fields
+                Object.keys(sd).forEach(k => sd[k] === undefined && delete sd[k]);
+                try { jsonEl.textContent = JSON.stringify(sd); } catch(e) {}
+            }
+        }
+
         // 試合表示の更新
         function updateMatchDisplay(data) {
             // チーム情報の更新
@@ -1632,6 +1752,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             statusElement.textContent = status === 'FT' || status === 'finished' ? '試合終了' : 
                                       status === 'LIVE' || status === 'live' ? '試合中' : '予定';
             statusElement.className = `match-status ${status === 'FT' || status === 'finished' ? 'finished' : status === 'LIVE' || status === 'live' ? 'live' : 'scheduled'}`;
+
+            // SEOメタ更新
+            updateMatchSeo({
+                homeTeam: homeTeamName,
+                awayTeam: awayTeamName,
+                league: leagueName,
+                date: data.date,
+                venue: data.venue,
+                status: status,
+                homeScore: homeScore,
+                awayScore: awayScore
+            });
         }
 
         // 統計タブを更新（FotMob風UI）
