@@ -1,0 +1,24 @@
+{
+  "success": true,
+  "data": {
+    "matchId": "123",
+    "fixtureId": "123",
+    "league": "プレミアリーグ",
+    "homeTeam": "Manchester United",
+    "awayTeam": "Chelsea",
+    "homeScore": 2,
+    "awayScore": 1,
+    "date": "2025-01-18T12:30:00Z",
+    "venue": "アンフィールド",
+    "referee": "Michael Oliver",
+    "status": "finished",
+    "stats": {
+      "possession": {"home": "55%", "away": "45%"},
+      "shots": {"home": 14, "away": 9},
+      "shotsOnTarget": {"home": 6, "away": 3},
+      "xg": {"home": 1.8, "away": 1.1}
+    },
+    "events": [],
+    "lineups": null
+  }
+}
