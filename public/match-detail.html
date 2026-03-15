@@ -24,6 +24,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
     <!-- Structured data placeholder (filled by JS after match data load) -->
     <script type="application/ld+json" id="matchJsonLd">{}</script>
+
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6574544891375303"
      crossorigin="anonymous"></script>
@@ -58,18 +59,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             min-height: 100vh;
         }
 
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-        }
-
+        /* Related links module */
         .related-links {
             margin: 0.75rem 0 1rem;
             display: flex;
@@ -1350,12 +1340,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <!-- SEO: primary heading (filled by JS) -->
         <h1 id="matchH1" class="sr-only">試合詳細</h1>
 
-        <!-- Internal links (navigation) -->
         <div class="related-links" aria-label="関連リンク">
-            <a class="related-link" href="/schedule.html" data-cta="internal_schedule" data-cta-location="match_detail">スケジュール</a>
             <a class="related-link" href="/ranking.html" data-cta="internal_ranking" data-cta-location="match_detail">ランキング</a>
             <a class="related-link" href="/database-new.html" data-cta="internal_database" data-cta-location="match_detail">データベース</a>
             <a class="related-link" href="/insights.html" data-cta="internal_insights" data-cta-location="match_detail">分析コラム</a>
+            <a class="related-link" href="/contact.html" data-cta="internal_contact" data-cta-location="match_detail">お問い合わせ</a>
         </div>
         
         <!-- 試合ヘッダー -->
@@ -1711,7 +1700,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     }
                 };
 
-                // Remove undefined fields
                 Object.keys(sd).forEach(k => sd[k] === undefined && delete sd[k]);
                 try { jsonEl.textContent = JSON.stringify(sd); } catch(e) {}
             }
