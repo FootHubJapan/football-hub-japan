@@ -392,8 +392,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
 
                 <div class="form-group">
-                    <label for="email" class="form-label">メールアドレス <span style="color: var(--muted);">（任意）</span></label>
-                    <input type="email" id="email" name="email" class="form-input" placeholder="example@email.com">
+                    <label for="email" class="form-label">メールアドレス <span style="color: var(--primary);">（必須）</span></label>
+                    <input type="email" id="email" name="email" class="form-input" placeholder="example@email.com" required>
                 </div>
 
                 <div class="form-group">
@@ -402,16 +402,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
 
                 <div class="form-group">
-                    <label for="message" class="form-label">メッセージ <span style="color: var(--muted);">（任意）</span></label>
-                    <textarea id="message" name="message" class="form-textarea" placeholder="お問い合わせ内容をご記入ください"></textarea>
+                    <label for="message" class="form-label">メッセージ <span style="color: var(--primary);">（必須）</span></label>
+                    <textarea id="message" name="message" class="form-textarea" placeholder="お問い合わせ内容をご記入ください" required></textarea>
                 </div>
 
                 <button type="submit" class="form-submit">送信する</button>
             </form>
 
-            <div class="success-message" id="successMessage">
-                <p><strong>お問い合わせありがとうございます。</strong></p>
-                <p>送信を受け付けました。内容を確認の上、必要に応じてご返信いたします。</p>
+            <div id="successMessage" class="success-message" style="display:none;">
+                お問い合わせありがとうございます。
             </div>
 
             <div class="form-note">
@@ -473,10 +472,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <script>
         function handleSubmit(event) {
             event.preventDefault();
-            const successMessage = document.getElementById('successMessage');
-            successMessage.classList.add('show');
 
-            // generate_lead を GA4 に直接送信
+            const form = document.getElementById('contactForm');
+            const successMessage = document.getElementById('successMessage');
+
+            if (successMessage) {
+                successMessage.style.display = 'block';
+            }
+
             if (typeof window.gtag === 'function') {
                 window.gtag('event', 'generate_lead', {
                     form_id: 'contact_main',
@@ -486,11 +489,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 });
             }
 
-            document.getElementById('contactForm').reset();
-            setTimeout(() => {
-                successMessage.classList.remove('show');
-            }, 10000);
+            if (form) {
+                form.reset();
+            }
+
+            return false;
         }
+    </script>
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+  const successMessage = document.getElementById('successMessage');
+  if (successMessage) {
+    successMessage.style.display = 'none';
+  }
+});
     </script>
     <script>
 document.addEventListener('DOMContentLoaded', function () {

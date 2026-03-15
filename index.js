@@ -1465,6 +1465,14 @@ app.get('/api/ranking/players', async (req, res) => {
     try {
         const { season = 2025, league, position, stat = 'goals', search } = req.query;
         
+        // サーバーサイドキャッシュ（5分）でレスポンス高速化
+        const cacheKey = `ranking_players_${season}_${league || ''}_${position || ''}_${stat}_${search || ''}`;
+        const cached = getCache(cacheKey);
+        if (cached) {
+            res.setHeader('Cache-Control', 'public, max-age=300'); // ブラウザキャッシュ5分
+            return res.json(cached);
+        }
+        
         console.log('🏆 Player Ranking Request:', { season, league, position, stat, search });
         
         let players = [];
@@ -2662,13 +2670,16 @@ app.get('/api/ranking/players', async (req, res) => {
         const returnedPlayers = players.slice(0, limit);
         
         console.log(`📤 Returning ${returnedPlayers.length} players out of ${players.length} total`);
-        res.json({ 
+        const responseData = { 
             players: returnedPlayers,
             total: players.length,
             filtered: !!league || !!position || !!search,
             limit: limit,
             source: players.length > 50 ? 'database' : 'fallback'
-        });
+        };
+        setCache(cacheKey, responseData, 5 * 60 * 1000); // 5分キャッシュ
+        res.setHeader('Cache-Control', 'public, max-age=300'); // ブラウザキャッシュ5分
+        res.json(responseData);
         
     } catch (error) {
         console.error('Player ranking error:', error);
@@ -2682,11 +2693,19 @@ app.get('/api/ranking/teams', async (req, res) => {
     try {
         const { league, season = 2025 } = req.query;
         
-        console.log('🏆 Team Ranking Request:', { league });
-        
         if (!league) {
             return res.status(400).json({ error: 'League parameter is required' });
         }
+        
+        // サーバーサイドキャッシュ（5分）
+        const cacheKey = `ranking_teams_${league}_${season}`;
+        const cached = getCache(cacheKey);
+        if (cached) {
+            res.setHeader('Cache-Control', 'public, max-age=300');
+            return res.json(cached);
+        }
+        
+        console.log('🏆 Team Ranking Request:', { league });
         
         let teams = [];
         
@@ -2766,7 +2785,10 @@ app.get('/api/ranking/teams', async (req, res) => {
             teams = generateFallbackTeamRanking(league);
         }
         
-        res.json({ teams });
+        const responseData = { teams };
+        setCache(cacheKey, responseData, 5 * 60 * 1000);
+        res.setHeader('Cache-Control', 'public, max-age=300');
+        res.json(responseData);
         
     } catch (error) {
         console.error('Team ranking error:', error);
@@ -2778,6 +2800,15 @@ app.get('/api/ranking/teams', async (req, res) => {
 app.get('/api/ranking/champions-league', async (req, res) => {
     try {
         const { season = 2025 } = req.query;
+        
+        // サーバーサイドキャッシュ（5分）
+        const cacheKey = `ranking_cl_${season}`;
+        const cached = getCache(cacheKey);
+        if (cached) {
+            res.setHeader('Cache-Control', 'public, max-age=300');
+            return res.json(cached);
+        }
+        
         console.log('🏆 Champions League Ranking Request:', { season });
         
         let standings = [];
@@ -2843,7 +2874,10 @@ app.get('/api/ranking/champions-league', async (req, res) => {
             ];
         }
         
-        res.json({ standings });
+        const responseData = { standings };
+        setCache(cacheKey, responseData, 5 * 60 * 1000);
+        res.setHeader('Cache-Control', 'public, max-age=300');
+        res.json(responseData);
         
     } catch (error) {
         console.error('Champions League ranking error:', error);
@@ -5480,6 +5514,7 @@ app.get('/api/fotmob/matches', async (req, res) => {
         console.log('First few matches:', matches.slice(0, 3));
 
         res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'public, max-age=300'); // 5分ブラウザキャッシュ
         res.json({ matches });
     } catch (error) {
         console.error('Error fetching matches:', error);
@@ -9824,6 +9859,14 @@ app.get('/api/integrated/players', async (req, res) => {
     try {
         const { query, limit = 10000, japanese = false, majorClubsOnly = false } = req.query;
         
+        // サーバーサイドキャッシュ（10分）- 初回読み込みの高速化
+        const cacheKey = `integrated_players_${limit}_${japanese}_${majorClubsOnly}_${query || ''}`;
+        const cached = getCache(cacheKey);
+        if (cached) {
+            res.setHeader('Cache-Control', 'public, max-age=600');
+            return res.json(cached);
+        }
+        
         // STORAGE_MODEに応じてデータソースを選択
         const storageMode = process.env.STORAGE_MODE || 'file';
         let players = [];
@@ -10163,7 +10206,8 @@ app.get('/api/integrated/players', async (req, res) => {
         
         console.log(`✅ 統合選手データ返却: ${enhancedPlayers.length}名`);
         
-        // データベースページの互換性のため、常に配列形式で返す
+        setCache(cacheKey, enhancedPlayers, 10 * 60 * 1000); // 10分キャッシュ
+        res.setHeader('Cache-Control', 'public, max-age=600');
         res.json(enhancedPlayers);
     } catch (error) {
         console.error('Integrated players error:', error);
@@ -10876,6 +10920,15 @@ app.get('/api/fotmob/players', async (req, res) => {
 app.get('/api/fotmob/teams', async (req, res) => {
     try {
         const { query, league } = req.query;
+        
+        // サーバーサイドキャッシュ（10分）
+        const cacheKey = `fotmob_teams_${query || ''}_${league || ''}`;
+        const cached = getCache(cacheKey);
+        if (cached) {
+            res.setHeader('Cache-Control', 'public, max-age=600');
+            return res.json(cached);
+        }
+        
         let teams = [];
         
         // DatabaseManagerが利用可能な場合は優先的に使用
@@ -10945,10 +10998,13 @@ app.get('/api/fotmob/teams', async (req, res) => {
         }
         
         // レスポンス形式を統一（database-new.htmlが期待する形式）
-        res.json({
+        const responseData = {
             teams: teams,
             total: teams.length
-        });
+        };
+        setCache(cacheKey, responseData, 10 * 60 * 1000);
+        res.setHeader('Cache-Control', 'public, max-age=600');
+        res.json(responseData);
     } catch (error) {
         console.error('Teams API error:', error);
         // エラー時は空配列を返す（database-new.htmlが期待する形式）

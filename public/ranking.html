@@ -868,14 +868,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 let url = `/api/ranking/players?season=${season}&league=${league}&position=${position}&stat=${stat}`;
                 if (search) url += `&search=${encodeURIComponent(search)}`;
                 
-                // キャッシュをチェック（2分間有効）
+                // キャッシュをチェック（5分間有効）- サーバーキャッシュと連動
                 const cacheKey = `ranking_players_${season}_${league}_${position}_${stat}_${search}`;
                 const cachedData = sessionStorage.getItem(cacheKey);
                 if (cachedData) {
                     try {
                         const cached = JSON.parse(cachedData);
                         const cacheAge = Date.now() - cached.timestamp;
-                        if (cacheAge < 2 * 60 * 1000) { // 2分以内のキャッシュは使用
+                        if (cacheAge < 5 * 60 * 1000) { // 5分以内のキャッシュは使用
                             console.log('📦 Using cached ranking data');
                             displayPlayerRanking(cached.players);
                             updatePlayerChart(cached.players.slice(0, 10));
@@ -902,7 +902,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         });
                     }
                     
-                    // キャッシュに保存（2分間有効）
+                    // キャッシュに保存（5分間有効）
                     try {
                         sessionStorage.setItem(cacheKey, JSON.stringify({
                             players: players,
