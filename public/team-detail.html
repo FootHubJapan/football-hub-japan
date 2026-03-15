@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-PNCBBCBM');</script>
+  <!-- End Google Tag Manager -->
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-47242CTHR5"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-47242CTHR5');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO base (updated by JS after team data load) -->
+  <meta name="description" content="チームの成績、順位、所属リーグ、スタジアム、主要選手などをまとめて確認できます。Football Hub Japanのチーム詳細ページ。" />
+  <title>チームスタッツ・成績・順位・日程・選手 | Football Hub Japan</title>
+
+  <!-- Structured data placeholder (filled by JS after team data load) -->
+  <script type="application/ld+json" id="teamJsonLd">{}</script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6574544891375303" crossorigin="anonymous"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --background: #0d1117;
+      --foreground: #f0f6fc;
+      --card: #161b22;
+      --card-hover: #1c2128;
+      --primary: #22c55e;
+      --primary-hover: #16a34a;
+      --secondary: #21262d;
+      --muted: #8b949e;
+      --border: #30363d;
+      --border-light: rgba(48, 54, 61, 0.5);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Noto Sans JP", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+      background: var(--background);
+      color: var(--foreground);
+      line-height: 1.6;
+    }
+
+    .header {
+      background: rgba(13, 17, 23, 0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-light);
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: 64px;
+    }
+
+    .logo {
+      color: var(--primary);
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .logo::before {
+      content: '⚡';
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: var(--primary);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .back-btn {
+      background: var(--secondary);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 1.25rem;
+    }
+
+    .back-btn:hover {
+      background: var(--primary);
+      color: var(--background);
+      border-color: var(--primary);
+    }
+
+    .team-header {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .team-crest {
+      width: 80px;
+      height: 80px;
+      border-radius: 16px;
+      background: rgba(33, 38, 45, 0.6);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .team-crest img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 10px;
+    }
+
+    .team-name {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+
+    .team-meta {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .related-links {
+      margin-top: 0.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .related-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(33, 38, 45, 0.6);
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .related-link:hover {
+      border-color: rgba(34, 197, 94, 0.4);
+      color: var(--foreground);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem;
+    }
+
+    .card h2 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 0.5rem 0.75rem;
+      font-size: 0.95rem;
+    }
+
+    .kv dt { color: var(--muted); }
+    .kv dd { color: var(--foreground); }
+
+    .col-6 { grid-column: span 6; }
+    .col-12 { grid-column: span 12; }
+
+    .muted { color: var(--muted); }
+
+    @media (max-width: 900px) {
+      .col-6 { grid-column: span 12; }
+      .team-header { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PNCBBCBM" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+  <div class="header">
+    <a href="/" class="logo">Football Hub Japan</a>
+  </div>
+
+  <div class="main-container">
+    <button class="back-btn" onclick="history.back()">← 戻る</button>
+
+    <div class="team-header">
+      <div class="team-crest"><img id="teamCrest" alt="チームエンブレム" src="" onerror="this.style.display='none'" /></div>
+      <div>
+        <h1 id="teamName" class="team-name">チーム名</h1>
+        <p id="teamMeta" class="team-meta">所属リーグ / 国 / 創設</p>
+
+        <div class="related-links" aria-label="関連リンク">
+          <a class="related-link" href="/ranking.html" data-cta="internal_ranking" data-cta-location="team_detail">ランキング</a>
+          <a class="related-link" href="/schedule.html" data-cta="internal_schedule" data-cta-location="team_detail">試合速報</a>
+          <a class="related-link" href="/database-new.html" data-cta="internal_database" data-cta-location="team_detail">データベース</a>
+          <a class="related-link" href="/insights.html" data-cta="internal_insights" data-cta-location="team_detail">分析コラム</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="card col-6" aria-label="チーム概要">
+        <h2>概要</h2>
+        <dl class="kv">
+          <dt>創設</dt><dd id="teamFounded">--</dd>
+          <dt>ホーム</dt><dd id="teamVenue">--</dd>
+          <dt>カラー</dt><dd id="teamColors">--</dd>
+          <dt>公式サイト</dt><dd id="teamWebsite">--</dd>
+        </dl>
+      </section>
+
+      <section class="card col-6" aria-label="リーグ・大会">
+        <h2>所属リーグ / 大会</h2>
+        <div id="teamCompetitions" class="muted">読み込み中...</div>
+      </section>
+
+      <section class="card col-12" aria-label="主要選手（プレビュー）">
+        <h2>主要選手（プレビュー）</h2>
+        <div id="teamSquad" class="muted">読み込み中...</div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    function getTeamIdFromUrl() {
+      // /team/:id
+      const pathMatch = window.location.pathname.match(/\/team\/(\d+)/);
+      if (pathMatch) return pathMatch[1];
+      // ?id=xxx
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('id');
+    }
+
+    function updateTeamSeo(team) {
+      const name = (team && team.name) ? String(team.name).trim() : '';
+      if (!name) return;
+
+      const founded = team.founded;
+      const venue = team.venue;
+      const country = team.area && team.area.name ? team.area.name : '';
+
+      document.title = `${name}・スタッツ・成績・順位・日程・選手 | Football Hub Japan`;
+
+      const meta = document.querySelector('meta[name="description"]');
+      if (meta) {
+        const parts = [];
+        parts.push(`${name}の成績/順位/日程/選手情報をまとめて確認。`);
+        if (country) parts.push(`国: ${country}`);
+        if (founded) parts.push(`創設: ${founded}`);
+        if (venue) parts.push(`ホーム: ${venue}`);
+        parts.push('Football Hub Japan');
+        meta.setAttribute('content', parts.join(' / '));
+      }
+
+      // JSON-LD (SportsTeam)
+      const jsonEl = document.getElementById('teamJsonLd');
+      if (jsonEl) {
+        const teamId = getTeamIdFromUrl() || '';
+        const sd = {
+          "@context": "https://schema.org",
+          "@type": "SportsTeam",
+          "name": name,
+          "sport": "Soccer",
+          "logo": team.crest || undefined,
+          "url": team.website || undefined,
+          "foundingDate": founded ? String(founded) : undefined,
+          "homeVenue": venue ? { "@type": "SportsActivityLocation", "name": venue } : undefined,
+          "areaServed": country || undefined,
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": `https://football-hub-japan-ubzb.onrender.com/team-detail.html?id=${encodeURIComponent(teamId)}`
+          }
+        };
+        Object.keys(sd).forEach(k => sd[k] === undefined && delete sd[k]);
+        try { jsonEl.textContent = JSON.stringify(sd); } catch(e) {}
+      }
+    }
+
+    async function loadTeam() {
+      const teamId = getTeamIdFromUrl();
+      if (!teamId) {
+        document.getElementById('teamName').textContent = 'チームIDが指定されていません';
+        document.getElementById('teamMeta').textContent = '';
+        document.getElementById('teamCompetitions').textContent = '';
+        document.getElementById('teamSquad').textContent = '';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/football-data/teams/${encodeURIComponent(teamId)}`);
+        if (!res.ok) {
+          throw new Error(`team api failed: ${res.status}`);
+        }
+        const text = await res.text();
+        let team;
+        try {
+          team = JSON.parse(text);
+        } catch (e) {
+          throw new Error('team api returned non-json');
+        }
+
+        // Basic render
+        document.getElementById('teamName').textContent = team.name || 'Unknown Team';
+        document.getElementById('teamFounded').textContent = team.founded ? `${team.founded}年` : '--';
+        document.getElementById('teamVenue').textContent = team.venue || '--';
+        document.getElementById('teamColors').textContent = team.clubColors || '--';
+
+        if (team.website) {
+          document.getElementById('teamWebsite').innerHTML = `<a href="${team.website}" target="_blank" rel="noopener noreferrer" style="color: var(--primary); text-decoration: none;">${team.website}</a>`;
+        } else {
+          document.getElementById('teamWebsite').textContent = '--';
+        }
+
+        const country = team.area && team.area.name ? team.area.name : '';
+        const leagueNames = Array.isArray(team.runningCompetitions) ? team.runningCompetitions.map(c => c.name).filter(Boolean) : [];
+        const meta = [leagueNames[0], country, team.founded ? `創設${team.founded}` : null].filter(Boolean).join(' / ');
+        document.getElementById('teamMeta').textContent = meta || '';
+
+        if (team.crest) {
+          const crestEl = document.getElementById('teamCrest');
+          crestEl.src = team.crest;
+          crestEl.style.display = 'block';
+        }
+
+        // Competitions
+        const compEl = document.getElementById('teamCompetitions');
+        if (leagueNames.length) {
+          compEl.innerHTML = `<ul style="margin-left: 1.2rem;">${leagueNames.map(n => `<li>${n}</li>`).join('')}</ul>`;
+        } else {
+          compEl.textContent = 'データなし';
+        }
+
+        // Squad preview
+        const squadEl = document.getElementById('teamSquad');
+        const squad = Array.isArray(team.squad) ? team.squad.slice(0, 12) : [];
+        if (squad.length) {
+          squadEl.innerHTML = `<ul style="margin-left: 1.2rem; columns: 2; column-gap: 2rem;">${squad.map(p => `<li>${p.name || 'Unknown'} (${p.position || '—'})</li>`).join('')}</ul><div class="muted" style="margin-top:0.75rem;">※ 選手の詳細リンクは後続タスクで追加余地</div>`;
+        } else {
+          squadEl.textContent = 'データなし';
+        }
+
+        // SEO
+        updateTeamSeo(team);
+      } catch (e) {
+        console.error(e);
+        document.getElementById('teamCompetitions').textContent = '読み込みに失敗しました';
+        document.getElementById('teamSquad').textContent = '読み込みに失敗しました';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadTeam);
+  </script>
+
+  <script src="/js/cta-tracking.js"></script>
+</body>
+</html>

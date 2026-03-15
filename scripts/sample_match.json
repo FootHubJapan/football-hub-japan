@@ -1,0 +1,17 @@
+{
+  "matchId": "123",
+  "league": "プレミアリーグ",
+  "homeTeam": "Manchester United",
+  "awayTeam": "Chelsea",
+  "homeScore": 2,
+  "awayScore": 1,
+  "date": "2025-01-18T12:30:00Z",
+  "venue": "アンフィールド",
+  "referee": "Michael Oliver",
+  "topStats": {
+    "ポゼッション": "55% - 45%",
+    "シュート": "14 - 9",
+    "枠内シュート": "6 - 3",
+    "xG": "1.8 - 1.1"
+  }
+}

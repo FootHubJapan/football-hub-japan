@@ -11,5 +11,5 @@ Allow: /
 User-agent: Mediapartners-Google
 Allow: /
 
-# Sitemap (if you have one)
-# Sitemap: https://football-hub-japan-ubzb.onrender.com/sitemap.xml
+# Sitemap
+Sitemap: https://football-hub-japan-ubzb.onrender.com/sitemap_index.xml

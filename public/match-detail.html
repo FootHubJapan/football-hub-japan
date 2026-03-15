@@ -19,7 +19,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>試合詳細 - Football Hub Japan</title>
+    <meta name="description" content="試合のプレビュー、結果、スタッツをまとめて確認できます。Football Hub Japanの試合詳細ページ。">
+    <title>試合プレビュー・結果・スタッツ | Football Hub Japan</title>
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6574544891375303"
      crossorigin="anonymous"></script>
@@ -52,6 +53,33 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             background: var(--background);
             color: var(--foreground);
             min-height: 100vh;
+        }
+
+        /* Related links module */
+        .related-links {
+            margin: 0.75rem 0 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .related-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.65rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(33, 38, 45, 0.6);
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .related-link:hover {
+            border-color: rgba(34, 197, 94, 0.4);
+            color: var(--foreground);
         }
 
         .header {
@@ -1304,6 +1332,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="main-container">
         <!-- 戻るリンク -->
         <a href="/schedule.html" class="back-link">← スケジュールに戻る</a>
+
+        <div class="related-links" aria-label="関連リンク">
+            <a class="related-link" href="/ranking.html" data-cta="internal_ranking" data-cta-location="match_detail">ランキング</a>
+            <a class="related-link" href="/database-new.html" data-cta="internal_database" data-cta-location="match_detail">データベース</a>
+            <a class="related-link" href="/insights.html" data-cta="internal_insights" data-cta-location="match_detail">分析コラム</a>
+            <a class="related-link" href="/contact.html" data-cta="internal_contact" data-cta-location="match_detail">お問い合わせ</a>
+        </div>
         
         <!-- 試合ヘッダー -->
         <div class="match-header">
