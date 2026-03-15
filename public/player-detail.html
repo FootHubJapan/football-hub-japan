@@ -20,7 +20,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>選手詳細 - Football Hub Japan</title>
+    <meta name="description" content="選手のスタッツ（成績）、所属、年齢、ポジションなどをまとめて確認できます。Football Hub Japanの選手詳細ページ。">
+    <title>選手スタッツ・成績・所属・年齢 | Football Hub Japan</title>
+
+    <!-- Structured data placeholder (filled by JS after player data load) -->
+    <script type="application/ld+json" id="playerJsonLd">{}</script>
     
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6574544891375303"
@@ -121,6 +125,37 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
+        }
+
+        .related-links {
+            margin-top: 0.75rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .related-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.65rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(33, 38, 45, 0.6);
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .related-link:hover {
+            border-color: rgba(34, 197, 94, 0.4);
+            color: var(--foreground);
+        }
+
+        .related-link strong {
+            color: var(--foreground);
+            font-weight: 600;
         }
 
         .player-header {
@@ -471,6 +506,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <h1 id="playerName" class="player-name">選手名</h1>
                 <p id="playerClub" class="player-club">所属チーム</p>
                 <div id="dataSourceInfo" style="color:#4ade80;font-size:12px;margin-top:4px;font-weight:600;"></div>
+
+                <!-- Internal links (SEO/navigation) -->
+                <div class="related-links" aria-label="関連リンク">
+                    <a class="related-link" href="/ranking.html" data-cta="internal_ranking" data-cta-location="player_detail">ランキング</a>
+                    <a class="related-link" href="/database-new.html" data-cta="internal_database" data-cta-location="player_detail">チーム/選手データ</a>
+                    <a class="related-link" href="/schedule.html" data-cta="internal_schedule" data-cta-location="player_detail">試合速報</a>
+                    <a class="related-link" href="/insights.html" data-cta="internal_insights" data-cta-location="player_detail">分析コラム</a>
+                    <span class="related-link" id="teamLink" style="display:none;"><strong>所属:</strong> <span id="teamName"></span></span>
+                </div>
+
                 <div class="player-basics">
                     <div class="basic-item">
                         <div class="basic-value" id="playerAge">--</div>
@@ -1045,6 +1090,89 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             return null;
         }
 
+        function isoDateFromYmdJapanese(s) {
+            // e.g. "2025年1月20日" -> "2025-01-20"
+            try {
+                const m = String(s || '').match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+                if (!m) return null;
+                const y = m[1];
+                const mo = m[2].padStart(2, '0');
+                const d = m[3].padStart(2, '0');
+                return `${y}-${mo}-${d}`;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function updatePlayerSeo(player, loanInfo) {
+            const name = (player && player.name) ? String(player.name).trim() : '';
+            if (!name) return;
+
+            const position = player.position || player.detailedPosition || player.stats?.position;
+            const age = player.age;
+
+            const clubText = loanInfo
+                ? `${loanInfo.currentTeam}（${loanInfo.loanSourceTeam}）`
+                : (player.currentTeam || '');
+
+            // Title: keep consistent, query-intent oriented.
+            const parts = [name, 'スタッツ', '成績', '所属', '年齢'];
+            document.title = `${parts.join('・')} | Football Hub Japan`;
+
+            // Meta description
+            const meta = document.querySelector('meta[name="description"]');
+            if (meta) {
+                const descParts = [];
+                descParts.push(`${name}のスタッツ（成績）をまとめて確認。`);
+                if (clubText) descParts.push(`所属: ${clubText}`);
+                if (position) descParts.push(`ポジション: ${position}`);
+                if (age) descParts.push(`年齢: ${age}歳`);
+                descParts.push('Football Hub Japan');
+                meta.setAttribute('content', descParts.join(' / '));
+            }
+
+            // Internal link helper (team label only; no URL assumptions)
+            const teamNameEl = document.getElementById('teamName');
+            const teamLinkEl = document.getElementById('teamLink');
+            if (teamNameEl && teamLinkEl && clubText) {
+                teamNameEl.textContent = clubText;
+                teamLinkEl.style.display = 'inline-flex';
+            }
+
+            // Structured data (Person)
+            const jsonEl = document.getElementById('playerJsonLd');
+            if (jsonEl) {
+                const sd = {
+                    "@context": "https://schema.org",
+                    "@type": "Person",
+                    "name": name,
+                    "nationality": player.nationality || undefined,
+                    "jobTitle": position || undefined,
+                    "image": player.photo || undefined,
+                    "mainEntityOfPage": {
+                        "@type": "WebPage",
+                        "@id": `https://football-hub-japan-ubzb.onrender.com/player-detail.html?id=${encodeURIComponent((typeof getPlayerIdFromUrl === 'function' ? (getPlayerIdFromUrl() || '') : '') )}`
+                    }
+                };
+
+                if (clubText) {
+                    sd.affiliation = {
+                        "@type": "SportsTeam",
+                        "name": clubText
+                    };
+                }
+
+                // Remove undefined fields
+                Object.keys(sd).forEach(k => sd[k] === undefined && delete sd[k]);
+
+                try {
+                    jsonEl.textContent = JSON.stringify(sd);
+                } catch (e) {
+                    // ignore
+                }
+            }
+        }
+
         // 選手データを表示
         async function displayPlayerData(player) {
             document.getElementById('playerName').textContent = player.name;
@@ -1086,14 +1214,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const sourceDisplay = sourceMap[dataSource] || '📁 ローカルデータ';
             console.log(`📊 データソース表示: ${sourceDisplay}`);
             
-            // ページタイトルを更新
-            if (dataSource === 'integrated' || dataSource === 'comprehensiveDatabase' || dataSource === 'apiFootball' || dataSource === 'footballData') {
-                console.log('✅ 実際のAPIデータを使用');
-                document.title = `${player.name} - 実際のデータ - Football Hub Japan`;
-            } else {
-                console.log('⚠️ フォールバックデータを使用');
-                document.title = `${player.name} - サンプルデータ - Football Hub Japan`;
-            }
+            // SEOメタ（title/description/structured data）を更新
+            updatePlayerSeo(player, loanInfo);
             
             // データソース表示をページに追加
             const dataSourceElement = document.getElementById('dataSourceInfo');
