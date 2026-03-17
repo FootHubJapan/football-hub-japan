@@ -1,7 +1,7 @@
 /**
  * 包括的なサッカーデータベース管理システム
  * 98チーム分の選手データ、統計、顔写真を管理
- * STORAGE_MODE環境変数で保存先を切り替え可能（file|firestore）
+ * 自作データベース（data/*.json）から常に読み込み
  */
 
 const fs = require('fs').promises;
@@ -9,10 +9,11 @@ const path = require('path');
 
 class DatabaseManager {
     constructor() {
-        // ストレージモードを環境変数から取得（デフォルト: file）
-        this.storageMode = process.env.STORAGE_MODE || 'file';
+        // 自作データベース（data/*.json）を常に使用。Firestoreは参照しない。
+        // STORAGE_MODEがfirestoreでも、読み込みは常にfile（自作DB）から行う
+        this.storageMode = 'file';
         
-        // ファイルベースのパス設定（fileモード用）
+        // ファイルベースのパス設定（自作データベース: data/*.json）
         this.dataPath = path.join(__dirname, 'data');
         this.playersPath = path.join(this.dataPath, 'players.json');
         this.teamsPath = path.join(this.dataPath, 'teams.json');
@@ -24,21 +25,9 @@ class DatabaseManager {
         this.lineupsPath = path.join(this.dataPath, 'lineups.json');
         this.standingsPath = path.join(this.dataPath, 'standings.json');
         
-        // Firestore用の初期化（firestoreモードの場合）
-        if (this.storageMode === 'firestore') {
-            try {
-                const { getFirestore } = require('./firebaseAdmin');
-                this.db = getFirestore();
-                console.log(`✅ DatabaseManager: Firestoreモードで初期化 (STORAGE_MODE=${this.storageMode})`);
-            } catch (error) {
-                console.error('❌ DatabaseManager: Firestore初期化エラー:', error);
-                console.error('   エラー詳細:', error.message);
-                console.log('⚠️ fileモードにフォールバックします');
-                this.storageMode = 'file';
-            }
-        } else {
-            console.log(`✅ DatabaseManager: ファイルモードで初期化 (STORAGE_MODE=${this.storageMode || '未設定'})`);
-        }
+        // 自作データベース（data/*.json）のみ使用。Firestoreは初期化しない
+        this.db = null;
+        console.log(`✅ DatabaseManager: 自作データベース（data/*.json）で初期化`);
         
         // 書き込みロック（同時書き込みを防ぐ）
         this.writeLock = false;
@@ -478,17 +467,8 @@ class DatabaseManager {
      * Firestoreから空配列が返された場合は、ファイルから読み込む（フォールバック）
      */
     async loadComprehensivePlayers(limit = null) {
-        if (this.storageMode === 'firestore') {
-            const firestorePlayers = await this.loadComprehensivePlayersFromFirestore(limit);
-            // Firestoreからデータが取得できなかった場合は、ファイルから読み込む
-            if (firestorePlayers.length === 0) {
-                console.log('⚠️ Firestoreからデータが取得できませんでした。ファイルから読み込みます。');
-                return this.loadComprehensivePlayersFromFile();
-            }
-            return firestorePlayers;
-        } else {
-            return this.loadComprehensivePlayersFromFile();
-        }
+        // 自作データベース（data/players.json）から読み込み
+        return this.loadComprehensivePlayersFromFile();
     }
 
     /**
