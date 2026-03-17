@@ -1478,10 +1478,15 @@ app.get('/api/ranking/players', async (req, res) => {
         let players = [];
         
         // 優先順位1: DatabaseManagerから動的に最新データを取得（強化データベース優先）
+        // 大容量ファイル対策: 10秒タイムアウトでフォールバック
         if (apiService && apiService.dbManager) {
             try {
                 console.log('🔄 DatabaseManagerから最新選手データを取得中...');
-                const dbPlayers = await apiService.dbManager.loadComprehensivePlayers();
+                const loadPromise = apiService.dbManager.loadComprehensivePlayers();
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Load timeout')), 10000)
+                );
+                const dbPlayers = await Promise.race([loadPromise, timeoutPromise]);
                 
                 if (dbPlayers && dbPlayers.length > 0) {
                     console.log(`✅ DatabaseManagerから${dbPlayers.length}名の最新選手データを取得`);
@@ -2684,20 +2689,27 @@ app.get('/api/ranking/players', async (req, res) => {
         res.json(responseData);
         
     } catch (error) {
-        console.error('Player ranking error:', error);
-        console.error('Stack trace:', error.stack);
-        res.status(500).json({ error: 'Failed to get player ranking' });
+        console.error('Player ranking error:', error?.message || error);
+        // タイムアウト等の場合はフォールバックを返す（500を避ける）
+        const { league, position, stat } = req.query;
+        const fallbackPlayers = generateFallbackPlayerRanking(league, position, stat);
+        res.setHeader('Cache-Control', 'public, max-age=300');
+        res.json({
+            players: fallbackPlayers,
+            total: fallbackPlayers.length,
+            filtered: false,
+            limit: parseInt(req.query.limit) || 1000,
+            source: 'fallback'
+        });
     }
 });
 
 // チームランキング取得
 app.get('/api/ranking/teams', async (req, res) => {
     try {
-        const { league, season = 2025 } = req.query;
-        
-        if (!league) {
-            return res.status(400).json({ error: 'League parameter is required' });
-        }
+        let { league, season = 2025 } = req.query;
+        // リーグ未指定時はJ1をデフォルトで返す（空表示を避ける）
+        if (!league) league = 'J1';
         
         // サーバーサイドキャッシュ（5分）
         const cacheKey = `ranking_teams_${league}_${season}`;
@@ -9884,11 +9896,18 @@ app.get('/api/integrated/players', async (req, res) => {
         let players = [];
         
         // DatabaseManagerが利用可能な場合は優先的に使用（file/firestore両方に対応）
+        // 97MB等の大容量ファイルはタイムアウトするため、10秒でフォールバック
         if (apiService && apiService.dbManager) {
             try {
                 console.log(`🔄 DatabaseManagerから選手データを取得中... (STORAGE_MODE=${storageMode})`);
-                players = await apiService.dbManager.loadComprehensivePlayers(parseInt(limit));
-                console.log(`✅ DatabaseManagerから${players.length}名の選手データを取得しました`);
+                const loadPromise = apiService.dbManager.loadComprehensivePlayers(parseInt(limit));
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Load timeout (10s)')), 10000)
+                );
+                players = await Promise.race([loadPromise, timeoutPromise]);
+                if (players && players.length > 0) {
+                    console.log(`✅ DatabaseManagerから${players.length}名の選手データを取得しました`);
+                }
                 
                 // DatabaseManagerが空配列を返した場合もフォールバック
                 if (players.length === 0) {
@@ -9916,28 +9935,35 @@ app.get('/api/integrated/players', async (req, res) => {
                     }
                 }
             } catch (dbError) {
-                console.error('❌ DatabaseManagerからの選手データ取得エラー:', dbError);
-                console.log('⚠️ 直接ファイル読み込みにフォールバックします');
-                // フォールバック: 直接ファイルから読み込む
-                const fs = require('fs');
-                const playersFile = path.join(__dirname, 'data', 'players.json');
-                if (fs.existsSync(playersFile)) {
-                    try {
-                        const stats = await fs.promises.stat(playersFile);
-                        const fileSizeMB = stats.size / (1024 * 1024);
-                        if (fileSizeMB > 50) {
-                            console.log(`⚠️ 大きなファイルを読み込み中: ${fileSizeMB.toFixed(2)}MB`);
+                console.error('❌ DatabaseManagerからの選手データ取得エラー:', dbError?.message || dbError);
+                // タイムアウトや大容量ファイルの場合は即フォールバック（再読み込みで二重タイムアウトを避ける）
+                if (dbError?.message?.includes('timeout') || dbError?.message?.includes('Load timeout')) {
+                    console.log('⚠️ 読み込みタイムアウトのためフォールバックを使用');
+                    players = cacheManager.getFallbackPlayers();
+                } else {
+                    console.log('⚠️ 直接ファイル読み込みにフォールバックします');
+                    const fs = require('fs');
+                    const playersFile = path.join(__dirname, 'data', 'players.json');
+                    if (fs.existsSync(playersFile)) {
+                        try {
+                            const stats = await fs.promises.stat(playersFile);
+                            const fileSizeMB = stats.size / (1024 * 1024);
+                            if (fileSizeMB > 50) {
+                                console.log(`⚠️ 大きなファイル(${fileSizeMB.toFixed(0)}MB)のためフォールバックを使用`);
+                                players = cacheManager.getFallbackPlayers();
+                            } else {
+                                const data = await fs.promises.readFile(playersFile, 'utf8');
+                                const parsed = JSON.parse(data);
+                                players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+                                if (parsed && !Array.isArray(parsed)) {
+                                    delete parsed.players;
+                                }
+                                console.log(`✅ ファイルから${players.length}名の選手データを読み込みました`);
+                            }
+                        } catch (readError) {
+                            console.error('❌ players.json読み込みエラー:', readError.message);
+                            players = [];
                         }
-                        const data = await fs.promises.readFile(playersFile, 'utf8');
-                        const parsed = JSON.parse(data);
-                        players = Array.isArray(parsed) ? parsed : (parsed.players || []);
-                        if (parsed && !Array.isArray(parsed)) {
-                            delete parsed.players;
-                        }
-                        console.log(`✅ ファイルから${players.length}名の選手データを読み込みました`);
-                    } catch (readError) {
-                        console.error('❌ players.json読み込みエラー:', readError.message);
-                        players = [];
                     }
                 }
             }
@@ -9951,15 +9977,17 @@ app.get('/api/integrated/players', async (req, res) => {
                     const stats = await fs.promises.stat(playersFile);
                     const fileSizeMB = stats.size / (1024 * 1024);
                     if (fileSizeMB > 50) {
-                        console.log(`⚠️ 大きなファイルを読み込み中: ${fileSizeMB.toFixed(2)}MB`);
+                        console.log(`⚠️ 大きなファイル(${fileSizeMB.toFixed(0)}MB)のためフォールバックを使用`);
+                        players = cacheManager.getFallbackPlayers();
+                    } else {
+                        const data = await fs.promises.readFile(playersFile, 'utf8');
+                        const parsed = JSON.parse(data);
+                        players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+                        if (parsed && !Array.isArray(parsed)) {
+                            delete parsed.players;
+                        }
+                        console.log(`✅ ファイルから${players.length}名の選手データを読み込みました`);
                     }
-                    const data = await fs.promises.readFile(playersFile, 'utf8');
-                    const parsed = JSON.parse(data);
-                    players = Array.isArray(parsed) ? parsed : (parsed.players || []);
-                    if (parsed && !Array.isArray(parsed)) {
-                        delete parsed.players;
-                    }
-                    console.log(`✅ ファイルから${players.length}名の選手データを読み込みました`);
                 } catch (readError) {
                     console.error('❌ players.json読み込みエラー:', readError.message);
                     players = [];
