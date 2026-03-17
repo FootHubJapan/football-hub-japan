@@ -10992,50 +10992,30 @@ app.get('/api/fotmob/teams', async (req, res) => {
         
         let teams = [];
         
-        // DatabaseManagerが利用可能な場合は優先的に使用
-        if (apiService && apiService.dbManager) {
+        // 自作データベース（data/teams.json）から直接読み込みを優先
+        const fs = require('fs');
+        const teamsFile = path.join(__dirname, 'data', 'teams.json');
+        if (fs.existsSync(teamsFile)) {
+            try {
+                const data = await fs.promises.readFile(teamsFile, 'utf8');
+                teams = JSON.parse(data);
+                if (!Array.isArray(teams) && teams.teams) teams = teams.teams;
+                if (teams.length > 0) {
+                    console.log(`✅ 自作DBから${teams.length}チームを取得しました`);
+                }
+            } catch (e) {
+                console.warn('teams.json読み込み失敗:', e.message);
+            }
+        }
+        
+        // 上記で取得できなかった場合のみDatabaseManagerを使用
+        if (teams.length === 0 && apiService && apiService.dbManager) {
             try {
                 console.log('🔄 DatabaseManagerからチームデータを取得中...');
                 teams = await apiService.dbManager.loadTeams();
                 console.log(`✅ DatabaseManagerから${teams.length}チームを取得しました`);
             } catch (dbError) {
-                console.error('❌ DatabaseManagerからのチームデータ取得エラー:', dbError);
-                console.log('⚠️ 直接ファイル読み込みにフォールバックします');
-                // フォールバック: 直接ファイルから読み込む
-                const fs = require('fs');
-                const teamsFile = path.join(__dirname, 'data', 'teams.json');
-                if (fs.existsSync(teamsFile)) {
-                    try {
-                        const data = await fs.promises.readFile(teamsFile, 'utf8');
-                        teams = JSON.parse(data);
-                        // 配列形式またはオブジェクト形式に対応
-                        if (!Array.isArray(teams) && teams.teams) {
-                            teams = teams.teams;
-                        }
-                        console.log(`✅ ファイルから${teams.length}チームを読み込みました`);
-                    } catch (readError) {
-                        console.error('❌ teams.json読み込みエラー:', readError.message);
-                        teams = [];
-                    }
-                }
-            }
-        } else {
-            // DatabaseManagerが利用できない場合: 直接ファイルから読み込む
-            const fs = require('fs');
-            const teamsFile = path.join(__dirname, 'data', 'teams.json');
-            if (fs.existsSync(teamsFile)) {
-                try {
-                    const data = await fs.promises.readFile(teamsFile, 'utf8');
-                    teams = JSON.parse(data);
-                    // 配列形式またはオブジェクト形式に対応
-                    if (!Array.isArray(teams) && teams.teams) {
-                        teams = teams.teams;
-                    }
-                    console.log(`✅ ファイルから${teams.length}チームを読み込みました`);
-                } catch (readError) {
-                    console.error('❌ teams.json読み込みエラー:', readError.message);
-                    teams = [];
-                }
+                console.error('❌ DatabaseManagerからのチームデータ取得エラー:', dbError?.message);
             }
         }
         

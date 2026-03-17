@@ -750,7 +750,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         function setupTabs() {
             const tabs = document.querySelectorAll('.tab');
             tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
+                tab.addEventListener('click', async () => {
                     tabs.forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
                     
@@ -759,12 +759,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     });
                     document.getElementById(`${tab.dataset.tab}-content`).classList.add('active');
                     
-                    // タブ切り替え時に選択状態をリセット（オプション）
-                    // コメントアウトしているので、選択状態は保持されます
-                    // if (tab.dataset.tab === 'leagues') {
-                    //     selectedLeagueId = null;
-                    //     selectedTeamId = null;
-                    // }
+                    // チームタブ表示時、データが空なら再読み込み
+                    if (tab.dataset.tab === 'teams' && teams.length === 0) {
+                        const grid = document.getElementById('teamsGrid');
+                        if (grid && !grid.querySelector('.loading')) {
+                            grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>チームデータを読み込み中...</p></div>';
+                            await loadAllTeams();
+                            filterAndDisplayTeams(document.getElementById('teamFilter')?.value || '', selectedLeagueId);
+                        }
+                    }
                 });
             });
         }
@@ -1199,7 +1202,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
 
         // Navigation functions
-        function selectLeague(leagueId) {
+        async function selectLeague(leagueId) {
             // リーグIDを取得
             const league = leagueData.find(l => l.id === leagueId);
             if (!league) return;
@@ -1210,7 +1213,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // チームタブに切り替え
             document.querySelector('[data-tab="teams"]').click();
             
-            // リーグでフィルタリングしてチームを表示（メモリから即座に）
+            // チームがまだ読み込まれていない場合は先に読み込む
+            if (teams.length === 0) {
+                const grid = document.getElementById('teamsGrid');
+                if (grid) grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>チームデータを読み込み中...</p></div>';
+                await loadAllTeams();
+            }
+            
+            // リーグでフィルタリングしてチームを表示
             filterAndDisplayTeams('', selectedLeagueId);
             
             // チームフィルターをクリア
