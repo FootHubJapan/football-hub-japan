@@ -936,6 +936,7 @@ class FootballDataService {
             { id: 1018, name: '徳島ヴォルティス', shortName: '徳島', tla: 'TOK', leagueId: 'J1' },
             { id: 1019, name: 'アビスパ福岡', shortName: '福岡', tla: 'AVI', leagueId: 'J1' },
             { id: 1020, name: 'サガン鳥栖', shortName: '鳥栖', tla: 'SAG', leagueId: 'J1' },
+            { id: 1021, name: 'ジェフユナイテッド千葉', shortName: '千葉', tla: 'JEF', leagueId: 'J1' },
             
             // J2リーグ
             { id: 2001, name: '京都サンガF.C.', shortName: '京都', tla: 'KYO', leagueId: 'J2' },
@@ -2161,6 +2162,7 @@ class FotMobDataService {
             { id: 1018, name: '徳島ヴォルティス', shortName: '徳島', tla: 'TOK', leagueId: 'J1' },
             { id: 1019, name: 'アビスパ福岡', shortName: '福岡', tla: 'AVI', leagueId: 'J1' },
             { id: 1020, name: 'サガン鳥栖', shortName: '鳥栖', tla: 'SAG', leagueId: 'J1' },
+            { id: 1021, name: 'ジェフユナイテッド千葉', shortName: '千葉', tla: 'JEF', leagueId: 'J1' },
             
             // J2リーグ
             { id: 2001, name: '京都サンガF.C.', shortName: '京都', tla: 'KYO', leagueId: 'J2' },

@@ -578,6 +578,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <label class="filter-label">リーグ</label>
                             <select id="leagueFilter" class="filter-select">
                                 <option value="">すべてのリーグ</option>
+                                <option value="J1">J1リーグ</option>
+                                <option value="J2">J2リーグ</option>
                                 <option value="premier">プレミアリーグ</option>
                                 <option value="laliga">ラ・リーガ（スペインリーグのみ）</option>
                                 <option value="seriea">セリエA</option>
@@ -706,6 +708,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <label class="filter-label">リーグを選択してください</label>
                             <select id="leagueStandingsFilter" class="filter-select" onchange="loadLeagueStandings()">
                                 <option value="">リーグを選択</option>
+                                <option value="J1">J1リーグ</option>
+                                <option value="J2">J2リーグ</option>
                                 <option value="premier">プレミアリーグ</option>
                                 <option value="laliga">ラ・リーガ</option>
                                 <option value="seriea">セリエA</option>
@@ -1321,6 +1325,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         function generateFallbackTeamData(league) {
             const teamsMap = {
+                J1: [
+                    { name: '横浜F・マリノス', played: 34, wins: 21, draws: 5, losses: 8, goalsFor: 65, goalsAgainst: 38, points: 68 },
+                    { name: '川崎フロンターレ', played: 34, wins: 20, draws: 5, losses: 9, goalsFor: 62, goalsAgainst: 42, points: 65 },
+                    { name: '浦和レッズ', played: 34, wins: 19, draws: 5, losses: 10, goalsFor: 58, goalsAgainst: 45, points: 62 },
+                    { name: 'FC東京', played: 34, wins: 18, draws: 5, losses: 11, goalsFor: 55, goalsAgainst: 48, points: 59 },
+                    { name: 'ジェフユナイテッド千葉', played: 34, wins: 17, draws: 5, losses: 12, goalsFor: 52, goalsAgainst: 48, points: 56 },
+                    { name: 'セレッソ大阪', played: 34, wins: 16, draws: 7, losses: 11, goalsFor: 50, goalsAgainst: 50, points: 55 }
+                ],
+                J2: [
+                    { name: '京都サンガF.C.', played: 34, wins: 16, draws: 7, losses: 11, goalsFor: 52, goalsAgainst: 45, points: 55 },
+                    { name: 'ファジアーノ岡山', played: 34, wins: 17, draws: 7, losses: 10, goalsFor: 55, goalsAgainst: 42, points: 58 },
+                    { name: 'FC町田ゼルビア', played: 34, wins: 19, draws: 5, losses: 10, goalsFor: 58, goalsAgainst: 38, points: 62 },
+                    { name: 'レノファ山口FC', played: 34, wins: 14, draws: 6, losses: 14, goalsFor: 45, goalsAgainst: 48, points: 48 }
+                ],
                 premier: [
                     { name: 'リバプール', played: 19, wins: 14, draws: 4, losses: 1, goalsFor: 45, goalsAgainst: 18, points: 46 },
                     { name: 'アーセナル', played: 19, wins: 11, draws: 6, losses: 2, goalsFor: 38, goalsAgainst: 16, points: 39 },

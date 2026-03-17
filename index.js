@@ -2534,6 +2534,8 @@ app.get('/api/ranking/players', async (req, res) => {
                 'SA': ['serie a', 'セリエa', 'serie', 'seriea'],
                 'BL1': ['bundesliga', 'ブンデスリーガ', 'bundes'],
                 'FL1': ['ligue 1', 'リーグ・アン', 'ligue', 'ligue1'],
+                'J1': ['j1 league', 'j1リーグ', 'j1', 'j league', 'jleague'],
+                'J2': ['j2 league', 'j2リーグ', 'j2', 'j2 league'],
                 'CL': ['champions league', 'チャンピオンズリーグ', 'uefa champions league'],
                 'MLS': ['major league soccer', 'mls', 'メジャーリーグサッカー'],
                 'SPL': ['saudi pro league', 'サウジアラビアプロリーグ', 'saudi arabian professional league', 'roshn saudi league']
@@ -2712,20 +2714,21 @@ app.get('/api/ranking/teams', async (req, res) => {
         const apiKey = process.env.RAPIDAPI_KEY || process.env.API_FOOTBALL_KEY;
         if (apiKey && apiKey !== 'YOUR_API_FOOTBALL_KEY' && apiKey !== 'your-api-football-key-here') {
             try {
-                // リーグIDのマッピング
+                // リーグIDのマッピング（フロントの値とAPI用IDの両方に対応）
                 const leagueIds = {
-                    'PL': 39,      // Premier League
-                    'PD': 140,     // La Liga
-                    'SA': 135,     // Serie A
-                    'BL1': 78,     // Bundesliga
-                    'FL1': 61,     // Ligue 1
-                    'J1': 98,      // J1 League
-                    'CL': 2,       // Champions League
-                    'MLS': 253,    // Major League Soccer
-                    'SPL': 307     // Saudi Pro League
+                    'PL': 39, 'premier': 39,      // Premier League
+                    'PD': 140, 'laliga': 140,     // La Liga
+                    'SA': 135, 'seriea': 135,     // Serie A
+                    'BL1': 78, 'bundesliga': 78,  // Bundesliga
+                    'FL1': 61, 'ligue1': 61,      // Ligue 1
+                    'J1': 98,                     // J1 League
+                    'J2': 99,                     // J2 League
+                    'CL': 2,                      // Champions League
+                    'MLS': 253,                   // Major League Soccer
+                    'SPL': 307, 'saudi': 307      // Saudi Pro League
                 };
                 
-                const targetLeague = leagueIds[league];
+                const targetLeague = leagueIds[league] || leagueIds[league.toUpperCase?.()];
                 
                 console.log('🔍 Fetching team standings from API-Football:', { league, targetLeague });
                 
@@ -3036,7 +3039,15 @@ function generateFallbackTeamRanking(league) {
             { name: '川崎フロンターレ', points: 65, wins: 20, draws: 5, losses: 9, goalsFor: 62, goalsAgainst: 42, goalDifference: 20, form: 'WDWWW' },
             { name: '浦和レッズ', points: 62, wins: 19, draws: 5, losses: 10, goalsFor: 58, goalsAgainst: 45, goalDifference: 13, form: 'WWWLD' },
             { name: 'FC東京', points: 59, wins: 18, draws: 5, losses: 11, goalsFor: 55, goalsAgainst: 48, goalDifference: 7, form: 'LWWWD' },
-            { name: 'セレッソ大阪', points: 56, wins: 17, draws: 5, losses: 12, goalsFor: 52, goalsAgainst: 52, goalDifference: 0, form: 'WWDWL' }
+            { name: 'ジェフユナイテッド千葉', points: 56, wins: 17, draws: 5, losses: 12, goalsFor: 52, goalsAgainst: 48, goalDifference: 4, form: 'WWDWL' },
+            { name: 'セレッソ大阪', points: 55, wins: 16, draws: 7, losses: 11, goalsFor: 50, goalsAgainst: 50, goalDifference: 0, form: 'WWDWL' }
+        ],
+        'J2': [
+            { name: '京都サンガF.C.', points: 55, wins: 16, draws: 7, losses: 11, goalsFor: 52, goalsAgainst: 45, goalDifference: 7, form: 'WWWDL' },
+            { name: 'ファジアーノ岡山', points: 58, wins: 17, draws: 7, losses: 10, goalsFor: 55, goalsAgainst: 42, goalDifference: 13, form: 'WDWWW' },
+            { name: 'FC町田ゼルビア', points: 62, wins: 19, draws: 5, losses: 10, goalsFor: 58, goalsAgainst: 38, goalDifference: 20, form: 'WWWLD' },
+            { name: 'レノファ山口FC', points: 48, wins: 14, draws: 6, losses: 14, goalsFor: 45, goalsAgainst: 48, goalDifference: -3, form: 'LWDWW' },
+            { name: 'FC琉球', points: 42, wins: 12, draws: 6, losses: 16, goalsFor: 42, goalsAgainst: 55, goalDifference: -13, form: 'WLDWL' }
         ]
     };
 
@@ -5990,7 +6001,8 @@ async function getMatchesFromAPIFootball(league, timeRange, season = null) {
             'SA': 135,   // Serie A
             'BL1': 78,   // Bundesliga
             'FL1': 61,   // Ligue 1
-            'J1': 98     // J1 League (API-Football)
+            'J1': 98,    // J1 League (API-Football)
+            'J2': 99     // J2 League (API-Football)
         };
 
         // 時間範囲の設定
@@ -11195,6 +11207,7 @@ function generateFallbackTeams() {
         { id: 3, name: '川崎フロンターレ', league: 'J1', country: 'Japan' },
         { id: 4, name: 'FC東京', league: 'J1', country: 'Japan' },
         { id: 5, name: '鹿島アントラーズ', league: 'J1', country: 'Japan' },
+        { id: 21, name: 'ジェフユナイテッド千葉', league: 'J1', country: 'Japan' },
         { id: 6, name: 'Arsenal', league: 'PL', country: 'England' },
         { id: 7, name: 'Chelsea', league: 'PL', country: 'England' },
         { id: 8, name: 'Liverpool', league: 'PL', country: 'England' },

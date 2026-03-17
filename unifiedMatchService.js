@@ -27,6 +27,7 @@ const leagueMapping = {
     primeiraLiga: { apiFootball: 94, footballData: 2017 },
     brasileirao: { apiFootball: 71, footballData: 2013 },
     j1: { apiFootball: 98, footballData: null }, // J1はFootball-data.org非対応
+    j2: { apiFootball: 99, footballData: null }, // J2リーグ
     championsLeague: { apiFootball: 2, footballData: 2001 },
     europaLeague: { apiFootball: 3, footballData: 2146 },
     conferenceLeague: { apiFootball: 848, footballData: 2017 }
@@ -45,6 +46,7 @@ function getLeagueKey(leagueCode) {
         'PPL': 'primeiraLiga',
         'BSA': 'brasileirao',
         'J1': 'j1',
+        'J2': 'j2',
         'CL': 'championsLeague',
         'EL': 'europaLeague',
         'ECL': 'conferenceLeague'
