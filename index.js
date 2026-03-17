@@ -9966,6 +9966,12 @@ app.get('/api/integrated/players', async (req, res) => {
                 }
             }
         }
+        
+        // データが空の場合はフォールバックを使用（data/がデプロイされていない環境対策）
+        if (players.length === 0) {
+            console.log('⚠️ 選手データが空のためフォールバックを使用');
+            players = cacheManager.getFallbackPlayers();
+        }
             
             // 主要クラブの選手のみを返す場合
             if (majorClubsOnly === 'true') {
@@ -10223,10 +10229,25 @@ app.get('/api/integrated/players', async (req, res) => {
         res.json(enhancedPlayers);
     } catch (error) {
         console.error('Integrated players error:', error);
-        res.status(500).json({ 
-            error: '統合選手データの取得に失敗しました',
-            message: error.message
-        });
+        // 500を避け、フォールバックデータを返す
+        try {
+            const fallbackPlayers = cacheManager.getFallbackPlayers();
+            const enhanced = fallbackPlayers.map(player => ({
+                ...player,
+                integration: {
+                    hasApiFootball: !!player.apiFootballId || !!player.playerId,
+                    hasFootballData: !!player.footballDataId,
+                    hasPhoto: !!player.photo,
+                    sources: ['fallback']
+                }
+            }));
+            res.json(enhanced);
+        } catch (fallbackError) {
+            res.status(500).json({ 
+                error: '統合選手データの取得に失敗しました',
+                message: error.message
+            });
+        }
     }
 });
 
@@ -11009,6 +11030,12 @@ app.get('/api/fotmob/teams', async (req, res) => {
             teams = teams.filter(team => team.leagueId === parseInt(league) || team.leagueName?.toLowerCase().includes(league.toLowerCase()));
         }
         
+        // データが空の場合はフォールバックを使用（data/がデプロイされていない環境対策）
+        if (teams.length === 0) {
+            console.log('⚠️ チームデータが空のためフォールバックを使用');
+            teams = generateFallbackTeams();
+        }
+        
         // レスポンス形式を統一（database-new.htmlが期待する形式）
         const responseData = {
             teams: teams,
@@ -11019,10 +11046,10 @@ app.get('/api/fotmob/teams', async (req, res) => {
         res.json(responseData);
     } catch (error) {
         console.error('Teams API error:', error);
-        // エラー時は空配列を返す（database-new.htmlが期待する形式）
+        // エラー時はフォールバックを返す（500を避ける）
         res.json({
-            teams: [],
-            total: 0
+            teams: generateFallbackTeams(),
+            total: generateFallbackTeams().length
         });
     }
 });
@@ -11199,20 +11226,21 @@ function generateFallbackPlayers(limit) {
     return players;
 }
 
-// フォールバックチームデータを生成
+// フォールバックチームデータを生成（database-new.html用）
 function generateFallbackTeams() {
+    const leagueNames = { J1: 'J1リーグ', PL: 'Premier League' };
     return [
-        { id: 1, name: '浦和レッズ', league: 'J1', country: 'Japan' },
-        { id: 2, name: '横浜F・マリノス', league: 'J1', country: 'Japan' },
-        { id: 3, name: '川崎フロンターレ', league: 'J1', country: 'Japan' },
-        { id: 4, name: 'FC東京', league: 'J1', country: 'Japan' },
-        { id: 5, name: '鹿島アントラーズ', league: 'J1', country: 'Japan' },
-        { id: 21, name: 'ジェフユナイテッド千葉', league: 'J1', country: 'Japan' },
-        { id: 6, name: 'Arsenal', league: 'PL', country: 'England' },
-        { id: 7, name: 'Chelsea', league: 'PL', country: 'England' },
-        { id: 8, name: 'Liverpool', league: 'PL', country: 'England' },
-        { id: 9, name: 'Manchester United', league: 'PL', country: 'England' },
-        { id: 10, name: 'Manchester City', league: 'PL', country: 'England' }
+        { id: 1, name: '浦和レッズ', league: 'J1', leagueName: leagueNames.J1, leagueId: 98, country: 'Japan', venue: '埼玉スタジアム' },
+        { id: 2, name: '横浜F・マリノス', league: 'J1', leagueName: leagueNames.J1, leagueId: 98, country: 'Japan', venue: '日産スタジアム' },
+        { id: 3, name: '川崎フロンターレ', league: 'J1', leagueName: leagueNames.J1, leagueId: 98, country: 'Japan', venue: '等々力陸上競技場' },
+        { id: 4, name: 'FC東京', league: 'J1', leagueName: leagueNames.J1, leagueId: 98, country: 'Japan', venue: '味の素スタジアム' },
+        { id: 5, name: '鹿島アントラーズ', league: 'J1', leagueName: leagueNames.J1, leagueId: 98, country: 'Japan', venue: 'カシマサッカースタジアム' },
+        { id: 21, name: 'ジェフユナイテッド千葉', league: 'J1', leagueName: leagueNames.J1, leagueId: 98, country: 'Japan', venue: 'フクダ電子アリーナ' },
+        { id: 6, name: 'Arsenal', league: 'PL', leagueName: leagueNames.PL, leagueId: 39, country: 'England', venue: 'Emirates Stadium' },
+        { id: 7, name: 'Chelsea', league: 'PL', leagueName: leagueNames.PL, leagueId: 39, country: 'England', venue: 'Stamford Bridge' },
+        { id: 8, name: 'Liverpool', league: 'PL', leagueName: leagueNames.PL, leagueId: 39, country: 'England', venue: 'Anfield' },
+        { id: 9, name: 'Manchester United', league: 'PL', leagueName: leagueNames.PL, leagueId: 39, country: 'England', venue: 'Old Trafford' },
+        { id: 10, name: 'Manchester City', league: 'PL', leagueName: leagueNames.PL, leagueId: 39, country: 'England', venue: 'Etihad Stadium' }
     ];
 }
 
