@@ -104,9 +104,16 @@ try {
     console.log('🔄 包括的API連携サービスを初期化中...');
 
     // 初期化を即座に実行
-    apiService.init().then(() => {
+    apiService.init().then(async () => {
         console.log('✅ 包括的API連携サービスが初期化されました');
         console.log('🔍 APIService状態確認:', !!apiService);
+        // チームデータをキャッシュ（APIで使用、Render等でファイル読み込みが失敗する対策）
+        try {
+            cachedTeams = await apiService.dbManager.loadTeams();
+            console.log(`📊 チームキャッシュ: ${cachedTeams.length}チーム`);
+        } catch (e) {
+            console.warn('チームキャッシュ失敗:', e?.message);
+        }
     }).catch(error => {
         console.error('❌ 包括的API連携サービス初期化エラー:', error);
         console.error('詳細エラー:', error.stack);
@@ -147,6 +154,7 @@ function maskApiKey(key) {
 // 🗄️ 簡易キャッシュシステム
 // ===============================
 const simpleCache = new Map();
+let cachedTeams = []; // 起動時に読み込んだチーム（APIで使用）
 
 function getCache(key) {
     const cached = simpleCache.get(key);
@@ -10992,19 +11000,24 @@ app.get('/api/fotmob/teams', async (req, res) => {
         
         let teams = [];
         
-        // 自作データベース（data/teams.json）から直接読み込みを優先
-        const fs = require('fs');
-        const teamsFile = path.join(__dirname, 'data', 'teams.json');
-        if (fs.existsSync(teamsFile)) {
-            try {
-                const data = await fs.promises.readFile(teamsFile, 'utf8');
-                teams = JSON.parse(data);
-                if (!Array.isArray(teams) && teams.teams) teams = teams.teams;
-                if (teams.length > 0) {
-                    console.log(`✅ 自作DBから${teams.length}チームを取得しました`);
+        // 起動時キャッシュを優先（Render等でファイル読み込みが失敗する対策）
+        if (cachedTeams && cachedTeams.length > 0) {
+            teams = [...cachedTeams];
+        }
+        
+        // キャッシュがなければ自作データベースから読み込み
+        if (teams.length === 0) {
+            const fs = require('fs');
+            const teamsFile = path.join(__dirname, 'data', 'teams.json');
+            if (fs.existsSync(teamsFile)) {
+                try {
+                    const data = await fs.promises.readFile(teamsFile, 'utf8');
+                    teams = JSON.parse(data);
+                    if (!Array.isArray(teams) && teams.teams) teams = teams.teams;
+                    if (teams.length > 0) console.log(`✅ 自作DBから${teams.length}チームを取得`);
+                } catch (e) {
+                    console.warn('teams.json読み込み失敗:', e.message);
                 }
-            } catch (e) {
-                console.warn('teams.json読み込み失敗:', e.message);
             }
         }
         
@@ -12524,11 +12537,18 @@ app.listen(PORT, () => {
             
                 // 初期化を実行して完了を待つ
             console.log('🔄 APIService初期化を実行中...');
-            apiService.init().then(() => {
+            apiService.init().then(async () => {
                 // #region agent log
                 fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11764',message:'APIService init completed',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'B'})}).catch(()=>{});
                 // #endregion
                 console.log('✅ APIService初期化完了');
+                // チームキャッシュを更新
+                try {
+                    cachedTeams = await apiService.dbManager.loadTeams();
+                    if (cachedTeams.length > 0) console.log(`📊 チームキャッシュ: ${cachedTeams.length}チーム`);
+                } catch (e) {
+                    console.warn('チームキャッシュ失敗:', e?.message);
+                }
                 // 初期化完了後にシステム初期化を実行（遅延）
                 console.log('✅ APIService利用可能、システム初期化を開始');
                 setTimeout(() => {
