@@ -6079,6 +6079,9 @@ async function getMatchesFromAPIFootball(league, timeRange, season = null) {
             'SA': 135,   // Serie A
             'BL1': 78,   // Bundesliga
             'FL1': 61,   // Ligue 1
+            'CL': 2,     // Champions League
+            'EL': 3,     // Europa League
+            'ECL': 848,  // Conference League
             'J1': 98,    // J1 League (API-Football)
             'J2': 99     // J2 League (API-Football)
         };
@@ -6198,7 +6201,7 @@ async function getMatchesFromAPIFootball(league, timeRange, season = null) {
             console.log('No specific league, fetching from major leagues');
             
             for (const [leagueCode, leagueId] of Object.entries(leagueMapping)) {
-                if (leagueCode !== 'J1') { // J1は別途処理
+                if (leagueCode !== 'J1' && leagueCode !== 'J2') { // J1/J2は別途処理
                     try {
                         const response = await fetch(`https://v3.football.api-sports.io/fixtures?league=${leagueId}&season=${season}&from=${fromDate}&to=${toDate}`, {
                             headers: {
@@ -6271,13 +6274,16 @@ async function getMatchesFromFootballData(league, timeRange, season = null) {
             return matches;
         }
 
-        // リーグIDのマッピング（Football-data.org用）
+        // リーグIDのマッピング（Football-data.org用: competition code）
         const leagueMapping = {
-            'PL': 2021,  // Premier League
-            'PD': 2014,  // La Liga
-            'SA': 2019,  // Serie A
-            'BL1': 2002, // Bundesliga
-            'FL1': 2015, // Ligue 1
+            'PL': 'PL',   // Premier League
+            'PD': 'PD',   // La Liga
+            'SA': 'SA',   // Serie A
+            'BL1': 'BL1', // Bundesliga
+            'FL1': 'FL1', // Ligue 1
+            'CL': 'CL',   // Champions League
+            'EL': 'EL',   // Europa League
+            'ECL': 'UCL', // Conference League (Football-data.org code)
         };
 
         // 時間範囲の設定
@@ -6349,6 +6355,7 @@ async function getMatchesFromFootballData(league, timeRange, season = null) {
                 
                 if (data.matches && Array.isArray(data.matches)) {
                     data.matches.forEach(match => {
+                        const ft = match.score?.fullTime;
                         matches.push({
                             id: match.id,
                             league: league,
@@ -6356,8 +6363,8 @@ async function getMatchesFromFootballData(league, timeRange, season = null) {
                             awayTeam: match.awayTeam.name,
                             homeTeamId: match.homeTeam.id,
                             awayTeamId: match.awayTeam.id,
-                            homeScore: match.score.fullTime.home,
-                            awayScore: match.score.fullTime.away,
+                            homeScore: ft?.home ?? null,
+                            awayScore: ft?.away ?? null,
                             date: match.utcDate,
                             venue: match.venue || 'Unknown',
                             status: match.status,
@@ -6392,6 +6399,7 @@ async function getMatchesFromFootballData(league, timeRange, season = null) {
                         const data = await response.json();
                         if (data.matches && Array.isArray(data.matches)) {
                             data.matches.forEach(match => {
+                                const ft = match.score?.fullTime;
                                 matches.push({
                                     id: match.id,
                                     league: leagueCode,
@@ -6399,8 +6407,8 @@ async function getMatchesFromFootballData(league, timeRange, season = null) {
                                     awayTeam: match.awayTeam.name,
                                     homeTeamId: match.homeTeam.id,
                                     awayTeamId: match.awayTeam.id,
-                                    homeScore: match.score.fullTime.home,
-                                    awayScore: match.score.fullTime.away,
+                                    homeScore: ft?.home ?? null,
+                                    awayScore: ft?.away ?? null,
                                     date: match.utcDate,
                                     venue: match.venue || 'Unknown',
                                     status: match.status,

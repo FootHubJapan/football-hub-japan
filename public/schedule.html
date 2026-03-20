@@ -6016,7 +6016,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         
                         // 複数の日付フィールドをチェック
                         const matchDate = parseUtcDate(match.date || match.utcDate || match.matchDate || match.fixture?.date);
-                        // 日本時間（JST）で表示
+                        // 日本時間（JST）で表示（例: 1月15日 20:00）
                         const timeString = matchDate ? matchDate.toLocaleTimeString('ja-JP', { 
                             hour: '2-digit', 
                             minute: '2-digit',
@@ -6027,6 +6027,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             day: 'numeric',
                             timeZone: 'Asia/Tokyo'
                         }) : '日付未定';
+                        const dateTimeLabel = matchDate ? `${dateString} ${timeString}` : '日時未定';
 
                         // スコアの表示（統合APIとAPI-Footballの両方に対応）
                         const homeScore = match.score?.fullTime?.home ?? match.homeScore;
@@ -6149,8 +6150,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                             </div>`;
                                         } else if (isUpcoming) {
                                             statusBadge = `<div style="position: absolute; top: 0; right: 0; padding: 0.75rem;">
-                                                <span style="font-size: 0.625rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(203, 213, 225, 0.8); padding: 0.25rem 0.5rem; border-radius: 9999px;">
-                                                    ${timeString}
+                                                <span style="font-size: 0.625rem; font-weight: bold; letter-spacing: 0.05em; border: 1px solid rgba(255, 255, 255, 0.1); color: var(--primary); padding: 0.25rem 0.5rem; border-radius: 9999px;">
+                                                    ${dateTimeLabel}
                                                 </span>
                                             </div>`;
                                         }
@@ -6183,11 +6184,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                                              '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(100, 116, 139, 0.8); text-transform: uppercase; margin-top: 0.5rem;">Score</span>';
                                             } else {
                                                 scoreDisplay = `<div style="font-size: 1.125rem; font-weight: bold; letter-spacing: 0.1em; color: rgba(100, 116, 139, 0.8); text-transform: uppercase;">VS</div>`;
-                                                scoreLabel = '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(71, 85, 105, 0.8); text-transform: uppercase; margin-top: 0.5rem; font-style: italic;">Upcoming</span>';
+                                                scoreLabel = `<span style="font-size: 0.75rem; font-weight: 500; color: var(--primary); margin-top: 0.5rem;">${dateTimeLabel}</span>`;
                                             }
                                         } else {
                                             scoreDisplay = `<div style="font-size: 1.125rem; font-weight: bold; letter-spacing: 0.1em; color: rgba(100, 116, 139, 0.8); text-transform: uppercase;">VS</div>`;
-                                            scoreLabel = '<span style="font-size: 0.625rem; font-weight: 500; color: rgba(71, 85, 105, 0.8); text-transform: uppercase; margin-top: 0.5rem; font-style: italic;">Upcoming</span>';
+                                            scoreLabel = `<span style="font-size: 0.75rem; font-weight: 500; color: var(--primary); margin-top: 0.5rem;">${dateTimeLabel}</span>`;
                                         }
                                         
                                         let footerInfo = '';
