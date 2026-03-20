@@ -311,7 +311,8 @@ app.use(helmet({
                 "https://ep1.adtrafficquality.google",
                 "https://*.adtrafficquality.google",
                 "https://*.doubleclick.net",
-                "https://*.googlesyndication.com"
+                "https://*.googlesyndication.com",
+                "https://unpkg.com"
             ],
             frameSrc: [
                 "'self'", 

@@ -106,6 +106,18 @@ body {
   outline: none;
 }
 .search-bar input::placeholder { color: var(--text-muted); opacity: 0.7; }
+.search-bar .search-btn {
+  background: none;
+  border: none;
+  color: var(--neon-blue);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+.search-bar .search-btn:hover { opacity: 0.8; }
 .search-hint {
   text-align: center;
   margin-top: 0.5rem;
@@ -265,10 +277,13 @@ body {
 </header>
 <!-- Search -->
 <div class="search-section">
-  <div class="search-bar">
+  <form class="search-bar" id="searchForm" role="search">
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-    <input type="text" id="globalSearch" placeholder="Search for any team, league, or stadium globally." autocomplete="off"/>
-  </div>
+    <input type="text" id="globalSearch" name="q" placeholder="Search for any team, league, or stadium globally." autocomplete="off"/>
+    <button type="submit" class="search-btn" aria-label="Search" title="Search">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </form>
   <p class="search-hint">Explore the world of football through an immersive map experience. Click on any country to zoom in.</p>
 </div>
 <!-- Stats Panel -->
@@ -299,6 +314,14 @@ body {
     <a href="#" aria-label="YouTube"><svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
   </div>
 </footer>
+<!-- Search form (Leafletに依存しない) -->
+<script>
+document.getElementById('searchForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const q = document.getElementById('globalSearch').value.trim();
+  if (q) window.location.href = '/database?q=' + encodeURIComponent(q);
+});
+</script>
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -327,9 +350,6 @@ body {
       iconAnchor: [30, 25]
     });
     L.marker([m.lat, m.lng], { icon: icon }).addTo(map).on('click', () => window.location.href = m.url);
-  });
-  document.getElementById('globalSearch').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') window.location.href = '/database?q=' + encodeURIComponent(this.value);
   });
 })();
 </script>
