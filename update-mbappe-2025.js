@@ -147,8 +147,8 @@ async function updateMbappe2025() {
         
         // データをソート（最新シーズンを先頭に）
         existingPlayer.stats.sort((a, b) => {
-            const seasonA = a.season || '';
-            const seasonB = b.season || '';
+            const seasonA = String(a.season || '');
+            const seasonB = String(b.season || '');
             return seasonB.localeCompare(seasonA);
         });
         

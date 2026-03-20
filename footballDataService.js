@@ -86,7 +86,7 @@ class FootballDataService {
     }
 
     // リーグの選手一覧を取得
-    async getLeaguePlayers(competitionId, season = 2024) {
+    async getLeaguePlayers(competitionId, season = 2025) {
         try {
             const response = await this.makeRequest(`${this.baseUrl}/competitions/${competitionId}/teams?season=${season}`);
             const data = await response.json();
@@ -111,7 +111,7 @@ class FootballDataService {
 
     // マッチデータ取得（Football-data.org）
     async getMatches(options = {}) {
-        const { league, season = 2024, status } = options;
+        const { league, season = 2025, status } = options;
         
         try {
             console.log(`🔄 Football-data.orgからマッチデータを取得中... league=${league}, season=${season}, status=${status}`);
@@ -187,7 +187,7 @@ class FootballDataService {
     }
 
     // リーグの試合スケジュールを取得
-    async getLeagueFixtures(competitionId, season = 2024) {
+    async getLeagueFixtures(competitionId, season = 2025) {
         try {
             const response = await this.makeRequest(`${this.baseUrl}/competitions/${competitionId}/matches?season=${season}`);
             const data = await response.json();
@@ -199,7 +199,7 @@ class FootballDataService {
     }
 
     // リーグの順位表を取得
-    async getLeagueStandings(competitionId, season = 2024) {
+    async getLeagueStandings(competitionId, season = 2025) {
         try {
             const response = await this.makeRequest(`${this.baseUrl}/competitions/${competitionId}/standings?season=${season}`);
             const data = await response.json();

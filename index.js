@@ -131,6 +131,8 @@ console.log('🚀 APIService初期化完了');
 
 // Load environment variables
 require('dotenv').config();
+const { spawn } = require('child_process');
+const cron = require('node-cron');
 
 // 環境変数の状態をログ出力
 console.log('🔍 環境変数チェック:');
@@ -914,7 +916,7 @@ app.get('/api/player-stats/:playerId', async (req, res) => {
                     // 各リーグで検索を試行
                     for (const leagueId of majorLeagues) {
                         try {
-                            searchResponse = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(playerId)}&league=${leagueId}&season=2024`, {
+                            searchResponse = await fetch(`https://v3.football.api-sports.io/players?search=${encodeURIComponent(playerId)}&league=${leagueId}&season=2025`, {
                                 headers: {
                                     'x-apisports-key': process.env.API_FOOTBALL_KEY
                                 }
@@ -1000,7 +1002,7 @@ app.get('/api/player-stats/:playerId', async (req, res) => {
                                     penalty: stats.penalty || {}
                                 },
                                 source: 'apiFootball-direct',
-                                season: '2024/2025',
+                                season: '2025/2026',
                                 lastUpdated: new Date().toISOString()
                             };
                             
@@ -1018,36 +1020,36 @@ app.get('/api/player-stats/:playerId', async (req, res) => {
             }
         }
         
-        // 3. API-Footballから実際のスタッツを取得（2024シーズン）
+        // 3. API-Footballから実際のスタッツを取得（2025シーズン）
         if (!playerStats && dataService) {
             try {
-                console.log(`🔄 API-Footballから選手スタッツを取得中: ${playerId} (2024シーズン)`);
-                const apiStats = await dataService.getPlayerStats(playerId, '2024');
+                console.log(`🔄 API-Footballから選手スタッツを取得中: ${playerId} (2025シーズン)`);
+                const apiStats = await dataService.getPlayerStats(playerId, '2025');
                 if (apiStats) {
                     playerStats = {
                         ...apiStats,
                         source: 'apiFootball',
-                        season: '2024/2025'
+                        season: '2025/2026'
                     };
-                    console.log(`✅ API-Footballから選手スタッツを取得: ${apiStats.name || playerId} (2024シーズン)`);
+                    console.log(`✅ API-Footballから選手スタッツを取得: ${apiStats.name || playerId} (2025シーズン)`);
                 }
             } catch (error) {
                 console.log('⚠️ API-Footballからの取得に失敗:', error.message);
             }
         }
         
-        // 4. Football-data.orgからスタッツを取得（2024シーズン）
+        // 4. Football-data.orgからスタッツを取得（2025シーズン）
         if (!playerStats && footballDataService) {
             try {
-                console.log(`🔄 Football-data.orgから選手スタッツを取得中: ${playerId} (2024シーズン)`);
-                const footballDataStats = await footballDataService.getPlayerStats(playerId, '2024');
+                console.log(`🔄 Football-data.orgから選手スタッツを取得中: ${playerId} (2025シーズン)`);
+                const footballDataStats = await footballDataService.getPlayerStats(playerId, '2025');
                 if (footballDataStats) {
                     playerStats = {
                         ...footballDataStats,
                         source: 'footballData',
-                        season: '2024/2025'
+                        season: '2025/2026'
                     };
-                    console.log(`✅ Football-data.orgから選手スタッツを取得: ${footballDataStats.name || playerId} (2024シーズン)`);
+                    console.log(`✅ Football-data.orgから選手スタッツを取得: ${footballDataStats.name || playerId} (2025シーズン)`);
                 }
             } catch (error) {
                 console.log('⚠️ Football-data.orgからの取得に失敗:', error.message);
@@ -1094,7 +1096,7 @@ app.get('/api/football-data/competitions/:id/teams', async (req, res) => {
                 count: 0,
                 filters: {},
                 competition: { id: leagueId, name: 'League' },
-                season: { id: 2024, startDate: '2024-08-01', endDate: '2025-05-31' },
+                season: { id: 2025, startDate: '2025-08-01', endDate: '2026-05-31' },
                 teams: []
             };
             return res.json(fallbackData);
@@ -1111,7 +1113,7 @@ app.get('/api/football-data/competitions/:id/teams', async (req, res) => {
             count: 0,
             filters: {},
             competition: { id: req.params.id, name: 'League' },
-            season: { id: 2024, startDate: '2024-08-01', endDate: '2025-05-31' },
+            season: { id: 2025, startDate: '2025-08-01', endDate: '2026-05-31' },
             teams: []
         };
         res.json(fallbackData);
@@ -1477,7 +1479,16 @@ app.post('/api/ai/tactics', async (req, res) => {
 // 選手ランキング取得（動的データ優先）
 app.get('/api/ranking/players', async (req, res) => {
     try {
-        const { season = 2025, league, position, stat = 'goals', search } = req.query;
+        let { season = 2025, league, position, stat = 'goals', search } = req.query;
+        
+        // フロントエンドのリーグ値→バックエンドコードに正規化（laliga→PD等）
+        const leagueNormalize = {
+            'premier': 'PL', 'laliga': 'PD', 'seriea': 'SA', 'bundesliga': 'BL1', 'ligue1': 'FL1',
+            'saudi': 'SPL', 'j1': 'J1', 'j2': 'J2'
+        };
+        if (league && leagueNormalize[league]) {
+            league = leagueNormalize[league];
+        }
         
         // サーバーサイドキャッシュ（5分）でレスポンス高速化
         const cacheKey = `ranking_players_${season}_${league || ''}_${position || ''}_${stat}_${search || ''}`;
@@ -1604,6 +1615,10 @@ app.get('/api/ranking/players', async (req, res) => {
                                         'BL1': ['bundesliga', 'ブンデスリーガ', 'bundes'],
                                         'FL1': ['ligue 1', 'リーグ・アン', 'ligue', 'ligue1'],
                                         'J1': ['j1 league', 'j1リーグ', 'j1', 'j league', 'jleague'],
+                                        'J2': ['j2 league', 'j2リーグ', 'j2'],
+                                        'CL': ['champions league', 'チャンピオンズリーグ', 'uefa champions league'],
+                                        'EL': ['europa league', 'ヨーロッパリーグ', 'uefa europa league'],
+                                        'ECL': ['conference league', 'カンファレンスリーグ', 'uefa conference league'],
                                         'MLS': ['major league soccer', 'mls', 'メジャーリーグサッカー'],
                                         'SPL': ['saudi pro league', 'サウジアラビアプロリーグ', 'saudi arabian professional league', 'roshn saudi league']
                                     };
@@ -2394,7 +2409,7 @@ app.get('/api/ranking/players', async (req, res) => {
             }
         }
         
-        // 優先順位3: API-Footballから直接取得（フォールバック）
+        // 優先順位3: API-Footballから直接取得（フォールバック: players.jsonにデータがない、またはフィルタ結果が0件の場合）
         const apiKey = process.env.RAPIDAPI_KEY || process.env.API_FOOTBALL_KEY;
         if (players.length === 0 && apiKey && apiKey !== 'YOUR_API_FOOTBALL_KEY' && apiKey !== 'your-api-football-key-here') {
             try {
@@ -2406,7 +2421,10 @@ app.get('/api/ranking/players', async (req, res) => {
                     'BL1': 78,     // Bundesliga
                     'FL1': 61,     // Ligue 1
                     'J1': 98,      // J1 League
+                    'J2': 99,      // J2 League
                     'CL': 2,       // Champions League
+                    'EL': 3,       // Europa League
+                    'ECL': 848,    // Conference League
                     'MLS': 253,    // Major League Soccer
                     'SPL': 307     // Saudi Pro League
                 };
@@ -2424,7 +2442,7 @@ app.get('/api/ranking/players', async (req, res) => {
                 console.log('🔍 Fetching player statistics from API-Football:', { league, targetLeague, season: targetSeason, stat });
                 
                 if (targetLeague) {
-                    // 特定リーグの選手統計を取得
+                    // 特定リーグの選手統計を取得（API-Football /players エンドポイント）
                     try {
                         const response = await axios.get(`https://v3.football.api-sports.io/players`, {
                             headers: {
@@ -6064,7 +6082,7 @@ const J1_TEAM_IDS = {
     'モンテディオ山形': 315, 'Montedio Yamagata': 315, '山形': 315,
     '水戸ホーリーホック': 316, 'Mito HollyHock': 316, '水戸': 316,
     '大宮アルディージャ': 317, 'Omiya Ardija': 317, '大宮': 317,
-    'ジェフユナイテッド千葉': 318, 'JEF United Chiba': 318, '千葉': 318
+    'ジェフユナイテッド千葉': 318, 'JEF United Chiba': 318, 'ジェフ千葉': 318, '千葉': 318
 };
 
 // API-Footballから試合データを取得
@@ -8702,7 +8720,7 @@ function getRandomTeam(league) {
         'SA': ['Juventus', 'AC Milan', 'Inter Milan', 'Napoli', 'Roma'],
         'BL1': ['Bayern Munich', 'Borussia Dortmund', 'RB Leipzig', 'Bayer Leverkusen'],
         'FL1': ['PSG', 'Marseille', 'Lyon', 'Monaco', 'Nice'],
-        'J1': ['浦和レッズ', '横浜F・マリノス', '川崎フロンターレ', 'FC東京', '鹿島アントラーズ']
+        'J1': ['浦和レッズ', '横浜F・マリノス', '川崎フロンターレ', 'FC東京', '鹿島アントラーズ', 'ジェフユナイテッド千葉']
     };
     
     const leagueTeams = teams[league] || teams['PL'];
@@ -8743,7 +8761,7 @@ app.get('/api/football-data/leagues', async (req, res) => {
 app.get('/api/football-data/matches/:leagueId', async (req, res) => {
     try {
         const { leagueId } = req.params;
-        const { season = 2024 } = req.query;
+        const { season = 2025 } = req.query;
 
         if (!footballDataIntegration) {
             return res.status(500).json({ error: 'Football-data.org API統合が利用できません' });
@@ -8763,7 +8781,7 @@ app.get('/api/football-data/matches/:leagueId', async (req, res) => {
 app.get('/api/football-data/player/:playerId', async (req, res) => {
     try {
         const { playerId } = req.params;
-        const { season = 2024 } = req.query;
+        const { season = 2025 } = req.query;
 
         if (!footballDataIntegration) {
             return res.status(500).json({ error: 'Football-data.org API統合が利用できません' });
@@ -8783,7 +8801,7 @@ app.get('/api/football-data/player/:playerId', async (req, res) => {
 // 包括的データ統合エンドポイント
 app.get('/api/comprehensive/matches', async (req, res) => {
     try {
-        const { league, season = 2024 } = req.query;
+        const { league, season = 2025 } = req.query;
         
         if (!footballDataIntegration) {
             return res.status(500).json({ error: 'Football-data.org API統合が利用できません' });
@@ -9734,7 +9752,7 @@ function normalizeMatchData(matches) {
 // 統合データエンドポイント（新しい統合マッチサービス使用）
 app.get('/api/integrated/matches', async (req, res) => {
     try {
-        const { league, season = 2024, status } = req.query;
+        const { league, season = 2025, status } = req.query;
         
         console.log(`🔍 統合マッチデータ取得: league=${league}, season=${season}, status=${status}`);
         
@@ -9790,7 +9808,7 @@ app.get('/api/integrated/matches', async (req, res) => {
                     leagueId: match.leagueId || match.league,
                     country: match.country,
                     round: match.round,
-                    season: match.season || (match.date ? new Date(match.date).getFullYear() : 2024),
+                    season: match.season || (match.date ? new Date(match.date).getFullYear() : 2025),
                     date: match.date || match.utcDate,
                     timestamp: match.timestamp || new Date(match.date || match.utcDate).getTime(),
                     events: match.events || [],
@@ -12669,6 +12687,22 @@ function startAutoUpdate() {
     checkAndUpdateFinishedMatches();
     matchUpdateInterval = setInterval(checkAndUpdateFinishedMatches, 60 * 60 * 1000);
     console.log('✅ 試合ベース自動更新システムが開始されました（1時間間隔）');
+
+    // 全選手2025-26スタッツ更新（毎日午前6時）
+    const playerUpdateScript = path.join(__dirname, 'update-all-players-2025-26.js');
+    cron.schedule('0 6 * * *', () => {
+        console.log('⏰ 定期実行: 全選手2025-26スタッツ更新を開始...');
+        const child = spawn('node', [playerUpdateScript], {
+            cwd: __dirname,
+            stdio: ['ignore', 'pipe', 'pipe']
+        });
+        child.stdout.on('data', (d) => process.stdout.write(d.toString()));
+        child.stderr.on('data', (d) => process.stderr.write(d.toString()));
+        child.on('close', (code) => {
+            console.log(`✅ 全選手2025-26スタッツ更新 完了 (exit: ${code})`);
+        });
+    });
+    console.log('✅ 全選手2025-26スタッツ更新スケジュール設定完了（毎日6:00）');
 }
 
 // 自動更新の実行

@@ -537,7 +537,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     preferredFoot: 'Right',
                     matches: generateSampleMatches('Girona FC'),
                     seasons: {
-                        '2024-2025': {
+                        '2025-2026': {
                             stats: {
                                 appearances: 25,
                                 goals: 0,
@@ -561,7 +561,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     preferredFoot: 'Left',
                     matches: generateSampleMatches('Real Sociedad'),
                     seasons: {
-                        '2024-2025': {
+                        '2025-2026': {
                             stats: {
                                 appearances: 28,
                                 goals: 8,
@@ -585,7 +585,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     preferredFoot: 'Right',
                     matches: generateSampleMatches('Brighton & Hove Albion'),
                     seasons: {
-                        '2024-2025': {
+                        '2025-2026': {
                             stats: {
                                 appearances: 26,
                                 goals: 6,
@@ -640,7 +640,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             grid.innerHTML = '';
 
             filteredPlayers.forEach(player => {
-                const seasonStats = player.seasons?.['2024-2025']?.stats || {};
+                const seasonStats = player.seasons?.['2025-2026']?.stats || {};
                 
                 const card = document.createElement('div');
                 card.className = 'player-card';
@@ -689,7 +689,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     playerData = { ...player, ...apiData };
                 }
 
-                const seasonStats = playerData.seasons?.['2024-2025']?.stats || {};
+                const seasonStats = playerData.seasons?.['2025-2026']?.stats || {};
                 const matches = playerData.matches || [];
 
                 modalBody.innerHTML = `
@@ -833,7 +833,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             } catch (error) {
                 console.error('Error loading player details:', error);
                 // Fallback to basic player data
-                const seasonStats = player.seasons?.['2024-2025']?.stats || {};
+                const seasonStats = player.seasons?.['2025-2026']?.stats || {};
                 const matches = player.matches || [];
 
                 modalBody.innerHTML = `
@@ -909,7 +909,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         filteredPlayers = [...currentPlayers];
                     } else {
                         filteredPlayers = currentPlayers.filter(player => {
-                            const playerLeague = player.seasons?.['2024-2025']?.leagueId;
+                            const playerLeague = player.seasons?.['2025-2026']?.leagueId;
                             return playerLeague === league;
                         });
                     }
@@ -921,7 +921,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     filteredPlayers = [...currentPlayers];
                 } else {
                     filteredPlayers = currentPlayers.filter(player => {
-                        const playerLeague = player.seasons?.['2024-2025']?.leagueId;
+                        const playerLeague = player.seasons?.['2025-2026']?.leagueId;
                         return playerLeague === league;
                     });
                 }

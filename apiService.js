@@ -138,7 +138,7 @@ class APIService {
             const response = await axios.get(`https://v3.football.api-sports.io/teams`, {
                 params: {
                     league: leagueId,
-                    season: 2024
+                    season: 2025
                 },
                 headers: {
                     'x-rapidapi-host': 'v3.football.api-sports.io',
@@ -173,7 +173,7 @@ class APIService {
             const response = await axios.get(`https://v3.football.api-sports.io/players`, {
                 params: {
                     team: teamId,
-                    season: 2024
+                    season: 2025
                 },
                 headers: {
                     'x-rapidapi-host': 'v3.football.api-sports.io',
@@ -221,7 +221,7 @@ class APIService {
             const response = await axios.get(`https://v3.football.api-sports.io/players`, {
                 params: {
                     id: playerId,
-                    season: 2024
+                    season: 2025
                 },
                 headers: {
                     'x-rapidapi-host': 'v3.football.api-sports.io',

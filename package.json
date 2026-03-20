@@ -12,6 +12,7 @@
     "build": "echo \"No build step required\"",
     "postinstall": "echo \"Post-install complete\"",
     "update-players-2025": "node update-all-players-latest.js",
+    "update-players-2025-26": "node update-all-players-2025-26.js",
     "update-finished-matches": "node update-finished-matches.js"
   },
   "keywords": [

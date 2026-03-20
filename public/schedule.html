@@ -6157,7 +6157,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                         }
                                         
                                         // チームIDの取得（matchオブジェクトから直接取得、J1は名前でフォールバック）
-                                        const J1_IDS = {'浦和レッズ':287,'横浜F・マリノス':296,'川崎フロンターレ':294,'FC東京':292,'鹿島アントラーズ':290,'名古屋グランパス':288,'セレッソ大阪':291,'ガンバ大阪':293,'アルビレックス新潟':311};
+                                        const J1_IDS = {'浦和レッズ':287,'横浜F・マリノス':296,'川崎フロンターレ':294,'FC東京':292,'鹿島アントラーズ':290,'名古屋グランパス':288,'セレッソ大阪':291,'ガンバ大阪':293,'アルビレックス新潟':311,'ジェフユナイテッド千葉':318,'ジェフ千葉':318};
                                         const isJ1Match = (match.league||match.leagueName||'').toString().includes('J1');
                                         let homeTeamId = match.homeTeam?.id || match.home?.id || match.teams?.home?.id || match.homeTeamId || null;
                                         let awayTeamId = match.awayTeam?.id || match.away?.id || match.teams?.away?.id || match.awayTeamId || null;
@@ -6464,7 +6464,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 const awayTeamName = typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name || match.away?.name || match.teams?.away?.name || 'Unknown';
                 
                 // チームIDの取得（複数のフィールドをチェック、J1は名前でフォールバック）
-                const J1_IDS_FALLBACK = {'浦和レッズ':287,'横浜F・マリノス':296,'川崎フロンターレ':294,'FC東京':292,'鹿島アントラーズ':290,'名古屋グランパス':288,'セレッソ大阪':291,'ガンバ大阪':293,'アルビレックス新潟':311};
+                const J1_IDS_FALLBACK = {'浦和レッズ':287,'横浜F・マリノス':296,'川崎フロンターレ':294,'FC東京':292,'鹿島アントラーズ':290,'名古屋グランパス':288,'セレッソ大阪':291,'ガンバ大阪':293,'アルビレックス新潟':311,'ジェフユナイテッド千葉':318,'ジェフ千葉':318};
                 const isJ1 = (match.league||match.leagueName||'').toString().includes('J1');
                 let homeTeamId = match.homeTeam?.id || match.home?.id || match.teams?.home?.id || match.homeTeamId || match.fixture?.teams?.home?.id || match.teams?.home?.team?.id || null;
                 let awayTeamId = match.awayTeam?.id || match.away?.id || match.teams?.away?.id || match.awayTeamId || match.fixture?.teams?.away?.id || match.teams?.away?.team?.id || null;

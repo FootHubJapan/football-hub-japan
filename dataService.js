@@ -317,7 +317,7 @@ class FootballDataService {
         // Filter by league (native-stats.org style)
         if (league && league !== 'all') {
             filteredPlayers = filteredPlayers.filter(player => {
-                const playerLeague = player.seasons?.['2024-2025']?.leagueId;
+                const playerLeague = player.seasons?.['2025-2026']?.leagueId;
                 return playerLeague === league;
             });
         }
@@ -436,7 +436,7 @@ class FootballDataService {
                 result: homeGoals > awayGoals ? 'W' : homeGoals < awayGoals ? 'L' : 'D',
                 venue: isHome ? 'Home' : 'Away',
                 competition: 'League Match',
-                season: '2024-2025'
+                season: '2025-2026'
             });
         }
         
@@ -766,7 +766,7 @@ class FootballDataService {
         if (!data) {
             try {
                 const response = await apiClient.get('/teams', {
-                    params: { league: leagueId, season: 2024 }
+                    params: { league: leagueId, season: 2025 }
                 });
                 data = response.data.response;
                 this.cache.set(cacheKey, data);
@@ -786,7 +786,7 @@ class FootballDataService {
         if (!data) {
             try {
                 const response = await apiClient.get('/players', {
-                    params: { team: teamId, season: 2024 }
+                    params: { team: teamId, season: 2025 }
                 });
                 data = response.data.response;
                 this.cache.set(cacheKey, data);
@@ -806,7 +806,7 @@ class FootballDataService {
         if (!data) {
             try {
                 const response = await apiClient.get('/players', {
-                    params: { id: playerId, season: 2024 }
+                    params: { id: playerId, season: 2025 }
                 });
                 data = response.data.response[0];
                 this.cache.set(cacheKey, data);
@@ -826,7 +826,7 @@ class FootballDataService {
         if (!data) {
             try {
                 const response = await apiClient.get('/teams/statistics', {
-                    params: { team: teamId, league: leagueId, season: 2024 }
+                    params: { team: teamId, league: leagueId, season: 2025 }
                 });
                 data = response.data.response;
                 this.cache.set(cacheKey, data);
@@ -846,7 +846,7 @@ class FootballDataService {
         if (!data) {
             try {
                 const response = await apiClient.get('/players', {
-                    params: { search: query, season: 2024 }
+                    params: { search: query, season: 2025 }
                 });
                 data = response.data.response;
                 this.cache.set(cacheKey, data, 1800); // 30 minutes cache for search results
@@ -1236,7 +1236,7 @@ class FootballDataService {
                     const majorLeagues = [39, 140, 135, 78, 61]; // J-League, La Liga, Serie A, Bundesliga, Ligue 1
                     const leaguePromises = majorLeagues.map(leagueId => 
                         fetchWithRetry(
-                            `/players?search=${encodeURIComponent(query)}&league=${leagueId}&season=2024`,
+                            `/players?search=${encodeURIComponent(query)}&league=${leagueId}&season=2025`,
                             'apiFootball'
                         ).then(response => {
                             console.log(`Multi-league search league ${leagueId} found ${response.data?.response?.length || 0} results`);
@@ -1270,7 +1270,7 @@ class FootballDataService {
                     const partialPromises = words.flatMap(word => 
                         majorLeagues.map(leagueId => 
                             fetchWithRetry(
-                                `/players?search=${encodeURIComponent(word)}&league=${leagueId}&season=2024`,
+                                `/players?search=${encodeURIComponent(word)}&league=${leagueId}&season=2025`,
                                 'apiFootball'
                             ).then(response => {
                                 console.log(`Partial search for "${word}" in league ${leagueId} found ${response.data?.response?.length || 0} results`);
@@ -1297,7 +1297,7 @@ class FootballDataService {
             const jLeagueSearch = async () => {
                 try {
                     // 複数のシーズンで検索
-                    const seasons = [2024, 2023, 2022];
+                    const seasons = [2025, 2024, 2023];
                     const leaguePromises = seasons.map(season => 
                         fetchWithRetry(
                             `/players?search=${encodeURIComponent(query)}&league=39&season=${season}`,
@@ -2756,7 +2756,7 @@ class AdvancedDataService {
             homeTeam: 'サンプルホーム',
             awayTeam: 'サンプルアウェイ',
             league: 'サンプルリーグ',
-            season: 2024,
+            season: 2025,
             date: new Date().toISOString(),
             bookmakers: []
         };

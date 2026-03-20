@@ -678,10 +678,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     if (tabType === 'players') {
                         const playerName = item.fullName || item.name || 'Unknown Player';
                         const teamName = item.currentTeam || item.team || 'Unknown Team';
-                        const leagueName = item.seasons?.['2024-2025']?.league || 'Unknown League';
+                        const leagueName = item.seasons?.['2025-2026']?.league || 'Unknown League';
                         const age = item.age || 'N/A';
                         const position = item.position || 'Unknown';
-                        const stats = item.seasons?.['2024-2025']?.stats || {};
+                        const stats = item.seasons?.['2025-2026']?.stats || {};
                         
                         html += `
                             <tr class="data-row" onclick="showPlayerDetail('${item.id || index}')">
@@ -702,7 +702,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                 </td>
                                 <td>
                                     <div class="season-info">
-                                        <div class="season-year">2024-2025</div>
+                                        <div class="season-year">2025-2026</div>
                                         <div class="season-status">進行中</div>
                                     </div>
                                 </td>
@@ -773,7 +773,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         const leagueName = item.name || 'Unknown League';
                         const country = item.country || 'Unknown';
                         const teams = item.teams || 'N/A';
-                        const season = item.season || '2024-25';
+                        const season = item.season || '2025-26';
                         
                         html += `
                             <tr class="data-row" onclick="showLeagueDetail('${item.id || index}')">
@@ -1098,7 +1098,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
                 const matchesPosition = !position || player.position === position;
                 const matchesLeague = !league || 
-                    player.seasons?.['2024-2025']?.league === league;
+                    player.seasons?.['2025-2026']?.league === league;
 
                 return matchesQuery && matchesPosition && matchesLeague;
             });
