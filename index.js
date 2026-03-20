@@ -103,28 +103,20 @@ try {
     // 包括的API連携サービスを初期化
     console.log('🔄 包括的API連携サービスを初期化中...');
 
-    // 初期化を即座に実行。キャッシュ完了後にサーバー起動（7560名・224チームを確実に返すため）
+    // 初期化を即座に実行（キャッシュはバックグラウンドで読み込み、APIで直接ファイル読みも行う）
     apiService.init().then(async () => {
         console.log('✅ 包括的API連携サービスが初期化されました');
-        console.log('🔍 APIService状態確認:', !!apiService);
-        // 自作DBをキャッシュ（APIで使用、初回リクエストでフォールバックを返さないため）
         try {
             cachedTeams = await apiService.dbManager.loadTeams();
             console.log(`📊 チームキャッシュ: ${cachedTeams.length}チーム`);
         } catch (e) {
             console.warn('チームキャッシュ失敗:', e?.message);
         }
-        try {
-            cachedPlayers = await apiService.dbManager.loadComprehensivePlayers(10000);
-            console.log(`📊 選手キャッシュ: ${cachedPlayers.length}名`);
-        } catch (e) {
-            console.warn('選手キャッシュ失敗:', e?.message);
-        }
-        startServer();
+        apiService.dbManager.loadComprehensivePlayers(10000)
+            .then(p => { cachedPlayers = p; console.log(`📊 選手キャッシュ: ${cachedPlayers.length}名`); })
+            .catch(e => console.warn('選手キャッシュ失敗:', e?.message));
     }).catch(error => {
         console.error('❌ 包括的API連携サービス初期化エラー:', error);
-        console.error('詳細エラー:', error.stack);
-        startServer(); // フォールバックでサーバーは起動
     });
 
     console.log('APIService initialization completed');
@@ -133,7 +125,6 @@ try {
     console.error('❌ Error loading APIService:', error);
     console.error('詳細エラー:', error.stack);
     apiService = null;
-    startServer(); // APIService失敗時もサーバーは起動
 }
 
 console.log('🚀 APIService初期化完了');
@@ -9909,15 +9900,28 @@ app.get('/api/integrated/players', async (req, res) => {
         }
         let players = [];
         
-        // 起動時キャッシュを優先。未準備なら最大60秒待機（97MB読み込みに時間がかかる）
-        for (let i = 0; i < 120 && (!cachedPlayers || cachedPlayers.length < 100); i++) {
-            await new Promise(r => setTimeout(r, 500));
-        }
+        // 1. キャッシュがあれば使用
         if (cachedPlayers && cachedPlayers.length > 20) {
             players = [...cachedPlayers];
         }
-        
-        // キャッシュがなければDatabaseManagerから取得
+        // 2. なければdata/players.jsonを直接読み込み（97MB・数十秒かかる）
+        if (players.length === 0) {
+            const fs = require('fs');
+            const playersFile = path.join(__dirname, 'data', 'players.json');
+            if (fs.existsSync(playersFile)) {
+                try {
+                    console.log('🔄 data/players.jsonを読み込み中...');
+                    const data = await fs.promises.readFile(playersFile, 'utf8');
+                    const parsed = JSON.parse(data);
+                    players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+                    if (parsed && !Array.isArray(parsed)) delete parsed.players;
+                    console.log(`✅ data/players.jsonから${players.length}名を取得`);
+                } catch (e) {
+                    console.warn('players.json読み込み失敗:', e.message);
+                }
+            }
+        }
+        // 3. まだなければDatabaseManagerから取得
         if (players.length === 0 && apiService && apiService.dbManager) {
             try {
                 console.log(`🔄 DatabaseManagerから選手データを取得中... (STORAGE_MODE=${apiService.dbManager?.storageMode || 'file'})`);
@@ -10972,15 +10976,11 @@ app.get('/api/fotmob/teams', async (req, res) => {
         }
         let teams = [];
         
-        // 起動時キャッシュを優先。未準備なら最大30秒待機（初回リクエスト対策）
-        for (let i = 0; i < 60 && (!cachedTeams || cachedTeams.length === 0); i++) {
-            await new Promise(r => setTimeout(r, 500));
-        }
+        // 1. キャッシュがあれば使用
         if (cachedTeams && cachedTeams.length > 0) {
             teams = [...cachedTeams];
         }
-        
-        // キャッシュがなければ自作データベースから読み込み
+        // 2. なければdata/teams.jsonを直接読み込み（小さいので即時）
         if (teams.length === 0) {
             const fs = require('fs');
             const teamsFile = path.join(__dirname, 'data', 'teams.json');
@@ -10989,14 +10989,13 @@ app.get('/api/fotmob/teams', async (req, res) => {
                     const data = await fs.promises.readFile(teamsFile, 'utf8');
                     teams = JSON.parse(data);
                     if (!Array.isArray(teams) && teams.teams) teams = teams.teams;
-                    if (teams.length > 0) console.log(`✅ 自作DBから${teams.length}チームを取得`);
+                    if (teams.length > 0) console.log(`✅ data/teams.jsonから${teams.length}チームを取得`);
                 } catch (e) {
                     console.warn('teams.json読み込み失敗:', e.message);
                 }
             }
         }
-        
-        // 上記で取得できなかった場合のみDatabaseManagerを使用
+        // 3. まだなければDatabaseManagerを使用
         if (teams.length === 0 && apiService && apiService.dbManager) {
             try {
                 console.log('🔄 DatabaseManagerからチームデータを取得中...');
@@ -12450,8 +12449,7 @@ app.get('/api/clear-cache', async (req, res) => {
     }
 });
 
-// サーバー起動（キャッシュ準備完了後にinitから呼ばれる。7560名・224チームを確実に返すため）
-function startServer() {
+// サーバー起動（即座に起動し、APIでdata/*.jsonを直接読み込む）
 app.listen(PORT, () => {
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11729',message:'Server started successfully',data:{port:PORT,memoryUsage:process.memoryUsage()},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'A'})}).catch(()=>{});
@@ -12548,7 +12546,6 @@ app.listen(PORT, () => {
     console.error('Server error:', error);
     process.exit(1);
 });
-}
 
 // 選手データをデータベースに保存する関数
 async function savePlayerData(playerData) {
