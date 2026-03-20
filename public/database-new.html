@@ -797,6 +797,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 loadAllPlayers()
             ]);
             
+            // URLの?q=パラメータがあれば検索を実行（トップページからの検索遷移用）
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchQuery = urlParams.get('q');
+            if (searchQuery && searchQuery.trim()) {
+                document.getElementById('globalSearch').value = searchQuery.trim();
+                document.querySelector('[data-tab="players"]').click();
+                document.getElementById('playerFilter').value = searchQuery.trim();
+                currentPage = 1;
+                applyPlayerFilters(searchQuery.trim(), selectedTeamId);
+            }
+            
             // 定期的にデータを更新（5分ごと）
             setInterval(async () => {
                 if (!isDataLoading) {
