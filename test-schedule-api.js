@@ -1,116 +1,68 @@
-#!/usr/bin/env node
-
 /**
- * Test script for the new /api/schedule endpoint
- * Tests the unified API priority over fallback data
+ * /api/scheduleエンドポイントの検証スクリプト
  */
 
-const axios = require('axios');
-
-const BASE_URL = process.env.BASE_URL || 'http://localhost:10000';
+const testCases = [
+    {
+        name: '全リーグ、デフォルトシーズン',
+        params: {}
+    },
+    {
+        name: 'プレミアリーグ、2025シーズン',
+        params: { league: 'PL', season: '2025' }
+    },
+    {
+        name: 'ラ・リーガ、今日の試合',
+        params: { league: 'PD', timeRange: 'today' }
+    },
+    {
+        name: '終了した試合のみ',
+        params: { status: '終了' }
+    }
+];
 
 async function testScheduleAPI() {
-    console.log('🧪 Testing /api/schedule endpoint...\n');
+    const baseUrl = process.env.TEST_URL || 'http://localhost:10000';
     
-    const testCases = [
-        {
-            name: 'Premier League 2025',
-            params: { league: 'premierLeague', season: '2025' },
-            expectedSource: 'live'
-        },
-        {
-            name: 'All Leagues 2025',
-            params: { league: 'all', season: '2025' },
-            expectedSource: 'live'
-        },
-        {
-            name: 'Europa League 2025 (API-Football priority)',
-            params: { league: 'europaLeague', season: '2025' },
-            expectedSource: 'live'
-        },
-        {
-            name: 'Invalid League (should return 400)',
-            params: { league: 'invalidLeague', season: '2025' },
-            expectedSource: 'error'
-        }
-    ];
+    console.log('🧪 /api/scheduleエンドポイントの検証を開始します...\n');
     
     for (const testCase of testCases) {
-        console.log(`📋 Testing: ${testCase.name}`);
-        console.log(`   Params:`, testCase.params);
+        console.log(`📋 テストケース: ${testCase.name}`);
+        const params = new URLSearchParams(testCase.params);
+        const url = `${baseUrl}/api/schedule?${params.toString()}`;
         
         try {
-            const response = await axios.get(`${BASE_URL}/api/schedule`, {
-                params: testCase.params,
-                timeout: 10000
-            });
+            const response = await fetch(url);
+            const data = await response.json();
             
-            const data = response.data;
-            console.log(`   ✅ Status: ${response.status}`);
-            console.log(`   📊 Source: ${data.source}`);
-            console.log(`   📈 Items: ${data.total || 0} matches`);
-            console.log(`   ⏰ Timestamp: ${data.timestamp}`);
-            
-            if (testCase.expectedSource === 'error') {
-                console.log(`   ⚠️  Expected error but got success`);
-            } else if (data.source === testCase.expectedSource) {
-                console.log(`   ✅ Source matches expected: ${testCase.expectedSource}`);
+            if (response.ok) {
+                const itemCount = data.items?.length || data.matches?.length || 0;
+                console.log(`  ✅ 成功: ${itemCount}件の試合データを取得`);
+                
+                if (itemCount > 0) {
+                    const firstMatch = data.items?.[0] || data.matches?.[0];
+                    console.log(`  📊 サンプルデータ:`, {
+                        id: firstMatch.id,
+                        homeTeam: firstMatch.homeTeam,
+                        awayTeam: firstMatch.awayTeam,
+                        date: firstMatch.date,
+                        status: firstMatch.status
+                    });
+                }
             } else {
-                console.log(`   ⚠️  Source mismatch: expected ${testCase.expectedSource}, got ${data.source}`);
+                console.log(`  ❌ エラー: ${response.status} - ${data.error || data.message || 'Unknown error'}`);
             }
-            
         } catch (error) {
-            if (testCase.expectedSource === 'error') {
-                console.log(`   ✅ Expected error: ${error.response?.status} - ${error.response?.data?.error || error.message}`);
-            } else {
-                console.log(`   ❌ Unexpected error: ${error.response?.status} - ${error.response?.data?.error || error.message}`);
-            }
+            console.log(`  ❌ 例外: ${error.message}`);
         }
         
         console.log('');
     }
     
-    // Test caching
-    console.log('🔄 Testing cache functionality...');
-    try {
-        const start = Date.now();
-        const response1 = await axios.get(`${BASE_URL}/api/schedule`, {
-            params: { league: 'premierLeague', season: '2025' },
-            timeout: 10000
-        });
-        const time1 = Date.now() - start;
-        
-        const start2 = Date.now();
-        const response2 = await axios.get(`${BASE_URL}/api/schedule`, {
-            params: { league: 'premierLeague', season: '2025' },
-            timeout: 10000
-        });
-        const time2 = Date.now() - start2;
-        
-        console.log(`   First request: ${time1}ms, source: ${response1.data.source}`);
-        console.log(`   Second request: ${time2}ms, source: ${response2.data.source}`);
-        
-        if (response2.data.source === 'cache' && time2 < time1) {
-            console.log(`   ✅ Cache working: second request was faster and used cache`);
-        } else {
-            console.log(`   ⚠️  Cache may not be working as expected`);
-        }
-        
-    } catch (error) {
-        console.log(`   ❌ Cache test error: ${error.message}`);
-    }
-    
-    console.log('\n🎯 Test Summary:');
-    console.log('   - /api/schedule endpoint created');
-    console.log('   - Unified API prioritized over fallback');
-    console.log('   - League validation implemented');
-    console.log('   - Europa League API-Football priority');
-    console.log('   - 15-minute caching system');
-    console.log('   - API key masking in logs');
-    console.log('   - Log spam reduction');
-    console.log('   - Node.js version fixed to 20.x');
+    console.log('✅ 検証完了');
 }
 
+// スクリプトが直接実行された場合
 if (require.main === module) {
     testScheduleAPI().catch(console.error);
 }

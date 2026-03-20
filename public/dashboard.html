@@ -39,9 +39,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             --foreground: #f0f6fc;
             --card: #161b22;
             --card-hover: #1c2128;
-            --primary: #22c55e;
-            --primary-hover: #16a34a;
-            --primary-glow: rgba(34, 197, 94, 0.2);
+            --primary: #00bdc7;
+            --primary-hover: #00a8b0;
+            --primary-glow: rgba(0, 189, 199, 0.2);
             --secondary: #21262d;
             --muted: #8b949e;
             --border: #30363d;
@@ -107,6 +107,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             font-size: 1.125rem;
             font-weight: 700;
             letter-spacing: -0.02em;
+        }
+
+        .nav-link {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
         }
 
         .user-info {
@@ -225,39 +237,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             margin: 0 auto;
         }
 
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            transition: all 0.3s;
-        }
-
-        .stat-card:hover {
-            border-color: rgba(34, 197, 94, 0.5);
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-label {
-            color: var(--muted);
-            font-size: 0.875rem;
-        }
-
         /* Features Grid */
         .section-title {
             font-size: 1.5rem;
@@ -292,7 +271,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
 
         .feature-card:hover {
-            border-color: rgba(34, 197, 94, 0.5);
+            border-color: rgba(0, 189, 199, 0.5);
             background: var(--card-hover);
             transform: translateY(-4px);
         }
@@ -308,7 +287,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             width: 48px;
             height: 48px;
             min-width: 48px;
-            background: rgba(34, 197, 94, 0.1);
+            background: rgba(0, 189, 199, 0.1);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -364,88 +343,25 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             border-color: var(--primary);
         }
 
-        /* Activity Section */
-        .activity-section {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-        }
-
-        .activity-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .activity-header-icon {
-            color: var(--primary);
-        }
-
-        .activity-header-title {
-            font-size: 1.125rem;
-            font-weight: 600;
-        }
-
-        .activity-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .activity-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: var(--secondary);
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-
-        .activity-item:hover {
-            background: var(--card-hover);
-        }
-
-        .activity-icon {
-            width: 40px;
-            height: 40px;
-            min-width: 40px;
-            background: rgba(34, 197, 94, 0.1);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.125rem;
-        }
-
-        .activity-content {
-            flex: 1;
-        }
-
-        .activity-title {
-            font-weight: 500;
-            margin-bottom: 0.125rem;
-        }
-
-        .activity-time {
-            color: var(--muted);
-            font-size: 0.75rem;
-        }
-
         /* Responsive */
-        @media (max-width: 1024px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
         @media (max-width: 768px) {
             .header-container {
                 padding: 0 1rem;
+                flex-wrap: wrap;
+                height: auto;
+                min-height: 64px;
+                gap: 0.5rem;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                order: 3;
+                width: 100%;
+            }
+
+            .nav-link {
+                font-size: 0.75rem;
             }
 
             .logo-text {
@@ -499,6 +415,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="logo-icon">⚡</div>
                 <span class="logo-text">Football Hub Japan</span>
             </a>
+            <nav class="nav-links" style="display: flex; gap: 1.5rem; align-items: center;">
+                <a href="/database" class="nav-link">データベース</a>
+                <a href="/radar" class="nav-link">レーダーチャート</a>
+                <a href="/schedule" class="nav-link">スケジュール</a>
+                <a href="/match-detail" class="nav-link">試合分析</a>
+                <a href="/ranking" class="nav-link">ランキング</a>
+                <a href="/insights.html" class="nav-link">コラム</a>
+            </nav>
             <div class="user-info">
                 <span class="user-email" id="userEmail">ユーザー</span>
                 <button class="btn btn-destructive" onclick="logout()">ログアウト</button>
@@ -517,26 +441,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
                 <h1 class="welcome-title">Football Data Platform</h1>
                 <p class="welcome-subtitle">最先端のAI技術で日本サッカーを分析・予測。選手パフォーマンス、戦術、移籍可能性を詳細分析。</p>
-            </div>
-        </div>
-
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number" id="stat-matches">1,247</div>
-                <div class="stat-label">分析済み試合</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="stat-accuracy">89.3%</div>
-                <div class="stat-label">予測精度</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="stat-players">5,432</div>
-                <div class="stat-label">登録選手</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="stat-teams">156</div>
-                <div class="stat-label">追跡チーム</div>
             </div>
         </div>
 
@@ -666,48 +570,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </button>
             </div>
         </div>
-
-        <!-- Activity Section -->
-        <div class="activity-section">
-            <div class="activity-header">
-                <span class="activity-header-icon">📋</span>
-                <h3 class="activity-header-title">最近のアクティビティ</h3>
-            </div>
-
-            <div class="activity-list">
-                <div class="activity-item">
-                    <div class="activity-icon">📊</div>
-                    <div class="activity-content">
-                        <div class="activity-title">データベース更新完了</div>
-                        <div class="activity-time">2時間前</div>
-                    </div>
-                </div>
-
-                <div class="activity-item">
-                    <div class="activity-icon">🤖</div>
-                    <div class="activity-content">
-                        <div class="activity-title">AI分析: 浦和レッズ vs 横浜F・マリノス</div>
-                        <div class="activity-time">5時間前</div>
-                    </div>
-                </div>
-
-                <div class="activity-item">
-                    <div class="activity-icon">📈</div>
-                    <div class="activity-content">
-                        <div class="activity-title">選手比較: 久保建英 vs 三笘薫</div>
-                        <div class="activity-time">1日前</div>
-                    </div>
-                </div>
-
-                <div class="activity-item">
-                    <div class="activity-icon">🏆</div>
-                    <div class="activity-content">
-                        <div class="activity-title">J1リーグ ランキング更新</div>
-                        <div class="activity-time">2日前</div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script src="/ai-widget.js"></script>
@@ -750,35 +612,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
         }
 
-        // 数値アニメーション
-        function animateNumber(element, finalValue, isPercentage = false) {
-            const numericValue = parseFloat(finalValue.replace(/[^\d.]/g, ''));
-            let currentValue = 0;
-            const increment = numericValue / 40;
-            const timer = setInterval(() => {
-                currentValue += increment;
-                if (currentValue >= numericValue) {
-                    currentValue = numericValue;
-                    clearInterval(timer);
-                }
-                
-                if (isPercentage) {
-                    element.textContent = currentValue.toFixed(1) + '%';
-                } else {
-                    element.textContent = Math.floor(currentValue).toLocaleString();
-                }
-            }, 30);
-        }
-
         // ページ読み込み時の処理
         document.addEventListener('DOMContentLoaded', function() {
             displayUserInfo();
-            
-            // 統計データのアニメーション
-            animateNumber(document.getElementById('stat-matches'), '1247');
-            animateNumber(document.getElementById('stat-accuracy'), '89.3', true);
-            animateNumber(document.getElementById('stat-players'), '5432');
-            animateNumber(document.getElementById('stat-teams'), '156');
         });
     </script>
 </body>

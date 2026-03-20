@@ -42,12 +42,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             --foreground: #f0f6fc;
             --card: #161b22;
             --card-hover: #1c2128;
-            --primary: #22c55e;
+            --primary: #00bdc7;
             --primary-foreground: #0d1117;
             --secondary: #21262d;
             --muted: #8b949e;
             --border: #30363d;
-            --ring: #22c55e;
+            --ring: #00bdc7;
             --radius: 0.75rem;
         }
 
@@ -123,10 +123,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             font-weight: 500;
             transition: all 0.2s;
             font-family: inherit;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .nav-btn:hover {
-            color: var(--foreground);
+            color: var(--primary);
             background: var(--secondary);
         }
 
@@ -149,7 +151,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             display: inline-flex;
             align-items: center;
             padding: 0.25rem 0.75rem;
-            border: 1px solid rgba(34, 197, 94, 0.5);
+            border: 1px solid rgba(0, 189, 199, 0.5);
             border-radius: 9999px;
             font-size: 0.75rem;
             font-weight: 500;
@@ -272,7 +274,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .filter-select:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+            box-shadow: 0 0 0 3px rgba(0, 189, 199, 0.1);
         }
 
         .filter-select option {
@@ -331,7 +333,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             color: var(--muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            background: rgba(34, 197, 94, 0.05);
+            background: rgba(0, 189, 199, 0.05);
             border-bottom: 1px solid var(--border);
         }
 
@@ -528,9 +530,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <span>Football Hub Japan</span>
             </a>
             <nav class="nav-buttons">
-                <button class="nav-btn" onclick="location.href='/'">ダッシュボード</button>
-                <button class="nav-btn" onclick="location.href='/database.html'">データベース</button>
-                <button class="nav-btn" onclick="location.href='/logout'">ログアウト</button>
+                <a href="/database" class="nav-btn">データベース</a>
+                <a href="/radar" class="nav-btn">レーダーチャート</a>
+                <a href="/schedule" class="nav-btn">スケジュール</a>
+                <a href="/match-detail" class="nav-btn">試合分析</a>
+                <a href="/ranking" class="nav-btn" style="color: var(--primary);">ランキング</a>
+                <a href="/insights.html" class="nav-btn">コラム</a>
             </nav>
         </div>
     </header>
@@ -988,8 +993,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     datasets: [{
                         label: getStatLabel(stat),
                         data: data,
-                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(0, 189, 199, 0.8)',
+                        borderColor: '#00bdc7',
                         borderWidth: 1,
                         borderRadius: 4
                     }]
@@ -1086,8 +1091,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     datasets: [{
                         label: '勝点',
                         data: data,
-                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(0, 189, 199, 0.8)',
+                        borderColor: '#00bdc7',
                         borderWidth: 1,
                         borderRadius: 4
                     }]
@@ -1261,8 +1266,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     datasets: [{
                         label: '勝点',
                         data: data,
-                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(0, 189, 199, 0.8)',
+                        borderColor: '#00bdc7',
                         borderWidth: 1,
                         borderRadius: 4
                     }]

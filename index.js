@@ -1490,21 +1490,34 @@ app.get('/api/ranking/players', async (req, res) => {
         console.log('🏆 Player Ranking Request:', { season, league, position, stat, search });
         
         let players = [];
+        let dbPlayers = null;
         
-        // 優先順位1: DatabaseManagerから動的に最新データを取得（強化データベース優先）
-        // 大容量ファイル対策: 10秒タイムアウトでフォールバック
-        if (apiService && apiService.dbManager) {
+        // 優先順位0: 起動時キャッシュ（最速、全選手データ）
+        if (cachedPlayers && cachedPlayers.length > 100) {
+            dbPlayers = cachedPlayers;
+            console.log(`✅ キャッシュから${dbPlayers.length}名の選手データを使用`);
+        }
+        
+        // 優先順位1: DatabaseManagerから動的に最新データを取得（キャッシュが空の場合）
+        // 大容量ファイル対策: 30秒タイムアウトでフォールバック
+        if (!dbPlayers && apiService && apiService.dbManager) {
             try {
                 console.log('🔄 DatabaseManagerから最新選手データを取得中...');
                 const loadPromise = apiService.dbManager.loadComprehensivePlayers();
                 const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Load timeout')), 10000)
+                    setTimeout(() => reject(new Error('Load timeout')), 30000)
                 );
-                const dbPlayers = await Promise.race([loadPromise, timeoutPromise]);
-                
+                dbPlayers = await Promise.race([loadPromise, timeoutPromise]);
                 if (dbPlayers && dbPlayers.length > 0) {
                     console.log(`✅ DatabaseManagerから${dbPlayers.length}名の最新選手データを取得`);
-                    
+                }
+            } catch (dbError) {
+                console.log('⚠️ DatabaseManagerからの取得に失敗:', dbError.message);
+            }
+        }
+        
+        // dbPlayersが取得できた場合（キャッシュ or DatabaseManager）、フォーマット変換を実行
+        if (dbPlayers && dbPlayers.length > 0) {
                     // フォーマット変換（シーズンとリーグでフィルタリング）
                     // フロントエンドから送信されるシーズン値は終了年（例: 2026 = 2025/2026シーズン）
                     const requestedSeason = parseInt(season) || 2025;
@@ -1937,13 +1950,9 @@ app.get('/api/ranking/players', async (req, res) => {
                     }).filter(p => p !== null); // nullを除外
                     
                     console.log(`✅ Converted ${players.length} players from DatabaseManager`);
-                }
-            } catch (dbError) {
-                console.log('⚠️ DatabaseManagerからの取得に失敗:', dbError.message);
-            }
         }
         
-        // 優先順位2: ローカルファイルから選手を読み込む（DatabaseManagerが失敗した場合）
+        // 優先順位2: ローカルファイルから選手を読み込む（DatabaseManager・キャッシュが失敗した場合）
         if (players.length === 0) {
             try {
                 const fs = require('fs');
@@ -1951,7 +1960,7 @@ app.get('/api/ranking/players', async (req, res) => {
                 console.log(`📁 Checking for players data at: ${playersDataPath}`);
                 
                 if (fs.existsSync(playersDataPath)) {
-                    const playersData = fs.readFileSync(playersDataPath, 'utf8');
+                    const playersData = await fs.promises.readFile(playersDataPath, 'utf8');
                     const parsedData = JSON.parse(playersData);
                     
                     // 配列形式またはオブジェクト形式に対応
@@ -5948,8 +5957,20 @@ app.get('/api/schedule', async (req, res) => {
             // FotMob IDの抽出（sourceがfotmobの場合）
             const fotmobId = match.fotmobId || (source === 'fotmob' ? (match.id || match.match_id || match.matchId) : null);
             
+            // J1チームIDの補完（ロゴ表示用、APIでIDが返らない場合のフォールバック）
+            const matchLeague = (match.league || match.leagueName || '').toString();
+            const isJ1 = matchLeague === 'J1' || matchLeague === 'j1' || matchLeague.includes('J1');
+            const resolvedHomeTeamId = match.homeTeamId ?? match.teams?.home?.id ?? match.homeTeam?.id ?? (isJ1 && homeTeamName ? J1_TEAM_IDS[homeTeamName] : null);
+            const resolvedAwayTeamId = match.awayTeamId ?? match.teams?.away?.id ?? match.awayTeam?.id ?? (isJ1 && awayTeamName ? J1_TEAM_IDS[awayTeamName] : null);
+            
             return {
                 ...match,
+                homeTeamId: resolvedHomeTeamId,
+                awayTeamId: resolvedAwayTeamId,
+                teams: {
+                    home: { id: resolvedHomeTeamId, name: homeTeamName },
+                    away: { id: resolvedAwayTeamId, name: awayTeamName }
+                },
                 // IDの確実な設定（実際のfixture IDを優先）
                 id: match.fixture?.id || match.id || match.match_id || match.matchId || `match_${Date.now()}_${index}`,
                 match_id: match.fixture?.id || match.match_id || match.id || match.matchId || `match_${Date.now()}_${index}`,
@@ -6014,6 +6035,37 @@ app.get('/api/schedule', async (req, res) => {
         });
     }
 });
+
+// J1リーグ チーム名→API-Football ID マッピング（ロゴ表示用、data/teams.json準拠）
+const J1_TEAM_IDS = {
+    '浦和レッズ': 287, 'Urawa': 287, 'Urawa Red Diamonds': 287,
+    '横浜F・マリノス': 296, 'Yokohama F. Marinos': 296, '横浜FM': 296,
+    '川崎フロンターレ': 294, 'Kawasaki Frontale': 294, '川崎': 294,
+    'FC東京': 292, 'FC Tokyo': 292, '東京': 292,
+    '鹿島アントラーズ': 290, 'Kashima': 290, 'Kashima Antlers': 290, '鹿島': 290,
+    '名古屋グランパス': 288, 'Nagoya Grampus': 288, '名古屋': 288,
+    'セレッソ大阪': 291, 'Cerezo Osaka': 291, 'C大阪': 291,
+    'ガンバ大阪': 293, 'Gamba Osaka': 293, 'G大阪': 293,
+    'アルビレックス新潟': 311, 'Albirex Niigata': 311, '新潟': 311,
+    '東京ヴェルディ': 306, 'Tokyo Verdy': 306, 'ヴェルディ': 306,
+    '横浜FC': 307, 'Yokohama FC': 307,
+    '柏レイソル': 289, 'Kashiwa Reysol': 289, '柏': 289,
+    '湘南ベルマーレ': 295, 'Shonan Bellmare': 295, '湘南': 295,
+    'ヴィッセル神戸': 303, 'Vissel Kobe': 303, '神戸': 303,
+    '北海道コンサドーレ札幌': 305, 'Consadole Sapporo': 305, '札幌': 305,
+    '清水エスパルス': 304, 'Shimizu S-Pulse': 304, '清水': 304,
+    'ジュビロ磐田': 302, 'Jubilo Iwata': 302, '磐田': 302,
+    '京都サンガF.C.': 301, 'Kyoto Sanga': 301, '京都': 301,
+    '町田ゼルビア': 309, 'Machida Zelvia': 309, '町田': 309,
+    '鹿児島ユナイテッドFC': 310, 'Kagoshima United': 310, '鹿児島': 310,
+    '藤枝MYFC': 312, 'Fujieda MYFC': 312, '藤枝': 312,
+    '大分トリニータ': 313, 'Oita Trinita': 313, '大分': 313,
+    '徳島ヴォルティス': 314, 'Tokushima Vortis': 314, '徳島': 314,
+    'モンテディオ山形': 315, 'Montedio Yamagata': 315, '山形': 315,
+    '水戸ホーリーホック': 316, 'Mito HollyHock': 316, '水戸': 316,
+    '大宮アルディージャ': 317, 'Omiya Ardija': 317, '大宮': 317,
+    'ジェフユナイテッド千葉': 318, 'JEF United Chiba': 318, '千葉': 318
+};
 
 // API-Footballから試合データを取得
 async function getMatchesFromAPIFootball(league, timeRange, season = null) {
@@ -6412,11 +6464,11 @@ function generateFallbackMatchesForDate(date, league) {
             { homeTeam: 'Olympique Marseille', awayTeam: 'Olympique Lyon', homeScore: 1, awayScore: 0, status: 'Scheduled' }
         ],
         'J1': [
-            { homeTeam: '浦和レッズ', awayTeam: '横浜F・マリノス', homeScore: 2, awayScore: 1, status: 'Finished' },
-            { homeTeam: '川崎フロンターレ', awayTeam: 'FC東京', homeScore: 0, awayScore: 0, status: 'Scheduled' },
-            { homeTeam: 'アルビレックス新潟', awayTeam: '川崎フロンターレ', homeScore: null, awayScore: null, status: 'Scheduled' },
-            { homeTeam: '鹿島アントラーズ', awayTeam: '名古屋グランパス', homeScore: 1, awayScore: 1, status: 'Finished' },
-            { homeTeam: 'セレッソ大阪', awayTeam: 'ガンバ大阪', homeScore: null, awayScore: null, status: 'Scheduled' }
+            { homeTeam: '浦和レッズ', awayTeam: '横浜F・マリノス', homeTeamId: 287, awayTeamId: 296, homeScore: 2, awayScore: 1, status: 'Finished' },
+            { homeTeam: '川崎フロンターレ', awayTeam: 'FC東京', homeTeamId: 294, awayTeamId: 292, homeScore: 0, awayScore: 0, status: 'Scheduled' },
+            { homeTeam: 'アルビレックス新潟', awayTeam: '川崎フロンターレ', homeTeamId: 311, awayTeamId: 294, homeScore: null, awayScore: null, status: 'Scheduled' },
+            { homeTeam: '鹿島アントラーズ', awayTeam: '名古屋グランパス', homeTeamId: 290, awayTeamId: 288, homeScore: 1, awayScore: 1, status: 'Finished' },
+            { homeTeam: 'セレッソ大阪', awayTeam: 'ガンバ大阪', homeTeamId: 291, awayTeamId: 293, homeScore: null, awayScore: null, status: 'Scheduled' }
         ]
     };
 
@@ -6439,6 +6491,8 @@ function generateFallbackMatchesForDate(date, league) {
                     league: leagueCode,
                     homeTeam: match.homeTeam,
                     awayTeam: match.awayTeam,
+                    homeTeamId: match.homeTeamId || (J1_TEAM_IDS && leagueCode === 'J1' ? J1_TEAM_IDS[match.homeTeam] : undefined),
+                    awayTeamId: match.awayTeamId || (J1_TEAM_IDS && leagueCode === 'J1' ? J1_TEAM_IDS[match.awayTeam] : undefined),
                     homeScore: match.homeScore,
                     awayScore: match.awayScore,
                     date: matchTime.toISOString(),
@@ -6466,6 +6520,8 @@ function generateFallbackMatchesForDate(date, league) {
                 league: selectedLeague,
                 homeTeam: match.homeTeam,
                 awayTeam: match.awayTeam,
+                homeTeamId: match.homeTeamId || (J1_TEAM_IDS && selectedLeague === 'J1' ? J1_TEAM_IDS[match.homeTeam] : undefined),
+                awayTeamId: match.awayTeamId || (J1_TEAM_IDS && selectedLeague === 'J1' ? J1_TEAM_IDS[match.awayTeam] : undefined),
                 homeScore: match.homeScore,
                 awayScore: match.awayScore,
                 date: matchTime.toISOString(),

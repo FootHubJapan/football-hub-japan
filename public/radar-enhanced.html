@@ -36,8 +36,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             --foreground: #f0f6fc;
             --card: #161b22;
             --card-hover: #1c2128;
-            --primary: #22c55e;
-            --primary-hover: #16a34a;
+            --primary: #00bdc7;
+            --primary-hover: #00a8b0;
             --secondary: #21262d;
             --muted: #8b949e;
             --border: #30363d;
@@ -109,6 +109,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             font-size: 0.875rem;
             font-weight: 500;
             transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .nav-btn:hover {
@@ -547,10 +549,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="header">
         <div class="logo">Football Hub Japan</div>
         <div class="nav-buttons">
-            <button class="nav-btn" onclick="window.location.href='/'">ホーム</button>
-            <button class="nav-btn" onclick="window.location.href='/database-enhanced'">データベース</button>
-            <button class="nav-btn" onclick="window.location.href='/ai-agent-enhanced'">AIエージェント</button>
-            <button class="nav-btn" onclick="window.location.href='/dashboard'">ダッシュボード</button>
+            <a href="/database" class="nav-btn">データベース</a>
+            <a href="/radar" class="nav-btn" style="color: var(--primary);">レーダーチャート</a>
+            <a href="/schedule" class="nav-btn">スケジュール</a>
+            <a href="/match-detail" class="nav-btn">試合分析</a>
+            <a href="/ranking" class="nav-btn">ランキング</a>
+            <a href="/insights.html" class="nav-btn">コラム</a>
         </div>
     </div>
 

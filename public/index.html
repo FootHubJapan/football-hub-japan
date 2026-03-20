@@ -15,11 +15,11 @@
 :root {
   --bg-dark: #0a0e17;
   --bg-card: #0d1321;
-  --neon-blue: #00d2ff;
-  --neon-blue-dim: rgba(0, 210, 255, 0.3);
+  --neon-blue: #00bdc7;
+  --neon-blue-dim: rgba(0, 189, 199, 0.3);
   --text-primary: #ffffff;
   --text-muted: #94a3b8;
-  --border: rgba(0, 210, 255, 0.2);
+  --border: rgba(0, 189, 199, 0.2);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -94,7 +94,7 @@ body {
 }
 .search-bar:focus-within {
   border-color: var(--neon-blue);
-  box-shadow: 0 0 40px rgba(0, 210, 255, 0.4);
+  box-shadow: 0 0 40px rgba(0, 189, 199, 0.4);
 }
 .search-bar svg { color: var(--neon-blue); flex-shrink: 0; }
 .search-bar input {
@@ -165,7 +165,7 @@ body {
 .stats-panel .stat-label { color: var(--text-muted); font-size: 0.75rem; }
 /* Map Markers */
 .map-marker {
-  background: rgba(0, 210, 255, 0.2);
+  background: rgba(0, 189, 199, 0.2);
   border: 2px solid var(--neon-blue);
   border-radius: 50%;
   width: 40px;
@@ -179,7 +179,7 @@ body {
 }
 .map-marker:hover {
   transform: scale(1.15);
-  box-shadow: 0 0 30px rgba(0, 210, 255, 0.6);
+  box-shadow: 0 0 30px rgba(0, 189, 199, 0.6);
 }
 .map-marker span { font-size: 1.2rem; }
 .marker-label {
@@ -268,11 +268,12 @@ body {
 <header class="header">
   <a href="/" class="logo">Global Football World Map Navigation</a>
   <nav class="nav">
-    <a href="/" class="active">Home</a>
-    <a href="/schedule">Leagues</a>
-    <a href="/database">Teams</a>
-    <a href="/database">Stadiums</a>
-    <a href="/login">My Profile</a>
+    <a href="/database">データベース</a>
+    <a href="/radar">レーダーチャート</a>
+    <a href="/schedule">スケジュール</a>
+    <a href="/match-detail">試合分析</a>
+    <a href="/ranking">ランキング</a>
+    <a href="/insights.html">コラム</a>
   </nav>
 </header>
 <!-- Search -->

@@ -1,0 +1,28 @@
+/* Football Hub Japan - 統一スタイル */
+/* ターコイズカラー & Noto Sans JP フォント */
+
+:root {
+    --fhj-primary: #00bdc7;
+    --fhj-primary-hover: #00a8b0;
+    --fhj-primary-glow: rgba(0, 189, 199, 0.2);
+    --fhj-ring: #00bdc7;
+}
+
+/* 既存の --primary を上書きする場合は各ページで shared.css を読み込んだ後に適用 */
+body {
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* 統一ナビゲーションリンク */
+.fhj-nav-link {
+    color: var(--muted, #8b949e);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.fhj-nav-link:hover,
+.fhj-nav-link.active {
+    color: var(--fhj-primary);
+}

@@ -74,8 +74,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             --foreground: #f0f6fc;
             --card: #161b22;
             --card-hover: #1c2128;
-            --primary: #33ffff;
-            --primary-hover: #00e6e6;
+            --primary: #00bdc7;
+            --primary-hover: #00a8b0;
             --secondary: #21262d;
             --muted: #8b949e;
             --border: #30363d;
@@ -1187,8 +1187,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
         
         .xi-card-header.home-header {
-            background: rgba(34, 197, 94, 0.1);
-            border-bottom-color: rgba(34, 197, 94, 0.2);
+            background: rgba(0, 189, 199, 0.1);
+            border-bottom-color: rgba(0, 189, 199, 0.2);
         }
         
         .xi-card-header.away-header {
@@ -1320,7 +1320,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .xi-player-position {
             font-size: 10px;
             color: var(--primary);
-            border: 1px solid rgba(34, 197, 94, 0.3);
+            border: 1px solid rgba(0, 189, 199, 0.3);
             padding: 0.125rem 0.25rem;
             border-radius: 0.125rem;
             text-transform: uppercase;
@@ -4591,17 +4591,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <!-- ヘッダー -->
         <header class="header glass">
             <div style="display: flex; align-items: center; gap: 3rem;">
-                <a href="/dashboard" class="logo">
+                <a href="/" class="logo">
                     <div class="logo-icon">
                         <span class="material-symbols-outlined">grid_view</span>
                     </div>
                     <span class="logo-text">Footy<span class="primary">Metrics</span></span>
                 </a>
             <nav class="nav-links">
-                    <a href="/dashboard" class="nav-link active">Dashboard</a>
-                    <a href="/database-enhanced" class="nav-link">Database</a>
-                    <a href="/radar" class="nav-link">Analysis</a>
-                    <a href="/ai-agent" class="nav-link">AI Agent</a>
+                    <a href="/database" class="nav-link">データベース</a>
+                    <a href="/radar" class="nav-link">レーダーチャート</a>
+                    <a href="/schedule" class="nav-link active">スケジュール</a>
+                    <a href="/match-detail" class="nav-link">試合分析</a>
+                    <a href="/ranking" class="nav-link">ランキング</a>
+                    <a href="/insights.html" class="nav-link">コラム</a>
             </nav>
             </div>
             <div style="display: flex; align-items: center; gap: 1.5rem;">
@@ -5625,11 +5627,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 const season = seasonSelect.value;
                 const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
                 const statusFilter = statusFilterSelect.value;
-                
-                console.log('🚀 loadMatches called with:', { league, timeRange, season, searchTerm, statusFilter });
-                console.log('🔍 About to call integrated API...');
-                
-                contentDiv.innerHTML = '<div class="loading">試合データを読み込み中...</div>';
+            
+            console.log('🚀 loadMatches called with:', { league, timeRange, season, searchTerm, statusFilter });
+            console.log('🔍 About to call integrated API...');
+            
+            contentDiv.innerHTML = '<div class="loading">試合データを読み込み中...</div>';
 
                 // 統合されたデータを優先的に使用
                 let response;
@@ -5637,8 +5639,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 let data = null;
                 
                 try {
-                    
-                    try {
+                
+                try {
                     // まず統合データを試す
                     // リーグコードを新しいAPI形式にマッピング（日本語名も対応）
                     const leagueMapping = {
@@ -5718,13 +5720,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         
                         // キャッシュがない、または古い場合はAPIから取得
                         if (!data) {
-                            response = await fetch(integratedUrl, {
-                                method: 'GET',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                signal: AbortSignal.timeout(30000) // 30秒のタイムアウト
-                            });
+                    response = await fetch(integratedUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        signal: AbortSignal.timeout(30000) // 30秒のタイムアウト
+                    });
                         
                             // APIから取得
                             console.log('📡 APIレスポンス受信:', {
@@ -5733,24 +5735,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                 ok: response.ok,
                                 headers: Object.fromEntries(response.headers.entries())
                             });
-                    
-                            if (!response.ok) {
+                
+                if (!response.ok) {
                                 const errorText = await response.text();
                                 console.error('❌ APIエラーレスポンス:', errorText);
                                 throw new Error(`Integrated API error! status: ${response.status}, message: ${errorText.substring(0, 200)}`);
-                            }
-                            
-                            const responseText = await response.text();
-                            console.log('✅ 統合API レスポンス取得成功');
-                            console.log('レスポンスサイズ:', responseText.length, '文字');
+                }
+                
+                const responseText = await response.text();
+                    console.log('✅ 統合API レスポンス取得成功');
+                    console.log('レスポンスサイズ:', responseText.length, '文字');
                             console.log('レスポンスプレビュー:', responseText.substring(0, 500));
-                    
+                
                             if (!responseText || responseText.trim() === '') {
                                 throw new Error('APIレスポンスが空です');
                             }
                             
                             try {
-                                data = JSON.parse(responseText);
+                    data = JSON.parse(responseText);
                                 console.log('✅ JSON解析成功');
                             
                                 // すべてのデータをキャッシュに保存（過去データは長期、現在データは短期）
@@ -5820,22 +5822,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     keys: Object.keys(data),
                     metaKeys: data.meta ? Object.keys(data.meta) : []
                 });
-                
-                // 新しいAPI形式に合わせてデータを変換
+                    
+                    // 新しいAPI形式に合わせてデータを変換
                 if (data.items && !data.matches) {
-                    data.matches = data.items;
+                        data.matches = data.items;
                     console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
-                }
-                
+                    }
+                    
                 // meta.sourceをsourceにコピー（後方互換性のため）
                 if (data.meta && data.meta.source && !data.source) {
                     data.source = data.meta.source;
                     console.log('📊 data.meta.sourceをdata.sourceにコピー:', data.source);
                 }
-            } catch (integratedError) {
-                console.log('⚠️ 統合API失敗:', integratedError.message);
-                console.log('🔍 統合APIエラーの詳細:', integratedError);
-                
+                } catch (integratedError) {
+                    console.log('⚠️ 統合API失敗:', integratedError.message);
+                    console.log('🔍 統合APIエラーの詳細:', integratedError);
+                    
                 // エラーメッセージを表示
                 contentDiv.innerHTML = `
                     <div class="error">
@@ -5899,7 +5901,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     data.matches = data.items;
                     console.log('📊 data.itemsをdata.matchesに変換:', data.matches.length, '件');
                 }
-            }
+                }
                 
                 if (data && data.matches && Array.isArray(data.matches) && data.matches.length > 0) {
                   console.log(`✅ Found matches from ${dataSource}:`, data.matches.length);
@@ -6153,9 +6155,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                             </div>`;
                                         }
                                         
-                                        // チームIDの取得（matchオブジェクトから直接取得）
-                                        const homeTeamId = match.homeTeam?.id || match.home?.id || match.teams?.home?.id || match.homeTeamId || null;
-                                        const awayTeamId = match.awayTeam?.id || match.away?.id || match.teams?.away?.id || match.awayTeamId || null;
+                                        // チームIDの取得（matchオブジェクトから直接取得、J1は名前でフォールバック）
+                                        const J1_IDS = {'浦和レッズ':287,'横浜F・マリノス':296,'川崎フロンターレ':294,'FC東京':292,'鹿島アントラーズ':290,'名古屋グランパス':288,'セレッソ大阪':291,'ガンバ大阪':293,'アルビレックス新潟':311};
+                                        const isJ1Match = (match.league||match.leagueName||'').toString().includes('J1');
+                                        let homeTeamId = match.homeTeam?.id || match.home?.id || match.teams?.home?.id || match.homeTeamId || null;
+                                        let awayTeamId = match.awayTeam?.id || match.away?.id || match.teams?.away?.id || match.awayTeamId || null;
+                                        if (!homeTeamId && isJ1Match && homeTeamName) homeTeamId = J1_IDS[homeTeamName] || null;
+                                        if (!awayTeamId && isJ1Match && awayTeamName) awayTeamId = J1_IDS[awayTeamName] || null;
                                         
                                         let scoreDisplay = '';
                                         let scoreLabel = '';
@@ -6412,15 +6418,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 let dateString = '';
                 if (matchDate && !isNaN(matchDate.getTime())) {
                     timeString = matchDate.toLocaleTimeString('ja-JP', { 
-                        hour: '2-digit', 
-                        minute: '2-digit',
-                        timeZone: 'Asia/Tokyo'
-                    });
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    timeZone: 'Asia/Tokyo'
+                });
                     dateString = matchDate.toLocaleDateString('ja-JP', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        timeZone: 'Asia/Tokyo'
-                    });
+                    month: 'short', 
+                    day: 'numeric',
+                    timeZone: 'Asia/Tokyo'
+                });
                 } else {
                     timeString = '時間未定';
                     dateString = '日付未定';
@@ -6456,11 +6462,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 const homeTeamName = typeof match.homeTeam === 'string' ? match.homeTeam : match.homeTeam?.name || match.home?.name || match.teams?.home?.name || 'Unknown';
                 const awayTeamName = typeof match.awayTeam === 'string' ? match.awayTeam : match.awayTeam?.name || match.away?.name || match.teams?.away?.name || 'Unknown';
                 
-                // チームIDの取得（複数のフィールドをチェック）
-                let homeTeamId = match.homeTeam?.id || match.home?.id || match.teams?.home?.id || match.homeTeamId || 
-                                 match.fixture?.teams?.home?.id || match.teams?.home?.team?.id || null;
-                let awayTeamId = match.awayTeam?.id || match.away?.id || match.teams?.away?.id || match.awayTeamId || 
-                                 match.fixture?.teams?.away?.id || match.teams?.away?.team?.id || null;
+                // チームIDの取得（複数のフィールドをチェック、J1は名前でフォールバック）
+                const J1_IDS_FALLBACK = {'浦和レッズ':287,'横浜F・マリノス':296,'川崎フロンターレ':294,'FC東京':292,'鹿島アントラーズ':290,'名古屋グランパス':288,'セレッソ大阪':291,'ガンバ大阪':293,'アルビレックス新潟':311};
+                const isJ1 = (match.league||match.leagueName||'').toString().includes('J1');
+                let homeTeamId = match.homeTeam?.id || match.home?.id || match.teams?.home?.id || match.homeTeamId || match.fixture?.teams?.home?.id || match.teams?.home?.team?.id || null;
+                let awayTeamId = match.awayTeam?.id || match.away?.id || match.teams?.away?.id || match.awayTeamId || match.fixture?.teams?.away?.id || match.teams?.away?.team?.id || null;
+                if (!homeTeamId && isJ1) homeTeamId = J1_IDS_FALLBACK[homeTeamName] || null;
+                if (!awayTeamId && isJ1) awayTeamId = J1_IDS_FALLBACK[awayTeamName] || null;
                 
                 const matchHtml = `
                         <div class="match-card">
