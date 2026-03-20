@@ -10990,17 +10990,16 @@ app.get('/api/fotmob/teams', async (req, res) => {
     try {
         const { query, league } = req.query;
         
-        // サーバーサイドキャッシュ（10分）
         const cacheKey = `fotmob_teams_${query || ''}_${league || ''}`;
+        // キャッシュは自作DB由来（20件超）の場合のみ使用（フォールバック11件の古いキャッシュを避ける）
         const cached = getCache(cacheKey);
-        if (cached) {
+        if (cached && cached.teams && cached.teams.length > 20) {
             res.setHeader('Cache-Control', 'public, max-age=600');
             return res.json(cached);
         }
-        
         let teams = [];
         
-        // 起動時キャッシュを優先（Render等でファイル読み込みが失敗する対策）
+        // 起動時キャッシュを優先（自作DB、224チーム）
         if (cachedTeams && cachedTeams.length > 0) {
             teams = [...cachedTeams];
         }

@@ -811,8 +811,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         
         // 全チームデータを読み込み（メモリに保持）
         async function loadAllTeams(silent = false) {
-            if (isDataLoading && !silent) return;
-            
+            // isDataLoadingは選手用のため、チーム読み込みはブロックしない
             try {
                 if (!silent) {
                     const grid = document.getElementById('teamsGrid');
