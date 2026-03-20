@@ -811,17 +811,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         
         // 全チームデータを読み込み（メモリに保持）
         async function loadAllTeams(silent = false) {
-            // isDataLoadingは選手用のため、チーム読み込みはブロックしない
             try {
                 if (!silent) {
                     const grid = document.getElementById('teamsGrid');
                     if (grid) grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>チームデータを読み込み中...</p></div>';
                 }
                 
-                const response = await fetch('/api/fotmob/teams');
+                const response = await fetch('/api/fotmob/teams', { cache: 'no-store' });
                 const data = await response.json();
                 teams = data.teams || data || [];
                 dataLastUpdated = new Date();
+                
+                // 空の場合はサーバー起動直後の可能性があるため1回リトライ
+                if (teams.length < 50 && !silent) {
+                    console.log('⚠️ チーム数が少ないため2秒後に再取得します...');
+                    await new Promise(r => setTimeout(r, 2000));
+                    const retryRes = await fetch('/api/fotmob/teams', { cache: 'no-store' });
+                    const retryData = await retryRes.json();
+                    teams = retryData.teams || retryData || [];
+                    console.log(`✅ 再取得後: ${teams.length}チーム`);
+                }
                 
                 if (!silent) {
                     displayTeams(teams);
@@ -849,10 +858,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     if (grid) grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>選手データを読み込み中...</p></div>';
                 }
                 
-                // 全選手データを一度に取得
-                const response = await fetch('/api/integrated/players?limit=10000');
-                const data = await response.json();
+                // 全選手データを一度に取得（cache: no-storeでブラウザキャッシュを無効化）
+                let response = await fetch('/api/integrated/players?limit=10000', { cache: 'no-store' });
+                let data = await response.json();
                 allPlayers = Array.isArray(data) ? data : (data.players || data.results || []);
+                // 少ない場合はサーバー起動直後の可能性があるため1回リトライ
+                if (allPlayers.length < 100 && !silent) {
+                    console.log('⚠️ 選手数が少ないため3秒後に再取得します...');
+                    await new Promise(r => setTimeout(r, 3000));
+                    response = await fetch('/api/integrated/players?limit=10000', { cache: 'no-store' });
+                    data = await response.json();
+                    allPlayers = Array.isArray(data) ? data : (data.players || data.results || []);
+                    console.log(`✅ 再取得後: ${allPlayers.length}名`);
+                }
                 filteredPlayers = [...allPlayers];
                 dataLastUpdated = new Date();
                 

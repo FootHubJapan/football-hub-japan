@@ -103,24 +103,28 @@ try {
     // 包括的API連携サービスを初期化
     console.log('🔄 包括的API連携サービスを初期化中...');
 
-    // 初期化を即座に実行
+    // 初期化を即座に実行。キャッシュ完了後にサーバー起動（7560名・224チームを確実に返すため）
     apiService.init().then(async () => {
         console.log('✅ 包括的API連携サービスが初期化されました');
         console.log('🔍 APIService状態確認:', !!apiService);
-        // 自作DBをキャッシュ（APIで使用、Render等でファイル読み込みが失敗する対策）
+        // 自作DBをキャッシュ（APIで使用、初回リクエストでフォールバックを返さないため）
         try {
             cachedTeams = await apiService.dbManager.loadTeams();
             console.log(`📊 チームキャッシュ: ${cachedTeams.length}チーム`);
         } catch (e) {
             console.warn('チームキャッシュ失敗:', e?.message);
         }
-        // 選手は97MBと重いためバックグラウンドでキャッシュ（数十秒かかる）
-        apiService.dbManager.loadComprehensivePlayers(10000)
-            .then(p => { cachedPlayers = p; console.log(`📊 選手キャッシュ: ${cachedPlayers.length}名`); })
-            .catch(e => console.warn('選手キャッシュ失敗:', e?.message));
+        try {
+            cachedPlayers = await apiService.dbManager.loadComprehensivePlayers(10000);
+            console.log(`📊 選手キャッシュ: ${cachedPlayers.length}名`);
+        } catch (e) {
+            console.warn('選手キャッシュ失敗:', e?.message);
+        }
+        startServer();
     }).catch(error => {
         console.error('❌ 包括的API連携サービス初期化エラー:', error);
         console.error('詳細エラー:', error.stack);
+        startServer(); // フォールバックでサーバーは起動
     });
 
     console.log('APIService initialization completed');
@@ -129,6 +133,7 @@ try {
     console.error('❌ Error loading APIService:', error);
     console.error('詳細エラー:', error.stack);
     apiService = null;
+    startServer(); // APIService失敗時もサーバーは起動
 }
 
 console.log('🚀 APIService初期化完了');
@@ -9897,7 +9902,6 @@ app.get('/api/integrated/players', async (req, res) => {
         const { query, limit = 10000, japanese = false, majorClubsOnly = false } = req.query;
         
         const cacheKey = `integrated_players_${limit}_${japanese}_${majorClubsOnly}_${query || ''}`;
-        // キャッシュは自作DB由来（100件超）の場合のみ使用
         const cached = getCache(cacheKey);
         if (cached && Array.isArray(cached) && cached.length > 100) {
             res.setHeader('Cache-Control', 'public, max-age=600');
@@ -9905,7 +9909,10 @@ app.get('/api/integrated/players', async (req, res) => {
         }
         let players = [];
         
-        // 起動時キャッシュを優先（自作DB、7560名）
+        // 起動時キャッシュを優先。未準備なら最大60秒待機（97MB読み込みに時間がかかる）
+        for (let i = 0; i < 120 && (!cachedPlayers || cachedPlayers.length < 100); i++) {
+            await new Promise(r => setTimeout(r, 500));
+        }
         if (cachedPlayers && cachedPlayers.length > 20) {
             players = [...cachedPlayers];
         }
@@ -9913,10 +9920,10 @@ app.get('/api/integrated/players', async (req, res) => {
         // キャッシュがなければDatabaseManagerから取得
         if (players.length === 0 && apiService && apiService.dbManager) {
             try {
-                console.log(`🔄 DatabaseManagerから選手データを取得中... (STORAGE_MODE=${storageMode})`);
+                console.log(`🔄 DatabaseManagerから選手データを取得中... (STORAGE_MODE=${apiService.dbManager?.storageMode || 'file'})`);
                 const loadPromise = apiService.dbManager.loadComprehensivePlayers(parseInt(limit));
                 const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Load timeout (10s)')), 10000)
+                    setTimeout(() => reject(new Error('Load timeout (90s)')), 90000)
                 );
                 players = await Promise.race([loadPromise, timeoutPromise]);
                 if (players && players.length > 0) {
@@ -9952,67 +9959,46 @@ app.get('/api/integrated/players', async (req, res) => {
                 console.error('❌ DatabaseManagerからの選手データ取得エラー:', dbError?.message || dbError);
                 // タイムアウトや大容量ファイルの場合は即フォールバック（再読み込みで二重タイムアウトを避ける）
                 if (dbError?.message?.includes('timeout') || dbError?.message?.includes('Load timeout')) {
-                    console.log('⚠️ 読み込みタイムアウトのためフォールバックを使用');
-                    players = cacheManager.getFallbackPlayers();
-                } else {
-                    console.log('⚠️ 直接ファイル読み込みにフォールバックします');
-                    const fs = require('fs');
-                    const playersFile = path.join(__dirname, 'data', 'players.json');
-                    if (fs.existsSync(playersFile)) {
-                        try {
-                            const stats = await fs.promises.stat(playersFile);
-                            const fileSizeMB = stats.size / (1024 * 1024);
-                            if (fileSizeMB > 50) {
-                                console.log(`⚠️ 大きなファイル(${fileSizeMB.toFixed(0)}MB)のためフォールバックを使用`);
-                                players = cacheManager.getFallbackPlayers();
-                            } else {
-                                const data = await fs.promises.readFile(playersFile, 'utf8');
-                                const parsed = JSON.parse(data);
-                                players = Array.isArray(parsed) ? parsed : (parsed.players || []);
-                                if (parsed && !Array.isArray(parsed)) {
-                                    delete parsed.players;
-                                }
-                                console.log(`✅ ファイルから${players.length}名の選手データを読み込みました`);
-                            }
-                        } catch (readError) {
-                            console.error('❌ players.json読み込みエラー:', readError.message);
-                            players = [];
-                        }
+                    console.log('⚠️ 読み込みタイムアウト。直接ファイル読み込みを試行します');
+                }
+                console.log('⚠️ 直接ファイル読み込みにフォールバックします');
+                const fs = require('fs');
+                const playersFile = path.join(__dirname, 'data', 'players.json');
+                if (fs.existsSync(playersFile)) {
+                    try {
+                        const stats = await fs.promises.stat(playersFile);
+                        const fileSizeMB = stats.size / (1024 * 1024);
+                        if (fileSizeMB > 50) console.log(`⚠️ 大きなファイルを読み込み中: ${fileSizeMB.toFixed(0)}MB（数十秒かかる場合があります）`);
+                        const data = await fs.promises.readFile(playersFile, 'utf8');
+                        const parsed = JSON.parse(data);
+                        players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+                        if (parsed && !Array.isArray(parsed)) delete parsed.players;
+                        console.log(`✅ ファイルから${players.length}名の選手データを読み込みました`);
+                    } catch (readError) {
+                        console.error('❌ players.json読み込みエラー:', readError.message);
+                        players = [];
                     }
                 }
             }
         } else {
-            // DatabaseManagerが利用できない場合: 直接ファイルから読み込む
+            // DatabaseManagerが利用できない場合: 直接ファイルから読み込む（サイズ制限なし、97MB対応）
             const fs = require('fs');
             const playersFile = path.join(__dirname, 'data', 'players.json');
-            
             if (fs.existsSync(playersFile)) {
                 try {
                     const stats = await fs.promises.stat(playersFile);
                     const fileSizeMB = stats.size / (1024 * 1024);
-                    if (fileSizeMB > 50) {
-                        console.log(`⚠️ 大きなファイル(${fileSizeMB.toFixed(0)}MB)のためフォールバックを使用`);
-                        players = cacheManager.getFallbackPlayers();
-                    } else {
-                        const data = await fs.promises.readFile(playersFile, 'utf8');
-                        const parsed = JSON.parse(data);
-                        players = Array.isArray(parsed) ? parsed : (parsed.players || []);
-                        if (parsed && !Array.isArray(parsed)) {
-                            delete parsed.players;
-                        }
-                        console.log(`✅ ファイルから${players.length}名の選手データを読み込みました`);
-                    }
+                    if (fileSizeMB > 50) console.log(`⚠️ 大きなファイルを読み込み中: ${fileSizeMB.toFixed(0)}MB`);
+                    const data = await fs.promises.readFile(playersFile, 'utf8');
+                    const parsed = JSON.parse(data);
+                    players = Array.isArray(parsed) ? parsed : (parsed.players || []);
+                    if (parsed && !Array.isArray(parsed)) delete parsed.players;
+                    console.log(`✅ ファイルから${players.length}名の選手データを読み込みました`);
                 } catch (readError) {
                     console.error('❌ players.json読み込みエラー:', readError.message);
                     players = [];
                 }
             }
-        }
-        
-        // データが空の場合はフォールバックを使用（data/がデプロイされていない環境対策）
-        if (players.length === 0) {
-            console.log('⚠️ 選手データが空のためフォールバックを使用');
-            players = cacheManager.getFallbackPlayers();
         }
             
             // 主要クラブの選手のみを返す場合
@@ -10271,25 +10257,7 @@ app.get('/api/integrated/players', async (req, res) => {
         res.json(enhancedPlayers);
     } catch (error) {
         console.error('Integrated players error:', error);
-        // 500を避け、フォールバックデータを返す
-        try {
-            const fallbackPlayers = cacheManager.getFallbackPlayers();
-            const enhanced = fallbackPlayers.map(player => ({
-                ...player,
-                integration: {
-                    hasApiFootball: !!player.apiFootballId || !!player.playerId,
-                    hasFootballData: !!player.footballDataId,
-                    hasPhoto: !!player.photo,
-                    sources: ['fallback']
-                }
-            }));
-            res.json(enhanced);
-        } catch (fallbackError) {
-            res.status(500).json({ 
-                error: '統合選手データの取得に失敗しました',
-                message: error.message
-            });
-        }
+        res.json([]);
     }
 });
 
@@ -10997,7 +10965,6 @@ app.get('/api/fotmob/teams', async (req, res) => {
         const { query, league } = req.query;
         
         const cacheKey = `fotmob_teams_${query || ''}_${league || ''}`;
-        // キャッシュは自作DB由来（20件超）の場合のみ使用（フォールバック11件の古いキャッシュを避ける）
         const cached = getCache(cacheKey);
         if (cached && cached.teams && cached.teams.length > 20) {
             res.setHeader('Cache-Control', 'public, max-age=600');
@@ -11005,7 +10972,10 @@ app.get('/api/fotmob/teams', async (req, res) => {
         }
         let teams = [];
         
-        // 起動時キャッシュを優先（自作DB、224チーム）
+        // 起動時キャッシュを優先。未準備なら最大30秒待機（初回リクエスト対策）
+        for (let i = 0; i < 60 && (!cachedTeams || cachedTeams.length === 0); i++) {
+            await new Promise(r => setTimeout(r, 500));
+        }
         if (cachedTeams && cachedTeams.length > 0) {
             teams = [...cachedTeams];
         }
@@ -11056,12 +11026,6 @@ app.get('/api/fotmob/teams', async (req, res) => {
             teams = teams.filter(team => team.leagueId === parseInt(league) || team.leagueName?.toLowerCase().includes(league.toLowerCase()));
         }
         
-        // データが空の場合はフォールバックを使用（data/がデプロイされていない環境対策）
-        if (teams.length === 0) {
-            console.log('⚠️ チームデータが空のためフォールバックを使用');
-            teams = generateFallbackTeams();
-        }
-        
         // レスポンス形式を統一（database-new.htmlが期待する形式）
         const responseData = {
             teams: teams,
@@ -11072,11 +11036,7 @@ app.get('/api/fotmob/teams', async (req, res) => {
         res.json(responseData);
     } catch (error) {
         console.error('Teams API error:', error);
-        // エラー時はフォールバックを返す（500を避ける）
-        res.json({
-            teams: generateFallbackTeams(),
-            total: generateFallbackTeams().length
-        });
+        res.json({ teams: [], total: 0 });
     }
 });
 
@@ -12490,10 +12450,8 @@ app.get('/api/clear-cache', async (req, res) => {
     }
 });
 
-// サーバーを起動
-// #region agent log
-fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11728',message:'Server startup attempt',data:{port:PORT,nodeEnv:process.env.NODE_ENV || 'development',memoryUsage:process.memoryUsage()},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'A'})}).catch(()=>{});
-// #endregion
+// サーバー起動（キャッシュ準備完了後にinitから呼ばれる。7560名・224チームを確実に返すため）
+function startServer() {
 app.listen(PORT, () => {
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11729',message:'Server started successfully',data:{port:PORT,memoryUsage:process.memoryUsage()},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'A'})}).catch(()=>{});
@@ -12590,6 +12548,7 @@ app.listen(PORT, () => {
     console.error('Server error:', error);
     process.exit(1);
 });
+}
 
 // 選手データをデータベースに保存する関数
 async function savePlayerData(playerData) {
