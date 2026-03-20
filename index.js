@@ -293,7 +293,7 @@ app.use(helmet({
                 "https://unpkg.com"
             ],
             scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://www.googletagmanager.com", "https://unpkg.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://www.googletagmanager.com", "https://unpkg.com", "https://cdn.jsdelivr.net"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:", "https://www.google-analytics.com", "https://www.googletagmanager.com"],
             connectSrc: [
