@@ -6155,10 +6155,10 @@ async function getMatchesFromAPIFootball(league, timeRange, season = null) {
                             }
                         });
 
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.response && Array.isArray(data.response)) {
-                                data.response.slice(0, 2).forEach(fixture => { // 各リーグから最大2試合
+                            if (response.ok) {
+                                const data = await response.json();
+                                if (data.response && Array.isArray(data.response)) {
+                                    data.response.forEach(fixture => { // 全試合を取得
                                     matches.push({
                                         id: fixture.fixture.id,
                                         league: leagueCode,
@@ -6339,7 +6339,7 @@ async function getMatchesFromFootballData(league, timeRange, season = null) {
                     if (response.ok) {
                         const data = await response.json();
                         if (data.matches && Array.isArray(data.matches)) {
-                            data.matches.slice(0, 2).forEach(match => {
+                            data.matches.forEach(match => {
                                 matches.push({
                                     id: match.id,
                                     league: leagueCode,
@@ -9836,10 +9836,10 @@ app.get('/api/integrated/matches', async (req, res) => {
         // 日付順でソート
         matches.sort((a, b) => new Date(a.date) - new Date(b.date));
         
-        // レスポンスサイズを制限（パフォーマンス向上）
-        const limitedMatches = matches.slice(0, 50); // 最大50件に制限
+        // 全試合を返却（制限なし）
+        const limitedMatches = matches;
         
-        console.log(`✅ 統合マッチデータ返却: ${limitedMatches.length}件（制限後）`);
+        console.log(`✅ 統合マッチデータ返却: ${limitedMatches.length}件`);
         
         // レスポンスヘッダーを設定してキャッシュとタイムアウトを制御
         res.set({
