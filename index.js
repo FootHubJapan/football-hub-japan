@@ -107,13 +107,17 @@ try {
     apiService.init().then(async () => {
         console.log('✅ 包括的API連携サービスが初期化されました');
         console.log('🔍 APIService状態確認:', !!apiService);
-        // チームデータをキャッシュ（APIで使用、Render等でファイル読み込みが失敗する対策）
+        // 自作DBをキャッシュ（APIで使用、Render等でファイル読み込みが失敗する対策）
         try {
             cachedTeams = await apiService.dbManager.loadTeams();
             console.log(`📊 チームキャッシュ: ${cachedTeams.length}チーム`);
         } catch (e) {
             console.warn('チームキャッシュ失敗:', e?.message);
         }
+        // 選手は97MBと重いためバックグラウンドでキャッシュ（数十秒かかる）
+        apiService.dbManager.loadComprehensivePlayers(10000)
+            .then(p => { cachedPlayers = p; console.log(`📊 選手キャッシュ: ${cachedPlayers.length}名`); })
+            .catch(e => console.warn('選手キャッシュ失敗:', e?.message));
     }).catch(error => {
         console.error('❌ 包括的API連携サービス初期化エラー:', error);
         console.error('詳細エラー:', error.stack);
@@ -155,6 +159,7 @@ function maskApiKey(key) {
 // ===============================
 const simpleCache = new Map();
 let cachedTeams = []; // 起動時に読み込んだチーム（APIで使用）
+let cachedPlayers = []; // 起動時に読み込んだ選手（APIで使用、自作DB）
 
 function getCache(key) {
     const cached = simpleCache.get(key);
@@ -9891,21 +9896,22 @@ app.get('/api/integrated/players', async (req, res) => {
     try {
         const { query, limit = 10000, japanese = false, majorClubsOnly = false } = req.query;
         
-        // サーバーサイドキャッシュ（10分）- 初回読み込みの高速化
         const cacheKey = `integrated_players_${limit}_${japanese}_${majorClubsOnly}_${query || ''}`;
+        // キャッシュは自作DB由来（100件超）の場合のみ使用
         const cached = getCache(cacheKey);
-        if (cached) {
+        if (cached && Array.isArray(cached) && cached.length > 100) {
             res.setHeader('Cache-Control', 'public, max-age=600');
             return res.json(cached);
         }
-        
-        // STORAGE_MODEに応じてデータソースを選択
-        const storageMode = process.env.STORAGE_MODE || 'file';
         let players = [];
         
-        // DatabaseManagerが利用可能な場合は優先的に使用（file/firestore両方に対応）
-        // 97MB等の大容量ファイルはタイムアウトするため、10秒でフォールバック
-        if (apiService && apiService.dbManager) {
+        // 起動時キャッシュを優先（自作DB、7560名）
+        if (cachedPlayers && cachedPlayers.length > 20) {
+            players = [...cachedPlayers];
+        }
+        
+        // キャッシュがなければDatabaseManagerから取得
+        if (players.length === 0 && apiService && apiService.dbManager) {
             try {
                 console.log(`🔄 DatabaseManagerから選手データを取得中... (STORAGE_MODE=${storageMode})`);
                 const loadPromise = apiService.dbManager.loadComprehensivePlayers(parseInt(limit));
@@ -12541,12 +12547,14 @@ app.listen(PORT, () => {
                 fetch('http://127.0.0.1:7242/ingest/fa8ce7ff-7ee1-4ab5-80be-33e3271dd743',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.js:11764',message:'APIService init completed',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'startup-check',hypothesisId:'B'})}).catch(()=>{});
                 // #endregion
                 console.log('✅ APIService初期化完了');
-                // チームキャッシュを更新
+                // 自作DBキャッシュを更新
                 try {
                     cachedTeams = await apiService.dbManager.loadTeams();
                     if (cachedTeams.length > 0) console.log(`📊 チームキャッシュ: ${cachedTeams.length}チーム`);
+                    cachedPlayers = await apiService.dbManager.loadComprehensivePlayers(10000);
+                    if (cachedPlayers.length > 0) console.log(`📊 選手キャッシュ: ${cachedPlayers.length}名`);
                 } catch (e) {
-                    console.warn('チームキャッシュ失敗:', e?.message);
+                    console.warn('キャッシュ失敗:', e?.message);
                 }
                 // 初期化完了後にシステム初期化を実行（遅延）
                 console.log('✅ APIService利用可能、システム初期化を開始');
