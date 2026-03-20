@@ -289,10 +289,11 @@ app.use(helmet({
                 "https://cdn.tailwindcss.com",
                 "https://www.googletagmanager.com",
                 "https://pagead2.googlesyndication.com",
-                "https://*.adtrafficquality.google"
+                "https://*.adtrafficquality.google",
+                "https://unpkg.com"
             ],
             scriptSrcAttr: ["'unsafe-inline'"], // Allow inline event handlers
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://www.googletagmanager.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://www.googletagmanager.com", "https://unpkg.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:", "https://www.google-analytics.com", "https://www.googletagmanager.com"],
             connectSrc: [
