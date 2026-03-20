@@ -396,6 +396,9 @@ app.get('/ads.txt', (req, res) => {
 });
 
 // 静的ファイルの配信（ルートハンドラーの後に設定）
+// data/*.json を静的配信（データベースページ用、API経由なしで直接取得）
+app.use('/data', express.static(path.join(__dirname, 'data')));
+
 // index.htmlは明示的にルートハンドラーで配信するため、express.staticのindexオプションをfalseに設定
 app.use(express.static('public', {
     index: false, // index.htmlの自動配信を無効化（ルートハンドラーで明示的に配信）
