@@ -113,16 +113,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             gap: 0.75rem;
         }
 
-        .logo::before {
-            content: '⚡';
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            background: var(--primary);
+        .logo-img {
+            height: 44px;
+            width: auto;
+            max-width: min(240px, 55vw);
+            object-fit: contain;
             border-radius: 8px;
-            font-size: 1rem;
+            display: block;
         }
 
         .nav-buttons {
@@ -1313,7 +1310,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
     <header class="header">
         <div class="header-content">
-            <a href="/" class="logo">Football Hub</a>
+            <a href="/" class="logo" title="Football Hub Japan">
+                <img src="/images/football-hub-japan-logo.png" alt="Football Hub Japan" class="logo-img" width="240" height="56" loading="eager" decoding="async">
+            </a>
             <nav class="nav-links">
                 <a href="/database" class="nav-link">データベース</a>
                 <a href="/radar" class="nav-link">レーダーチャート</a>

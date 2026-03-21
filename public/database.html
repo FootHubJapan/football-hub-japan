@@ -59,6 +59,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             color: #00ff88;
             font-size: 1.8rem;
             font-weight: bold;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo .header-logo-img {
+            height: 48px;
+            width: auto;
+            max-width: min(260px, 50vw);
+            object-fit: contain;
+            border-radius: 8px;
+            display: block;
         }
 
         .nav-buttons {
@@ -1171,7 +1183,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
     <header class="header">
-        <div class="logo">⚽ Football Hub Japan</div>
+        <a href="/" class="logo" title="Football Hub Japan">
+            <img src="/images/football-hub-japan-logo.png" alt="Football Hub Japan" class="header-logo-img" width="260" height="60" loading="eager" decoding="async">
+        </a>
         <div class="nav-buttons">
             <button class="nav-btn" onclick="window.location.href='/dashboard'">ダッシュボード</button>
             <button class="nav-btn" onclick="window.location.href='/radar'">レーダーチャート</button>
@@ -1544,11 +1558,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                 // レスポンスが配列の場合とオブジェクトの場合に対応
                                 let apiPlayers = Array.isArray(apiData) ? apiData : (apiData.players || apiData.results || []);
                                 
-                                // 主要クラブの選手を優先的に先頭に配置
+                                const sortPlayersByName = (arr) => [...arr].sort((a, b) =>
+                                    String(a.name || a.fullName || '').localeCompare(String(b.name || b.fullName || ''), 'ja', { sensitivity: 'base' })
+                                );
+                                
+                                // 主要クラブの選手を優先的に先頭に配置（未取得・0件時は players.json の生順のままだとサウジ等が先頭に来る）
                                 if (majorClubsPlayers.length > 0) {
                                     const majorClubsPlayerIds = new Set(majorClubsPlayers.map(p => p.id || p.apiFootballId || p.playerId));
                                     const otherPlayers = apiPlayers.filter(p => !majorClubsPlayerIds.has(p.id || p.apiFootballId || p.playerId));
-                                    apiPlayers = [...majorClubsPlayers, ...otherPlayers];
+                                    apiPlayers = [...majorClubsPlayers, ...sortPlayersByName(otherPlayers)];
+                                } else {
+                                    apiPlayers = sortPlayersByName(apiPlayers);
                                 }
                                 
                                 if (apiPlayers.length > 0) {

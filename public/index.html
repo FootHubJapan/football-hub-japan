@@ -51,6 +51,17 @@ body {
   color: var(--text-primary);
   text-decoration: none;
   text-shadow: 0 0 20px var(--neon-blue-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.logo-img {
+  height: 44px;
+  width: auto;
+  max-width: min(260px, 55vw);
+  object-fit: contain;
+  border-radius: 8px;
+  display: block;
 }
 .nav {
   display: flex;
@@ -266,7 +277,9 @@ body {
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PNCBBCBM" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- Header -->
 <header class="header">
-  <a href="/" class="logo">Global Football World Map Navigation</a>
+  <a href="/" class="logo" title="Football Hub Japan">
+    <img src="/images/football-hub-japan-logo.png" alt="Football Hub Japan" class="logo-img" width="260" height="60" loading="eager" decoding="async">
+  </a>
   <nav class="nav">
     <a href="/database">データベース</a>
     <a href="/radar">レーダーチャート</a>

@@ -33,8 +33,53 @@ const LEAGUES = [
     { id: 307, name: 'Saudi Pro League' }
 ];
 
+/** 所属表示は国内リーグ優先（APIの statistics 配列順に依存しない） */
+const DOMESTIC_LEAGUE_IDS = [39, 140, 135, 78, 61, 88, 94, 98, 253, 307];
+
+/**
+ * @param {Array} rawStats - API の item.statistics
+ * @param {number} clubTeamId - 取得時の club team id（players?team= の値）
+ */
+function pickDomesticRawStat(rawStats, clubTeamId) {
+    if (!rawStats || !rawStats.length) return null;
+    const forClub = rawStats.filter((s) => !clubTeamId || s.team?.id === clubTeamId);
+    const pool = forClub.length ? forClub : rawStats;
+    for (const lid of DOMESTIC_LEAGUE_IDS) {
+        const row = pool.find((s) => s.league?.id === lid);
+        if (row) return row;
+    }
+    return pool[0];
+}
+
+/**
+ * @param {Array} normStats - normalizeStat 済み
+ * @param {number} clubTeamId
+ */
+function pickDomesticNormalized(normStats, clubTeamId) {
+    if (!normStats || !normStats.length) return null;
+    const forClub = normStats.filter((s) => !clubTeamId || s.teamId === clubTeamId);
+    const pool = forClub.length ? forClub : normStats;
+    for (const lid of DOMESTIC_LEAGUE_IDS) {
+        const row = pool.find((s) => s.leagueId === lid);
+        if (row) return row;
+    }
+    return pool[0];
+}
+
 function delay(ms) {
     return new Promise(r => setTimeout(r, ms));
+}
+
+/** API-Football の JSON に errors / HTTP エラーをまとめて表示 */
+function formatApiFootballIssue(res, data) {
+    const parts = [];
+    if (res && !res.ok) parts.push(`HTTP ${res.status}`);
+    if (data && Array.isArray(data.errors) && data.errors.length) {
+        parts.push(JSON.stringify(data.errors));
+    } else if (data && data.message) {
+        parts.push(String(data.message));
+    }
+    return parts.length ? parts.join(' ') : '';
 }
 
 function normalizeStat(apiStat) {
@@ -96,6 +141,8 @@ async function fetchLeagueTeams(leagueId) {
             { headers: { 'x-apisports-key': API_KEY } }
         );
         const data = await res.json();
+        const issue = formatApiFootballIssue(res, data);
+        if (issue) console.warn(`  ⚠️ リーグ${leagueId} teams:`, issue);
         return (data.response || []).map(t => ({ id: t.team.id, name: t.team.name }));
     } catch (e) {
         console.warn(`  ⚠️ リーグ${leagueId} チーム取得エラー:`, e.message);
@@ -111,11 +158,16 @@ async function fetchTeamPlayers(teamId, teamName) {
             { headers: { 'x-apisports-key': API_KEY } }
         );
         const data = await res.json();
+        const issue = formatApiFootballIssue(res, data);
+        if (issue) {
+            console.warn(`    ⚠️ ${teamName} 選手取得:`, issue);
+        }
         const items = data.response || [];
         return items.map(item => {
             const p = item.player;
             const stats = item.statistics || [];
-            const primaryStat = stats.find(s => s.league?.id === 39 || s.league?.id === 140 || s.league?.id === 135 || s.league?.id === 78 || s.league?.id === 61) || stats[0] || {};
+            const domesticRaw = pickDomesticRawStat(stats, teamId);
+            const primaryStat = domesticRaw || stats[0] || {};
             const normalizedStats = stats.map(normalizeStat);
             return {
                 playerId: p.id,
@@ -127,10 +179,11 @@ async function fetchTeamPlayers(teamId, teamName) {
                 age: p.age,
                 nationality: p.nationality,
                 photo: p.photo,
-                currentTeam: primaryStat.team?.name || 'Unknown',
-                teamId: primaryStat.team?.id,
+                // 取得元チームを正とし、リーグ名は国内リーグ行から（所属の一括整合用）
+                currentTeam: teamName,
+                teamId: teamId,
                 league: primaryStat.league?.name || 'Unknown',
-                leagueId: primaryStat.league?.id,
+                leagueId: primaryStat.league?.id ?? null,
                 stats: normalizedStats,
                 source: 'api-football-2025-26',
                 lastUpdated: new Date().toISOString()
@@ -218,15 +271,22 @@ async function main() {
             player.stats.sort((a, b) => String(b.season || '').localeCompare(String(a.season || '')));
         }
 
-        // チーム・リーグ情報を更新
-        const laliga = apiPlayer.stats?.find(s => s.leagueId === 140);
-        const pl = apiPlayer.stats?.find(s => s.leagueId === 39);
-        const primary = laliga || pl || apiPlayer.stats?.[0];
-        if (primary) {
-            player.currentTeam = primary.teamName;
-            player.teamId = primary.teamId;
+        // チーム・リーグを一括更新（API取得時の club + 国内リーグ行。clubOverride は尊重）
+        const primary = pickDomesticNormalized(apiPlayer.stats, apiPlayer.teamId);
+        const ov = player.clubOverride;
+        if (ov && ov.active) {
+            player.currentTeam = ov.teamName || player.currentTeam;
+            player.teamId = ov.teamId ?? player.teamId;
+            player.league = ov.leagueName || player.league;
+            player.leagueId = ov.leagueId ?? player.leagueId;
+        } else if (primary) {
+            player.currentTeam = apiPlayer.currentTeam || primary.teamName;
+            player.teamId = apiPlayer.teamId ?? primary.teamId;
             player.league = primary.leagueName;
             player.leagueId = primary.leagueId;
+        } else if (apiPlayer.currentTeam) {
+            player.currentTeam = apiPlayer.currentTeam;
+            player.teamId = apiPlayer.teamId;
         }
 
         updatedCount++;

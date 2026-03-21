@@ -82,16 +82,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             text-decoration: none;
         }
 
-        .logo::before {
-            content: '⚡';
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            background: var(--primary);
+        .logo-img {
+            height: 44px;
+            width: auto;
+            max-width: min(240px, 55vw);
+            object-fit: contain;
             border-radius: 8px;
-            font-size: 1rem;
+            display: block;
         }
 
         .nav-buttons {
@@ -480,7 +477,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
     <div class="header">
-        <a href="/" class="logo">Football Hub Japan</a>
+        <a href="/" class="logo" title="Football Hub Japan">
+            <img src="/images/football-hub-japan-logo.png" alt="Football Hub Japan" class="logo-img" width="240" height="56" loading="eager" decoding="async">
+        </a>
         <div class="nav-buttons">
             <button class="nav-btn" onclick="window.location.href='/'">ホーム</button>
             <button class="nav-btn" onclick="window.location.href='/database-new.html'">データベース</button>

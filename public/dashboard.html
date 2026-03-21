@@ -109,6 +109,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             letter-spacing: -0.02em;
         }
 
+        .logo-img {
+            height: 44px;
+            width: auto;
+            max-width: min(240px, 55vw);
+            object-fit: contain;
+            border-radius: 8px;
+            display: block;
+        }
+
         .nav-link {
             color: var(--muted);
             text-decoration: none;
@@ -411,9 +420,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- Header -->
     <header class="header">
         <div class="header-container">
-            <a href="/" class="logo">
-                <div class="logo-icon">⚡</div>
-                <span class="logo-text">Football Hub Japan</span>
+            <a href="/" class="logo" title="Football Hub Japan">
+                <img src="/images/football-hub-japan-logo.png" alt="Football Hub Japan" class="logo-img" width="240" height="56" loading="eager" decoding="async">
             </a>
             <nav class="nav-links" style="display: flex; gap: 1.5rem; align-items: center;">
                 <a href="/database" class="nav-link">データベース</a>

@@ -106,6 +106,24 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             letter-spacing: -0.02em;
         }
 
+        .logo-img {
+            height: 44px;
+            width: auto;
+            max-width: min(240px, 55vw);
+            object-fit: contain;
+            border-radius: 8px;
+            display: block;
+        }
+
+        .footer-brand-logo-img {
+            height: 36px;
+            width: auto;
+            max-width: 200px;
+            object-fit: contain;
+            border-radius: 6px;
+            display: block;
+        }
+
         .nav-menu {
             display: flex;
             align-items: center;
@@ -360,9 +378,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- Header -->
     <header class="header">
         <div class="header-container">
-            <a href="/" class="logo">
-                <div class="logo-icon">⚡</div>
-                <span class="logo-text">Football Hub Japan</span>
+            <a href="/" class="logo" title="Football Hub Japan">
+                <img src="/images/football-hub-japan-logo.png" alt="Football Hub Japan" class="logo-img" width="240" height="56" loading="eager" decoding="async">
             </a>
 
             <ul class="nav-menu">
@@ -428,9 +445,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="footer-container">
             <div class="footer-grid">
                 <div class="footer-brand">
-                    <a href="/" class="footer-brand-logo">
-                        <div class="logo-icon">⚡</div>
-                        <span class="logo-text">Football Hub Japan</span>
+                    <a href="/" class="footer-brand-logo" title="Football Hub Japan">
+                        <img src="/images/football-hub-japan-logo.png" alt="Football Hub Japan" class="footer-brand-logo-img" width="200" height="48" loading="lazy" decoding="async">
                     </a>
                     <p class="footer-brand-text">最先端のAI技術で日本サッカーを分析・予測するデータプラットフォーム</p>
                 </div>

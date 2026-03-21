@@ -15,6 +15,7 @@
     "update-players-2025-26": "node update-all-players-2025-26.js",
     "update-vinicius-2025": "node update-vinicius-2025.js",
     "update-valverde-2025": "node update-valverde-2025.js",
+    "update-daniel-yanez-2025": "node update-daniel-yanez-2025.js",
     "update-finished-matches": "node update-finished-matches.js"
   },
   "keywords": [
