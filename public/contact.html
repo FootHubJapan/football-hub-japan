@@ -400,42 +400,36 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <main>
         <div class="content">
             <h1>お問い合わせ</h1>
-            <p>ご質問、ご意見、ご要望がございましたら、以下のフォームよりお気軽にお問い合わせください。お返事には数日かかる場合がございますので、あらかじめご了承ください。</p>
+            <p>ご質問・ご意見は<strong>メール</strong>にて受け付けています。フォームからの自動送信は現在ご利用いただけません（サーバー連携は準備中です）。</p>
 
-            <form id="contactForm" onsubmit="handleSubmit(event)">
+            <div class="form-note" style="margin: 1.5rem 0; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,189,199,0.08);">
+                <p style="margin-bottom: 0.75rem;"><strong>推奨:</strong> 下記メールアドレス宛に直接ご連絡ください。返信には数日かかる場合があります。</p>
+                <p class="mailto-link" style="font-size: 1.1rem;">
+                    <a href="mailto:contact@footballhubjapan.com?subject=Football%20Hub%20Japan%20お問い合わせ" style="color: var(--primary); font-weight: 600;">contact@footballhubjapan.com</a>
+                </p>
+            </div>
+
+            <details style="margin-top: 2rem; opacity: 0.85;">
+                <summary style="cursor: pointer; color: var(--muted); font-size: 0.9rem;">フォーム入力（参考・送信はできません）</summary>
+                <form id="contactForm" style="margin-top: 1rem; pointer-events: none; opacity: 0.6;" aria-disabled="true" onsubmit="return false;">
                 <div class="form-group">
                     <label for="name" class="form-label">お名前 <span style="color: var(--muted);">（任意）</span></label>
-                    <input type="text" id="name" name="name" class="form-input" placeholder="山田 太郎">
+                    <input type="text" id="name" name="name" class="form-input" placeholder="山田 太郎" disabled tabindex="-1">
                 </div>
-
                 <div class="form-group">
-                    <label for="email" class="form-label">メールアドレス <span style="color: var(--primary);">（必須）</span></label>
-                    <input type="email" id="email" name="email" class="form-input" placeholder="example@email.com" required>
+                    <label for="email" class="form-label">メールアドレス</label>
+                    <input type="email" id="email" name="email" class="form-input" placeholder="example@email.com" disabled tabindex="-1">
                 </div>
-
                 <div class="form-group">
-                    <label for="subject" class="form-label">件名 <span style="color: var(--muted);">（任意）</span></label>
-                    <input type="text" id="subject" name="subject" class="form-input" placeholder="お問い合わせの件名">
+                    <label for="message" class="form-label">メッセージ</label>
+                    <textarea id="message" name="message" class="form-textarea" placeholder="上記メール宛に同内容をお送りください" disabled tabindex="-1"></textarea>
                 </div>
-
-                <div class="form-group">
-                    <label for="message" class="form-label">メッセージ <span style="color: var(--primary);">（必須）</span></label>
-                    <textarea id="message" name="message" class="form-textarea" placeholder="お問い合わせ内容をご記入ください" required></textarea>
-                </div>
-
-                <button type="submit" class="form-submit">送信する</button>
-            </form>
+                <button type="button" class="form-submit" disabled>送信（準備中）</button>
+                </form>
+            </details>
 
             <div id="successMessage" class="success-message" style="display:none;">
                 お問い合わせありがとうございます。
-            </div>
-
-            <div class="form-note">
-                <p><strong>ご注意:</strong> 自動送信やスパム行為はお控えください。また、現時点ではフォーム送信はフロントエンドのみで動作しており、実際のメール送信機能は実装されていません。緊急のご連絡が必要な場合は、下記のメールアドレスをご利用ください。</p>
-            </div>
-
-            <div class="mailto-link">
-                <p>メールでのお問い合わせ: <a href="mailto:contact@footballhubjapan.com">contact@footballhubjapan.com</a></p>
             </div>
         </div>
     </main>
@@ -448,7 +442,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <a href="/" class="footer-brand-logo" title="Football Hub Japan">
                         <img src="/images/football-hub-japan-logo.png" alt="Football Hub Japan" class="footer-brand-logo-img" width="200" height="48" loading="lazy" decoding="async">
                     </a>
-                    <p class="footer-brand-text">最先端のAI技術で日本サッカーを分析・予測するデータプラットフォーム</p>
+                    <p class="footer-brand-text">日本発のサッカーデータ・分析サイト（個人運営）。外部API由来の統計を中心に提供しています。</p>
                 </div>
 
                 <!-- プロダクトセクションは削除（未完成ページへのリンクを避けるため） -->

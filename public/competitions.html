@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大会対戦表（CL / EL / カンファレンス） - Football Hub Japan</title>
+    <meta name="description" content="UEFAチャンピオンズリーグ・ヨーロッパリーグ・カンファレンスリーグのラウンド別対戦表。API-Footballの試合データを表示します。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: #0d1117;
+            --foreground: #f0f6fc;
+            --card: #161b22;
+            --primary: #00bdc7;
+            --muted: #8b949e;
+            --border: #30363d;
+            --radius: 0.75rem;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: var(--background);
+            color: var(--foreground);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            border-bottom: 1px solid var(--border);
+            background: rgba(13, 17, 23, 0.92);
+            backdrop-filter: blur(12px);
+        }
+        .header-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1.5rem;
+            height: 64px;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .logo { text-decoration: none; display: flex; align-items: center; }
+        .logo-img {
+            height: 44px;
+            width: auto;
+            max-width: min(240px, 55vw);
+            border-radius: 8px;
+        }
+        .nav-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            padding: 0.5rem 0.85rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-decoration: none;
+            font-family: inherit;
+        }
+        .nav-btn:hover { color: var(--primary); background: #21262d; }
+        .main-container { max-width: 1400px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+        .hero-section {
+            text-align: center;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.75rem;
+            border: 1px solid rgba(0, 189, 199, 0.5);
+            border-radius: 999px;
+            font-size: 0.75rem;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+        }
+        .page-title { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .page-subtitle { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+            margin-bottom: 1.5rem;
+            padding: 1.25rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+        .control-group { display: flex; flex-direction: column; gap: 0.35rem; }
+        .control-group label { font-size: 0.8rem; color: var(--muted); }
+        select, input[type="number"] {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            color: var(--foreground);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            min-width: 140px;
+        }
+        .btn-load {
+            background: var(--primary);
+            color: #0d1117;
+            border: none;
+            padding: 0.55rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .btn-load:hover { filter: brightness(1.08); }
+        .btn-load:disabled { opacity: 0.5; cursor: not-allowed; }
+        .meta-bar {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 1rem;
+        }
+        .trust-note {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            border-left: 3px solid var(--primary);
+            background: rgba(0, 189, 199, 0.06);
+            border-radius: 0 8px 8px 0;
+        }
+        .bracket-scroll {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+            scroll-snap-type: x proximity;
+        }
+        .bracket-col {
+            flex: 0 0 min(280px, 85vw);
+            scroll-snap-align: start;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.75rem;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .bracket-round-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--card);
+            z-index: 1;
+        }
+        .match-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.65rem 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+            transition: border-color 0.2s;
+        }
+        .match-card:hover { border-color: rgba(0, 189, 199, 0.45); }
+        .match-date { font-size: 0.7rem; color: var(--muted); margin-bottom: 0.35rem; }
+        .team-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin: 0.25rem 0;
+        }
+        .team-side {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            min-width: 0;
+            flex: 1;
+        }
+        .team-logo { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
+        .team-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; font-size: 0.78rem; }
+        .goal-num {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--primary);
+            min-width: 1.25rem;
+            text-align: right;
+        }
+        .match-link {
+            display: inline-block;
+            margin-top: 0.35rem;
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+        .match-link a { color: var(--primary); }
+        .loading, .error-msg { padding: 2rem; text-align: center; color: var(--muted); }
+        .error-msg { color: #f87171; }
+        @media (max-width: 768px) {
+            .header-content { height: auto; padding: 0.75rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo" title="Football Hub Japan">
+                <img src="/images/football-hub-japan-logo.png" alt="Football Hub Japan" class="logo-img" width="240" height="56" loading="eager">
+            </a>
+            <nav class="nav-buttons">
+                <a href="/database" class="nav-btn">データベース</a>
+                <a href="/schedule" class="nav-btn">スケジュール</a>
+                <a href="/ranking" class="nav-btn">ランキング</a>
+                <a href="/competitions" class="nav-btn" style="color: var(--primary);">大会対戦表</a>
+                <a href="/insights.html" class="nav-btn">コラム</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="hero-section">
+            <span class="badge">UEFAカップ戦</span>
+            <h1 class="page-title">大会対戦表・トーナメント</h1>
+            <p class="page-subtitle">チャンピオンズリーグ（CL）・ヨーロッパリーグ（EL）・カンファレンスリーグ（UECL）のラウンド別に試合を表示します。グループリーグはグループごと、決勝トーナメントはラウンドごとに列が分かれます。</p>
+        </section>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="compSelect">大会</label>
+                <select id="compSelect">
+                    <option value="CL">UEFA CL（チャンピオンズリーグ）</option>
+                    <option value="EL">UEFA EL（ヨーロッパリーグ）</option>
+                    <option value="UECL">UEFA カンファレンスリーグ</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="seasonInput">シーズン（開始年・例: 2025 = 2025-26）</label>
+                <input type="number" id="seasonInput" min="2010" max="2035" step="1">
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button type="button" class="btn-load" id="loadBtn">対戦表を読み込む</button>
+            </div>
+        </div>
+
+        <p class="trust-note">表示内容は API-Football 由来です。試合形式（2回戦総得点など）は大会ルールに従い、同一カードに複数試合が並ぶ場合があります。遅延・欠損は利用規約のとおり保証しません。</p>
+
+        <div class="meta-bar" id="metaBar"></div>
+        <div id="bracketHost"><p class="loading">大会とシーズンを選んで「対戦表を読み込む」を押してください。</p></div>
+    </main>
+
+    <script>
+(function () {
+    const seasonInput = document.getElementById('seasonInput');
+    const compSelect = document.getElementById('compSelect');
+    const loadBtn = document.getElementById('loadBtn');
+    const host = document.getElementById('bracketHost');
+    const metaBar = document.getElementById('metaBar');
+
+    const y = new Date().getFullYear();
+    const m = new Date().getMonth() + 1;
+    seasonInput.value = m >= 7 ? y : y - 1;
+
+    function esc(s) {
+        const d = document.createElement('div');
+        d.textContent = s == null ? '' : String(s);
+        return d.innerHTML;
+    }
+
+    function fmtDate(iso) {
+        if (!iso) return '—';
+        try {
+            const d = new Date(iso);
+            return d.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        } catch (e) { return iso; }
+    }
+
+    function goalOrDash(v) {
+        if (v === 0) return '0';
+        return v == null ? '—' : String(v);
+    }
+
+    async function load() {
+        const competition = compSelect.value;
+        const season = parseInt(seasonInput.value, 10) || y;
+        loadBtn.disabled = true;
+        host.innerHTML = '<p class="loading">読み込み中…</p>';
+        metaBar.textContent = '';
+
+        try {
+            const res = await fetch(`/api/competitions/bracket?competition=${encodeURIComponent(competition)}&season=${season}`);
+            const data = await res.json();
+            if (!res.ok) {
+                host.innerHTML = `<p class="error-msg">${esc(data.error || '取得に失敗しました')}</p>`;
+                if (data.hint) host.innerHTML += `<p class="trust-note">${esc(data.hint)}</p>`;
+                return;
+            }
+
+            metaBar.textContent = `${data.leagueNameJa || data.leagueName} · シーズン ${data.season} · 試合数 ${data.totalFixtures || 0} · 更新 ${data.updatedAt ? new Date(data.updatedAt).toLocaleString('ja-JP') : '—'}`;
+
+            const rounds = data.rounds || [];
+            if (rounds.length === 0) {
+                host.innerHTML = '<p class="loading">この条件では試合が取得できませんでした。シーズン年（例: 2024 / 2025）を変えてお試しください。</p>';
+                return;
+            }
+
+            const scroll = document.createElement('div');
+            scroll.className = 'bracket-scroll';
+
+            rounds.forEach((round) => {
+                const col = document.createElement('div');
+                col.className = 'bracket-col';
+                const h = document.createElement('div');
+                h.className = 'bracket-round-title';
+                h.textContent = round.name;
+                col.appendChild(h);
+
+                (round.matches || []).forEach((m) => {
+                    const card = document.createElement('div');
+                    card.className = 'match-card';
+                    const mid = m.id;
+                    const gh = goalOrDash(m.goals?.home);
+                    const ga = goalOrDash(m.goals?.away);
+                    card.innerHTML = `
+                        <div class="match-date">${esc(fmtDate(m.date))} · ${esc(m.status || '')}</div>
+                        <div class="team-row">
+                            <div class="team-side">
+                                ${m.home?.logo ? `<img class="team-logo" src="${esc(m.home.logo)}" alt="" loading="lazy">` : ''}
+                                <span class="team-name">${esc(m.home?.name || 'TBD')}</span>
+                            </div>
+                            <span class="goal-num">${esc(gh)}</span>
+                        </div>
+                        <div class="team-row">
+                            <div class="team-side">
+                                ${m.away?.logo ? `<img class="team-logo" src="${esc(m.away.logo)}" alt="" loading="lazy">` : ''}
+                                <span class="team-name">${esc(m.away?.name || 'TBD')}</span>
+                            </div>
+                            <span class="goal-num">${esc(ga)}</span>
+                        </div>
+                        ${mid ? `<div class="match-link"><a href="/match/${mid}">試合詳細 →</a></div>` : ''}
+                    `;
+                    col.appendChild(card);
+                });
+                scroll.appendChild(col);
+            });
+
+            host.innerHTML = '';
+            host.appendChild(scroll);
+        } catch (e) {
+            console.error(e);
+            host.innerHTML = `<p class="error-msg">通信エラー: ${esc(e.message)}</p>`;
+        } finally {
+            loadBtn.disabled = false;
+        }
+    }
+
+    loadBtn.addEventListener('click', load);
+})();
+    </script>
+</body>
+</html>

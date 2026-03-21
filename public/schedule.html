@@ -4631,8 +4631,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <span class="material-symbols-outlined">chevron_left</span>
                         </button>
                         <div style="padding: 0.25rem 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
-                            <span style="font-size: 0.75rem; color: var(--primary); font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em;" id="currentMonth">Oct 2023</span>
-                            <span style="font-size: 1.125rem; font-weight: bold; color: var(--foreground);" id="currentDate">Today, 24th</span>
+                            <span style="font-size: 0.75rem; color: var(--primary); font-weight: bold; letter-spacing: 0.05em;" id="currentMonth">読み込み中…</span>
+                            <span style="font-size: 1.125rem; font-weight: bold; color: var(--foreground);" id="currentDate">—</span>
                             <span style="font-size: 0.85rem; color: var(--primary); font-weight: 600;" id="currentTime"></span>
                         </div>
                         <button style="padding: 0.5rem; background: none; border: none; color: var(--foreground); cursor: pointer; border-radius: 0.5rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">
@@ -5106,22 +5106,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const timeEl = document.getElementById('currentTime');
             
             if (monthEl) {
-                const monthStr = now.toLocaleDateString('ja-JP', { 
-                    month: 'short', 
+                monthEl.textContent = now.toLocaleDateString('ja-JP', {
                     year: 'numeric',
+                    month: 'long',
                     timeZone: 'Asia/Tokyo'
-                }).replace('年', '').replace('月', '');
-                monthEl.textContent = monthStr.toUpperCase();
+                });
             }
             
             if (dateEl) {
-                const dateStr = now.toLocaleDateString('ja-JP', { 
-                    weekday: 'short',
-                    month: 'short', 
+                dateEl.textContent = now.toLocaleDateString('ja-JP', { 
+                    weekday: 'long',
+                    month: 'long', 
                     day: 'numeric',
                     timeZone: 'Asia/Tokyo'
                 });
-                dateEl.textContent = dateStr;
             }
             
             if (timeEl) {

@@ -3,8 +3,12 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Global Football World Map Navigation - Football Hub Japan</title>
-<meta name="description" content="世界中のサッカーリーグ、チーム、スタジアムをインタラクティブなマップで探索。">
+<title>Football Hub Japan | Jリーグ・欧州主要リーグのサッカーデータ・分析</title>
+<meta name="description" content="Jリーグと欧州主要リーグを、検索・比較・分析できる日本発のサッカーデータサイト。選手・チーム・試合を横断し、分析コラムやスケジュールまで。データは外部API由来で、正確性・最新性は保証しない場合があります。">
+<meta name="keywords" content="サッカー,フットボール,データベース,試合分析,ランキング,Jリーグ,プレミアリーグ,ラ・リーガ">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"Football Hub Japan","url":"/","description":"Jリーグと欧州主要リーグを検索・比較・分析できるサッカーデータサイト（日本発・グローバル対応）","inLanguage":"ja"}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- Leaflet CSS (jsDelivr: CSP許可済み) -->
@@ -82,15 +86,97 @@ body {
   border-bottom-color: var(--neon-blue);
 }
 /* Search Section */
+/* プロダクト型ヒーロー（訴求とCTA） */
+.hero-product {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  z-index: 998;
+  padding: 0.75rem 1.25rem 0.5rem;
+  text-align: center;
+  pointer-events: none;
+}
+.hero-product a, .hero-product button { pointer-events: auto; }
+.hero-h1 {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: clamp(1rem, 2.8vw, 1.35rem);
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--text-primary);
+  max-width: 42rem;
+  margin: 0 auto 0.5rem;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+}
+.hero-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  max-width: 36rem;
+  margin: 0 auto 0.65rem;
+  line-height: 1.55;
+}
+.hero-sub a { color: var(--neon-blue); }
+.hero-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+.hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: 'Noto Sans JP', sans-serif;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: background 0.2s, border-color 0.2s;
+}
+.hero-btn--primary {
+  background: var(--neon-blue);
+  color: #0a0e17;
+}
+.hero-btn--primary:hover { filter: brightness(1.08); }
+.hero-btn--secondary {
+  background: rgba(13, 19, 33, 0.92);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+.hero-btn--secondary:hover { border-color: var(--neon-blue); color: var(--neon-blue); }
+.hero-btn--ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border-color: var(--border);
+  font-size: 0.75rem;
+}
+.badge-beta {
+  display: inline-block;
+  margin-right: 0.25rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+  background: rgba(234, 179, 8, 0.25);
+  color: #fbbf24;
+  font-size: 0.65rem;
+  vertical-align: middle;
+}
 .search-section {
   position: fixed;
-  top: 70px;
+  top: 200px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 999;
   width: 90%;
   max-width: 600px;
   padding: 1rem 0;
+}
+@media (max-width: 768px) {
+  .hero-product { top: 56px; padding: 0.5rem; }
+  .search-section { top: 220px; }
 }
 .search-bar {
   display: flex;
@@ -205,15 +291,12 @@ body {
   text-shadow: 0 0 8px var(--neon-blue-dim);
   pointer-events: none;
 }
-/* Footer */
+/* Footer（スクロールコンテンツ末尾に配置・マップ上に常時重ならない） */
 .footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: relative;
   z-index: 100;
   padding: 1rem 2rem;
-  background: rgba(10, 14, 23, 0.9);
+  background: rgba(10, 14, 23, 0.95);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--border);
   display: flex;
@@ -243,17 +326,14 @@ body {
 }
 .footer-social a:hover { color: var(--neon-blue); }
 .footer-border {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   height: 2px;
   background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
   opacity: 0.5;
-  z-index: 101;
+  width: 100%;
 }
-/* Decorative HUD elements */
+/* 開発用 HUD（?debug=1 のときのみ表示） */
 .hud-coord {
+  display: none;
   position: fixed;
   right: 1rem;
   top: 50%;
@@ -264,11 +344,130 @@ body {
   opacity: 0.5;
   font-family: 'Orbitron', monospace;
 }
+body.fhj-debug .hud-coord { display: block; }
+/* ライブ感パルス */
+.stat-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+  animation: livePulse 1.8s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.85); }
+}
+/* マップ下の SEO / 新着コンテンツ */
+.map-scroll-spacer {
+  height: 100vh;
+  pointer-events: none;
+  position: relative;
+  z-index: 0;
+}
+.home-seo-below {
+  position: relative;
+  z-index: 500;
+  background: linear-gradient(180deg, #0a0e17 0%, #070a10 100%);
+  border-top: 1px solid var(--border);
+  padding: 3rem 1.5rem 4rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+.home-seo-below h2 {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+.home-seo-below .lead {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+  margin-bottom: 2.5rem;
+}
+.home-section-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--neon-blue);
+  margin: 2rem 0 1rem;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+.card-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .card-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.seo-card {
+  display: block;
+  padding: 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.seo-card:hover {
+  border-color: rgba(0, 189, 199, 0.45);
+  box-shadow: 0 0 24px var(--neon-blue-dim);
+}
+.seo-card h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+.seo-card p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+.seo-card .meta {
+  font-size: 0.7rem;
+  color: var(--neon-blue);
+  margin-top: 0.75rem;
+}
+.tool-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.tool-links a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 189, 199, 0.12);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--neon-blue);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+.tool-links a:hover { background: rgba(0, 189, 199, 0.22); }
+.site-footer-wrap {
+  position: relative;
+  z-index: 500;
+  background: rgba(10, 14, 23, 0.98);
+}
 @media (max-width: 768px) {
   .header { padding: 0.75rem 1rem; }
   .nav { display: none; }
-  .stats-panel { left: 0.5rem; padding: 0.75rem; font-size: 0.8rem; }
-  .search-section { top: 60px; }
+  .stats-panel { left: 0.5rem; padding: 0.75rem; font-size: 0.75rem; }
+  .search-section { top: 240px; }
 }
 </style>
 </head>
@@ -280,39 +479,92 @@ body {
   <a href="/" class="logo" title="Football Hub Japan">
     <img src="/images/football-hub-japan-logo.png" alt="Football Hub Japan" class="logo-img" width="260" height="60" loading="eager" decoding="async">
   </a>
-  <nav class="nav">
-    <a href="/database">データベース</a>
-    <a href="/radar">レーダーチャート</a>
-    <a href="/schedule">スケジュール</a>
-    <a href="/match-detail">試合分析</a>
-    <a href="/ranking">ランキング</a>
-    <a href="/insights.html">コラム</a>
+  <nav class="nav" id="mainNav">
+    <a href="/database" data-fhj-nav="database">データベース</a>
+    <a href="/radar" data-fhj-nav="radar">レーダーチャート</a>
+    <a href="/schedule" data-fhj-nav="schedule">スケジュール</a>
+    <a href="/match-detail" data-fhj-nav="match_detail">試合分析</a>
+    <a href="/ranking" data-fhj-nav="ranking">ランキング</a>
+    <a href="/competitions" data-fhj-nav="competitions">大会対戦表</a>
+    <a href="/insights.html" data-fhj-nav="insights">コラム</a>
   </nav>
 </header>
+<!-- 価値提案・CTA（実態と整合する表現） -->
+<div class="hero-product">
+  <h1 class="hero-h1">Jリーグと欧州主要リーグを、検索・比較・分析できるサッカーデータサイト</h1>
+  <p class="hero-sub">日本発・個人運営。Jリーグ・日本人選手に強みを持ちつつ、プレミアやラ・リーガなどグローバルなデータも閲覧できます。データの正確性・最新性は保証しない場合があります（<a href="/terms.html">免責・利用規約</a>）。</p>
+  <div class="hero-cta-row">
+    <a href="#searchAnchor" class="hero-btn hero-btn--primary">選手を検索</a>
+    <a href="/schedule" class="hero-btn hero-btn--secondary" data-fhj-nav="hero_schedule">今日の試合を見る</a>
+    <a href="/radar" class="hero-btn hero-btn--ghost" data-fhj-nav="hero_radar">2選手を比較</a>
+    <a href="/ai-agent-enhanced.html" class="hero-btn hero-btn--ghost" data-fhj-nav="hero_ai"><span class="badge-beta">β</span>AIに質問</a>
+  </div>
+</div>
 <!-- Search -->
-<div class="search-section">
-  <form class="search-bar" id="searchForm" role="search">
+<div class="search-section" id="searchAnchor">
+  <form class="search-bar" id="searchForm" role="search" aria-label="選手・チーム・リーグ検索">
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-    <input type="text" id="globalSearch" name="q" placeholder="Search for any team, league, or stadium globally." autocomplete="off"/>
-    <button type="submit" class="search-btn" aria-label="Search" title="Search">
+    <input type="text" id="globalSearch" name="q" placeholder="選手名・チーム名・リーグ名で検索（データベースへ）" autocomplete="off"/>
+    <button type="submit" class="search-btn" aria-label="検索する" title="検索">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </button>
   </form>
-  <p class="search-hint">Explore the world of football through an immersive map experience. Click on any country to zoom in.</p>
+  <p class="search-hint">地図上のマーカーをタップすると、対象地域のデータベースへ移動します。</p>
 </div>
-<!-- Stats Panel -->
-<div class="stats-panel">
-  <div class="stat"><span class="stat-value">142</span><br><span class="stat-label">Active Matches</span></div>
-  <div class="stat"><span class="stat-value">35</span><br><span class="stat-label">Global Leagues</span></div>
-  <div class="stat"><span class="stat-value">25,890</span><br><span class="stat-label">Users Online</span></div>
+<!-- 左パネル: 演出用の数値ではなく、運用情報を明示 -->
+<div class="stats-panel" aria-label="データの扱い（目安）">
+  <div class="stat"><span class="stat-value">日次</span><br><span class="stat-label">更新頻度（目安）</span></div>
+  <div class="stat"><span class="stat-value">API</span><br><span class="stat-label">取得元（API-Football等）</span></div>
+  <div class="stat"><span class="stat-value">10+</span><br><span class="stat-label">対象リーグ例</span></div>
 </div>
-<!-- HUD Decoration -->
-<div class="hud-coord">LAT/LONG<br>COORD</div>
+<!-- 開発用のみ ?debug=1 -->
+<div class="hud-coord" id="devHud" hidden>LAT/LONG<br>COORD</div>
 <!-- Map -->
 <div class="map-container">
   <div id="map"></div>
 </div>
-<!-- Footer -->
+<!-- 1画面分の余白のあと、スクロールでテキストコンテンツ（SEO・新着） -->
+<div class="map-scroll-spacer" aria-hidden="true"></div>
+<section class="home-seo-below" id="homeContent">
+  <h2>Football Hub Japan とは</h2>
+  <p class="lead">
+    インタラクティブな<strong>世界地図</strong>から各国のリーグ・クラブへ移動し、
+    <strong>選手データベース</strong>・<strong>試合分析</strong>・<strong>レーダーチャート</strong>・<strong>ランキング</strong>・<strong>分析コラム</strong>を利用できます。
+    <strong>Jリーグと日本人選手</strong>に加え、欧州5大リーグ・MLS・サウジなど<strong>グローバルな統計</strong>も扱います（機能は開発中のものがあります）。
+  </p>
+  <div class="trust-block" style="margin: 1.5rem 0 2rem; padding: 1rem 1.25rem; background: rgba(0,189,199,0.08); border: 1px solid var(--border); border-radius: 12px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.7;">
+    <strong style="color: var(--primary);">信頼・データについて</strong><br>
+    取得元は主に API-Football（API-Sports）等の外部サービスです。遅延・誤差・欠損があり得ます。詳細は<a href="/terms.html" style="color: var(--neon-blue);">利用規約</a>と<a href="/about.html" style="color: var(--neon-blue);">運営者情報</a>をご確認ください。AI機能は参考情報であり、予測精度を保証するものではありません。
+  </div>
+  <h2 class="home-section-title">最新の分析コラム</h2>
+  <div class="card-grid">
+    <a class="seo-card" href="/insights-001.html" data-fhj-content="insights" data-fhj-slug="jleague-xg">
+      <h3>Jリーグで&quot;勝ち点を伸ばす&quot;ための指標：xGだけでは足りない理由</h3>
+      <p>xGと実際の得点の差、守備の質、セットプレーなど、勝ち点に結びつく複合的な視点を解説します。</p>
+      <span class="meta">2025年1月20日 · データ分析 · 続きを読む →</span>
+    </a>
+    <a class="seo-card" href="/insights-002.html" data-fhj-content="insights" data-fhj-slug="ppda-press">
+      <h3>ハイプレスの強度をどう見る？PPDAの見方と注意点</h3>
+      <p>PPDAの解釈と、数値だけでは見えない落とし穴についてまとめました。</p>
+      <span class="meta">2025年1月15日 · 戦術分析 · 続きを読む →</span>
+    </a>
+    <a class="seo-card" href="/insights-003.html" data-fhj-content="insights" data-fhj-slug="market-value">
+      <h3>移籍市場価値は当てになる？データの限界と&quot;使い方&quot;</h3>
+      <p>市場価値の要因と、データをどう活用すべきかの考察です。</p>
+      <span class="meta">2025年1月10日 · データ解釈 · 続きを読む →</span>
+    </a>
+  </div>
+  <h2 class="home-section-title">試合分析・データツール</h2>
+  <p class="lead" style="margin-bottom: 0.75rem;">ライブに近い統計や対戦分析は<strong>試合分析</strong>ページから。一覧の選手比較は<strong>データベース</strong>と<strong>ランキング</strong>をご利用ください。</p>
+  <div class="tool-links">
+    <a href="/match-detail" data-fhj-nav="match_detail_block">試合分析</a>
+    <a href="/database" data-fhj-nav="database_block">選手・チームデータベース</a>
+    <a href="/ranking" data-fhj-nav="ranking_block">ランキング</a>
+    <a href="/competitions" data-fhj-nav="competitions_block">CL/EL 対戦表</a>
+    <a href="/radar" data-fhj-nav="radar_block">レーダーチャート</a>
+  </div>
+</section>
+<div class="site-footer-wrap">
 <div class="footer-border"></div>
 <footer class="footer">
   <div class="footer-links">
@@ -328,12 +580,51 @@ body {
     <a href="#" aria-label="YouTube"><svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
   </div>
 </footer>
+</div>
 <!-- Search form (Leafletに依存しない) -->
 <script>
+(function () {
+  window.dataLayer = window.dataLayer || [];
+  function fhjPush(obj) {
+    try { window.dataLayer.push(obj); } catch (e) {}
+  }
+  if (typeof URLSearchParams !== 'undefined') {
+    var p = new URLSearchParams(window.location.search);
+    if (p.get('debug') === '1') {
+      document.body.classList.add('fhj-debug');
+      var hud = document.getElementById('devHud');
+      if (hud) { hud.hidden = false; }
+    }
+  }
+  document.querySelectorAll('[data-fhj-nav]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      fhjPush({
+        event: 'fhj_nav_click',
+        fhj_nav_destination: el.getAttribute('data-fhj-nav') || '',
+        fhj_nav_href: el.getAttribute('href') || ''
+      });
+    });
+  });
+  document.querySelectorAll('[data-fhj-content="insights"]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      fhjPush({
+        event: 'fhj_insights_card_click',
+        fhj_insights_slug: el.getAttribute('data-fhj-slug') || '',
+        fhj_insights_href: el.getAttribute('href') || ''
+      });
+    });
+  });
+})();
 document.getElementById('searchForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const q = document.getElementById('globalSearch').value.trim();
-  if (q) window.location.href = '/database?q=' + encodeURIComponent(q);
+  if (q) {
+    try {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: 'fhj_search_submit', fhj_search_query_len: q.length });
+    } catch (err) {}
+    window.location.href = '/database?q=' + encodeURIComponent(q);
+  }
 });
 </script>
 <!-- Leaflet JS -->
@@ -358,12 +649,23 @@ document.getElementById('searchForm').addEventListener('submit', function(e) {
   ];
   markers.forEach(m => {
     const icon = L.divIcon({
-      html: '<div class="map-marker" onclick="window.location.href=\'' + m.url + '\'"><span>' + m.icon + '</span><span class="marker-label">' + m.label + '</span></div>',
+      html: '<div class="map-marker"><span>' + m.icon + '</span><span class="marker-label">' + m.label + '</span></div>',
       className: 'custom-map-marker',
       iconSize: [60, 50],
       iconAnchor: [30, 25]
     });
-    L.marker([m.lat, m.lng], { icon: icon }).addTo(map).on('click', () => window.location.href = m.url);
+    L.marker([m.lat, m.lng], { icon: icon }).addTo(map).on('click', function () {
+      try {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: 'fhj_map_region_click',
+          fhj_map_region: m.label,
+          fhj_map_region_key: String(m.label).toLowerCase().replace(/\s+/g, '_'),
+          fhj_map_target_url: m.url
+        });
+      } catch (e) {}
+      window.location.href = m.url;
+    });
   });
 })();
 </script>

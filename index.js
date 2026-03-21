@@ -374,6 +374,11 @@ app.get('/ranking', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'ranking.html'));
 });
 
+/** UEFAカップ戦・ラウンド別対戦表（CL / EL / カンファレンス） */
+app.get('/competitions', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'competitions.html'));
+});
+
 app.get('/match-detail', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'match-detail.html'));
 });
@@ -2938,6 +2943,144 @@ app.get('/api/ranking/champions-league', async (req, res) => {
     } catch (error) {
         console.error('Champions League ranking error:', error);
         res.status(500).json({ error: 'Failed to get Champions League ranking' });
+    }
+});
+
+/** API-Football: 大会別fixturesをラウンドでグルーピング（トーナメント表・対戦表） */
+const COMPETITION_BRACKET_META = {
+    CL: { id: 2, nameJa: 'UEFAチャンピオンズリーグ', name: 'UEFA Champions League' },
+    EL: { id: 3, nameJa: 'UEFAヨーロッパリーグ', name: 'UEFA Europa League' },
+    UECL: { id: 848, nameJa: 'UEFAヨーロッパカンファレンスリーグ', name: 'UEFA Europa Conference League' }
+};
+
+function bracketRoundSortKey(roundName) {
+    const r = (roundName || '').trim();
+    const lower = r.toLowerCase();
+    if (/^group\s+[a-z]$/i.test(r)) return 120 + (r.charCodeAt(r.length - 1) || 65);
+    if (lower.includes('league phase') || lower.includes('リーグフェーズ')) return 115;
+    if (lower.includes('group') && lower.includes('stage')) return 118;
+    if (lower.includes('group')) return 130;
+    if (lower.includes('qualif') || lower.includes('qualifying') || lower.includes('preliminary')) return 80;
+    if (lower.includes('play-off') || lower.includes('playoff')) return 90;
+    if (lower.includes('knockout') && lower.includes('play')) return 95;
+    if (lower.includes('round of 32') || lower.includes('1/16')) return 250;
+    if (lower.includes('round of 16') || lower.includes('1/8') || lower.includes('8th')) return 300;
+    if (lower.includes('quarter')) return 400;
+    if (lower.includes('semi')) return 500;
+    if (lower === 'final' || /^final$/i.test(r) || lower.endsWith(' - final')) return 600;
+    return 200;
+}
+
+app.get('/api/competitions/bracket', async (req, res) => {
+    try {
+        const competition = String(req.query.competition || 'CL').toUpperCase();
+        const season = parseInt(req.query.season, 10) || new Date().getFullYear();
+        const meta = COMPETITION_BRACKET_META[competition];
+        if (!meta) {
+            return res.status(400).json({ error: 'competition は CL, EL, UECL のいずれかを指定してください' });
+        }
+
+        const cacheKey = `comp_bracket_${competition}_${season}`;
+        const cached = getCache(cacheKey);
+        if (cached) {
+            res.setHeader('Cache-Control', 'public, max-age=300');
+            return res.json(cached);
+        }
+
+        const apiKey = process.env.API_FOOTBALL_KEY || process.env.RAPIDAPI_KEY;
+        if (!apiKey || apiKey === 'YOUR_API_FOOTBALL_KEY' || apiKey === 'your-api-football-key-here') {
+            return res.status(503).json({
+                error: 'APIキー未設定',
+                hint: 'API_FOOTBALL_KEY を設定してください',
+                competition: meta.nameJa,
+                season,
+                rounds: []
+            });
+        }
+
+        const headers = {
+            'x-rapidapi-key': apiKey,
+            'x-rapidapi-host': 'v3.football.api-sports.io'
+        };
+
+        let allFixtures = [];
+        let page = 1;
+        const maxPages = 40;
+        while (page <= maxPages) {
+            const r = await axios.get('https://v3.football.api-sports.io/fixtures', {
+                headers,
+                params: { league: meta.id, season, page },
+                timeout: 25000
+            });
+            if (r.data?.errors && Object.keys(r.data.errors).length) {
+                console.warn('⚠️ fixtures bracket API errors:', r.data.errors);
+            }
+            const items = r.data?.response || [];
+            allFixtures = allFixtures.concat(items);
+            const totalPages = r.data?.paging?.total || 1;
+            if (page >= totalPages) break;
+            page++;
+        }
+
+        const byRound = new Map();
+        for (const f of allFixtures) {
+            const roundName = f.league?.round || '—';
+            if (!byRound.has(roundName)) byRound.set(roundName, []);
+            const home = f.teams?.home;
+            const away = f.teams?.away;
+            const goals = f.goals || {};
+            byRound.get(roundName).push({
+                id: f.fixture?.id,
+                date: f.fixture?.date,
+                timestamp: f.fixture?.timestamp || 0,
+                status: f.fixture?.status?.short,
+                statusLong: f.fixture?.status?.long,
+                round: roundName,
+                home: {
+                    id: home?.id,
+                    name: home?.name,
+                    logo: home?.logo,
+                    winner: home?.winner
+                },
+                away: {
+                    id: away?.id,
+                    name: away?.name,
+                    logo: away?.logo,
+                    winner: away?.winner
+                },
+                goals: { home: goals.home, away: goals.away }
+            });
+        }
+
+        const roundNames = [...byRound.keys()].sort((a, b) => {
+            const d = bracketRoundSortKey(a) - bracketRoundSortKey(b);
+            return d !== 0 ? d : a.localeCompare(b);
+        });
+
+        const rounds = roundNames.map((name) => ({
+            name,
+            sortKey: bracketRoundSortKey(name),
+            matches: (byRound.get(name) || []).sort((m1, m2) => (m1.timestamp || 0) - (m2.timestamp || 0))
+        }));
+
+        const payload = {
+            competition,
+            leagueId: meta.id,
+            leagueName: meta.name,
+            leagueNameJa: meta.nameJa,
+            season,
+            updatedAt: new Date().toISOString(),
+            rounds,
+            totalFixtures: allFixtures.length,
+            source: 'api-football'
+        };
+
+        setCache(cacheKey, payload, 5 * 60 * 1000);
+        res.setHeader('Cache-Control', 'public, max-age=300');
+        res.json(payload);
+    } catch (error) {
+        console.error('❌ /api/competitions/bracket:', error.message);
+        res.status(500).json({ error: '対戦表の取得に失敗しました', detail: error.message, rounds: [] });
     }
 });
 
