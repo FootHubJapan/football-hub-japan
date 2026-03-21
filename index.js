@@ -3015,23 +3015,56 @@ app.get('/api/competitions/bracket', async (req, res) => {
             });
         }
 
-        const headers = {
+        // API-Sports は「直契約（dashboard）」と「RapidAPI」で認証ヘッダが異なる。index 内の試合詳細等は x-apisports-key を使用。
+        const headersDirect = { 'x-apisports-key': apiKey };
+        const headersRapid = {
             'x-rapidapi-key': apiKey,
             'x-rapidapi-host': 'v3.football.api-sports.io'
         };
+
+        const fetchFixturesPage = (headers, pageNum) =>
+            axios.get('https://v3.football.api-sports.io/fixtures', {
+                headers,
+                params: { league: meta.id, season, page: pageNum },
+                timeout: 25000,
+                validateStatus: () => true
+            });
+
+        const probeDirect = await fetchFixturesPage(headersDirect, 1);
+        let useHeaders = headersDirect;
+        let probe = probeDirect;
+
+        const directEmptyWithErrors =
+            probeDirect.status === 200 &&
+            (probeDirect.data?.response || []).length === 0 &&
+            apiFootballHasMeaningfulErrors(probeDirect.data);
+
+        if (probeDirect.status !== 200) {
+            const probeRapid = await fetchFixturesPage(headersRapid, 1);
+            if (probeRapid.status === 200) {
+                useHeaders = headersRapid;
+                probe = probeRapid;
+                if (probeDirect.status !== 200) {
+                    console.log('📎 /api/competitions/bracket: x-apisports-key が失敗したため RapidAPI ヘッダにフォールバック');
+                }
+            }
+        } else if (directEmptyWithErrors) {
+            const probeRapid = await fetchFixturesPage(headersRapid, 1);
+            if (
+                probeRapid.status === 200 &&
+                ((probeRapid.data?.response || []).length > 0 || !apiFootballHasMeaningfulErrors(probeRapid.data))
+            ) {
+                useHeaders = headersRapid;
+                probe = probeRapid;
+            }
+        }
 
         let allFixtures = [];
         let upstreamWarning = null;
         let page = 1;
         const maxPages = 40;
         while (page <= maxPages) {
-            // validateStatus: API-Sports は 4xx（無効シーズン・権限など）を返すことがあり、axios の既定だと例外→500 になる
-            const r = await axios.get('https://v3.football.api-sports.io/fixtures', {
-                headers,
-                params: { league: meta.id, season, page },
-                timeout: 25000,
-                validateStatus: () => true
-            });
+            const r = page === 1 ? probe : await fetchFixturesPage(useHeaders, page);
             if (r.status !== 200) {
                 upstreamWarning =
                     r.status === 404 || r.status === 400
