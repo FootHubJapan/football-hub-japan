@@ -2953,8 +2953,25 @@ const COMPETITION_BRACKET_META = {
     UECL: { id: 848, nameJa: 'UEFAヨーロッパカンファレンスリーグ', name: 'UEFA Europa Conference League' }
 };
 
+/** API-Football の errors / round は型が一定でないため安全に扱う */
+function apiFootballHasMeaningfulErrors(data) {
+    const e = data && data.errors;
+    if (e == null) return false;
+    if (typeof e === 'string') return e.trim().length > 0;
+    if (typeof e === 'number' || typeof e === 'boolean') return true;
+    if (Array.isArray(e)) return e.length > 0;
+    if (typeof e === 'object') {
+        try {
+            return Object.keys(e).length > 0;
+        } catch {
+            return true;
+        }
+    }
+    return false;
+}
+
 function bracketRoundSortKey(roundName) {
-    const r = (roundName || '').trim();
+    const r = String(roundName || '').trim();
     const lower = r.toLowerCase();
     if (/^group\s+[a-z]$/i.test(r)) return 120 + (r.charCodeAt(r.length - 1) || 65);
     if (lower.includes('league phase') || lower.includes('リーグフェーズ')) return 115;
@@ -3024,7 +3041,7 @@ app.get('/api/competitions/bracket', async (req, res) => {
                 allFixtures = [];
                 break;
             }
-            if (r.data?.errors && Object.keys(r.data.errors).length) {
+            if (apiFootballHasMeaningfulErrors(r.data)) {
                 console.warn('⚠️ fixtures bracket API errors:', r.data.errors);
                 const itemsErr = r.data?.response || [];
                 if (page === 1 && itemsErr.length === 0) {
@@ -3042,7 +3059,9 @@ app.get('/api/competitions/bracket', async (req, res) => {
 
         const byRound = new Map();
         for (const f of allFixtures) {
-            const roundName = f.league?.round || '—';
+            if (!f || typeof f !== 'object') continue;
+            // round は数値で返ることがあり、そのまま sort の localeCompare で例外になる
+            const roundName = f.league?.round != null ? String(f.league.round) : '—';
             if (!byRound.has(roundName)) byRound.set(roundName, []);
             const home = f.teams?.home;
             const away = f.teams?.away;
