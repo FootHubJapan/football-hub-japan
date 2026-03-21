@@ -119,6 +119,16 @@ body {
   line-height: 1.55;
 }
 .hero-sub a { color: var(--neon-blue); }
+.home-disclaimer {
+  margin-top: 2.5rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  max-width: 42rem;
+}
+.home-disclaimer a { color: var(--neon-blue); }
 .hero-br-sp { display: none; }
 @media (max-width: 640px) {
   .hero-br-sp { display: block; }
@@ -184,7 +194,7 @@ body {
 }
 .search-section {
   position: fixed;
-  top: 268px;
+  top: 218px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1003;
@@ -194,10 +204,10 @@ body {
 }
 @media (max-width: 768px) {
   .hero-product { top: 56px; padding: 0.65rem 0.75rem 0.85rem; }
-  .search-section { top: 300px; }
+  .search-section { top: 252px; }
 }
 @media (min-width: 720px) {
-  .search-section { top: 248px; }
+  .search-section { top: 198px; }
 }
 .search-bar {
   display: flex;
@@ -492,7 +502,7 @@ body.fhj-debug .hud-coord { display: block; }
   .header { padding: 0.75rem 1rem; }
   .nav { display: none; }
   .stats-panel { left: 0.5rem; padding: 0.75rem; font-size: 0.75rem; }
-  .search-section { top: 300px; }
+  .search-section { top: 252px; }
 }
 </style>
 </head>
@@ -517,7 +527,7 @@ body.fhj-debug .hud-coord { display: block; }
 <!-- 価値提案・CTA（実態と整合する表現） -->
 <div class="hero-product">
   <h1 class="hero-h1">Jリーグ・欧州主要リーグのデータを<br class="hero-br-sp"/>検索・比較・分析</h1>
-  <p class="hero-sub">Jリーグ・日本人選手・欧州5大リーグなどを横断して閲覧できます。データの正確性・最新性は保証しない場合があります（<a href="/terms.html">免責・利用規約</a>）。</p>
+  <p class="hero-sub">Jリーグ・日本人選手・欧州5大リーグなどを横断して閲覧できます。</p>
   <div class="hero-cta-row">
     <a href="#searchAnchor" class="hero-btn hero-btn--primary">選手を検索</a>
     <a href="/schedule" class="hero-btn hero-btn--secondary" data-fhj-nav="hero_schedule">今日の試合を見る</a>
@@ -587,6 +597,9 @@ body.fhj-debug .hud-coord { display: block; }
     <a href="/competitions" data-fhj-nav="competitions_block">CL/EL 対戦表</a>
     <a href="/radar" data-fhj-nav="radar_block">レーダーチャート</a>
   </div>
+  <p class="home-disclaimer">
+    データの正確性・最新性・完全性は保証しない場合があります。利用条件・免責は<a href="/terms.html">利用規約</a>をご確認ください。
+  </p>
 </section>
 <div class="site-footer-wrap">
 <div class="footer-border"></div>

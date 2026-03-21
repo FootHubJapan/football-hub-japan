@@ -3004,16 +3004,34 @@ app.get('/api/competitions/bracket', async (req, res) => {
         };
 
         let allFixtures = [];
+        let upstreamWarning = null;
         let page = 1;
         const maxPages = 40;
         while (page <= maxPages) {
+            // validateStatus: API-Sports は 4xx（無効シーズン・権限など）を返すことがあり、axios の既定だと例外→500 になる
             const r = await axios.get('https://v3.football.api-sports.io/fixtures', {
                 headers,
                 params: { league: meta.id, season, page },
-                timeout: 25000
+                timeout: 25000,
+                validateStatus: () => true
             });
+            if (r.status !== 200) {
+                upstreamWarning =
+                    r.status === 404 || r.status === 400
+                        ? `シーズン ${season} の試合データが見つかりません（UEFAは「開始年」で指定。例: 2025 = 2025-26）。`
+                        : `データ取得に失敗しました（HTTP ${r.status}）。`;
+                console.warn('⚠️ fixtures bracket HTTP', r.status, r.data);
+                allFixtures = [];
+                break;
+            }
             if (r.data?.errors && Object.keys(r.data.errors).length) {
                 console.warn('⚠️ fixtures bracket API errors:', r.data.errors);
+                const itemsErr = r.data?.response || [];
+                if (page === 1 && itemsErr.length === 0) {
+                    upstreamWarning = 'APIがエラーを返しました。シーズン年やAPI利用枠を確認してください。';
+                    allFixtures = [];
+                    break;
+                }
             }
             const items = r.data?.response || [];
             allFixtures = allFixtures.concat(items);
@@ -3072,7 +3090,8 @@ app.get('/api/competitions/bracket', async (req, res) => {
             updatedAt: new Date().toISOString(),
             rounds,
             totalFixtures: allFixtures.length,
-            source: 'api-football'
+            source: 'api-football',
+            ...(upstreamWarning ? { warning: upstreamWarning } : {})
         };
 
         setCache(cacheKey, payload, 5 * 60 * 1000);
@@ -3080,7 +3099,22 @@ app.get('/api/competitions/bracket', async (req, res) => {
         res.json(payload);
     } catch (error) {
         console.error('❌ /api/competitions/bracket:', error.message);
-        res.status(500).json({ error: '対戦表の取得に失敗しました', detail: error.message, rounds: [] });
+        const compKey = String(req.query.competition || 'CL').toUpperCase();
+        const metaFb = COMPETITION_BRACKET_META[compKey] || COMPETITION_BRACKET_META.CL;
+        // ネットワーク障害などでもフロントが落ちないよう 200 + 空データ（competitions ページは空表示にフォールバック）
+        res.status(200).json({
+            competition: compKey,
+            leagueId: metaFb.id,
+            leagueName: metaFb.name,
+            leagueNameJa: metaFb.nameJa,
+            season: parseInt(req.query.season, 10) || new Date().getFullYear(),
+            updatedAt: new Date().toISOString(),
+            rounds: [],
+            totalFixtures: 0,
+            source: 'api-football',
+            warning: '対戦表の取得に失敗しました。時間をおいて再度お試しください。',
+            detail: process.env.NODE_ENV !== 'production' ? error.message : undefined
+        });
     }
 });
 

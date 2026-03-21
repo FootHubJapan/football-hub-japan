@@ -302,11 +302,13 @@
                 return;
             }
 
-            metaBar.textContent = `${data.leagueNameJa || data.leagueName} · シーズン ${data.season} · 試合数 ${data.totalFixtures || 0} · 更新 ${data.updatedAt ? new Date(data.updatedAt).toLocaleString('ja-JP') : '—'}`;
+            const baseMeta = `${data.leagueNameJa || data.leagueName} · シーズン ${data.season} · 試合数 ${data.totalFixtures || 0} · 更新 ${data.updatedAt ? new Date(data.updatedAt).toLocaleString('ja-JP') : '—'}`;
+            metaBar.textContent = data.warning ? `${baseMeta} · ${data.warning}` : baseMeta;
 
             const rounds = data.rounds || [];
             if (rounds.length === 0) {
-                host.innerHTML = '<p class="loading">この条件では試合が取得できませんでした。シーズン年（例: 2024 / 2025）を変えてお試しください。</p>';
+                const hint = data.warning ? `<p class="trust-note">${esc(data.warning)}</p>` : '';
+                host.innerHTML = `<p class="loading">この条件では試合が取得できませんでした。シーズン年は大会の<strong>開始年</strong>です（例: 2025 = 2025-26）。別の年でもう一度お試しください。</p>${hint}`;
                 return;
             }
 
