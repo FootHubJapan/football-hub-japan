@@ -3170,6 +3170,126 @@ app.get('/api/competitions/bracket', async (req, res) => {
     }
 });
 
+/**
+ * API-Football: 選手名またはIDで検索し、指定シーズンの所属チームを statistics[].team から返す
+ * 例: /api/players/team-from-api?search=Jacobo+Ramon&season=2025
+ *     /api/players/team-from-api?id=12345&season=2025
+ */
+app.get('/api/players/team-from-api', async (req, res) => {
+    try {
+        const search = String(req.query.search || req.query.q || '').trim();
+        const playerIdParam = req.query.id != null && req.query.id !== '' ? parseInt(req.query.id, 10) : null;
+        const season = parseInt(req.query.season, 10) || new Date().getFullYear();
+
+        if (!search && (playerIdParam == null || Number.isNaN(playerIdParam))) {
+            return res.status(400).json({ error: 'search（名前）または id（API-Footballの選手ID）を指定してください' });
+        }
+
+        const apiKey = process.env.API_FOOTBALL_KEY || process.env.RAPIDAPI_KEY;
+        if (!apiKey || apiKey === 'YOUR_API_FOOTBALL_KEY' || apiKey === 'your-api-football-key-here') {
+            return res.status(503).json({
+                error: 'APIキー未設定',
+                hint: 'Render の環境変数 API_FOOTBALL_KEY を設定してください'
+            });
+        }
+
+        const fetchPlayers = async (params) => {
+            const u = new URL('https://v3.football.api-sports.io/players');
+            Object.entries(params).forEach(([k, v]) => {
+                if (v != null && v !== '') u.searchParams.set(k, String(v));
+            });
+            const url = u.toString();
+            const hD = { 'x-apisports-key': apiKey };
+            const hR = {
+                'x-rapidapi-key': apiKey,
+                'x-rapidapi-host': 'v3.football.api-sports.io'
+            };
+            let r = await axios.get(url, {
+                headers: hD,
+                timeout: 22000,
+                validateStatus: () => true
+            });
+            const emptyErr =
+                r.status === 200 &&
+                (r.data?.response || []).length === 0 &&
+                apiFootballHasMeaningfulErrors(r.data);
+            if (r.status !== 200 || emptyErr) {
+                const r2 = await axios.get(url, {
+                    headers: hR,
+                    timeout: 22000,
+                    validateStatus: () => true
+                });
+                if (r2.status === 200) return r2;
+            }
+            return r;
+        };
+
+        let pid = playerIdParam;
+        if (pid == null || Number.isNaN(pid)) {
+            const searchRes = await fetchPlayers({ search, season });
+            if (searchRes.status !== 200) {
+                return res.status(502).json({
+                    error: 'API検索に失敗しました',
+                    httpStatus: searchRes.status,
+                    upstream: searchRes.data
+                });
+            }
+            const list = searchRes.data?.response || [];
+            if (list.length === 0) {
+                return res.status(404).json({
+                    error: '選手が見つかりません',
+                    search,
+                    season
+                });
+            }
+            pid = list[0].player?.id;
+            if (!pid) {
+                return res.status(502).json({ error: '検索結果に player.id がありません' });
+            }
+        }
+
+        const detRes = await fetchPlayers({ id: pid, season });
+        if (detRes.status !== 200) {
+            return res.status(502).json({
+                error: '選手詳細の取得に失敗しました',
+                httpStatus: detRes.status,
+                upstream: detRes.data
+            });
+        }
+
+        const row = detRes.data?.response?.[0];
+        if (!row) {
+            return res.status(404).json({ error: '選手データが空です', playerId: pid, season });
+        }
+
+        const player = row.player || {};
+        const statistics = row.statistics || [];
+        const teams = statistics.map((s) => ({
+            leagueId: s.league?.id,
+            leagueName: s.league?.name,
+            leagueCountry: s.league?.country,
+            teamId: s.team?.id,
+            teamName: s.team?.name,
+            teamLogo: s.team?.logo
+        }));
+
+        res.setHeader('Cache-Control', 'public, max-age=120');
+        res.json({
+            ok: true,
+            playerId: player.id,
+            name: player.name,
+            firstname: player.firstname,
+            lastname: player.lastname,
+            season,
+            teams,
+            source: 'api-football'
+        });
+    } catch (error) {
+        console.error('❌ /api/players/team-from-api:', error.message);
+        res.status(500).json({ error: '取得に失敗しました', detail: error.message });
+    }
+});
+
 // リーグランキング取得
 app.get('/api/ranking/leagues', async (req, res) => {
     try {
