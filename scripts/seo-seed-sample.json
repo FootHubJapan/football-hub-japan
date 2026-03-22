@@ -1,0 +1,34 @@
+{
+  "baseUrl": "https://football-hub-japan-ubzb.onrender.com",
+  "players": [
+    {
+      "slug": "jude-bellingham",
+      "apiId": 998,
+      "name": "Jude Bellingham",
+      "nameJa": "ジュード・ベリンガム",
+      "team": "Real Madrid",
+      "league": "La Liga",
+      "season": 2025
+    },
+    {
+      "slug": "takefusa-kubo",
+      "apiId": 32862,
+      "name": "Takefusa Kubo",
+      "nameJa": "久保建英",
+      "team": "Real Sociedad",
+      "league": "La Liga",
+      "season": 2025
+    }
+  ],
+  "matches": [
+    {
+      "fixtureId": "1379270",
+      "home": "Bournemouth",
+      "away": "Manchester United",
+      "homeSlug": "bournemouth",
+      "awaySlug": "manchester-united",
+      "date": "2026-03-18",
+      "competition": "Premier League"
+    }
+  ]
+}

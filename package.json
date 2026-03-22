@@ -16,7 +16,8 @@
     "update-vinicius-2025": "node update-vinicius-2025.js",
     "update-valverde-2025": "node update-valverde-2025.js",
     "update-daniel-yanez-2025": "node update-daniel-yanez-2025.js",
-    "update-finished-matches": "node update-finished-matches.js"
+    "update-finished-matches": "node update-finished-matches.js",
+    "seo:generate": "node scripts/generate-seo-skeleton.js"
   },
   "keywords": [
     "football",

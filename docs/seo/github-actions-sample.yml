@@ -1,0 +1,37 @@
+# サンプル: GitHub Actions で SEO 骨格を日次生成（コピーして .github/workflows/ に配置）
+# ファイル名例: .github/workflows/seo-skeleton.yml
+#
+# 使う前に:
+# 1. Repository Settings → Secrets に API_FOOTBALL_KEY は「HTML生成のみ」なら不要（seed JSON なら不要）
+# 2. 本番は seed を API から書き出すスクリプトに差し替え
+# 3. 生成物をコミットする場合は .gitignore から public/seo-generated/*.html を外す
+
+name: SEO skeleton generate
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 21 * * *' # 毎日 06:00 JST 相当（UTC 21:00 前日）
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install
+        run: npm ci
+
+      - name: Generate SEO skeleton
+        run: npm run seo:generate
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-generated
+          path: public/seo-generated/
