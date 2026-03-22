@@ -16,4 +16,9 @@
     <loc>https://football-hub-japan-ubzb.onrender.com/sitemap_articles.xml</loc>
     <lastmod>2026-03-15</lastmod>
   </sitemap>
+  <!-- npm run seo:generate:players で生成（未生成時は404のため Search Console から外しても可） -->
+  <sitemap>
+    <loc>https://football-hub-japan-ubzb.onrender.com/sitemap_seo_players.xml</loc>
+    <lastmod>2026-03-22</lastmod>
+  </sitemap>
 </sitemapindex>

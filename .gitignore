@@ -132,3 +132,4 @@ data/*.bak
 # SEO 大量生成（骨格HTML・manifest。ディレクトリと .gitkeep は維持）
 public/seo-generated/**/*.html
 public/seo-generated/seo-manifest.json
+public/seo-generated/seo-players-manifest.json

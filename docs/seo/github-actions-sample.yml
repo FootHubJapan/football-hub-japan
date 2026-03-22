@@ -30,6 +30,10 @@ jobs:
       - name: Generate SEO skeleton
         run: npm run seo:generate
 
+      - name: Generate player SEO pages from data/players.json
+        run: npm run seo:generate:players
+        continue-on-error: true
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

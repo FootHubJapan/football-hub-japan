@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const helmet = require('helmet');
 const cors = require('cors');
 const axios = require('axios');
@@ -85,7 +86,6 @@ try {
     console.log('Loading APIService...');
 
     // ファイルの存在確認
-    const fs = require('fs');
     const apiServicePath = path.join(__dirname, 'apiService.js');
     if (fs.existsSync(apiServicePath)) {
         console.log('✅ apiService.js file exists');
@@ -709,6 +709,20 @@ app.get('/player-detail', (req, res) => {
 
 app.get('/player/:id', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'player-detail.html'));
+});
+
+/** SEO: generate-seo-from-players.js で生成した静的HTML（/p/{id}-{slug}-stats） */
+app.get('/p/:idAndSlug', (req, res) => {
+    const raw = String(req.params.idAndSlug || '');
+    const m = raw.match(/^(\d+)-(.+)$/);
+    if (!m) {
+        return res.status(404).type('text/plain').send('Not found');
+    }
+    const fp = path.join(__dirname, 'public', 'seo-generated', 'p', `${m[1]}-${m[2]}.html`);
+    if (fs.existsSync(fp)) {
+        return res.sendFile(fp);
+    }
+    return res.redirect(302, `/player/${m[1]}`);
 });
 
 // Firebase configuration endpoint

@@ -30,6 +30,22 @@ node scripts/generate-seo-skeleton.js --seed path/to/seed.json
 
 GitHub Actions のサンプル: [github-actions-sample.yml](./github-actions-sample.yml)
 
+### 選手ページ量産（data/players.json 連携）
+
+```bash
+# デフォルト: 得点+アシスト目安で上位 500 名 → public/seo-generated/p/ と sitemap_seo_players.xml
+npm run seo:generate:players
+
+# 日本人選手のみ・200件
+node --max-old-space-size=8192 scripts/generate-seo-from-players.js --limit 200 --japan-only
+
+# ドライラン（生成せず件数確認）
+node scripts/generate-seo-from-players.js --dry-run --limit 5
+```
+
+- 公開URLは **`/p/{選手ID}-{slug}-stats`**（例: `/p/32862-takefusa-kubo-stats`）。`index.js` が `seo-generated/p/*.html` を配信、無ければ `/player/:id` へリダイレクト。
+- `players.json` が **数十MB〜** の場合は上記のとおり `max-old-space-size` を推奨。
+
 ## メンテ
 
 - 生成物の大量コミットは避け、`public/seo-generated/` は `.gitignore` 推奨（サンプルだけコミット可）。
