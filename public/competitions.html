@@ -245,14 +245,14 @@
             </div>
             <div class="control-group">
                 <label>&nbsp;</label>
-                <button type="button" class="btn-load" id="loadBtn">対戦表を読み込む</button>
+                <button type="button" class="btn-load" id="loadBtn" data-i18n="competitions.loadBtn">対戦表を読み込む</button>
             </div>
         </div>
 
         <p class="trust-note">表示内容は API-Football 由来です。試合形式（2回戦総得点など）は大会ルールに従い、同一カードに複数試合が並ぶ場合があります。遅延・欠損は利用規約のとおり保証しません。</p>
 
         <div class="meta-bar" id="metaBar"></div>
-        <div id="bracketHost"><p class="loading">大会とシーズンを選んで「対戦表を読み込む」を押してください。</p></div>
+        <div id="bracketHost"><p class="loading" data-i18n="competitions.initialHint">大会とシーズンを選んで「対戦表を読み込む」を押してください。</p></div>
     </main>
 
     <script>
@@ -365,5 +365,6 @@
     loadBtn.addEventListener('click', load);
 })();
     </script>
+<script src="/js/fhj-i18n.js" defer></script>
 </body>
 </html>

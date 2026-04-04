@@ -105,18 +105,23 @@ function buildPlayerLangPack(name, team, league, nationality, season, apps, goal
  */
 function buildLangSwitcherScript() {
     return `(function(){
-  var KEY='fhj_seo_lang';
   var I18N=window.__FHJ_SEO_I18N__;
   if(!I18N)return;
   function norm(l){l=(l||'ja').toLowerCase().slice(0,2);return l==='en'?'en':l==='es'?'es':'ja';}
   function getInitial(){
     var q=new URLSearchParams(location.search).get('lang');
     if(q)return norm(q);
-    try{return norm(localStorage.getItem(KEY));}catch(e){return'ja';}
+    try{
+      var a=localStorage.getItem('fhj_lang');
+      if(a)return norm(a);
+      var b=localStorage.getItem('fhj_seo_lang');
+      if(b)return norm(b);
+    }catch(e){}
+    return 'ja';
   }
   function apply(lang){
     lang=norm(lang);
-    try{localStorage.setItem(KEY,lang);}catch(e){}
+    try{localStorage.setItem('fhj_lang',lang);localStorage.setItem('fhj_seo_lang',lang);}catch(e){}
     document.documentElement.lang=lang==='ja'?'ja':lang==='es'?'es':'en';
     var pack=I18N[lang];if(!pack)return;
     if(pack.title)document.title=pack.title;

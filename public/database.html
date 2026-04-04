@@ -1443,6 +1443,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         let allTeams = [];
         let allPlayers = [];
 
+        const FHJ_CURRENT_SEASON_KEY = '2025-2026';
+        function fhjSeasonStats(player) {
+            if (!player || !player.seasons) return {};
+            const cur = player.seasons[FHJ_CURRENT_SEASON_KEY];
+            const leg = player.seasons['2024-2025'];
+            return (cur && cur.stats) ? cur.stats : (leg && leg.stats ? leg.stats : {});
+        }
+        function fhjSeasonLeague(player) {
+            if (!player || !player.seasons) return 'Unknown League';
+            return player.seasons[FHJ_CURRENT_SEASON_KEY]?.league ||
+                player.seasons['2024-2025']?.league || 'Unknown League';
+        }
+
         // FirebaseDataServiceの初期化確認
         function checkFirebaseDataService() {
             if (!window.firebaseDataService) {
@@ -1680,7 +1693,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     if (tabType === 'players') {
                         const playerName = item.fullName || item.name || 'Unknown Player';
                         const teamName = item.currentTeam || item.team || 'Unknown Team';
-                        const leagueName = item.seasons?.['2024-2025']?.league || 'Unknown League';
+                        const leagueName = fhjSeasonLeague(item) || 'Unknown League';
                         
                         // 年齢を計算
                         let age = 'N/A';
@@ -1694,7 +1707,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         }
                         
                         const position = item.position || item.detailedPosition || item.stats?.position || (Array.isArray(item.stats) && item.stats[0]?.position) || 'Unknown';
-                        const stats = item.seasons?.['2024-2025']?.stats || {};
+                        const stats = fhjSeasonStats(item) || {};
                         
                         html += `
                             <tr class="data-row" data-player-id="${item.id || index}" onclick="showPlayerDetailFromElement(this)">
@@ -1770,7 +1783,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                 </td>
                                 <td>
                                     <div class="season-info">
-                                        <div class="season-year">2024-2025</div>
+                                        <div class="season-year">2025-2026</div>
                                         <div class="season-position">N/A位</div>
                                     </div>
                                 </td>
@@ -2746,7 +2759,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     // リーグでフィルタリング
                     if (searchLeague) {
                         filteredPlayers = filteredPlayers.filter(player => 
-                            player.seasons?.['2024-2025']?.league === searchLeague ||
+                            fhjSeasonLeague(player) === searchLeague ||
                             player.league === searchLeague
                         );
                     }
@@ -2788,7 +2801,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     // 最低ゴール数でフィルタリング
                     if (minGoals > 0) {
                         filteredPlayers = filteredPlayers.filter(player => {
-                            const goals = parseInt(player.seasons?.['2024-2025']?.goals || '0');
+                            const goals = parseInt(fhjSeasonStats(player).goals || '0');
                             return goals >= minGoals;
                         });
                     }
@@ -2796,7 +2809,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     // 最低アシスト数でフィルタリング
                     if (minAssists > 0) {
                         filteredPlayers = filteredPlayers.filter(player => {
-                            const assists = parseInt(player.seasons?.['2024-2025']?.assists || '0');
+                            const assists = parseInt(fhjSeasonStats(player).assists || '0');
                             return assists >= minAssists;
                         });
                     }
@@ -2882,7 +2895,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             }
                             
                             if (searchLeague && searchType === 'teams') {
-                                matches = matches && (item.league === searchLeague || item.seasons?.['2024-2025']?.league === searchLeague);
+                                matches = matches && (item.league === searchLeague || fhjSeasonLeague(item) === searchLeague);
                             }
                             
                             return matches;
@@ -3665,12 +3678,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         const ageB = calculatePlayerAge(b.birthday);
                         return ageA - ageB;
                     case 'goals':
-                        const goalsA = parseInt(a.seasons?.['2024-2025']?.goals || '0');
-                        const goalsB = parseInt(b.seasons?.['2024-2025']?.goals || '0');
+                        const goalsA = parseInt(fhjSeasonStats(a).goals || '0');
+                        const goalsB = parseInt(fhjSeasonStats(b).goals || '0');
                         return goalsB - goalsA; // 降順
                     case 'assists':
-                        const assistsA = parseInt(a.seasons?.['2024-2025']?.assists || '0');
-                        const assistsB = parseInt(b.seasons?.['2024-2025']?.assists || '0');
+                        const assistsA = parseInt(fhjSeasonStats(a).assists || '0');
+                        const assistsB = parseInt(fhjSeasonStats(b).assists || '0');
                         return assistsB - assistsA; // 降順
                     case 'marketValue':
                         const valueA = parseFloat(a.marketValue?.replace(/[^\d.]/g, '') || '0');
@@ -4320,7 +4333,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             
             console.log('選手詳細表示:', player);
             
-            const seasonStats = player.seasons?.['2024-2025']?.stats || player.stats || {};
+            const seasonStats = fhjSeasonStats(player) || player.stats || {};
             const matches = player.matches || [];
             
             // 年齢計算
@@ -4349,7 +4362,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <div class="player-info-large">
                                 <h3>${player.fullName || player.name}</h3>
                                 <p>${player.position} • ${player.nationality || 'Unknown'}</p>
-                                <p>${player.currentTeam || player.team} • ${player.seasons?.['2024-2025']?.league || 'Unknown League'}</p>
+                                <p>${player.currentTeam || player.team} • ${fhjSeasonLeague(player) || 'Unknown League'}</p>
                             </div>
                         </div>
 
@@ -4423,7 +4436,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
                         <!-- 統計 -->
                         <div class="stats-section">
-                            <h4>2024-2025シーズン統計</h4>
+                            <h4>2025-2026シーズン統計</h4>
                             <div class="stats-grid-native">
                                 <div class="stat-item-native">
                                     <span class="stat-label">試合数</span>
@@ -4486,7 +4499,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const team = currentData.find(t => t.id === teamId);
             if (!team) return;
             
-            const seasonStats = team.seasons?.['2024-2025']?.stats || team.stats || {};
+            const seasonStats = team.seasons?.['2025-2026']?.stats || team.seasons?.['2024-2025']?.stats || team.stats || {};
             
             const modal = document.createElement('div');
             modal.className = 'detail-modal';
@@ -4506,7 +4519,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             </div>
                         </div>
                         <div class="season-section">
-                            <h4>2024-2025 シーズン成績</h4>
+                            <h4>2025-2026 シーズン成績</h4>
                             <div class="stats-grid-large">
                                 <div class="stat-card">
                                     <div class="stat-value">${seasonStats.position || 'N/A'}</div>
@@ -4827,5 +4840,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
         }
     </script>
+<script src="/js/fhj-i18n.js" defer></script>
 </body>
 </html> 

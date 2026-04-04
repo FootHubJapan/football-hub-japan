@@ -171,6 +171,7 @@ function buildPlayerHtml(baseUrl, p) {
   </article>
   <script>window.__FHJ_SEO_I18N__=${i18nJson};</script>
   <script>${buildLangSwitcherScript()}</script>
+  <script src="/js/fhj-i18n.js" defer></script>
 </body>
 </html>`;
 }

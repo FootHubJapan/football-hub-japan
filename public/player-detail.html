@@ -1145,13 +1145,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
             // 詳細統計（安全な要素チェック）
             const totalGoalsEl = document.getElementById('totalGoals');
-            if (totalGoalsEl) totalGoalsEl.textContent = player.stats?.goals || 0;
+            if (totalGoalsEl) totalGoalsEl.textContent = player.goals ?? player.stats?.goals ?? 0;
             
             const totalAssistsEl = document.getElementById('totalAssists');
-            if (totalAssistsEl) totalAssistsEl.textContent = player.stats?.assists || 0;
+            if (totalAssistsEl) totalAssistsEl.textContent = player.assists ?? player.stats?.assists ?? 0;
             
             const totalAppearancesEl = document.getElementById('totalAppearances');
-            if (totalAppearancesEl) totalAppearancesEl.textContent = player.stats?.appearances || 0;
+            if (totalAppearancesEl) totalAppearancesEl.textContent = player.appearances ?? player.stats?.appearances ?? 0;
             
             const passAccuracyEl = document.getElementById('passAccuracy');
             if (passAccuracyEl) passAccuracyEl.textContent = player.stats?.passAccuracy || 'N/A';
@@ -1181,25 +1181,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     const appearances = stat.appearances || stat.lineups || stat.matches || 0;
                     const leagueName = stat.leagueName || stat.league || '';
                     
-                    // 2025/26シーズンのチェック
+                    // 2025/26シーズンのチェック（シーズン後半〜終盤は欧州でも30試合前後が正常）
                     const is2025Season = season.includes('2025') || season.includes('2026') || season === '2025/2026' || season === '2025/26';
                     if (!is2025Season) return false;
-                    
-                    // 欧州リーグで試合数が29試合以上は誤データ（2024/25シーズンのデータが間違って保存されている可能性）
-                    // 2025/26シーズンは2025年8月から開始されており、まだ途中なので十数試合が正しい
-                    const isEuropeanLeague = leagueName && (
-                        leagueName.includes('Premier League') || 
-                        leagueName.includes('La Liga') || 
-                        leagueName.includes('Serie A') || 
-                        leagueName.includes('Bundesliga') || 
-                        leagueName.includes('Ligue 1')
-                    );
-                    
-                    if (isEuropeanLeague && appearances >= 29) {
-                        console.log('⚠️ 2025/26シーズンだが試合数が29試合以上（誤データの可能性）:', { season, appearances, league: leagueName });
-                        return false;
-                    }
-                    
                     return true;
                 });
                 
@@ -1546,96 +1530,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // シーズンごとにグループ化してリーグ戦のみの合計を計算
             const statsBySeason = {};
             
-            // 優先順位1: player.careerStats（保存されたデータを最優先で常に表示）
-            if (player.careerStats && Array.isArray(player.careerStats) && player.careerStats.length > 0) {
-                console.log(`✅ キャリアスタッツをデータベースから取得: ${player.careerStats.length}レコード`);
-                
-                player.careerStats.forEach(stat => {
-                    // リーグ戦のみを対象とする
-                    if (!isLeagueCompetition(stat)) {
-                        return; // カップ戦はスキップ
-                    }
-                    
-                    // シーズンを正規化
-                    const rawSeason = stat.season || 'Unknown';
-                    let season = normalizeSeason(rawSeason);
-                    
-                    // APIレスポンスのシーズン形式が "2025" のような場合、正規化が失敗する可能性があるため、再試行
-                    if (season === 'Unknown' && rawSeason && /^\d{4}$/.test(String(rawSeason))) {
-                        const year = parseInt(rawSeason);
-                        season = `${year}/${String(year + 1).slice(-2)}`;
-                        console.log(`  → シーズン再正規化: "${rawSeason}" → "${season}"`);
-                    }
-                    
-                    // 保存されたキャリアスタッツは、シーズンが有効な形式であれば常に表示（年による制限を緩和）
-                    if (season === 'Unknown' || !season) {
-                        console.log(`⚠️ シーズンが正規化できませんでした: "${rawSeason}"`);
-                        return;
-                    }
-                    
-                    const club = stat.teamName || stat.team || stat.club || 'Unknown';
-                    
-                    const matches = stat.matches || stat.appearances || 0;
-                    const goals = stat.goals || 0;
-                    const assists = stat.assists || 0;
-                    
-                    // 試合数が0のデータは除外（誤データの可能性）
-                    if (matches === 0 && goals === 0 && assists === 0) {
-                        console.log(`  ⚠️ 試合数0のデータをスキップ: ${season} (${club})`);
-                        return;
-                    }
-                    
-                    // 既存のデータがある場合は上書き、ない場合は追加
-                    if (!statsBySeason[season]) {
-                        statsBySeason[season] = {
-                            season: season,
-                            club: club,
-                            matches: 0,
-                            goals: 0,
-                            assists: 0,
-                            ratingSum: 0,
-                            ratingCount: 0
-                        };
-                        console.log(`  ✅ 新しいシーズンを追加: ${season} (${club})`);
-                    } else {
-                        // 同じシーズンに複数のクラブデータがある場合、試合数が多い方を優先
-                        const existingMatches = statsBySeason[season].matches || 0;
-                        if (matches > existingMatches) {
-                            statsBySeason[season].club = club;
-                            statsBySeason[season].matches = 0; // リセットして再計算
-                            statsBySeason[season].goals = 0;
-                            statsBySeason[season].assists = 0;
-                            statsBySeason[season].ratingSum = 0;
-                            statsBySeason[season].ratingCount = 0;
-                            console.log(`  🔄 より多くの試合数のデータで更新: ${season} (${club}, ${matches}試合)`);
-                        } else if (matches === existingMatches && club !== statsBySeason[season].club) {
-                            // 試合数が同じ場合、より詳細な情報を優先
-                            if (club !== 'Unknown' && statsBySeason[season].club === 'Unknown') {
-                                statsBySeason[season].club = club;
-                            }
-                            console.log(`  🔄 既存のシーズンを更新: ${season} (${club})`);
-                        } else {
-                            console.log(`  ⏭️ 既存データの方が多いためスキップ: ${season} (既存: ${existingMatches}試合, 新規: ${matches}試合)`);
-                            return;
-                        }
-                    }
-                    
-                    // 各シーズンのリーグ戦のみの合計を計算
-                    statsBySeason[season].matches += matches;
-                    statsBySeason[season].goals += goals;
-                    statsBySeason[season].assists += assists;
-                    if (stat.rating) {
-                        const rating = parseFloat(stat.rating);
-                        if (!isNaN(rating)) {
-                            statsBySeason[season].ratingSum += rating;
-                            statsBySeason[season].ratingCount += 1;
-                        }
-                    }
-                });
-                console.log(`📊 保存済みキャリアスタッツマージ後のシーズン数: ${Object.keys(statsBySeason).length}`);
-            }
+            // キャリア表は /api/player/career-stats（API-Football 優先）のみ使用（JSON の古い careerStats は使わない）
             
-            // 優先順位2: APIエンドポイントから取得（最新のデータで上書き）
+            // APIエンドポイントから取得
             try {
                 console.log('🔄 キャリアスタッツAPIエンドポイントから取得中...');
                 
@@ -2051,33 +1948,37 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             console.log('📊 v2526 - player.careerStats length:', player.careerStats?.length || 0);
             console.log('📊 v2526 - player.season:', player.season);
             
-            // 優先: careerStatsから2025/26シーズンのデータを取得
-            if (player.careerStats && Array.isArray(player.careerStats) && player.careerStats.length > 0) {
-                console.log('📊 careerStatsから2025/26シーズンを検索中...');
-                const stats2526 = player.careerStats.filter(stat => {
+            // 優先: stats 配列（統合API + live API-Football）
+            if (player.stats && Array.isArray(player.stats) && player.stats.length > 0) {
+                console.log('📊 Using array format stats (primary)');
+                const stats2025 = player.stats.filter(stat => {
                     const season = stat.season || '';
-                    return season === '2025/2026' || season.includes('2025/2026');
+                    return season.includes('2025') || season.includes('2026') || season === '2025/26';
                 });
-                
-                if (stats2526.length > 0) {
-                    console.log(`✅ careerStatsから2025/26シーズンのデータを発見: ${stats2526.length}コンペティション`);
-                    competitions = stats2526.map(stat => ({
-                        name: stat.leagueName || stat.league || 'リーグ',
+                if (stats2025.length > 0) {
+                    const seenCompetitions = new Set();
+                    const uniqueStats = [];
+                    for (const stat of stats2025) {
+                        const compName = (stat.leagueName || 'リーグ').toLowerCase().trim();
+                        if (!seenCompetitions.has(compName)) {
+                            seenCompetitions.add(compName);
+                            uniqueStats.push(stat);
+                        }
+                    }
+                    competitions = uniqueStats.map(stat => ({
+                        name: stat.leagueName || 'リーグ',
                         goals: stat.goals || 0,
                         assists: stat.assists || 0,
                         yellowCards: stat.yellowCards || 0,
                         redCards: stat.redCards || 0,
                         minutes: stat.minutes || 0,
-                        rating: stat.rating || 'N/A',
-                        matches: stat.matches || stat.appearances || 0
+                        rating: stat.rating != null ? stat.rating : 'N/A',
+                        matches: stat.appearances || stat.lineups || 0
                     }));
                 }
-            } else {
-                console.log('⚠️ careerStatsが見つかりません、または空です');
             }
-            
-            // careerStatsからデータが取れなかった場合のみ、他のソースをチェック
-            // 2025年データがある場合（オブジェクト形式）
+
+            // オブジェクト形式の stats
             if (competitions.length === 0 && player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
                 // seasonプロパティで判定（player.seasonを優先チェック）
                 const statsSeason = player.season || player.stats.season;
@@ -2086,19 +1987,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 // player.leagueも含めてリーグ名を取得
                 const leagueName = player.stats.leagueName || player.stats.league || player.league || '';
                 
-                // 2025/26シーズンで試合数が29試合以上は誤データ（2024/25シーズンのデータが間違って保存されている可能性）
-                // 2025/26シーズンは2025年8月から開始されており、まだ途中なので十数試合が正しい
-                const isEuropeanLeague = leagueName && (
-                    leagueName.includes('Premier League') || 
-                    leagueName.includes('La Liga') || 
-                    leagueName.includes('Serie A') || 
-                    leagueName.includes('Bundesliga') || 
-                    leagueName.includes('Ligue 1')
-                );
-                
-                if ((statsSeason === '2025/2026' || statsSeason === '2025/26' || statsSeason === '2025') && 
-                    !(isEuropeanLeague && appearances >= 29)) {
-                    // データがあれば表示（すべて0でも表示する - 更新中かもしれない）
+                if (statsSeason === '2025/2026' || statsSeason === '2025/26' || statsSeason === '2025') {
                     console.log('📊 Using 2025/2026 season data (object format)');
                     competitions = [
                         {
@@ -2112,92 +2001,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             matches: appearances
                         }
                     ];
-                } else if (statsSeason === '2025/2026' || statsSeason === '2025/26' || statsSeason === '2025') {
-                    console.log('⚠️ 2025/26シーズンだが試合数が29試合以上（誤データの可能性）:', { season: statsSeason, appearances, league: leagueName, isEuropeanLeague });
-                    competitions = []; // 誤データの場合は空配列を返す
                 } else {
                     console.log('⚠️ オブジェクト形式のstatsが2025/26シーズンではありません:', statsSeason);
                 }
-            } else if (competitions.length === 0 && player.stats && Array.isArray(player.stats)) {
-                // 配列形式のstatsがある場合、2025/2026シーズンのデータを取得（緩和したフィルタリング）
-                console.log('📊 Using array format stats');
-                const stats2025 = player.stats.filter(stat => {
-                    const season = stat.season;
-                    const appearances = stat.appearances || stat.lineups || stat.matches || 0;
-                    const leagueName = stat.leagueName || stat.league || '';
-                    
-                    // シーズン情報がない場合は除外（ただし、leagueNameがあれば含める）
-                    if (!season || season === 'Unknown' || season === '') {
-                        // シーズン情報がないが、leagueNameがある場合は2025/26シーズンとして扱う可能性を考慮
-                        // ただし、明らかに古いデータ（2024以前）の場合は除外
-                        return false;
-                    }
-                    // 2025/26シーズンのみを含める
-                    const isValidSeason = season === '2025/2026' || season === '2025/26' || season === '2025';
-                    if (!isValidSeason) {
-                        return false;
-                    }
-                    
-                    // 欧州リーグで試合数が29試合以上は誤データ（2024/25シーズンのデータが間違って保存されている可能性）
-                    // 2025/26シーズンは2025年8月から開始されており、まだ途中なので十数試合が正しい
-                    const isEuropeanLeague = leagueName && (
-                        leagueName.includes('Premier League') || 
-                        leagueName.includes('La Liga') || 
-                        leagueName.includes('Serie A') || 
-                        leagueName.includes('Bundesliga') || 
-                        leagueName.includes('Ligue 1')
-                    );
-                    
-                    if (isEuropeanLeague && appearances >= 29) {
-                        console.log('⚠️ 2025/26シーズンだが試合数が29試合以上（誤データの可能性）:', { season, appearances, league: leagueName });
-                        return false;
-                    }
-                    
-                    // データがあれば表示（すべて0でも表示する - 更新中かもしれない）
-                    // ただし、明らかにフォールバックデータ（seasonがnull/Unknown/空）は除外済み
-                    return true;
-                });
-                
-                console.log(`📊 2025/26シーズンのコンペティション数: ${stats2025.length}`);
-                stats2025.forEach((stat, idx) => {
-                    console.log(`  ${idx + 1}. ${stat.leagueName}: ${stat.appearances}試合, ${stat.goals}ゴール`);
-                });
-                
-                if (stats2025.length > 0) {
-                    // 重複を除去（コンペティション名で重複チェック）
-                    const seenCompetitions = new Set();
-                    const uniqueStats = [];
-                    
-                    for (const stat of stats2025) {
-                        const compName = (stat.leagueName || 'リーグ').toLowerCase().trim();
-                        if (!seenCompetitions.has(compName)) {
-                            seenCompetitions.add(compName);
-                            uniqueStats.push(stat);
-                        } else {
-                            console.log(`⚠️ 重複データをスキップ: ${stat.leagueName}`);
-                        }
-                    }
-                    
-                    competitions = uniqueStats.map(stat => ({
-                        name: stat.leagueName || 'リーグ',
-                        goals: stat.goals || 0,
-                        assists: stat.assists || 0,
-                        yellowCards: stat.yellowCards || 0,
-                        redCards: stat.redCards || 0,
-                        minutes: stat.minutes || 0,
-                        rating: stat.rating || 'N/A',
-                        matches: stat.appearances || stat.lineups || 0
-                    }));
-                    
-                    console.log(`📊 重複除去後: ${competitions.length}コンペティション`);
-                } else {
-                    console.log('⚠️ 2025/26シーズンのデータが見つかりませんでした');
-                    // 空の配列を返す（フォールバックデータは使用しない）
-                    competitions = [];
-                }
-            } else if (competitions.length === 0) {
-                // データがない場合は空配列を返す（フォールバックデータは使用しない）
-                console.log('⚠️ 2025/26シーズンの統計データが見つかりませんでした');
             }
 
             // 2025/26シーズンのデータがない場合、保存済みの全データから検索（APIから直接取得しない）
@@ -2262,14 +2068,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 return;
             }
 
+            const fmtRating = (r) => {
+                if (r == null || r === 'N/A' || r === '') return '-';
+                const n = parseFloat(String(r).replace(',', '.'));
+                if (Number.isNaN(n)) return String(r);
+                return (Math.round(n * 100) / 100).toString();
+            };
+
             // 合計を計算
+            const ratingNums = competitions.map(c => parseFloat(String(c.rating).replace(',', '.'))).filter(n => !Number.isNaN(n));
             const totals = {
                 goals: competitions.reduce((sum, comp) => sum + comp.goals, 0),
                 assists: competitions.reduce((sum, comp) => sum + comp.assists, 0),
                 yellowCards: competitions.reduce((sum, comp) => sum + comp.yellowCards, 0),
                 redCards: competitions.reduce((sum, comp) => sum + comp.redCards, 0),
                 minutes: competitions.reduce((sum, comp) => sum + comp.minutes, 0),
-                rating: (competitions.reduce((sum, comp) => sum + parseFloat(comp.rating), 0) / competitions.length).toFixed(1),
+                rating: ratingNums.length ? (Math.round((ratingNums.reduce((a, b) => a + b, 0) / ratingNums.length) * 100) / 100).toString() : '-',
                 matches: competitions.reduce((sum, comp) => sum + comp.matches, 0)
             };
 
@@ -2286,7 +2100,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <td class="stat-value">${comp.yellowCards || '-'}</td>
                         <td class="stat-value">${comp.redCards || '-'}</td>
                         <td class="stat-value">${comp.minutes}'</td>
-                        <td class="stat-value">${comp.rating}</td>
+                        <td class="stat-value">${fmtRating(comp.rating)}</td>
                     </tr>
                 `;
             });
@@ -2319,5 +2133,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             loadPlayerData();
         });
     </script>
+<script src="/js/fhj-i18n.js" defer></script>
 </body>
 </html> 
