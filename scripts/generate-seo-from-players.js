@@ -12,6 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 const { esc, playerFileSlug, playerScore, pickPrimaryStat } = require('./lib/seo-util');
+const { buildPlayerLangPack, buildLangSwitcherScript } = require('./lib/seo-player-i18n');
 
 const ROOT = path.join(__dirname, '..');
 const PLAYERS_PATH = path.join(ROOT, 'data', 'players.json');
@@ -56,30 +57,68 @@ function buildPlayerHtml(baseUrl, p) {
     const assists = st ? st.assists ?? '—' : '—';
     const apps = st ? st.appearances ?? '—' : '—';
     const season = st ? st.season || '' : '';
+    const lastUpd = (st && st.lastUpdated) || new Date().toISOString().slice(0, 10);
 
-    const title = `${name}のスタッツ・所属（${league || '各リーグ'}）｜Football Hub Japan`;
-    const desc = `${name}（${team || '所属チーム参照'}）の出場・得点・アシスト等の目安。${season ? `対象シーズン例: ${season}。` : ''}データは外部API・DB由来で遅延・誤差があり得ます。`;
+    const L = buildPlayerLangPack(name, team, league, nationality, season, apps, goals, assists);
+
+    const i18nEmbed = {
+        ja: {
+            ...L.ja,
+            metaLine: `${L.ja.lblNat}: ${nationality} / ${L.ja.lblTeam}: ${team} / ${L.ja.lblLeague}: ${league}`,
+            valApps: String(apps),
+            valGoals: String(goals),
+            valAssists: String(assists),
+            lastUpd
+        },
+        en: {
+            ...L.en,
+            metaLine: `${L.en.lblNat}: ${nationality} / ${L.en.lblTeam}: ${team} / ${L.en.lblLeague}: ${league}`,
+            valApps: String(apps),
+            valGoals: String(goals),
+            valAssists: String(assists),
+            lastUpd
+        },
+        es: {
+            ...L.es,
+            metaLine: `${L.es.lblNat}: ${nationality} / ${L.es.lblTeam}: ${team} / ${L.es.lblLeague}: ${league}`,
+            valApps: String(apps),
+            valGoals: String(goals),
+            valAssists: String(assists),
+            lastUpd
+        }
+    };
+
+    const titleJa = L.ja.title;
+    const descJa = L.ja.description;
 
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'WebPage',
-        name: title,
+        name: titleJa,
         url: pageUrl,
-        description: desc.slice(0, 300),
+        description: descJa,
+        inLanguage: ['ja', 'en', 'es'],
         isPartOf: { '@type': 'WebSite', name: 'Football Hub Japan', url: baseUrl }
     };
+
+    const hrefBase = pageUrl.split('?')[0];
+    const i18nJson = JSON.stringify(i18nEmbed).replace(/</g, '\\u003c');
 
     return `<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${esc(title)}</title>
-  <meta name="description" content="${esc(desc.slice(0, 160))}" />
-  <link rel="canonical" href="${esc(pageUrl)}" />
-  <meta property="og:title" content="${esc(title)}" />
-  <meta property="og:description" content="${esc(desc.slice(0, 200))}" />
-  <meta property="og:url" content="${esc(pageUrl)}" />
+  <title>${esc(titleJa)}</title>
+  <meta name="description" content="${esc(descJa)}" />
+  <link rel="canonical" href="${esc(hrefBase)}" />
+  <link rel="alternate" hreflang="ja" href="${esc(hrefBase)}?lang=ja" />
+  <link rel="alternate" hreflang="en" href="${esc(hrefBase)}?lang=en" />
+  <link rel="alternate" hreflang="es" href="${esc(hrefBase)}?lang=es" />
+  <link rel="alternate" hreflang="x-default" href="${esc(hrefBase)}" />
+  <meta property="og:title" content="${esc(titleJa)}" />
+  <meta property="og:description" content="${esc(descJa)}" />
+  <meta property="og:url" content="${esc(hrefBase)}" />
   <meta property="og:type" content="article" />
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
   <style>
@@ -93,32 +132,45 @@ function buildPlayerHtml(baseUrl, p) {
     .cta { margin-top:1.25rem; }
     nav.related { margin-top:2rem; padding-top:1.25rem; border-top:1px solid #334155; }
     nav.related h2 { font-size:1rem; color:#22d3ee; }
+    .lang-bar { display:flex; flex-wrap:wrap; align-items:center; gap:0.5rem 0.75rem; margin-bottom:1.25rem; padding:0.5rem 0; border-bottom:1px solid #334155; }
+    .lang-bar span.label { font-size:0.8rem; color:#94a3b8; }
+    .fhj-lang-btn { font:inherit; cursor:pointer; padding:0.35rem 0.65rem; border-radius:6px; border:1px solid #475569; background:#111827; color:#e2e8f0; }
+    .fhj-lang-btn[aria-pressed="true"] { border-color:#22d3ee; color:#22d3ee; background:rgba(0,189,199,0.12); }
+    .fhj-lang-btn:focus { outline:2px solid #22d3ee; outline-offset:2px; }
   </style>
 </head>
 <body>
   <article>
-    <h1>${esc(name)}のスタッツ</h1>
-    <p class="muted">国籍: ${esc(nationality)} / 所属: ${esc(team)} / リーグ: ${esc(league)}</p>
-    <p>詳細な数値・写真はアプリ内の選手詳細で確認できます。</p>
-    <table aria-label="シーズン目安">
-      <thead><tr><th>項目</th><th>値（目安）</th></tr></thead>
+    <div class="lang-bar" role="group" aria-label="Language" data-i18n-group-lang>
+      <span class="label" data-i18n="switchLabel">言語</span>
+      <button type="button" class="fhj-lang-btn" data-lang="ja" aria-pressed="true">日本語</button>
+      <button type="button" class="fhj-lang-btn" data-lang="en" aria-pressed="false">English</button>
+      <button type="button" class="fhj-lang-btn" data-lang="es" aria-pressed="false">Español</button>
+    </div>
+    <h1 data-i18n="h1">${esc(L.ja.h1)}</h1>
+    <p class="muted" data-i18n="metaLine">${esc(i18nEmbed.ja.metaLine)}</p>
+    <p data-i18n="intro">${esc(L.ja.intro)}</p>
+    <table data-i18n-table aria-label="シーズン目安">
+      <thead><tr><th data-i18n="thItem">${esc(L.ja.thItem)}</th><th data-i18n="thVal">${esc(L.ja.thVal)}</th></tr></thead>
       <tbody>
-        <tr><td>出場</td><td>${esc(apps)}</td></tr>
-        <tr><td>得点</td><td>${esc(goals)}</td></tr>
-        <tr><td>アシスト</td><td>${esc(assists)}</td></tr>
+        <tr><td data-i18n="rowApps">${esc(L.ja.rowApps)}</td><td data-i18n="valApps">${esc(apps)}</td></tr>
+        <tr><td data-i18n="rowGoals">${esc(L.ja.rowGoals)}</td><td data-i18n="valGoals">${esc(goals)}</td></tr>
+        <tr><td data-i18n="rowAssists">${esc(L.ja.rowAssists)}</td><td data-i18n="valAssists">${esc(assists)}</td></tr>
       </tbody>
     </table>
-    <p class="cta"><a href="${esc(baseUrl + '/player/' + id)}">→ この選手の詳細ページを開く</a></p>
-    <nav class="related" aria-label="関連リンク">
-      <h2>関連（回遊）</h2>
+    <p class="cta"><a href="${esc(baseUrl + '/player/' + id)}" data-i18n="cta">${esc(L.ja.cta)}</a></p>
+    <nav class="related" data-i18n-related-nav aria-label="関連リンク">
+      <h2 data-i18n="relatedH">${esc(L.ja.relatedH)}</h2>
       <ul>
-        <li><a href="${esc(baseUrl + '/ranking')}">ランキング</a></li>
-        <li><a href="${esc(baseUrl + '/database')}">データベース検索</a></li>
-        <li><a href="${esc(baseUrl + '/match-detail')}">試合分析</a></li>
+        <li><a href="${esc(baseUrl + '/ranking')}" data-i18n="linkRanking">${esc(L.ja.linkRanking)}</a></li>
+        <li><a href="${esc(baseUrl + '/database')}" data-i18n="linkDb">${esc(L.ja.linkDb)}</a></li>
+        <li><a href="${esc(baseUrl + '/match-detail')}" data-i18n="linkMatch">${esc(L.ja.linkMatch)}</a></li>
       </ul>
     </nav>
-    <p class="muted">最終更新目安: ${esc((st && st.lastUpdated) || new Date().toISOString().slice(0, 10))}</p>
+    <p class="muted"><span data-i18n="footerUpd">${esc(L.ja.footerUpd)}</span> <span data-i18n="lastUpd">${esc(lastUpd)}</span></p>
   </article>
+  <script>window.__FHJ_SEO_I18N__=${i18nJson};</script>
+  <script>${buildLangSwitcherScript()}</script>
 </body>
 </html>`;
 }

@@ -44,6 +44,7 @@ node scripts/generate-seo-from-players.js --dry-run --limit 5
 ```
 
 - 公開URLは **`/p/{選手ID}-{slug}-stats`**（例: `/p/32862-takefusa-kubo-stats`）。`index.js` が `seo-generated/p/*.html` を配信、無ければ `/player/:id` へリダイレクト。
+- **言語**: 各ページで **日本語 / English / Español** を切り替え可能（`?lang=ja|en|es`、選択は `localStorage` の `fhj_seo_lang` に保存）。`hreflang` リンク付き。
 - `players.json` が **数十MB〜** の場合は上記のとおり `max-old-space-size` を推奨。
 
 ## メンテ
