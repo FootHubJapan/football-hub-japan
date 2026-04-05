@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const playerStatsConsistency = require('./lib/player-stats-consistency');
+const apiFootballDbCache = require('./lib/apiFootballDbCache');
 const fs = require('fs');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -9286,11 +9287,6 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
         const { playerId } = req.params;
         const { seasons } = req.query;
 
-        const {
-            fetchApiFootballPlayerRaw,
-            pickDomesticCareerRowFromApiPlayer
-        } = playerStatsConsistency;
-
         console.log(`🔍 選手キャリアスタッツ取得中: ${playerId}`);
 
         const playersFile = path.join(__dirname, 'data', 'players.json');
@@ -9341,25 +9337,15 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
             return m ? m[1] : str;
         }
 
-        const careerStats = [];
-        const seenSeason = new Set();
-
-        if (process.env.API_FOOTBALL_KEY) {
-            for (const year of yearList) {
-                try {
-                    const raw = await fetchApiFootballPlayerRaw(apiFootballPlayerId, year);
-                    if (!raw || !raw.statistics || !raw.statistics.length) continue;
-                    const row = pickDomesticCareerRowFromApiPlayer(raw, year);
-                    if (!row || (!row.matches && !row.goals && !row.assists)) continue;
-                    const sk = normalizeSeasonKey(row.season);
-                    if (seenSeason.has(sk)) continue;
-                    seenSeason.add(sk);
-                    careerStats.push(row);
-                } catch (e) {
-                    console.log(`⚠️ キャリア ${year}:`, e.message);
-                }
-            }
-        }
+        const forceRefreshCareer = req.query.refresh === '1' || req.query.refresh === 'true';
+        const cacheResult = await apiFootballDbCache.loadOrRefreshCareer(
+            apiFootballPlayerId,
+            yearList,
+            forceRefreshCareer
+        );
+        let careerStats = Array.isArray(cacheResult.careerStats) ? [...cacheResult.careerStats] : [];
+        let careerFromCache = cacheResult.fromCache;
+        let careerFetchedAt = cacheResult.fetchedAt || null;
 
         if (careerStats.length === 0 && player.careerStats && Array.isArray(player.careerStats)) {
             const cupRe = /champions|europa|world cup|super cup|copa del rey|fa cup|friendl/i;
@@ -9392,6 +9378,8 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
                 const yb = parseInt(normalizeSeasonKey(b.season), 10) || 0;
                 return yb - ya;
             }));
+            careerFromCache = false;
+            careerFetchedAt = null;
         }
 
         careerStats.sort((a, b) => {
@@ -9399,6 +9387,13 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
             const yb = parseInt(normalizeSeasonKey(b.season), 10) || 0;
             return yb - ya;
         });
+
+        const careerSources =
+            !careerFromCache && careerStats.some((s) => s.source === 'saved-career-stats')
+                ? ['saved-career-stats']
+                : process.env.API_FOOTBALL_KEY
+                  ? ['API-Football']
+                  : ['saved-career-stats'];
 
         res.json({
             player: {
@@ -9413,7 +9408,10 @@ app.get('/api/player/career-stats/:playerId', async (req, res) => {
             },
             careerStats,
             totalSeasons: careerStats.length,
-            sources: process.env.API_FOOTBALL_KEY ? ['API-Football'] : ['saved-career-stats'],
+            sources: careerSources,
+            storedIn: 'data/api-football-stored/career',
+            careerFromCache,
+            careerFetchedAt,
             timestamp: new Date().toISOString()
         });
     } catch (error) {
@@ -10678,30 +10676,28 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
         enhancedPlayer = playerStatsConsistency.enrichPlayerWithSeasonSnapshot(enhancedPlayer);
 
         const apiPid = enhancedPlayer.apiFootballId || enhancedPlayer.playerId;
-        if (apiPid && process.env.API_FOOTBALL_KEY) {
+        const forceRefreshPlayer = req.query.refresh === '1' || req.query.refresh === 'true';
+        if (apiPid) {
             try {
-                const raw = await playerStatsConsistency.fetchApiFootballPlayerRaw(
-                    apiPid,
-                    playerStatsConsistency.API_SEASON_YEAR
-                );
-                if (raw && raw.statistics && raw.statistics.length) {
-                    let statsArr = playerStatsConsistency.mapApiStatisticsToStatsArray(raw);
-                    statsArr = playerStatsConsistency.dedupeCompetitionStats(statsArr);
-                    const tot = playerStatsConsistency.aggregateTotalsFromStatsArray(statsArr);
-                    const snap = playerStatsConsistency.buildSeason2526SnapshotFromLocalStats(statsArr);
+                const live = await apiFootballDbCache.loadOrRefreshPlayerSeason2025(apiPid, forceRefreshPlayer);
+                if (live && live.statsArray && live.statsArray.length) {
+                    const tot = live.totals;
+                    const snap = live.snap;
                     enhancedPlayer = {
                         ...enhancedPlayer,
-                        stats: statsArr,
+                        stats: live.statsArray,
                         goals: tot.goals,
                         assists: tot.assists,
                         appearances: tot.appearances,
                         minutes: tot.minutes,
                         rating: tot.rating,
                         season: '2025/2026',
-                        statsSource: 'api-football-live',
+                        statsSource: live.statsSource,
+                        apiFootballStatsFetchedAt: live.fetchedAt,
+                        apiFootballStatsFromCache: live.fromCache,
                         integration: {
                             ...enhancedPlayer.integration,
-                            lastUpdated: new Date().toISOString()
+                            lastUpdated: live.fetchedAt || enhancedPlayer.integration.lastUpdated
                         }
                     };
                     if (snap) {
@@ -10712,7 +10708,7 @@ app.get('/api/integrated/player/:playerId', async (req, res) => {
                     }
                 }
             } catch (liveErr) {
-                console.warn('統合選手 live API-Football:', liveErr.message);
+                console.warn('統合選手 API-Football ストア:', liveErr.message);
             }
         }
         

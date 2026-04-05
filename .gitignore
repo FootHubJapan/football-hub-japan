@@ -125,6 +125,11 @@ ui-debug.log
 # Data files (large JSON files, not committed to git)
 # data/  # コメントアウト：Renderで使用するためGitに含める
 data/backups/
+# API-Football ファイルキャッシュ（起動時に再取得。コミット不要）
+data/api-football-stored/
+data/cache-fill.log
+data/cache-fill-all.log
+data/.cache-fill-running
 # 大きなバックアップファイルは除外
 data/*.backup
 data/*.bak
