@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const playerStatsConsistency = require('./lib/player-stats-consistency');
+const scheduleTimeRanges = require('./lib/schedule-time-ranges');
 const apiFootballDbCache = require('./lib/apiFootballDbCache');
 const fs = require('fs');
 const helmet = require('helmet');
@@ -6203,7 +6204,10 @@ app.get('/api/schedule', async (req, res) => {
     const normStatusKey = qStatus.toString();
     const status = statusMap.hasOwnProperty(normStatusKey) ? statusMap[normStatusKey] : null;
 
-    console.log(`📅 Schedule API called: league=${league || 'all'}, season=${season || '2025'}, status=${status || 'all'}, timeRange=${timeRange}`);
+    const focusYmd = (req.query.date || req.query.ymd || '').toString().trim();
+    console.log(
+        `📅 Schedule API called: league=${league || 'all'}, season=${season || '2025'}, status=${status || 'all'}, timeRange=${timeRange}, focusDate=${focusYmd || 'none'}`
+    );
 
     try {
         let items = [];
@@ -6228,13 +6232,13 @@ app.get('/api/schedule', async (req, res) => {
         // Firebase導入前の方法: 直接API-Footballから取得
         try {
             console.log('🔄 API-Footballから試合データを取得中...');
-            items = await getMatchesFromAPIFootball(league, timeRange, normalizedSeason);
+            items = await getMatchesFromAPIFootball(league, timeRange, normalizedSeason, focusYmd);
             console.log(`✅ API-Footballから${items.length}件の試合データを取得しました`);
             
             // API-Footballからデータが取得できなかった場合は、Football-data.orgを試す
             if (items.length === 0 && process.env.FOOTBALL_DATA_API_KEY) {
                 console.log('⚠️ API-Footballからデータが取得できませんでした。Football-data.orgを試します...');
-                const footballDataMatches = await getMatchesFromFootballData(league, timeRange, normalizedSeason);
+                const footballDataMatches = await getMatchesFromFootballData(league, timeRange, normalizedSeason, focusYmd);
                 if (footballDataMatches.length > 0) {
                     items = footballDataMatches;
                     console.log(`✅ Football-data.orgから${items.length}件の試合データを取得しました`);
@@ -6451,7 +6455,8 @@ const J1_TEAM_IDS = {
 };
 
 // API-Footballから試合データを取得
-async function getMatchesFromAPIFootball(league, timeRange, season = null) {
+// focusYmd: YYYY-MM-DD（指定時は当該1日。カレンダー/日付ナビ用。JST 暦。）
+async function getMatchesFromAPIFootball(league, timeRange, season = null, focusYmd = null) {
     const matches = [];
     
     try {
@@ -6469,69 +6474,24 @@ async function getMatchesFromAPIFootball(league, timeRange, season = null) {
             'J2': 99     // J2 League (API-Football)
         };
 
-        // 時間範囲の設定
-        let fromDate, toDate;
         const today = new Date();
         const currentYear = today.getFullYear();
         const currentMonth = today.getMonth() + 1; // 0-indexed
-        
-        // シーズンの決定（パラメータが渡されていない場合は自動計算）
+
         if (!season) {
             season = currentMonth >= 8 ? currentYear : currentYear - 1;
         }
-        
-        // J1リーグの場合は2024-25シーズンを使用（シーズンが指定されていない場合のみ）
         if (league === 'J1' && !season) {
             season = 2024;
             console.log(`J1 League: Using season ${season}`);
-            
-            // J1リーグの場合は、より広い日付範囲で試合を取得
-            if (timeRange === 'week') {
-                const weekStart = new Date(today);
-                weekStart.setDate(today.getDate() - 7); // 1週間前から
-                fromDate = weekStart.toISOString().split('T')[0];
-            } else if (timeRange === 'month') {
-                const monthStart = new Date(today);
-                monthStart.setMonth(today.getMonth() - 1); // 1ヶ月前から
-                fromDate = monthStart.toISOString().split('T')[0];
-            }
-        }
-        
-        switch (timeRange) {
-            case 'today':
-                fromDate = toDate = today.toISOString().split('T')[0];
-                break;
-            case 'tomorrow':
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                fromDate = toDate = tomorrow.toISOString().split('T')[0];
-                break;
-            case 'week':
-                fromDate = today.toISOString().split('T')[0];
-                const weekLater = new Date(today);
-                weekLater.setDate(today.getDate() + 7);
-                toDate = weekLater.toISOString().split('T')[0];
-                break;
-            case 'lastweek':
-                const lastWeekStart = new Date(today);
-                lastWeekStart.setDate(today.getDate() - 7);
-                fromDate = lastWeekStart.toISOString().split('T')[0];
-                toDate = today.toISOString().split('T')[0];
-                break;
-            case 'month':
-                fromDate = today.toISOString().split('T')[0];
-                const monthLater = new Date(today);
-                monthLater.setMonth(today.getMonth() + 1);
-                toDate = monthLater.toISOString().split('T')[0];
-                break;
-            default:
-                fromDate = today.toISOString().split('T')[0];
-                const defaultLater = new Date(today);
-                defaultLater.setDate(today.getDate() + 7);
-                toDate = defaultLater.toISOString().split('T')[0];
         }
 
-        console.log('Date range:', { fromDate, toDate, season });
+        const { from: fromDate, to: toDate, label: rangeLabel } = scheduleTimeRanges.getScheduleRangeYmd(
+            timeRange,
+            focusYmd,
+            today
+        );
+        console.log('Date range (JST 暦, 週=月～日、今月=当月初日～末日、または指定1日):', { fromDate, toDate, rangeLabel, timeRange, focusYmd });
 
         // 特定のリーグが指定されている場合
         if (league && leagueMapping[league]) {
@@ -6648,7 +6608,7 @@ async function getMatchesFromAPIFootball(league, timeRange, season = null) {
 }
 
 // Football-data.orgから試合データを取得（バックアップ）
-async function getMatchesFromFootballData(league, timeRange, season = null) {
+async function getMatchesFromFootballData(league, timeRange, season = null, focusYmd = null) {
     const matches = [];
     
     try {
@@ -6669,57 +6629,23 @@ async function getMatchesFromFootballData(league, timeRange, season = null) {
             'ECL': 'UCL', // Conference League (Football-data.org code)
         };
 
-        // 時間範囲の設定
-        let fromDate, toDate;
         const today = new Date();
         const currentYear = today.getFullYear();
         const currentMonth = today.getMonth() + 1;
-        
-        // シーズンの決定（パラメータが渡されていない場合は自動計算）
+
         if (!season) {
             season = currentMonth >= 8 ? currentYear : currentYear - 1;
         }
-        
-        // J1リーグの場合は2024-25シーズンを使用（シーズンが指定されていない場合のみ）
         if (league === 'J1' && !season) {
             season = 2024;
         }
-        
-        switch (timeRange) {
-            case 'today':
-                fromDate = toDate = today.toISOString().split('T')[0];
-                break;
-            case 'tomorrow':
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                fromDate = toDate = tomorrow.toISOString().split('T')[0];
-                break;
-            case 'week':
-                fromDate = today.toISOString().split('T')[0];
-                const weekLater = new Date(today);
-                weekLater.setDate(today.getDate() + 7);
-                toDate = weekLater.toISOString().split('T')[0];
-                break;
-            case 'lastweek':
-                const lastWeekStart = new Date(today);
-                lastWeekStart.setDate(today.getDate() - 7);
-                fromDate = lastWeekStart.toISOString().split('T')[0];
-                toDate = today.toISOString().split('T')[0];
-                break;
-            case 'month':
-                fromDate = today.toISOString().split('T')[0];
-                const monthLater = new Date(today);
-                monthLater.setMonth(today.getMonth() + 1);
-                toDate = monthLater.toISOString().split('T')[0];
-                break;
-            default:
-                fromDate = today.toISOString().split('T')[0];
-                const defaultLater = new Date(today);
-                defaultLater.setDate(today.getDate() + 7);
-                toDate = defaultLater.toISOString().split('T')[0];
-        }
 
-        console.log('Football-data.org date range:', { fromDate, toDate, season });
+        const { from: fromDate, to: toDate, label: rangeLabel } = scheduleTimeRanges.getScheduleRangeYmd(
+            timeRange,
+            focusYmd,
+            today
+        );
+        console.log('Football-data.org date range (JST):', { fromDate, toDate, rangeLabel, timeRange, focusYmd });
 
         // 特定のリーグが指定されている場合
         if (league && leagueMapping[league]) {

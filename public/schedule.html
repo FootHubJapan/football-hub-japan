@@ -4628,7 +4628,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     </div>
                     <!-- Custom Date Picker -->
                     <div class="glass" style="border-radius: 0.75rem; padding: 0.5rem; display: flex; align-items: center; gap: 0.5rem; align-self: flex-end;">
-                        <button style="padding: 0.5rem; background: none; border: none; color: var(--foreground); cursor: pointer; border-radius: 0.5rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">
+                        <input type="date" id="scheduleDateInput" aria-label="日付を選択" style="position:absolute; opacity:0; width:0; height:0; pointer-events:none;" tabindex="-1" />
+                        <button type="button" id="dateNavPrev" title="前の日" style="padding: 0.5rem; background: none; border: none; color: var(--foreground); cursor: pointer; border-radius: 0.5rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">
                             <span class="material-symbols-outlined">chevron_left</span>
                         </button>
                         <div style="padding: 0.25rem 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
@@ -4636,10 +4637,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <span style="font-size: 1.125rem; font-weight: bold; color: var(--foreground);" id="currentDate">—</span>
                             <span style="font-size: 0.85rem; color: var(--primary); font-weight: 600;" id="currentTime"></span>
                         </div>
-                        <button style="padding: 0.5rem; background: none; border: none; color: var(--foreground); cursor: pointer; border-radius: 0.5rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">
+                        <button type="button" id="dateNavNext" title="次の日" style="padding: 0.5rem; background: none; border: none; color: var(--foreground); cursor: pointer; border-radius: 0.5rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">
                             <span class="material-symbols-outlined">chevron_right</span>
                         </button>
-                        <button style="margin-left: 0.5rem; background: rgba(51, 255, 255, 0.2); color: var(--primary); padding: 0.5rem; border-radius: 0.5rem; border: none; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(51,255,255,0.3)'" onmouseout="this.style.background='rgba(51,255,255,0.2)'">
+                        <button type="button" id="dateNavOpenCalendar" title="カレンダーで日付を選ぶ" style="margin-left: 0.5rem; background: rgba(51, 255, 255, 0.2); color: var(--primary); padding: 0.5rem; border-radius: 0.5rem; border: none; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(51,255,255,0.3)'" onmouseout="this.style.background='rgba(51,255,255,0.2)'">
                             <span class="material-symbols-outlined">calendar_today</span>
                         </button>
                     </div>
@@ -5099,54 +5100,121 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         console.log('🚀 タイムスタンプ:', new Date().toISOString());
         console.log('🚀 document.readyState:', document.readyState);
         
-        // 現在の日時を更新する関数
-        function updateCurrentDateTime() {
-            const now = new Date();
+        /** JST 暦 YYYY-MM-DD */
+        function browserJstYmd() {
+            return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+        }
+        function addDaysJst(ymd, n) {
+            const t = new Date(ymd + 'T12:00:00+09:00');
+            t.setTime(t.getTime() + n * 864e5);
+            return t.toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' });
+        }
+        let scheduleHeaderYmd = null;
+        /** 前後ナビ/カレンダーで指定した日。付いている間は API の date= が優先され、期間はその1日。 */
+        let scheduleFocusYmd = null;
+        // 表示用（ヘッダの年月日）
+        function updateHeaderDate(ymd) {
+            if (!ymd) return;
             const monthEl = document.getElementById('currentMonth');
             const dateEl = document.getElementById('currentDate');
-            const timeEl = document.getElementById('currentTime');
-            
+            const [y, m, d] = ymd.split('-').map(Number);
+            const t = new Date(y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0') + 'T12:00:00+09:00');
             if (monthEl) {
-                monthEl.textContent = now.toLocaleDateString('ja-JP', {
-                    year: 'numeric',
-                    month: 'long',
-                    timeZone: 'Asia/Tokyo'
-                });
+                monthEl.textContent = t.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', timeZone: 'Asia/Tokyo' });
             }
-            
             if (dateEl) {
-                dateEl.textContent = now.toLocaleDateString('ja-JP', { 
+                dateEl.textContent = t.toLocaleDateString('ja-JP', {
                     weekday: 'long',
-                    month: 'long', 
+                    month: 'long',
                     day: 'numeric',
                     timeZone: 'Asia/Tokyo'
                 });
             }
-            
+        }
+        function updateClock() {
+            const timeEl = document.getElementById('currentTime');
             if (timeEl) {
-                const timeStr = now.toLocaleTimeString('ja-JP', { 
-                    hour: '2-digit', 
+                const timeStr = new Date().toLocaleTimeString('ja-JP', {
+                    hour: '2-digit',
                     minute: '2-digit',
                     timeZone: 'Asia/Tokyo'
                 });
                 timeEl.textContent = `🕐 ${timeStr}`;
             }
         }
-        
+        // 日付見出し + 時計
+        function updateCurrentDateTime() {
+            if (scheduleHeaderYmd) {
+                updateHeaderDate(scheduleHeaderYmd);
+            } else {
+                const ymd = browserJstYmd();
+                updateHeaderDate(ymd);
+            }
+            updateClock();
+        }
         // DOM読み込み後に実行
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
+                scheduleHeaderYmd = browserJstYmd();
                 updateCurrentDateTime();
-                // 1分ごとに更新
-                setInterval(updateCurrentDateTime, 60000);
+                setInterval(() => { updateClock(); }, 1000);
             });
         } else {
-            // 既に読み込み済みの場合
+            scheduleHeaderYmd = browserJstYmd();
             updateCurrentDateTime();
-            // 1分ごとに更新
-            setInterval(updateCurrentDateTime, 60000);
+            setInterval(() => { updateClock(); }, 1000);
         }
-        
+        // 日付ナビ・カレンダー
+        (function initScheduleDateNav() {
+            function onReady() {
+                const input = document.getElementById('scheduleDateInput');
+                const prev = document.getElementById('dateNavPrev');
+                const next = document.getElementById('dateNavNext');
+                const cal = document.getElementById('dateNavOpenCalendar');
+                if (input) input.value = browserJstYmd();
+                if (prev) {
+                    prev.addEventListener('click', () => {
+                        if (!scheduleHeaderYmd) scheduleHeaderYmd = browserJstYmd();
+                        scheduleHeaderYmd = addDaysJst(scheduleHeaderYmd, -1);
+                        scheduleFocusYmd = scheduleHeaderYmd;
+                        if (input) input.value = scheduleHeaderYmd;
+                        updateHeaderDate(scheduleHeaderYmd);
+                        if (typeof loadMatches === 'function') loadMatches();
+                    });
+                }
+                if (next) {
+                    next.addEventListener('click', () => {
+                        if (!scheduleHeaderYmd) scheduleHeaderYmd = browserJstYmd();
+                        scheduleHeaderYmd = addDaysJst(scheduleHeaderYmd, 1);
+                        scheduleFocusYmd = scheduleHeaderYmd;
+                        if (input) input.value = scheduleHeaderYmd;
+                        updateHeaderDate(scheduleHeaderYmd);
+                        if (typeof loadMatches === 'function') loadMatches();
+                    });
+                }
+                if (cal && input) {
+                    cal.addEventListener('click', () => {
+                        try {
+                            if (input.showPicker) input.showPicker();
+                            else input.click();
+                        } catch (_) {
+                            input.click();
+                        }
+                    });
+                }
+                if (input) {
+                    input.addEventListener('change', (e) => {
+                        if (!e.target.value) return;
+                        scheduleHeaderYmd = e.target.value;
+                        scheduleFocusYmd = e.target.value;
+                        updateHeaderDate(scheduleHeaderYmd);
+                        if (typeof loadMatches === 'function') loadMatches();
+                    });
+                }
+            }
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady);
+            else onReady();
+        })();
         let currentMatches = [];
 
         // イベントリスナーを設定
@@ -5551,9 +5619,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 seasonSelect.addEventListener('change', loadMatches);
             }
             
-            // 期間選択の変更を監視（既に5426行目で宣言済み）
+            // 期間選択の変更を監視（日付ナビの focus を解除して暦の期間に戻す）
             if (timeRangeSelect) {
-                timeRangeSelect.addEventListener('change', loadMatches);
+                timeRangeSelect.addEventListener('change', () => {
+                    scheduleFocusYmd = null;
+                    scheduleHeaderYmd = browserJstYmd();
+                    const inp = document.getElementById('scheduleDateInput');
+                    if (inp) inp.value = scheduleHeaderYmd;
+                    if (typeof updateHeaderDate === 'function') updateHeaderDate(scheduleHeaderYmd);
+                    loadMatches();
+                });
             }
             
             // ステータスフィルターの変更を監視
@@ -5625,8 +5700,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 const season = seasonSelect.value;
                 const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
                 const statusFilter = statusFilterSelect.value;
+                const filterTime = scheduleFocusYmd ? '' : timeRange;
             
-            console.log('🚀 loadMatches called with:', { league, timeRange, season, searchTerm, statusFilter });
+            console.log('🚀 loadMatches called with:', { league, timeRange, season, searchTerm, statusFilter, scheduleFocusYmd });
             console.log('🔍 About to call integrated API...');
             
             contentDiv.innerHTML = '<div class="loading">試合データを読み込み中...</div>';
@@ -5669,10 +5745,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     const statusParam = statusFilter ? `&status=${encodeURIComponent(statusFilter)}` : '';
                     const seasonParam = season ? `&season=${encodeURIComponent(season)}` : '';
                     const timeRangeParam = timeRange ? `&timeRange=${encodeURIComponent(timeRange)}` : '';
+                    const dateParam = scheduleFocusYmd
+                        ? `&date=${encodeURIComponent(scheduleFocusYmd)}`
+                        : '';
                     
                     console.log('🔄 統合APIを呼び出し中...');
                     console.log('🔍 リーグマッピング:', league, '→', mappedLeague);
-                    const integratedUrl = `/api/schedule?season=${season}${leagueParam}${statusParam}${timeRangeParam}`;
+                    const integratedUrl = `/api/schedule?season=${season}${leagueParam}${statusParam}${timeRangeParam}${dateParam}`;
                     console.log('📡 統合API URL:', integratedUrl);
                     console.log('📡 パラメータ詳細:', { season, leagueParam, statusParam, timeRangeParam });
                     
@@ -5684,7 +5763,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         const isFinishedStatusOnly = statusFilter === '終了';
                         
                         // キャッシュキー: 期間、リーグ、シーズン、ステータスを含める
-                        const cacheKey = `schedule_${timeRange || 'all'}_${season}_${league || 'all'}_${statusFilter || 'all'}`;
+                        const cacheKey = `schedule_${timeRange || 'all'}_${season}_${league || 'all'}_${statusFilter || 'all'}_${scheduleFocusYmd || 'nodate'}`;
                         const cachedData = sessionStorage.getItem(cacheKey);
                         
                         // キャッシュ有効期限: 過去データは24時間、現在・未来データは5分
@@ -5946,12 +6025,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     console.log('🔍 ========== フィルタリング開始 ==========');
                     console.log('🔍 フィルタリング前:', currentMatches.length, '件');
                     console.log('🔍 フィルタリング前の最初の3件:', currentMatches.slice(0, 3));
-                    console.log('🔍 フィルタリング条件:', { league, timeRange, searchTerm, statusFilter, season });
+                    console.log('🔍 フィルタリング条件:', { league, timeRange, filterTime: scheduleFocusYmd ? '(APIで指定1日、クライアント期間抑止)' : timeRange, searchTerm, statusFilter, season, scheduleFocusYmd });
                     
                     // リーグフィルターが「すべて」の場合は空文字列に変換
                     const normalizedLeague = (league === 'すべてのリーグ' || league === 'all' || league === '') ? '' : league;
                     
-                    let filteredMatches = filterMatches(currentMatches, normalizedLeague, timeRange, searchTerm, statusFilter, season);
+                    let filteredMatches = filterMatches(currentMatches, normalizedLeague, filterTime, searchTerm, statusFilter, season);
                     
                     console.log(`🔍 フィルタリング結果: ${currentMatches.length} → ${filteredMatches.length}件`);
                     console.log('🔍 フィルタリング後の最初のマッチ:', filteredMatches[0] || 'なし');
@@ -5961,7 +6040,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         console.warn('⚠️ フィルタリング後、試合が0件になりました。フィルタリングを緩和します。');
                         
                         // まず期間フィルターを無効化して再試行
-                        if (timeRange && timeRange !== '') {
+                        if (filterTime && filterTime !== '') {
                             console.log('🔍 期間フィルターを無効化して再試行');
                             filteredMatches = filterMatches(currentMatches, normalizedLeague, '', searchTerm, statusFilter, season);
                             console.log(`🔍 期間フィルター無効化後: ${filteredMatches.length}件`);
@@ -6853,12 +6932,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         endDate.setDate(lastWeekMonday.getDate() + 6); // 先週の日曜日まで
                         endDate.setHours(23, 59, 59, 999);
                         break;
-                    case 'month':
-                        startDate = new Date(now);
-                        endDate = new Date(now);
-                        endDate.setMonth(endDate.getMonth() + 1);
-                        endDate.setHours(23, 59, 59, 999);
+                    case 'month': {
+                        // 当月1日 ～ 当月末日（端末のローカル日付。日本では通常 JST＝JST 暦と一致）
+                        startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+                        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
                         break;
+                    }
                     case 'lastmonth':
                         startDate = new Date(now);
                         startDate.setMonth(startDate.getMonth() - 1);
