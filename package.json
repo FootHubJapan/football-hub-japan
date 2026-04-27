@@ -18,7 +18,8 @@
     "update-daniel-yanez-2025": "node update-daniel-yanez-2025.js",
     "update-finished-matches": "node update-finished-matches.js",
     "seo:generate": "node scripts/generate-seo-skeleton.js",
-    "seo:generate:players": "node --max-old-space-size=8192 scripts/generate-seo-from-players.js"
+    "seo:generate:players": "node --max-old-space-size=8192 scripts/generate-seo-from-players.js",
+    "data:refresh-2526-seasons": "node --max-old-space-size=16384 scripts/refresh-players-2526-seasons.js"
   },
   "keywords": [
     "football",

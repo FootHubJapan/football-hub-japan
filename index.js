@@ -8,6 +8,33 @@ const helmet = require('helmet');
 const cors = require('cors');
 const axios = require('axios');
 
+/** ランキング: 同一シーズン複数大会を選手詳細の合計と同様に合算（代表行は出場数最大でメタ維持） */
+function rankingMergeAggregatedNumericFromRows(metaRow, seasonRows) {
+    if (!metaRow || !seasonRows || !seasonRows.length) return metaRow;
+    const agg = playerStatsConsistency.aggregateTotalsFromStatsArray(
+        playerStatsConsistency.dedupeCompetitionStats(seasonRows)
+    );
+    if (!agg) return metaRow;
+    return {
+        ...metaRow,
+        goals: agg.goals,
+        assists: agg.assists,
+        appearances: agg.appearances,
+        minutes: agg.minutes,
+        rating: agg.rating != null ? String(agg.rating) : metaRow.rating
+    };
+}
+
+function pickPlayerStatsForRanking(seasonRowArray) {
+    if (!seasonRowArray || !seasonRowArray.length) return null;
+    const meta = [...seasonRowArray].sort(
+        (a, b) =>
+            (b.appearances || b.matches || b.lineups || 0) -
+            (a.appearances || a.matches || a.lineups || 0)
+    )[0];
+    return rankingMergeAggregatedNumericFromRows(meta, seasonRowArray);
+}
+
 // エラーハンドリング付きでデータサービスをインポート
 let dataService;
 let aiService;
@@ -1687,10 +1714,8 @@ app.get('/api/ranking/players', async (req, res) => {
                                     });
                                     
                                     if (leagueFilteredStats.length > 0) {
-                                        // リーグマッチしたstatsから、appearancesが最も多いものを選択
-                                        playerStats = leagueFilteredStats.sort((a, b) => 
-                                            (b.appearances || 0) - (a.appearances || 0)
-                                        )[0];
+                                        // リーグ行を全て合算（大会別を「合計」に揃える）
+                                        playerStats = pickPlayerStatsForRanking(leagueFilteredStats);
                                         matchedLeague = String(playerStats.leagueName || playerStats.league || '').toLowerCase();
                                         
                                         // PDの場合、チーム名も確認（スペインのチームのみ許可）
@@ -1735,14 +1760,10 @@ app.get('/api/ranking/players', async (req, res) => {
                                     });
                                     
                                     if (nonFriendlyStats.length > 0) {
-                                        playerStats = nonFriendlyStats.sort((a, b) => 
-                                            (b.appearances || 0) - (a.appearances || 0)
-                                        )[0];
+                                        playerStats = pickPlayerStatsForRanking(nonFriendlyStats);
                                     } else {
                                         // 親善試合以外のデータがない場合は、親善試合を含むデータを使用（フォールバック）
-                                        playerStats = seasonStats.sort((a, b) => 
-                                            (b.appearances || 0) - (a.appearances || 0)
-                                        )[0];
+                                        playerStats = pickPlayerStatsForRanking(seasonStats);
                                     }
                                     matchedLeague = String(playerStats.leagueName || playerStats.league || '').toLowerCase();
                                 }
@@ -1764,14 +1785,10 @@ app.get('/api/ranking/players', async (req, res) => {
                                     });
                                     
                                     if (nonFriendlyStats.length > 0) {
-                                        playerStats = nonFriendlyStats.sort((a, b) => 
-                                            (b.appearances || 0) - (a.appearances || 0)
-                                        )[0];
+                                        playerStats = pickPlayerStatsForRanking(nonFriendlyStats);
                                     } else {
                                         // 親善試合以外のデータがない場合は、親善試合を含むデータを使用（フォールバック）
-                                        playerStats = player.stats.sort((a, b) => 
-                                            (b.appearances || 0) - (a.appearances || 0)
-                                        )[0];
+                                        playerStats = pickPlayerStatsForRanking(player.stats);
                                     }
                                     matchedLeague = String(playerStats?.leagueName || playerStats?.league || '').toLowerCase();
                                 }
@@ -2118,10 +2135,7 @@ app.get('/api/ranking/players', async (req, res) => {
                                         });
                                         
                                         if (leagueFilteredStats.length > 0) {
-                                            // リーグマッチしたstatsから、appearancesが最も多いものを選択
-                                            playerStats = leagueFilteredStats.sort((a, b) => 
-                                                (b.appearances || 0) - (a.appearances || 0)
-                                            )[0];
+                                            playerStats = pickPlayerStatsForRanking(leagueFilteredStats);
                                             matchedLeague = String(playerStats.leagueName || playerStats.league || '').toLowerCase();
                                             
                                             // PDの場合、チーム名も確認（スペインのチームのみ許可）
@@ -2162,14 +2176,10 @@ app.get('/api/ranking/players', async (req, res) => {
                                         });
                                         
                                         if (nonFriendlyStats.length > 0) {
-                                            playerStats = nonFriendlyStats.sort((a, b) => 
-                                                (b.appearances || 0) - (a.appearances || 0)
-                                            )[0];
+                                            playerStats = pickPlayerStatsForRanking(nonFriendlyStats);
                                         } else {
                                             // 親善試合以外のデータがない場合は、親善試合を含むデータを使用（フォールバック）
-                                            playerStats = seasonStats.sort((a, b) => 
-                                                (b.appearances || 0) - (a.appearances || 0)
-                                            )[0];
+                                            playerStats = pickPlayerStatsForRanking(seasonStats);
                                         }
                                         matchedLeague = String(playerStats.leagueName || playerStats.league || '').toLowerCase();
                                     }
@@ -2186,14 +2196,10 @@ app.get('/api/ranking/players', async (req, res) => {
                                         });
                                         
                                         if (nonFriendlyStats.length > 0) {
-                                            playerStats = nonFriendlyStats.sort((a, b) => 
-                                                (b.appearances || 0) - (a.appearances || 0)
-                                            )[0];
+                                            playerStats = pickPlayerStatsForRanking(nonFriendlyStats);
                                         } else {
                                             // 親善試合以外のデータがない場合は、親善試合を含むデータを使用（フォールバック）
-                                            playerStats = player.stats.sort((a, b) => 
-                                                (b.appearances || 0) - (a.appearances || 0)
-                                            )[0];
+                                            playerStats = pickPlayerStatsForRanking(player.stats);
                                         }
                                         matchedLeague = String(playerStats?.leagueName || playerStats?.league || '').toLowerCase();
                                     }

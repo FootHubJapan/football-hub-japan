@@ -1434,6 +1434,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         };
         document.head.appendChild(script);
     </script>
+    <script src="/fhj-player-season-2526.js"></script>
     <script>
         // Version: 1.5 - Cache busting - NEW FILE
         // データ管理
@@ -1445,6 +1446,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         const FHJ_CURRENT_SEASON_KEY = '2025-2026';
         function fhjSeasonStats(player) {
+            if (typeof window.fhjListSeason2025_26Stats === 'function' && player) {
+                const s = window.fhjListSeason2025_26Stats(player);
+                if (s && (s.goals != null || s.appearances != null)) return s;
+            }
             if (!player || !player.seasons) return {};
             const cur = player.seasons[FHJ_CURRENT_SEASON_KEY];
             const leg = player.seasons['2024-2025'];

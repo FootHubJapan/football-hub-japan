@@ -27,6 +27,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6574544891375303"
      crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/fhj-player-season-2526.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1149,6 +1150,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             yellowCards: parseFloat(seasonStats.yellowCards) || 0,
                             redCards: parseFloat(seasonStats.redCards) || 0
                         };
+                        if (typeof window.fhjListSeason2025_26Stats === 'function') {
+                            const h = window.fhjListSeason2025_26Stats(playerData);
+                            if (h) {
+                                currentPlayers[target].stats.goals = h.goals;
+                                currentPlayers[target].stats.assists = h.assists;
+                                currentPlayers[target].stats.appearances = h.appearances;
+                                if (h.minutes) currentPlayers[target].stats.minutes = h.minutes;
+                                if (h.rating && h.rating !== 'N/A') {
+                                    const rr = parseFloat(String(h.rating).replace(',', '.'));
+                                    if (!Number.isNaN(rr)) currentPlayers[target].stats.rating = rr;
+                                }
+                            }
+                        }
                         
                         console.log(`📊 データベースから取得した生の値 (${player.name}):`, {
                             goals: seasonStats.goals,

@@ -36,6 +36,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <link rel="dns-prefetch" href="https://media.api-sports.io">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/fhj-player-season-2526.js"></script>
     <style>
         :root {
             --background: #0d1117;
@@ -946,6 +947,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
         }
 
+        function fhjRankingStatsOrApi(player) {
+            const hasArr = Array.isArray(player.stats) && player.stats.length > 0;
+            if (hasArr && typeof window.fhjListSeason2025_26Stats === 'function') {
+                return window.fhjListSeason2025_26Stats(player);
+            }
+            return null;
+        }
+
         function displayPlayerRanking(players) {
             const tbody = document.getElementById('playerTableBody');
             
@@ -959,10 +968,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     ? player.photo 
                     : `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&size=128&background=22c55e&color=0d1117&bold=true`;
                 
-                const goals = player.stats?.goals || player.goals || 0;
-                const assists = player.stats?.assists || player.assists || 0;
-                const appearances = player.stats?.appearances || player.appearances || 0;
-                const rating = player.stats?.rating || player.rating || '-';
+                const s = fhjRankingStatsOrApi(player);
+                const goals = s ? s.goals : (player.stats?.goals || player.goals || 0);
+                const assists = s ? s.assists : (player.stats?.assists || player.assists || 0);
+                const appearances = s ? s.appearances : (player.stats?.appearances || player.appearances || 0);
 
                 return `
                     <tr>
@@ -979,7 +988,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <td class="stat-cell">${goals}</td>
                         <td class="stat-cell">${assists}</td>
                         <td class="stat-cell">${appearances}</td>
-                        <td class="stat-cell primary">${typeof rating === 'number' ? rating.toFixed(1) : rating}</td>
+                        <td class="stat-cell primary">${(() => {
+                            const r = s ? s.rating : (player.stats?.rating || player.rating || '-');
+                            if (r === '-' || r == null || r === 'N/A') return '-';
+                            const n = parseFloat(String(r).replace(',', '.'));
+                            return Number.isNaN(n) ? r : n.toFixed(1);
+                        })()}</td>
                     </tr>
                 `;
             }).join('');
@@ -993,7 +1007,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
             const labels = players.map(p => p.name.length > 10 ? p.name.slice(0, 10) + '...' : p.name);
             const data = players.map(p => {
-                if (stat === 'goalAssist') return (p.stats?.goals || p.goals || 0) + (p.stats?.assists || p.assists || 0);
+                const s = fhjRankingStatsOrApi(p);
+                if (stat === 'goalAssist') {
+                    if (s) return (s.goals || 0) + (s.assists || 0);
+                    return (p.stats?.goals || p.goals || 0) + (p.stats?.assists || p.assists || 0);
+                }
+                if (s && (stat === 'goals' || stat === 'assists' || stat === 'appearances')) return s[stat] || 0;
+                if (stat === 'rating' && s && s.rating && s.rating !== 'N/A') {
+                    const r = parseFloat(String(s.rating).replace(',', '.'));
+                    return Number.isNaN(r) ? 0 : r;
+                }
                 return p.stats?.[stat] || p[stat] || 0;
             });
 

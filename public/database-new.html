@@ -706,6 +706,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </main>
 
     <script src="/ai-widget.js"></script>
+    <script src="/fhj-player-season-2526.js"></script>
     <script>
         // Data
         let leagues = [];
@@ -1113,115 +1114,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             return positions[pos] || pos;
         }
 
-        // 2025/26 一覧用スタッツ（lib/player-stats-consistency.js および player-detail.html と同じ合算ルール）
-        const FHJ_CURRENT_SEASON_KEY = '2025-2026';
-
-        function fhjIsSeason2025_26(raw) {
-            if (raw == null || raw === '') return false;
-            const s = String(raw).trim();
-            if (s === '2025' || s === '2025/26' || s === '2025/2026' || s === '2025-2026') return true;
-            if (/2025.*2026/.test(s)) return true;
-            if (/^2025\//.test(s)) return true;
-            return false;
-        }
-
-        function fhjDedupeCompetitionStats(statsArray) {
-            if (!Array.isArray(statsArray) || statsArray.length === 0) return [];
-            const byKey = new Map();
-            for (const st of statsArray) {
-                if (!st) continue;
-                const league = String(st.leagueName || st.league || '').toLowerCase().trim();
-                const season = String(st.season || '');
-                const key = `${season}::${league}::${String(st.teamName || st.team || '')}`;
-                const apps = Number(st.appearances || st.matches || st.lineups || 0);
-                const prev = byKey.get(key);
-                if (!prev) {
-                    byKey.set(key, st);
-                    continue;
-                }
-                const prevApps = Number(prev.appearances || prev.matches || prev.lineups || 0);
-                const prevTs = prev.lastUpdated ? new Date(prev.lastUpdated).getTime() : 0;
-                const curTs = st.lastUpdated ? new Date(st.lastUpdated).getTime() : 0;
-                if (apps > prevApps || (apps === prevApps && curTs >= prevTs)) {
-                    byKey.set(key, st);
-                }
-            }
-            return Array.from(byKey.values());
-        }
-
-        function fhjBuildSeason2526FromStatsArray(statsArray) {
-            if (!Array.isArray(statsArray)) return null;
-            const seasonRows = statsArray.filter((s) => s && fhjIsSeason2025_26(s.season));
-            if (seasonRows.length === 0) return null;
-            const deduped = fhjDedupeCompetitionStats(seasonRows);
-            let goals = 0;
-            let assists = 0;
-            let appearances = 0;
-            let minutes = 0;
-            let ratingWeighted = 0;
-            let ratingW = 0;
-            for (const st of deduped) {
-                goals += Number(st.goals || 0);
-                assists += Number(st.assists || 0);
-                const apps = Number(st.appearances || st.matches || st.lineups || 0);
-                appearances += apps;
-                minutes += Number(st.minutes || 0);
-                const r =
-                    st.rating != null && st.rating !== 'N/A'
-                        ? parseFloat(String(st.rating).replace(',', '.'))
-                        : null;
-                if (r != null && !Number.isNaN(r) && apps > 0) {
-                    ratingWeighted += r * apps;
-                    ratingW += apps;
-                }
-            }
-            const rating = ratingW > 0 ? Math.round((ratingWeighted / ratingW) * 100) / 100 : null;
-            return {
-                goals,
-                assists,
-                appearances,
-                minutes,
-                rating: rating != null ? String(rating) : 'N/A'
-            };
-        }
-
-        function fhjListSeason2025_26Stats(player) {
-            if (!player) {
-                return { goals: 0, assists: 0, appearances: 0 };
-            }
-            if (Array.isArray(player.stats) && player.stats.length) {
-                const a = fhjBuildSeason2526FromStatsArray(player.stats);
-                if (a) return a;
-            }
-            if (player.stats && typeof player.stats === 'object' && !Array.isArray(player.stats)) {
-                const s = player.stats;
-                if (fhjIsSeason2025_26(s.season || player.season)) {
-                    const apps = Number(s.appearances || s.matches || s.lineups || 0);
-                    return {
-                        goals: Number(s.goals || 0),
-                        assists: Number(s.assists || 0),
-                        appearances: apps,
-                        minutes: Number(s.minutes || 0),
-                        rating: s.rating != null ? String(s.rating) : 'N/A'
-                    };
-                }
-            }
-            if (player.seasons && player.seasons[FHJ_CURRENT_SEASON_KEY] && player.seasons[FHJ_CURRENT_SEASON_KEY].stats) {
-                return player.seasons[FHJ_CURRENT_SEASON_KEY].stats;
-            }
-            return { goals: 0, assists: 0, appearances: 0, minutes: 0, rating: 'N/A' };
-        }
-
         function getPlayerGoals(player) {
-            return fhjListSeason2025_26Stats(player).goals;
+            return (typeof window.fhjListSeason2025_26Stats === 'function' ? window.fhjListSeason2025_26Stats(player) : {}).goals || 0;
         }
 
         function getPlayerAssists(player) {
-            return fhjListSeason2025_26Stats(player).assists;
+            return (typeof window.fhjListSeason2025_26Stats === 'function' ? window.fhjListSeason2025_26Stats(player) : {}).assists || 0;
         }
 
         function getPlayerAppearances(player) {
-            return fhjListSeason2025_26Stats(player).appearances;
+            return (typeof window.fhjListSeason2025_26Stats === 'function' ? window.fhjListSeason2025_26Stats(player) : {}).appearances || 0;
         }
 
         // Update pagination
