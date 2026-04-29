@@ -890,7 +890,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 if (search) url += `&search=${encodeURIComponent(search)}`;
                 
                 // キャッシュをチェック（5分間有効）- サーバーキャッシュと連動
-                const cacheKey = `ranking_players_v2_${season}_${league}_${position}_${stat}_${search}`;
+                // v3: サーバー側ランキングロジック変更時にキーを上げて sessionStorage の古い結果を捨てる
+                const cacheKey = `ranking_players_v3_${season}_${league}_${position}_${stat}_${search}`;
                 const cachedData = sessionStorage.getItem(cacheKey);
                 if (cachedData) {
                     try {

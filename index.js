@@ -1578,7 +1578,7 @@ app.get('/api/ranking/players', async (req, res) => {
         const seasonPatterns = seasonPatternsForRanking(apiSeasonYear);
 
         // サーバーサイドキャッシュ（5分）でレスポンス高速化
-        const cacheKey = `ranking_players_${apiSeasonYear}_${league || ''}_${position || ''}_${stat}_${search || ''}`;
+        const cacheKey = `ranking_players_v3_${apiSeasonYear}_${league || ''}_${position || ''}_${stat}_${search || ''}`;
         const cached = getCache(cacheKey);
         if (cached) {
             res.setHeader('Cache-Control', 'public, max-age=300'); // ブラウザキャッシュ5分
@@ -2188,7 +2188,7 @@ app.get('/api/competitions/bracket', async (req, res) => {
             return res.status(400).json({ error: 'competition は CL, EL, UECL, ECL のいずれかを指定してください' });
         }
 
-        const cacheKey = `comp_bracket_${competition}_${season}`;
+        const cacheKey = `comp_bracket_v2_${competition}_${season}`;
         const cached = getCache(cacheKey);
         if (cached) {
             res.setHeader('Cache-Control', 'public, max-age=300');
