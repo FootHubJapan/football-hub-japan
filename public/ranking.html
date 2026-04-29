@@ -890,7 +890,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 if (search) url += `&search=${encodeURIComponent(search)}`;
                 
                 // キャッシュをチェック（5分間有効）- サーバーキャッシュと連動
-                const cacheKey = `ranking_players_${season}_${league}_${position}_${stat}_${search}`;
+                const cacheKey = `ranking_players_v2_${season}_${league}_${position}_${stat}_${search}`;
                 const cachedData = sessionStorage.getItem(cacheKey);
                 if (cachedData) {
                     try {
@@ -1090,11 +1090,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 return;
             }
 
-            teams.sort((a, b) => (b.points || 0) - (a.points || 0));
+            teams.sort((a, b) => {
+                const ra = a.rank != null ? Number(a.rank) : NaN;
+                const rb = b.rank != null ? Number(b.rank) : NaN;
+                if (!Number.isNaN(ra) && !Number.isNaN(rb)) return ra - rb;
+                if ((b.points || 0) !== (a.points || 0)) return (b.points || 0) - (a.points || 0);
+                return (b.goalDifference || 0) - (a.goalDifference || 0);
+            });
 
             tbody.innerHTML = teams.map((team, index) => `
                 <tr>
-                    <td class="rank-cell">${index + 1}</td>
+                    <td class="rank-cell">${team.rank != null ? team.rank : index + 1}</td>
                     <td>
                         <div class="player-cell">
                             ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo" loading="lazy" decoding="async">` : ''}
@@ -1192,6 +1198,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
 
             teams.sort((a, b) => {
+                const ra = a.rank != null ? Number(a.rank) : NaN;
+                const rb = b.rank != null ? Number(b.rank) : NaN;
+                if (!Number.isNaN(ra) && !Number.isNaN(rb)) return ra - rb;
                 if ((b.points || 0) !== (a.points || 0)) return (b.points || 0) - (a.points || 0);
                 return (b.goalDifference || 0) - (a.goalDifference || 0);
             });
@@ -1200,7 +1209,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 const gd = team.goalDifference || ((team.goalsFor || 0) - (team.goalsAgainst || 0));
                 return `
                     <tr>
-                        <td class="rank-cell">${index + 1}</td>
+                        <td class="rank-cell">${team.rank != null ? team.rank : index + 1}</td>
                         <td>
                             <div class="player-cell">
                                 ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo" loading="lazy" decoding="async">` : ''}
@@ -1263,9 +1272,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
             tbody.innerHTML = standings.map((team, index) => {
                 const gd = team.goalDifference || ((team.goalsFor || 0) - (team.goalsAgainst || 0));
+                const rk = team.position != null ? team.position : index + 1;
                 return `
                     <tr>
-                        <td class="rank-cell">${index + 1}</td>
+                        <td class="rank-cell">${rk}</td>
                         <td>
                             <div class="player-cell">
                                 ${team.logo ? `<img src="${team.logo}" alt="${team.name}" class="team-logo" loading="lazy" decoding="async">` : ''}

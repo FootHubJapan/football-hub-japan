@@ -709,6 +709,52 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             return urlParams.get('id');
         }
 
+        /** 統合APIの1レスポンスを画面用にマージして表示。成功なら true */
+        function applyIntegratedPlayerResponse(player, label) {
+            if (!player) return false;
+            if (player.error) {
+                console.log(`⚠️ 統合APIエラー${label ? ` (${label})` : ''}: ${player.error}`);
+                return false;
+            }
+            if (!(player.name || player.fullName)) {
+                console.log(`⚠️ 統合APIレスポンスはあるが選手データが空${label ? ` (${label})` : ''}`);
+                return false;
+            }
+            console.log(`✅ 統合APIデータを取得${label ? ` (${label})` : ''}: ${player.name || player.fullName || ''}`);
+            console.log('📊 Stats形式:', Array.isArray(player.stats) ? '配列形式' : typeof player.stats);
+            if (Array.isArray(player.stats)) {
+                console.log(`📊 コンペティション数: ${player.stats.length}`);
+                player.stats.forEach((stat, idx) => {
+                    console.log(`  ${idx + 1}. ${stat.leagueName}: ${stat.appearances}試合, ${stat.goals}ゴール`);
+                });
+            }
+            const displayData = {
+                ...player,
+                source: 'integrated',
+                stats: player.stats || [],
+                integration: player.integration
+            };
+            const existingPlayerData = window.currentPlayerData;
+            if (existingPlayerData && existingPlayerData.stats && Array.isArray(existingPlayerData.stats) && Array.isArray(displayData.stats)) {
+                const mergedStats = [...existingPlayerData.stats];
+                displayData.stats.forEach(newStat => {
+                    const existingIndex = mergedStats.findIndex(s =>
+                        (s.leagueName || s.league) === (newStat.leagueName || newStat.league) &&
+                        (s.season || '') === (newStat.season || '')
+                    );
+                    if (existingIndex >= 0) {
+                        mergedStats[existingIndex] = { ...mergedStats[existingIndex], ...newStat };
+                    } else {
+                        mergedStats.push(newStat);
+                    }
+                });
+                displayData.stats = mergedStats;
+            }
+            window.currentPlayerData = displayData;
+            displayPlayerData(displayData);
+            return true;
+        }
+
         // 選手データを読み込み（実際のAPIデータを優先）
         async function loadPlayerData() {
             const playerId = getPlayerIdFromUrl();
@@ -719,72 +765,44 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
             try {
                 console.log(`🔍 選手データ読み込み開始: ${playerId}`);
-                
-                // 1. まず統合APIデータを取得
+                let integratedOk = false;
+
+                // 1a. 即時表示: quick=1 はライブ取得を待たない（JSON＋スナップショット）
                 try {
-                    console.log('🔄 統合APIデータを取得中...');
+                    console.log('🔄 統合API（クイック）を取得中...');
+                    const quickRes = await fetch(`/api/integrated/player/${encodeURIComponent(playerId)}?quick=1`);
+                    if (quickRes.ok) {
+                        const quickPlayer = await quickRes.json();
+                        if (applyIntegratedPlayerResponse(quickPlayer, 'クイック')) {
+                            integratedOk = true;
+                        }
+                    } else {
+                        console.log(`⚠️ 統合API（クイック）失敗 (${quickRes.status})`);
+                    }
+                } catch (integratedQuickErr) {
+                    console.log('⚠️ 統合API（クイック）エラー:', integratedQuickErr.message);
+                }
+
+                // 1b. フル統合（キャッシュ/必要ならライブ更新）で上書き・マージ
+                try {
+                    console.log('🔄 統合APIデータを取得中（フル）...');
                     const response = await fetch(`/api/integrated/player/${encodeURIComponent(playerId)}`);
-                    
                     if (response.ok) {
                         const player = await response.json();
-                        
-                        // エラーレスポンスのチェック
-                        if (player.error) {
-                            console.log(`⚠️ 統合APIエラー: ${player.error}`);
-                        } else if (player && (player.name || player.fullName)) {
-                            console.log(`✅ 統合APIデータを取得: ${player.name || playerId}`);
-                            console.log('📊 Stats形式:', Array.isArray(player.stats) ? '配列形式' : typeof player.stats);
-                            if (Array.isArray(player.stats)) {
-                                console.log(`📊 コンペティション数: ${player.stats.length}`);
-                                player.stats.forEach((stat, idx) => {
-                                    console.log(`  ${idx + 1}. ${stat.leagueName}: ${stat.appearances}試合, ${stat.goals}ゴール`);
-                                });
-                            }
-                            
-                            // 統合データを表示用に変換
-                            // statsは配列形式またはオブジェクト形式のまま使用（フロントエンドが両方に対応）
-                            const displayData = {
-                                ...player,
-                                source: 'integrated',
-                                stats: player.stats || [],
-                                integration: player.integration
-                            };
-                            
-                            // 既存のデータがあればマージ（更新中でも既存データを表示）
-                            const existingPlayerData = window.currentPlayerData;
-                            if (existingPlayerData && existingPlayerData.stats && Array.isArray(existingPlayerData.stats) && Array.isArray(displayData.stats)) {
-                                // 既存のstatsを保持し、新しいstatsで上書き
-                                const mergedStats = [...existingPlayerData.stats];
-                                displayData.stats.forEach(newStat => {
-                                    const existingIndex = mergedStats.findIndex(s => 
-                                        (s.leagueName || s.league) === (newStat.leagueName || newStat.league) &&
-                                        (s.season || '') === (newStat.season || '')
-                                    );
-                                    if (existingIndex >= 0) {
-                                        // 既存のデータを新しいデータで上書き
-                                        mergedStats[existingIndex] = { ...mergedStats[existingIndex], ...newStat };
-                                    } else {
-                                        // 新しいデータを追加
-                                        mergedStats.push(newStat);
-                                    }
-                                });
-                                displayData.stats = mergedStats;
-                            }
-                            
-                            // 現在のデータを保存（更新中でも既存データを保持）
-                            window.currentPlayerData = displayData;
-                            
-                            displayPlayerData(displayData);
+                        if (applyIntegratedPlayerResponse(player, 'フル')) {
+                            integratedOk = true;
                             return;
-                        } else {
-                            console.log('⚠️ 統合APIレスポンスはあるが選手データが空。フォールバックに移行');
-                            console.log('🔍 APIレスポンス:', player);
                         }
+                        console.log('🔍 APIレスポンス:', player);
                     } else {
                         console.log(`⚠️ 統合APIデータの取得に失敗 (${response.status})、フォールバックに移行`);
                     }
                 } catch (integratedError) {
                     console.log('⚠️ 統合APIデータの取得中にエラー:', integratedError.message);
+                }
+
+                if (integratedOk) {
+                    return;
                 }
                 
                 // 2. 従来のAPI-Footballエンドポイントを試す

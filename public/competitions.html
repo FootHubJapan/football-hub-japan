@@ -363,6 +363,11 @@
     }
 
     loadBtn.addEventListener('click', load);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', load);
+    } else {
+        load();
+    }
 })();
     </script>
 <script src="/js/fhj-i18n.js" defer></script>
