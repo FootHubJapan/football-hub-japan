@@ -7,6 +7,7 @@
     "start": "node --max-old-space-size=1024 index.js",
     "dev": "nodemon index.js",
     "test": "node test-production.js",
+    "verify:ranking": "node scripts/verify-ranking-smoke.js",
     "test:local": "BASE_URL=http://localhost:3000 node test-production.js",
     "deploy": "bash deploy.sh",
     "build": "echo \"No build step required\"",
