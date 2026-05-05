@@ -2188,7 +2188,7 @@ app.get('/api/competitions/bracket', async (req, res) => {
             return res.status(400).json({ error: 'competition は CL, EL, UECL, ECL のいずれかを指定してください' });
         }
 
-        const cacheKey = `comp_bracket_v2_${competition}_${season}`;
+        const cacheKey = `comp_bracket_v3_${competition}_${season}`;
         const cached = getCache(cacheKey);
         if (cached) {
             res.setHeader('Cache-Control', 'public, max-age=300');
@@ -2213,15 +2213,28 @@ app.get('/api/competitions/bracket', async (req, res) => {
             'x-rapidapi-host': 'v3.football.api-sports.io'
         };
 
-        const fetchFixturesPage = (headers, pageNum) =>
-            axios.get('https://v3.football.api-sports.io/fixtures', {
-                headers,
-                params: { league: meta.id, season, page: pageNum },
-                timeout: 25000,
-                validateStatus: () => true
-            });
+        /** axios は接続失敗・DNS・タイムアウトで例外になるため、ここで握って HTTP 同等の形にそろえる（本番で catch に落ちないようにする） */
+        const fetchFixturesPage = async (headers, pageNum) => {
+            try {
+                return await axios.get('https://v3.football.api-sports.io/fixtures', {
+                    headers,
+                    params: { league: meta.id, season, page: pageNum },
+                    timeout: 25000,
+                    validateStatus: () => true
+                });
+            } catch (err) {
+                const msg = err?.message || String(err);
+                const code = err?.code ? ` ${err.code}` : '';
+                console.warn(`⚠️ /api/competitions/bracket fixtures page ${pageNum} network error:${code}`, msg);
+                return {
+                    status: 0,
+                    data: { response: [], errors: { network: msg } },
+                    __networkError: true
+                };
+            }
+        };
 
-        const probeDirect = await fetchFixturesPage(headersDirect, 1);
+        let probeDirect = await fetchFixturesPage(headersDirect, 1);
         let useHeaders = headersDirect;
         let probe = probeDirect;
 
@@ -2230,23 +2243,22 @@ app.get('/api/competitions/bracket', async (req, res) => {
             (probeDirect.data?.response || []).length === 0 &&
             apiFootballHasMeaningfulErrors(probeDirect.data);
 
-        if (probeDirect.status !== 200) {
+        const directUnusable =
+            probeDirect.status === 0 ||
+            probeDirect.status !== 200 ||
+            directEmptyWithErrors;
+
+        if (directUnusable) {
             const probeRapid = await fetchFixturesPage(headersRapid, 1);
-            if (probeRapid.status === 200) {
-                useHeaders = headersRapid;
-                probe = probeRapid;
-                if (probeDirect.status !== 200) {
-                    console.log('📎 /api/competitions/bracket: x-apisports-key が失敗したため RapidAPI ヘッダにフォールバック');
-                }
-            }
-        } else if (directEmptyWithErrors) {
-            const probeRapid = await fetchFixturesPage(headersRapid, 1);
-            if (
+            const rapidOk =
                 probeRapid.status === 200 &&
-                ((probeRapid.data?.response || []).length > 0 || !apiFootballHasMeaningfulErrors(probeRapid.data))
-            ) {
+                ((probeRapid.data?.response || []).length > 0 || !apiFootballHasMeaningfulErrors(probeRapid.data));
+            if (rapidOk) {
                 useHeaders = headersRapid;
                 probe = probeRapid;
+                if (probeDirect.status !== 200 || probeDirect.__networkError) {
+                    console.log('📎 /api/competitions/bracket: 直契約ヘッダが使えないため RapidAPI ヘッダにフォールバック');
+                }
             }
         }
 
@@ -2256,6 +2268,13 @@ app.get('/api/competitions/bracket', async (req, res) => {
         const maxPages = 40;
         while (page <= maxPages) {
             const r = page === 1 ? probe : await fetchFixturesPage(useHeaders, page);
+            if (r.status === 0 || r.__networkError) {
+                upstreamWarning =
+                    upstreamWarning ||
+                    'API-Football への接続に失敗しました（ネットワークまたはタイムアウト）。環境の外向き通信と API キーを確認してください。';
+                console.warn('⚠️ fixtures bracket ネットワークエラーで打ち切り');
+                break;
+            }
             if (r.status !== 200) {
                 upstreamWarning =
                     r.status === 404 || r.status === 400
